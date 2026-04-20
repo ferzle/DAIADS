@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+  <title>Bucket Sort</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>  
+  <script src="/Algorithms/scripts/chapterScripts.js"></script>
+  <link rel="stylesheet" href="/Algorithms/css/style.css">
+  <link rel="stylesheet" href="/Algorithms/css/chapter.css">
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-DQ5LVZVFDC');
+</script>
+</head>
+<body>
+
+  <h1>Bucket Sort</h1>
+
+  <h2>Problem Solved</h2>
+  <p>Bucket Sort solves the <a class="problem" href="?path=Problems%2FFoundational%2FSorting">Sorting</a> problem by distributing elements into buckets and sorting each bucket individually.</p>
+
+  <h2>Design and Strategy</h2>
+  <p>
+    Bucket Sort works by partitioning an array into a fixed number of <strong>buckets</strong>, 
+    each covering a subrange of the input values. 
+    Each element is placed into its corresponding bucket based on its value. 
+    Once all elements have been distributed, each bucket is sorted individually and 
+    its contents are merged back into the original array in order, producing the fully sorted sequence. 
+    Bucket Sort leverages a <strong>space–time tradeoff</strong>, using extra memory for bucket 
+    storage to significantly accelerate sorting time on uniformly distributed data.
+   </p>
+   
+   <p>
+  The algorithm proceeds in three main phases:
+  <ul>
+    <li><strong>Range Discovery Phase:</strong>
+      Before distributing elements into buckets, the algorithm performs a linear scan through the array to find the smallest and largest values:
+      \[
+      \mathit{min} = \text{smallest value in the array}
+      \]
+      \[
+      \mathit{max} = \text{largest value in the array}
+      \]
+      These values define the data range of the data and are used to compute the bucket width.
+    </li>
+
+    <li><strong>Distribution Phase:</strong>
+      Let \( n \) be the number of elements and \( k \) the number of buckets.  
+      The bucket width is calculated as:
+      \[
+      \mathit{width} = \frac{max - min}{k} + \varepsilon,
+      \]
+      where \( \varepsilon \) is a small constant (e.g., \(10^{-8}\)) to prevent zero-width buckets.  
+      Then for each element \( arr[i] \), its bucket index is computed as:
+      \[
+      \mathit{idx} = \left\lfloor \frac{arr[i] - min}{width} \right\rfloor,
+      \]
+      and the element is appended to the corresponding bucket.
+    </li>
+
+    <li><strong>Collection Phase:</strong>
+      Each bucket is sorted in place, typically using Insertion Sort, although any sorting algorithm
+	  can be used. The sorted elements are then copied back into the original array in order, starting from index 0.
+    </li>
+  </ul>
+  This three-step approach—first discovering the range, then distributing elements, and finally sorting and collecting—ensures that all elements are placed into their correct positions efficiently.
+</p>
+  
+  <div class="embeddedDemoContainer">
+    <iframe class="embeddedDemo"
+            src="/Algorithms/Content/Demos/Space-Time Tradeoff/Bucket Sort Demo.html"
+            allowfullscreen allow="fullscreen"
+            style="width:100%; height:425px; border:none;">
+    </iframe>
+  </div>
+  
+  <h2>Implementation in Java, C++, Python</h2>
+  <p>
+  The implementations below use <strong>fixed-size 2D arrays</strong> for the buckets, 
+  along with a separate count array to track how many elements are currently in each bucket. 
+  Key variable names used throughout the implementations include:
+</p>
+<ul>
+  <li><code>min</code>: the smallest value in the input array</li>
+  <li><code>max</code>: the largest value in the input array</li>
+  <li><code>width</code>: the computed width of each bucket, based on the range divided by the number of buckets</li>
+  <li><code>idx</code>: the index of the bucket to which an element is assigned</li>
+  <li><code>buckets</code>: a 2D array (or list of lists) where elements are distributed before sorting</li>
+  <li><code>counts</code>: an array that tracks how many elements are currently in each bucket</li>
+  <li><code>pos</code>: an index used to track the current position in the original array while copying 
+  back sorted elements from the buckets</li>
+</ul>
+<p>
+  In Python, the names <code>min</code> and <code>max</code> are avoided to prevent shadowing the built-in functions <code>min()</code> and <code>max()</code>. 
+  Instead, the variables <code>min_val</code> and <code>max_val</code> are used.
+</p>
+
+<div class="tab-group">
+  <div class="tabs" role="tablist">
+    <button id="tab-java" class="tablink active" data-lang="java" role="tab"
+            aria-controls="java" aria-selected="true">Java</button>
+    <button id="tab-cpp" class="tablink" data-lang="cpp" role="tab"
+            aria-controls="c++" aria-selected="true">C++</button>
+    <button id="tab-python" class="tablink" data-lang="python" role="tab"
+            aria-controls="python" aria-selected="true">Python</button>
+  </div>
+
+  <div id="java" class="code-container active" role="tabpanel" aria-labelledby="tab-java">
+<pre><code class="language-java">// Main bucket sort function
+public static void bucketSort(int[] arr, int k) {
+    if (arr.length == 0) return;
+
+    // Find min and max values
+    int min = arr[0], max = arr[0];
+    for (int val : arr) {
+        if (val &lt; min) min = val;
+        if (val &gt; max) max = val;
+    }
+
+    // Compute bucket width
+    double width = (double)(max - min) / k + 1e-8;
+
+    // Create buckets and counts
+    int[][] buckets = new int[k][arr.length];
+    int[] counts = new int[k];
+
+    // Distribute elements into buckets
+    for (int val : arr) {
+        int idx = (int)((val - min) / width);
+        buckets[idx][counts[idx]++] = val;
+    }
+
+    // Sort each bucket and collect results
+    int pos = 0;
+    for (int i = 0; i &lt; k; i++) {
+        insertionSort(buckets[i], counts[i]);
+        for (int j = 0; j &lt; counts[i]; j++) {
+            arr[pos++] = buckets[i][j];
+        }
+    }
+}
+
+// Sorts a single bucket using Insertion Sort
+private static void insertionSort(int[] bucket, int size) {
+    for (int i = 1; i &lt; size; i++) {
+        int key = bucket[i];
+        int j = i - 1;
+        while (j &gt;= 0 &amp;&amp; bucket[j] &gt; key) {
+            bucket[j + 1] = bucket[j];
+            j--;
+        }
+        bucket[j + 1] = key;
+    }
+}</code></pre>
+  </div>
+
+  <div id="cpp" class="code-container active" role="tabpanel" aria-labelledby="tab-cpp">
+<pre><code class="language-cpp">// Main bucket sort function
+void bucketSort(int arr[], int n, int k) {
+    if (n == 0) return;
+
+    // Find min and max values
+    int min = arr[0], max = arr[0];
+    for (int i = 1; i &lt; n; ++i) {
+        if (arr[i] &lt; min) min = arr[i];
+        if (arr[i] &gt; max) max = arr[i];
+    }
+
+    // Compute bucket width
+    double width = (double)(max - min) / k + 1e-8;
+
+    // Allocate bucket array and element counters
+    int** buckets = new int*[k];
+    for (int i = 0; i &lt; k; ++i)
+        buckets[i] = new int[n];
+    int* counts = new int[k]{};
+
+
+    // Distribute elements into buckets
+    for (int i = 0; i &lt; n; ++i) {
+        int idx = (int)((arr[i] - min) / width);
+        buckets[idx][counts[idx]++] = arr[i];
+    }
+
+    // Sort each bucket and copy back to original array
+    int pos = 0;
+    for (int i = 0; i &lt; k; ++i) {
+        insertionSort(buckets[i], counts[i]);
+        for (int j = 0; j &lt; counts[i]; ++j)
+            arr[pos++] = buckets[i][j];
+        delete[] buckets[i];  // Clean up
+    }
+
+    delete[] buckets;
+    delete[] counts;
+}
+
+// Sorts a single bucket using Insertion Sort
+void insertionSort(int bucket[], int size) {
+    for (int i = 1; i &lt; size; ++i) {
+        int key = bucket[i];
+        int j = i - 1;
+        while (j &gt;= 0 &amp;&amp; bucket[j] &gt; key) {
+            bucket[j + 1] = bucket[j];
+            --j;
+        }
+        bucket[j + 1] = key;
+    }
+}</code></pre>
+  </div>
+
+  <div id="python" class="code-container active" role="tabpanel" aria-labelledby="tab-python">
+<pre><code class="language-python"><pre># Main bucket sort function
+def bucketSort(arr, k):
+    if not arr:
+        return
+
+    # Find min and max values
+    min_val = min(arr)
+    max_val = max(arr)
+
+    # Compute bucket width
+    width = (max_val - min_val) / k + 1e-8
+
+    # Create buckets (dynamic lists)
+    buckets = [[] for _ in range(k)]
+
+    # Distribute elements into buckets
+    for val in arr:
+        idx = int((val - min_val) / width)
+        buckets[idx].append(val)
+
+    # Sort each bucket and copy back
+    pos = 0
+    for bucket in buckets:
+        insertion_sort(bucket)
+        for val in bucket:
+            arr[pos] = val
+            pos += 1
+
+# Sorts a single bucket using Insertion Sort
+def insertion_sort(bucket):
+    for i in range(1, len(bucket)):
+        key = bucket[i]
+        j = i - 1
+        while j &gt;= 0 and bucket[j] &gt; key:
+            bucket[j + 1] = bucket[j]
+            j -= 1
+        bucket[j + 1] = key</code></pre>
+  </div>
+</div>
+
+
+<h2>Time/Space Analysis</h2><p>To analyze the performance, assume the algorithm 
+is given an array of size <em>n</em> and distributes the elements into <em>k</em> buckets.</p>
+<p>
+  <strong>Average-Case Time Complexity:</strong><br>
+  Assuming the input is uniformly distributed, on average, 
+  each of the \(k\) buckets receives about \(n/k\) elements.  
+  Sorting each bucket using Insertion Sort takes \(O\left((n/k)^2\right)\), 
+  and across all buckets this totals \(k\times O\left((n/k)^2\right) = O\left(n^2 / k\right)\).  
+  The distribution step takes \(O(n)\), and the collection step is \(O(k + n)\).  
+  Therefore, the total average-case time is \(O\left(n + \frac{n^2}{k} + k\right)\),  
+  which becomes \(O(n)\) when \(k = \Theta(n)\).
+</p>
+
+<p>
+  <strong>Worst-Case Time Complexity:</strong><br>
+  In the worst case, all elements fall into a single bucket, so there is one bucket of size \(n\) 
+  and \(k-1\) empty buckets.  
+  Sorting that bucket with Insertion Sort takes \(O(n^2)\), the distribution step is \(O(n)\), and the collection step is \(O(k)\).  
+  Hence the overall complexity is  
+  \(O(n^2+n+k) = O(n^2 + k) = O(n^2)\), for any reasonable choice of \(k\).
+</p>
+<p>
+  <strong>Space Complexity:</strong><br>
+  In all cases—<strong>Best</strong>, <strong>Average</strong>, and <strong>Worst</strong>—the space complexity 
+  for the <code>Java</code> and <code>C++</code> implementations is \(O(kn)\),  
+  since we allocate <em>k</em> buckets, each capable of holding up to <em>n</em> elements.  
+  Additionally, we use an auxiliary count array of size \(k\), but this does not affect the asymptotic bound.
+  The <code>Python</code> version uses dynamically sized lists for the buckets, resulting in a total space complexity of \(O(n + k)\).
+  As discussed below, any practical implementation of Bucket Sort should aim for \(O(n + k)\) space,
+  which is easily achieved using dynamic arrays or lists.
+</p>
+    <h2>Variations/Improvements</h2>
+<ul>
+<li>
+  <strong>Adaptive Bucket Count</strong>:  
+  Instead of choosing a fixed <em>k</em> in advance, estimate the input’s variance or size and choose  
+  \(k\) based on a heuristic. Two common choices are:
+  <ul>
+    <li>\(k = \lceil \sqrt{n} \rceil\), which is simple and works well when the input is not too skewed, helping avoid large buckets that could require \(O(n^2)\) sorting.</li>
+    <li>\(k \approx \frac{n}{\log n}\), which is often used when the data is randomly distributed and strikes a balance between the overhead of distributing elements and the cost of sorting within each bucket.</li>
+  </ul>
+  <p class="note">
+    These heuristics aim to keep buckets small enough for efficient sorting without creating so many buckets that they introduce unnecessary memory or processing overhead.
+  </p>
+</li>
+
+  <li>
+    <strong>Dynamic Bucket Arrays</strong>:  
+    Use dynamically sized arrays (e.g., 
+	Python lists, <code>ArrayList</code> in Java, and <code>std::vector</code> in C++) instead of fixed-size buckets.  
+    This allows each bucket to grow only as needed, reducing space from \(O(kn)\) to \(O(n + k)\) while simplifying memory management.  
+    <p class="note">
+      This is particularly useful when the distribution of elements is unknown or uneven, and is standard in high-level language implementations.
+    </p>
+  </li>
+
+  <li>
+    <strong>Parallel Bucket Sort</strong>:  
+    Leverage multiple cores by dividing work into independent stages:
+    <ul>
+      <li><strong>Distribution:</strong> one thread computes global \(\min/\max\), then all threads cooperatively place chunks of the array into shared buckets (with synchronization).</li>
+      <li><strong>Bucket Sort:</strong> assign each bucket to a separate thread or task to sort in-place (e.g., Insertion Sort or another small-array algorithm).</li>
+      <li><strong>Collection:</strong> merge the sorted buckets back into the array in parallel or via a simple scan.</li>
+    </ul>
+    <p class="note">
+      This approach achieves near-linear speedup when the number of buckets (and thus threads) matches available cores.
+    </p>
+  </li>
+
+  <li>
+    <strong>Adaptive Bucket Sort</strong>:  
+    Instead of fixing <em>k</em> beforehand, monitor bucket fill levels and  
+    dynamically split any bucket whose size exceeds a threshold, or merge adjacent buckets that are too small.  
+    <p class="note">
+      By keeping bucket sizes balanced even on skewed inputs, this variant can approach \(O(n \log n)\) worst-case while retaining linear-time regions.
+    </p>
+  </li>
+
+<li>
+  <strong>Radix–Bucket Hybrid</strong>:  
+  Process each digit position one at a time, as in radix sort, distributing elements into \(b\) buckets per pass based on the current digit (where \(b\) is the base).  
+  After each pass, collect the buckets and repeat for all \(d\) digit positions.
+  <p class="note">
+    This runs in \(O(d \cdot (n + b))\), where \(d\) is the number of digits and \(b\) the base.  
+    It combines the efficiency of radix sort with bucket-based distribution and can outperform naive bucket or radix sort—especially when buckets are optimized with simpler internal sorts.
+  </p>
+</li>
+</ul>
+    
+    <h2>Helpful Links and Resources</h2>
+    <ul>
+      <li><a href="https://en.wikipedia.org/wiki/Bucket_sort">Wikipedia – Bucket Sort</a></li>
+      <li><a href="https://www.geeksforgeeks.org/bucket-sort/">GeeksforGeeks – Bucket Sort Tutorial</a></li>
+      <li><a href="https://www.programiz.com/dsa/bucket-sort">Programiz Bucket Sort Algorithm </a></li>
+    </ul>
+    
+	
+	<h2>Reading Comprehension Questions</h2>
+<ol>
+  <li>What assumption about the input distribution does Bucket Sort rely on to achieve linear-time behavior?</li>
+  <li>How does the choice of \(k\) (number of buckets) affect both time and space complexity?</li>
+  <li>What role does the constant \epsilon play when computing the bucket width?</li>
+  <li>Why is Insertion Sort often used to sort the contents of each bucket?</li>
+  <li>When does Bucket Sort degrade to \(O(n^2)\) time?</li>
+  <li>What are the tradeoffs between using fixed-size 2D arrays versus dynamically sized arrays for the buckets?</li>
+  <li>Why is the Python implementation able to use only \(O(n + k)\) space, whereas the C++ and Java versions use \(O(kn)\)?</li>
+  <li>Perform Bucket Sort on the array [60, 92, 16, 86, 97, 45, 98, 27, 48, 0, 11, 48] using values of k = 5, 10, and 15. 
+      (You may sort buckets manually without using Insertion Sort.)</li>
+</ol>
+<button id="toggleAnswers" class="show-answer" aria-expanded="false" style="margin-top: 10px;">
+  Show Answers
+</button>
+<div id="answers" class="answer" hidden style="margin-top: 10px;">
+  <ol>
+    <li>
+      <strong>Answer:</strong> Bucket Sort assumes the input values are uniformly distributed across the range, so that each bucket receives roughly the same number of elements.
+    </li>
+    <li>
+      <strong>Answer:</strong> Increasing \(k\) (more buckets) leads to smaller per-bucket sizes, which speeds up bucket sorting but increases memory usage. Decreasing \(k\) saves space but may result in large buckets that slow down sorting.
+    </li>
+    <li>
+      <strong>Answer:</strong> The small constant \epsilon ensures that the bucket width is never exactly zero (which would happen if <code>max == min</code>), preventing division-by-zero and ensuring all elements are assigned a valid bucket.
+    </li>
+    <li>
+      <strong>Answer:</strong> Insertion Sort is efficient for small arrays and requires no extra memory. Since Bucket Sort is designed to keep buckets small (ideally constant size), Insertion Sort performs well and has low overhead.
+    </li>
+    <li>
+      <strong>Answer:</strong> Bucket Sort degrades to \(O(n^2)\) time when all or most elements fall into a single bucket, causing that bucket’s internal sort to dominate the runtime.
+    </li>
+    <li>
+      <strong>Answer:</strong> Fixed-size 2D arrays must allocate space for every possible element in every bucket, using \(O(kn)\) space regardless of actual usage. Dynamically sized arrays grow as needed, using only \(O(n + k)\) space in total.
+    </li>
+    <li>
+      <strong>Answer:</strong> The Python implementation uses lists that grow as needed (i.e., dynamic arrays), so it only allocates memory for the actual number of elements per bucket. In contrast, the C++ and Java versions preallocate \(n\) slots in each of the \(k\) buckets, even if most of them remain unused.
+    </li>
+    <li>
+      <strong>Answer:</strong> Look at the demo or perform this by hand. For each value of \(k\), compute the bucket width and assign elements to buckets. Then sort each bucket (manually or with a simple method), and concatenate the buckets in order to form the final sorted array.
+    </li>
+  </ol>
+</div>
+
+<h2>In-class Activities</h2>
+<ol>
+  <li>Use the visualization tool to explore how different values of \(k\) affect the performance and structure of Bucket Sort.</li>
+  <li>Discuss and compare the best, average, and worst-case time complexities of Bucket Sort. Use skewed and uniform data examples to illustrate how distribution affects bucket balance.</li>
+  <li>Try swapping out Insertion Sort for another sorting algorithm (e.g., Merge Sort or Quick Sort) within each bucket. Discuss how the choice impacts overall performance and memory usage.</li>
+  <li>Compare Bucket Sort with Counting Sort. Discuss when each is appropriate, 
+  particularly in terms of data type (e.g., floating point values, strings, etc.) and memory requirements.</li>
+  <li>Modify a provided fixed-array Bucket Sort implementation to use dynamically allocated or 
+  resizable arrays (e.g., <code>std::vector</code>, <code>ArrayList</code>). 
+  Discuss the effect on code and the time and space complexity of the updated version of the algorithm.</li>
+  <li>Estimate how much space is used by the fixed-array version of Bucket Sort when given \(n = 1000\) and \(k = 10\). Then estimate space for a dynamic-array version assuming well-balanced buckets.</li>
+</ol>
+    
+	<div class="section">
+  <h2>Problems</h2>
+  <ol>
+    <li>
+      Modify a fixed-size Bucket Sort implementation to use dynamically sized buckets 
+	  (e.g., <code>std::vector</code> in C++ or  <code>ArrayList</code>  in Java). 
+      Compare its space usage in practice to the fixed-array version using various input sizes.
+    </li>
+    <li>
+      Design a variant of Bucket Sort that dynamically splits any bucket exceeding a threshold size during distribution. 
+      Prove that its worst-case time complexity remains \(O(n \log n)\).
+    </li>
+    <li>
+      Suppose you have \(n\) integers drawn from the range \([0, m)\). 
+	  How would you choose \(k\) to minimize the average complexity of Bucket Sort?  Justify your choice.
+    </li>
+    <li>
+      Compare the performance and memory usage of Bucket Sort and Counting Sort in the best and worst cases. 
+      Create an input of 12 integers for each scenario to illustrate the differences.
+    </li>
+    <li>
+      Given the array <code>[2, 7, 4, 5, 9, 11, 8, 4, 11, 1, 5, 11]</code>, 
+	  perform Bucket Sort three times using \(k = 3\), \(k = 9\), and \(k = 12\). 
+      For each value of \(k\):
+      <ol type='a'>
+        <li>Compute the bucket width using \(width = (max – min) / k + \epsilon\).</li>
+        <li>Assign each element to a bucket using \(idx = \lfloor(x – min) / width\rfloor\).</li>
+        <li>Show both unsorted and sorted contents of each bucket.</li>
+        <li>Show the final sorted array after concatenation.</li>
+      </ol>
+    </li>
+  </ol>
+</div>
+      
+</body>
+</html>

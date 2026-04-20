@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Selection Sort Demo</title>
+  <script src="/Algorithms/scripts/demoScripts.js"></script>
+  <link rel="stylesheet" href="/Algorithms/css/style.css">
+  <link rel="stylesheet" href="/Algorithms/css/demo.css">
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-DQ5LVZVFDC');
+</script>
+</head>
+<body class = "no-tooltips">
+  <h2>Selection Sort Demo</h2>
+
+  <div id="controls">
+    <label>Size:
+      <input type="number" id="arraySize" min="8" max="20" value="10" size="2">
+    </label>
+    <button id="generate">Random Array</button>
+    <input type="text" id="customArray" placeholder="12,34,56,78" size="40">
+    <button id="useCustom">Create Array</button>
+  </div>
+
+  <div id="buttons" style="margin:10px 0;">
+    <button id="prev" disabled>Previous</button>
+    <button id="next" disabled>Next</button>
+    <button id="play">Play</button>
+    <label for="speed">Speed:</label>
+    <select id="speed">
+      <option value="1">1x</option>
+      <option value="2">2x</option>
+      <option value="4">4x</option>
+    </select>
+  </div>
+
+  <div class="array-container" id="boxes"></div>
+  <div id="step-desc" class="step-comment"></div>
+
+  <div class="legend">
+    <strong>Legend:</strong>
+    <span class="legend-box default"></span> Unsorted
+    <span class="legend-box comparing"></span> Being Compared
+    <span class="legend-box swap"></span> Being Swapped
+    <span class="legend-box sorted"></span> Sorted
+  </div>
+
+  <script>
+    let array = [], steps = [], cur = 0;
+
+    function record(state) {
+      steps.push(JSON.parse(JSON.stringify(state)));
+    }
+
+    function generateSteps(A) {
+      steps = [];
+      for (let i = A.length - 1; i > 0; i--) {
+        let maxIndex = i;
+        for (let j = 0; j < i; j++) {
+          const comment = `Comparing elements at ${j} and ${maxIndex}: ${A[j]} > ${A[maxIndex]} → ` +
+            (A[j] > A[maxIndex] ? `update max index to ${j}` : `max index remains at ${maxIndex}`);
+          record({ A: [...A], i, j, maxIndex, phase: 'compare', desc: comment });
+          if (A[j] > A[maxIndex]) {
+            maxIndex = j;
+          }
+        }
+        if (maxIndex !== i) {
+          record({ A: [...A], i, maxIndex, phase: 'swap', desc: `Swapping element ${A[i]} at index ${i} with element ${A[maxIndex]} at index ${maxIndex}` });
+          [A[i], A[maxIndex]] = [A[maxIndex], A[i]];
+          record({ A: [...A], i, maxIndex, phase: 'swapped', desc: `Swapped elements at index ${i} and ${maxIndex}` });
+        }
+      }
+      record({ A: [...A], phase: 'done', desc: 'Array fully sorted' });
+    }
+
+    function render() {
+      const box = document.getElementById('boxes');
+      box.innerHTML = '';
+      const st = steps[cur];
+      st.A.forEach((val, idx) => {
+        const div = document.createElement('div');
+        div.className = 'element';
+
+        if (st.phase === 'done') {
+          div.classList.add('sorted');
+        } else if (idx === st.i || idx === st.j) {
+          div.classList.add('comparing');
+        }
+        if ((st.phase === 'swap' || st.phase === 'swapped') && (idx === st.i || idx === st.maxIndex)) {
+          div.classList.remove('comparing');
+          div.classList.add('swap');
+        }
+        if (idx === st.maxIndex && st.phase !== 'swapped' && st.phase !== 'swap') {
+          div.style.backgroundColor = '#ff7f7f';
+        }
+        if (st.phase === 'done' || idx > st.i) {
+          div.className = 'element sorted';
+        }
+
+        div.textContent = val;
+
+        const labels = [];
+        if (idx === st.i) labels.push('i');
+        if (idx === st.j) labels.push('j');
+        if (idx === st.maxIndex) labels.push('max');
+        if (labels.length > 0) {
+          div.innerHTML += `<div class="arrow">↑<br>${labels.join(',')}</div>`;
+        }
+
+        box.appendChild(div);
+      });
+
+      document.getElementById('step-desc').textContent = st.desc || '';
+    }
+
+    function initDemo() {
+      let n = parseInt(document.getElementById('arraySize').value) || 10;
+      n = Math.max(8, Math.min(n, 20));
+      document.getElementById('arraySize').value = n;
+      array = Array.from({ length: n }, () => Math.floor(Math.random() * 100));
+      generateSteps([...array]);
+      cur = 0;
+      render();
+    }
+
+    // Expose to demoScripts.js:
+    window.onGenerate = function(isCustom) {
+      if (isCustom) {
+        const inputStr = document.getElementById('customArray').value.trim();
+        const values = inputStr.split(',').map(x => parseInt(x.trim())).filter(x => !isNaN(x));
+        return values.length >= 2 ? values : [];
+      } else {
+        let n = parseInt(document.getElementById('arraySize').value) || 10;
+        n = Math.max(8, Math.min(n, 20));
+        document.getElementById('arraySize').value = n;
+        return Array.from({ length: n }, () => Math.floor(Math.random() * 100));
+      }
+    };
+
+    window.genSteps = function(arr) {
+      // Build steps for the given array
+      steps = [];
+      generateSteps([...arr]);
+      return steps;
+    };
+
+    window.renderStep = function(stepsArr, idx, original) {
+      steps = stepsArr;
+      cur = idx;
+      render();
+    };
+
+    // On initial load, run the demo once
+    initDemo();
+  </script>
+</body>
+</html>

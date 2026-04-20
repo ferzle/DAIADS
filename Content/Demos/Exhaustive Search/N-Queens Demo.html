@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Queens: Exhaustive Search Demo (Steampunk Fixed with Toggle Switch)</title>
+
+  <!-- Unmodified references to your existing CSS -->
+  <script src="../../../scripts/demoScripts.js"></script>
+  <link rel="stylesheet" href="/Algorithms/css/style.css">
+  <link rel="stylesheet" href="/Algorithms/css/demo.css">
+
+  <style>
+    /* ───────────────────────────────────────────────────────────────────────── */
+    /* 1) STEAMPUNK BODY & BACKGROUND TEXTURE */
+    body.steampunk {
+      background-color: #2f2419;
+      /* subtle “riveted leather/metal” dot pattern */
+      background-image:
+        radial-gradient(circle at center, rgba(0, 0, 0, 0.15) 1px, transparent 1px),
+        radial-gradient(circle at center, rgba(0, 0, 0, 0.15) 1px, transparent 1px);
+      background-size: 20px 20px;
+      background-position: 0 0, 10px 10px;
+      color: #e0d7c0;
+      font-family: 'Times New Roman', serif;
+    }
+
+    body.steampunk h2 {
+      color: #d4b483;
+      text-shadow: 1px 1px 0 #3a2a18;
+    }
+
+    /* ───────────────────────────────────────────────────────────────────────── */
+    /* 2) CONTROLS BAR: aged copper/bronze look */
+    body.steampunk .controls {
+      background-color: #3f3024;
+      padding: 10px 12px;
+      border-radius: 6px;
+      border: 2px solid #5a3e1b;
+      box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.4);
+      margin-bottom: 15px;
+    }
+
+    body.steampunk .controls label,
+    body.steampunk .controls select,
+    body.steampunk .controls button {
+      color: #e0d7c0;
+      font-family: 'Times New Roman', serif;
+      font-size: 16px;
+    }
+
+    body.steampunk .controls select {
+      background-color: #5a3e1b;
+      border: 1px solid #3a2a18;
+      padding: 4px 6px;
+      border-radius: 4px;
+      margin: 0 8px;
+    }
+
+    body.steampunk .controls button {
+      background-color: #8b6c42;
+      border: 1px solid #5a3e1b;
+      padding: 6px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      margin-left: 6px;
+      transition: background-color 0.2s ease;
+    }
+
+    body.steampunk .controls button:hover {
+      background-color: #a07b52;
+    }
+
+    /* ───────────────────────────────────────────────────────────────────────── */
+    /* 3) SVG BOARD BORDER: riveted metal plate (outline instead of border) */
+    body.steampunk svg {
+      outline: 4px double #5a3e1b;
+      background-color: #4f3a28;
+      box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.6);
+    }
+
+    /* ───────────────────────────────────────────────────────────────────────── */
+    /* 4) TEXT PANELS (step-counter, q-array, comments, solutions) */
+    body.steampunk #step-count,
+    body.steampunk #q-array,
+    body.steampunk #comment,
+    body.steampunk #solutions {
+      color: #e0d7c0;
+      text-shadow: 1px 1px 0 #3a2a18;
+    }
+
+    body.steampunk #solutions ol {
+      margin-left: 20px;
+    }
+
+    body.steampunk .solution-entry {
+      color: #bfa560;
+    }
+    body.steampunk .solution-entry:hover {
+      color: #e0d7c0;
+    }
+
+    /* Give the board a gap from the Q-array */
+    #board {
+      margin-top: 10px;
+    }
+
+    /* ───────────────────────────────────────────────────────────────────────── */
+    /* 5) TOGGLE-SWITCH CSS */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 26px;
+      vertical-align: middle;
+      margin-right: 10px;
+      margin-left: 30px;
+    }
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0;
+      right: 0; bottom: 0;
+      background-color: #ccc;
+      transition: 0.2s;
+      border-radius: 26px;
+    }
+    .slider::before {
+      position: absolute;
+      content: "";
+      height: 22px;
+      width: 22px;
+      left: 2px;
+      bottom: 2px;
+      background-color: white;
+      transition: 0.2s;
+      border-radius: 50%;
+    }
+    .switch input:checked + .slider {
+      background-color: #5a3e1b;
+    }
+    .switch input:checked + .slider::before {
+      transform: translateX(24px);
+    }
+
+    /* Steampunk-mode tweaks for the slider */
+    body.steampunk .slider {
+      background-color: #444;
+    }
+    body.steampunk .switch input:checked + .slider {
+      background-color: #bfa560;
+    }
+
+    /* ───────────────────────────────────────────────────────────────────────── */
+    /* 6) EXISTING “NORMAL” STYLES (unchanged) */
+    #loading {
+      font-style: italic;
+      margin-bottom: 10px;
+      display: none;
+    }
+    #comment {
+      margin-top: 10px;
+      font-style: italic;
+      min-height: 1.2em;
+    }
+    #step-count {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    #q-array {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+    #solutions {
+      margin-top: 15px;
+      border-top: 1px solid #ccc;
+      padding-top: 10px;
+    }
+    .solution-entry {
+      color: blue;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+    .solution-entry:hover {
+      color: darkblue;
+    }
+    svg {
+      border: 1px solid #333;
+    }
+    .cell {
+      fill: #f0f0f0;
+      stroke: #333;
+      stroke-width: 1;
+    }
+    .cell.dark {
+      fill: #999;
+    }
+    .queen {
+      font-size: 24px;
+      text-anchor: middle;
+      dominant-baseline: central;
+    }
+  </style>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-DQ5LVZVFDC');
+</script>
+</head>
+
+<body class = "no-tooltips">
+  <h2>Queens: Exhaustive Search Demo</h2>
+
+  <div class="controls">
+    <label for="n-select">N:</label>
+    <select id="n-select">
+      <option value="3">3</option>
+      <option value="4" selected>4</option>
+      <option value="5">5</option>
+      <option value="6">6</option>
+      <option value="7">7</option>
+      <option value="8">8</option>
+    </select>
+
+    <button id="prev-btn" disabled>Previous</button>
+    <button id="next-btn">Next</button>
+    <button id="play-btn">Play</button>
+
+    <label for="speed-select">Speed:</label>
+    <select id="speed-select">
+      <option value="1">1×</option>
+      <option value="2">2×</option>
+      <option value="4">4×</option>
+      <option value="8">8×</option>
+      <option value="16">16×</option>
+      <option value="32">32×</option>
+      <option value="64">64×</option>
+      <option value="128">128×</option>
+      <option value="256">256×</option>
+      <option value="512">512×</option>
+      <option value="1024">1024×</option>
+    </select>
+
+    <!-- Toggle switch instead of button -->
+    <label class="switch">
+      <input type="checkbox" id="theme-toggle">
+      <span class="slider"></span>
+    </label>  
+  <span class="switch-label">
+    Steampunk Mode
+  </span>
+  </div>
+
+  <div id="loading">Loading, please wait...</div>
+
+  <div id="step-count"> configurations tried: 0</div>
+  <div id="q-array">Q = [ - ]</div>
+  <svg id="board"></svg>
+  <div id="comment"><br></div>
+  <div id="solutions">
+    <strong>Solutions found:</strong>
+    <ol id="solutions-list"></ol>
+  </div>
+
+  <script>
+    // === VARIABLES & DOM REFERENCES ===
+    const nSelect      = document.getElementById('n-select');
+    let N              = parseInt(nSelect.value, 10);
+    const CELL_SIZE    = 50;
+
+    let allEvents      = [];
+    let stepIndex      = -1;
+    let currentEvent   = null;
+    let playing        = false;
+    let intervalId     = null;
+    let stepCounter    = 0;
+
+    const prevBtn      = document.getElementById('prev-btn');
+    const nextBtn      = document.getElementById('next-btn');
+    const playBtn      = document.getElementById('play-btn');
+    const speedSelect  = document.getElementById('speed-select');
+    const commentDiv   = document.getElementById('comment');
+    const qArrayDiv    = document.getElementById('q-array');
+    const boardSvg     = document.getElementById('board');
+    const solutionsDiv = document.getElementById('solutions');
+    const loadingDiv   = document.getElementById('loading');
+    const stepCountDiv = document.getElementById('step-count');
+    let solutionsList  = document.getElementById('solutions-list');
+    const themeToggle  = document.getElementById('theme-toggle');
+
+    // === HELPERS: DISABLE/ENABLE CONTROLS ===
+    function disableControls() {
+      prevBtn.disabled      = true;
+      nextBtn.disabled      = true;
+      playBtn.disabled      = true;
+      nSelect.disabled      = true;
+      speedSelect.disabled  = true;
+      themeToggle.disabled  = true;
+    }
+    function enableControls() {
+      prevBtn.disabled      = true;  // “Previous” remains disabled at start
+      nextBtn.disabled      = false;
+      playBtn.disabled      = false;
+      nSelect.disabled      = false;
+      speedSelect.disabled  = false;
+      themeToggle.disabled  = false;
+    }
+
+    // === SHOW / HIDE LOADING ===
+    function showLoading() {
+      loadingDiv.style.display = 'block';
+      disableControls();
+      commentDiv.innerHTML  = '';
+      qArrayDiv.textContent = '';
+      drawEmptyBoard();
+      solutionsDiv.innerHTML = '<strong>Solutions found:</strong><ol id="solutions-list"></ol>';
+      solutionsList = document.getElementById('solutions-list');
+      stepCounter = 0;
+      stepCountDiv.textContent = ' configurations tried: 0';
+    }
+    function hideLoading() {
+      loadingDiv.style.display = 'none';
+      enableControls();
+    }
+
+    // === GENERATE ALL EVENTS (BACKTRACK) ===
+    function generateAllEvents() {
+      const events = [];
+      const Q = new Array(N).fill(-1);
+
+      function isValidConfiguration(arr) {
+        for (let i = 0; i < N; i++) {
+          for (let j = i + 1; j < N; j++) {
+            if (
+              arr[i] === arr[j] ||
+              Math.abs(i - j) === Math.abs(arr[i] - arr[j])
+            ) {
+              return false;
+            }
+          }
+        }
+        return true;
+      }
+
+      function recurse(row) {
+        for (let col = 0; col < N; col++) {
+          Q[row] = col;
+          events.push({ type: 'place', Q: Q.slice(), row: row });
+          if (row === N - 1) {
+            const valid = isValidConfiguration(Q);
+            events.push({ type: 'check', Q: Q.slice(), valid: valid });
+          } else {
+            recurse(row + 1);
+          }
+        }
+        Q[row] = -1;
+      }
+
+      recurse(0);
+      return events;
+    }
+
+    // === DRAW EMPTY BOARD (and STEAMPUNK margin) ===
+    function drawEmptyBoard() {
+      boardSvg.innerHTML = '';
+
+      // Calculate board size (without margin)
+      const baseSize = N * CELL_SIZE;
+
+      // If Steampunk is active, add a 1px margin all around:
+      if (document.body.classList.contains('steampunk')) {
+        boardSvg.setAttribute('width', baseSize + 2);
+        boardSvg.setAttribute('height', baseSize + 2);
+
+        // Create a <g> so that everything shifts by (1,1)
+        const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        group.setAttribute('id', 'boardGroup');
+        group.setAttribute('transform', 'translate(1,1)');
+        boardSvg.appendChild(group);
+        _drawCellsAndPlaceholders(group, baseSize);
+      } else {
+        boardSvg.setAttribute('width', baseSize);
+        boardSvg.setAttribute('height', baseSize);
+        _drawCellsAndPlaceholders(boardSvg, baseSize);
+      }
+    }
+
+    // Draw all N×N cells into container (either the <svg> itself or the <g> inside it)
+    function _drawCellsAndPlaceholders(container, baseSize) {
+      for (let r = 0; r < N; r++) {
+        for (let c = 0; c < N; c++) {
+          const rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
+          rect.setAttribute('x', c * CELL_SIZE);
+          rect.setAttribute('y', r * CELL_SIZE);
+          rect.setAttribute('width', CELL_SIZE);
+          rect.setAttribute('height', CELL_SIZE);
+
+          const isDark = (r + c) % 2 === 1;
+
+          if (document.body.classList.contains('steampunk')) {
+            // Use “plate” colors + 2px stroke
+            rect.setAttribute('fill', isDark ? '#7a5830' : '#bfa56a');
+            rect.setAttribute('stroke', '#5a3e1b');
+            rect.setAttribute('stroke-width', '2');
+          } else {
+            // Default theme
+            rect.setAttribute('class', 'cell' + (isDark ? ' dark' : ''));
+          }
+          container.appendChild(rect);
+        }
+      }
+    }
+
+    // === HANDLE A CHECK EVENT (STEP COUNTER + SOLUTIONS LIST) ===
+    function handleCheckEvent(ev) {
+      stepCounter++;
+      stepCountDiv.textContent = ' configurations tried: ' + stepCounter;
+      if (ev.valid) {
+        const arr = ev.Q;
+        const li = document.createElement('li');
+        li.textContent = '[ ' + arr.join(' , ') + ' ]';
+        li.classList.add('solution-entry');
+        li.addEventListener('click', () => {
+          renderSolution(arr);
+        });
+        solutionsList.appendChild(li);
+      }
+    }
+
+    // === RENDER THE CURRENT EVENT (PLACE vs CHECK) ===
+    function renderCurrentEvent() {
+      drawEmptyBoard();
+
+      if (stepIndex < 0 || !currentEvent) {
+        commentDiv.innerHTML = '<br>';
+        qArrayDiv.textContent = 'Q = [ ' + Array(N).fill('-').join(' , ') + ' ]';
+        return;
+      }
+      const ev  = currentEvent;
+      const arr = ev.Q;
+      const displayArr = arr.map(v => (v === -1 ? '-' : v));
+      qArrayDiv.textContent = 'Q = [ ' + displayArr.join(' , ') + ' ]';
+
+      if (ev.type === 'place') {
+        for (let r = 0; r <= ev.row; r++) {
+          const c = arr[r];
+          if (c < 0) continue;
+          drawQueenAt(r, c, 'place', null);
+        }
+        commentDiv.textContent = 'Placed queen at row ' + ev.row + ', column ' + arr[ev.row] + '.';
+      } else if (ev.type === 'check') {
+        const conflictSet = new Set();
+        for (let i = 0; i < N; i++) {
+          for (let j = i + 1; j < N; j++) {
+            if (
+              arr[i] === arr[j] ||
+              Math.abs(i - j) === Math.abs(arr[i] - arr[j])
+            ) {
+              conflictSet.add(i);
+              conflictSet.add(j);
+            }
+          }
+        }
+        for (let r = 0; r < N; r++) {
+          const c = arr[r];
+          if (c < 0) continue;
+          const isConflict = conflictSet.has(r);
+          drawQueenAt(r, c, 'check', !isConflict);
+        }
+        if (ev.valid) {
+          commentDiv.textContent = 'Valid solution: [ ' + arr.join(' , ') + ' ]';
+        } else {
+          commentDiv.textContent = 'Invalid assignment: [ ' + arr.join(' , ') + ' ]';
+        }
+      }
+    }
+
+    // === DRAW A SINGLE QUEEN AT (r,c) ===
+    // type: 'place' or 'check'
+    // isValid: if type==='check', this is boolean; otherwise ignored
+    function drawQueenAt(r, c, type, isValid) {
+      const cx = c * CELL_SIZE + CELL_SIZE / 2;
+      const cy = r * CELL_SIZE + CELL_SIZE / 2;
+      const container = document.body.classList.contains('steampunk')
+        ? document.getElementById('boardGroup')
+        : boardSvg;
+
+      if (!document.body.classList.contains('steampunk')) {
+        const fillColor = (type === 'check')
+          ? (isValid ? '#0a0' : '#c00')
+          : '#888';
+
+        const circle = document.createElementNS('http://www.w3.org/2000/svg','circle');
+        circle.setAttribute('cx', cx);
+        circle.setAttribute('cy', cy);
+        circle.setAttribute('r', CELL_SIZE / 2 - 5);
+        circle.setAttribute('fill', fillColor);
+        container.appendChild(circle);
+
+        const text = document.createElementNS('http://www.w3.org/2000/svg','text');
+        text.setAttribute('x', cx);
+        text.setAttribute('y', cy + 1);
+        text.setAttribute('class', 'queen');
+        text.setAttribute('fill', '#fff');
+        text.textContent = 'Q';
+        container.appendChild(text);
+        return;
+      }
+
+      // STEAMPUNK MODE:
+      const radius = CELL_SIZE / 2 - 5;
+      const behind = document.createElementNS('http://www.w3.org/2000/svg','circle');
+      behind.setAttribute('cx', cx);
+      behind.setAttribute('cy', cy);
+      behind.setAttribute('r', radius + 2);
+      behind.setAttribute('fill', '#3a2a18');
+      behind.setAttribute('opacity', '0.6');
+      container.appendChild(behind);
+
+      const text = document.createElementNS('http://www.w3.org/2000/svg','text');
+      text.setAttribute('x', cx);
+      text.setAttribute('y', cy + 2);
+      text.setAttribute('class', 'queen');
+      text.setAttribute('font-size', radius * 1.4);
+
+      if (type === 'place') {
+        text.setAttribute('fill', '#c9a16b');
+      } else if (type === 'check') {
+        text.setAttribute('fill', isValid ? '#548f65' : '#b3302d');
+      }
+      text.textContent = '♛';
+      container.appendChild(text);
+    }
+
+    // === RENDER A CLICKED SOLUTION (all valid) ===
+    function renderSolution(arr) {
+      drawEmptyBoard();
+      qArrayDiv.textContent = 'Q = [ ' + arr.join(' , ') + ' ]';
+      commentDiv.textContent = 'Displaying selected solution.';
+      for (let r = 0; r < N; r++) {
+        const c = arr[r];
+        if (c < 0) continue;
+        drawQueenAt(r, c, 'check', true);
+      }
+    }
+
+    // === NEXT EVENT ===
+    function nextEvent() {
+      if (stepIndex + 1 >= allEvents.length) {
+        stopPlaying();
+        return;
+      }
+      stepIndex++;
+      const ev = allEvents[stepIndex];
+      currentEvent = ev;
+      if (ev.type === 'check') {
+        handleCheckEvent(ev);
+      }
+      renderCurrentEvent();
+      updateButtons();
+    }
+
+    // === PREVIOUS EVENT ===
+    function prevEvent() {
+      if (stepIndex < 0) return;
+
+      const outgoing = allEvents[stepIndex];
+      if (outgoing.type === 'check') {
+        stepCounter--;
+        stepCountDiv.textContent = ' configurations tried: ' + stepCounter;
+        if (outgoing.valid && solutionsList.lastElementChild) {
+          solutionsList.removeChild(solutionsList.lastElementChild);
+        }
+      }
+
+      stepIndex--;
+      currentEvent = stepIndex >= 0 ? allEvents[stepIndex] : null;
+      renderCurrentEvent();
+      updateButtons();
+    }
+
+    // === PLAY/PAUSE & SPEED ===
+    function stopPlaying() {
+      playing = false;
+      playBtn.textContent = 'Play';
+      clearInterval(intervalId);
+    }
+
+    function playEvents() {
+      if (playing) {
+        stopPlaying();
+      } else {
+        playing = true;
+        playBtn.textContent = 'Pause';
+        startIntervalAtCurrentSpeed();
+      }
+    }
+
+    function startIntervalAtCurrentSpeed() {
+      clearInterval(intervalId);
+      const speed = parseInt(speedSelect.value, 10);
+      let skipFactor = 1;
+      let effectiveRate = speed;
+      if (speed > 32) {
+        skipFactor = speed / 32;
+        effectiveRate = 32;
+      }
+      const delay = 1000 / effectiveRate;
+
+      intervalId = setInterval(() => {
+        for (let i = 0; i < skipFactor; i++) {
+          nextEvent();
+          if (!playing) break;
+        }
+      }, delay);
+    }
+
+    speedSelect.addEventListener('change', () => {
+      if (!playing) return;
+      clearInterval(intervalId);
+      startIntervalAtCurrentSpeed();
+    });
+
+    // === THEME TOGGLE (checkbox “change” instead of button “click”) ===
+    themeToggle.addEventListener('change', () => {
+      if (themeToggle.checked) {
+        document.body.classList.add('steampunk');
+      } else {
+        document.body.classList.remove('steampunk');
+      }
+      // Redraw immediately so margins, cell strokes, and queen colors update
+      drawEmptyBoard();
+      if (currentEvent) renderCurrentEvent();
+    });
+
+    // === CHANGE N HANDLER ===
+    nSelect.addEventListener('change', () => {
+      if (playing) {
+        stopPlaying();
+      }
+      N = parseInt(nSelect.value, 10);
+      showLoading();
+      setTimeout(() => {
+        initDemo();
+        hideLoading();
+      }, 50);
+    });
+
+    // === INITIALIZATION ===
+    function initDemo() {
+      solutionsDiv.innerHTML = '<strong>Solutions found:</strong><ol id="solutions-list"></ol>';
+      solutionsList = document.getElementById('solutions-list');
+      drawEmptyBoard();
+      commentDiv.innerHTML = '<br>';
+      stepCounter = 0;
+      stepCountDiv.textContent = ' configurations tried: 0';
+      qArrayDiv.textContent = 'Q = [ ' + Array(N).fill('-').join(' , ') + ' ]';
+
+      allEvents = generateAllEvents();
+      stepIndex = -1;
+      currentEvent = null;
+      updateButtons();
+    }
+
+    // === UPDATE BUTTON STATES ===
+    function updateButtons() {
+      prevBtn.disabled = stepIndex <= 0;
+      nextBtn.disabled = stepIndex + 1 >= allEvents.length;
+    }
+
+    // === BUTTON LISTENERS ===
+    prevBtn.addEventListener('click', prevEvent);
+    nextBtn.addEventListener('click', nextEvent);
+    playBtn.addEventListener('click', playEvents);
+
+    // === ON FIRST LOAD ===
+    initDemo();
+  </script>
+</body>
+</html>

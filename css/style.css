@@ -1,0 +1,455 @@
+/*
+ * style.css — updated: single‐scroll container + side‐by‐side menu & content
+ */
+
+/* 0) Global reset for all documents */
+html {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  overflow: visible;
+}
+*, *::before, *::after {
+  box-sizing: inherit;
+}
+body {
+  font-family: Verdana, sans-serif;
+  /*font-family: Arial, sans-serif; */ /* Pretty good */
+  /*font-family: 'Inter', sans-serif;*/  /* Pretty good */
+  /*font-family: 'Times New Roman', Times, serif;*/
+  background-color: #f7f9fc;
+  margin: 0;
+  padding: 0 5px;              /* horizontal gutters */
+  overflow: visible;
+}
+
+/* restore a monospace font for all code or pre */
+code,
+pre {
+  font-family: 'Fira Code', 'Source Code Pro', Menlo, Consolas, monospace;
+}
+
+strong {
+  color: #003366;           /* dark navy blue */
+  font-weight: 600;         /* medium weight */
+}
+
+
+/*-------------- header -----------------*/
+header h1,
+header h2,
+header h3 {
+  color: #DDDDDD;
+  margin: 0.2em 0;
+  padding: 0;
+}
+header h3 {
+  font-style: italic;
+}
+header h4 {
+  color: #DDDDDD;
+  margin: 0.2em 0;
+  padding: 0;
+  font-size: .8em;
+}
+
+/*-------------------------------------------------------------*/
+h1 {
+	font-size: 1.5em;
+	margin-bottom: .25em;
+}
+h2 {
+	font-size: 1.25em;
+	margin-bottom: .125em;
+}
+h3 {
+	font-size: 1em;
+  color: #002244; 
+	margin-bottom: .125em;
+}
+h4 {
+	font-size: .85em;
+  color: #003366; 
+	margin-bottom: .125em;
+}
+
+/* 1) Site layout (only on <body class="mainSite">) */
+body.mainSite {
+  display: flex;
+  flex-direction: column;
+  margin: 0 10px;
+  overflow: visible;
+}
+
+body.mainSite #pageWrapper {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  width: 100%;
+  max-width: 1050px;
+  margin: 0 auto;
+  background: #fff;
+}
+
+body.mainSite header {
+  flex: 0 0 auto;
+  padding: 8px 0;
+  background-color: #4F7AA1;
+  color: #fff;
+  text-align: center;
+  /* Reserve space for right-side logo; keep header tall enough for it */
+  padding-right: calc(var(--logo-size, 72px) + 16px);
+  min-height: calc(var(--logo-size, 72px) + 12px);
+}
+
+/* Header logo pinned to upper-right; responsive size */
+:root { --logo-size: 80px; }
+
+#siteLogo {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  left: auto;
+  height: var(--logo-size);
+  width: auto;
+}
+
+/* Shrink logo on smaller screens to avoid overlap */
+@media (max-width: 800px) {
+  :root { --logo-size: 56px; }
+}
+@media (max-width: 500px) {
+  :root { --logo-size: 40px; }
+}
+
+/* 2) Container holds menu + content and is the *only* scrollable area */
+body.mainSite #container {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* 4) Main content area (iframe) */
+body.mainSite #content {
+  flex: 1 1 auto;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* 3) Sidebar menu */
+body.mainSite nav#menu {
+  font-size: 1em; 
+  width: 190px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  background-color: #e2e8f0;
+  padding: 0.5em;
+  overflow-y: auto;
+  word-wrap: break-word;
+}
+
+body.mainSite nav#menu ul {
+  list-style: none;
+  padding-left: 0;
+  margin: 0;
+}
+body.mainSite nav#menu ul ul {
+  display: none;
+  padding-left: 1em;
+}
+body.mainSite nav#menu li {
+  margin-bottom: 0.3em;
+}
+body.mainSite nav#menu li.open > ul {
+  display: block;
+}
+
+body.mainSite nav#menu li span {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4em;
+  width: 100%;
+  cursor: pointer;
+}
+
+body.mainSite nav#menu li ul {
+  width: 100%;
+}
+
+/* base arrow size */
+body.mainSite nav#menu li span::before {
+  content: "▶";
+  display: inline-block;
+  width: 1em;
+  font-size: 1em;
+  text-align: center;
+  line-height: 1;
+  transition: transform 0.15s ease;
+  transform-origin: center;
+  margin-top: 0.15em; /* ⬅️ Add this line */
+}
+
+/* smaller arrows for deeper levels */
+body.mainSite nav#menu ul ul li span::before {
+  font-size: 0.9em;
+}
+body.mainSite nav#menu ul ul ul li span::before {
+  font-size: 0.8em;
+}
+body.mainSite nav#menu ul ul ul ul li span::before {
+  font-size: 0.7em;
+}
+
+body.mainSite nav#menu li.open > span::before {
+  transform: rotate(90deg);
+}
+
+body.mainSite nav#menu li span:hover {
+  background-color: #94a3b8;
+}
+
+body.mainSite nav#menu a {
+  color: #1e293b;
+  text-decoration: none;
+}
+body.mainSite nav#menu a:hover {
+  text-decoration: underline;
+}
+
+nav#menu .menu-controls {
+  margin-bottom: 0.5em;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3em;
+  align-items: stretch;
+}
+
+nav#menu .menu-icon-controls {
+  display: flex;
+  gap: 0.25em;
+  flex: 0 0 auto;
+  justify-content: flex-start;
+}
+
+nav#menu .menu-icon-button {
+  min-width: 1.45rem;
+  width: 1.45rem;
+  height: 1.45rem;
+  border: 1px solid #94a3b8;
+  background: #f8fafc;
+  color: #1e3a5f;
+  border-radius: 4px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.72em;
+  line-height: 1;
+  padding: 0;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+}
+
+nav#menu .menu-icon-button:hover {
+  background-color: #dbeafe;
+  border-color: #64748b;
+  color: #0f172a;
+}
+
+nav#menu .menu-view-toggle {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: stretch;
+  border: 1px solid #94a3b8;
+  background: #f8fafc;
+  border-radius: 10px;
+  padding: 0.14rem;
+  min-height: auto;
+  cursor: pointer;
+  font: inherit;
+  color: #1e293b;
+}
+
+nav#menu .menu-view-toggle .toggle-option {
+  text-align: center;
+  padding: 0.18rem 0.35rem;
+  border-radius: 8px;
+  font-size: 0.78em;
+  font-weight: 600;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+nav#menu .menu-view-toggle.is-grouped .toggle-grouped,
+nav#menu .menu-view-toggle.is-flat .toggle-flat {
+  background: #4f7aa1;
+  color: #ffffff;
+}
+
+nav#menu .menu-view-toggle.is-grouped .toggle-flat,
+nav#menu .menu-view-toggle.is-flat .toggle-grouped {
+  color: #475569;
+}
+
+nav#menu .menu-view-toggle:hover {
+  border-color: #64748b;
+}
+/* Highlight the displayed menu item */
+body.mainSite nav#menu a.active {
+  color: #0366d6;       /* Accent blue */
+  background-color: #cbd5e1;  /* Subtle slate background */
+  border-radius: 2px;
+  padding: 2px 2px;
+}
+
+/*-------------------------------------------------------------*/
+/* 5) Error message below iframe (if shown) */
+body.mainSite #errorMessage {
+  flex: 0 0 auto;
+  align-self: flex-start;
+  margin: 0.5em;
+}
+
+ a {
+  color: #038c7f;
+  text-decoration: none;
+  padding-bottom: 0px;
+}
+a:hover {
+  color: #024f9a;
+  border-color: #559ecb;
+}
+
+/* 8) Error message (global) */
+.error {
+  padding: 1em;
+  background-color: #fdd;
+  color: #900;
+  border: 1px solid #900;
+  border-radius: 5px;
+  margin-top: 1em;
+}
+/*-------------------------------------------------------------*/
+
+/* 7) Problem-link styling (global) */
+a.problem {
+  color: #0366d6;
+  text-decoration: none;
+  padding-bottom: 1px;
+  transition: color 0.2s, border-color 0.2s;
+}
+a.problem:hover {
+  color: #024f9a;
+  border-color: #559ecb;
+}
+/*-------------------------------------------------------------*/
+
+/* 9) Resource-list link styling in main content */
+.resource-list a {
+  color: #038c7f;
+  text-decoration: none;
+  padding-bottom: 0px;
+  /*line-height: 1.75;*/
+}
+.resource-list a:hover {
+  color: #024f9a;
+  border-color: #559ecb;
+}
+
+/*-------------------------------------------------------------*/
+/* ======================
+   Glossary Tooltip CSS
+   ====================== */
+
+/* 1) Term styling */
+.glossary-term {
+  position: relative;
+  cursor: help;
+  /* (choose whatever color/decoration you like) */
+  color: #555555;
+  /*text-decoration: underline dotted 1px;*/ 
+  /*text-underline-offset: 2px;*/
+}
+
+/* 2) Tooltip container */
+.glossary-term .tooltip-content {
+  /* ── FORCE “content-box” so that max-width:50vw only limits the content area ── */
+  box-sizing: content-box !important;
+
+  /* Hidden until hover */
+  /*display: none;*/
+  position: absolute;
+  top: 0; /* adjust if you’d rather pop it slightly lower (e.g. top: 110%) */
+
+  background: #ffffff;
+  border: 1px solid #ccc;
+  padding: 0.5rem;
+  border-radius: 4px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.10);
+
+  /* ── SHRINK-WRAP then expand up to 50vw of CONTENT ── */
+  display: inline-block;       /* auto-size to content */
+  width: 50vw !important;
+
+  /* Ensure normal wrapping at spaces, and break very long words if needed */
+  white-space: normal !important;
+  overflow-wrap: break-word !important;
+  word-break: break-word;
+
+  font-size: 0.9rem;
+  line-height: 1.4;
+
+  opacity: 0;
+  pointer-events: none;        /* so hovering the tooltip itself does NOT keep it open */
+  transition: opacity 150ms ease-in-out;
+  z-index: 999;                /* relative to iframe—parent’s menu lives outside */
+}
+
+/* 3) Show only when hovering the term itself */
+.glossary-term:hover .tooltip-content {
+  display: inline-block;
+  opacity: 1;
+}
+
+/* 5) If you’re still using “.to-right” / “.to-left” classes for dynamic positioning: */
+
+.glossary-term .tooltip-content.to-right {
+  left: 100%;              /* immediately to the right of the term */
+  margin-left: 0.4rem;     /* small gap */
+}
+.glossary-term .tooltip-content.to-left {
+  right: 100%;             /* immediately to the left of the term */
+  margin-right: 0.4rem;    /* small gap */
+}
+/* 5a) Centered tooltip (for terms in the middle third of the viewport) */
+.glossary-term .tooltip-content.to-center {
+  position: fixed;
+  right: auto;
+  transform: none; 
+}
+
+/* when we add the .highlighted class, change bg/fg */
+.glossary-term.highlighted {
+  background-color: #e2e8f0; /* #cbd5e1 A little darker if I change my mind */
+  color: #333;                  /* darken text so it’s still readable */
+  border-radius: 2px;           /* subtle rounding */
+  transition: background-color 0.2s ease;
+}
+/*-----------------------------------------------------------------------*/
+/* Related to alphabet menu for glossary page. */
+#alpha-nav-overlay {
+  position: fixed;
+  bottom: 0;              /* stick to window bottom */
+  left: 50%;              /* center based on pageWrapper’s midpoint */
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 1050px;      /* same as #pageWrapper */
+  box-sizing: border-box;
+  padding: 0.5rem 0 0.5rem 190px; /* indent by your 190px sidebar */
+  background: #fff;
+  text-align: center;
+  box-shadow: 0 -2px 4px rgba(0,0,0,0.1);
+  z-index: 1000;
+}
+
+/*-----------------------------------------------------------------------*/

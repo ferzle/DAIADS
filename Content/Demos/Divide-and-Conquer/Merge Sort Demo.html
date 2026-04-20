@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="../../../scripts/demoScripts.js"></script>
+  <link rel="stylesheet" href="../../../css/style.css">
+  <link rel="stylesheet" href="../../../css/demo.css">
+  <title>Merge Sort Demo</title>
+  <style>
+    .array-container { margin-bottom: 10px; }
+    .left { background-color: #ffcc00; }
+    .right { background-color: #1f77b4; }
+    .compare { background: #f99; }
+    .merged { background: #9f9; }
+	.element { margin: 6px; }
+    .active-subarray { background-color: #FF9C00; border-radius: 4px; padding: 4px; gap: 0px; }
+	
+#aux-container > .element:first-child {
+  border-left-width: 9px;
+}
+
+    #aux-label, #main-label, #other-label { font-weight: bold; margin-bottom: 8px; }
+    #aux-container { margin-bottom: 20px; }
+    #main-label { margin-top: 20px; }
+    #subarrays { margin-bottom: 20px; }
+    #description { margin-top: 10px; font-style: italic; }
+    #buttons { margin: 10px 0; }
+    #play { margin-left: 20px; }
+    #buttons button, #buttons select, #buttons label { margin-right: 8px; }
+	.element-wrapper {
+	  display: flex;
+	  flex-direction: column;
+    flex: 1 1 auto;
+	  align-items: center;
+	  gap: 2px;               /* space between value and index */
+	}
+	.element-index {
+	  font-size: 1em;
+	 
+	}
+	
+	/* Aux-array cells coming from the left subarray */
+.leftAux {
+  border-color: #ffcc00;  /* gold */
+  box-shadow: inset 0 0 0 1px #333;
+}
+
+/* Aux-array cells coming from the right subarray */
+.rightAux {
+  border-color: #1f77b4;  /* steel blue */
+  box-shadow: inset 0 0 0 1px #333;
+}
+
+#aux-container {
+  position: relative;    /* so the arrow can be absolutely positioned within */
+}
+#aux-arrow2 {
+  position: absolute;
+  font-size: 18px;
+  color: #333;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+/* persistent arrow element */
+#aux-arrow {
+  position: absolute;
+  font-size: 18px;
+  color: #333;
+  pointer-events: none;
+  visibility: hidden;    /* start hidden until first compare */
+}
+
+.tight{
+	gap: 0;
+}
+	.auxElem{
+	margin:0;
+	border-width: 13px;
+  box-sizing: content-box;
+	}
+	
+	.hidden{
+		background-color:transparent;
+		border-color:transparent;
+		color:transparent
+	}
+	
+.array-container .element-wrapper {
+      /* stack vertically as you already have */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-right: 4px;
+    
+      /* NEW: ideal width = 40px, no grow, can shrink */
+      flex: 0 1 40px;
+      box-sizing: border-box;   /* so padding/margin don’t bust the math */
+    }
+    .array-container .element-wrapper .element {
+      width: 100%;
+      aspect-ratio: 1 / 1;     /* keep it square */
+      height: auto;
+    }
+  </style>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-DQ5LVZVFDC');
+</script>
+</head>
+<body class="no-tooltips">
+  <h1>Merge Sort Demo</h1>
+  <div id="controls">
+    <label>Size:<input type="number" id="size" min="5" max="20" value="16" /></label>
+    <button id="generate">Random Array</button>
+    <input type="text" id="customArray" placeholder="12,6,10,5,3,8,1,20,13" size="30" />
+    <button id="useCustom">Use Custom Array</button>
+  </div>
+  <div id="buttons">
+    <button id="prev" disabled>Previous</button>
+    <button id="next" disabled>Next</button>
+    <button id="play">Play</button>
+   <label for="speed">Speed:</label>
+    <select id="speed">
+      <option value="1">1x</option>
+      <option value="2">2x</option>
+      <option value="4">4x</option>
+    </select>
+  </div>
+  <div id="legend" class="legend">
+    <strong>Legend:</strong>
+    <span><span class="legend-box compare"></span> Compare</span>
+    <span><span class="legend-box merged"></span> Placed</span>
+    <span><span class="legend-box left"></span> Left subarray</span>
+    <span><span class="legend-box right"></span> Right subarray</span>
+    <span><span class="legend-box active-subarray"></span> Active subarray</span>
+  </div>
+  <br><strong>Sorting Array:</strong>
+  <div class="array-container" id="visualization"></div>
+  
+  <br><strong>Auxiliary Array:</strong>
+  <div id="aux-container" class="array-container" style="height: 80px;"></div>
+  <div id="aux-arrow"><b>↑<br>i</b></div>
+  <div id="aux-arrow2"><b>↑<br>j</b></div>
+  <br><strong>Conceptual Arrays (these don't really exist):</strong>
+  <div id="subarrays"></div>
+  <div id="description">Press "Next" to begin.</div>
+
+  <script>
+    window.onGenerate = function(isCustom) {
+      if (isCustom) {
+        return document.getElementById('customArray').value
+          .split(',').map(x => parseInt(x.trim(), 10));
+      }
+      const n = parseInt(document.getElementById('size').value, 10);
+      return Array.from({ length: n }, () => Math.floor(Math.random() * 90) + 10);
+    };
+	
+    window.genSteps = function(arr) {
+      let a = arr.slice(), records = [];
+      const record = (type, meta={}) => records.push({ a: a.slice(), type, ...meta });
+      function mergeSort(l,r) {
+        if(l>=r) return;
+        const m = Math.floor((l+r)/2);
+        record('split',{l,m,r}); 
+		record('recurseLeft',{l,m,r}); 
+		mergeSort(l,m);
+        record('recurseRight',{l,m,r}); 
+		mergeSort(m+1,r);
+      
+		merge(l,m,r);
+        record('mergeEnd',{l,m,r}); 
+		
+      }
+	  function merge(l, m, r) {
+		  // 1) grab the two runs out of A and copy them to “aux”
+		  const L = a.slice(l, m + 1);
+		  const R = a.slice(m + 1, r + 1);
+		   record('copyToAux', { l, m, r });
+		 
+
+		  // 2) indicate we’re merging back INTO the main array
+		  record('mergeStep', { l, m, r });
+
+		  // 3) merge from L/R back into A
+		  let i = 0, j = 0, k = l;
+		  while (i < L.length && j < R.length) {
+			const idxL = l + i;
+			const idxR = m + 1 + j;
+			record('compare', { idxL, idxR, valueL: L[i], valueR: R[j], l, m, r });
+			if(L[i] <= R[j]) {
+			  const v= L[i++];
+			  a[k] = v;
+			  record('placedFromCompare-l', { k, newValue: v, l, m, r });
+			} else {
+			  const v = R[j++];
+			  a[k] = v;
+			  record('placedFromCompare-r', { k, newValue: v, l, m, r });
+			}
+			
+			k++;
+		  }
+		  // finish any leftovers
+		  while (i < L.length) {
+		  const idxL = l + i;
+			const v = L[i++];
+			a[k] = v;
+			record('placeLeftRemainder', { k,idxL, newValue: v, l, m, r });
+			k++;
+		  }
+		  while (j < R.length) {
+			const v = R[j++];
+			a[k] = v;
+			record('placeRightRemainder', { k, newValue: v, l, m, r });
+			k++;
+		  }
+
+		  // 4) done merging this segment
+		 // record('copyToAux', { l, r });
+		}
+
+      record('init'); mergeSort(0,arr.length-1); record('done'); return records;
+    };
+    window.setupAux = function(original,n){
+      const aux=document.getElementById('aux-container');
+	  aux.innerHTML='';
+	  aux.classList.add('tight');
+      original.forEach(v=>{const el=document.createElement('div');
+	  el.className='element';
+	  el.textContent=v;aux.appendChild(el);
+	  el.classList.add('auxElem');
+	  el.classList.add('hidden');
+	  });
+    
+  const oldBox = aux.querySelector('.aux-segment-box');
+  if (oldBox) {
+    // unwrap the cells back into aux
+    const parent = oldBox.parentNode;
+    while (oldBox.firstChild) {
+      parent.insertBefore(oldBox.firstChild, oldBox);
+    }
+    parent.removeChild(oldBox);
+  }
+  
+}
+    window.renderStep = function(steps,idx,original){
+      const main=document.getElementById('visualization'),
+	  aux=document.getElementById('aux-container'),
+	  sub=document.getElementById('subarrays'),
+	  desc=document.getElementById('description');
+	  arrow = document.getElementById('aux-arrow');
+	  arrow2= document.getElementById('aux-arrow2');	  
+      main.innerHTML=''; 
+	  sub.innerHTML=''; 
+	  window.setupAux(original,original.length);
+	  const auxRect   = aux.getBoundingClientRect();
+const style     = getComputedStyle(aux);
+const gap       = parseInt(style.columnGap || style.gap, 10) || 0;
+const cellWidth = aux.children[0].getBoundingClientRect().width;
+
+	  
+	  
+Array.from(aux.children).forEach(w => {
+  w.classList.remove('leftAux','rightAux');
+});
+
+	  Array.from(aux.children).forEach(el =>el.classList.remove('merged'));
+      steps.slice(0,idx+1).forEach(st=>{
+	  if(st.type==='copyToAux')
+	  {for(let k=st.l;k<=st.r;k++)
+	  {
+	  aux.children[k].textContent=st.a[k];
+	  }}});
+      Array.from(aux.children).forEach(el=>el.classList.remove('compare'));
+
+
+		  if(!steps.length) return; const st=steps[idx];
+		  // 1) Build up a set of “still highlighted” indices
+	const placedSet = new Set();
+	for (let j = 0; j <= idx; j++) {
+	  const s = steps[j];
+	  if (s.type === 'copyToAux'||s.type ==='mergeEnd') {
+		placedSet.clear();          // clear highlights on each copy
+	  }
+	  if (s.type === 'placedFromCompare-l' || s.type === 'placedFromCompare-r' ||s.type === 'placeRightRemainder'||s.type === 'placeLeftRemainder') {
+	 
+		placedSet.add(s.k);         // remember any placed index
+	  }
+	}
+
+	// 2) Now redraw the main array, highlighting only those indices
+	st.a.forEach((v, i) => {
+	  const wrapper = document.createElement('div');
+	  wrapper.className = 'element-wrapper';
+
+	  const c = document.createElement('div');
+	  c.className = 'element';
+	  c.textContent = v;
+	  if (placedSet.has(i)) {
+		c.classList.add('merged');
+	  }
+	  wrapper.appendChild(c);
+
+	  const idxLabel = document.createElement('div');
+	  idxLabel.className = 'element-index';
+	  idxLabel.textContent = i;
+	  wrapper.appendChild(idxLabel);
+
+	  main.appendChild(wrapper);
+	});
+
+
+      const active=[];
+      steps.slice(0,idx+1).forEach(s=>{if(s.type==='split')active.push(s);
+	  if(s.type==='mergeEnd')
+	  active.pop();});
+      active.forEach(sp=>{
+        const {l,m,r}=sp;
+        const row=document.createElement('div');
+		row.className='array-container';
+        for(let p=0;p<l;p++){
+		const ph=document.createElement('div');
+		ph.className='element';
+		ph.style.visibility='hidden';
+		row.appendChild(ph);}        
+        const leftWrap=document.createElement('div');leftWrap.className='array-container';
+		
+        // highlight only the current subarray and the aux array during the merge step
+		/*		if (st.type === 'mergeStep'||st.type === 'compare'||st.type === 'copyToAux'||st.type === 'placed') {
+		  for (let k = st.l; k <= st.r; k++) {
+			aux.children[k].classList.remove('hidden');
+		  }
+		}*/
+		// first clear old classes
+
+
+// then for each index in [l..r], un-hide and color its border
+arrow.style.visibility  = 'hidden';
+arrow2.style.visibility = 'hidden';
+if (['mergeStep','compare','copyToAux','placedFromCompare-l','placedFromCompare-r','placeLeftRemainder','placeRightRemainder'].includes(st.type)) {
+if(st.type != 'mergeStep' && st.type != 'copyToAux'){
+
+arrow.style.visibility = 'visible';
+arrow2.style.visibility = 'visible';
+}
+
+  for (let k = st.l; k <= st.r; k++) {
+  
+    const cell = aux.children[k];
+    cell.classList.remove('hidden');
+    // pick border color based on midpoint st.m
+    if (k <= st.m) cell.classList.add('leftAux');
+    else           cell.classList.add('rightAux');
+  }
+}
+
+
+        if(st.l===l && st.m===m && ['recurseLeft','mergeStep','compare','placedFromCompare-l','placedFromCompare-r','placeLeftRemainder','placeRightRemainder','mergeEnd'].includes(st.type)) 
+		leftWrap.classList.add('active-subarray');
+        for(let i=l;i<=m;i++){
+		const ce=document.createElement('div');
+		ce.className='element left';
+		ce.textContent=st.a[i];leftWrap.appendChild(ce);
+		}
+		row.appendChild(leftWrap);
+        const rightWrap=document.createElement('div');rightWrap.className='array-container';
+        if(st.l===l && st.m===m && ['recurseRight','mergeStep','compare','placedFromCompare-l','placedFromCompare-r','placeLeftRemainder','placeRightRemainder','mergeEnd'].includes(st.type)) rightWrap.classList.add('active-subarray');
+        for(let i=m+1;i<=r;i++){const ce=document.createElement('div');ce.className='element right';ce.textContent=st.a[i];rightWrap.appendChild(ce);}row.appendChild(rightWrap);
+        sub.appendChild(row);
+      });
+	  
+      switch (st.type) {
+  case 'init':
+    desc.textContent = 'Initial array.';
+    break;
+
+  case 'split':
+    desc.textContent = `Split [${st.l},${st.m}] & [${st.m + 1},${st.r}]`;
+    break;
+
+  case 'recurseLeft':
+	  if(st.m-st.l>0) {
+		desc.textContent = `Sorting left [${st.l},${st.m}]`;
+	  } else {
+		  desc.textContent = `Base case. Already sorted`;
+	  }
+    break;
+
+  case 'recurseRight':
+	  if(st.r-(st.m+1)>0) {
+		desc.textContent = `Sorting right [${st.m + 1},${st.r}]`;
+	  } else {
+		desc.textContent = `Base case. Already sorted.`;
+	  }
+    break;
+
+  case 'mergeStep':
+    desc.textContent = `Merging [${st.l},${st.m}] and [${st.m + 1},${st.r}]`;
+    break;
+
+  case 'compare': {
+  // 1) highlight the two slots
+  aux.children[st.idxL].classList.add('compare');
+  aux.children[st.idxR].classList.add('compare');
+  desc.textContent = `Compare ${st.valueL} & ${st.valueR}`;
+
+  // 2) compute container metrics once
+  const auxRect = aux.getBoundingClientRect();
+
+  // ▶ arrow 1 under st.idxL
+  const cell1   = aux.children[st.idxL].getBoundingClientRect();
+  const left1   = cell1.left + cell1.width/2 - auxRect.left + 10;
+  const top1    = cell1.bottom - auxRect.top  + 350;
+  arrow.style.left       = `${left1}px`;
+  arrow.style.top        = `${top1}px`;
+  arrow.style.visibility = 'visible';
+
+  // ▶ arrow2 under st.idxR
+  const cell2   = aux.children[st.idxR].getBoundingClientRect();
+  const left2   = cell2.left + cell2.width/2 - auxRect.left + 10;
+  const top2    = cell2.bottom - auxRect.top  + 350;
+  arrow2.style.left       = `${left2}px`;
+  arrow2.style.top        = `${top2}px`;
+  arrow2.style.visibility = 'visible';
+
+  break;
+}
+
+
+
+  case 'placedFromCompare-l':
+    desc.textContent = `Placed ${st.newValue} at index ${st.k}, i will increment`;
+    break;
+  case 'placedFromCompare-r':
+    desc.textContent = `Placed ${st.newValue} at index ${st.k}, j will increment`;
+    break;
+case 'placeLeftRemainder': {
+ const auxRect  = aux.getBoundingClientRect();
+const cell     = aux.children[st.idxL];
+
+    const cellRect = cell.getBoundingClientRect();
+    const left = cellRect.left + cellRect.width/2 - auxRect.left +10;
+    const top  = cellRect.bottom - auxRect.top + 350;
+
+    arrow.style.left       = `${left}px`;
+    arrow.style.top        = `${top}px`;
+    arrow.style.visibility = 'visible';
+
+    desc.textContent = `No right subarray elements remaining. Placed ${st.newValue} at index ${st.k}`;
+    break;
+}
+
+
+
+
+  case 'placeRightRemainder': {
+    const auxRect  = aux.getBoundingClientRect();
+    const cell     = aux.children[st.k];
+    const cellRect = cell.getBoundingClientRect();
+    const left = cellRect.left + cellRect.width/2 - auxRect.left +10;
+    const top  = cellRect.bottom - auxRect.top + 350;
+
+    arrow2.style.left       = `${left}px`;
+    arrow2.style.top        = `${top}px`;
+    arrow2.style.visibility = 'visible';
+
+    desc.textContent = `No left subarray elements remaining. Placed ${st.newValue} at index ${st.k}`;
+    break;
+  }
+
+
+  case 'mergeEnd':
+	 arrow.style.visibility = 'hidden';
+	  arrow2.style.visibility = 'hidden';
+    desc.textContent = `Merged segment [${st.l},${st.m}] and [${st.m + 1},${st.r}]`;
+    break;
+
+  case 'copyToAux': 
+  // write the values
+  for (let k = st.l; k <= st.r; k++) {
+    aux.children[k].textContent = st.a[k];
+  }
+  
+    desc.textContent = `Copied [${st.l},${st.r}] to auxiliary`;
+    break;
+
+  case 'done':
+    desc.textContent = 'Array fully sorted!';
+    break;
+
+  default:
+    // no-op
+    break;
+}
+
+    };
+  </script>
+ 
+</body>
+</html>

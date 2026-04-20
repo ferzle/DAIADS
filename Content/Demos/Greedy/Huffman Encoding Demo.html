@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Huffman Encoding Visualization</title>
+  <script src="/Algorithms/scripts/demoScripts.js"></script>
+  <link rel="stylesheet" href="/Algorithms/css/style.css">
+  <link rel="stylesheet" href="/Algorithms/css/demo.css">
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-DQ5LVZVFDC');
+</script>
+</head>
+<style>
+  #output {
+    padding: 1em;
+    border: none;
+    font-family: monospace;
+    min-height: 60px;
+    white-space: pre-wrap;
+    width: 100%;        /* fill container, avoid horizontal overflow in iframe */
+    overflow: auto;     /* allow scrolling when content is long */
+    max-height: 32vh;   /* prevent the text from crowding out the graph */
+  }
+
+  button {
+    margin: 0.5em;
+    padding: 0.5em 1em;
+  }
+  svg {
+    width: 100%;
+  }
+  .node text {
+    font-size: 12px;
+    text-anchor: middle;
+  }
+  .node circle {
+    fill: #cce3ff;
+    stroke: #333;
+  }
+  .node.merging circle {
+    fill: #b2f2bb;
+  }
+  .edge {
+    stroke: #888;
+  }
+  .label {
+    font-size: 12px;
+    fill: black;
+    text-anchor: middle;
+  }
+  #queue-container {
+    margin-top: 1em;
+    padding: 1em;
+    /* Let it participate in normal flow so iframe height matches content */
+    overflow-x: auto;
+    width: 100%;
+  }
+
+  /* New Play/Pause + Speed styles */
+  #play   { margin-left: 0.5em; }
+  #speed  { margin-left: 0.25em; }
+  #scaleVal { margin-left: 0.25em; }
+  #zoomOut, #zoomIn { margin-left: 0.25em; padding: 0.2em 0.5em; }
+  #allowFlips { margin-left: 0.75em; }
+</style>
+<body class = "no-tooltips">
+
+<h2>Huffman Encoding Demo</h2>
+
+<p>Enter text to encode:</p>
+<input type="text" id="inputText"
+       value="This is a sample string. Change if you want to."
+       style="width:400px;" />
+<button onclick="startVisualization()">Start</button>
+<br>
+<button onclick="prevStep()">Previous</button>
+<button onclick="nextStep()">Next</button>
+
+<!-- Added Play/Pause button and Speed dropdown below: -->
+<button id="play">Play</button>
+<label for="speed">Speed:</label>
+<select id="speed">
+  <option value="1">1×</option>
+  <option value="2">2×</option>
+  <option value="4">4×</option>
+  <option value="8">8×</option>
+  <option value="16">16×</option>
+</select>
+&nbsp; &nbsp; 
+<label>Scale:</label>
+<span id="scaleVal">1.0×</span>
+<button id="zoomOut" title="Zoom out">−</button>
+<button id="zoomIn" title="Zoom in">+</button>
+<button id="toggleDetails" title="Show/Hide details">Hide Details</button>
+<label for="allowFlips" id="allowFlipsLabel">Allow flips</label>
+<input type="checkbox" id="allowFlips" />
+
+<div id="output">Click "Start" to begin.</div>
+
+<h3>Priority Queue (Tree Forest)</h3>
+<div id="queue-container">
+  <svg id="queue-svg" style="width: 100%;"></svg>
+</div>
+
+<script>
+  let steps = [], queues = [], highlight = [], stepIndex = 0;
+  let highlightId = [], encodingTables = [];
+  let nodeIdCounter = 0;
+  let playing = false, intervalId = null;
+  let vizScale = 1;
+  let lastInputText = "";
+  let interactiveRoot = null;
+  let flipEnabledForThisView = false;
+
+  const svgQueue = document.getElementById("queue-svg");
+  const output = document.getElementById("output");
+
+  function countFrequencies(str) {
+    const freq = {};
+    for (let ch of str) freq[ch] = (freq[ch] || 0) + 1;
+    return freq;
+  }
+
+  function deepCopy(obj) {
+    return JSON.parse(JSON.stringify(obj));
+  }
+
+  function formatNode(node) {
+    return node.char !== null ? `${node.char}|${node.freq}` : `|${node.freq}`;
+  }
+
+  // Layout a binary tree with adjustable horizontal spacing (minSpacing)
+  // Returns the total width occupied by this subtree, including the gap between children.
+  function layoutTree(node, x, y, levelGap = 60, minSpacing = 40) {
+    if (!node) return 0;
+    const hasLeft = !!node.left;
+    const hasRight = !!node.right;
+
+    const leftWidth  = hasLeft  ? layoutTree(node.left,  x, y + levelGap, levelGap, minSpacing) : 0;
+    const rightStart = x + leftWidth + (hasLeft && hasRight ? minSpacing : 0);
+    const rightWidth = hasRight ? layoutTree(node.right, rightStart, y + levelGap, levelGap, minSpacing) : 0;
+
+    // Include the inter-child gap in reported width so ancestors position siblings correctly
+    let width;
+    if (hasLeft && hasRight) {
+      width = Math.max(minSpacing, leftWidth + minSpacing + rightWidth);
+    } else if (hasLeft || hasRight) {
+      width = Math.max(minSpacing, leftWidth + rightWidth);
+    } else {
+      width = minSpacing; // leaf
+    }
+
+    node._x = x + width / 2;
+    node._y = y;
+    return width;
+  }
+
+  function drawLine(svg, x1, y1, x2, y2, label = "") {
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.setAttribute("x1", x1);
+    line.setAttribute("y1", y1);
+    line.setAttribute("x2", x2);
+    line.setAttribute("y2", y2);
+    line.setAttribute("class", "edge");
+    svg.appendChild(line);
+
+    if (label) {
+      const midX = (x1 + x2) / 2;
+      const midY = (y1 + y2) / 2;
+      const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+      text.setAttribute("x", midX);
+      text.setAttribute("y", midY - 5);
+      text.setAttribute("class", "label");
+      text.textContent = label;
+      svg.appendChild(text);
+    }
+  }
+
+  function drawEdges(svg, node, labelMode = false) {
+    if (node.left) {
+      drawLine(svg, node._x, node._y, node.left._x, node.left._y,
+               labelMode ? "0" : "");
+      drawEdges(svg, node.left, labelMode);
+    }
+    if (node.right) {
+      drawLine(svg, node._x, node._y, node.right._x, node.right._y,
+               labelMode ? "1" : "");
+      drawEdges(svg, node.right, labelMode);
+    }
+  }
+
+  function drawNode(svg, node, isMerging = false, isRoot = false) {
+    const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    g.setAttribute("transform", `translate(${node._x},${node._y})`);
+    g.setAttribute("class", `node${isMerging ? " merging" : ""}`);
+
+    const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    circle.setAttribute("r", 15);
+    if (isRoot) {
+      circle.setAttribute("stroke", "#000");
+      circle.setAttribute("stroke-width", "3");
+    }
+    g.appendChild(circle);
+
+    const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    // Nudge text upward a bit for better visual centering
+    text.setAttribute("dy", "3");
+    text.textContent = formatNode(node);
+    // Adjust font size for larger frequency values to reduce overflow
+    // Use inline style so it overrides the stylesheet rule for .node text
+    try {
+      const freq = Number(node.freq);
+      const digits = isFinite(freq) ? String(Math.floor(Math.abs(freq))).length : 1;
+      let fs = 11;
+      if (digits >= 4) fs = 7; // 1000+
+      else if (digits >= 3) fs = 9; // 100-999
+      text.style.fontSize = fs + "px";
+    } catch (e) {
+      // Fallback to CSS size if anything unexpected
+    }
+    if (isRoot) {
+      text.setAttribute("font-weight", "bold");
+    }
+    g.appendChild(text);
+
+    // If flip interaction is active, enable click to flip this node's subtree
+    if (flipEnabledForThisView) {
+      g.style.cursor = 'pointer';
+      g.addEventListener('click', (evt) => {
+        evt.stopPropagation();
+        flipSubtree(node);
+        redrawCurrentWithInteractiveSummary();
+      });
+    }
+
+    svg.appendChild(g);
+  }
+
+  function drawAllNodes(svg, node, isMerging = false, isRoot = false) {
+    if (!node) return;
+    drawNode(svg, node, isMerging, isRoot);
+    drawAllNodes(svg, node.left, isMerging, false);
+    drawAllNodes(svg, node.right, isMerging, false);
+  }
+
+  function drawQueue(queue, highlightCount = 0, idToHighlight = null, labelEdges = false) {
+    // Defensive: handle empty queue
+    const depths = queue.map(getTreeDepth);
+    const maxDepth = depths.length ? Math.max(...depths) : 0;
+    // We'll set the final SVG height after computing scale; clear contents now and prepare a scaled group
+    svgQueue.innerHTML = "";
+    const gRoot = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    gRoot.setAttribute("id", "queue-root");
+    gRoot.setAttribute("transform", `scale(${vizScale})`);
+    svgQueue.appendChild(gRoot);
+
+    // Adaptive horizontal spacing capped to 600px total width when needed.
+    // Maintain at least ~10px edge-to-edge separation between circles (no overlap).
+    const nodeRadius = 15;                // circle radius used in drawNode
+    const minEdgeGapPx = 10;              // minimum edge-to-edge gap between sibling circles
+    const minSpacingFloor = Math.ceil(nodeRadius + minEdgeGapPx / 2); // ensures center gap >= 2*radius + minEdgeGap
+    const baseSpacing = 40;               // previous default unit spacing
+    const baseGapBetweenTrees = 20;       // gap between separate trees in the forest
+
+    const containerWidth = (svgQueue.getBoundingClientRect && svgQueue.getBoundingClientRect().width) ||
+                           svgQueue.clientWidth || (svgQueue.parentElement?.clientWidth) || 800;
+    const treeWidthsAtBase = queue.map(t => getTreeWidth(t, baseSpacing));
+    const forestWidthAtBase = treeWidthsAtBase.reduce((a, b) => a + b, 0) + baseGapBetweenTrees * Math.max(0, queue.length - 1) + 20;
+
+    const MAX_WIDTH_BEFORE_COMPRESS = 600;
+    const targetWidth = Math.min(containerWidth - 20, MAX_WIDTH_BEFORE_COMPRESS);
+    const needCompress = forestWidthAtBase > targetWidth;
+    const scale = forestWidthAtBase > 0 ? (needCompress ? Math.min(1, targetWidth / forestWidthAtBase) : Math.min(1, (containerWidth - 20) / forestWidthAtBase)) : 1;
+
+    // Subtree horizontal spacing (within each tree)
+    const minSpacing = Math.max(minSpacingFloor, Math.floor(baseSpacing * scale));
+
+    // Set the SVG height to match scaled content height to avoid large empty space below
+    const levelGap = 60;
+    const desiredHeightUnscaled = maxDepth * levelGap + 60; // prior logic
+    const desiredHeightScaled = Math.max(60, Math.ceil(desiredHeightUnscaled * vizScale));
+    svgQueue.setAttribute("height", desiredHeightScaled);
+
+    // Root-to-root spacing across the top row (between different trees)
+    const ROOT_BASE_GAP = 60; // comfortable distance at base
+    const ROOT_MIN_GAP  = 36; // never closer than this between root centers
+    const roots = queue.length;
+    const margin = 10; // left/right padding within target width
+    let rootGap = ROOT_BASE_GAP;
+    if (roots > 1) {
+      // Fit roots into the targetWidth while respecting ROOT_MIN_GAP and not exceeding ROOT_BASE_GAP
+      const maxGapThatFitsTarget = Math.floor((targetWidth - 2 * margin) / (roots - 1));
+      rootGap = Math.max(ROOT_MIN_GAP, Math.min(ROOT_BASE_GAP, maxGapThatFitsTarget));
+    }
+
+    // Compute root centers across top row
+    const totalRootsWidth = roots > 1 ? (roots - 1) * rootGap : 0;
+    // Center roots across the full container width; if too wide, left-align to margin
+    const leftStart = Math.max(margin, Math.floor((containerWidth - totalRootsWidth) / 2));
+
+    // Precompute tree widths and initial centers
+    const treeWidths = queue.map(t => getTreeWidth(t, minSpacing));
+    const centers = Array.from({ length: roots }, (_, i) => leftStart + i * rootGap);
+    const leftXs = centers.map((cx, i) => Math.floor(cx - treeWidths[i] / 2));
+    const minLeftX = leftXs.length ? Math.min(...leftXs) : margin;
+    const shiftRight = Math.max(0, margin - minLeftX);
+
+    // Decide if we enable flipping for this view: only final step (single tree) and checkbox checked
+    const allowFlipsChecked = document.getElementById('allowFlips')?.checked;
+    flipEnabledForThisView = !!(allowFlipsChecked && (queue.length === 1) && labelEdges);
+    if (flipEnabledForThisView) {
+      if (!interactiveRoot) interactiveRoot = deepCopy(queue[0]);
+      queue = [interactiveRoot];
+    } else {
+      interactiveRoot = null;
+    }
+
+    for (let i = 0; i < queue.length; i++) {
+      const centerX = centers[i] + shiftRight;
+      const tree = queue[i];
+      const treeWidth = treeWidths[i];
+      const leftX = Math.floor(centerX - treeWidth / 2);
+
+      // Layout each tree centered at its assigned root position; subtrees may overlap across trees.
+      layoutTree(tree, leftX, 30, 60, minSpacing);
+      drawEdges(gRoot, tree, labelEdges && queue.length === 1);
+      const isMerging = (i < highlightCount) || (idToHighlight !== null && tree.id === idToHighlight);
+      drawAllNodes(gRoot, tree, isMerging, true);
+    }
+  }
+
+  function getTreeWidth(node, minSpacing = 40) {
+    if (!node) return 0;
+    const hasLeft = !!node.left;
+    const hasRight = !!node.right;
+    if (hasLeft && hasRight) {
+      return getTreeWidth(node.left, minSpacing) + minSpacing + getTreeWidth(node.right, minSpacing);
+    }
+    if (hasLeft || hasRight) {
+      return Math.max(minSpacing, getTreeWidth(node.left, minSpacing) + getTreeWidth(node.right, minSpacing));
+    }
+    return minSpacing; // leaf
+  }
+
+  function logStep(title, content, queue, highlightCount, nodeIdToHighlight = null, encodingTable = null) {
+    steps.push({ title, content });
+    queues.push(deepCopy(queue));
+    highlight.push(highlightCount);
+    highlightId.push(nodeIdToHighlight);
+    encodingTables.push(encodingTable);
+  }
+
+  function buildHuffmanTree(freqs, inputText) {
+    let queue = Object.entries(freqs).map(([char, freq]) => ({
+      char, freq, left: null, right: null, id: nodeIdCounter++
+    }));
+
+    logStep("Character Frequencies",
+            Object.entries(freqs).map(([c, f]) => `'${c}': ${f}`).join(", "),
+            [], 0);
+
+    queue.sort((a, b) => a.freq - b.freq);
+    logStep("Initial Queue", formatQueue(queue), queue, 0);
+
+    while (queue.length > 1) {
+      let left = queue.shift();
+      let right = queue.shift();
+
+      logStep("Merging Next Two Nodes",
+              `Combining ${formatNode(left)} + ${formatNode(right)}`,
+              [left, right, ...queue], 2);
+
+      let parent = {
+        char: null,
+        freq: left.freq + right.freq,
+        left,
+        right,
+        id: nodeIdCounter++
+      };
+
+      queue.push(parent);
+      queue.sort((a, b) => a.freq - b.freq);
+
+      logStep("Queue After Merge", "", queue, 0, parent.id);
+    }
+
+    const root = queue[0];
+    const codes = {};
+    generateEncodingTable(root, "", codes);
+
+    const huffmanBits = inputText.split("").reduce((sum, ch) => sum + codes[ch].length, 0);
+    const asciiBits   = inputText.length * 8;
+    const unicodeBits = inputText.length * 16;
+
+    const freqTable = countFrequencies(inputText);  
+    const tableStr = Object.entries(codes)
+      .map(([char, code]) => {
+        const freq = freqTable[char];
+        return `  '${char}' → ${code}   (freq: ${freq})`;
+      })
+      .join("\n");
+
+    let costTerms = [];
+    for (let [char, code] of Object.entries(codes)) {
+      const freq = freqTable[char];
+      costTerms.push(`(${freq}×${code.length})`);
+    }
+    const huffmanCostBreakdown = costTerms.join(" + ");
+    const huffmanCost = eval(huffmanCostBreakdown.replace(/×/g, '*'));
+
+    const summary =
+      `Encoding Table:\n${tableStr}\n\n` +
+      `Bit Comparison:\n` +
+      `--> Huffman: ${huffmanBits} bits = ${huffmanCostBreakdown} \n` +
+      `--> ASCII:   ${asciiBits} bits = (8 × ${inputText.length} chars)\n` +
+      `--> Unicode: ${unicodeBits} bits = (16 × ${inputText.length} chars)`;
+
+    logStep("Huffman Tree Complete", summary, [root], 0, null, codes);
+  }
+
+  function generateEncodingTable(node, code, map) {
+    if (node.char !== null) {
+      map[node.char] = code;
+    } else {
+      if (node.left)  generateEncodingTable(node.left,  code + "0", map);
+      if (node.right) generateEncodingTable(node.right, code + "1", map);
+    }
+  }
+
+  function formatQueue(queue) {
+    return queue.map(formatNode).join(" | ");
+  }
+
+  function nextStep() {
+    if (stepIndex < steps.length) {
+      const step = steps[stepIndex];
+      output.innerHTML = `▶ <b>${step.title}</b>\n${step.content}`;
+      const isFinalStep = (stepIndex === steps.length - 1);
+      drawQueue(queues[stepIndex],
+                highlight[stepIndex],
+                highlightId[stepIndex],
+                isFinalStep);
+      stepIndex++;
+    } else {
+      output.innerHTML = `✅ <b>All steps complete.</b>`;
+    }
+  }
+
+  function redrawCurrent() {
+    const idx = Math.min(stepIndex, steps.length) - 1;
+    if (idx >= 0) {
+      const isFinalStep = (idx === steps.length - 1);
+      drawQueue(queues[idx], highlight[idx], highlightId[idx], isFinalStep);
+    }
+  }
+
+  function getTreeDepth(node) {
+    if (!node) return 0;
+    return 1 + Math.max(getTreeDepth(node.left), getTreeDepth(node.right));
+  }
+
+  function prevStep() {
+    if (stepIndex > 1) {
+      stepIndex -= 2;
+      nextStep();
+    }
+  }
+
+  function startVisualization() {
+    const input = document.getElementById("inputText").value;
+    if (!input.trim()) return alert("Please enter a string.");
+    lastInputText = input;
+    steps = [];
+    queues = [];
+    highlight = [];
+    highlightId = [];
+    encodingTables = [];
+    stepIndex = 0;
+    nodeIdCounter = 0;
+    svgQueue.innerHTML = "";
+
+    const freqs = countFrequencies(input);
+    buildHuffmanTree(freqs, input);
+    nextStep();
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  //  Play/Pause & Speed functionality (following Merge Sort pattern)
+  // ─────────────────────────────────────────────────────────────
+
+  document.getElementById('play').addEventListener('click', () => {
+    if (playing) {
+      // Pause
+      playing = false;
+      document.getElementById('play').textContent = 'Play';
+      clearInterval(intervalId);
+      intervalId = null;
+    } else {
+      // Start playing
+      playing = true;
+      document.getElementById('play').textContent = 'Pause';
+      const speed = parseInt(document.getElementById('speed').value, 10);
+      const delay = 1000 / speed;
+      intervalId = setInterval(() => {
+        if (stepIndex < steps.length - 1) {
+          nextStep();
+        } else {
+          // Stop at the end
+          playing = false;
+          document.getElementById('play').textContent = 'Play';
+          clearInterval(intervalId);
+          intervalId = null;
+        }
+      }, delay);
+    }
+  });
+
+  document.getElementById('speed').addEventListener('change', () => {
+    if (playing) {
+      clearInterval(intervalId);
+      playing = false;
+      document.getElementById('play').textContent = 'Play';
+      // Restart playback at new speed
+      document.getElementById('play').click();
+    }
+  });
+
+  // Toggle visibility of the output/details panel
+  const toggleDetailsBtn = document.getElementById('toggleDetails');
+  toggleDetailsBtn.addEventListener('click', () => {
+    const hidden = (output.style.display === 'none');
+    output.style.display = hidden ? '' : 'none';
+    toggleDetailsBtn.textContent = hidden ? 'Hide Details' : 'Show Details';
+    // Redraw so layout can adapt to the new vertical space
+    redrawCurrent();
+  });
+
+  // Scale controls without slider
+  const scaleVal = document.getElementById('scaleVal');
+  const zoomOutBtn = document.getElementById('zoomOut');
+  const zoomInBtn = document.getElementById('zoomIn');
+  const SCALE_MIN = 0.25;
+  const SCALE_MAX = 2;
+  const SCALE_STEP = 0.1;
+
+  function setScale(newScale) {
+    vizScale = Math.max(SCALE_MIN, Math.min(SCALE_MAX, newScale));
+    scaleVal.textContent = `${vizScale.toFixed(1)}×`;
+    redrawCurrent();
+  }
+
+  zoomOutBtn.addEventListener('click', () => {
+    setScale((Math.round((vizScale - SCALE_STEP) * 10) / 10));
+  });
+  zoomInBtn.addEventListener('click', () => {
+    setScale((Math.round((vizScale + SCALE_STEP) * 10) / 10));
+  });
+
+  // Flip support: re-render when checkbox toggled
+  document.getElementById('allowFlips').addEventListener('change', () => {
+    redrawCurrent();
+  });
+
+  function flipSubtree(node) {
+    if (!node) return;
+    const tmp = node.left;
+    node.left = node.right;
+    node.right = tmp;
+    flipSubtree(node.left);
+    flipSubtree(node.right);
+  }
+
+  function redrawCurrentWithInteractiveSummary() {
+    const idx = Math.min(stepIndex, steps.length) - 1;
+    const isFinal = idx === steps.length - 1;
+    if (!isFinal || !interactiveRoot) {
+      redrawCurrent();
+      return;
+    }
+    drawQueue([interactiveRoot], 0, null, true);
+    const codes = {};
+    generateEncodingTable(interactiveRoot, "", codes);
+    const huffmanBits = lastInputText.split("").reduce((sum, ch) => sum + codes[ch].length, 0);
+    const asciiBits   = lastInputText.length * 8;
+    const unicodeBits = lastInputText.length * 16;
+    const freqTable = countFrequencies(lastInputText);
+    const tableStr = Object.entries(codes)
+      .map(([char, code]) => {
+        const freq = freqTable[char];
+        return `  '${char}' → ${code}   (freq: ${freq})`;
+      })
+      .join("\n");
+    const costTerms = Object.entries(codes).map(([ch, code]) => `(${freqTable[ch]}×${code.length})`);
+    const huffmanCostBreakdown = costTerms.join(" + ");
+    const summary =
+      `Encoding Table (flipped):\n${tableStr}\n\n` +
+      `Bit Comparison:\n` +
+      `--> Huffman: ${huffmanBits} bits = ${huffmanCostBreakdown} \n` +
+      `--> ASCII:   ${asciiBits} bits = (8 × ${lastInputText.length} chars)\n` +
+      `--> Unicode: ${unicodeBits} bits = (16 × ${lastInputText.length} chars)`;
+    output.innerHTML = `▶ <b>Huffman Tree Complete</b>\n${summary}`;
+  }
+</script>
+</body>
+</html>

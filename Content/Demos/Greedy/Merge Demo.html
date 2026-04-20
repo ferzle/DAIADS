@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<script src="/Algorithms/scripts/demoScripts.js"></script>
+  <link rel="stylesheet" href="/Algorithms/css/style.css">
+  <link rel="stylesheet" href="/Algorithms/css/demo.css">
+  <title>Merge Step Demo</title>
+  <style>
+    /* Container styles for arrays and layout */
+    .array-container { display: flex; gap: 12px; margin-bottom: 10px; }
+    #current-container { display: flex; gap: 40px; margin: 20px 0; }
+    .portion { display: flex; flex-direction: column; align-items: flex-start; }
+    /* Highlight styles */
+    .compare { background: #f99; }
+    .merged  { background: #9f9; }
+    /* Labels */
+    #aux-label, #left-label, #right-label { font-weight: bold; margin-bottom: 8px; }
+    #aux-container { margin-bottom: 20px; }
+    #description { margin-top: 10px; font-style: italic; }
+    #buttons { margin: 10px 0; }
+    #buttons button, #buttons select, #buttons label { margin-right: 8px; }
+
+    /* Wrapper for elements with index labels */
+    .element-wrapper { display: flex; flex-direction: column; align-items: center; }
+    .index-label { font-size: 0.8em; margin-top: 4px; }
+    .arrow         { font-size: 18px; pointer-events: none; visibility: hidden; }
+  </style>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-DQ5LVZVFDC');
+</script>
+</head>
+<body class = "no-tooltips">
+  <h1>Merge Demo</h1>
+
+  <!-- Controls for generating or inputting arrays -->
+  <div id="controls">
+    <label>Size:<input type="number" id="size" min="1" max="50" value="6" /></label>
+    <button id="generate">Random Arrays</button>
+    <input type="text" id="leftArray" placeholder="Left array (e.g. 2,5,8)" size="20" />
+    <input type="text" id="rightArray" placeholder="Right array (e.g. 3,6,7)" size="20" />
+    <button id="useCustom">Use Custom Arrays</button>
+  </div>
+
+  <!-- Navigation buttons for stepping through the merge -->
+  <div id="buttons">
+    <button id="prev" disabled>Previous</button>
+    <button id="next" disabled>Next</button>
+    <button id="play">Play</button>
+    <label for="speed">Speed:</label>
+    <select id="speed"><option value="1">1x</option><option value="2">2x</option><option value="4">4x</option></select>
+  </div>
+
+  <!-- Legend for color coding -->
+  <div id="legend" class="legend"><strong>Legend:</strong>
+    <span><span class="legend-box compare"></span> Compare</span>
+    <span><span class="legend-box merged"></span> Placed → Auxiliary</span>
+  </div>
+
+  <!-- Containers for visualization -->
+  <div id="aux-label">Auxiliary Array:</div>
+  <div id="aux-container" class="array-container"></div>
+  <div id="current-container">
+    <div class="portion">
+      <div id="left-label">Left Array:</div>
+      <div id="left-visualization" class="array-container"></div>
+    </div>
+    <div class="portion">
+      <div id="right-label">Right Array:</div>
+      <div id="right-visualization" class="array-container"></div>
+    </div>
+  </div>
+  <div id="description" style="margin-top: 50px">Press "Random Arrays" to begin.</div>
+
+  <script>
+    /**
+     * onGenerate: Initializes left and right sorted subarrays.
+     */
+    window.onGenerate = isCustom => {
+      let left, right;
+      if (!isCustom) {
+        const size = parseInt(document.getElementById('size').value, 10) || 4;
+        left  = Array.from({ length: size }, () => Math.floor(Math.random() * 100)).sort((a,b)=>a-b);
+        right = Array.from({ length: size }, () => Math.floor(Math.random() * 100)).sort((a,b)=>a-b);
+        document.getElementById('leftArray').value  = left.join(',');
+        document.getElementById('rightArray').value = right.join(',');
+      } else {
+        left  = document.getElementById('leftArray').value.split(',').map(x=>parseInt(x.trim(),10));
+        right = document.getElementById('rightArray').value.split(',').map(x=>parseInt(x.trim(),10));
+      }
+      window.splitIndex = left.length - 1;
+      return left.concat(right);
+    };
+
+    /**
+     * genSteps: Records compare and placed events for merge process.
+     */
+    window.genSteps = arr => {
+      let a = arr.slice(), records = [];
+      const record = (type, meta = {}) => records.push(Object.assign({ a: a.slice(), type }, meta));
+
+      function mergeImpl(l, m, r) {
+        const L = a.slice(l, m + 1), R = a.slice(m + 1, r + 1);
+        let i = 0, j = 0, k = l;
+
+        while (i < L.length && j < R.length) {
+          record('compare', { idxLeft: i, idxRight: j, valueL: L[i], valueR: R[j], l, m, r });
+          if (L[i] <= R[j]) {
+            record('placed', { k, newValue: L[i], idxLeft: i, idxRight: null, from: 'left', l, m, r });
+            a[k++] = L[i++];
+          } else {
+            record('placed', { k, newValue: R[j], idxLeft: null, idxRight: j, from: 'right', l, m, r });
+            a[k++] = R[j++];
+          }
+        }
+        // Leftover (right side exhausted)
+        while (i < L.length) {
+          record('placed', { k, newValue: L[i], idxLeft: i, idxRight: null, from: 'left', l, m, r, exhausted: 'left' });
+          a[k++] = L[i++];
+        }
+        // Left exhausted
+        while (j < R.length) {
+          record('placed', { k, newValue: R[j], idxLeft: null, idxRight: j, from: 'right', l, m, r, exhausted: 'right' });
+          a[k++] = R[j++];
+        }
+      }
+
+      record('init');
+      mergeImpl(0, window.splitIndex, arr.length - 1);
+      record('done');
+      return records;
+    };
+
+    /**
+     * setupAux: Initializes auxiliary array display with index labels.
+     */
+    window.setupAux = original => {
+      const aux = document.getElementById('aux-container'); aux.innerHTML = '';
+      original.forEach((_, idx) => {
+        const wrapper = document.createElement('div'); wrapper.className = 'element-wrapper';
+        const el = document.createElement('div'); el.className = 'element'; el.textContent = '';
+        const lbl = document.createElement('div'); lbl.className = 'index-label'; lbl.textContent = idx;
+        wrapper.appendChild(el); wrapper.appendChild(lbl); aux.appendChild(wrapper);
+      });
+    };
+
+    document.addEventListener('DOMContentLoaded', () => document.getElementById('generate').click());
+
+    /**
+     * renderStep: Updates UI and descriptive text for each step.
+     */
+    window.renderStep = (steps, idx, original) => {
+      const aux      = document.getElementById('aux-container'),
+            leftVis  = document.getElementById('left-visualization'),
+            rightVis = document.getElementById('right-visualization'),
+            desc     = document.getElementById('description');
+      const st = steps[idx];
+
+      // Find last comparison for sticky arrows
+      let lastCompare = null;
+      for (let i = 0; i <= idx; i++) {
+        if (steps[i].type === 'compare') lastCompare = { idxLeft: steps[i].idxLeft, idxRight: steps[i].idxRight };
+      }
+
+      // First step: build visuals
+      if (idx === 0) {
+        leftVis.innerHTML = '';
+        rightVis.innerHTML = '';
+        const m = window.splitIndex;
+        for (let i = 0; i <= m; i++) {
+          const w = document.createElement('div'); w.className = 'element-wrapper';
+          w.innerHTML = `<div class="element">${original[i]}</div><div class="arrow">↑<br>i</div>`;
+          leftVis.appendChild(w);
+        }
+        for (let j = m + 1; j < original.length; j++) {
+          const w = document.createElement('div'); w.className = 'element-wrapper';
+          w.innerHTML = `<div class="element">${original[j]}</div><div class="arrow">↑<br>j</div>`;
+          rightVis.appendChild(w);
+        }
+      }
+
+      // Redraw auxiliary & reset classes/arrows
+      window.setupAux(original);
+      [leftVis, rightVis].forEach(container => {
+        Array.from(container.children).forEach(w => { w.querySelector('.element').classList.remove('compare'); w.querySelector('.arrow').style.visibility = 'hidden'; });
+      });
+      steps.slice(0, idx + 1).forEach(s => {
+        if (s.type === 'placed') {
+          const wr = aux.children[s.k]; const el = wr.querySelector('.element'); el.textContent = s.newValue; el.classList.add('merged');
+        }
+      });
+
+      // Handle current step
+      if (st.type === 'compare') {
+        if (st.idxLeft !== null) { const wL = leftVis.children[st.idxLeft]; wL.querySelector('.element').classList.add('compare'); wL.querySelector('.arrow').style.visibility = 'visible'; }
+        if (st.idxRight !== null) { const wR = rightVis.children[st.idxRight]; wR.querySelector('.element').classList.add('compare'); wR.querySelector('.arrow').style.visibility = 'visible'; }
+        const chooseLeft = st.valueL <= st.valueR;
+        desc.textContent = `${st.valueL} <= ${st.valueR}? ${chooseLeft ? 'Yes' : 'No'}, placing ${chooseLeft ? st.valueL : st.valueR}.`;
+      }
+      else if (st.type === 'placed') {
+        // Arrow logic (mark the source or previous comparison arrow)
+        if (st.exhausted === 'left') {
+          const wL = leftVis.children[st.idxLeft]; wL.querySelector('.arrow').style.visibility = 'visible';
+        } else if (st.exhausted === 'right') {
+          const wR = rightVis.children[st.idxRight]; wR.querySelector('.arrow').style.visibility = 'visible';
+        } else if (st.idxLeft !== null) {
+          const wL = leftVis.children[st.idxLeft]; wL.querySelector('.arrow').style.visibility = 'visible';
+          if (lastCompare && lastCompare.idxRight !== null) { const wR = rightVis.children[lastCompare.idxRight]; wR.querySelector('.arrow').style.visibility = 'visible'; }
+        } else {
+          const wR = rightVis.children[st.idxRight]; wR.querySelector('.arrow').style.visibility = 'visible';
+          if (lastCompare && lastCompare.idxLeft !== null) { const wL = leftVis.children[lastCompare.idxLeft]; wL.querySelector('.arrow').style.visibility = 'visible'; }
+        }
+        // Description logic with exhaustion first
+        if (st.exhausted === 'left') {
+          desc.textContent = `Left array elements exhausted, placing ${st.newValue}.`;
+        } else if (st.exhausted === 'right') {
+          desc.textContent = `Right array elements exhausted, placing ${st.newValue}.`;
+        } else if (st.idxLeft !== null) {
+          desc.textContent = `Placed value ${st.newValue} into auxiliary index ${st.k}. Incrementing i`;
+        } else {
+          desc.textContent = `Placed value ${st.newValue} into auxiliary index ${st.k}. Incrementing j`;
+        }
+      }
+      else if (st.type === 'init') {
+        desc.textContent = 'Initialization complete, ready to start merging.';
+      }
+      else if (st.type === 'done') {
+        desc.textContent = 'All elements merged successfully!';
+      }
+    };
+  </script>
+</body>
+</html>

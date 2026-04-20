@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Naïve Recursive Fibonacci Demo</title>
+  <!-- Common CSS -->
+  <script src="/Algorithms/scripts/demoScripts.js"></script>
+  <link rel="stylesheet" href="/Algorithms/css/style.css">
+  <link rel="stylesheet" href="/Algorithms/css/demo.css">
+  <!-- Demo-specific styling for nodes -->
+  <style>
+    /* Node and link styling */
+    .link-line {
+      stroke: #777;
+      stroke-width: 1;
+    }
+    .node-circle {
+      stroke: #333;
+      fill: #fff;
+    }
+    .node-call {
+      fill: #f8d3d3;
+    }
+    .node-computed {
+      fill: #d3f8d3;
+    }
+    .node-current {
+      stroke: #ff0000;
+      stroke-width: 3;
+    }
+    .node-text {
+      font-size: 14px;
+      text-anchor: middle;
+      dominant-baseline: middle;
+      pointer-events: none;
+      font-family: sans-serif;
+    }
+    .node-label {
+      font-size: 10px;
+      text-anchor: end;
+      dominant-baseline: hanging;
+      pointer-events: none;
+      font-family: sans-serif;
+    }
+
+    /* Commentary panel */
+    #commentary {
+      margin-top: 10px;
+      font-family: sans-serif;
+      font-style: italic;
+    }
+    
+    #callPanel {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 300px;
+      height: 100%;
+      background: #fff;
+      border-left: 1px solid #ccc;
+      box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+      transform: translateX(100%);
+      transition: transform 0.3s ease-out;
+      overflow-y: auto;
+      z-index: 1000;
+    }
+    #callPanel ul {
+       list-style: none;
+       margin: 5px;
+       padding: 0;
+       font-family: sans-serif;
+       font-size: 14px;
+    }
+    #callPanel.open {
+      transform: translateX(0);
+    }
+  </style>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-DQ5LVZVFDC');
+</script>
+</head>
+<body class="no-tooltips">
+  <h2>Naïve Recursive Fibonacci Demo</h2>
+  <div id="controls">
+    <label for="inputN">n:</label>
+    <input type="number" id="inputN" min="2" max="8" value="5">
+    <button id="startBtn">Start</button>
+    <button id="prevBtn" disabled>Previous</button>
+    <button id="nextBtn" disabled>Next</button>
+    <!-- Play/Pause and Speed controls added below -->
+    <button id="play">Play</button>
+    <label for="speed">Speed:</label>
+    <select id="speed">
+      <option value="1">1×</option>
+      <option value="2">2×</option>
+      <option value="4">4×</option>
+      <option value="8">8×</option>
+    </select>
+    <br><br>
+    <span id="nodeCount">Number of nodes: 0</span>
+    <button id="toggleCalls">Show Calls</button>
+    <div id="commentary"></div>
+  </div>
+  
+  <svg
+    id="treeSvg"
+    viewBox="0 0 800 400"
+    preserveAspectRatio="xMidYMin meet"
+    style="width: 100%; min-height: 600px; display: block; margin: 0 auto; overflow: visible;"
+  >
+    <!-- Layer for links (edges) -->
+    <g id="linkLayer"></g>
+    <!-- Layer for nodes (circles, labels, values) -->
+    <g id="nodeLayer"></g>
+  </svg>
+   
+  <div id="callPanel">
+    <ul id="callList"></ul>
+  </div>
+  
+  <script>
+    // Node class
+    class FibNode {
+      constructor(n, id) {
+        this.n = n;
+        this.id = id;
+        this.left = null;
+        this.right = null;
+        this.parent = null;
+        this.value = null;
+        this.x = 0;
+        this.y = 0;
+        this.depth = 0;
+      }
+    }
+
+    // Globals
+    let root = null;
+    let allNodes = [];
+    let eventList = [];
+    let stepIndex = 0;
+    let svg = document.getElementById('treeSvg');
+    let svgNS = 'http://www.w3.org/2000/svg';
+    let createCount = 0;
+    const r = 12;
+
+    // Playback globals
+    let playing = false;
+    let intervalId = null;
+
+    // Build full tree structure (for layout and event generation)
+    function buildTree(n) {
+      let idCounter = 0;
+      function helper(k, parent = null, depth = 0) {
+        let node = new FibNode(k, idCounter++);
+        node.parent = parent;
+        node.depth = depth;
+        allNodes.push(node);
+        if (k >= 2) {
+          node.left = helper(k - 1, node, depth + 1);
+          node.right = helper(k - 2, node, depth + 1);
+        }
+        return node;
+      }
+      return helper(n, null, 0);
+    }
+
+    function generateEvents(node) {
+      if (!node) return;
+      eventList.push({ type: 'call', node: node });
+      if (node.left) {
+        generateEvents(node.left);
+        eventList.push({ type: 'resume', node: node });
+      }
+      if (node.right) {
+        generateEvents(node.right);
+      }
+      eventList.push({ type: 'return', node: node });
+    }
+
+    function assignPositions(root) {
+      let xCounter = 0;
+      allNodes.forEach(node => {
+        // nothing here
+      });
+      const viewBoxWidth  = 800;
+      const viewBoxHeight = 400;
+      const levelHeight   = 50;
+      const marginX       = r + 5;
+      const usableWidth   = viewBoxWidth - 2 * marginX;
+      const total         = allNodes.length;
+
+      function inorder(node) {
+        if (!node) return;
+        inorder(node.left);
+        if (total > 1) {
+          node.x = marginX + xCounter * (usableWidth / (total - 1));
+        } else {
+          node.x = viewBoxWidth / 2;
+        }
+        node.y = node.depth * levelHeight + r;
+        xCounter++;
+        inorder(node.right);
+      }
+      inorder(root);
+    }
+
+    function clearSvg() {
+      while (svg.firstChild) {
+        svg.removeChild(svg.firstChild);
+      }
+      let linkLayer = document.createElementNS(svgNS, 'g');
+      linkLayer.setAttribute('id', 'linkLayer');
+      svg.appendChild(linkLayer);
+      let nodeLayer = document.createElementNS(svgNS, 'g');
+      nodeLayer.setAttribute('id', 'nodeLayer');
+      svg.appendChild(nodeLayer);
+    }
+
+    function clearCurrentHighlights() {
+      allNodes.forEach(node => {
+        let circle = document.getElementById('circle-' + node.id);
+        if (circle) {
+          circle.classList.remove('node-current');
+        }
+      });
+    }
+
+    function drawLink(node) {
+  if (!node.parent) return;
+  const parent = node.parent;
+  // vector from parent to child
+  const dx     = node.x - parent.x;
+  const dy     = node.y - parent.y;
+  const dist   = Math.sqrt(dx*dx + dy*dy) || 1;
+  const ux     = dx / dist;         // unit‐vector x
+  const uy     = dy / dist;         // unit‐vector y
+  // start at parent’s circumference
+  const x1 = parent.x + ux * r;
+  const y1 = parent.y + uy * r;
+  // end at child’s circumference
+  const x2 = node.x   - ux * r;
+  const y2 = node.y   - uy * r;
+  // draw it
+  const line = document.createElementNS(svgNS, 'line');
+  line.setAttribute('x1', x1);
+  line.setAttribute('y1', y1);
+  line.setAttribute('x2', x2);
+  line.setAttribute('y2', y2);
+  line.setAttribute('class', 'link-line');
+  line.setAttribute('id',    'link-' + node.id);
+  document.getElementById('linkLayer').appendChild(line);
+}
+
+
+    function drawNode(node) {
+      clearCurrentHighlights();
+      let circle = document.createElementNS(svgNS, 'circle');
+      circle.setAttribute('cx', node.x);
+      circle.setAttribute('cy', node.y);
+      circle.setAttribute('r', r);
+      circle.setAttribute('id', 'circle-' + node.id);
+      circle.setAttribute('class', 'node-circle node-call node-current');
+      document.getElementById('nodeLayer').appendChild(circle);
+      let label = document.createElementNS(svgNS, 'text');
+      label.setAttribute('x', node.x + 25);
+      label.setAttribute('y', node.y + r);
+      label.setAttribute('id', 'label-' + node.id);
+      label.setAttribute('class', 'node-label');
+      label.textContent = `F(${node.n})`;
+      document.getElementById('nodeLayer').appendChild(label);
+      let text = document.createElementNS(svgNS, 'text');
+      text.setAttribute('x', node.x);
+      text.setAttribute('y', node.y);
+      text.setAttribute('id', 'text-' + node.id);
+      text.setAttribute('class', 'node-text');
+      text.textContent = "";
+      document.getElementById('nodeLayer').appendChild(text);
+      createCount++;
+      document.getElementById('nodeCount').textContent = `Number of nodes: ${createCount}`;
+      updateCommentary(`Calling fib(${node.n})`);
+      // Log call in callPanel
+      logCall(node.n, node.depth, `Call fib(${node.n})`);
+    }
+
+    function computeNode(node) {
+      clearCurrentHighlights();
+      if (node.n < 2) {
+        node.value = node.n;
+      } else {
+        node.value = node.left.value + node.right.value;
+      }
+      let circle = document.getElementById('circle-' + node.id);
+      let text   = document.getElementById('text-'   + node.id);
+      if (circle) {
+        circle.setAttribute('class', 'node-circle node-computed node-current');
+      }
+      if (text) {
+        text.textContent = node.value;
+      }
+      if (node.n < 2) {
+        updateCommentary(`Returning F(${node.n}) = ${node.value}`);
+      } else {
+        const L = node.left.n;
+        const Lv = node.left.value;
+        const R = node.right.n;
+        const Rv = node.right.value;
+        const N = node.n;
+        const Nv = node.value;
+        updateCommentary(
+          `Done computing F(${L}) = ${Lv} and F(${R}) = ${Rv}. Returning F(${N}) = ${Lv} + ${Rv} = ${Nv}`
+        );
+      }
+      // Log return in callPanel
+      logCall(node.n, node.depth, `Return fib(${node.n}) = ${node.value}`);
+    }
+
+    function removeNode(node) {
+      let circle = document.getElementById('circle-' + node.id);
+      let text = document.getElementById('text-' + node.id);
+      let label = document.getElementById('label-' + node.id);
+      let link = document.getElementById('link-' + node.id);
+      if (circle) document.getElementById('nodeLayer').removeChild(circle);
+      if (text) document.getElementById('nodeLayer').removeChild(text);
+      if (label) document.getElementById('nodeLayer').removeChild(label);
+      if (link) document.getElementById('linkLayer').removeChild(link);
+      createCount--;
+      document.getElementById('nodeCount').textContent = `Number of nodes: ${createCount}`;
+      updateCommentary(`Undo call fib(${node.n})`);
+      // Remove last entry from callPanel
+      const ul = document.getElementById('callList');
+      if (ul.lastElementChild) {
+        ul.removeChild(ul.lastElementChild);
+      }
+    }
+
+    function undoCompute(node) {
+      clearCurrentHighlights();
+      let circle = document.getElementById('circle-' + node.id);
+      let text = document.getElementById('text-' + node.id);
+      if (circle) {
+        circle.setAttribute('class', 'node-circle node-call');
+      }
+      if (text) {
+        text.textContent = "";
+      }
+      node.value = null;
+      updateCommentary(`Undo return fib(${node.n})`);
+      // Remove last entry from callPanel
+      const ul = document.getElementById('callList');
+      if (ul.lastElementChild) {
+        ul.removeChild(ul.lastElementChild);
+      }
+    }
+
+    function updateCommentary(message) {
+      document.getElementById('commentary').textContent = message;
+    }
+
+    function initializeDemo(n) {
+      allNodes = [];
+      eventList = [];
+      stepIndex = 0;
+      createCount = 0;
+      root = buildTree(n);
+      generateEvents(root);
+      assignPositions(root);
+      clearSvg();
+      document.getElementById('nodeCount').textContent = `Number of nodes: 0`;
+      updateCommentary('');
+      document.getElementById('nextBtn').disabled = false;
+      document.getElementById('prevBtn').disabled = true;
+      clearCallList();
+    }
+
+    function nextStep() {
+      if (stepIndex >= eventList.length) return;
+      let ev = eventList[stepIndex];
+      if (ev.type === 'call') {
+        drawLink(ev.node);
+        drawNode(ev.node);
+      } else if (ev.type === 'resume') {
+        clearCurrentHighlights();
+        let circle = document.getElementById('circle-' + ev.node.id);
+        if (circle) {
+          circle.classList.add('node-current');
+        }
+        const leftNode  = ev.node.left;
+        const leftN     = leftNode.n;
+        const leftValue = leftNode.value;
+        const rightN    = ev.node.right.n;
+        updateCommentary(
+          `Computed F(${leftN}) = ${leftValue}. Now need to compute F(${rightN}).`
+        );
+      } else if (ev.type === 'return') {
+        computeNode(ev.node);
+      }
+      stepIndex++;
+      updateButtons();
+    }
+
+    function prevStep() {
+      if (stepIndex <= 0) return;
+      stepIndex--;
+      let ev = eventList[stepIndex];
+      if (ev.type === 'call') {
+        removeNode(ev.node);
+      } else if (ev.type === 'resume') {
+        let circle = document.getElementById('circle-' + ev.node.id);
+        if (circle) {
+          circle.classList.remove('node-current');
+        }
+      } else if (ev.type === 'return') {
+        undoCompute(ev.node);
+      }
+      updateButtons();
+    }
+
+    function updateButtons() {
+      document.getElementById('prevBtn').disabled = (stepIndex === 0);
+      document.getElementById('nextBtn').disabled = (stepIndex === eventList.length);
+    }
+
+    document.getElementById('startBtn').addEventListener('click', () => {
+      let n = parseInt(document.getElementById('inputN').value, 10);
+      if (isNaN(n) || n < 2 || n > 8) {
+        alert("Please enter an integer n with 2 ≤ n ≤ 8.");
+        return;
+      }
+      initializeDemo(n);
+    });
+
+    document.getElementById('nextBtn').addEventListener('click', nextStep);
+    document.getElementById('prevBtn').addEventListener('click', prevStep);
+
+    // ────── Playback logic for Play/Pause & Speed ──────
+    const playBtn = document.getElementById('play');
+    const speedSelect = document.getElementById('speed');
+
+    playBtn.addEventListener('click', () => {
+      if (playing) {
+        // Pause
+        playing = false;
+        playBtn.textContent = 'Play';
+        clearInterval(intervalId);
+        intervalId = null;
+      } else {
+        // Start playing
+        playing = true;
+        playBtn.textContent = 'Pause';
+        const speed = parseInt(speedSelect.value, 10);
+        const delay = 1000 / speed;
+        intervalId = setInterval(() => {
+          if (stepIndex < eventList.length) {
+            nextStep();
+          } else {
+            // Stop at the end
+            playing = false;
+            playBtn.textContent = 'Play';
+            clearInterval(intervalId);
+            intervalId = null;
+          }
+        }, delay);
+      }
+    });
+
+    speedSelect.addEventListener('change', () => {
+      if (playing) {
+        clearInterval(intervalId);
+        playing = false;
+        playBtn.textContent = 'Play';
+        // Restart playback at new speed
+        playBtn.click();
+      }
+    });
+
+    // ────── Call panel helpers ──────
+    const toggleBtn = document.getElementById('toggleCalls');
+    const panel    = document.getElementById('callPanel');
+    toggleBtn.addEventListener('click', () => {
+      panel.classList.toggle('open');
+      toggleBtn.textContent = panel.classList.contains('open') ? 'Hide Calls' : 'Show Calls';
+    });
+    function logCall(n, depth, type) {
+      const li = document.createElement('li');
+      li.textContent = `${type}`;
+      li.style.paddingLeft = (depth * 20) + 'px';
+      document.getElementById('callList').appendChild(li);
+    }
+    function clearCallList() {
+      document.getElementById('callList').innerHTML = '';
+    }
+
+    window.addEventListener('load', () => {
+      initializeDemo(5);
+    });
+  </script>   
+</body>
+</html>

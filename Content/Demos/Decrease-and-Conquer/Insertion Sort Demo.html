@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Insertion Sort Demo</title>
+  <script src="/Algorithms/scripts/demoScripts.js"></script>
+  <link rel="stylesheet" href="/Algorithms/css/style.css">
+  <link rel="stylesheet" href="/Algorithms/css/demo.css">
+  <style>
+    #visualization { position: relative; height: 120px; overflow: visible; margin: 0 auto; }
+    #array-container { display: flex; align-items: flex-end; justify-content: left; gap: 5px; 
+      height: calc(100% - 10px); margin-bottom: 10px; }
+    .floating  { position: absolute; z-index: 10; transition: top 0.3s ease; }
+  </style>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-DQ5LVZVFDC');
+</script>
+</head>
+<body class = "no-tooltips">
+  <h2>Insertion Sort Demo</h2>
+  <div id="controls">
+    <label>Size:<input type="number" id="size" min="8" max="20" value="10" /></label>
+    <button id="generate">Random Array</button>
+    <input type="text" id="customArray" placeholder="12,6,10,5,3,8,1,20,13" size="30" />
+    <button id="useCustom">Use Custom Array</button>
+  </div>
+
+  <div id="buttons">
+    <button id="prev" disabled>Previous</button>
+    <button id="next" disabled>Next</button>
+    <!-- Added Play/Pause and Speed dropdown -->
+    <button id="play">Play</button>
+    <label for="speed">Speed:</label>
+    <select id="speed">
+      <option value="1">1×</option>
+      <option value="2">2×</option>
+      <option value="4">4×</option>
+    </select>
+  </div>
+
+  <div id="visualization">
+    <div id="array-container"></div>
+    <div id="floatLayer"></div>
+  </div>
+  <div id="description">Press "Next" to start sorting.</div>
+  <div id="legend" class="legend">
+    <strong>Legend:</strong>
+    <span><span class="legend-box default"></span> Unsorted</span>
+    <span><span class="legend-box sorted"></span> Sorted Portion</span>
+    <span><span class="legend-box key"></span> Key</span>
+    <span><span class="legend-box comparing"></span> Comparing</span>
+    <span><span class="legend-box empty"></span> Empty Placeholder</span>
+  </div>
+
+  <script>
+    const arrayContainer = document.getElementById('array-container');
+    const floatLayer = document.getElementById('floatLayer');
+    const desc = document.getElementById('description');
+    const prevBtn = document.getElementById('prev');
+    const nextBtn = document.getElementById('next');
+    const playBtn = document.getElementById('play');
+    const speedSelect = document.getElementById('speed');
+    let steps = [], stepIndex = 0, floatingKey = null;
+
+    function generateSteps(arr) {
+      const states = [];
+      let a = arr.slice();
+      states.push({ arr: a.slice(), sortedCount: 1, stage: 'init', i: 1 });
+      for (let i = 1; i < a.length; i++) {
+        const key = a[i];
+        let kArr = a.slice();
+        let j = i - 1;
+        states.push({ arr: kArr.slice(), sortedCount: i, stage: 'newKey', keyIndex: i, keyVal: key, i });
+        while (j >= 0) {
+          states.push({ arr: kArr.slice(), sortedCount: i, stage: 'comparing', keyIndex: i, compareIndex: j, keyVal: key, i });
+          if (a[j] <= key) break;
+          kArr[j + 1] = kArr[j]; kArr[j] = null;
+          states.push({ arr: kArr.slice(), sortedCount: i, stage: 'shift', keyIndex: i, keyVal: key, firstShiftIndex: j + 1, i });
+          j--;
+        }
+        kArr[j + 1] = key;
+        states.push({ arr: kArr.slice(), sortedCount: i + 1, stage: 'placed', keyIndex: j + 1, keyVal: key, i });
+        a = kArr.slice();
+      }
+      return states;
+    }
+
+    function renderState(state) {
+      arrayContainer.innerHTML = '';
+      state.arr.forEach((val, idx) => {
+        const element = document.createElement('div');
+        element.className = 'element';
+        const hideOriginalKey = state.stage === 'comparing' && state.compareIndex === state.i - 1 && idx === state.i;
+        if (val === null || hideOriginalKey) {
+          element.classList.add('empty');
+        } else {
+          element.textContent = val;
+          // orange under floating key except on init/comparing/newKey
+          if (idx === state.i && !['init','newKey'].includes(state.stage)) element.classList.add('sorted');
+          // always sorted portion
+          if (idx < state.sortedCount) element.classList.add('sorted');
+          // blue for key on newKey stage
+          if (state.stage === 'newKey' && idx === state.keyIndex ) element.classList.add('key');
+          // blue for key after shift/placed
+          if (['shift','placed'].includes(state.stage) && idx === state.keyIndex) element.classList.add('key');
+          // yellow for comparing
+          if (state.stage === 'comparing' && idx === state.compareIndex) {
+            element.classList.remove('sorted'); element.classList.add('comparing');
+          }
+          // blue for key when it’s just been placed
+          if (state.stage === 'placed' && idx === state.keyIndex) {
+            element.classList.remove('sorted');
+            element.classList.add('key');
+          }
+        }
+        arrayContainer.appendChild(element);
+      });
+
+      switch(state.stage) {
+        case 'newKey':
+          desc.textContent = `${state.keyVal} is the new key element.`;
+          break;
+        case 'init':
+          desc.textContent = 'Initial array.';
+          break;
+        case 'comparing': {
+          const aVal = state.keyVal;
+          const bVal = state.arr[state.compareIndex];
+          if (aVal < bVal) {
+            desc.textContent = `${aVal} < ${bVal}? Yes, need to shift ${bVal} to the right.`;
+          } else {
+            desc.textContent = `${aVal} < ${bVal}? No, placing key element.`;
+          }
+          break;
+        }
+        case 'shift':
+          desc.textContent = 'Shifted element to the right.';
+          break;
+        case 'placed':
+          if (state.sortedCount === state.arr.length) {
+            desc.textContent = 'Array is sorted!';
+            Array.from(arrayContainer.children).forEach(el => {
+              el.classList.remove('sorted');
+              el.classList.add('finished');
+            });
+          } else {
+            desc.textContent = `${state.keyVal} placed at index ${state.keyIndex}.`;
+          }
+          break;
+      }
+
+      // floating key
+      if (['comparing','shift'].includes(state.stage)) {
+        floatLayer.innerHTML = '';
+        floatingKey = document.createElement('div');
+        floatingKey.className = 'element key floating';
+        floatingKey.textContent = state.keyVal;
+        const target = arrayContainer.children[state.i].getBoundingClientRect();
+        const parent = floatLayer.getBoundingClientRect();
+        floatingKey.style.width  = `${target.width}px`;
+        floatingKey.style.height = `${target.height}px`;
+        floatingKey.style.left   = `${target.left - parent.left}px`;
+        floatingKey.style.top    = `${target.top - parent.top + 70}px`;
+        floatLayer.appendChild(floatingKey);
+      } else {
+        floatLayer.innerHTML = '';
+        floatingKey = null;
+      }
+    }
+
+    function updateButtons() {
+      prevBtn.disabled = (stepIndex === 0);
+      nextBtn.disabled = (stepIndex === steps.length - 1);
+    }
+
+    function goToStep(idx) {
+      stepIndex = idx;
+      renderState(steps[idx]);
+      updateButtons();
+    }
+
+    prevBtn.addEventListener('click', () => {
+      if (stepIndex > 0) goToStep(stepIndex - 1);
+    });
+    nextBtn.addEventListener('click', () => {
+      if (stepIndex < steps.length - 1) goToStep(stepIndex + 1);
+    });
+
+    document.getElementById('generate').addEventListener('click', () => {
+      const size = parseInt(document.getElementById('size').value, 10);
+      if (isNaN(size) || size < 8 || size > 20) {
+        return alert('Size must be between 8 and 20');
+      }
+      const arr = Array.from({ length: size }, () => Math.floor(Math.random() * 90) + 10);
+      document.getElementById('customArray').value = arr.join(',');
+      steps = generateSteps(arr);
+      goToStep(0);
+    });
+
+    document.getElementById('useCustom').addEventListener('click', () => {
+      const input = document.getElementById('customArray').value.trim();
+      if (!input) return;
+      const arr = input.split(',').map(s => parseInt(s.trim(), 10));
+      if (arr.some(isNaN) || arr.length < 8 || arr.length > 20) {
+        return alert('Custom array must have 8-20 numbers, comma-separated.');
+      }
+      steps = generateSteps(arr);
+      goToStep(0);
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // Playback logic (Play/Pause + Speed) – inserted below without touching existing logic
+    // ───────────────────────────────────────────────────────────────────────────
+    let playing = false;
+    let intervalId = null;
+
+    playBtn.addEventListener('click', () => {
+      if (playing) {
+        // Pause
+        playing = false;
+        playBtn.textContent = 'Play';
+        clearInterval(intervalId);
+        intervalId = null;
+      } else {
+        // Start playing
+        playing = true;
+        playBtn.textContent = 'Pause';
+        const speed = parseInt(speedSelect.value, 10);
+        const delay = 1000 / speed;
+        intervalId = setInterval(() => {
+          if (stepIndex < steps.length - 1) {
+            stepIndex++;
+            renderState(steps[stepIndex]);
+            updateButtons();
+          } else {
+            // Stop at the end
+            playing = false;
+            playBtn.textContent = 'Play';
+            clearInterval(intervalId);
+            intervalId = null;
+          }
+        }, delay);
+      }
+    });
+
+    speedSelect.addEventListener('change', () => {
+      if (playing) {
+        clearInterval(intervalId);
+        playing = false;
+        playBtn.textContent = 'Play';
+        // Restart playback at new speed
+        playBtn.click();
+      }
+    });
+
+    // Initialize on load by simulating “Generate” click
+    document.getElementById('generate').click();
+  </script>
+</body>
+</html>

@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-DQ5LVZVFDC');
+</script>
+  <meta charset="UTF-8">
+  <link rel="icon" href="favicon.ico" type="image/x-icon" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet">
+
+  <title>Design, Analysis, and Implementation of Algorithms</title>
+  <script>
+    document.write('<link rel="stylesheet" href="css/style.css?v=' + new Date().getTime() + '">');
+  </script>
+
+  <style>
+  /* container pinned in lower-left */
+#scroll-controls {
+  position: fixed;
+  bottom: 1rem;
+  left: 1rem;
+  display: flex;
+  gap: 0.5rem;         /* space between buttons */
+  z-index: 1000;
+}
+
+/* buttons inherit whatever styles you already had */
+#to-top,
+#to-bottom {
+  background: rgba(0,0,0,0.7);
+  color: #fff;
+  border: none;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+#to-top:hover,
+#to-bottom:hover {
+  opacity: 1;
+}
+
+#to-top.hidden,
+#to-bottom.hidden {
+  display: none;
+}
+
+#menu.collapsed {
+  display: none;
+}
+header {
+  position: relative;
+}
+#hamburger {
+  position: fixed;
+  top: 0.25rem;    /* distance from top */
+  left: var(--hamburger-left, 1rem);
+  /*left: 1rem;   */    /* distance from right */
+  font-size: 1.5rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  z-index: 1100;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.5);
+}
+
+/* Adjust header if necessary so the hamburger doesn’t overlap */
+header {
+  position: relative;
+}
+
+/* Collapse menu when toggled */
+#menu.collapsed {
+  display: none;
+}
+
+/* Expand iframe to full width when menu is collapsed */
+#container.menu-collapsed #content {
+  width: 100% !important;
+}
+
+/* Default container layout */
+#container {
+  display: flex;
+}
+
+/* Sidebar menu */
+#menu {
+  width: 250px;
+  flex-shrink: 0;
+}
+
+/* Iframe content */
+#content {
+  flex: 1;
+}
+
+
+</style>
+</head>
+<body class="mainSite">
+  <div id="pageWrapper">
+    <header>
+      <img id="siteLogo" src="images/DAIA.png" alt="DAIA logo" />
+      <h1>Design, Analysis, and Implementation of Algorithms</h1>
+      <h4>(and eventually Data Structures)</h4>
+      <h3>Design Strategies &middot; Interactive Demos &middot; 
+      Code/Pseudocode &middot; Analysis &middot; Exercises</h3>
+    <button id="hamburger" aria-label="Toggle menu">&equiv;</button>
+    </header>
+
+    <div id="container">
+
+      <nav id="menu">
+      <ul></ul>
+      </nav>
+      <iframe
+          id="content"
+          src=""
+          frameborder="0"
+          allow="fullscreen"
+          scrolling="no"
+          >
+      </iframe>
+        <div id="errorMessage" 
+             class="error" 
+             style="display:none;">Error loading content: Page not found.</div>
+        </div>
+  </div>
+
+<div id="scroll-controls">
+  <button id="to-top" type="button" aria-label="Back to top">⬆ Top</button>
+  <button id="to-bottom" type="button" aria-label="Scroll to bottom">⬇ Bottom</button>
+</div>
+
+
+
+ <!-- THIS lives directly under <body>, not inside #container: -->
+  <nav id="alpha-nav-overlay">
+    <!-- A–Z links go here (you can build them once on parent load) -->
+  </nav>
+
+  <script>
+    // on initial load and whenever the iframe navigates, show/hide:
+    const nav = document.getElementById('alpha-nav-overlay');
+    const iframe = document.getElementById('content');
+    function syncAlpha() {
+      let path;
+      try { path = iframe.contentWindow.location.pathname; }
+      catch { path = iframe.getAttribute('src'); }
+      nav.style.display = path.endsWith('Glossary.html') ? 'block' : 'none';
+    }
+    iframe.addEventListener('load', syncAlpha);
+    syncAlpha();
+    
+  // 1) Generate A–Z links once on parent DOM ready
+  document.addEventListener('DOMContentLoaded', () => {
+    const nav = document.getElementById('alpha-nav-overlay');
+    // clear in case it’s already there
+    nav.innerHTML = '';
+    for (let i = 65; i <= 90; i++) {
+      const letter = String.fromCharCode(i);
+      const a = document.createElement('a');
+      a.href = '#';
+      a.textContent = letter;
+      a.style.margin = '0 0.25rem';
+      // 2) on click, scroll into view inside the iframe
+      a.addEventListener('click', ev => {
+        ev.preventDefault();
+        scrollToLetterInIframe(letter);
+      });
+      nav.appendChild(a);
+    }
+  });
+
+  // 3) Helper to find & scroll the first matching term inside the iframe
+  function scrollToLetterInIframe(letter) {
+    const iframe = document.getElementById('content');
+    const doc = iframe.contentWindow.document;
+    // Assuming your glossary terms have class="glossary-term"
+    const entries = Array.from(doc.querySelectorAll('.glossary-term'));
+    // find first whose text starts ≥ letter
+    const match = entries.find(el => {
+      const text = el.textContent.trim().toUpperCase();
+      return text[0] >= letter;
+    });
+    if (match) {
+      match.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+  </script>
+
+  <script src="scripts/loadContent.js"></script>
+  <script>
+  const toTop    = document.getElementById('to-top');
+  const toBottom = document.getElementById('to-bottom');
+
+  // scroll actions
+  toTop.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+  toBottom.addEventListener('click', () => {
+    window.scrollTo({ top: document.documentElement.scrollHeight,
+                      behavior: 'smooth' });
+  });
+const HIDE_THRESHOLD = 100;  // px from top/bottom
+
+window.addEventListener('scroll', () => {
+  const scrollY   = window.scrollY;
+  const innerH    = window.innerHeight;
+  const docHeight = document.documentElement.scrollHeight;
+
+  // hide Top when you're within HIDE_THRESHOLD px of the very top
+  const nearTop = scrollY <= HIDE_THRESHOLD;
+  toTop.classList.toggle('hidden', nearTop);
+
+  // hide Bottom when you're within HIDE_THRESHOLD px of the very bottom
+  const nearBottom = innerH + scrollY >= docHeight - HIDE_THRESHOLD;
+  toBottom.classList.toggle('hidden', nearBottom);
+});
+  document.getElementById('hamburger').addEventListener('click', () => {
+    const menu = document.getElementById('menu');
+    const container = document.getElementById('container');
+    menu.classList.toggle('collapsed');
+    container.classList.toggle('menu-collapsed');
+  });
+ 
+ function updateHamburgerPosition() {
+  const wrapper = document.getElementById('pageWrapper');
+  const style = document.documentElement.style;
+  const padding = 4; // 1rem = 16px
+
+  if (!wrapper) return;
+
+  const rect = wrapper.getBoundingClientRect();
+  const leftOffset = Math.max(rect.left + padding, 8);
+
+  style.setProperty('--hamburger-left', `${leftOffset}px`);
+}
+
+// Always update on resize
+window.addEventListener('resize', updateHamburgerPosition);
+
+// On full load, wait for layout & fonts
+window.addEventListener('load', () => {
+  const runUpdate = () => {
+    requestAnimationFrame(() => {
+      updateHamburgerPosition();
+      setTimeout(updateHamburgerPosition, 50); // Just in case layout shifts again
+    });
+  };
+
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(runUpdate);
+  } else {
+    runUpdate(); // Fallback if fonts not supported
+  }
+});
+</script>
+<!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "c3f956e7631f4157896a46121c04d295"}'></script><!-- End Cloudflare Web Analytics -->
+</body>
+</html>

@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Merge Sort</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>  
+  <script src="/Algorithms/scripts/chapterScripts.js"></script>
+  <link rel="stylesheet" href="/Algorithms/css/style.css">
+  <link rel="stylesheet" href="/Algorithms/css/chapter.css">
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-DQ5LVZVFDC');
+</script>
+</head>
+<body>
+  <h1>Merge Sort</h1>
+
+  <section id="problem-solved" section-title="Problem Solved">
+<h2>Problem Solved</h2>
+  <p>
+    Merge Sort solves the 
+    <a class="problem" href="?path=Problems%2FFoundational%2FSorting">Sorting</a> problem.
+  </p>
+
+
+</section><section id="design-and-strategy" section-title="Design and Strategy">
+<h2>Design and Strategy</h2>
+<p>
+  Merge Sort uses the <strong>divide-and-conquer</strong> approach.  
+  It proceeds as follows:
+</p>
+<ol>
+  <li>
+    If the list has at most one item, it’s already sorted, so do nothing.
+  </li>
+  <li>
+    Otherwise, divide the list into two halves—a first half and a second half.
+  </li>
+  <li>
+    Sort each half independently, using Merge Sort, of course.
+  </li>
+  <li>
+    Take the two sorted halves and merge them together by always picking the 
+	smaller front item from either half. Once one half is empty, copy
+	the remaining elements of the other list to the end of the array.
+	An auxiliary array is needed for this step.
+  </li>
+</ol>
+
+<p>Before we can give a more formal description of the algorithm we must discuss how to
+accomplish the <em>merge</em> step. If you are unfamiliar with how this is done, please
+read the <a class="problem" href="?path=Algorithms/Greedy/Merge">Merge</a> section before continuing.
+</p>
+
+
+
+<p>
+  To sort an array \(A\) of length \(n\), we let \(left=0\) and \(right=n-1\) 
+ and proceed as follows.  (Note: it treats both \(left\) and \(right\) as inclusive endpoints.)
+</p>
+
+<ol class="spaced">
+  <li>
+    <strong>Base case:</strong>
+    When your subarray has zero or one element, it is by definition already sorted, so do nothing.
+  </li>
+  <li>
+    <strong>Split the problem in half:</strong>
+    For a subarray that starts at index \(\mathrm{left}\) and ends at index \(\mathrm{right}\), compute
+    \[
+      \mathrm{mid} \;=\; \left\lfloor \frac{\mathrm{left} + \mathrm{right}}{2} \right\rfloor.
+    \]
+    Now you have two smaller tasks: sort the left half of \(A\) \(\bigl(\mathrm{left}\dots\mathrm{mid}\bigr)\)
+    and sort the right half of \(A\) \(\bigl(\mathrm{mid}+1\dots\mathrm{right}\bigr)\).
+  </li>
+  <li>
+    <strong>Sort each half recursively:</strong>
+    Call Merge Sort on the left half and then again on the right half.
+  </li>
+  <li>
+    <strong>Merge the sorted halves:</strong>
+    Once both halves are individually sorted, <a class="problem" href="?path=Algorithms/Greedy/Merge">Merge</a> 
+	them back into a single sorted array.
+  </li>
+</ol>
+
+<section id="demo" section-title="Interactive Demo">
+<div class="embeddedDemoContainer">
+  <iframe class="embeddedDemo"
+          src="/Algorithms/Content/Demos/Divide-and-Conquer/Merge Sort Demo.html"
+          allow="fullscreen"
+          nam="merge-sort-demo">
+  </iframe>
+</div>
+</section>
+
+
+  
+</section><section id="implementation-in-java-c-python" section-title="Implementation in Java, C++, Python">
+<h2>Implementation in Java, C++, Python</h2>
+
+The implementations are initially called 
+as <code>mergeSort(A,0,n-1)</code>. An alternative version for Python is given
+that takes advantage of some shortcuts, but it is not as efficient as the first version.
+<div class="tab-group">
+  <div class="tabs" role="tablist">
+   <button
+    id="tab-java"
+    class="tablink active"
+    data-lang="java"
+    role="tab"
+    aria-controls="java"
+    aria-selected="true">
+    Java
+  </button>
+   <button
+    id="tab-cpp"
+    class="tablink"
+    data-lang="cpp"
+    role="tab"
+    aria-controls="c++"
+    aria-selected="true">
+    C++
+  </button>
+   <button
+    id="tab-python"
+    class="tablink"
+    data-lang="python"
+    role="tab"
+    aria-controls="python"
+    aria-selected="true">
+    Python
+  </button>
+   <button
+    id="tab-python2"
+    class="tablink"
+    data-lang="python2"
+    role="tab"
+    aria-controls="python version 2"
+    aria-selected="true">
+    Python (alternate version)
+  </button>
+  </div>
+  <div id="java" class="code-container active" role="tabpanel"  aria-labelledby="tab-java">
+<pre><code class="language-java">public static void mergeSort(int[] A, int left, int right) {
+  if (left < right) {
+    int mid = left + (right - left) / 2;
+    mergeSort(A, left, mid);
+    mergeSort(A, mid + 1, right);
+    merge(A, left, mid, right);
+  }
+}
+
+public static void merge(int[] A, int left, int mid, int right) {
+  int n1 = mid - left + 1;
+  int n2 = right - mid;
+  int[] L = new int[n1];
+  int[] R = new int[n2];
+  // copy into temporary lists
+  for (int i = 0; i < n1; i++) 
+      L[i] = A[left + i];
+  for (int j = 0; j < n2; j++) 
+      R[j] = A[mid + 1 + j];
+  int i = 0, j = 0, k = left;
+  // merge back into A
+  while (i < n1 && j < n2) {
+    if (L[i] <= R[j]) 
+	    A[k++] = L[i++];
+    else 
+	    A[k++] = R[j++];
+  }
+  // copy any remaining elements of L (if R is exhausted)
+  while (i < n1) 
+      A[k++] = L[i++];
+  // copy any remaining elements of R (if L is exhausted)
+  while (j < n2) 
+      A[k++] = R[j++];
+}</code></pre>
+  </div>
+
+  <div id="cpp" class="code-container" role="tabpanel"  aria-labelledby="tab-cpp">
+<pre><code class="language-cpp">void mergeSort(int A[], int left, int right) {
+  if (left < right) {
+    int mid = left + (right - left) / 2;
+    mergeSort(A, left, mid);
+    mergeSort(A, mid + 1, right);
+    merge(A, left, mid, right);
+  }
+}
+
+void merge(int A[], int left, int mid, int right) {
+  int n1 = mid - left + 1;
+  int n2 = right - mid;
+  int* L = new int[n1];
+  int* R = new int[n2];
+  // copy into temporary lists
+  for (int i = 0; i < n1; i++) 
+      L[i] = A[left + i];
+  for (int j = 0; j < n2; j++) 
+      R[j] = A[mid + 1 + j];
+  int i = 0, j = 0, k = left;
+  // merge back into A
+  while (i < n1 && j < n2) {
+    if (L[i] <= R[j]) 
+	    A[k++] = L[i++];
+    else 
+	    A[k++] = R[j++];
+  }
+  // copy any remaining elements of L (if R is exhausted)
+  while (i < n1) 
+      A[k++] = L[i++];
+  // copy any remaining elements of R (if L is exhausted)
+  while (j < n2) 
+      A[k++] = R[j++];
+  // delete dynamically allocated memory
+  delete[] L;
+  delete[] R;
+}</code></pre>
+  </div>
+  <div id="python" class="code-container" role="tabpanel"  aria-labelledby="tab-python">
+<pre><code class="language-python">def merge_sort(A, left, right):
+    if left < right:
+        mid = left + (right - left) // 2
+        merge_sort(A, left, mid)
+        merge_sort(A, mid + 1, right)
+        merge(A, left, mid, right)
+
+def merge(A, left, mid, right):
+    n1 = mid - left + 1
+    n2 = right - mid
+
+    # copy into temporary lists
+    L = [A[left + i] for i in range(n1)]
+    R = [A[mid + 1 + j] for j in range(n2)]
+
+    i = j = 0       # current indices in L and R
+    k = left        # current index in A where we write
+
+    # merge back into A
+    while i < n1 and j < n2:
+        if L[i] <= R[j]:
+            A[k] = L[i]
+            i += 1
+        else:
+            A[k] = R[j]
+            j += 1
+        k += 1
+
+    # copy any remaining elements of L (if R is exhausted)
+    while i < n1:
+        A[k] = L[i]
+        i += 1
+        k += 1
+
+    # copy any remaining elements of R (if L is exhausted)
+    while j < n2:
+        A[k] = R[j]
+        j += 1
+        k += 1
+</code></pre>
+  </div>
+  <div id="python2" class="code-container active" role="tabpanel"  aria-labelledby="tab-python-version2">
+<pre><code class="language-python">def merge_sort(A):
+    if len(A) <= 1:
+        return A
+    mid = len(A) // 2
+    left = merge_sort(A[:mid])
+    right = merge_sort(A[mid:])
+    return merge(left, right)
+
+def merge(left, right):
+    result = []
+    i = j = 0
+    while i < len(left) and j < len(right):
+        if left[i] <= right[j]:
+            result.append(left[i]); i += 1
+        else:
+            result.append(right[j]); j += 1
+    result.extend(left[i:])
+    result.extend(right[j:])
+    return result</code></pre>
+  </div>
+  </div>
+
+
+ 
+</section><section id="timespace-analysis" section-title="Time/Space Analysis">
+<h2>Time/Space Analysis</h2>
+<div class="section">
+  
+  <p><strong>Time Complexity:</strong>
+  Let \(T(n)\) be the time (number of basic operations) required by Merge Sort to sort an array of length <code>n</code>.  
+  We can break each call into three parts:
+</p>
+
+<ol class="spaced">
+  <li>
+    <strong>Divide:</strong>  
+    Compute the midpoint and split the array into two halves of size roughly \(n/2\).  
+    This takes constant time, say \(\alpha\).
+  </li>
+  <li>
+    <strong>Conquer (recursive calls):</strong>  
+    Recursively call Merge Sort on each half.  
+	Each half has size \(\lfloor n/2\rfloor\) or \(\lceil n/2\rceil\), 
+	but for simplicity we write it as two calls of size \(n/2\). 
+    Since \(T(n)\) is the time to sort an array of size \(n\), it takes \(T(n/2)\) time
+    to sort an array of size \(n/2\). Thus, the two recursive calls take	
+    \(2\,T(n/2)\) time.
+  </li>
+  <li>
+    <strong>Combine (merge):</strong>  
+    Merge the two sorted halves back together with a single left-to-right sweep, comparing elements and copying them into a result.  
+    This takes \(\beta\,n\) time (for some constant \(\beta\)).
+  </li>
+</ol>
+
+<p>
+  Since sorting an array of size 1 takes constant time, we get
+</p>
+<p style="text-align:center;">
+  \[
+    T(n) \;=\; 2\,T\!\bigl(\tfrac n2\bigr)\;+\;\alpha\;+\;\beta\,n,
+    \quad
+    T(1) = 1.
+  \]
+</p>
+<p>Assuming we only want a bound on the complexity, we can simplify this to </p>
+<p style="text-align:center;">
+  \[
+    T(n) \;=\; 2\,T\!\bigl(\tfrac n2\bigr)\;+\;n,
+    \quad
+    T(1) = 1.
+  \]
+</p>
+
+<p>
+  There are various ways of solving this recurrence relation
+  (backward substitution, forward substitution, Master Theorem) that all
+  give us \[T(n)=\Theta(n\log n).\]
+</p>
+<p>
+Notice that the complexity does not depend on the initial order of elements.
+Thus, Merge Sort takes a predictable amount of time to sort any array of a given size.
+</p>
+
+<p><strong>Space Complexity:</strong>  
+   Merge Sort requires two types of extra space:</p>
+
+<ul>
+  <li>
+    <strong>Auxiliary arrays:</strong>  
+    At each merge step, temporary storage of total size \(n\) is allocated to hold the two halves before copying back, for \(\Theta(n)\) extra space.
+  </li>
+  <li>
+    <strong>Recursion stack:</strong>  
+    The recursion depth reaches \(\lceil \log_{2} n\rceil\), 
+	consuming \(\Theta(\log n)\) stack frames, each of constant size.
+  </li>
+</ul>
+
+<p>
+  Thus, overall the space complexity is \(\Theta(\log n\;+\;n)\;=\;\Theta(n)\).
+</p>
+
+</div>
+
+</section><section id="variationsimprovements" section-title="Variations/Improvements">
+<h2>Variations/Improvements</h2>
+<p>
+  There are several well-known variations and optimizations:
+</p>
+<ul>
+  <li>
+    <strong>Bottom-Up (Iterative) Merge Sort:</strong>
+    Instead of recursing, you start by merging subarrays of size 1, then size 2, 4, 8, and so on, 
+	doubling the run size each pass. This eliminates the recursion overhead.
+  </li>
+  <li>
+    <strong>Natural Merge Sort:</strong>
+    Leverages existing runs in the input: scan the array to identify already sorted runs (monotonic sequences), then repeatedly merge adjacent runs. On partially ordered data, this can be faster than the Θ(n log n) bound.
+  </li>
+  <li>
+    <strong>In-Place Merge:</strong>
+    The typical merge uses Θ(n) auxiliary space. In-place merge algorithms exist—using techniques like block rearrangement or pointer arithmetic—to perform the merge with only Θ(1) extra space, at the cost of more complex code and slightly higher constant factors.
+  </li>
+  <li>
+    <strong>Hybrid Approaches:</strong>
+    For small subarrays (e.g. length ≤ 32), switching to an Insertion Sort or selection sort can reduce overhead. This “cut-off” optimization exploits the fact that simple sorts outperform Merge Sort on tiny segments.
+  </li>
+  <li>
+    <strong>Multi-Way Merge:</strong>
+    Instead of dividing into two halves, you can split into k > 2 runs and do a k-way merge using a min-heap. This is especially useful in external sorting (e.g. merging many sorted files) to reduce the number of merge passes.
+  </li>
+  <li>
+  <strong>Timsort:</strong> A hybrid stable sort combining natural Merge Sort and Insertion Sort: it identifies existing monotonic runs, uses Insertion Sort to extend short runs to a minimum “minrun” length, then merges runs via a stack-based policy with “galloping” when one run consistently outpaces the other.  
+  This yields Θ(n) performance on nearly-sorted data and Θ(n log n) worst-case, and is used as the default sort in Python and Java.
+</li>
+
+</ul>
+
+
+</section><section id="links-to-resources" section-title="Links to Resources">
+<h2>Links to Resources</h2>
+<ul>
+  <li><a href="https://en.wikipedia.org/wiki/Merge_sort">Merge Sort (Wikipedia)</a></li>
+  <li><a href="https://www.geeksforgeeks.org/merge-sort/">GeeksforGeeks: Merge Sort</a></li>
+  <li><a href="https://visualgo.net/en/sorting?slide=5">VisuAlgo: Merge Sort</a></li>
+  <li><a href="https://codepen.io/maxwell_alexius/pen/peLbRR?q=merge%20sort&order=popularity&depth=everything&show_forks=false" target="_blank">MergeSort Visualization</a></li>
+
+  <li><A href="https://www.youtube.com/watch?v=XaqR3G_NVoo" target="_blank">Merge-sort with Transylvanian-saxon (German) folk dance</a></li>
+  <li><a href="http://www.cs.usfca.edu/~galles/visualization/ComparisonSort.html" target="_blank">Sorting Demos</a></li> 
+  <li><a href="https://www.youtube.com/watch?v=kPRA0W1kECg" target="_blank">15 Sorting Algorithms in 6 Minutes</a></li>
+</ul>
+
+  
+</section><section id="reading-comprehension-questions" section-title="Reading Comprehension Questions">
+<h2>Reading Comprehension Questions</h2>
+  <ol>
+    <li>What is the worst-, average-, and best-case time complexity of Merge Sort?</li>
+    <li>Which recurrence relation models Merge Sort, and how is it solved?</li>
+    <li>Why is Merge Sort called a divide-and-conquer algorithm?</li>
+    <li>Is Merge Sort stable? Explain your answer.</li>
+    <li>What extra space does Merge Sort need and why?</li>
+    <li>Does Merge Sort do the work on the way down the recursive calls or on the way up?</li>
+  </ol>
+  <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
+  <div id="answers" class="answer" hidden>
+    <ol>
+      <li><strong>Answer:</strong> It is always Θ(n log n).</li>
+      <li><strong>Answer:</strong> T(n)=2T(n/2)+n, solved by the Master Theorem (among other options) to Θ(n log n).</li>
+      <li><strong>Answer:</strong> It splits the array (dividing), sorts halves recursively (conquering), then merges.</li>
+      <li><strong>Answer:</strong> Yes—merging preserves the order of equal keys, assuming merge is implemented
+	  so that it chooses from the left array when keys are equal.</li>
+      <li><strong>Answer:</strong> O(n) for the auxiliary arrays used in each merge.</li>
+      <li><strong>Answer:</strong> On the way up since it merges after the two subarrays have been sorted.</li>
+    </ol>
+  </div>
+
+  <div class="section">
+    
+</section><section id="in-class-activities" section-title="In-Class Activities">
+<h2>In-Class Activities</h2>
+    <ol>
+      <li>Draw the recursion tree for a size-8 array and annotate work per level.</li>
+      <li>Trace Merge Sort on <code>[5,3,8,1,2,7,4,6]</code> by hand.</li>
+      <li>Trace Insertion Sort on the data from the previous question and discuss the number of
+	  comparisons used for each algorithm.</li>
+      <li>Implement bottom-up (iterative) Merge Sort and discuss pros/cons.</li>
+      <li>Experiment with stability using arrays containing duplicates.
+	  Can you make versions of Merge Sort that are both stable and unstable? Discuss.</li>
+    </ol>
+  </div>
+
+  <div class="section">
+    
+</section><section id="problems" section-title="Problems">
+<h2>Problems</h2>
+    <ol>
+      <li>Implement bottom-up (iterative) Merge Sort in your favorite language.</li>
+      <li>Design an in-place merge and analyze its complexity.</li>
+      <li>Count the number of comparisons and moves Merge Sort uses 
+	  on <code>[8,7,6,5,4,3,2,1]</code> and <code>[1,2,3,4,5,6,7,8]</code>.</li>
+	  <li>Implement Merge Sort for a singly-linked list and compare its performance and space usage to the array-based version.</li>
+      <li>Design and implement a parallel Merge Sort (using threads or processes); 
+      measure its speedup on large inputs and analyze the overheads that limit scalability.</li>
+    </ol>
+  </div>
+
+  
+
+</section></body>
+</html>

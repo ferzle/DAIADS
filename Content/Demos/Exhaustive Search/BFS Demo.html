@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>BFS Demo</title>
+  <!-- Reuse your existing CSS -->
+  <script src="/Algorithms/scripts/demoScripts.js"></script>
+  <link rel="stylesheet" href="/Algorithms/css/style.css">
+  <link rel="stylesheet" href="/Algorithms/css/demo.css">
+
+<style>
+  /* Variables */
+  :root {
+    --node-fill: lightblue;
+    --node-stroke: #444;
+    --edge-stroke: #888;
+    --edge-highlight: yellow;
+    --label-offset: 15;
+    --font-sans: sans-serif;
+  }
+
+  /* Graph Nodes */
+  .graphNode circle {
+    fill: var(--node-fill);
+    stroke: var(--node-stroke);
+    stroke-width: 1px;
+  }
+  /* Ensure node fills reflect BFS states */
+  .graphNode.white circle { fill: lightblue; }
+  .graphNode.gray  circle { fill: orange; }
+  .graphNode.black circle { fill: lightgreen; }
+  .graphNode.visited circle { fill: lightgreen; }
+  .graphNode.current circle { fill: orange; stroke-width: 2.5px; }
+  .graphNode text {
+    font-size: 20px;
+    text-anchor: middle;
+    dominant-baseline: middle;
+    fill: #202020;
+  }
+
+  /* Edges */
+  #svg line {
+    stroke: var(--edge-stroke);
+    stroke-width: 3px;
+  }
+  #svg line[stroke-dasharray] {
+    stroke: rgb(238,232,170) !important;
+    stroke-width: 5px !important;
+    stroke-dasharray: none !important;
+  }
+  #linkLayer line.current-edge {
+    stroke: crimson;
+    stroke-width: 4px;
+  }
+  /* Final-step styling */
+  #linkLayer line.tree-edge-final {
+    stroke: #1e88e5 !important; /* blue */
+    stroke-width: 5px !important;
+    stroke-dasharray: none !important;
+    opacity: 1 !important;
+  }
+  #linkLayer line.nontree-final {
+    stroke: #d0d0d0 !important; /* very light gray, but visible */
+    stroke-opacity: 1 !important;
+    stroke-width: 2px !important;
+  }
+
+  /* Distance labels (positioned via JS) */
+  .edgeLabel {
+    font-size: 18px;
+    text-anchor: middle;
+    dominant-baseline: middle;
+  }
+
+  /* Panels & Layout */
+  .panel { display: flex; flex-direction: column; align-items: center; }
+  .panel h3 {
+    font-family: var(--font-sans);
+    font-size: 1.1em;
+    margin-bottom: 0.5em;
+  }
+  .graph-panel { flex: 1 1 auto; box-sizing: border-box; }
+  .table-panel { flex: 0 0 250px; margin-left: 10px; }
+
+  /* Queue & Commentary */
+  #structures {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 10px 0;
+    font-family: var(--font-sans);
+    min-height: 60px;
+  }
+  #structures div { display: flex; align-items: center; gap: 5px; }
+
+  #queue-container {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    align-items: center;
+    column-gap: 8px;
+    height: 60px;
+    width: 100%;
+  }
+  #queue {
+    display: inline-flex;
+    align-items: center;
+    overflow-x: auto;
+    white-space: nowrap;
+    max-width: 750px;
+  }
+  #neighbors {
+    display: inline-flex;
+    align-items: center;
+    overflow-x: auto;
+    white-space: nowrap;
+    max-width: 750px;
+  }
+  .queueNode {
+    margin: 0 4px;
+    flex: 0 0 auto;
+    background: none;
+    border: none;
+  }
+  .queue-arrow { margin: 0 4px; flex: 0 0 auto; }
+  #neighbors-container {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    align-items: center;
+    column-gap: 8px;
+    height: 60px;
+    width: 100%;
+  }
+
+  /* State Table */
+  #state-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--font-sans);
+  }
+  #state-table th,
+  #state-table td {
+    border: 1px solid #ddd;
+    padding: 0.3em;
+    text-align: center;
+  }
+  #state-table th { background: #f0f0f0; }
+  .highlighted-row { outline: 2px solid #000; }
+  .color-cell.blue   { background: lightblue;  color: #000; }
+  .color-cell.orange { background: orange;     color: #000; }
+  .color-cell.green  { background: lightgreen; color: #000; }
+
+  /* Legend under table */
+  .table-panel .legend {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.3em;
+    font-family: var(--font-sans);
+    margin-top: 1em;
+  }
+  .table-panel .legend strong { display: block; margin-bottom: 0.25em; }
+  .table-panel .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+  }
+  .table-panel .legend-box {
+    width: 1em;
+    height: 1em;
+    display: inline-block;
+  }
+  .legend-box.default { background: lightblue; }
+  .legend-box.current { background: orange; }
+  .legend-box.visited { background: lightgreen; }
+
+  /* Reduce spacing before headings */
+  .graph-panel p { margin-top: 0; }
+  .table-panel h3 { margin-top: 0; }
+
+  .drag-note {
+    font-size: 0.9em;
+    font-style: italic;
+    margin: 0.25em 0;
+  }/* force our SVG to always have a white background */
+  #svg {
+      width: 100%;
+      height: auto;
+      max-height: var(--svg-max-height, 500px);
+      background-color: #fff !important;
+    }
+#demo-wrapper {
+  min-height: 800px;
+  display: flex;
+  flex-direction: column;
+}
+
+  #controls label {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    #controls input[type="range"] {
+      vertical-align: middle;
+    }
+  </style>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-DQ5LVZVFDC');
+</script>
+</head>
+
+<body class="no-tooltips">
+<div id="demo-wrapper">
+  <h2>Breadth-First Search Demo</h2>
+
+  <!-- Step controls -->
+  <div id="controls">
+  <!-- 1) Graph size + generate graph immediately after -->
+  <label>
+    Vertices:
+    <input id="graphSize" type="number" min="1" max="15" value="8" style="width:3.5em">
+  </label>
+  <label>
+    Edge %:
+    <input id="edgeDensity" type="number" min="0" max="1" step="0.05" value="0.3" style="width:4.5em">
+  </label>
+  <button id="generateBtn">Generate</button>
+
+  <!-- 2) Source node + its own button -->
+  <label>
+    Source:
+    <input id="sourceNode" type="number" min="0" max="14" value="0" style="width:3.5em">
+  </label>
+  <button id="generateSourceBtn">Set</button>
+  &nbsp; &nbsp;<label>Canvas Size: <input id="svgSize" type="range" min="250" max="1200" value="500" style="width:100px"></label>
+
+  <!-- 3) break before the traversal controls -->
+  <br>
+
+  <button id="prevBtn" disabled>Previous</button>
+  <button id="nextBtn" disabled>Next</button>
+  <button id="playBtn">Play</button>
+  <label for="speedSelect">Speed:</label>
+  <select id="speedSelect">
+    <option value="1">1×</option>
+    <option value="2">2×</option>
+    <option value="4">4×</option>
+  </select>
+</div>
+
+<script>
+  // after initializeDemo is defined, add:
+ // generate graph (as before)
+document.getElementById('generateBtn').addEventListener('click', () => {
+  const rawSize = parseInt(document.getElementById('graphSize').value, 10) || 6;
+  const n       = Math.min(15, Math.max(1, rawSize));
+  adjList = generateGraph(n);
+  nodePositions = layoutGraph(adjList);
+
+  // update source-input max
+  const srcInput = document.getElementById('sourceNode');
+  srcInput.max   = n - 1;
+
+  // build BFS from current source
+  const rawSrc = parseInt(srcInput.value, 10);
+  const start  = Math.min(n - 1, Math.max(0, isNaN(rawSrc) ? 0 : rawSrc));
+
+  srcInput.value = start;               // ← add this
+
+  steps = buildBfsSteps(adjList, start);
+  stepIndex = 0;
+  renderStep();
+});
+
+
+// new: regenerate BFS from an existing graph when source changes
+document.getElementById('generateSourceBtn').addEventListener('click', () => {
+  const srcInput = document.getElementById('sourceNode');
+  const rawSrc   = parseInt(srcInput.value, 10);
+  const start    = Math.min(adjList.length - 1, Math.max(0, isNaN(rawSrc) ? 0 : rawSrc));
+
+  srcInput.value = start;               // ← add this
+
+  // rebuild BFS without regenerating the graph
+  steps = buildBfsSteps(adjList, start);
+  stepIndex = 0;
+  renderStep();
+});
+</script>
+
+  <!-- Graph drawing area -->
+    <!-- remove the standalone SVG and the old #structures div entirely -->
+
+<!-- New -->
+<div id="main-container" style="display:flex; align-items:flex-start; gap:10px;">
+
+  <!-- Graph Panel -->
+  <div class="panel graph-panel">
+    <p><b>Graph</b> (Drag vertices to reposition them)</p>
+    <!-- wrap the <g> layers _inside_ the svg -->
+    <svg id="svg" viewBox="0 0 800 800" preserveAspectRatio="xMidYMid meet">
+      <g id="linkLayer"></g>
+      <g id="labelLayer"></g>
+      <g id="nodeLayer"></g>
+    </svg>
+  </div>  <!-- end .graph-panel -->
+
+  <!-- State Table Panel stays where it is -->
+  <div class="panel table-panel">
+    <h3>Vertex Table</h3>
+    <table id="state-table">
+      <thead>
+        <tr>
+          <th>v</th>
+          <th>d</th>
+          <th>p</th>
+          <th>color</th>
+        </tr>
+      </thead>
+      <tbody id="state-table-body"></tbody>
+    </table>
+	<div class="legend">
+	  <strong>Legend:</strong>
+	  <div class="legend-item">
+		<span class="legend-box default"></span>
+		<span class="legend-label">Unvisited</span>
+	  </div>
+	  <div class="legend-item">
+		<span class="legend-box current"></span>
+		<span class="legend-label">Visited</span>
+	  </div>
+	  <div class="legend-item">
+		<span class="legend-box visited"></span>
+		<span class="legend-label">All Neighbors Visited</span>
+	  </div>
+	</div>
+
+  </div>
+</div> <!-- end #main-container -->  
+
+<!-- Queue + Commentary inside Graph panel -->
+    <div id="structures">
+      <div id="queue-container">
+        <strong>Queue:</strong> <span id="queue"></span>
+      </div>
+      <div id="neighbors-container">
+        <strong id="neighbors-title">Neighbors:</strong> <span id="neighbors"></span>
+      </div>
+    </div>
+    <div id="commentary"></div>
+</div>
+  <script>
+    // ── JavaScript for BFS Demo ──
+const width   = 800,
+      height  = 800,
+      radius  = 30,            // bump this up to taste
+      margin  = 10;            // small extra padding
+// now pull the nodes almost to the very edge:
+const circleR = width/2 - radius - margin;
+const centerX = width  / 2,
+      centerY = height / 2;
+
+    let adjList, steps, stepIndex = 0,
+        nodePositions = [];
+
+    // Generate a random connected graph of n nodes
+    function generateGraph(n) {
+      const adj = Array.from({ length: n }, () => []);
+      
+      // Create a random undirected graph without connectivity guarantees
+      const edgeDensity = parseFloat(document.getElementById('edgeDensity').value) || 0.3;
+      for(let i = 0; i < n; i++) {
+        for(let j = i + 1; j < n; j++) {
+          if(Math.random() < edgeDensity) {
+            adj[i].push(j);
+            adj[j].push(i);
+          }
+        }
+      }
+      
+      return adj;
+    }
+function layoutGraph(adj) {
+  const svgEl = document.getElementById('svg');
+  // gets you { x:0, y:0, width:800, height:800 }
+  const vb = svgEl.viewBox.baseVal;
+  const cx = vb.width  / 2;
+  const cy = vb.height / 2;
+
+  // pick a node radius and padding in *viewBox* units:
+  const nodeR  = 30;   // your circle radius
+  const margin = 20;   // how far from the edge you want nodes
+
+  // ring radius in user units:
+  const ringR = vb.width/2 - nodeR - margin;
+
+  // now evenly space them:
+  return adj.map((_, i) => {
+    const θ = 2*Math.PI * i/adj.length - Math.PI/2;
+    return {
+      x: cx + ringR * Math.cos(θ),
+      y: cy + ringR * Math.sin(θ)
+    };
+  });
+}
+    // Build the step-by-step event list for BFS from start=0
+    // New buildBfsSteps
+// ── 1) buildBfsSteps ──
+function buildBfsSteps(adj, start) {
+  const events = [];
+  const treeEdges = [];   
+  const labeledEdges = [];
+  const n = adj.length;
+
+  // initialize
+  const color = Array(n).fill('white');
+  const d     = Array(n).fill(Infinity);
+  const p     = Array(n).fill(null);
+
+  color[start] = 'gray';
+  d[start]     = 0;
+
+  const queue = [ start ];
+  events.push({
+    desc: `Initialize BFS with source = ${start}; set d[${start}]=0 and color ${start} orange`,
+    color: color.slice(),
+    d:     d.slice(),
+    p:     p.slice(),
+    queue: queue.slice(),
+    current: null,
+	labeledEdges: labeledEdges.slice()
+  });
+
+  while (queue.length > 0) {
+    const u = queue.shift();
+
+    // prepare a mutable list of u’s edges
+    let pendingEdges = adj[u].map(v => ({ from: u, to: v }));
+
+    // ① Dequeue step: highlight *all* of u’s edges
+    events.push({
+      desc: `Dequeue node ${u}; traversing all of ${u}’s neighbors…`,
+      color: color.slice(),
+      d:     d.slice(),
+      p:     p.slice(),
+      queue: queue.slice(),
+      current: u,
+      highlightEdges: pendingEdges.slice(),
+	  labeledEdges: labeledEdges.slice()
+    });
+
+    // ② For each neighbor...
+    for (const v of adj[u]) {
+	  // 1) remove the u→v edge so it disappears in *every* event
+	  pendingEdges = pendingEdges.filter(e => !(e.from === u && e.to === v));
+
+	  // 2) decide what to do & how to describe it
+	  let desc;
+	  if (color[v] === 'white') {
+		  color[v] = 'gray';
+		  d[v]     = d[u] + 1;
+		  p[v]     = u;
+		  queue.push(v);
+		  // record this as a tree edge:
+		  treeEdges.push({ from: u, to: v });  
+		// record the distance label:
+		  labeledEdges.push({ from: u, to: v, dist: d[v] });
+
+		  desc = `Checked neighbor ${v} of node ${u}. It was unvisited (blue), so set d[${v}] = d[${u}] + 1, p[${v}] = ${u}, color ${v} orange, and enqueue it.`;
+		  
+		  events.push({
+			desc,
+			color:          color.slice(),
+			d:              d.slice(),
+			p:              p.slice(),
+			queue:          queue.slice(),
+			current:        u,
+			highlightEdges: pendingEdges.slice(),
+			updatedVertex:  v ,   // ← tag which row to outline
+			newlyLabeledEdge: { from:u, to:v, dist: d[v] },
+            currentEdge:    { from: u, to: v },         // ← NEW!
+			labeledEdges: labeledEdges.slice()
+		  });
+		  continue;  // skip the generic push below
+	}
+	  else if (color[v] === 'gray') {
+		// → ALREADY DISCOVERED
+		desc = `Checked neighbor ${v} of node ${u}: it’s already visited (orange), so skip.`;
+	  }
+	  else {
+		// color[v] === 'black'
+		// → ALREADY FINISHED
+		desc = `Checked neighbor ${v} of node ${u}: it’s already finished (green), so skip.`;
+	  }
+
+	  // 3) emit one event per edge, highlighting only the *remaining* edges
+	  events.push({
+		desc,
+		color:          color.slice(),
+		d:              d.slice(),
+		p:              p.slice(),
+		queue:          queue.slice(),
+		current:        u,
+		highlightEdges: pendingEdges.slice(),
+        currentEdge:    { from: u, to: v }, 
+		labeledEdges: labeledEdges.slice()
+	  });
+}
+
+
+    // ③ After all neighbors, finish u (clears all highlights)
+    color[u] = 'black';
+    events.push({
+      desc: `Finished exploring all neighbors of ${u}; color ${u} green`,
+      color:    color.slice(),
+      d:        d.slice(),
+      p:        p.slice(),
+      queue:    queue.slice(),
+      current:  null,
+	  labeledEdges: labeledEdges.slice()
+      // no highlightEdges ⇒ linkLayer.innerHTML='' clears highlights
+    });
+  }
+  events.push({
+    desc: 'BFS complete. Now highlighting the BFS tree edges.',
+    color:     color.slice(),
+    d:         d.slice(),
+    p:         p.slice(),
+    queue:     queue.slice(),
+    current:   null,
+    highlightEdges: treeEdges,
+	labeledEdges: labeledEdges.slice()
+  });
+
+  return events;
+}
+
+    // Get current position of node i
+    function computeNodePosition(i, n) {
+      if (nodePositions[i]) return nodePositions[i];
+      const angle = 2 * Math.PI * i / n - Math.PI / 2;
+      return {
+        x: centerX + circleR * Math.cos(angle),
+        y: centerY + circleR * Math.sin(angle)
+      };
+    }
+
+    function updateNode(i) {
+      const g = document.querySelector(`g.graphNode[data-id='${i}']`);
+      if (!g) return;
+      const pos = nodePositions[i];
+      g.querySelector('circle').setAttribute('cx', pos.x);
+      g.querySelector('circle').setAttribute('cy', pos.y);
+      g.querySelector('text').setAttribute('x', pos.x);
+      g.querySelector('text').setAttribute('y', pos.y + 4);
+    }
+
+    function updateEdges(i) {
+      adjList[i].forEach(j => {
+        const id = `edge-${Math.min(i,j)}-${Math.max(i,j)}`;
+        const line = document.getElementById(id);
+        if (line) {
+          const p1 = nodePositions[Math.min(i,j)];
+          const p2 = nodePositions[Math.max(i,j)];
+          line.setAttribute('x1', p1.x);
+          line.setAttribute('y1', p1.y);
+          line.setAttribute('x2', p2.x);
+          line.setAttribute('y2', p2.y);
+        }
+        const hl = document.querySelector(`#linkLayer line[data-edge='${id}']`);
+        if (hl) {
+          const p1 = nodePositions[i];
+          const p2 = nodePositions[j];
+          hl.setAttribute('x1', p1.x);
+          hl.setAttribute('y1', p1.y);
+          hl.setAttribute('x2', p2.x);
+          hl.setAttribute('y2', p2.y);
+        }
+      });
+	    // now also update the crimson “current edge” if there is one
+	  const ev = steps[stepIndex];
+	  if (ev.currentEdge) {
+		const { from, to } = ev.currentEdge;
+		const line = document.querySelector('#linkLayer line.current-edge');
+		if (line) {
+		  const p1 = nodePositions[from];
+		  const p2 = nodePositions[to];
+		  line.setAttribute('x1', p1.x);
+		  line.setAttribute('y1', p1.y);
+		  line.setAttribute('x2', p2.x);
+		  line.setAttribute('y2', p2.y);
+		}
+	  }
+    }
+
+function addDragHandlers(g, i) {
+  const svgEl = document.getElementById('svg');
+  const radius = /* your node radius */ 30;
+
+  g.addEventListener('mousedown', e => {
+    e.preventDefault();
+
+    // 1) Prepare our helper point and the inverse CTM
+    const pt     = svgEl.createSVGPoint();
+    const ctmInv = svgEl.getScreenCTM().inverse();
+
+    // 2) Figure out the drag offset in SVG-space
+    pt.x = e.clientX; pt.y = e.clientY;
+    const startP = pt.matrixTransform(ctmInv);
+    const offsetX = startP.x - nodePositions[i].x;
+    const offsetY = startP.y - nodePositions[i].y;
+
+    // 3) Compute the two SVG-space corners for clamping
+    const r = radius;
+    const rect = svgEl.getBoundingClientRect();
+    const tl = new DOMPoint(rect.left  + r, rect.top    + r).matrixTransform(ctmInv);
+    const br = new DOMPoint(rect.right - r, rect.bottom - r).matrixTransform(ctmInv);
+
+    function onMove(e2) {
+      // map mouse → SVG point
+      pt.x = e2.clientX; pt.y = e2.clientY;
+      const p = pt.matrixTransform(ctmInv);
+
+      // clamp to our dynamic corners
+      const x = Math.max(tl.x, Math.min(br.x, p.x - offsetX));
+      const y = Math.max(tl.y, Math.min(br.y, p.y - offsetY));
+
+      nodePositions[i].x = x;
+      nodePositions[i].y = y;
+      updateNode(i);
+      updateEdges(i);
+      updateLabels(i);
+    }
+
+    function onUp() {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    }
+
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  });
+}
+
+/*
+function addDragHandlers(g, i) {
+  const svgEl = document.getElementById('svg');
+  const vb    = svgEl.viewBox.baseVal;
+  const minX  = vb.x + radius;
+  const maxX  = vb.x + vb.width  - radius;
+  const minY  = vb.y + radius;
+  const maxY  = vb.y + vb.height - radius;
+
+  g.addEventListener('mousedown', e => {
+    e.preventDefault();
+    const svgRect = svgEl.getBoundingClientRect();
+    const offsetX = e.clientX - svgRect.left - nodePositions[i].x;
+    const offsetY = e.clientY - svgRect.top  - nodePositions[i].y;
+
+    function onMove(e2) {
+      // raw new position
+      let x = e2.clientX - svgRect.left - offsetX;
+      let y = e2.clientY - svgRect.top  - offsetY;
+      // clamp it
+      x = Math.min(maxX, Math.max(minX, x));
+      y = Math.min(maxY, Math.max(minY, y));
+      nodePositions[i].x = x;
+      nodePositions[i].y = y;
+      updateNode(i);
+      updateEdges(i);
+      updateLabels(i);
+    }
+
+    function onUp() {
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+    }
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  });
+}*/
+
+    // Render the current step
+   function renderStep() {
+  const ev = steps[stepIndex];
+
+  // 1) update the commentary text
+  document.getElementById('commentary').textContent = ev.desc;
+
+  // 2) redraw graph
+  renderGraph(ev);
+
+  // 3) redraw queue right under the graph
+  renderQueue(ev);
+  // 3.5) list neighbors for the current node
+  renderNeighbors(ev);
+
+  // 4) rebuild the state table
+  renderTable(ev);
+
+  // 5) update Prev/Next buttons
+  updateButtons();
+}
+
+
+// New helper (place anywhere in your <script> block)
+// ── 2) renderGraph ──
+function renderGraph(ev) {
+  const svgNS     = 'http://www.w3.org/2000/svg';
+  const linkLayer = document.getElementById('linkLayer');
+  const nodeLayer = document.getElementById('nodeLayer');
+  const labelLayer = document.getElementById('labelLayer');
+
+  linkLayer.innerHTML = '';
+  nodeLayer.innerHTML = '';
+  labelLayer.innerHTML = '';
+
+  // draw static base edges once
+  const isFinal = (stepIndex === steps.length - 1);
+  const treeSet = new Set();
+  if (isFinal && ev.highlightEdges) {
+    ev.highlightEdges.forEach(({from,to}) => {
+      const id = `edge-${Math.min(from,to)}-${Math.max(from,to)}`;
+      treeSet.add(id);
+    });
+  }
+  adjList.forEach((nbrs, i) => {
+    nbrs.forEach(j => {
+      if (i < j) {
+        const p1 = computeNodePosition(i, adjList.length);
+        const p2 = computeNodePosition(j, adjList.length);
+        const L  = document.createElementNS(svgNS, 'line');
+        const id = `edge-${i}-${j}`;
+        L.setAttribute('id', id);
+        L.setAttribute('x1', p1.x);
+        L.setAttribute('y1', p1.y);
+        L.setAttribute('x2', p2.x);
+        L.setAttribute('y2', p2.y);
+        // Lighten non-tree edges only on the final step
+        if (isFinal && !treeSet.has(id)) {
+          L.classList.add('nontree-final');
+        }
+        linkLayer.appendChild(L);
+      }
+    });
+  });
+
+ // 2) draw _all_ distance labels up to this step
+  if (ev.labeledEdges) {
+    ev.labeledEdges.forEach(({from,to,dist})=>{
+      const p1 = computeNodePosition(from,adjList.length);
+      const p2 = computeNodePosition(to,  adjList.length);
+      // midpoint + perpendicular offset:
+      const midX = (p1.x+p2.x)/2, midY = (p1.y+p2.y)/2;
+      const dx   = p2.x-p1.x,   dy   = p2.y-p1.y;
+      const len  = Math.hypot(dx,dy)||1;
+      const ux   = dx/len,      uy   = dy/len;
+      const px   = -uy,         py   =  ux;
+      const offset = 15;
+      const x = midX + px*offset, y = midY + py*offset;
+
+      const lbl = document.createElementNS(svgNS,'text');
+      lbl.classList.add('edgeLabel');
+      lbl.dataset.edge = `edge-${Math.min(from,to)}-${Math.max(from,to)}`;
+      lbl.setAttribute('x',x);
+      lbl.setAttribute('y',y);
+      lbl.setAttribute('font-size','20');
+      lbl.setAttribute('text-anchor','middle');
+      lbl.setAttribute('dominant-baseline','middle');
+      lbl.textContent = dist;
+      labelLayer.appendChild(lbl);
+    });
+  }
+
+  // draw highlight edges
+  if (ev.highlightEdges) {
+    ev.highlightEdges.forEach(({ from, to }) => {
+      const p1 = computeNodePosition(from, adjList.length);
+      const p2 = computeNodePosition(to,   adjList.length);
+      const id = `edge-${Math.min(from,to)}-${Math.max(from,to)}`;
+      const H  = document.createElementNS(svgNS, 'line');
+      H.setAttribute('data-edge', id);
+      H.setAttribute('x1', p1.x);
+      H.setAttribute('y1', p1.y);
+      H.setAttribute('x2', p2.x);
+      H.setAttribute('y2', p2.y);
+      if (isFinal) {
+        // Final step: make tree edges darker/blue
+        H.classList.add('tree-edge-final');
+      } else {
+        // During traversal: keep existing highlight style
+        H.setAttribute('stroke', 'yellow');
+        H.setAttribute('stroke-width', '4');
+        H.setAttribute('stroke-dasharray', '6 4');
+      }
+      linkLayer.appendChild(H);
+    });
+  }
+// draw the single “current edge” if present
+if (ev.currentEdge) {
+  const { from, to } = ev.currentEdge;
+  const p1 = computeNodePosition(from, adjList.length);
+  const p2 = computeNodePosition(to,   adjList.length);
+  const E  = document.createElementNS(svgNS, 'line');
+  E.setAttribute('x1', p1.x);
+  E.setAttribute('y1', p1.y);
+  E.setAttribute('x2', p2.x);
+  E.setAttribute('y2', p2.y);
+  E.classList.add('current-edge');
+  linkLayer.appendChild(E);
+}
+
+if (ev.newlyLabeledEdge) {
+  const { from, to, dist } = ev.newlyLabeledEdge;
+  const edgeId = `edge-${Math.min(from,to)}-${Math.max(from,to)}`;
+  const lbl = linkLayer.ownerSVGElement
+                 .querySelector(`text.edgeLabel[data-edge='${edgeId}']`);
+  if (lbl) lbl.textContent = dist;
+}
+
+  // draw nodes
+  ev.color.forEach((col, i) => {
+    const pos = computeNodePosition(i, adjList.length);
+    const g   = document.createElementNS(svgNS, 'g');
+    g.dataset.id = i;
+    g.classList.add('graphNode', col);
+    if (ev.current === i)    g.classList.add('current');
+    else if (col === 'black') g.classList.add('visited');
+
+    const circ = document.createElementNS(svgNS, 'circle');
+    circ.setAttribute('cx', pos.x);
+    circ.setAttribute('cy', pos.y);
+    circ.setAttribute('r', radius);
+    const fill = col === 'white'
+               ? 'lightblue'
+               : col === 'gray'
+                 ? 'orange'
+                 : 'lightgreen';
+    circ.setAttribute('fill', fill);
+    circ.setAttribute('stroke', '#444');
+    circ.setAttribute('stroke-width', '2');
+    g.appendChild(circ);
+
+    const txt = document.createElementNS(svgNS, 'text');
+    txt.setAttribute('x', pos.x);
+    txt.setAttribute('y', pos.y + 4);
+    txt.setAttribute('text-anchor', 'middle');
+    txt.setAttribute('dominant-baseline', 'middle');
+    txt.setAttribute('font-size', '20');
+    txt.textContent = i;
+    g.appendChild(txt);
+
+    nodeLayer.appendChild(g);
+    addDragHandlers(g, i);
+  });
+}
+
+function updateLabels(i) {
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const layer = document.getElementById('labelLayer');
+  adjList[i].forEach(j => {
+    // match the same edge-id you used when you created them
+    const edgeId = `edge-${Math.min(i,j)}-${Math.max(i,j)}`;
+    const lbl = layer.querySelector(`text.edgeLabel[data-edge='${edgeId}']`);
+    if (!lbl) return;
+    // recompute endpoints
+    const p1 = nodePositions[i];
+    const p2 = nodePositions[j];
+    // midpoint
+    const midX = (p1.x + p2.x)/2, midY = (p1.y + p2.y)/2;
+    // perpendicular offset
+    const dx = p2.x - p1.x, dy = p2.y - p1.y;
+    const len = Math.hypot(dx, dy) || 1;
+    const ux = dx/len, uy = dy/len;
+    const px = -uy, py = ux;
+    const offset = 15;    // same offset you used when drawing
+    // set new label coords
+    lbl.setAttribute('x', midX + px*offset);
+    lbl.setAttribute('y', midY + py*offset);
+  });
+}
+
+
+function renderQueue(ev) {
+  const queueEl = document.getElementById('queue');
+  queueEl.innerHTML = '';
+  ev.queue.forEach((node, i) => {
+    queueEl.insertAdjacentHTML('beforeend', `
+      <svg class="queueNode" width="40" height="40" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="20" cy="20" r="18" fill="lightblue" stroke="#444" stroke-width="2"/>
+        <text x="20" y="24" text-anchor="middle" dominant-baseline="middle" font-size="16">${node}</text>
+      </svg>
+    `);
+    if (i < ev.queue.length - 1) {
+      queueEl.insertAdjacentHTML('beforeend', '<span class="queue-arrow">→</span>');
+    }
+  });
+}
+
+// Render the neighbor list of the current node, highlighting the active neighbor
+function renderNeighbors(ev) {
+  const titleEl = document.getElementById('neighbors-title');
+  const listEl  = document.getElementById('neighbors');
+  listEl.innerHTML = '';
+
+  if (ev.current === null || ev.current === undefined) {
+    titleEl.textContent = 'Neighbors:';
+    return;
+  }
+
+  const u = ev.current;
+  titleEl.textContent = `Neighbors of ${u}:`;
+
+  const activeV = ev.currentEdge ? ev.currentEdge.to : null;
+  (adjList[u] || []).forEach((v, i) => {
+    const isActive = (activeV === v);
+    const stroke   = isActive ? 'crimson' : '#444';
+    const strokeW  = isActive ? 4 : 2;
+    listEl.insertAdjacentHTML('beforeend', `
+      <svg class="queueNode" width="40" height="40" xmlns="http://www.w3.org/2000/svg" title="${v}">
+        <circle cx="20" cy="20" r="18" fill="lightblue" stroke="${stroke}" stroke-width="${strokeW}"/>
+        <text x="20" y="24" text-anchor="middle" dominant-baseline="middle" font-size="16">${v}</text>
+      </svg>
+    `);
+    if (i < adjList[u].length - 1) {
+      listEl.insertAdjacentHTML('beforeend', '<span class="queue-arrow">,</span>');
+    }
+  });
+}
+
+// ── Render the right‐hand state table ──
+function renderTable(ev) {
+  const tbody = document.getElementById('state-table-body');
+  tbody.innerHTML = '';
+  const colorMap = { white:'blue', gray:'orange', black:'green' };
+
+  ev.color.forEach((col, i) => {
+    const tr = document.createElement('tr');
+    if (ev.updatedVertex === i) {
+      tr.classList.add('highlighted-row');
+    }
+
+    const displayText = colorMap[col] || col;
+    tr.innerHTML = `
+      <td>${i}</td>
+      <td>${ev.d[i] === Infinity ? '∞' : ev.d[i]}</td>
+      <td>${ev.p[i] === null ? 'NIL' : ev.p[i]}</td>
+      <td class="color-cell ${displayText}">${displayText}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// after your addDragHandlers, add:
+
+function clampAllNodes() {
+  const svgEl = document.getElementById('svg');
+  const radius = /* your radius */ 30;
+
+  // build the inverse CTM and helper point
+  const pt     = svgEl.createSVGPoint();
+  const ctmInv = svgEl.getScreenCTM().inverse();
+
+  // compute the on-screen rect → SVG-space corners
+  const rect = svgEl.getBoundingClientRect();
+  const tl   = new DOMPoint(rect.left  + radius, rect.top    + radius)
+                   .matrixTransform(ctmInv);
+  const br   = new DOMPoint(rect.right - radius, rect.bottom - radius)
+                   .matrixTransform(ctmInv);
+
+  // clamp each node
+  nodePositions.forEach((pos, i) => {
+    pos.x = Math.max(tl.x, Math.min(br.x, pos.x));
+    pos.y = Math.max(tl.y, Math.min(br.y, pos.y));
+    updateNode(i);
+    updateEdges(i);
+    updateLabels(i);
+  });
+}
+
+// Hook it up:
+window.addEventListener('resize', clampAllNodes);
+// If you have a fullscreen toggle button, call clampAllNodes() after exiting FS.
+
+    // Step controls
+    function nextStep() {
+      if (stepIndex < steps.length - 1) {
+        stepIndex++;
+        renderStep();
+      }
+    }
+    function prevStep() {
+      if (stepIndex > 0) {
+        stepIndex--;
+        renderStep();
+      }
+    }
+    function updateButtons() {
+      document.getElementById('prevBtn').disabled = stepIndex === 0;
+      document.getElementById('nextBtn').disabled = stepIndex === steps.length - 1;
+    }
+
+    // Initialize on page load
+    function initializeDemo() {
+        adjList = generateGraph(8);                // graph size = 8
+        nodePositions = layoutGraph(adjList);
+
+        // initialize source-input to valid range [0,5]
+        const srcInput = document.getElementById('sourceNode');
+        srcInput.max = adjList.length - 1;
+        const rawSrc = parseInt(srcInput.value, 10);
+        const start  = Math.min(adjList.length - 1,
+                        Math.max(0, isNaN(rawSrc) ? 0 : rawSrc));
+  steps   = buildBfsSteps(adjList, start);
+      stepIndex = 0;
+      document.getElementById('prevBtn').addEventListener('click', prevStep);
+      document.getElementById('nextBtn').addEventListener('click', nextStep);
+      renderStep();
+    }
+
+    // — Playback controls for BFS demo —
+
+let timer = null;
+const playBtn      = document.getElementById('playBtn');
+const speedSelect  = document.getElementById('speedSelect');
+
+// toggle Play/Pause
+playBtn.addEventListener('click', () => {
+  if (timer) {
+    clearInterval(timer);
+    timer = null;
+    playBtn.textContent = 'Play';
+  } else {
+    playBtn.textContent = 'Pause';
+    timer = setInterval(() => {
+      if (stepIndex < steps.length - 1) nextStep();
+      else {
+        clearInterval(timer);
+        playBtn.textContent = 'Play';
+      }
+    }, 1000 / parseInt(speedSelect.value, 10));
+  }
+});
+
+// if you change speed while playing, restart at new rate
+speedSelect.addEventListener('change', () => {
+  if (timer) {
+    clearInterval(timer);
+    playBtn.textContent = 'Pause'; // still playing
+    timer = setInterval(() => {
+      if (stepIndex < steps.length - 1) nextStep();
+      else {
+        clearInterval(timer);
+        playBtn.textContent = 'Play';
+      }
+    }, 1000 / parseInt(speedSelect.value, 10));
+  }
+});
+
+window.onload = initializeDemo;
+
+// SVG size control
+const svgSizeSlider = document.getElementById('svgSize');
+const svgElement = document.getElementById('svg');
+
+function updateSvgSize() {
+  const size = svgSizeSlider.value;
+  document.documentElement.style.setProperty('--svg-max-height', size + 'px');
+  
+  // Trigger a resize event to clamp nodes if needed
+  setTimeout(clampAllNodes, 100);
+}
+
+svgSizeSlider.addEventListener('input', updateSvgSize);
+
+// Initialize SVG size
+updateSvgSize();
+</script>
+</body>
+</html>

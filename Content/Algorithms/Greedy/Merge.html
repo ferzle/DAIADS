@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Merge</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>  
+  <script src="/Algorithms/scripts/chapterScripts.js"></script>
+  <link rel="stylesheet" href="/Algorithms/css/style.css">
+  <link rel="stylesheet" href="/Algorithms/css/chapter.css">
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-DQ5LVZVFDC');
+</script>
+</head>
+<body>
+
+<h1>Merge</h1>
+
+<h2>Problem Solved</h2>
+<p>
+Merge solves the
+<a class="problem" href="?path=Problems%2FFoundational%2FMerge">Merge</a> problem.
+</p>
+<h2>Design and Strategy</h2>
+<p>
+When merging two sorted lists, a natural strategy is to compare their front elements and repeatedly 
+select the smaller one. Think of it as using two fingers—one pointing to each list—advancing the finger 
+that pointed to the smaller item just added to the result. This continues until one list is exhausted, 
+at which point the remainder of the other list is appended. This elegant and efficient linear-time 
+technique not only preserves the overall sorted order but also exemplifies a classic <b>greedy</b> 
+design approach: at each step, it makes the locally optimal choice (the smallest remaining item), 
+which leads to a globally correct result.
+</p>
+<p>
+A slightly more formal step-through of the algorithm is as follows:
+</p>
+<p>
+<ol>
+  <li>Start with two sorted lists: List \(A\) and List \(B\), and an empty list \(C\).</li>
+  <li>
+    While neither list is empty:
+    <ol type='a'>
+      <li>Compare the first items of \(A\) and \(B\).</li>
+      <li>Add the smaller item to the end of \(C\) and remove the item from its list.</li>
+    </ol>
+  </li>
+  <li>When one list is empty, append the remaining items from the other list to \(C\).</li>
+</ol>
+<p>
+In actual implementations, we don’t remove elements from the original lists. Instead, we use pointers or indices to track our position in each list. This allows the algorithm to run efficiently in linear time without modifying the original data.
+</p>
+
+<div class="embeddedDemoContainer">
+  <iframe class="embeddedDemo"
+          src="/Algorithms/Content/Demos/Greedy/Merge Demo.html"
+          allow="fullscreen"
+          name="merge-demo">
+  </iframe>
+</div>
+
+
+<h2>Implementation in Java, C++, Python</h2>
+<p>Here are implementations that take two separate sorted arrays as input and 
+output a sorted array that combined the two input arrays.</p>
+
+<div class="tab-group">
+	<div class="tabs" role="tablist">
+   <button
+    id="tab-java"
+    class="tablink active"
+    data-lang="java"
+    role="tab"
+    aria-controls="java"
+    aria-selected="true">
+    Java
+  </button>
+   <button
+    id="tab-cpp"
+    class="tablink"
+    data-lang="cpp"
+    role="tab"
+    aria-controls="c++"
+    aria-selected="true">
+    C++
+  </button>
+   <button
+    id="tab-python"
+    class="tablink"
+    data-lang="python"
+    role="tab"
+    aria-controls="python"
+    aria-selected="true">
+    Python
+  </button>
+  </div>
+  <div id="java" class="code-container active" role="tabpanel"  aria-labelledby="tab-java">
+	<pre><code class="language-java">public static int[] merge(int[] A, int[] B) {
+	int nA = A.length, nB = B.length;
+	int[] C = new int[nA + nB];
+	int i = 0, j = 0, k = 0;
+	while (i < nA && j < nB) {
+		if (A[i] <= B[j]) 
+		    C[k++] = A[i++];
+		else              
+		    C[k++] = B[j++];
+	}
+	while (i < nA) 
+	    C[k++] = A[i++];
+	while (j < nB) 
+	    C[k++] = B[j++];
+	return C;
+}</code></pre>
+	</div>
+
+  <div id="cpp" class="code-container active" role="tabpanel"  aria-labelledby="tab-cpp">
+	<pre><code class="language-cpp">int* merge(const int A[], int nA, const int B[], int nB) {
+	int total = nA + nB;
+	int* C = new int[total];
+	int i = 0, j = 0, k = 0;
+
+	// Merge until one input runs out
+	while (i < nA && j < nB) {
+		if (A[i] <= B[j]) 
+		    C[k++] = A[i++];
+		else              
+		    C[k++] = B[j++];
+	}
+	// Copy any remaining elements
+	while (i < nA) 
+	    C[k++] = A[i++];S
+	while (j < nB) 
+	    C[k++] = B[j++];
+
+	return C;
+}</code></pre>
+	</div>
+
+  <div id="python" class="code-container active" role="tabpanel"  aria-labelledby="tab-python">
+	<pre><code class="language-python">def merge(A, B):
+	i = j = 0
+	C = []
+	while i < len(A) and j < len(B):
+		if A[i] <= B[j]:
+			C.append(A[i]); i += 1
+		else:
+			C.append(B[j]); j += 1
+	# append any leftovers
+	C.extend(A[i:])
+	C.extend(B[j:])
+	return C	</code></pre>
+	</div>
+</div>
+
+
+	<p>
+  Unfortunately, that version is not very useful in many contexts—especially for use in Merge Sort. The following implementation takes in a single array <code>A</code> together with three indices—<code>left</code>, <code>mid</code> and <code>right</code>—and merges the two sorted subarrays 
+  <code>A[left…mid]</code> and <code>A[mid+1…right]</code> into one sorted segment in <code>A[left…right]</code>. It does this by
+  <ol>
+    <li>Maintaining two read pointers (<code>i</code> at <code>left</code> and <code>j</code> at <code>mid+1</code>) and a write pointer <code>k</code> into a temporary array,</li>
+    <li>Repeatedly comparing <code>A[i]</code> and <code>A[j]</code>, copying the smaller into the temp array and advancing that pointer,</li>
+    <li>Once one side runs out, copying any remaining elements from the other side,</li>
+    <li>And finally copying the merged result back into <code>A[left…right]</code>.  
+  </ol>
+  This “in‐place” style merge integrates cleanly into the recursive structure of Merge Sort.
+</p>
+
+	<div class="tab-group">
+	<div class="tabs" role="tablist">
+   <button
+    id="tab-java"
+    class="tablink active"
+    data-lang="java"
+    role="tab"
+    aria-controls="java"
+    aria-selected="true">
+    Java
+  </button>
+   <button
+    id="tab-cpp"
+    class="tablink"
+    data-lang="cpp"
+    role="tab"
+    aria-controls="c++"
+    aria-selected="true">
+    C++
+  </button>
+   <button
+    id="tab-python"
+    class="tablink"
+    data-lang="python"
+    role="tab"
+    aria-controls="python"
+    aria-selected="true">
+    Python
+  </button>
+  </div>
+  <div id="java" class="code-container active" role="tabpanel"  aria-labelledby="tab-java">
+		<pre><code class="language-java">public static void merge(int[] A, int left, int mid, int right) {
+	int n1 = mid - left + 1;
+	int n2 = right - mid;
+	// allocate auxiliary arrays
+	int[] L = new int[n1];
+	int[] R = new int[n2];
+
+	// copy into L and R
+	for (int i = 0; i < n1; i++)  
+		L[i] = A[left + i];
+	for (int j = 0; j < n2; j++)  
+		R[j] = A[mid + 1 + j];
+
+	// merge back into A
+	int i = 0, j = 0, k = left;
+	while (i < n1 && j < n2) {
+		if (L[i] <= R[j]) 
+			A[k++] = L[i++];
+		else              
+			A[k++] = R[j++];
+	}
+
+	// copy the remaining elements of the unfinished array
+	while (i < n1)  
+		A[k++] = L[i++];
+	while (j < n2)  
+		A[k++] = R[j++];
+}</code></pre>
+		</div>
+
+  <div id="cpp" class="code-container active" role="tabpanel"  aria-labelledby="tab-cpp">
+		<pre><code class="language-cpp">void merge(int A[], int left, int mid, int right) {
+	int n1 = mid - left + 1;
+	int n2 = right - mid;
+	// allocate auxiliary arrays
+	int* L = new int[n1];
+	int* R = new int[n2];
+
+	// copy into L and R
+	for (int i = 0; i < n1; ++i)  
+		L[i] = A[left + i];
+	for (int j = 0; j < n2; ++j)  
+		R[j] = A[mid + 1 + j];
+
+	// merge back into A
+	int i = 0, j = 0, k = left;
+	while (i < n1 && j < n2) {
+		if (L[i] <= R[j]) 
+			A[k++] = L[i++];
+		else              
+			A[k++] = R[j++];
+	}
+
+	// copy the remaining elements of the unfinished array
+	while (i < n1)  
+		A[k++] = L[i++];
+	while (j < n2)  
+		A[k++] = R[j++];
+
+	// free up the dynamic memory
+	delete[] L;
+	delete[] R;
+}</code></pre>
+	</div>
+
+  <div id="python" class="code-container active" role="tabpanel"  aria-labelledby="tab-python">
+	<pre><code class="language-python">def merge(A, left, mid, right):
+	// copy into L and R
+	L = A[left:mid+1]
+	R = A[mid+1:right+1]
+
+	// merge back into A
+	i = j = 0
+	k = left
+	while i < len(L) and j < len(R):
+		if L[i] <= R[j]:
+			A[k] = L[i]; i += 1
+		else:
+			A[k] = R[j]; j += 1
+		k += 1
+		
+	// copy the remaining elements of the unfinished array
+	while i < len(L):
+		A[k] = L[i]; i += 1; k += 1
+	while j < len(R):
+		A[k] = R[j]; j += 1; k += 1</code></pre>
+	</div>
+</div>
+  
+
+<h2>Time/Space Analysis</h2>
+  <h2>Merge Procedure Analysis</h2>
+
+  <p><b>Time Complexity:</b>
+    Although some elements may be compared multiple times—as the algorithm repeatedly checks
+    the current element of each half—the total number of comparisons never exceeds 
+    \( 2n - 1 \), where 
+    \( n = \text{right} - \text{left} + 1 \).
+    Each of the \( n \) elements is copied once into the auxiliary buffer
+    and once back into the original array, so the overall work is 
+    \( \Theta(n) \).
+  </p>
+
+  <p>
+    Let’s be more detailed with the analysis. Let 
+    \( n = \text{right} - \text{left} + 1 \) denote the total number of elements
+    being merged. The work breaks down into three main passes:
+  </p>
+
+  <ol>
+    <li>
+      <strong>Main merge pass:</strong> Repeatedly compare the next unused element from each half 
+      and copy the smaller into the temporary buffer. This loop runs at most 
+      \( n \) times.
+    </li>
+    <li>
+      <strong>Remainder copy pass:</strong> Once one side is exhausted, copy the remaining 
+      \( k \leq n \) elements from the other half—at most 
+      \( n \) constant-time copies.
+    </li>
+    <li>
+      <strong>Write-back pass:</strong> Copy all 
+      \( n \) elements from the temporary buffer back into 
+      \( A[\text{left}\ldots\text{right}] \), 
+      which requires another \( n \) assignments.
+    </li>
+  </ol>
+
+  <p>
+    Each of these passes is linear in \( n \). 
+    If we let \( c_1 \), \( c_2 \), and 
+    \( c_3 \) be the per-element costs of each pass, then:
+  </p>
+
+  <div>
+    \[
+    T(n) = c_1 n + c_2 n + c_3 n = (c_1 + c_2 + c_3)n = O(n)
+    \]
+  </div>
+
+  <p>
+    In actuality, there are exactly \( n \) elements copied during the first
+    two passes combined, so the constants involved are slightly smaller than this
+    upper-bound analysis suggests. In any case, the time complexity remains 
+    \( \Theta(n) \).
+  </p>
+  <p><B>Space Complexity:</b>
+    We allocate one temporary array of size \( n \), plus a few index variables
+    (\( i \), \( j \), \( k \)) in constant space. Hence, the merge algorithm uses
+    \( \Theta(n) \) auxiliary space.
+  </p>
+
+
+<h2>Variations/Improvements</h2>
+<p>
+<ul>
+  <li>In-place merging algorithms reduce extra space at the cost of increased complexity.</li>
+  <li>Parallel merge can be used to divide work across processors for large datasets.</li>
+</ul>
+</p>
+
+<h2>Links to Resources</h2>
+<ul>
+  <li><a href="https://en.wikipedia.org/wiki/Merge_algorithm" target="_blank">Wikipedia: Merge algorithm</a></li>
+</ul>
+<h2>Reading Comprehension Questions</h2>
+<ol>
+  <li>Why does the merge step run in linear time?</li>
+  <li>What happens when one subarray is exhausted?</li>
+  <li>How much extra space does merge use?</li>
+</ol>
+
+<button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
+
+<div id="answers" class="answer" hidden>
+  <ol>
+    <li><strong>Answer:</strong> Because each element is compared at most twice and copied exactly once into the auxiliary buffer and once back, for a total of Θ(n) operations.</li>
+    <li><strong>Answer:</strong> The remaining elements from the non‐exhausted subarray are copied en masse into the merged output.</li>
+    <li><strong>Answer:</strong> Θ(n) extra space, proportional to the size of the segment being merged.</li>
+  </ol>
+</div>
+
+<h2>In-Class Activities</h2>
+<ol>
+  <li>Trace the merge process by hand on two small sorted lists.</li>
+  <li>Implement merge in pairs, then test with random small arrays.</li>
+  <li>Work together to give code/pseudocode for the version that copies the first half forward
+  and the second half backwards. Discuss the advantages and disadvantages of this version.</li>
+</ol>
+
+<h2>Problems</h2>
+<ol>
+  <li>Implement the version of merge that only uses a single auxiliary array, and 
+  copies the first half forward, the second half backwards,
+  and does not need to worry about checking for the end of the array and/or the middle pass.</li>
+  <li>Design an in-place merge algorithm with O(1) extra space. Give the worst-case complexity of your algorithm.</li>
+</ol>
+
+</body>
+</html>

@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Boyer–Moore Algorithm Tutorial &amp; Demo</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <script src="../../../scripts/chapterScripts.js"></script>
+  <link rel="stylesheet" href="../../../css/style.css">
+  <link rel="stylesheet" href="../../../css/chapter.css">
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-DQ5LVZVFDC');
+</script>
+</head>
+<style>
+.shift-build {
+  list-style: none;
+  padding: 0;
+}
+.shift-build li {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 2em;
+  gap: 1em;
+}
+.shift-build li .details,
+.shift-build li .table-container {
+  flex: 1;
+}
+.shift-build li .details p {
+  margin: 0.5em 0;
+}
+</style>
+<body>
+  <h1>Boyer–Moore Algorithm</h1>
+  <h3><font color="red">UNDER CONSTRUCTION!</font></h3>
+
+  <section id="problem-solved" section-title="Problem Statement">
+    <h2>Problem Statement</h2>
+    <p>Boyer–Moore solves the <a class="problem" href="?path=Problems%2FFoundational%2FStringMatching">String Matching</a> problem: find all occurrences of a pattern <em>P</em> (length <em>m</em>) in a text <em>T</em> (length <em>n</em>) as efficiently as possible.</p>
+  </section>
+
+  <section id="design" section-title="Design and Strategy">
+    <h2>Design and Strategy</h2>
+    <p>The Boyer–Moore algorithm uses two heuristics to skip ahead in the text:</p>
+  <ul>
+    <li><strong>Bad Character Heuristic:</strong> Shift based on the rightmost occurrence of the mismatched character.</li>
+    <li><strong>Good Suffix Heuristic:</strong> Shift based on previously matched suffixes of the pattern.</li>
+  </ul>
+  <p>Preprocessing builds two tables in <em>O(m + σ)</em> time (<em>σ</em> = alphabet size). Searching then runs in sublinear average time <em>O(n/m)</em>, with worst-case <em>O(mn)</em> without further optimizations.</p>
+  </section>
+
+  <section section-title="Bad Character Heuristic">
+    <h3>Bad Character Heuristic</h3>
+    <p>Build a <code>last</code> array (<em>L</em>) mapping each character to its rightmost index in <em>P</em>, or <code>-1</code> if absent. On a mismatch at <code>T[i+j]</code>, shift by <code>j − L[T[i+j]]</code>.</p>
+  </section>
+
+  <section section-title="Preprocessing Walkthrough">
+    <h3>Building the Bad Character Table</h3>
+    <p>For <code>P = "EXAMPLE"</code> (<em>m</em> = 7), we build <em>L</em>:</p>
+  <div style="text-align:center;">
+    <ol class="shift-build" style="display:inline-block; text-align:left;">
+      <li>
+        <div class="details">
+          <strong>Initialize</strong>
+          <p><code>int[] L = new int[256];<br>Arrays.fill(L, -1);</code><br><em>All entries = −1.</em></p>
+        </div>
+        <div class="table-container">
+          <table border="1" cellpadding="6" cellspacing="0">
+            <tr><th>Char</th><th>Last Occurrence</th></tr>
+            <tr><td>All chars</td><td>−1</td></tr>
+          </table>
+        </div>
+      </li>
+      <li>
+        <div class="details">
+          <strong>j = 0 (<code>P[0] = 'E'</code>)</strong>
+          <p><code>L['E'] = 0;</code><br><em>Set last(E) = 0.</em></p>
+        </div>
+        <div class="table-container">
+          <table border="1" cellpadding="6" cellspacing="0">
+            <tr><th>Char</th><th>Last Occurrence</th></tr>
+            <tr><td>E</td><td>0</td></tr>
+            <tr><td>Others</td><td>−1</td></tr>
+          </table>
+        </div>
+      </li>
+      <li>
+        <div class="details">
+          <strong>j = 1 (<code>P[1] = 'X'</code>)</strong>
+          <p><code>L['X'] = 1;</code><br><em>Set last(X) = 1.</em></p>
+        </div>
+        <div class="table-container">
+          <table border="1" cellpadding="6" cellspacing="0">
+            <tr><th>Char</th><th>Last Occurrence</th></tr>
+            <tr><td>E</td><td>0</td></tr>
+            <tr><td>X</td><td>1</td></tr>
+            <tr><td>Others</td><td>−1</td></tr>
+          </table>
+        </div>
+      </li>
+      <li>
+        <div class="details">
+          <strong>j = 2 (<code>P[2] = 'A'</code>)</strong>
+          <p><code>L['A'] = 2;</code><br><em>Set last(A) = 2.</em></p>
+        </div>
+        <div class="table-container">
+          <table border="1" cellpadding="6" cellspacing="0">
+            <tr><th>Char</th><th>Last Occurrence</th></tr>
+            <tr><td>E</td><td>0</td></tr>
+            <tr><td>X</td><td>1</td></tr>
+            <tr><td>A</td><td>2</td></tr>
+            <tr><td>Others</td><td>−1</td></tr>
+          </table>
+        </div>
+      </li>
+      <li>
+        <div class="details">
+          <strong>j = 3 (<code>P[3] = 'M'</code>)</strong>
+          <p><code>L['M'] = 3;</code><br><em>Set last(M) = 3.</em></p>
+        </div>
+        <div class="table-container">
+          <table border="1" cellpadding="6" cellspacing="0">
+            <tr><th>Char</th><th>Last Occurrence</th></tr>
+            <tr><td>E</td><td>0</td></tr>
+            <tr><td>X</td><td>1</td></tr>
+            <tr><td>A</td><td>2</td></tr>
+            <tr><td>M</td><td>3</td></tr>
+            <tr><td>Others</td><td>−1</td></tr>
+          </table>
+        </div>
+      </li>
+      <li>
+        <div class="details">
+          <strong>j = 4 (<code>P[4] = 'P'</code>)</strong>
+          <p><code>L['P'] = 4;</code><br><em>Set last(P) = 4.</em></p>
+        </div>
+        <div class="table-container">
+          <table border="1" cellpadding="6" cellspacing="0">
+            <tr><th>Char</th><th>Last Occurrence</th></tr>
+            <tr><td>E</td><td>0</td></tr>
+            <tr><td>X</td><td>1</td></tr>
+            <tr><td>A</td><td>2</td></tr>
+            <tr><td>M</td><td>3</td></tr>
+            <tr><td>P</td><td>4</td></tr>
+            <tr><td>Others</td><td>−1</td></tr>
+          </table>
+        </div>
+      </li>
+      <li>
+        <div class="details">
+          <strong>j = 5 (<code>P[5] = 'L'</code>)</strong>
+          <p><code>L['L'] = 5;</code><br><em>Set last(L) = 5.</em></p>
+        </div>
+        <div class="table-container">
+          <table border="1" cellpadding="6" cellspacing="0">
+            <tr><th>Char</th><th>Last Occurrence</th></tr>
+            <tr><td>E</td><td>0</td></tr>
+            <tr><td>X</td><td>1</td></tr>
+            <tr><td>A</td><td>2</td></tr>
+            <tr><td>M</td><td>3</td></tr>
+            <tr><td>P</td><td>4</td></tr>
+            <tr><td>L</td><td>5</td></tr>
+            <tr><td>Others</td><td>−1</td></tr>
+          </table>
+        </div>
+      </li>
+      <li>
+        <div class="details">
+          <strong>j = 6 (<code>P[6] = 'E'</code>)</strong>
+          <p><code>L['E'] = 6;</code><br><em>Overwrite last(E) = 6.</em></p>
+        </div>
+        <div class="table-container">
+          <table border="1" cellpadding="6" cellspacing="0">
+            <tr><th>Char</th><th>Last Occurrence</th></tr>
+            <tr><td>E</td><td>6</td></tr>
+            <tr><td>X</td><td>1</td></tr>
+            <tr><td>A</td><td>2</td></tr>
+            <tr><td>M</td><td>3</td></tr>
+            <tr><td>P</td><td>4</td></tr>
+            <tr><td>L</td><td>5</td></tr>
+            <tr><td>Others</td><td>−1</td></tr>
+          </table>
+        </div>
+      </li>
+      <li>
+        <div class="details"><strong>Final Bad Character Table</strong></div>
+        <div class="table-container">
+          <table border="1" cellpadding="6" cellspacing="0">
+            <tr><th>Character</th><th>Last Occurrence</th></tr>
+            <tr><td>E</td><td>6</td></tr>
+            <tr><td>X</td><td>1</td></tr>
+            <tr><td>A</td><td>2</td></tr>
+            <tr><td>M</td><td>3</td></tr>
+            <tr><td>P</td><td>4</td></tr>
+            <tr><td>L</td><td>5</td></tr>
+            <tr><td>Others</td><td>−1</td></tr>
+          </table>
+        </div>
+      </li>
+    </ol>
+  </div>
+
+  <h3>Good Suffix Heuristic</h3>
+  <p>When a mismatch occurs at position <code>j</code> in <em>P</em>, let <code>k</code> = <code>m−1−j</code>. If the suffix of length <code>k</code> also appears elsewhere in the pattern or as a prefix, shift so that that occurrence aligns. We compute a <code>suff</code> array then build the <code>gs</code> table in two phases.</p>
+
+  <h4>Building the Good Suffix Table (Demo Style)</h4>
+  <pre><code class="language-javascript">// Compute suffix lengths
+tools.suffixes = function(pat) {
+  const m = pat.length, suff = Array(m).fill(0);
+  suff[m-1] = m;
+  let g = m - 1, f = 0;
+  for (let i = m - 2; i >= 0; i--) {
+    if (i > g && suff[i + m - 1 - f] < i - g + 1) {
+      suff[i] = suff[i + m - 1 - f];
+    } else {
+      if (i < g) g = i;
+      f = i;
+      while (g >= 0 && pat[g] === pat[g + m - 1 - f]) g--;
+      suff[i] = f - g;
+    }
+  }
+  return suff;
+};
+
+// Build the good-suffix shift table
+tools.buildGoodSuffixTable = function(pat) {
+  const m = pat.length, gs = Array(m).fill(m), suff = tools.suffixes(pat);
+  let j = 0;
+  // Phase 1: prefix matches
+  for (let i = m - 1; i >= 0; i--) {
+    if (suff[i] === i + 1) {
+      for (; j < m - 1 - i; j++) {
+        if (gs[j] === m) gs[j] = m - 1 - i;
+      }
+    }
+  }
+  // Phase 2: other occurrences
+  for (let i = 0; i < m - 1; i++) {
+    gs[m - 1 - suff[i]] = m - 1 - i;
+  }
+  return gs;
+};</code></pre>
+
+  <p>Example for <code>P = "ABCDABC"</code> (<em>m</em> = 7):</p>
+  <ol class="shift-build" style="display:inline-block; text-align:left; max-width:600px;">
+    <li>
+      <div class="details">
+        <strong>1. Initialize <code>suff</code> and variables</strong>
+        <p>Set <code>suff = [0,0,0,0,0,0,0]</code>, then <code>suff[6] = 7</code> (full match).<br>
+        Initialize <code>g = 6</code>, <code>f = 0</code>.</p>
+      </div>
+      <div class="table-container">
+        <table border="1" cellpadding="6" cellspacing="0">
+          <tr><th>i</th><th>suff[i]</th></tr>
+          <tr><td>0–5</td><td>0</td></tr>
+          <tr><td>6</td><td>7</td></tr>
+        </table>
+      </div>
+    </li>
+    <li>
+      <div class="details">
+        <strong>2. Compute <code>suff[5]</code></strong>
+        <p>i = 5 &le; g (6), so set <code>g = 5</code>, <code>f = 5</code>.<br>
+        Compare <code>pat[5]</code> (B) to <code>pat[6]</code> (C) → mismatch → <code>suff[5] = f - g = 0</code>.</p>
+      </div>
+      <div class="table-container">
+        <table border="1" cellpadding="6" cellspacing="0">
+          <tr><th>i</th><th>suff[i]</th></tr>
+          <tr><td>5</td><td>0</td></tr>
+        </table>
+      </div>
+    </li>
+    <li>
+      <div class="details">
+        <strong>3. Compute <code>suff[4]</code></strong>
+        <p>i = 4 &le; g (5), set <code>g = 4</code>, <code>f = 4</code>.<br>
+        Compare <code>pat[4]</code> (A) to <code>pat[6]</code> (C) → mismatch → <code>suff[4] = 0</code>.</p>
+      </div>
+      <div class="table-container">
+        <table border="1" cellpadding="6" cellspacing="0">
+          <tr><th>i</th><th>suff[i]</th></tr>
+          <tr><td>4</td><td>0</td></tr>
+        </table>
+      </div>
+    </li>
+    <li>
+      <div class="details">
+        <strong>4. Compute <code>suff[3]</code></strong>
+        <p>i = 3 &le; g (4), set <code>g = 3</code>, <code>f = 3</code>.<br>
+        Compare <code>pat[3]</code> (D) to <code>pat[6]</code> (C) → mismatch → <code>suff[3] = 0</code>.</p>
+      </div>
+      <div class="table-container">
+        <table border="1" cellpadding="6" cellspacing="0">
+          <tr><th>i</th><th>suff[i]</th></tr>
+          <tr><td>3</td><td>0</td></tr>
+        </table>
+      </div>
+    </li>
+    <li>
+      <div class="details">
+        <strong>5. Compute <code>suff[2]</code></strong>
+        <p>i = 2 &le; g (3), set <code>g = 2</code>, <code>f = 2</code>.<br>
+        Compare backwards:<br>
+        pat[2]=C vs pat[6]=C → match (g→1)<br>
+        pat[1]=B vs pat[5]=B → match (g→0)<br>
+        pat[0]=A vs pat[4]=A → match (g→-1)<br>
+        → <code>suff[2] = f - g = 2 - (-1) = 3</code>.</p>
+      </div>
+      <div class="table-container">
+        <table border="1" cellpadding="6" cellspacing="0">
+          <tr><th>i</th><th>suff[i]</th></tr>
+          <tr><td>2</td><td>3</td></tr>
+        </table>
+      </div>
+    </li>
+    <li>
+      <div class="details">
+        <strong>6. Compute <code>suff[1]</code></strong>
+        <p>i = 1 &gt; g (-1) and <code>suff[1+m-1-f] = suff[5] = 0 &lt; i-g+1 = 3</code> → reuse → <code>suff[1] = 0</code>.</p>
+      </div>
+      <div class="table-container">
+        <table border="1" cellpadding="6" cellspacing="0">
+          <tr><th>i</th><th>suff[i]</th></tr>
+          <tr><td>1</td><td>0</td></tr>
+        </table>
+      </div>
+    </li>
+    <li>
+      <div class="details">
+        <strong>7. Compute <code>suff[0]</code></strong>
+        <p>i = 0 &gt; g (-1) and <code>suff[0+m-1-f] = suff[4] = 0 &lt; i-g+1 = 2</code> → reuse → <code>suff[0] = 0</code>.</p>
+      </div>
+      <div class="table-container">
+        <table border="1" cellpadding="6" cellspacing="0">
+          <tr><th>i</th><th>suff[i]</th></tr>
+          <tr><td>0</td><td>0</td></tr>
+        </table>
+      </div>
+    </li>
+    <li>
+      <div class="details">
+        <strong>Final <code>suff</code> array</strong>
+        <p><code>[0, 0, 3, 0, 0, 0, 7]</code></p>
+      </div>
+      <div class="table-container">
+        <table border="1" cellpadding="6" cellspacing="0">
+          <tr><th>i</th><th>suff[i]</th></tr>
+          <tr><td>0</td><td>0</td></tr>
+          <tr><td>1</td><td>0</td></tr>
+          <tr><td>2</td><td>3</td></tr>
+          <tr><td>3</td><td>0</td></tr>
+          <tr><td>4</td><td>0</td></tr>
+          <tr><td>5</td><td>0</td></tr>
+          <tr><td>6</td><td>7</td></tr>
+        </table>
+      </div>
+    </li>
+    <li>
+      <div class="details">
+        <strong>2. Phase 1: prefix matches</strong>
+        <p>Indices where <code>suff[i] === i + 1</code>: <code>i = 2</code> (since <code>suff[2] = 3 = 2+1</code>).</p>
+        <p>This sets <code>gs[0..4) = m-1-2 = 4</code>.</p>
+      </div>
+      <div class="table-container">
+        <table border="1" cellpadding="6" cellspacing="0">
+          <tr><th>j</th><th>gs[j] after Phase 1</th></tr>
+          <tr><td>0</td><td>4</td></tr>
+          <tr><td>1</td><td>4</td></tr>
+          <tr><td>2</td><td>4</td></tr>
+          <tr><td>3</td><td>4</td></tr>
+          <tr><td>4</td><td>4</td></tr>
+          <tr><td>5</td><td>7</td></tr>
+          <tr><td>6</td><td>7</td></tr>
+        </table>
+      </div>
+    </li>
+    <li>
+      <div class="details">
+        <strong>3. Phase 2: other occurrences</strong>
+        <p>For each <code>i = 0..5</code>, update <code>gs[m-1-suff[i]] = m-1-i</code>. Final <code>gs</code>:</p>
+      </div>
+      <div class="table-container">
+        <table border="1" cellpadding="6" cellspacing="0">
+          <tr><th>j</th><th>gs[j] final</th></tr>
+          <tr><td>0</td><td>4</td></tr>
+          <tr><td>1</td><td>4</td></tr>
+          <tr><td>2</td><td>4</td></tr>
+          <tr><td>3</td><td>4</td></tr>
+          <tr><td>4</td><td>7</td></tr>
+          <tr><td>5</td><td>7</td></tr>
+          <tr><td>6</td><td>1</td></tr>
+        </table>
+      </div>
+    </li>
+  </ol>
+  </section>
+
+  <section id="demo" section-title="Interactive Demo">
+  <div class="embeddedDemoContainer" style="height: 600px">
+    <iframe class="embeddedDemo"
+            src="../../Demos/Space-Time Tradeoff/Boyer-Moore Demo.html"
+            allow="fullscreen"
+            name="boyermoore-demo">
+    </iframe>
+  </div>
+  </section>
+
+  <section id="code" section-title="Implementation in Java, C++, Python">
+    <h2>Code Implementations</h2>
+    <p>The implementations below combine both heuristics. Preprocessing builds <code>last</code>, <code>suffix</code>, and <code>prefix</code> tables.  
+    During search, on a mismatch at <code>j</code>, we compute both the bad-character shift and good-suffix shift and advance by their maximum, ensuring we never skip a valid match and reduce unnecessary comparisons.</p>
+  <div class="tab-group">
+    <div class="tabs" role="tablist">
+      <button id="tab-java" class="tablink active" data-lang="java" role="tab" aria-controls="java" aria-selected="true">Java</button>
+      <button id="tab-cpp" class="tablink" data-lang="cpp" role="tab" aria-controls="c++" aria-selected="false">C++</button>
+      <button id="tab-python" class="tablink" data-lang="python" role="tab" aria-controls="python" aria-selected="false">Python</button>
+    </div>
+
+    <div id="java" class="code-container active" role="tabpanel" aria-labelledby="tab-java">
+<pre><code class="language-java">// Java implementation of Boyer–Moore
+public List<Integer> boyerMooreSearch(String T, String P) {
+    int n = T.length(), m = P.length();
+    List<Integer> result = new ArrayList<>();
+    if (m == 0 || n < m) return result;
+    // 1. Build bad character table
+    int[] last = new int[256];
+    Arrays.fill(last, -1);
+    for (int i = 0; i < m; i++) {
+        last[P.charAt(i)] = i;
+    }
+    // 2. Build good suffix tables
+    int[] suffix = new int[m];
+    boolean[] prefix = new boolean[m];
+    buildGoodSuffix(P, suffix, prefix);
+    // 3. Search
+    int i = 0;
+    while (i <= n - m) {
+        int j = m - 1;
+        while (j >= 0 && P.charAt(j) == T.charAt(i + j)) {
+            j--;
+        }
+        if (j < 0) {
+            result.add(i);
+            i++;  // full match → shift by 1 to continue
+        } else {
+            int bcShift = j - last[T.charAt(i + j)];
+            int gsShift = (j < m - 1) ? moveByGoodSuffix(j, m, suffix, prefix) : 1;
+            i += Math.max(bcShift, gsShift);
+        }
+    }
+    return result;
+}
+
+private void buildGoodSuffix(String P, int[] suffix, boolean[] prefix) {
+    int m = P.length();
+    Arrays.fill(suffix, -1);
+    Arrays.fill(prefix, false);
+    for (int i = 0; i < m - 1; i++) {
+        int j = i, k = 0;
+        while (j >= 0 && P.charAt(j) == P.charAt(m - 1 - k)) {
+            j--; k++;
+            suffix[k] = j + 1;
+        }
+        if (j == -1) prefix[k] = true;
+    }
+}
+
+private int moveByGoodSuffix(int j, int m, int[] suffix, boolean[] prefix) {
+    int k = m - 1 - j;
+    if (suffix[k] != -1) {
+        return j - suffix[k] + 1;
+    }
+    for (int r = j + 2; r < m; r++) {
+        if (prefix[m - r]) {
+            return r;
+        }
+    }
+    return m;
+}</code></pre>
+    </div>
+
+    <div id="cpp" class="code-container" role="tabpanel" aria-labelledby="tab-cpp">
+<pre><code class="language-cpp">// C++ implementation of Boyer–Moore
+vector<int> boyerMooreSearch(const string &T, const string &P) {
+    int n = T.size(), m = P.size();
+    vector<int> result;
+    if (m == 0 || n < m) return result;
+    // 1. Build bad character table
+    vector<int> last(256, -1);
+    for (int i = 0; i < m; i++) last[(unsigned char)P[i]] = i;
+    // 2. Build good suffix tables
+    vector<int> suffix(m, -1);
+    vector<bool> prefix(m, false);
+    for (int i = 0; i < m - 1; i++) {
+        int j = i, k = 0;
+        while (j >= 0 && P[j] == P[m - 1 - k]) {
+            j--; k++;
+            suffix[k] = j + 1;
+        }
+        if (j == -1) prefix[k] = true;
+    }
+    // 3. Search
+    int i = 0;
+    while (i <= n - m) {
+        int j = m - 1;
+        while (j >= 0 && P[j] == T[i + j]) j--;
+        if (j < 0) {
+            result.push_back(i);
+            i++;
+        } else {
+            int bcShift = j - last[(unsigned char)T[i + j]];
+            int gsShift = (j < m - 1) ? [&] {
+                int k = m - 1 - j;
+                if (suffix[k] != -1) return j - suffix[k] + 1;
+                for (int r = j + 2; r < m; r++)
+                    if (prefix[m - r]) return r;
+                return m;
+            }() : 1;
+            i += max(bcShift, gsShift);
+        }
+    }
+    return result;
+}</code></pre>
+    </div>
+
+    <div id="python" class="code-container" role="tabpanel" aria-labelledby="tab-python">
+<pre><code class="language-python">def boyer_moore_search(text: str, pattern: str) -> List[int]:
+    n, m = len(text), len(pattern)
+    result = []
+    if m == 0 or n < m:
+        return result
+    # 1. Build bad character table
+    last = {chr(c): -1 for c in range(256)}
+    for i, ch in enumerate(pattern):
+        last[ch] = i
+    # 2. Build good suffix tables
+    suffix = [-1] * m
+    prefix = [False] * m
+    for i in range(m - 1):
+        j, k = i, 0
+        while j >= 0 and pattern[j] == pattern[m - 1 - k]:
+            suffix[k + 1] = j
+            j -= 1
+            k += 1
+        if j == -1:
+            prefix[k] = True
+    # 3. Search
+    i = 0
+    while i <= n - m:
+        j = m - 1
+        while j >= 0 and pattern[j] == text[i + j]:
+            j -= 1
+        if j < 0:
+            result.append(i)
+            i += 1
+        else:
+            bc_shift = j - last.get(text[i + j], -1)
+            # good suffix shift
+            k = m - 1 - j
+            if suffix[k] != -1:
+                gs_shift = j - suffix[k] + 1
+            else:
+                gs_shift = next((r for r in range(j+2, m) if prefix[m-r]), m)
+            i += max(bc_shift, gs_shift)
+    return result</code></pre>
+    </div>
+  </div>
+  </section>
+
+  <section id="analysis" section-title="Time/Space Analysis">
+    <h2>Time/Space Analysis</h2>
+    <p>Preprocessing: <em>O(m + σ)</em>.  
+    Search: average-case <em>O(n/m)</em>, worst-case <em>O(mn)</em> (without optimizations).  
+    Space: <em>O(σ + m)</em>.</p>
+  </section>
+
+  <section id="reading-questions" section-title="Reading Comprehension Questions">
+    <h2>Reading Comprehension Questions</h2>
+    <ol>
+      <li>What does the bad-character table store, and how is it used?</li>
+      <li>How are the <code>suffix</code> and <code>prefix</code> arrays constructed?</li>
+      <li>Why do we take the maximum of the bad-character and good-suffix shifts?</li>
+      <li>What is the average-case time complexity of Boyer–Moore?</li>
+      <li>How would the algorithm behave on a pattern with no repeated substrings?</li>
+    </ol>
+  </section>
+
+  <section id="activities" section-title="In-Class Activities">
+    <h2>In-Class Activities</h2>
+    <ol>
+      <li>Manually build both tables for a given pattern and verify shifts.</li>
+      <li>Trace the algorithm step-by-step on a sample text to observe skips.</li>
+      <li>Compare Boyer–Moore to Horspool and naïve search on random texts.</li>
+      <li>Extend the implementation to support wildcard characters.</li>
+      <li>Experiment with very large alphabets (e.g., Unicode) and measure preprocess time.</li>
+    </ol>
+  </section>
+
+  <section id="problems" section-title="Homework Problems">
+    <h2>Problems</h2>
+    <ol>
+      <li>Prove the correctness of the good-suffix heuristic.</li>
+      <li>Generalize the algorithm to handle patterns with gaps or wildcards.</li>
+      <li>Analyze worst-case inputs that force <em>O(mn)</em> behavior.</li>
+      <li>Design a parallel variant and discuss scalability.</li>
+      <li>Optimize space usage when σ is very large.</li>
+    </ol>
+  </section>
+</body>
+</html>

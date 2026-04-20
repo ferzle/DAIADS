@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Algorithm Textbook &ndash; Glossary</title>
+  <link rel="stylesheet" href="/Algorithms/css/style.css" />
+  <style>
+    /* Glossary container styling */
+    #glossary-container {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+      padding-bottom: 4rem; /* space for fixed nav */
+    }
+    .glossary-entry { margin-bottom: 1rem; }
+    .glossary-term { font-weight: bold; font-size: 1.1em; color: #333; }
+    .glossary-variants { margin-top: 0.25rem; font-style: italic; color: #555; }
+    .glossary-definition { margin-top: 0.25rem; line-height: 1.4; }
+  </style>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-DQ5LVZVFDC');
+</script>
+</head>
+<body class="no-tooltips">
+  <main id="glossary-container">
+    <h2>Glossary</h2>
+    <div id="entries"></div>
+  </main>
+
+  <script type="module">
+    // Fetch and render glossary entries
+    const container = document.getElementById('entries');
+    function render(glossary) {
+      container.innerHTML = '';
+      glossary.forEach(({variants, definition}) => {
+        const term = variants[0];
+        const others = variants.slice(1);
+        const entry = document.createElement('div');
+        entry.className = 'glossary-entry';
+        let html = `<div class="glossary-term">${term}</div>`;
+        if (others.length) {
+          html += `<div class="glossary-variants"><em>Other Forms:</em> ${others.join(', ')}</div>`;
+        }
+        html += `<div class="glossary-definition">${definition}</div>`;
+        entry.innerHTML = html;
+        container.appendChild(entry);
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      fetch('/Algorithms/scripts/glossary-data.json?cb=' + Date.now(), {cache: 'no-store'})
+        .then(r => r.ok ? r.json() : Promise.reject(r))
+        .then(data => {
+        /*
+          const gloss = data.map(e => ({variants: e.variants || [e.term], definition: e.definition}));
+          gloss.sort((a,b) => a.variants[0].localeCompare(b.variants[0]));
+          render(gloss);
+          */
+          const gloss = data.map(e => {
+              const variants = e.variants || [e.term];
+          
+              // keep v[i] only if it's not just the last kept + "s"
+              const filtered = variants.reduce((keep, v) => {
+                if (
+                  keep.length === 0 ||
+                  v.toLowerCase() !== keep[keep.length - 1].toLowerCase() + 's'
+                ) {
+                  keep.push(v);
+                }
+                return keep;
+              }, []);
+          
+              return { variants: filtered, definition: e.definition };
+            })
+            .sort((a, b) => a.variants[0].localeCompare(b.variants[0]));
+          
+            render(gloss);
+        })
+        .catch(() => container.innerHTML = '<p>Could not load glossary.</p>');
+    });
+  </script>
+</body>
+</html>

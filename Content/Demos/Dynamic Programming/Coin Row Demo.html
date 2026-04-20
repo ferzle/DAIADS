@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Coin Row (DP) Demo</title>
+  <script src="../../../scripts/demoScripts.js"></script>
+  <link rel="stylesheet" href="../../../css/style.css">
+  <link rel="stylesheet" href="../../../css/demo.css">
+
+  <!-- put your custom demo-only CSS in a <style> block -->
+  <style>
+    #stepInfo {
+      white-space: pre-line;
+    }
+    /* permanently mark a backtracked-selected coin */
+    .element.selected {
+      background-color: lightgreen;
+    }
+
+    /* blue-ish for choice1 */
+    .highlight {
+      background-color: yellow;
+    }
+
+    /* red for choice2 */
+    .red-highlight {
+      background-color: lightcoral;
+    }
+
+    /* maybe green for the final write */
+    .written {
+      background-color: lightgreen;
+    }
+    .arrow {
+      top: 45px;
+      line-height: 1.2;
+    }
+    .comparing   { background-color: yellow; }
+    .red-highlight { background-color: lightcoral; }
+    .sorted      { background-color: orange; }
+
+    .array-label {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    .pointer-row {
+      display: flex;
+      justify-content: center;
+      margin-top: 6px;
+    }
+    .pointer-row .pointer {
+      /* match the width of .element boxes – replace with your pixel value if you don’t use a var */
+      flex: 0 0 var(--element-size);
+      text-align: center;
+      line-height: 1.2;
+      font-weight: bold;
+    }
+    .array-container {
+      margin: 10px 0 60px;
+    }
+    .f-array-container {
+      display: flex;
+      gap: 4px;
+      align-items: flex-start;
+      font-size: 18px;
+      position: relative;
+      margin: 10px 0 20px;
+    }
+    /* index wrapper styles, from Merge Sort Demo :contentReference[oaicite:0]{index=0} */
+    .element-wrapper {
+      display: flex;
+      flex-direction: column;    /* stack index above the box */
+      align-items: center;
+      gap: 2px;                  /* small gap between index and box */
+    }
+    .element-index {
+      font-size: 0.9em;
+      color: #555;
+    }
+    .array-container .element-wrapper {
+      /* stack vertically as you already have */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-right: 4px;
+    
+      /* NEW: ideal width = 40px, no grow, can shrink */
+      flex: 0 1 40px;
+      box-sizing: border-box;   /* so padding/margin don’t bust the math */
+    }
+    .array-container .element-wrapper .element {
+      width: 100%;
+      aspect-ratio: 1 / 1;     /* keep it square */
+      height: auto;
+    }
+    .f-array-container .element-wrapper {
+      /* stack vertically as you already have */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-right: 4px;
+    
+      /* NEW: ideal width = 40px, no grow, can shrink */
+      flex: 0 1 40px;
+      box-sizing: border-box;   /* so padding/margin don’t bust the math */
+    }
+    .f-array-container .element-wrapper .element {
+      width: 100%;
+      aspect-ratio: 1 / 1;     /* keep it square */
+      height: auto;
+    }
+    
+  </style>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-DQ5LVZVFDC');
+</script>
+</head>
+<body class="no-tooltips">
+<div id="demoContainer">
+  <h2>Coin Row (Dynamic Programming) Demo</h2>
+
+  <div>
+    <label>Size:
+      <input type="number" id="arraySize" min="5" max="20" value="10" size="2">
+    </label>
+    <button onclick="randomArray()">Random Row</button>
+    <input type="text" id="inputValues" placeholder="Enter comma-separated values" size="40">
+    <button onclick="generateArray()">Create Row</button>
+  </div>
+
+  <div>
+    <button onclick="previousStep()">Previous</button>
+    <button onclick="nextStep()">Next</button>
+    <!-- Added Play/Pause button and Speed dropdown -->
+    <button id="play">Play</button>
+    <label for="speed">Speed:</label>
+    <select id="speed">
+      <option value="1">1×</option>
+      <option value="2">2×</option>
+      <option value="4">4×</option>
+    </select>
+  </div>
+
+  <div class="array-section">
+    <div class="array-label" style="margin-top: 10px;">C (Coin array)</div>
+    <div class="array-container" id="arrayContainer"></div>
+    <!-- ↓ one flex row of “pointer” slots under each box -->
+    <div class="pointer-row" id="inputPointerRow"></div>
+  </div>
+  <div class="array-section">
+    <div class="array-label">M (Dynamic Programming array)</div>
+    <div class="f-array-container" id="dpContainer"></div>
+  </div>
+  <div id="stepInfo" style="margin-top: 10px; margin-bottom: 10px;"></div>
+
+  <div class="legend">
+    <strong>Legend:</strong>
+    <span class="legend-box comparing"></span>Choice 1: CM[i−2] + C[i]
+    <span class="legend-box red-highlight"></span>Choice 2: M[i-1]
+    <span class="legend-box sorted"></span>Computed
+    <span class="legend-box swap"></span>Selected coin
+  </div>
+
+  <script>
+    let row = [];
+    let steps = [];
+    let currentStep = -1;
+    let playing = false;
+    let intervalId = null;
+
+    function generateRandomArray(sizeInput, inputValues) {
+      let size = +sizeInput.value;
+      const minV = parseInt(sizeInput.min);
+      const maxV = parseInt(sizeInput.max);
+      if (size < minV) { size = minV; sizeInput.value = minV; }
+      if (size > maxV) { size = maxV; sizeInput.value = maxV; }
+      row = Array.from({ length: size }, () => Math.floor(Math.random() * 20) + 1);
+      inputValues.value = row.join(',');
+    }
+
+    function generateArray() {
+      const input = document.getElementById('inputValues').value;
+      row = input.split(',').map(Number);
+      initDP();
+    }
+
+    function randomArray() {
+      const sizeInput = document.getElementById('arraySize');
+      const inputValues = document.getElementById('inputValues');
+      generateRandomArray(sizeInput, inputValues);
+      initDP();
+    }
+
+    function initDP() {
+      steps = [];
+      currentStep = -1;
+      computeDP([...row]);
+      renderStep(0);
+    }
+
+    function computeDP(arr) {
+      const n = arr.length;
+      // dp[i] = best value using coins[0..i]
+      let dp = new Array(n).fill(0);
+
+      // Initialize F[0] = coins[0]
+      dp[0] = arr[0];
+      steps.push({
+        arr: [...arr],
+        dp: [...dp],
+        i: 0,
+        phase: 'init',
+        info: `Base Case 1: M[0] = C[0] = ${arr[0]}`
+      });
+
+      // Initialize F[1] = max(coins[0], coins[1])
+      if (n > 1) {
+        dp[1] = Math.max(arr[0], arr[1]);
+        steps.push({
+          arr: [...arr],
+          dp: [...dp],
+          i: 1,
+          phase: 'init',
+          info: `Base Case 2: M[1] = max{ C[0], C[1] } = ${dp[1]}`
+        });
+      }
+
+      for (let i = 2; i < n; i++) {
+        const includeVal = arr[i] + dp[i - 2];
+        const excludeVal = dp[i - 1];
+        dp[i] = Math.max(includeVal, excludeVal);
+
+        if (includeVal > excludeVal) {
+          steps.push({
+            arr: [...arr],
+            dp: [...dp],
+            i,
+            phase: 'choice',
+            info: `M[${i}] = max{ M[${i - 2}] + C[${i}], M[${i - 1}] } = ` +
+                  `max{${dp[i - 2]} + ${arr[i]} , ${dp[i - 1]}} = ${includeVal} (coin taken!)`
+          });
+        } else {
+          steps.push({
+            arr: [...arr],
+            dp: [...dp],
+            i,
+            phase: 'choice',
+            info: `M[${i}] = max{ M[${i - 2}] + C[${i}], M[${i - 1}] } = ` +
+                  `max{${dp[i - 2]} + ${arr[i]}, ${dp[i - 1]}} = ${excludeVal} (coin not taken!)`
+          });
+        }
+      }
+
+      // Backtracking to find which coins were chosen
+      let selected = [];
+      let i = n - 1;
+
+      steps.push({
+        arr: [...arr],
+        dp: [...dp],
+        phase: 'backtrack',
+        info: `Begin backtracking at i = ${i}, M[${i}] = ${dp[i]}`
+      });
+
+      while (i > 0) {
+        const includeVal = arr[i] + (i - 2 >= 0 ? dp[i - 2] : 0);
+        const excludeVal = dp[i - 1];
+
+        if (dp[i] === excludeVal) {
+          steps.push({
+            arr: [...arr],
+            dp: [...dp],
+            i,
+            phase: 'exclude',
+            info:
+              `At i = ${i}: M[${i}] = M[${i - 1}] = ${dp[i]}. ` +
+              `Skipping coin ${i} (value = ${arr[i]}). Move to i = ${i - 1}.`
+          });
+          i--;
+        } else {
+          steps.push({
+            arr: [...arr],
+            dp: [...dp],
+            i,
+            phase: 'select',
+            info:
+              `At i = ${i}: M[${i}] = C[${i}] + M[${i - 2}] ` +
+              `= ${arr[i]} + ${dp[i - 2]} = ${dp[i]}. Selecting coin ${i}. Move to i = ${i - 2}.`
+          });
+          selected.push(i);
+          i -= 2;
+        }
+      }
+
+      if (i === 0) {
+        steps.push({
+          arr: [...arr],
+          dp: [...dp],
+          i: 0,
+          phase: 'select',
+          info:
+            `At i = 0: Only coin 0 remains (value = ${arr[0]}). Select coin 0.`
+        });
+        selected.push(0);
+      }
+
+      selected.reverse();
+
+      steps.push({
+        arr: [...arr],
+        dp: [...dp],
+        phase: 'done',
+        info:
+          `Done backtracking: max value = ${n > 0 ? dp[n - 1] : 0}. ` +
+          `Chosen coins at indices [${selected.join(', ')}].`
+      });
+    }
+
+    function renderStep(idx) {
+      if (idx < 0 || idx >= steps.length) return;
+      currentStep = idx;
+
+      // 1) Build permanent‐DP & backtrack sets
+      const permDP = new Set();
+      const permSelected = new Set();
+      for (let k = 0; k <= idx; k++) {
+        const s = steps[k];
+        if (s.i != null && ['init', 'choice', 'write', 'select'].includes(s.phase)) {
+          for (let j = 0; j <= s.i; j++) permDP.add(j);
+        }
+        if (s.phase === 'select' && s.i != null) {
+          permSelected.add(s.i);
+        }
+        if (s.phase === 'done' && Array.isArray(s.dp)) {
+          s.dp.forEach((_, j) => permDP.add(j));
+        }
+      }
+
+      // 2) Destructure current step
+      const { arr, dp, i, phase, info } = steps[idx];
+      const pointerIndex = (i != null) ? i : Math.max(...permDP);
+
+      // 2a) Highlight‐sets for "choice" & "write"
+      const arrHigh = new Set();
+      const dpHighBlue = new Set();
+      const dpHighRed = new Set();
+      const dpHighGreen = new Set();
+
+      if (phase === 'choice') {
+        arrHigh.add(i);        // coin[i] → blue
+        dpHighBlue.add(i - 2); // F[i−2] → blue
+        dpHighRed.add(i - 1);  // F[i−1] → red
+      } else if (phase === 'write' || phase === 'select') {
+        dpHighGreen.add(i);    // F[i] → green
+      }
+
+      // 3) Render input‐row
+      const arrayC = document.getElementById('arrayContainer');
+      arrayC.innerHTML = '';
+      arr.forEach((val, j) => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'element-wrapper';
+
+        const idxLabel = document.createElement('div');
+        idxLabel.className = 'element-index';
+        idxLabel.textContent = j;
+        wrapper.appendChild(idxLabel);
+
+        const el = document.createElement('div');
+        el.className = 'element';
+        el.textContent = val;
+
+        if (permSelected.has(j)) el.classList.add('selected');
+        if (arrHigh.has(j)) el.classList.add('comparing');
+        if (phase !== 'done' && j === pointerIndex) {
+          el.innerHTML += '<div class="arrow">↑<br>i</div>';
+        }
+
+        wrapper.appendChild(el);
+        arrayC.appendChild(wrapper);
+      });
+
+      // 4) Render DP‐row
+      const dpC = document.getElementById('dpContainer');
+      dpC.innerHTML = '';
+      dp.forEach((val, j) => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'element-wrapper';
+
+        const idxLabel = document.createElement('div');
+        idxLabel.className = 'element-index';
+        idxLabel.textContent = j;
+        wrapper.appendChild(idxLabel);
+
+        const el = document.createElement('div');
+        el.className = 'element';
+        el.textContent = val;
+
+        if (permDP.has(j) && !(phase === 'choice' && (j === i - 2 || j === i - 1))) {
+          el.classList.add('sorted');
+        }
+        if (dpHighBlue.has(j)) el.classList.add('comparing');
+        if (dpHighRed.has(j)) el.classList.add('red-highlight');
+        if (dpHighGreen.has(j)) el.classList.add('sorted');
+
+        wrapper.appendChild(el);
+        dpC.appendChild(wrapper);
+      });
+
+      // 5) Update description text
+      document.getElementById('stepInfo').textContent = info;
+    }
+
+    function nextStep() {
+      if (currentStep < steps.length - 1) renderStep(currentStep + 1);
+    }
+    function previousStep() {
+      if (currentStep > 0) renderStep(currentStep - 1);
+    }
+
+    randomArray();
+
+    // ─────────────────────────────────────────────────────────────
+    // Play/Pause & Speed functionality (following Merge Sort pattern)
+    // ─────────────────────────────────────────────────────────────
+
+    document.getElementById('play').addEventListener('click', () => {
+      if (playing) {
+        // Pause
+        playing = false;
+        document.getElementById('play').textContent = 'Play';
+        clearInterval(intervalId);
+        intervalId = null;
+      } else {
+        // Start playing
+        playing = true;
+        document.getElementById('play').textContent = 'Pause';
+        const speed = parseInt(document.getElementById('speed').value, 10);
+        const delay = 1000 / speed;
+        intervalId = setInterval(() => {
+          if (currentStep < steps.length - 1) {
+            nextStep();
+          } else {
+            // Stop at the end
+            playing = false;
+            document.getElementById('play').textContent = 'Play';
+            clearInterval(intervalId);
+            intervalId = null;
+          }
+        }, delay);
+      }
+    });
+
+    document.getElementById('speed').addEventListener('change', () => {
+      if (playing) {
+        clearInterval(intervalId);
+        playing = false;
+        document.getElementById('play').textContent = 'Play';
+        // Restart playback at new speed
+        document.getElementById('play').click();
+      }
+    });
+  </script>
+</div>
+</body>
+</html>
