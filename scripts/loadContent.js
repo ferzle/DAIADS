@@ -254,7 +254,7 @@ function hookIframeContent(iframe) {
   const scriptTips = innerDoc.createElement('script');
   scriptTips.id = 'glossary-tooltips-script';
   scriptTips.type = 'module';
-  scriptTips.src = `/Algorithms/scripts/glossary-tooltips.js?cb=${Date.now()}`;
+  scriptTips.src = `/DAIADS/scripts/glossary-tooltips.js?cb=${Date.now()}`;
   head.appendChild(scriptTips);
 
   // Insert a visible DRAFT banner in the HOST page (outside the iframe)

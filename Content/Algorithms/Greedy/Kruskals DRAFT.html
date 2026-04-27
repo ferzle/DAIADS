@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Kruskal's Algorithm</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <script src="/Algorithms/scripts/chapterScripts.js"></script>
+  <link rel="stylesheet" href="/Algorithms/css/style.css">
+  <link rel="stylesheet" href="/Algorithms/css/chapter.css">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-DQ5LVZVFDC');
+  </script>
+</head>
+<body>
+  <h1>Kruskal's Algorithm</h1>
+
+  <section id="problem-solved" section-title="Problem Solved">
+    <h2>Problem Solved</h2>
+    <p>
+      Kruskal's Algorithm solves the
+      <a class="problem" href="?path=Problems%2FGraphs%2FMinimum%20Spanning%20Tree">Minimum Spanning Tree</a>
+      problem.
+    </p>
+  </section>
+
+  <section id="design" section-title="Design and Strategy">
+    <h2>Design and Strategy</h2>
+    <p>
+      Kruskal's Algorithm builds a minimum spanning tree one edge at a time. It sorts all edges by weight
+      and then scans them from lightest to heaviest. An edge is accepted exactly when it connects two
+      previously separate components; otherwise it is skipped because it would create a cycle.
+    </p>
+    <p>
+      The key data structure is a <em>disjoint-set union</em> structure, also called union-find. It quickly
+      answers whether two vertices are already in the same connected component and merges components when
+      a new edge is added to the tree.
+    </p>
+
+    <h3>High-Level Algorithm</h3>
+    <ol class="spaced">
+      <li>Sort all graph edges into nondecreasing order by weight.</li>
+      <li>Place each vertex in its own singleton set.</li>
+      <li>Process edges in sorted order:
+        <ul>
+          <li>If an edge \((u,v)\) connects two different sets, add it to the tree and union those sets.</li>
+          <li>If \(u\) and \(v\) are already in the same set, skip the edge.</li>
+        </ul>
+      </li>
+      <li>Stop after selecting \(V-1\) edges.</li>
+    </ol>
+
+    <div class="example-box">
+      <strong class="example-title">Small Example</strong>
+      <p>
+        Suppose the graph has edges
+        \((A,B,2), (A,C,3), (B,C,1), (B,D,4), (C,E,2), (D,E,3)\).
+      </p>
+      <ol class="spaced">
+        <li>Sort edges by weight: \((B,C,1), (A,B,2), (C,E,2), (A,C,3), (D,E,3), (B,D,4)\).</li>
+        <li>Add \((B,C)\).</li>
+        <li>Add \((A,B)\).</li>
+        <li>Add \((C,E)\).</li>
+        <li>Skip \((A,C)\) because \(A\) and \(C\) are already connected.</li>
+        <li>Add \((D,E)\) and stop.</li>
+      </ol>
+      <p>
+        The chosen edges form an MST of total weight \(1 + 2 + 2 + 3 = 8\).
+      </p>
+    </div>
+  </section>
+
+  <section id="demo" section-title="Interactive Demo">
+    <h2>Interactive Demo</h2>
+    <p>
+      This demo shows the sorted edge list, the accepted and rejected edges, and the current disjoint sets.
+    </p>
+    <div class="embeddedDemoContainer">
+      <iframe class="embeddedDemo"
+              src="/Algorithms/Content/Demos/Greedy/Kruskals Algorithm Demo.html"
+              allow="fullscreen"
+              name="kruskals-demo">
+      </iframe>
+    </div>
+  </section>
+
+  <section id="code" section-title="Implementation in Java, C++, Python">
+    <h2>Implementation in Java, C++, Python</h2>
+    <p>
+      These implementations sort the edges, use union-find to detect cycles, and return the total weight
+      of the minimum spanning tree.
+    </p>
+    <div class="tab-group">
+      <div class="tabs" role="tablist">
+        <button id="tab-java" class="tablink active" data-lang="java" role="tab" aria-controls="java" aria-selected="true">Java</button>
+        <button id="tab-cpp" class="tablink" data-lang="cpp" role="tab" aria-controls="cpp" aria-selected="false">C++</button>
+        <button id="tab-python" class="tablink" data-lang="python" role="tab" aria-controls="python" aria-selected="false">Python</button>
+      </div>
+      <div id="java" class="code-container active" role="tabpanel" aria-labelledby="tab-java">
+        <pre><code class="language-java">import java.util.*;
+
+class Edge {
+  int u, v, w;
+  Edge(int u, int v, int w) { this.u = u; this.v = v; this.w = w; }
+}
+
+class DSU {
+  int[] parent, rank;
+  DSU(int n) {
+    parent = new int[n];
+    rank = new int[n];
+    for (int i = 0; i &lt; n; i++) parent[i] = i;
+  }
+  int find(int x) {
+    if (parent[x] != x) parent[x] = find(parent[x]);
+    return parent[x];
+  }
+  boolean union(int a, int b) {
+    int ra = find(a), rb = find(b);
+    if (ra == rb) return false;
+    if (rank[ra] &lt; rank[rb]) parent[ra] = rb;
+    else if (rank[ra] &gt; rank[rb]) parent[rb] = ra;
+    else {
+      parent[rb] = ra;
+      rank[ra]++;
+    }
+    return true;
+  }
+}
+
+int kruskalMST(int n, List&lt;Edge&gt; edges) {
+  edges.sort(Comparator.comparingInt(e -&gt; e.w));
+  DSU dsu = new DSU(n);
+  int total = 0;
+
+  for (Edge e : edges) {
+    if (dsu.union(e.u, e.v)) {
+      total += e.w;
+    }
+  }
+  return total;
+}</code></pre>
+      </div>
+      <div id="cpp" class="code-container" role="tabpanel" aria-labelledby="tab-cpp">
+        <pre><code class="language-cpp">#include &lt;algorithm&gt;
+#include &lt;vector&gt;
+using namespace std;
+
+struct Edge {
+  int u, v, w;
+};
+
+struct DSU {
+  vector&lt;int&gt; parent, rank;
+  DSU(int n) : parent(n), rank(n, 0) {
+    for (int i = 0; i &lt; n; ++i) parent[i] = i;
+  }
+  int find(int x) {
+    if (parent[x] != x) parent[x] = find(parent[x]);
+    return parent[x];
+  }
+  bool unite(int a, int b) {
+    int ra = find(a), rb = find(b);
+    if (ra == rb) return false;
+    if (rank[ra] &lt; rank[rb]) parent[ra] = rb;
+    else if (rank[ra] &gt; rank[rb]) parent[rb] = ra;
+    else {
+      parent[rb] = ra;
+      rank[ra]++;
+    }
+    return true;
+  }
+};
+
+int kruskalMST(int n, vector&lt;Edge&gt;&amp; edges) {
+  sort(edges.begin(), edges.end(),
+       [](const Edge&amp; a, const Edge&amp; b) { return a.w &lt; b.w; });
+
+  DSU dsu(n);
+  int total = 0;
+  for (const Edge&amp; e : edges) {
+    if (dsu.unite(e.u, e.v)) {
+      total += e.w;
+    }
+  }
+  return total;
+}</code></pre>
+      </div>
+      <div id="python" class="code-container" role="tabpanel" aria-labelledby="tab-python">
+        <pre><code class="language-python">def kruskal_mst(n, edges):
+    parent = list(range(n))
+    rank = [0] * n
+
+    def find(x):
+        if parent[x] != x:
+            parent[x] = find(parent[x])
+        return parent[x]
+
+    def union(a, b):
+        ra, rb = find(a), find(b)
+        if ra == rb:
+            return False
+        if rank[ra] < rank[rb]:
+            parent[ra] = rb
+        elif rank[ra] > rank[rb]:
+            parent[rb] = ra
+        else:
+            parent[rb] = ra
+            rank[ra] += 1
+        return True
+
+    total = 0
+    for u, v, w in sorted(edges, key=lambda e: e[2]):
+        if union(u, v):
+            total += w
+    return total</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <section id="analysis" section-title="Time/Space Analysis">
+    <h2>Time/Space Analysis</h2>
+    <p>
+      <strong>Time Complexity:</strong> Sorting the edges costs \(O(E \log E)\), and the union-find operations
+      are nearly constant amortized time, so the overall running time is dominated by the sort.
+    </p>
+    <p>
+      <strong>Space Complexity:</strong> The edge list and disjoint-set structure require \(O(V + E)\) space.
+    </p>
+  </section>
+
+  <section id="variations" section-title="Variations/Improvements">
+    <h2>Variations/Improvements</h2>
+    <p>
+      Kruskal's Algorithm is especially natural when the graph is already given as an edge list. Union by rank
+      together with path compression makes cycle detection very fast in practice. A closely related alternative is
+      <a href="?path=Algorithms%2FGreedy%2FPrims%20DRAFT">Prim's Algorithm</a>, which grows the tree from a starting vertex.
+    </p>
+  </section>
+
+  <section id="links" section-title="Links to Resources">
+    <h2>Links to Resources</h2>
+    <ul>
+      <li><a href="https://en.wikipedia.org/wiki/Kruskal%27s_algorithm" target="_blank">Wikipedia: Kruskal's algorithm</a> Background, greedy intuition, and historical notes.</li>
+      <li><a href="https://cp-algorithms.com/graph/mst_kruskal.html" target="_blank">cp-algorithms: Kruskal's algorithm</a> Implementation-oriented explanation using union-find.</li>
+      <li><a href="https://www.geeksforgeeks.org/kruskals-minimum-spanning-tree-algorithm-greedy-algo-2/" target="_blank">GeeksforGeeks: Kruskal's Minimum Spanning Tree</a> Additional worked examples and code samples.</li>
+    </ul>
+  </section>
+
+  <section id="reading-questions" section-title="Reading Comprehension Questions">
+    <h2>Reading Comprehension Questions</h2>
+    <ol>
+      <li><strong>Edge Ordering:</strong> Why does Kruskal's Algorithm sort all edges before making any selections?</li>
+      <li><strong>Skipping Edges:</strong> Under what condition is an edge skipped during the scan of the sorted edge list?</li>
+    </ol>
+    <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
+    <div id="answers" class="answer" hidden>
+      <ol>
+        <li><strong>Answer:</strong> The greedy rule is to consider the lightest remaining edge first, so sorting ensures edges are checked in the correct order.</li>
+        <li><strong>Answer:</strong> An edge is skipped when its endpoints are already in the same connected component, because adding it would create a cycle.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="activities" section-title="In-Class Activities">
+    <h2>In-Class Activities</h2>
+    <ol>
+      <li><strong>Sort and Select:</strong> Give students an edge list, have them sort it by weight, and then mark each edge as accepted or rejected step by step.</li>
+      <li><strong>Union-Find Snapshot:</strong> Ask students to record the disjoint sets after every accepted edge so they can visualize the connected components merging.</li>
+    </ol>
+  </section>
+
+  <section id="problems" section-title="Homework Problems">
+    <h2>Homework Problems</h2>
+    <ol>
+      <li><strong>Manual Simulation:</strong> Run Kruskal's Algorithm by hand on a weighted graph and list the accepted and rejected edges in order.</li>
+      <li><strong>Ties in Weights:</strong> Explain why two different tie-breaking choices among equal-weight edges can still lead to minimum spanning trees of the same total weight.</li>
+    </ol>
+  </section>
+</body>
+</html>

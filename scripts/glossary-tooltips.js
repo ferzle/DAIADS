@@ -1,4 +1,4 @@
-// File: /Algorithms/scripts/glossary-tooltips.js
+// File: /DAIADS/scripts/glossary-tooltips.js
 
 // ————————————————————————————————————————————————
 // 1) Load glossary data from JSON
@@ -6,7 +6,7 @@
 let GLOSSARY = [];
 
 function initGlossaryTooltips() {
-  fetch("/Algorithms/scripts/glossary-data.json?cb=" + Date.now(), { cache: "no-store" })
+  fetch("/DAIADS/scripts/glossary-data.json?cb=" + Date.now(), { cache: "no-store" })
     .then(res => {
       if (!res.ok) throw new Error("Failed to load glossary-data.json");
       return res.json();

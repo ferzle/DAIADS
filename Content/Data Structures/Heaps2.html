@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Heaps</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <script src="/Algorithms/scripts/chapterScripts.js"></script>
+  <link rel="stylesheet" href="/Algorithms/css/style.css">
+  <link rel="stylesheet" href="/Algorithms/css/chapter.css">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-DQ5LVZVFDC');
+  </script>
+</head>
+<body>
+  <h1>Heaps</h1>
+
+  <section id="overview" section-title="Overview">
+    <h2>Overview</h2>
+    <p>
+      A <strong>heap</strong> is a tree-based abstract data type that maintains a partial order between elements.
+      In a <em>max-heap</em>, each node is at least as large as its children; in a <em>min-heap</em>, each node is
+      at most as large as its children. We call this ordering rule the <em>heap property</em>.
+    </p>
+    <p>
+      Heaps support efficient <code>insert</code>, <code>peek</code>, and <code>extractMax</code> or
+      <code>extractMin</code> operations, which makes them useful for priority queues, selection problems,
+      and in-place sorting with Heapsort. This page focuses on <strong>binary max-heaps</strong>; adapting the
+      ideas to min-heaps mostly means reversing the comparisons.
+    </p>
+    <p>
+      Other heap families, such as binomial heaps and Fibonacci heaps, make different tradeoffs for operations like
+      merging heaps or decreasing a key. Binary heaps remain the most common introductory implementation because they
+      are simple, compact, and fast in practice.
+    </p>
+  </section>
+
+  <section id="adt" section-title="Abstract Data Type and Operations">
+    <h2>Abstract Data Type and Operations</h2>
+    <p>
+      Abstractly, a heap behaves like a priority queue: it stores a collection of values and gives fast access to
+      the highest-priority item. In a max-heap, the largest value has highest priority.
+    </p>
+    <ul>
+      <li><strong><code>peekMax</code>:</strong> Return the maximum value without removing it.</li>
+      <li><strong><code>insert</code>:</strong> Add a new value while preserving the heap property.</li>
+      <li><strong><code>extractMax</code>:</strong> Remove and return the maximum value, then repair the heap.</li>
+      <li><strong><code>buildMaxHeap</code>:</strong> Rearrange an arbitrary array into a valid max-heap.</li>
+      <li><strong><code>heapify</code>:</strong> Repair a local heap-property violation when the subtrees below are already heaps.</li>
+    </ul>
+  </section>
+
+  <section id="conceptual-model" section-title="Conceptual Model">
+    <h2>Conceptual Model</h2>
+    <p>
+      A binary heap is a <em>complete binary tree</em>: every level is full except possibly the last,
+      and the last level is filled from left to right. That completeness is what makes the array implementation work
+      so well, because there are no gaps in the tree.
+    </p>
+    <p>
+      With zero-based indexing, the relatives of the node at index \(i\) are:
+    </p>
+    <ul>
+      <li>left child: \(2i + 1\)</li>
+      <li>right child: \(2i + 2\)</li>
+      <li>parent: \(\lfloor(i - 1)/2\rfloor\)</li>
+    </ul>
+    <p>
+      Because all elements can be packed into one array, heaps avoid the pointer overhead of node-based tree
+      implementations and benefit from good cache locality. In practice, we often maintain both the array and a
+      separate <code>heapSize</code> variable so the array can have extra capacity while only the first
+      <code>heapSize</code> entries are considered part of the heap.
+    </p>
+    <div class="embeddedDemoContainer">
+      <iframe
+        class="embeddedDemo"
+        src="/Algorithms/Content/Demos/Data Structures/Heap/Heap Representation Demo.html"
+        allow="fullscreen"
+        name="heap-representation-demo">
+      </iframe>
+    </div>
+  </section>
+
+  <section id="core-operations" section-title="Core Operations">
+    <h2>Core Operations</h2>
+    <p>
+      The key heap operations all rely on the same invariant: every parent must be at least as large as its children.
+      Some operations move a value downward to restore that invariant; others move a value upward.
+    </p>
+
+    <h3>heapify(A, i, heapSize)</h3>
+    <p>
+      <code>heapify</code> restores the max-heap property at index \(i\), assuming the left and right subtrees are
+      already valid heaps. It compares the node with its children, swaps with the larger child if needed, and repeats
+      one level lower.
+    </p>
+    <ol>
+      <li>Compute the indices of the left and right children.</li>
+      <li>Find the largest among the parent and the existing children.</li>
+      <li>If one of the children is larger, swap and continue from that child.</li>
+    </ol>
+    <div class="embeddedDemoContainer">
+      <iframe class="embeddedDemo"
+              src="/Algorithms/Content/Demos/Data Structures/Heap/Heapify Demo.html"
+              allow="fullscreen"
+              name="heapify-demo">
+      </iframe>
+    </div>
+
+    <h3>buildMaxHeap(A)</h3>
+    <p>
+      To build a heap from an arbitrary array, start at the last internal node and call <code>heapify</code> while
+      moving backward toward the root. This works because each subtree is fixed before its parent is processed.
+    </p>
+    <ol>
+      <li>Locate the last non-leaf node at index \(\lfloor n/2 \rfloor - 1\).</li>
+      <li>Call <code>heapify</code> on each internal node from right to left.</li>
+      <li>Finish at the root, which yields a valid max-heap.</li>
+    </ol>
+    <div class="embeddedDemoContainer">
+      <iframe class="embeddedDemo"
+              src="/Algorithms/Content/Demos/Data Structures/Heap/Build Heap Demo.html"
+              allow="fullscreen"
+              name="build-max-heap-demo">
+      </iframe>
+    </div>
+
+    <h3>insert(A, value, heapSize)</h3>
+    <p>
+      Insertion places the new value at the end of the heap and then <em>bubbles it up</em> until the heap property is
+      restored. Each swap moves the new value one level closer to the root.
+    </p>
+    <ol>
+      <li>Store the new value at index <code>heapSize</code> and increment <code>heapSize</code>.</li>
+      <li>Compare the new node with its parent.</li>
+      <li>While the new node is larger than its parent, swap upward.</li>
+    </ol>
+    <div class="embeddedDemoContainer">
+      <iframe class="embeddedDemo"
+              src="/Algorithms/Content/Demos/Data Structures/Heap/Insert Demo.html"
+              allow="fullscreen"
+              name="insert-demo">
+      </iframe>
+    </div>
+
+    <h3>extractMax(A, heapSize)</h3>
+    <p>
+      The maximum value is always at the root, so extraction removes <code>A[0]</code>. To preserve the complete-tree
+      shape, the last heap element moves to the root, the heap shrinks by one, and then <code>heapify</code> repairs
+      the tree from the top down.
+    </p>
+    <ol>
+      <li>Save the root value to return later.</li>
+      <li>Move the last heap element into the root position and decrement <code>heapSize</code>.</li>
+      <li>Call <code>heapify(A, 0, heapSize)</code> to restore the heap property.</li>
+    </ol>
+    <div class="embeddedDemoContainer">
+      <iframe class="embeddedDemo"
+              src="/Algorithms/Content/Demos/Data Structures/Heap/ExtractMax Demo.html"
+              allow="fullscreen"
+              name="extract-max-demo">
+      </iframe>
+    </div>
+  </section>
+
+  <section id="demo" section-title="Interactive Demo (Optional)">
+    <h2>Interactive Demo (Optional)</h2>
+    <p>
+      The demos above show the key local operations. The representation demo is especially helpful for seeing how the
+      complete binary tree and the backing array line up, and how <code>heapSize</code> can differ from the array's
+      physical length.
+    </p>
+    <div class="embeddedDemoContainer">
+      <iframe class="embeddedDemo"
+              src="/Algorithms/Content/Demos/Data Structures/Heap/Heap Representation Demo.html"
+              allow="fullscreen"
+              name="heap-overview-demo">
+      </iframe>
+    </div>
+  </section>
+
+  <section id="implementations" section-title="Implementation Options">
+    <h2>Implementation Options</h2>
+
+    <section id="implementation-array" section-title="Implementation 1: Array-Based Binary Heap">
+      <h3>Implementation 1: Array-Based Binary Heap</h3>
+      <p>
+        The standard implementation stores the heap in an array and relies on the index formulas from the conceptual
+        model. The main invariant is that the represented tree is complete and every parent is at least as large as its
+        children.
+      </p>
+
+      <h4>How the Operations Work</h4>
+
+      <h5>heapify</h5>
+      <p>
+        Compare the element at index <code>i</code> with its children that lie within <code>heapSize</code>. If a
+        child is larger, swap with the larger child and continue recursively or iteratively from there.
+      </p>
+      <div class="tab-group">
+        <div class="tabs" role="tablist">
+          <button id="tab-java-heapify" class="tablink active" data-lang="java-heapify" role="tab" aria-controls="java-heapify" aria-selected="true">Java</button>
+          <button id="tab-cpp-heapify" class="tablink" data-lang="cpp-heapify" role="tab" aria-controls="cpp-heapify" aria-selected="false">C++</button>
+          <button id="tab-python-heapify" class="tablink" data-lang="python-heapify" role="tab" aria-controls="python-heapify" aria-selected="false">Python</button>
+        </div>
+        <div id="java-heapify" class="code-container active" role="tabpanel" aria-labelledby="tab-java-heapify">
+          <pre><code class="language-java">public void heapify(int[] A, int i, int heapSize) {
+    int largest = i;
+    int left    = 2 * i + 1;
+    int right   = 2 * i + 2;
+
+    if (left < heapSize && A[left] > A[largest]) {
+        largest = left;
+    }
+    if (right < heapSize && A[right] > A[largest]) {
+        largest = right;
+    }
+
+    if (largest != i) {
+        swap(A, i, largest);
+        heapify(A, largest, heapSize);
+    }
+}</code></pre>
+        </div>
+        <div id="cpp-heapify" class="code-container" role="tabpanel" aria-labelledby="tab-cpp-heapify">
+          <pre><code class="language-cpp">void heapify(int A[], int i, int heapSize) {
+    int largest = i;
+    int left    = 2 * i + 1;
+    int right   = 2 * i + 2;
+
+    if (left < heapSize && A[left] > A[largest]) {
+        largest = left;
+    }
+    if (right < heapSize && A[right] > A[largest]) {
+        largest = right;
+    }
+
+    if (largest != i) {
+        swap(A, i, largest);
+        heapify(A, largest, heapSize);
+    }
+}</code></pre>
+        </div>
+        <div id="python-heapify" class="code-container" role="tabpanel" aria-labelledby="tab-python-heapify">
+          <pre><code class="language-python">def heapify(A, i, heapSize):
+    largest = i
+    left = 2 * i + 1
+    right = 2 * i + 2
+
+    if left < heapSize and A[left] > A[largest]:
+        largest = left
+    if right < heapSize and A[right] > A[largest]:
+        largest = right
+
+    if largest != i:
+        A[i], A[largest] = A[largest], A[i]
+        heapify(A, largest, heapSize)</code></pre>
+        </div>
+      </div>
+
+      <h5>buildMaxHeap</h5>
+      <p>
+        Start at the last internal node and call <code>heapify</code> on each internal node going backward to the
+        root. Although this seems like it should take \(O(n \log n)\), the total running time is actually \(O(n)\)
+        because most nodes are near the bottom of the tree.
+      </p>
+      <div class="tab-group" style="margin-top:10px;">
+        <div class="tabs" role="tablist">
+          <button id="tab-java-build" class="tablink active" data-lang="java-build" role="tab" aria-controls="java-build" aria-selected="true">Java</button>
+          <button id="tab-cpp-build" class="tablink" data-lang="cpp-build" role="tab" aria-controls="cpp-build" aria-selected="false">C++</button>
+          <button id="tab-python-build" class="tablink" data-lang="python-build" role="tab" aria-controls="python-build" aria-selected="false">Python</button>
+        </div>
+        <div id="java-build" class="code-container active" role="tabpanel" aria-labelledby="tab-java-build">
+          <pre><code class="language-java">public void buildMaxHeap(int[] A) {
+    int n = A.length;
+    for (int i = n / 2 - 1; i >= 0; i--) {
+        heapify(A, i, n);
+    }
+}</code></pre>
+        </div>
+        <div id="cpp-build" class="code-container" role="tabpanel" aria-labelledby="tab-cpp-build">
+          <pre><code class="language-cpp">void buildMaxHeap(int A[], int n) {
+    for (int i = n / 2 - 1; i >= 0; i--) {
+        heapify(A, i, n);
+    }
+}</code></pre>
+        </div>
+        <div id="python-build" class="code-container" role="tabpanel" aria-labelledby="tab-python-build">
+          <pre><code class="language-python">def build_max_heap(A):
+    n = len(A)
+    for i in range(n // 2 - 1, -1, -1):
+        heapify(A, i, n)</code></pre>
+        </div>
+      </div>
+
+      <h5>insert and extractMax</h5>
+      <p>
+        Insertion bubbles a new value upward from the end of the array, while extraction moves the last heap element to
+        the root and then pushes it downward with <code>heapify</code>.
+      </p>
+
+      <h6>Insert</h6>
+      <div class="tab-group" style="margin-top:10px;">
+        <div class="tabs" role="tablist">
+          <button id="tab-java-insert" class="tablink active" data-lang="java-insert" role="tab" aria-controls="java-insert" aria-selected="true">Java</button>
+          <button id="tab-cpp-insert" class="tablink" data-lang="cpp-insert" role="tab" aria-controls="cpp-insert" aria-selected="false">C++</button>
+          <button id="tab-python-insert" class="tablink" data-lang="python-insert" role="tab" aria-controls="python-insert" aria-selected="false">Python</button>
+        </div>
+        <div id="java-insert" class="code-container active" role="tabpanel" aria-labelledby="tab-java-insert">
+          <pre><code class="language-java">public void insert(int[] A, int value, int heapSize) {
+    A[heapSize] = value;
+    heapSize++;
+    int i = heapSize - 1;
+
+    while (i > 0 && A[(i - 1) / 2] < A[i]) {
+        swap(A, i, (i - 1) / 2);
+        i = (i - 1) / 2;
+    }
+}</code></pre>
+        </div>
+        <div id="cpp-insert" class="code-container" role="tabpanel" aria-labelledby="tab-cpp-insert">
+          <pre><code class="language-cpp">void insert(int A[], int value, int heapSize) {
+    A[heapSize] = value;
+    heapSize++;
+    int i = heapSize - 1;
+
+    while (i > 0 && A[(i - 1) / 2] < A[i]) {
+        swap(A, i, (i - 1) / 2);
+        i = (i - 1) / 2;
+    }
+}</code></pre>
+        </div>
+        <div id="python-insert" class="code-container" role="tabpanel" aria-labelledby="tab-python-insert">
+          <pre><code class="language-python">def insert(A, value, heapSize):
+    A.append(value)
+    heapSize += 1
+    i = heapSize - 1
+
+    while i > 0:
+        parent = (i - 1) // 2
+        if A[parent] < A[i]:
+            A[i], A[parent] = A[parent], A[i]
+            i = parent
+        else:
+            break</code></pre>
+        </div>
+      </div>
+
+      <h6>Extract Max</h6>
+      <div class="tab-group" style="margin-top:10px;">
+        <div class="tabs" role="tablist">
+          <button id="tab-java-extract" class="tablink active" data-lang="java-extract" role="tab" aria-controls="java-extract" aria-selected="true">Java</button>
+          <button id="tab-cpp-extract" class="tablink" data-lang="cpp-extract" role="tab" aria-controls="cpp-extract" aria-selected="false">C++</button>
+          <button id="tab-python-extract" class="tablink" data-lang="python-extract" role="tab" aria-controls="python-extract" aria-selected="false">Python</button>
+        </div>
+        <div id="java-extract" class="code-container active" role="tabpanel" aria-labelledby="tab-java-extract">
+          <pre><code class="language-java">public int extractMax(int[] A, int heapSize) {
+    int max = A[0];
+    A[0] = A[heapSize - 1];
+    heapSize--;
+    heapify(A, 0, heapSize);
+    return max;
+}</code></pre>
+        </div>
+        <div id="cpp-extract" class="code-container" role="tabpanel" aria-labelledby="tab-cpp-extract">
+          <pre><code class="language-cpp">int extractMax(int A[], int heapSize) {
+    int max = A[0];
+    A[0] = A[heapSize - 1];
+    heapSize--;
+    heapify(A, 0, heapSize);
+    return max;
+}</code></pre>
+        </div>
+        <div id="python-extract" class="code-container" role="tabpanel" aria-labelledby="tab-python-extract">
+          <pre><code class="language-python">def extract_max(A, heapSize):
+    max_val = A[0]
+    A[0] = A[heapSize - 1]
+    heapSize -= 1
+    heapify(A, 0, heapSize)
+    return max_val</code></pre>
+        </div>
+      </div>
+
+      <h4>Notes</h4>
+      <ul>
+        <li><code>peekMax</code> is just <code>return A[0]</code> after checking that the heap is nonempty.</li>
+        <li>If the backing array has spare capacity, <code>heapSize</code> can be smaller than <code>A.length</code>.</li>
+        <li>Every child-index calculation must be checked against <code>heapSize</code>, not just the physical array length.</li>
+      </ul>
+    </section>
+
+    <section id="library-implementations" section-title="Library Implementations">
+      <h3>Library Implementations</h3>
+      <p>
+        In practice, most languages already provide priority-queue libraries built on binary heaps or closely related
+        structures. Those libraries are the right default choice in production code, but implementing a heap yourself
+        is still valuable for understanding the invariant and the array representation.
+      </p>
+      <ul>
+        <li><strong>Java:</strong> <code>PriorityQueue</code> is a min-heap by default, so a max-heap needs a reversed comparator.</li>
+        <li><strong>C++:</strong> <code>std::priority_queue</code> is a max-priority queue by default.</li>
+        <li><strong>Python:</strong> <code>heapq</code> provides a min-heap; a max-heap is usually simulated by negating priorities.</li>
+      </ul>
+      <p>
+        These libraries expose the priority-queue ADT rather than the full internal heap representation, so they are
+        convenient for applications but less useful when you want to study how heap maintenance works internally.
+      </p>
+    </section>
+  </section>
+
+  <section id="costs" section-title="Operation Costs">
+    <h2>Operation Costs</h2>
+    <p>
+      The height of a binary heap with \(n\) elements is \(\lfloor \log n \rfloor\), which drives the cost of the
+      update operations. The array representation also uses only constant extra space beyond the storage for the items.
+    </p>
+    <table class="example-table">
+      <thead>
+        <tr>
+          <th>Operation</th>
+          <th>Array-Based Binary Heap</th>
+          <th>Library Priority Queue</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>peekMax</code></td>
+          <td>\(O(1)\)</td>
+          <td>\(O(1)\)</td>
+          <td>The maximum is always stored at the root.</td>
+        </tr>
+        <tr>
+          <td><code>insert</code></td>
+          <td>\(O(\log n)\)</td>
+          <td>\(O(\log n)\)</td>
+          <td>The new element may bubble from a leaf to the root.</td>
+        </tr>
+        <tr>
+          <td><code>extractMax</code></td>
+          <td>\(O(\log n)\)</td>
+          <td>\(O(\log n)\)</td>
+          <td>After removing the root, the replacement may move down one path.</td>
+        </tr>
+        <tr>
+          <td><code>heapify</code></td>
+          <td>\(O(\log n)\)</td>
+          <td>Internal</td>
+          <td>The repair travels downward through at most the heap height.</td>
+        </tr>
+        <tr>
+          <td><code>buildMaxHeap</code></td>
+          <td>\(O(n)\)</td>
+          <td>Often available implicitly</td>
+          <td>Bottom-up heap construction is linear time overall.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="applications" section-title="Applications">
+    <h2>Applications</h2>
+    <p>
+      Heaps are used whenever a program repeatedly needs fast access to the current largest or smallest item.
+    </p>
+    <ul>
+      <li>Priority queues for task scheduling, simulation, and event processing.</li>
+      <li>Graph algorithms such as Dijkstra's algorithm and Prim's algorithm, usually with min-heaps.</li>
+      <li>Selection problems such as keeping the top \(k\) items seen so far.</li>
+      <li>In-place sorting with Heapsort.</li>
+    </ul>
+  </section>
+
+  <section id="comparison" section-title="Comparisons and Tradeoffs">
+    <h2>Comparisons and Tradeoffs</h2>
+    <p>
+      Heaps are excellent when you care about repeated access to the extreme element, but they are not good at
+      supporting fast arbitrary searches or preserving sorted order throughout the structure.
+    </p>
+    <ul>
+      <li>Compared with a sorted array, heaps make insertion much faster but make full-order traversal less direct.</li>
+      <li>Compared with a binary search tree, heaps give faster access to the maximum or minimum but do not support ordered search efficiently.</li>
+      <li>Compared with Fibonacci or binomial heaps, binary heaps are simpler and usually better in practice unless merge or decrease-key dominates.</li>
+    </ul>
+  </section>
+
+  <section id="variations" section-title="Variations and Extensions">
+    <h2>Variations and Extensions</h2>
+    <p>
+      Binary heaps are only one member of a broader family of heap-like structures.
+    </p>
+    <ul>
+      <li><strong>Min-heaps:</strong> Reverse the comparisons so that the minimum element is stored at the root.</li>
+      <li><strong>Binomial heaps:</strong> Support efficient merging of heaps by organizing elements as a forest of trees.</li>
+      <li><strong>Fibonacci heaps:</strong> Improve some theoretical bounds, especially for repeated decrease-key operations.</li>
+      <li><strong>d-ary heaps:</strong> Give each node more than two children, trading a shorter height for more child comparisons per step.</li>
+    </ul>
+  </section>
+
+  <section id="pitfalls" section-title="Common Pitfalls">
+    <h2>Common Pitfalls</h2>
+    <p>
+      Heap mistakes are usually small indexing or invariant errors that quietly corrupt the structure.
+    </p>
+    <ul>
+      <li>Forgetting that the last valid heap index is <code>heapSize - 1</code>, not <code>A.length - 1</code>.</li>
+      <li>Using the wrong parent or child formulas for zero-based indexing.</li>
+      <li>Assuming that a heap is fully sorted; only the parent-child relationship is guaranteed.</li>
+      <li>Neglecting the empty-heap case before calling <code>peekMax</code> or <code>extractMax</code>.</li>
+    </ul>
+  </section>
+
+  <section id="summary" section-title="Summary">
+    <h2>Summary</h2>
+    <p>
+      A binary heap is a compact array-based implementation of the priority-queue ADT. Its power comes from the heap
+      property and the complete-tree shape: they allow fast insertion, fast removal of the maximum or minimum, and
+      linear-time heap construction. For most applications that need repeated extreme-value access, a binary heap is a
+      simple and effective default choice.
+    </p>
+  </section>
+
+  <section id="links" section-title="Helpful Links and Resources">
+    <h2>Helpful Links and Resources</h2>
+    <ul>
+      <li><a href="https://en.wikipedia.org/wiki/Binary_heap" target="_blank">Binary Heap (Wikipedia)</a> General reference on binary heap structure, operations, and analysis.</li>
+      <li><a href="https://en.wikipedia.org/wiki/Binomial_heap" target="_blank">Binomial Heap (Wikipedia)</a> Useful for comparing binary heaps with merge-friendly heap variants.</li>
+      <li><a href="https://en.wikipedia.org/wiki/Fibonacci_heap" target="_blank">Fibonacci Heap (Wikipedia)</a> Useful for seeing how theoretical heap improvements change the tradeoffs.</li>
+      <li><a href="https://docs.python.org/3/library/heapq.html" target="_blank">Python <code>heapq</code></a> Shows a real standard-library heap interface.</li>
+    </ul>
+  </section>
+
+  <section id="reading-questions" section-title="Reading Comprehension Questions">
+    <h2>Reading Comprehension Questions</h2>
+    <ol>
+      <li><strong>Shape vs. Order:</strong> Why does the completeness of the binary tree make an array implementation possible?</li>
+      <li><strong>Local Repair:</strong> Why is it enough for <code>heapify</code> to assume that the subtrees below index <code>i</code> are already heaps?</li>
+      <li><strong>Not Fully Sorted:</strong> What ordering information does a max-heap guarantee, and what does it not guarantee?</li>
+    </ol>
+    <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
+    <div id="answers" class="answer" hidden>
+      <ol>
+        <li><strong>Answer:</strong> A complete binary tree has no internal gaps, so its nodes can be listed level by level in a contiguous array while preserving fixed parent-child index formulas.</li>
+        <li><strong>Answer:</strong> The only possible violation is at the root of that local subtree. Once the larger child is promoted, the same kind of single-path violation may remain one level lower, which is exactly what the recursive call fixes.</li>
+        <li><strong>Answer:</strong> A max-heap guarantees that every parent is at least as large as its children, so the root is the maximum. It does not guarantee that siblings or nodes in different branches are in sorted order.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="activities" section-title="In-Class Activities">
+    <h2>In-Class Activities</h2>
+    <ol>
+      <li><strong>Index Mapping Practice:</strong> Give students an array representation of a heap and ask them to label the parent, left child, and right child of selected indices.</li>
+      <li><strong>Manual Heapify:</strong> Start with one local heap-property violation and have students trace each comparison and swap that <code>heapify</code> performs.</li>
+      <li><strong>Build a Heap by Hand:</strong> Hand out an unsorted array and have students apply bottom-up <code>buildMaxHeap</code> to see why the process works.</li>
+    </ol>
+  </section>
+
+  <section id="problems" section-title="Homework Problems">
+    <h2>Homework Problems</h2>
+    <ol>
+      <li><strong>Min-Heap Conversion:</strong> Rewrite the heap algorithms on this page for a min-heap and explain exactly which comparisons change.</li>
+      <li><strong>Heapsort Trace:</strong> Starting from an unsorted array, build a max-heap and then trace the repeated <code>extractMax</code> steps used by Heapsort.</li>
+      <li><strong>Linear Build Proof:</strong> Prove that <code>buildMaxHeap</code> runs in \(O(n)\) time even though it calls <code>heapify</code> many times.</li>
+    </ol>
+  </section>
+
+</body>
+</html>

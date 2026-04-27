@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Prim's Algorithm</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <script src="/Algorithms/scripts/chapterScripts.js"></script>
+  <link rel="stylesheet" href="/Algorithms/css/style.css">
+  <link rel="stylesheet" href="/Algorithms/css/chapter.css">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-DQ5LVZVFDC');
+  </script>
+</head>
+<body>
+  <h1>Prim's Algorithm</h1>
+
+  <section id="problem-solved" section-title="Problem Solved">
+    <h2>Problem Solved</h2>
+    <p>
+      Prim's Algorithm solves the
+      <a class="problem" href="?path=Problems%2FGraphs%2FMinimum%20Spanning%20Tree">Minimum Spanning Tree</a>
+      problem.
+    </p>
+  </section>
+
+  <section id="design" section-title="Design and Strategy">
+    <h2>Design and Strategy</h2>
+    <p>
+      Prim's Algorithm builds a minimum spanning tree one vertex at a time. It starts from any chosen
+      vertex and repeatedly adds the lightest edge that connects a vertex already in the tree to a vertex
+      outside the tree. This is a greedy rule: at each step we commit to the cheapest edge that expands the
+      current partial tree without creating a cycle.
+    </p>
+    <p>
+      A convenient implementation keeps, for every vertex not yet in the tree, the weight of the cheapest
+      edge that could attach it to the tree. A min-priority queue then tells us which vertex should be added
+      next. Whenever a new vertex enters the tree, we examine its incident edges and update those best-known
+      attachment costs.
+    </p>
+
+    <h3>High-Level Algorithm</h3>
+    <ol class="spaced">
+      <li>Choose a start vertex \(s\).</li>
+      <li>Set \(key[s] = 0\), and for every other vertex \(v\), set \(key[v] = \infty\).</li>
+      <li>Insert all vertices into a min-priority queue keyed by their current \(key\) values.</li>
+      <li>While the queue is not empty:
+        <ul>
+          <li>Extract the vertex \(u\) with minimum key.</li>
+          <li>Add \(u\) to the growing tree.</li>
+          <li>For each edge \((u,v)\) with weight \(w\), if \(v\) is not yet in the tree and \(w &lt; key[v]\),
+            update \(key[v]\) and record \(u\) as the parent of \(v\).</li>
+        </ul>
+      </li>
+      <li>The parent edges form the minimum spanning tree.</li>
+    </ol>
+
+    <div class="example-box">
+      <strong class="example-title">Small Example</strong>
+      <p>
+        Suppose the graph has edges
+        \((A,B,2), (A,C,3), (B,C,1), (B,D,4), (C,E,2), (D,E,3)\),
+        and we start at \(A\).
+      </p>
+      <ol class="spaced">
+        <li>Start with tree \(\{A\}\).</li>
+        <li>The cheapest edge leaving the tree is \((A,B)\) with weight \(2\), so add \(B\).</li>
+        <li>Now the cheapest edge crossing the cut is \((B,C)\) with weight \(1\), so add \(C\).</li>
+        <li>Next add \((C,E)\) with weight \(2\).</li>
+        <li>Finally add \((E,D)\) with weight \(3\).</li>
+      </ol>
+      <p>
+        The resulting tree has total weight \(2 + 1 + 2 + 3 = 8\).
+      </p>
+    </div>
+  </section>
+
+  <section id="demo" section-title="Interactive Demo">
+    <h2>Interactive Demo</h2>
+    <p>
+      This demo shows the current tree, the vertex table, and the priority queue as Prim's Algorithm runs.
+    </p>
+    <div class="embeddedDemoContainer">
+      <iframe class="embeddedDemo"
+              src="/Algorithms/Content/Demos/Greedy/Prims Algorithm Demo.html"
+              allow="fullscreen"
+              name="prims-demo">
+      </iframe>
+    </div>
+  </section>
+
+  <section id="code" section-title="Implementation in Java, C++, Python">
+    <h2>Implementation in Java, C++, Python</h2>
+    <p>
+      The versions below use an adjacency list and a min-priority queue. They return the total weight of the
+      minimum spanning tree for a connected graph.
+    </p>
+    <div class="tab-group">
+      <div class="tabs" role="tablist">
+        <button id="tab-java" class="tablink active" data-lang="java" role="tab" aria-controls="java" aria-selected="true">Java</button>
+        <button id="tab-cpp" class="tablink" data-lang="cpp" role="tab" aria-controls="cpp" aria-selected="false">C++</button>
+        <button id="tab-python" class="tablink" data-lang="python" role="tab" aria-controls="python" aria-selected="false">Python</button>
+      </div>
+      <div id="java" class="code-container active" role="tabpanel" aria-labelledby="tab-java">
+        <pre><code class="language-java">import java.util.*;
+
+class Edge {
+  int to, w;
+  Edge(int to, int w) { this.to = to; this.w = w; }
+}
+
+int primMST(List&lt;Edge&gt;[] graph) {
+  int n = graph.length;
+  boolean[] inTree = new boolean[n];
+  int[] key = new int[n];
+  Arrays.fill(key, Integer.MAX_VALUE);
+  key[0] = 0;
+
+  PriorityQueue&lt;int[]&gt; pq =
+      new PriorityQueue&lt;&gt;(Comparator.comparingInt(a -&gt; a[0]));
+  pq.add(new int[]{0, 0}); // {weight, vertex}
+
+  int total = 0;
+  while (!pq.isEmpty()) {
+    int[] cur = pq.poll();
+    int w = cur[0], u = cur[1];
+    if (inTree[u]) continue;
+    inTree[u] = true;
+    total += w;
+
+    for (Edge e : graph[u]) {
+      if (!inTree[e.to] && e.w &lt; key[e.to]) {
+        key[e.to] = e.w;
+        pq.add(new int[]{e.w, e.to});
+      }
+    }
+  }
+  return total;
+}</code></pre>
+      </div>
+      <div id="cpp" class="code-container" role="tabpanel" aria-labelledby="tab-cpp">
+        <pre><code class="language-cpp">#include &lt;climits&gt;
+#include &lt;queue&gt;
+#include &lt;utility&gt;
+#include &lt;vector&gt;
+using namespace std;
+
+struct Edge {
+  int to, w;
+};
+
+int primMST(const vector&lt;vector&lt;Edge&gt;&gt;&amp; graph) {
+  int n = graph.size();
+  vector&lt;bool&gt; inTree(n, false);
+  vector&lt;int&gt; key(n, INT_MAX);
+  priority_queue&lt;pair&lt;int,int&gt;, vector&lt;pair&lt;int,int&gt;>, greater&lt;pair&lt;int,int&gt;&gt;&gt; pq;
+
+  key[0] = 0;
+  pq.push({0, 0}); // {weight, vertex}
+
+  int total = 0;
+  while (!pq.empty()) {
+    auto [w, u] = pq.top();
+    pq.pop();
+    if (inTree[u]) continue;
+    inTree[u] = true;
+    total += w;
+
+    for (const Edge&amp; e : graph[u]) {
+      if (!inTree[e.to] && e.w &lt; key[e.to]) {
+        key[e.to] = e.w;
+        pq.push({e.w, e.to});
+      }
+    }
+  }
+  return total;
+}</code></pre>
+      </div>
+      <div id="python" class="code-container" role="tabpanel" aria-labelledby="tab-python">
+        <pre><code class="language-python">import heapq
+
+def prim_mst(graph):
+    n = len(graph)
+    in_tree = [False] * n
+    key = [float("inf")] * n
+    key[0] = 0
+    pq = [(0, 0)]  # (weight, vertex)
+
+    total = 0
+    while pq:
+        w, u = heapq.heappop(pq)
+        if in_tree[u]:
+            continue
+        in_tree[u] = True
+        total += w
+
+        for v, edge_w in graph[u]:
+            if not in_tree[v] and edge_w < key[v]:
+                key[v] = edge_w
+                heapq.heappush(pq, (edge_w, v))
+
+    return total</code></pre>
+      </div>
+    </div>
+  </section>
+
+  <section id="analysis" section-title="Time/Space Analysis">
+    <h2>Time/Space Analysis</h2>
+    <p>
+      <strong>Time Complexity:</strong> With an adjacency list and binary heap, Prim's Algorithm runs in
+      \(O(E \log V)\), where \(V\) is the number of vertices and \(E\) is the number of edges.
+    </p>
+    <p>
+      <strong>Space Complexity:</strong> The graph representation, key array, and priority queue require
+      \(O(V + E)\) space.
+    </p>
+  </section>
+
+  <section id="variations" section-title="Variations/Improvements">
+    <h2>Variations/Improvements</h2>
+    <p>
+      On dense graphs, an adjacency-matrix version runs in \(O(V^2)\) and can be simpler to implement.
+      Prim's is often preferred when the graph is represented by adjacency lists and a priority queue is readily available.
+      A closely related alternative is <a href="?path=Algorithms%2FGreedy%2FKruskals%20DRAFT">Kruskal's Algorithm</a>.
+    </p>
+  </section>
+
+  <section id="links" section-title="Links to Resources">
+    <h2>Links to Resources</h2>
+    <ul>
+      <li><a href="https://en.wikipedia.org/wiki/Prim%27s_algorithm" target="_blank">Wikipedia: Prim's algorithm</a> Overview, history, and standard variants.</li>
+      <li><a href="https://cp-algorithms.com/graph/mst_prim.html" target="_blank">cp-algorithms: Prim's algorithm</a> Concise explanation with implementation details.</li>
+      <li><a href="https://www.geeksforgeeks.org/prims-minimum-spanning-tree-mst-greedy-algo-5/" target="_blank">GeeksforGeeks: Prim's Minimum Spanning Tree</a> Extra examples and alternate code versions.</li>
+    </ul>
+  </section>
+
+  <section id="reading-questions" section-title="Reading Comprehension Questions">
+    <h2>Reading Comprehension Questions</h2>
+    <ol>
+      <li><strong>Safe Edge:</strong> Why is the lightest edge leaving the current tree always a safe edge to add?</li>
+      <li><strong>Key Values:</strong> What does the key value of a vertex represent while Prim's Algorithm is running?</li>
+    </ol>
+    <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
+    <div id="answers" class="answer" hidden>
+      <ol>
+        <li><strong>Answer:</strong> It is the minimum-weight edge crossing the cut between vertices already in the tree and vertices outside it, so adding it preserves the possibility of an optimal MST.</li>
+        <li><strong>Answer:</strong> It is the weight of the cheapest known edge that can currently attach that vertex to the growing tree.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="activities" section-title="In-Class Activities">
+    <h2>In-Class Activities</h2>
+    <ol>
+      <li><strong>Trace the Table:</strong> Give students a graph and have them fill in the changing key and parent tables after each extraction from the priority queue.</li>
+      <li><strong>Compare Starting Vertices:</strong> Run Prim's Algorithm from two different starting vertices on the same graph and compare the order of choices and final total weight.</li>
+    </ol>
+  </section>
+
+  <section id="problems" section-title="Homework Problems">
+    <h2>Homework Problems</h2>
+    <ol>
+      <li><strong>Full Run:</strong> Execute Prim's Algorithm by hand on a connected weighted graph with at least six vertices and record each selected edge.</li>
+      <li><strong>Dense vs. Sparse:</strong> Explain when an \(O(V^2)\) adjacency-matrix implementation of Prim's may be preferable to a heap-based implementation.</li>
+    </ol>
+  </section>
+</body>
+</html>

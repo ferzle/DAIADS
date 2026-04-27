@@ -2,7 +2,7 @@
 import os, json, urllib.parse, xml.etree.ElementTree as ET
 
 # Edit this to match your actual root URL for the menu (include trailing slash if needed)
-SITE_ROOT = "https:///Algorithms/"
+SITE_ROOT = "https:///DAIADS/"
 
 # Directories to exclude from menu generation (case-insensitive)
 IGNORE_DIRS = {"old", "images", "figures"}
@@ -25,7 +25,7 @@ def scan_dir(current_path, path_prefix="", draft_accumulator=None):
             else:
                 items.append(entry)
     return items
-def build_chapters_json(base_dir='/home/cusack/public_html/Algorithms/Content'):
+def build_chapters_json(base_dir='/home/cusack/public_html/DAIADS/Content'):
     chapters = {}
     drafts = []
     for chapter_dir in sorted(os.listdir(base_dir)):
@@ -38,7 +38,7 @@ def build_chapters_json(base_dir='/home/cusack/public_html/Algorithms/Content'):
     if drafts:
         chapters.setdefault("More", []).append({"DRAFTS": sorted(drafts)})
 
-    with open('/home/cusack/public_html/Algorithms/scripts/chapters.json', 'w') as f:
+    with open('/home/cusack/public_html/DAIADS/scripts/chapters.json', 'w') as f:
         json.dump(chapters, f, indent=2)
 
     return chapters
@@ -75,7 +75,7 @@ def write_sitemap(paths):
         # This matches your menu link logic: ?path=...
         loc.text = f"{SITE_ROOT}?path={urllib.parse.quote(path, safe='')}"
     tree = ET.ElementTree(urlset)
-    tree.write("/home/cusack/public_html/Algorithms/scripts/sitemap.xml", encoding="utf-8", xml_declaration=True)
+    tree.write("/home/cusack/public_html/DAIADS/scripts/sitemap.xml", encoding="utf-8", xml_declaration=True)
 
 if __name__ == "__main__":
     chapters = build_chapters_json()
