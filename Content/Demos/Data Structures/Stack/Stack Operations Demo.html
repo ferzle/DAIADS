@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Stack Operations Demo</title>
+  <script src="../../../../scripts/demoScripts.js"></script>
+  <link rel="stylesheet" href="../../../../css/style.css">
+  <link rel="stylesheet" href="../../../../css/demo.css">
+  <style>
+    .stack-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .stack-controls label {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .stack-controls input {
+      width: 90px;
+    }
+    #status {
+      min-height: 42px;
+      margin: 8px 0;
+      padding: 6px 8px;
+      border-left: 4px solid #4a768b;
+      background: #f7fbfd;
+    }
+    .stack-layout {
+      display: grid;
+      grid-template-columns: minmax(150px, 230px) minmax(220px, 1fr);
+      gap: 18px;
+      align-items: start;
+      margin-top: 12px;
+    }
+    .stack-view {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      align-items: stretch;
+      max-width: 230px;
+    }
+    .stack-item {
+      min-height: 42px;
+      border: 1px solid #333;
+      background: #cce3ff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 10px;
+      box-sizing: border-box;
+      font-weight: bold;
+    }
+    .stack-item.top {
+      background: #ffe16a;
+      border-width: 2px;
+    }
+    .stack-role {
+      color: #555;
+      font-size: 12px;
+      font-weight: normal;
+    }
+    .stack-base {
+      border-top: 3px solid #333;
+      color: #555;
+      font-size: 12px;
+      padding-top: 4px;
+      text-align: center;
+    }
+    .empty-state,
+    .result-box {
+      border: 1px dashed #777;
+      color: #555;
+      background: #f6f6f6;
+      padding: 10px 12px;
+    }
+    .result-box {
+      border-style: solid;
+      margin-bottom: 10px;
+      line-height: 1.5;
+    }
+    .removed-value {
+      display: inline-block;
+      min-width: 36px;
+      margin-left: 4px;
+      padding: 2px 8px;
+      border: 1px solid #333;
+      background: #ffa088;
+      text-align: center;
+      font-weight: bold;
+    }
+    .stack-notes {
+      line-height: 1.5;
+    }
+  </style>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-DQ5LVZVFDC');
+  </script>
+</head>
+<body class="no-tooltips">
+  <div id="demoContainer">
+    <h2>Stack Operations Demo</h2>
+
+    <div class="stack-controls">
+      <label>Value <input id="valueInput" type="text" value="X"></label>
+      <button id="pushBtn">Push</button>
+      <button id="popBtn">Pop</button>
+      <button id="peekBtn">Peek</button>
+      <button id="resetBtn">Reset</button>
+    </div>
+
+    <div class="legend">
+      <strong>Legend:</strong>
+      <span class="legend-box" style="background:#ffe16a;"></span>Top item
+      <span class="legend-box" style="background:#ffa088;"></span>Removed item
+    </div>
+
+    <div id="status"></div>
+    <div class="stack-layout">
+      <div>
+        <div id="stackView" class="stack-view"></div>
+        <div class="stack-base">bottom</div>
+      </div>
+      <div class="stack-notes">
+        <div id="resultBox" class="result-box"></div>
+        <div><strong>Abstract rule:</strong> the only accessible item is the top item.</div>
+        <div id="stackSummary"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let items;
+    let lastRemoved = '';
+
+    function resetState() {
+      items = ['A', 'B', 'C'];
+      lastRemoved = '';
+      render('Initial stack. The most recently added item is on top.');
+    }
+
+    function readValue() {
+      return document.getElementById('valueInput').value.trim();
+    }
+
+    function topItem() {
+      return items.length === 0 ? '' : items[items.length - 1];
+    }
+
+    function render(message) {
+      document.getElementById('status').textContent = message;
+      document.getElementById('stackSummary').textContent =
+        items.length === 0
+          ? 'Count: 0. Push adds the next item.'
+          : `Count: ${items.length}. Next pop or peek looks at ${topItem()}.`;
+
+      const resultBox = document.getElementById('resultBox');
+      resultBox.innerHTML = '';
+      const topLine = document.createElement('div');
+      topLine.textContent = items.length === 0 ? 'Top: none' : `Top: ${topItem()}`;
+      resultBox.appendChild(topLine);
+      if (lastRemoved !== '') {
+        const removedLine = document.createElement('div');
+        removedLine.textContent = 'Last removed:';
+        const removedValue = document.createElement('span');
+        removedValue.className = 'removed-value';
+        removedValue.textContent = lastRemoved;
+        removedLine.appendChild(removedValue);
+        resultBox.appendChild(removedLine);
+      }
+
+      const stackView = document.getElementById('stackView');
+      stackView.innerHTML = '';
+
+      if (items.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'empty-state';
+        empty.textContent = 'empty stack';
+        stackView.appendChild(empty);
+        return;
+      }
+
+      for (let i = items.length - 1; i >= 0; i--) {
+        const item = document.createElement('div');
+        item.className = 'stack-item';
+        if (i === items.length - 1) {
+          item.classList.add('top');
+        }
+
+        const value = document.createElement('span');
+        value.textContent = items[i];
+
+        const role = document.createElement('span');
+        role.className = 'stack-role';
+        role.textContent = i === items.length - 1 ? 'top' : '';
+
+        item.appendChild(value);
+        item.appendChild(role);
+        stackView.appendChild(item);
+      }
+    }
+
+    document.getElementById('pushBtn').addEventListener('click', () => {
+      const value = readValue();
+      if (value === '') {
+        render('Enter a value before pushing.');
+        return;
+      }
+      items.push(value);
+      lastRemoved = '';
+      render(`Push adds ${value} to the top of the stack.`);
+    });
+
+    document.getElementById('popBtn').addEventListener('click', () => {
+      if (items.length === 0) {
+        lastRemoved = '';
+        render('Pop has no result because the stack is empty.');
+        return;
+      }
+      lastRemoved = items.pop();
+      render(`Pop removes ${lastRemoved}, which was the top item.`);
+    });
+
+    document.getElementById('peekBtn').addEventListener('click', () => {
+      lastRemoved = '';
+      if (items.length === 0) {
+        render('Peek has no result because the stack is empty.');
+        return;
+      }
+      render(`Peek returns ${topItem()} without removing it.`);
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', resetState);
+
+    resetState();
+  </script>
+</body>
+</html>

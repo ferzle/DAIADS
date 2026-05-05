@@ -4,15 +4,17 @@ import os, json, urllib.parse, xml.etree.ElementTree as ET
 # Edit this to match your actual root URL for the menu (include trailing slash if needed)
 SITE_ROOT = "https:///DAIADS/"
 
-# Directories to exclude from menu generation (case-insensitive)
-IGNORE_DIRS = {"old", "images", "figures"}
+# Directories to exclude from menu generation (case-insensitive).
+# Content/Code stores downloadable starter code and should not appear in
+# the sidebar or sitemap unless that policy changes later.
+IGNORE_DIRS = {"old", "images", "figures", "code"}
 
 def scan_dir(current_path, path_prefix="", draft_accumulator=None):
     items = []
     for entry in sorted(os.listdir(current_path)):
         entry_path = os.path.join(current_path, entry)
         if os.path.isdir(entry_path):
-            # Skip directories like 'old', 'images', or 'figures' (any capitalization)
+            # Skip ignored directories in any capitalization.
             if entry.lower() in IGNORE_DIRS:
                 continue
             sub = scan_dir(entry_path, path_prefix + entry + "/", draft_accumulator)

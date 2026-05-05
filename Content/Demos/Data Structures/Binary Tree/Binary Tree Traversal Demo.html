@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Binary Tree Traversal Demo</title>
+  <script src="../../../../scripts/demoScripts.js"></script>
+  <link rel="stylesheet" href="../../../../css/style.css">
+  <link rel="stylesheet" href="../../../../css/demo.css">
+  <style>
+    .tree-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .tree-controls label {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    #status {
+      min-height: 42px;
+      margin: 8px 0;
+      padding: 6px 8px;
+      border-left: 4px solid #4a768b;
+      background: #f7fbfd;
+    }
+    .tree-demo-layout {
+      display: grid;
+      grid-template-columns: minmax(320px, 620px) minmax(220px, 1fr);
+      gap: 16px;
+      align-items: start;
+      margin-top: 12px;
+    }
+    svg {
+      width: 100%;
+      max-width: 620px;
+      height: 320px;
+      border: 1px solid #ccc;
+      background: #fff;
+      box-sizing: border-box;
+    }
+    .tree-edge {
+      stroke: #777;
+      stroke-width: 2;
+    }
+    .tree-node circle {
+      fill: #cce3ff;
+      stroke: #333;
+      stroke-width: 1.5;
+    }
+    .tree-node.current circle {
+      fill: #ffe16a;
+      stroke-width: 3;
+    }
+    .tree-node.visited circle {
+      fill: #74b474;
+    }
+    .tree-node text {
+      text-anchor: middle;
+      dominant-baseline: middle;
+      font-weight: bold;
+      fill: #111;
+    }
+    .traversal-panel {
+      line-height: 1.5;
+    }
+    .output-list {
+      min-height: 36px;
+      margin: 8px 0;
+      padding: 8px;
+      border: 1px solid #777;
+      background: #f6f6f6;
+      font-family: monospace;
+      font-size: 16px;
+    }
+  </style>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-DQ5LVZVFDC');
+  </script>
+</head>
+<body class="no-tooltips">
+  <div id="demoContainer">
+    <h2>Binary Tree Traversal Demo</h2>
+
+    <div class="tree-controls">
+      <label>
+        Traversal
+        <select id="traversalSelect">
+          <option value="preorder">Preorder</option>
+          <option value="inorder">Inorder</option>
+          <option value="postorder">Postorder</option>
+          <option value="levelorder">Level-order</option>
+        </select>
+      </label>
+      <button id="prevBtn">Previous</button>
+      <button id="nextBtn">Next</button>
+      <button id="resetBtn">Reset Traversal</button>
+    </div>
+
+    <div class="legend">
+      <strong>Legend:</strong>
+      <span class="legend-box" style="background:#ffe16a;"></span>Current visit
+      <span class="legend-box" style="background:#74b474;"></span>Already visited
+      <span class="legend-box" style="background:#cce3ff;"></span>Not visited yet
+    </div>
+
+    <div id="status"></div>
+    <div class="tree-demo-layout">
+      <svg id="treeSvg" viewBox="0 0 640 320" preserveAspectRatio="xMidYMid meet"></svg>
+      <div class="traversal-panel">
+        <div><strong>Rule:</strong> <span id="ruleText"></span></div>
+        <div><strong>Visited order:</strong></div>
+        <div id="outputList" class="output-list"></div>
+        <div id="stepCount"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const tree = {
+      id: 'A',
+      left: {
+        id: 'B',
+        left: { id: 'D' },
+        right: {
+          id: 'E',
+          left: { id: 'G' }
+        }
+      },
+      right: {
+        id: 'C',
+        right: { id: 'F' }
+      }
+    };
+
+    const positions = {
+      A: { x: 320, y: 42 },
+      B: { x: 185, y: 112 },
+      C: { x: 455, y: 112 },
+      D: { x: 105, y: 190 },
+      E: { x: 265, y: 190 },
+      F: { x: 535, y: 190 },
+      G: { x: 225, y: 268 }
+    };
+
+    const rules = {
+      preorder: 'visit the node, then traverse the left subtree, then the right subtree.',
+      inorder: 'traverse the left subtree, visit the node, then traverse the right subtree.',
+      postorder: 'traverse the left subtree, then the right subtree, then visit the node.',
+      levelorder: 'visit nodes level by level, from left to right within each level.'
+    };
+
+    let order = [];
+    let stepIndex = -1;
+
+    function preorder(node, result) {
+      if (!node) return;
+      result.push(node.id);
+      preorder(node.left, result);
+      preorder(node.right, result);
+    }
+
+    function inorder(node, result) {
+      if (!node) return;
+      inorder(node.left, result);
+      result.push(node.id);
+      inorder(node.right, result);
+    }
+
+    function postorder(node, result) {
+      if (!node) return;
+      postorder(node.left, result);
+      postorder(node.right, result);
+      result.push(node.id);
+    }
+
+    function levelorder(node, result) {
+      const queue = node ? [node] : [];
+      while (queue.length > 0) {
+        const current = queue.shift();
+        result.push(current.id);
+        if (current.left) queue.push(current.left);
+        if (current.right) queue.push(current.right);
+      }
+    }
+
+    function buildOrder(kind) {
+      const result = [];
+      if (kind === 'preorder') preorder(tree, result);
+      if (kind === 'inorder') inorder(tree, result);
+      if (kind === 'postorder') postorder(tree, result);
+      if (kind === 'levelorder') levelorder(tree, result);
+      return result;
+    }
+
+    function collectEdges(node, edges) {
+      if (!node) return;
+      if (node.left) {
+        edges.push([node.id, node.left.id]);
+        collectEdges(node.left, edges);
+      }
+      if (node.right) {
+        edges.push([node.id, node.right.id]);
+        collectEdges(node.right, edges);
+      }
+    }
+
+    function collectNodes(node, nodes) {
+      if (!node) return;
+      nodes.push(node.id);
+      collectNodes(node.left, nodes);
+      collectNodes(node.right, nodes);
+    }
+
+    function svgElement(name) {
+      return document.createElementNS('http://www.w3.org/2000/svg', name);
+    }
+
+    function renderTree() {
+      const svg = document.getElementById('treeSvg');
+      svg.innerHTML = '';
+
+      const edges = [];
+      const nodes = [];
+      const visited = new Set(order.slice(0, stepIndex + 1));
+      const currentId = stepIndex >= 0 ? order[stepIndex] : '';
+
+      collectEdges(tree, edges);
+      collectNodes(tree, nodes);
+
+      edges.forEach(([from, to]) => {
+        const a = positions[from];
+        const b = positions[to];
+        const line = svgElement('line');
+        line.setAttribute('x1', a.x);
+        line.setAttribute('y1', a.y);
+        line.setAttribute('x2', b.x);
+        line.setAttribute('y2', b.y);
+        line.setAttribute('class', 'tree-edge');
+        svg.appendChild(line);
+      });
+
+      nodes.forEach((id) => {
+        const pos = positions[id];
+        const group = svgElement('g');
+        group.setAttribute('class', 'tree-node');
+        if (visited.has(id)) group.classList.add('visited');
+        if (id === currentId) group.classList.add('current');
+
+        const circle = svgElement('circle');
+        circle.setAttribute('cx', pos.x);
+        circle.setAttribute('cy', pos.y);
+        circle.setAttribute('r', 22);
+
+        const text = svgElement('text');
+        text.setAttribute('x', pos.x);
+        text.setAttribute('y', pos.y + 1);
+        text.textContent = id;
+
+        group.appendChild(circle);
+        group.appendChild(text);
+        svg.appendChild(group);
+      });
+    }
+
+    function render() {
+      const kind = document.getElementById('traversalSelect').value;
+      document.getElementById('ruleText').textContent = rules[kind];
+
+      const visitedOrder = order.slice(0, stepIndex + 1);
+      document.getElementById('outputList').textContent =
+        visitedOrder.length === 0 ? '(none yet)' : visitedOrder.join(' -> ');
+      document.getElementById('stepCount').textContent =
+        `Step ${Math.max(stepIndex + 1, 0)} of ${order.length}`;
+
+      if (stepIndex < 0) {
+        document.getElementById('status').textContent = 'Choose Next to begin the traversal.';
+      } else {
+        document.getElementById('status').textContent =
+          `Visit ${order[stepIndex]}. It is appended to the traversal output.`;
+      }
+
+      document.getElementById('prevBtn').disabled = stepIndex < 0;
+      document.getElementById('nextBtn').disabled = stepIndex >= order.length - 1;
+      renderTree();
+    }
+
+    function resetTraversal() {
+      const kind = document.getElementById('traversalSelect').value;
+      order = buildOrder(kind);
+      stepIndex = -1;
+      render();
+    }
+
+    document.getElementById('traversalSelect').addEventListener('change', resetTraversal);
+    document.getElementById('prevBtn').addEventListener('click', () => {
+      if (stepIndex >= 0) {
+        stepIndex--;
+        render();
+      }
+    });
+    document.getElementById('nextBtn').addEventListener('click', () => {
+      if (stepIndex < order.length - 1) {
+        stepIndex++;
+        render();
+      }
+    });
+    document.getElementById('resetBtn').addEventListener('click', resetTraversal);
+
+    resetTraversal();
+  </script>
+</body>
+</html>

@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>BST Rotation Demo</title>
+  <script src="../../../../scripts/demoScripts.js"></script>
+  <link rel="stylesheet" href="../../../../css/style.css">
+  <link rel="stylesheet" href="../../../../css/demo.css">
+  <style>
+    .rotation-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    #status {
+      min-height: 42px;
+      margin: 8px 0;
+      padding: 6px 8px;
+      border-left: 4px solid #4a768b;
+      background: #f7fbfd;
+    }
+    .rotation-layout {
+      display: grid;
+      grid-template-columns: minmax(360px, 720px) minmax(240px, 1fr);
+      gap: 16px;
+      align-items: start;
+      margin-top: 12px;
+    }
+    svg {
+      width: 100%;
+      max-width: 720px;
+      min-height: 360px;
+      border: 1px solid #ccc;
+      background: #fff;
+      box-sizing: border-box;
+    }
+    .tree-edge {
+      stroke: #777;
+      stroke-width: 2;
+    }
+    .rotation-node circle {
+      fill: #cce3ff;
+      stroke: #333;
+      stroke-width: 1.5;
+    }
+    .rotation-node.focus circle {
+      fill: #ffe16a;
+      stroke-width: 3;
+    }
+    .rotation-node.root circle {
+      stroke-width: 3;
+    }
+    .rotation-node text {
+      text-anchor: middle;
+      dominant-baseline: middle;
+      font-weight: bold;
+      fill: #111;
+    }
+    .subtree rect {
+      fill: #f6f6f6;
+      stroke: #777;
+      stroke-dasharray: 4 3;
+    }
+    .subtree text {
+      text-anchor: middle;
+      dominant-baseline: middle;
+      fill: #555;
+      font-weight: bold;
+    }
+    .rotation-panel {
+      line-height: 1.5;
+    }
+    .inorder-box {
+      min-height: 36px;
+      margin: 8px 0;
+      padding: 8px;
+      border: 1px solid #777;
+      background: #f6f6f6;
+      font-family: monospace;
+      font-size: 15px;
+    }
+  </style>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-DQ5LVZVFDC');
+  </script>
+</head>
+<body class="no-tooltips">
+  <div id="demoContainer">
+    <h2>BST Rotation Demo</h2>
+
+    <div class="rotation-controls">
+      <button data-case="left">Left Rotation</button>
+      <button data-case="right">Right Rotation</button>
+      <button data-case="leftRight">Left-Right Rotation</button>
+      <button data-case="rightLeft">Right-Left Rotation</button>
+      <button id="prevBtn">Previous Step</button>
+      <button id="nextBtn">Next Step</button>
+    </div>
+
+    <div class="legend">
+      <strong>Legend:</strong>
+      <span class="legend-box" style="background:#ffe16a;"></span>Nodes being rotated
+      <span class="legend-box" style="background:#cce3ff;"></span>Tree node
+      <span class="legend-box" style="background:#f6f6f6;"></span>Subtree whose internal shape is unchanged
+    </div>
+
+    <div id="status"></div>
+    <div class="rotation-layout">
+      <svg id="rotationSvg" preserveAspectRatio="xMidYMid meet"></svg>
+      <div class="rotation-panel">
+        <div><strong>Case:</strong> <span id="caseTitle"></span></div>
+        <div><strong>Step:</strong> <span id="stepCount"></span></div>
+        <div><strong>In-order sequence:</strong></div>
+        <div id="inorderBox" class="inorder-box"></div>
+        <div><strong>Key idea:</strong> rotations change parent-child relationships locally but preserve the in-order order of the values.</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function n(id, label, left = null, right = null) {
+      return { id, label, left, right, subtree: false };
+    }
+
+    function t(id) {
+      return { id, label: id, left: null, right: null, subtree: true };
+    }
+
+    function leftRotationSteps() {
+      return [
+        {
+          title: 'Left rotation',
+          message: 'Before rotating left: 10 has a right child, 20. The middle subtree T2 must stay between 10 and 20.',
+          focus: ['A', 'B'],
+          inorder: 'T1, 10, T2, 20, T3',
+          tree: n('A', '10', t('T1'), n('B', '20', t('T2'), t('T3')))
+        },
+        {
+          title: 'Left rotation',
+          message: 'After rotating left: 20 moves up, 10 becomes its left child, and T2 becomes the right subtree of 10.',
+          focus: ['A', 'B'],
+          inorder: 'T1, 10, T2, 20, T3',
+          tree: n('B', '20', n('A', '10', t('T1'), t('T2')), t('T3'))
+        }
+      ];
+    }
+
+    function rightRotationSteps() {
+      return [
+        {
+          title: 'Right rotation',
+          message: 'Before rotating right: 20 has a left child, 10. The middle subtree T2 must stay between 10 and 20.',
+          focus: ['A', 'B'],
+          inorder: 'T1, 10, T2, 20, T3',
+          tree: n('B', '20', n('A', '10', t('T1'), t('T2')), t('T3'))
+        },
+        {
+          title: 'Right rotation',
+          message: 'After rotating right: 10 moves up, 20 becomes its right child, and T2 becomes the left subtree of 20.',
+          focus: ['A', 'B'],
+          inorder: 'T1, 10, T2, 20, T3',
+          tree: n('A', '10', t('T1'), n('B', '20', t('T2'), t('T3')))
+        }
+      ];
+    }
+
+    function leftRightSteps() {
+      return [
+        {
+          title: 'Left-right rotation',
+          message: 'Start with a left-right shape: 30 leans left, but the heavy child 10 leans right.',
+          focus: ['Y', 'X', 'Z'],
+          inorder: 'T1, 10, T2, 20, T3, 30, T4',
+          tree: n('Z', '30', n('Y', '10', t('T1'), n('X', '20', t('T2'), t('T3'))), t('T4'))
+        },
+        {
+          title: 'Left-right rotation',
+          message: 'Step 1: rotate left at 10. This converts the shape into a simple left-heavy case at 30.',
+          focus: ['Y', 'X'],
+          inorder: 'T1, 10, T2, 20, T3, 30, T4',
+          tree: n('Z', '30', n('X', '20', n('Y', '10', t('T1'), t('T2')), t('T3')), t('T4'))
+        },
+        {
+          title: 'Left-right rotation',
+          message: 'Step 2: rotate right at 30. The middle value, 20, becomes the root of this local subtree.',
+          focus: ['X', 'Z'],
+          inorder: 'T1, 10, T2, 20, T3, 30, T4',
+          tree: n('X', '20', n('Y', '10', t('T1'), t('T2')), n('Z', '30', t('T3'), t('T4')))
+        }
+      ];
+    }
+
+    function rightLeftSteps() {
+      return [
+        {
+          title: 'Right-left rotation',
+          message: 'Start with a right-left shape: 10 leans right, but the heavy child 30 leans left.',
+          focus: ['Z', 'X', 'Y'],
+          inorder: 'T1, 10, T2, 20, T3, 30, T4',
+          tree: n('Z', '10', t('T1'), n('Y', '30', n('X', '20', t('T2'), t('T3')), t('T4')))
+        },
+        {
+          title: 'Right-left rotation',
+          message: 'Step 1: rotate right at 30. This converts the shape into a simple right-heavy case at 10.',
+          focus: ['X', 'Y'],
+          inorder: 'T1, 10, T2, 20, T3, 30, T4',
+          tree: n('Z', '10', t('T1'), n('X', '20', t('T2'), n('Y', '30', t('T3'), t('T4'))))
+        },
+        {
+          title: 'Right-left rotation',
+          message: 'Step 2: rotate left at 10. The middle value, 20, becomes the root of this local subtree.',
+          focus: ['Z', 'X'],
+          inorder: 'T1, 10, T2, 20, T3, 30, T4',
+          tree: n('X', '20', n('Z', '10', t('T1'), t('T2')), n('Y', '30', t('T3'), t('T4')))
+        }
+      ];
+    }
+
+    const caseBuilders = {
+      left: leftRotationSteps,
+      right: rightRotationSteps,
+      leftRight: leftRightSteps,
+      rightLeft: rightLeftSteps
+    };
+
+    let currentCase = 'left';
+    let steps = [];
+    let stepIndex = 0;
+
+    function svgElement(name) {
+      return document.createElementNS('http://www.w3.org/2000/svg', name);
+    }
+
+    function layoutTree(root) {
+      const positions = new Map();
+      const edges = [];
+      let nextX = 0;
+      let maxDepth = 0;
+
+      function assign(node, depth) {
+        if (!node) return;
+        maxDepth = Math.max(maxDepth, depth);
+        assign(node.left, depth + 1);
+        positions.set(node.id, {
+          x: 50 + nextX * 84,
+          y: 42 + depth * 72,
+          node
+        });
+        nextX++;
+        if (node.left) edges.push([node.id, node.left.id]);
+        if (node.right) edges.push([node.id, node.right.id]);
+        assign(node.right, depth + 1);
+      }
+
+      assign(root, 0);
+      return {
+        positions,
+        edges,
+        width: Math.max(640, 110 + Math.max(1, nextX) * 84),
+        height: Math.max(320, 90 + (maxDepth + 1) * 72)
+      };
+    }
+
+    function renderTree(step) {
+      const svg = document.getElementById('rotationSvg');
+      svg.innerHTML = '';
+
+      const layout = layoutTree(step.tree);
+      svg.setAttribute('viewBox', `0 0 ${layout.width} ${layout.height}`);
+
+      layout.edges.forEach(([from, to]) => {
+        const a = layout.positions.get(from);
+        const b = layout.positions.get(to);
+        const line = svgElement('line');
+        line.setAttribute('x1', a.x);
+        line.setAttribute('y1', a.y);
+        line.setAttribute('x2', b.x);
+        line.setAttribute('y2', b.y);
+        line.setAttribute('class', 'tree-edge');
+        svg.appendChild(line);
+      });
+
+      layout.positions.forEach((pos, id) => {
+        const group = svgElement('g');
+        group.setAttribute('class', pos.node.subtree ? 'subtree' : 'rotation-node');
+        if (!pos.node.subtree && step.focus.includes(id)) group.classList.add('focus');
+        if (id === step.tree.id) group.classList.add('root');
+
+        if (pos.node.subtree) {
+          const rect = svgElement('rect');
+          rect.setAttribute('x', pos.x - 22);
+          rect.setAttribute('y', pos.y - 16);
+          rect.setAttribute('width', 44);
+          rect.setAttribute('height', 32);
+          rect.setAttribute('rx', 4);
+
+          const text = svgElement('text');
+          text.setAttribute('x', pos.x);
+          text.setAttribute('y', pos.y + 1);
+          text.textContent = pos.node.label;
+
+          group.appendChild(rect);
+          group.appendChild(text);
+        } else {
+          const circle = svgElement('circle');
+          circle.setAttribute('cx', pos.x);
+          circle.setAttribute('cy', pos.y);
+          circle.setAttribute('r', 22);
+
+          const text = svgElement('text');
+          text.setAttribute('x', pos.x);
+          text.setAttribute('y', pos.y + 1);
+          text.textContent = pos.node.label;
+
+          group.appendChild(circle);
+          group.appendChild(text);
+        }
+
+        svg.appendChild(group);
+      });
+    }
+
+    function render() {
+      const step = steps[stepIndex];
+      document.getElementById('caseTitle').textContent = step.title;
+      document.getElementById('stepCount').textContent = `${stepIndex + 1} of ${steps.length}`;
+      document.getElementById('status').textContent = step.message;
+      document.getElementById('inorderBox').textContent = step.inorder;
+      document.getElementById('prevBtn').disabled = stepIndex === 0;
+      document.getElementById('nextBtn').disabled = stepIndex === steps.length - 1;
+      renderTree(step);
+    }
+
+    function chooseCase(caseName) {
+      currentCase = caseName;
+      steps = caseBuilders[currentCase]();
+      stepIndex = 0;
+      render();
+    }
+
+    document.querySelectorAll('[data-case]').forEach((button) => {
+      button.addEventListener('click', () => chooseCase(button.dataset.case));
+    });
+
+    document.getElementById('prevBtn').addEventListener('click', () => {
+      if (stepIndex > 0) {
+        stepIndex--;
+        render();
+      }
+    });
+
+    document.getElementById('nextBtn').addEventListener('click', () => {
+      if (stepIndex < steps.length - 1) {
+        stepIndex++;
+        render();
+      }
+    });
+
+    chooseCase('left');
+  </script>
+</body>
+</html>

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Binary Trees</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <script src="../../scripts/chapterScripts.js"></script>
+  <link rel="stylesheet" href="../../css/style.css">
+  <link rel="stylesheet" href="../../css/chapter.css">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-DQ5LVZVFDC');
+  </script>
+</head>
+<body>
+  <h1>Binary Trees</h1>
+
+  <section id="overview" section-title="Overview">
+    <h2>Overview</h2>
+    <p>
+      A <strong>binary tree</strong> is a tree in which each node has at most two children. The children are usually
+      called the <em>left child</em> and the <em>right child</em>. This left/right distinction is part of the structure:
+      swapping the two children of a node generally produces a different binary tree.
+    </p>
+    <p>
+      A plain binary tree does not require any ordering rule among the values. It is a structural idea. More specialized
+      trees add extra rules: a <a href="?path=Data%20Structures%2FBinary%20Search%20Trees">binary search tree</a> orders values,
+      a binary heap requires a completeness rule and a heap-order rule, and AVL/red-black trees add balancing rules.
+    </p>
+  </section>
+
+  <section id="terminology" section-title="Terminology">
+    <h2>Terminology</h2>
+    <ul>
+      <li><strong>Root:</strong> the top node of the tree.</li>
+      <li><strong>Parent and child:</strong> a node is the parent of its left and right children.</li>
+      <li><strong>Leaf:</strong> a node with no children.</li>
+      <li><strong>Subtree:</strong> a node together with all of its descendants.</li>
+      <li><strong>Depth:</strong> the number of edges from the root to a node.</li>
+      <li><strong>Height:</strong> the number of edges on the longest downward path from a node to a leaf.</li>
+      <li><strong>Full node:</strong> a node with exactly two children.</li>
+    </ul>
+    <p>
+      In many algorithms, a binary tree is defined recursively: a tree is either empty or consists of a root, a left
+      subtree, and a right subtree. That recursive definition is why tree algorithms often have compact recursive
+      descriptions.
+    </p>
+  </section>
+
+  <section id="shapes" section-title="Common Shapes">
+    <h2>Common Shapes</h2>
+    <ul>
+      <li><strong>Perfect binary tree:</strong> every internal node has two children and all leaves are at the same depth.</li>
+      <li><strong>Complete binary tree:</strong> every level is full except possibly the last, and the last level is filled from left to right.</li>
+      <li><strong>Balanced binary tree:</strong> the height stays proportional to \(\log n\), usually because the tree enforces a balancing rule.</li>
+      <li><strong>Degenerate tree:</strong> each internal node has only one child, so the tree behaves like a linked list.</li>
+    </ul>
+    <p>
+      Shape matters because height controls the cost of many tree operations. A tree with \(n\) nodes can have height
+      as small as \(\Theta(\log n)\) or as large as \(\Theta(n)\).
+    </p>
+  </section>
+
+  <section id="traversals" section-title="Traversals">
+    <h2>Traversals</h2>
+    <p>
+      A <strong>traversal</strong> visits every node in a systematic order. The most common depth-first traversals are:
+    </p>
+    <ul>
+      <li><strong>Preorder:</strong> visit the node, then the left subtree, then the right subtree.</li>
+      <li><strong>Inorder:</strong> visit the left subtree, then the node, then the right subtree.</li>
+      <li><strong>Postorder:</strong> visit the left subtree, then the right subtree, then the node.</li>
+    </ul>
+    <p>
+      <strong>Level-order</strong> traversal visits nodes by depth, from left to right within each level. It is the
+      traversal used by breadth-first search on a tree.
+    </p>
+    <p>
+      All four traversals visit each node once, so their running time is \(O(n)\). Their auxiliary space depends on the
+      method used: recursive depth-first traversals use call-stack space proportional to the tree height, while
+      level-order traversal uses a queue that can hold many nodes from one level.
+    </p>
+  </section>
+
+  <section id="demo" section-title="Interactive Demo">
+    <h2>Interactive Demo</h2>
+    <p>
+      This demo compares preorder, inorder, postorder, and level-order traversal on the same binary tree.
+    </p>
+    <div class="embeddedDemoContainer">
+      <iframe class="embeddedDemo"
+              src="../../Content/Demos/Data Structures/Binary Tree/Binary Tree Traversal Demo.html"
+              allow="fullscreen"
+              name="binary-tree-traversal-demo">
+      </iframe>
+    </div>
+  </section>
+
+  <section id="representations" section-title="Representations">
+    <h2>Representations</h2>
+    <h3>Node and References</h3>
+    <p>
+      The most direct representation stores one object per node. Each node stores a value and references to its left
+      and right children.
+    </p>
+    <pre><code>Node:
+    value
+    left
+    right</code></pre>
+    <p>
+      This representation is flexible: the tree can have any shape, and rotations or subtree moves are local reference
+      updates.
+    </p>
+
+    <h3>Implicit Array Layout</h3>
+    <p>
+      Complete binary trees are often stored in arrays. For zero-based indexing, the children of index \(i\) are
+      \(2i + 1\) and \(2i + 2\), and the parent is \(\lfloor(i - 1)/2\rfloor\). Binary heaps use this representation
+      because their complete-tree shape makes it efficient.
+    </p>
+    <p>
+      A general binary tree can also be stored in an array, but arbitrary missing children can waste space or require
+      extra markers. For general tree algorithms, node references are usually easier to reason about.
+    </p>
+  </section>
+
+  <section id="connections" section-title="Connections">
+    <h2>Connections</h2>
+    <ul>
+      <li><strong>Expression trees:</strong> operators are internal nodes and operands are leaves.</li>
+      <li><strong>Decision trees:</strong> internal nodes represent choices and leaves represent outcomes.</li>
+      <li><strong>Binary search trees:</strong> add an ordering invariant that supports search.</li>
+      <li><strong>Heaps:</strong> add shape and priority rules for efficient priority queues.</li>
+      <li><strong>AVL and red-black trees:</strong> add balancing rules to keep search-tree height logarithmic.</li>
+    </ul>
+  </section>
+</body>
+</html>

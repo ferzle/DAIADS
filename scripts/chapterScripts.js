@@ -88,7 +88,8 @@ function initAnswerToggle() {
   if (!btn || !ans) return;
 
   btn.addEventListener('click', () => {
-    const isVisible = ans.style.display === 'block';
+    const isVisible = !ans.hidden && ans.style.display === 'block';
+    ans.hidden = isVisible;
     ans.style.display = isVisible ? 'none' : 'block';
     btn.textContent = isVisible ? 'Show Answers' : 'Hide Answers';
     btn.setAttribute('aria-expanded', String(!isVisible));

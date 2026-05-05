@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Algorithm Textbook &ndash; Data Structures Glossary Draft</title>
+  <link rel="stylesheet" href="../../css/style.css" />
+  <style>
+    /* Glossary container styling */
+    #glossary-container {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+      padding-bottom: 4rem; /* space for fixed nav */
+    }
+    .glossary-entry { margin-bottom: 1rem; }
+    .glossary-term { font-weight: bold; font-size: 1.1em; color: #333; }
+    .glossary-variants { margin-top: 0.25rem; font-style: italic; color: #555; }
+    .glossary-definition { margin-top: 0.25rem; line-height: 1.4; }
+  </style>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-DQ5LVZVFDC');
+</script>
+</head>
+<body class="no-tooltips">
+  <main id="glossary-container">
+    <h2>Data Structures Glossary Draft</h2>
+    <p>
+      Draft list of data structures terms for review before merging into the main glossary.
+    </p>
+    <div id="entries"></div>
+  </main>
+
+  <script type="module">
+    const container = document.getElementById('entries');
+
+    function render(glossary) {
+      container.innerHTML = '';
+      glossary.forEach(({variants, definition}) => {
+        const term = variants[0];
+        const others = variants.slice(1);
+        const entry = document.createElement('div');
+        entry.className = 'glossary-entry';
+        let html = `<div class="glossary-term">${term}</div>`;
+        if (others.length) {
+          html += `<div class="glossary-variants"><em>Other Forms:</em> ${others.join(', ')}</div>`;
+        }
+        html += `<div class="glossary-definition">${definition}</div>`;
+        entry.innerHTML = html;
+        container.appendChild(entry);
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      fetch('../../scripts/glossary-data_DS.json?cb=' + Date.now(), {cache: 'no-store'})
+        .then(r => r.ok ? r.json() : Promise.reject(r))
+        .then(data => {
+          const gloss = data
+            .map(e => ({variants: e.variants || [e.term], definition: e.definition}))
+            .sort((a, b) => a.variants[0].localeCompare(b.variants[0]));
+
+          render(gloss);
+        })
+        .catch(() => container.innerHTML = '<p>Could not load data structures glossary.</p>');
+    });
+  </script>
+</body>
+</html>

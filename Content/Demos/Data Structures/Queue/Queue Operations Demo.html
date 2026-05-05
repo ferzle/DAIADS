@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Queue Operations Demo</title>
+  <script src="../../../../scripts/demoScripts.js"></script>
+  <link rel="stylesheet" href="../../../../css/style.css">
+  <link rel="stylesheet" href="../../../../css/demo.css">
+  <style>
+    .queue-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .queue-controls label {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .queue-controls input {
+      width: 90px;
+    }
+    #status {
+      min-height: 42px;
+      margin: 8px 0;
+      padding: 6px 8px;
+      border-left: 4px solid #4a768b;
+      background: #f7fbfd;
+    }
+    .queue-line {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      gap: 8px;
+      margin-top: 14px;
+    }
+    .queue-entry {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .queue-item {
+      min-width: 54px;
+      height: 44px;
+      border: 1px solid #333;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #cce3ff;
+      box-sizing: border-box;
+      font-weight: bold;
+      padding: 0 10px;
+    }
+    .queue-item.front {
+      background: #ffe16a;
+      border-width: 2px;
+    }
+    .queue-item.back {
+      box-shadow: inset 0 -5px 0 #8ecae6;
+    }
+    .queue-item.changed {
+      background: #8ecae6;
+    }
+    .queue-role {
+      color: #333;
+      font-size: 12px;
+      min-height: 16px;
+    }
+    .queue-arrow {
+      color: #555;
+      font-weight: bold;
+      margin-top: 16px;
+    }
+    .queue-info {
+      display: grid;
+      grid-template-columns: minmax(220px, 320px) minmax(220px, 1fr);
+      gap: 16px;
+      margin-top: 12px;
+      line-height: 1.5;
+    }
+    .result-box,
+    .empty-state {
+      border: 1px solid #777;
+      color: #555;
+      background: #f6f6f6;
+      padding: 10px 12px;
+    }
+    .empty-state {
+      border-style: dashed;
+    }
+    .removed-value {
+      display: inline-block;
+      min-width: 36px;
+      margin-left: 4px;
+      padding: 2px 8px;
+      border: 1px solid #333;
+      background: #ffa088;
+      text-align: center;
+      font-weight: bold;
+    }
+  </style>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-DQ5LVZVFDC');
+  </script>
+</head>
+<body class="no-tooltips">
+  <div id="demoContainer">
+    <h2>Queue Operations Demo</h2>
+
+    <div class="queue-controls">
+      <label>Value <input id="valueInput" type="text" value="X"></label>
+      <button id="enqueueBtn">Enqueue</button>
+      <button id="dequeueBtn">Dequeue</button>
+      <button id="peekBtn">Peek Front</button>
+      <button id="resetBtn">Reset</button>
+    </div>
+
+    <div class="legend">
+      <strong>Legend:</strong>
+      <span class="legend-box" style="background:#ffe16a;"></span>Front item
+      <span class="legend-box" style="background:#8ecae6;"></span>Back or changed item
+      <span class="legend-box" style="background:#ffa088;"></span>Removed item
+    </div>
+
+    <div id="status"></div>
+    <div id="queueLine" class="queue-line"></div>
+    <div class="queue-info">
+      <div id="resultBox" class="result-box"></div>
+      <div>
+        <div><strong>Abstract rule:</strong> the front item leaves first; new items join at the back.</div>
+        <div id="queueSummary"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let items;
+    let highlightIndex = -1;
+    let lastRemoved = '';
+
+    function resetState() {
+      items = ['A', 'B', 'C'];
+      highlightIndex = 0;
+      lastRemoved = '';
+      render('Initial queue. A has waited the longest, so it is at the front.');
+    }
+
+    function readValue() {
+      return document.getElementById('valueInput').value.trim();
+    }
+
+    function frontItem() {
+      return items.length === 0 ? '' : items[0];
+    }
+
+    function backItem() {
+      return items.length === 0 ? '' : items[items.length - 1];
+    }
+
+    function render(message) {
+      document.getElementById('status').textContent = message;
+      document.getElementById('queueSummary').textContent =
+        items.length === 0
+          ? 'Count: 0. Enqueue adds the next item.'
+          : `Count: ${items.length}. Next dequeue or peek looks at ${frontItem()}.`;
+
+      const resultBox = document.getElementById('resultBox');
+      resultBox.innerHTML = '';
+      const frontLine = document.createElement('div');
+      frontLine.textContent = items.length === 0 ? 'Front: none' : `Front: ${frontItem()}`;
+      resultBox.appendChild(frontLine);
+
+      const backLine = document.createElement('div');
+      backLine.textContent = items.length === 0 ? 'Back: none' : `Back: ${backItem()}`;
+      resultBox.appendChild(backLine);
+
+      if (lastRemoved !== '') {
+        const removedLine = document.createElement('div');
+        removedLine.textContent = 'Last removed:';
+        const removedValue = document.createElement('span');
+        removedValue.className = 'removed-value';
+        removedValue.textContent = lastRemoved;
+        removedLine.appendChild(removedValue);
+        resultBox.appendChild(removedLine);
+      }
+
+      const queueLine = document.getElementById('queueLine');
+      queueLine.innerHTML = '';
+
+      if (items.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'empty-state';
+        empty.textContent = 'empty queue';
+        queueLine.appendChild(empty);
+        return;
+      }
+
+      items.forEach((value, index) => {
+        const entry = document.createElement('div');
+        entry.className = 'queue-entry';
+
+        const item = document.createElement('div');
+        item.className = 'queue-item';
+        if (index === 0) {
+          item.classList.add('front');
+        }
+        if (index === items.length - 1) {
+          item.classList.add('back');
+        }
+        if (index === highlightIndex && index !== 0) {
+          item.classList.add('changed');
+        }
+        item.textContent = value;
+
+        const role = document.createElement('div');
+        role.className = 'queue-role';
+        if (items.length === 1) {
+          role.textContent = 'front/back';
+        } else if (index === 0) {
+          role.textContent = 'front';
+        } else if (index === items.length - 1) {
+          role.textContent = 'back';
+        } else {
+          role.textContent = '';
+        }
+
+        entry.appendChild(item);
+        entry.appendChild(role);
+        queueLine.appendChild(entry);
+
+        if (index < items.length - 1) {
+          const arrow = document.createElement('div');
+          arrow.className = 'queue-arrow';
+          arrow.textContent = '->';
+          queueLine.appendChild(arrow);
+        }
+      });
+    }
+
+    document.getElementById('enqueueBtn').addEventListener('click', () => {
+      const value = readValue();
+      if (value === '') {
+        render('Enter a value before enqueueing.');
+        return;
+      }
+      items.push(value);
+      highlightIndex = items.length - 1;
+      lastRemoved = '';
+      render(`Enqueue adds ${value} at the back of the queue.`);
+    });
+
+    document.getElementById('dequeueBtn').addEventListener('click', () => {
+      if (items.length === 0) {
+        highlightIndex = -1;
+        lastRemoved = '';
+        render('Dequeue has no result because the queue is empty.');
+        return;
+      }
+      lastRemoved = items.shift();
+      highlightIndex = 0;
+      render(`Dequeue removes ${lastRemoved}, which was at the front.`);
+    });
+
+    document.getElementById('peekBtn').addEventListener('click', () => {
+      lastRemoved = '';
+      if (items.length === 0) {
+        highlightIndex = -1;
+        render('Peek has no result because the queue is empty.');
+        return;
+      }
+      highlightIndex = 0;
+      render(`Peek returns ${frontItem()} without removing it.`);
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', resetState);
+
+    resetState();
+  </script>
+</body>
+</html>

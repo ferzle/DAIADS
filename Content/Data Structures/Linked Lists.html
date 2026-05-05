@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Linked Lists</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <script src="../../scripts/chapterScripts.js"></script>
+  <link rel="stylesheet" href="../../css/style.css">
+  <link rel="stylesheet" href="../../css/chapter.css">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-DQ5LVZVFDC');
+  </script>
+</head>
+<body>
+  <h1>Linked Lists</h1>
+
+  <section id="overview" section-title="Overview">
+    <h2>Overview</h2>
+    <p>
+      A <strong>linked list</strong> stores a sequence of values in separate node objects. Each node stores a value
+      and one or more links to other nodes. Instead of using an index to jump directly to a position, a linked list
+      is usually traversed by following links from the head.
+    </p>
+    <p>
+      Linked lists are useful when you often insert or remove nodes near known positions and do not need constant-time
+      random access. They also provide a clean way to teach pointer/reference manipulation.
+    </p>
+    <p>
+      The phrase <em>near known positions</em> is important. A linked list can insert after a node in constant time
+      once that node is already known, but finding the node may still require a traversal. Many incorrect analyses
+      accidentally count only the pointer update and ignore the search needed to reach the update location.
+    </p>
+  </section>
+
+  <section id="adt" section-title="Abstract Data Type and Operations">
+    <h2>Abstract Data Type and Operations</h2>
+    <p>
+      Abstractly, a linked list represents an ordered sequence. The implementation decides how nodes are linked.
+    </p>
+    <ul>
+      <li><strong><code>front</code>:</strong> Return the first value.</li>
+      <li><strong><code>pushFront(value)</code>:</strong> Insert a value at the beginning.</li>
+      <li><strong><code>pushBack(value)</code>:</strong> Insert a value at the end.</li>
+      <li><strong><code>insertAfter(node, value)</code>:</strong> Insert a value after a known node.</li>
+      <li><strong><code>deleteAfter(node)</code>:</strong> Remove the node after a known node.</li>
+      <li><strong><code>search(value)</code>:</strong> Traverse until a matching value is found or the list ends.</li>
+    </ul>
+  </section>
+
+  <section id="conceptual-model" section-title="Conceptual Model">
+    <h2>Conceptual Model</h2>
+    <p>
+      In a singly linked list, each node has a <code>next</code> reference. The list object usually stores a
+      reference to the <code>head</code> node, and sometimes also to the <code>tail</code> node.
+    </p>
+    <pre><code>head
+ |
+ v
+[14 | next] -> [8 | next] -> [31 | next] -> null</code></pre>
+    <p>
+      In a doubly linked list, each node also stores a <code>prev</code> reference. That extra link makes it easier
+      to move backward and to delete a known node, but it uses more memory and requires more pointer updates.
+    </p>
+    <p>
+      Unlike an array, the nodes do not need to be adjacent in memory. The logical order comes entirely from the links.
+      This flexibility avoids shifting elements, but it also means there is no formula like <code>base + i * w</code>
+      for jumping directly to index <code>i</code>.
+    </p>
+  </section>
+
+  <section id="worked-example" section-title="Worked Example">
+    <h2>Worked Example</h2>
+    <p>
+      Suppose a singly linked list stores <code>14 -> 8 -> 31 -> 5</code>, and we want to insert <code>99</code>
+      after the node containing <code>8</code>. The node containing <code>8</code> is already known.
+    </p>
+    <ol>
+      <li>Create a new node <code>x</code> containing <code>99</code>.</li>
+      <li>Set <code>x.next</code> to the old successor of the <code>8</code> node, which is the <code>31</code> node.</li>
+      <li>Set the <code>8</code> node's <code>next</code> reference to <code>x</code>.</li>
+    </ol>
+    <p>
+      The order becomes <code>14 -> 8 -> 99 -> 31 -> 5</code>. The sequence of assignments matters: if we overwrite
+      the <code>8</code> node's <code>next</code> link before saving the old successor, the rest of the list can become
+      unreachable.
+    </p>
+    <p>
+      Deleting after the <code>8</code> node is the reverse idea. If <code>x</code> is the node after <code>8</code>,
+      then setting <code>8.next = x.next</code> bypasses <code>x</code>. In languages with garbage collection, the
+      removed node is eventually reclaimed if nothing else references it. In languages with manual memory management,
+      the removed node must also be freed appropriately.
+    </p>
+  </section>
+
+  <section id="core-operations" section-title="Core Operations">
+    <h2>Core Operations</h2>
+
+    <h3>Traversal and Search</h3>
+    <p>
+      Traversal starts at <code>head</code> and repeatedly follows <code>next</code>. Search is traversal with a
+      comparison at each node. If the desired value is near the end or absent, every node is inspected.
+    </p>
+    <p>
+      Traversal code usually uses a reference such as <code>cur</code>. At each step, <code>cur</code> points to the
+      current node, and <code>cur = cur.next</code> advances one node. The traversal stops when <code>cur</code> is
+      <code>null</code>. Forgetting that final null check is one of the most common sources of list bugs.
+    </p>
+
+    <h3>Insert at Head</h3>
+    <ol>
+      <li>Create a new node whose <code>next</code> points to the old head.</li>
+      <li>Update <code>head</code> to point to the new node.</li>
+      <li>If the list was empty, also update <code>tail</code>.</li>
+    </ol>
+    <p>
+      Inserting at the head is the simplest constant-time list update. It does not require traversal because the list
+      object already stores the head reference.
+    </p>
+
+    <h3>Insert After a Known Node</h3>
+    <ol>
+      <li>Create the new node.</li>
+      <li>Set its <code>next</code> reference to the known node's old <code>next</code>.</li>
+      <li>Set the known node's <code>next</code> reference to the new node.</li>
+    </ol>
+    <p>
+      If the known node was the tail, the new node becomes the tail. Implementations that store a tail reference must
+      remember to update it. Without a tail reference, appending at the end requires walking from the head to the last
+      node.
+    </p>
+
+    <h3>Delete After a Known Node</h3>
+    <p>
+      Deleting after a known node bypasses the removed node. The known node's <code>next</code> becomes the removed
+      node's <code>next</code>. The removed node is then unreachable from the list.
+    </p>
+    <p>
+      Deleting the head is a separate case because there is no predecessor node. The list's <code>head</code>
+      reference itself must change. If the list becomes empty, both <code>head</code> and <code>tail</code> should
+      represent an empty list consistently.
+    </p>
+  </section>
+
+  <section id="demo" section-title="Interactive Demo">
+    <h2>Interactive Demo</h2>
+    <p>
+      This demo shows common singly linked list updates and highlights the affected nodes.
+    </p>
+    <div class="embeddedDemoContainer">
+      <iframe class="embeddedDemo"
+              src="../../Content/Demos/Data Structures/Linked List/Linked List Operations Demo.html"
+              allow="fullscreen"
+              name="linked-list-operations-demo">
+      </iframe>
+    </div>
+  </section>
+
+  <section id="implementations" section-title="Implementation Options">
+    <h2>Implementation Options</h2>
+
+    <section id="implementation-singly" section-title="Implementation 1: Singly Linked List">
+      <h3>Implementation 1: Singly Linked List</h3>
+      <p>
+        Each node stores a value and a <code>next</code> reference. The invariant is that following
+        <code>next</code> from <code>head</code> visits every node exactly once and eventually reaches
+        <code>null</code>.
+      </p>
+      <h4>Operation Sketch</h4>
+      <pre><code>pushFront(value):
+    newNode = Node(value)
+    newNode.next = head
+    head = newNode
+    if tail == null:
+        tail = newNode
+
+pushBack(value):
+    newNode = Node(value)
+    if head == null:
+        head = newNode
+        tail = newNode
+    else:
+        tail.next = newNode
+        tail = newNode
+
+deleteFirst(value):
+    if head == null:
+        return false
+    if head.value == value:
+        head = head.next
+        if head == null:
+            tail = null
+        return true
+    prev = head
+    cur = head.next
+    while cur != null:
+        if cur.value == value:
+            prev.next = cur.next
+            if cur == tail:
+                tail = prev
+            return true
+        prev = cur
+        cur = cur.next
+    return false</code></pre>
+      <div class="example-box">
+        <strong class="example-title">Implementation Exercise</strong>
+        <p>
+          Implement <code>pushFront</code>, <code>pushBack</code>, <code>search</code>, and
+          <code>deleteFirst(value)</code> for a singly linked list.
+        </p>
+        <ul>
+          <li>Handle the empty list separately.</li>
+          <li>Update <code>tail</code> when inserting into or deleting from the end.</li>
+          <li>Use two references, <code>prev</code> and <code>cur</code>, when deleting by value.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="implementation-doubly" section-title="Implementation 2: Doubly Linked List">
+      <h3>Implementation 2: Doubly Linked List</h3>
+      <p>
+        A doubly linked list stores both <code>next</code> and <code>prev</code> references. The added invariant is
+        that if <code>x.next</code> is <code>y</code>, then <code>y.prev</code> is <code>x</code>. This symmetry
+        makes deletion of a known node constant time.
+      </p>
+      <p>
+        Doubly linked lists are especially useful when an iterator points directly at a node and the program wants to
+        remove that node without searching for its predecessor. This is one reason doubly linked lists appear in some
+        library list implementations.
+      </p>
+      <h4>Notes</h4>
+      <ul>
+        <li>More convenient for deques and bidirectional iteration.</li>
+        <li>Requires more memory per node.</li>
+        <li>Every insertion or deletion must update both directions correctly.</li>
+      </ul>
+    </section>
+
+    <section id="library-implementations" section-title="Library Implementations">
+      <h3>Library Implementations</h3>
+      <ul>
+        <li><strong>Java:</strong> <code>LinkedList&lt;E&gt;</code> implements list and deque operations.</li>
+        <li><strong>C++:</strong> <code>std::forward_list</code> is singly linked; <code>std::list</code> is doubly linked.</li>
+        <li><strong>Python:</strong> no built-in linked list; <code>collections.deque</code> supports efficient end operations.</li>
+      </ul>
+      <p>
+        In practice, linked lists are less common than students sometimes expect. Dynamic arrays are often faster for
+        many workloads because of cache locality and lower memory overhead. Linked lists are still conceptually
+        important and useful when stable node references or frequent local splicing are central to the problem.
+      </p>
+    </section>
+  </section>
+
+  <section id="costs" section-title="Operation Costs">
+    <h2>Operation Costs</h2>
+    <table class="example-table">
+      <thead>
+        <tr>
+          <th>Operation</th>
+          <th>Singly Linked List</th>
+          <th>Doubly Linked List</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Access by index</td>
+          <td>\(O(n)\)</td>
+          <td>\(O(n)\)</td>
+          <td>Must follow links from an end.</td>
+        </tr>
+        <tr>
+          <td>Search by value</td>
+          <td>\(O(n)\)</td>
+          <td>\(O(n)\)</td>
+          <td>May inspect every node.</td>
+        </tr>
+        <tr>
+          <td>Insert at head</td>
+          <td>\(O(1)\)</td>
+          <td>\(O(1)\)</td>
+          <td>Only a few references change.</td>
+        </tr>
+        <tr>
+          <td>Insert at tail</td>
+          <td>\(O(1)\) with tail, \(O(n)\) without</td>
+          <td>\(O(1)\) with tail</td>
+          <td>A tail reference avoids traversal.</td>
+        </tr>
+        <tr>
+          <td>Delete known node</td>
+          <td>\(O(1)\) if previous node is known</td>
+          <td>\(O(1)\)</td>
+          <td>Singly linked lists need access to the predecessor.</td>
+        </tr>
+        <tr>
+          <td>Extra space per element</td>
+          <td>one link</td>
+          <td>two links</td>
+          <td>Node overhead can dominate for small values.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      The most important distinction is between <em>finding</em> a position and <em>updating</em> a known position.
+      Linked lists are good at the second task. They are not good at the first task unless the program already has a
+      reference to the relevant node.
+    </p>
+  </section>
+
+  <section id="applications" section-title="Applications">
+    <h2>Applications</h2>
+    <ul>
+      <li><strong>Stacks and queues:</strong> A singly linked list can implement a stack by using the head as the top. A queue can also be implemented efficiently if the structure stores both head and tail references.</li>
+      <li><strong>Adjacency lists:</strong> Graphs are often represented by an array of neighbor lists. A linked list is one possible representation for each neighbor list, especially when edges are inserted and removed dynamically.</li>
+      <li><strong>Frequent local splicing:</strong> If a program already has references to the relevant nodes, linked lists can insert or remove nodes without shifting a large block of elements. This makes them useful for workloads centered on local structural changes.</li>
+      <li><strong>Pointer and reference education:</strong> Linked lists are one of the clearest ways to practice reference updates, aliasing, null checks, and object identity. Even when arrays are faster in practice, linked lists remain valuable for learning how dynamic structures work.</li>
+      <li><strong>Sparse symbolic data:</strong> Polynomials, sparse vectors, and similar structures can be represented as linked nodes storing only nonzero or meaningful terms. This avoids allocating a slot for every possible exponent or index.</li>
+      <li><strong>Hash-table chaining:</strong> One collision-resolution strategy stores all keys that hash to the same bucket in a linked chain. Modern implementations may use other bucket structures too, but chaining is still an important baseline idea.</li>
+      <li><strong>Low-level memory management:</strong> Free lists use links to connect available blocks of memory or reusable objects. This is one reason stacks and linked lists appear in systems-level discussions of allocation.</li>
+    </ul>
+  </section>
+
+  <section id="comparison" section-title="Comparisons and Tradeoffs">
+    <h2>Comparisons and Tradeoffs</h2>
+    <ul>
+      <li><strong>Linked lists vs. arrays:</strong> Arrays provide \(O(1)\) indexed access, while linked lists must follow links from a known starting point. Linked lists avoid shifting for local updates, but finding the update position may still cost \(O(n)\).</li>
+      <li><strong>Known node vs. searched node:</strong> Inserting after a known node is constant time. Inserting after the first node containing a value includes the search, so the total operation is usually linear time.</li>
+      <li><strong>Singly vs. doubly linked:</strong> Singly linked lists use less memory per node and are simpler to maintain. Doubly linked lists support reverse traversal and easier deletion of a known node, but every update must preserve both directions.</li>
+      <li><strong>Sentinel vs. no sentinel:</strong> Sentinel nodes can eliminate many boundary cases by ensuring there is always a node before the first real element. The cost is extra conceptual overhead and dummy nodes that must not be confused with real data.</li>
+      <li><strong>Memory overhead vs. flexibility:</strong> Each linked-list node stores at least one reference in addition to the data. This overhead is worthwhile only when the update pattern benefits from node-level flexibility.</li>
+      <li><strong>Practical performance:</strong> Even when Big-O notation looks favorable, linked lists often lose to dynamic arrays because nodes are scattered in memory. Pointer chasing can be slower than scanning adjacent array cells.</li>
+    </ul>
+  </section>
+
+  <section id="variations" section-title="Variations and Extensions">
+    <h2>Variations and Extensions</h2>
+    <ul>
+      <li><strong>Singly linked list:</strong> Each node points only forward. This is enough for stack-like behavior, simple queues with a tail reference, and one-way traversal.</li>
+      <li><strong>Doubly linked list:</strong> Each node points both forward and backward. This supports bidirectional traversal and constant-time deletion of a known node without separately tracking its predecessor.</li>
+      <li><strong>Circular linked list:</strong> The final node links back to the first node instead of ending at <code>null</code>. Circular lists are useful for round-robin scheduling and repeated cyclic scans.</li>
+      <li><strong>Sentinel-node list:</strong> A dummy head or tail node can simplify insertions and deletions at the boundaries. The algorithm can often treat the beginning and middle of the list more uniformly.</li>
+      <li><strong>Unrolled linked list:</strong> Each node stores a small array of values rather than one value. This reduces per-element pointer overhead and improves locality while still allowing block-level splicing.</li>
+      <li><strong>Skip list:</strong> A skip list adds extra forward links at multiple levels. It behaves like a probabilistic alternative to balanced search trees, supporting expected logarithmic search, insert, and delete.</li>
+      <li><strong>Intrusive linked list:</strong> In systems code, the link fields may be stored inside the objects being linked rather than in separate wrapper nodes. This can reduce allocation overhead but tightly couples the object type to the list structure.</li>
+    </ul>
+  </section>
+
+  <section id="pitfalls" section-title="Common Pitfalls">
+    <h2>Common Pitfalls</h2>
+    <ul>
+      <li><strong>Overwriting links too early:</strong> If an insertion changes <code>prev.next</code> before saving the old successor, the rest of the list may become unreachable. The order of reference assignments is part of the algorithm.</li>
+      <li><strong>Forgetting boundary updates:</strong> Operations that change the first or last real node may also need to update <code>head</code> or <code>tail</code>. Empty-list and one-node-list cases are especially easy to mishandle.</li>
+      <li><strong>Ignoring the search cost:</strong> Deleting a known node can be constant time in some list variants. Deleting by value still requires finding the node first, which is linear in the worst case.</li>
+      <li><strong>Accidental cycles:</strong> A wrong link assignment can create a cycle, causing traversal to loop forever. Cycle detection with slow and fast references is a useful diagnostic technique.</li>
+      <li><strong>Inconsistent <code>prev</code> links:</strong> In a doubly linked list, updating only <code>next</code> leaves the backward links wrong. Bugs may not appear until a later reverse traversal or deletion.</li>
+      <li><strong>Memory-management mistakes:</strong> In languages without automatic garbage collection, removing a node from the list does not automatically free it. In garbage-collected languages, forgotten external references can still keep removed nodes alive.</li>
+      <li><strong>Using a list for random access:</strong> Repeatedly asking for the item at index <code>i</code> turns into repeated traversal. If indexed access is central, an array or dynamic array is usually the better representation.</li>
+    </ul>
+  </section>
+
+  <section id="summary" section-title="Summary">
+    <h2>Summary</h2>
+    <p>
+      Linked lists store values in nodes connected by references. They are flexible for local insertion and deletion,
+      but they do not support fast indexed access and they use extra memory for links.
+    </p>
+  </section>
+
+  <section id="related-pages" section-title="Related Pages">
+    <h2>Related Pages</h2>
+    <ul>
+      <li><a href="?path=Data%20Structures%2FStacks">Stacks</a>, which can use a linked list as the backing structure.</li>
+      <li><a href="?path=Data%20Structures%2FQueues">Queues</a>, which can use head and tail references.</li>
+      <li><a href="?path=Data%20Structures%2FArrays">Arrays</a>, the main sequence alternative.</li>
+    </ul>
+  </section>
+
+  <section id="links" section-title="Helpful Links and Resources">
+    <h2>Helpful Links and Resources</h2>
+    <ul>
+      <li><a href="https://opendsa.org/OpenDSA/Books/Catalog/html/ListLinked.html" target="_blank">OpenDSA: Linked Lists</a> Presents linked nodes as a traditional list implementation and discusses node classes.</li>
+      <li><a href="https://runestone.academy/ns/books/published/pswadsup/basic-data-structures.html" target="_blank">Runestone: Basic Data Structures</a> Includes unordered and ordered linked lists, plus stack and queue applications.</li>
+      <li><a href="https://en.cppreference.com/w/cpp/container/list" target="_blank">cppreference: <code>std::list</code></a> Shows how a production library exposes a doubly linked list interface.</li>
+    </ul>
+  </section>
+
+  <section id="reading-questions" section-title="Reading Comprehension Questions">
+    <h2>Reading Comprehension Questions</h2>
+    <ol>
+      <li><strong>Traversal:</strong> Why is accessing the item at index <code>i</code> usually \(O(i)\)?</li>
+      <li><strong>Tail Reference:</strong> What operation improves from \(O(n)\) to \(O(1)\) when a singly linked list stores a tail reference?</li>
+      <li><strong>Deletion:</strong> Why does a singly linked list need the predecessor to delete a known node in \(O(1)\)?</li>
+      <li><strong>Known Position:</strong> What is the difference between inserting after a known node and inserting after the first node containing a given value?</li>
+      <li><strong>Link Order:</strong> Why should a new node's <code>next</code> reference usually be set before changing the previous node's <code>next</code> reference?</li>
+      <li><strong>Doubly Linked Lists:</strong> What extra invariant must be maintained when each node has both <code>next</code> and <code>prev</code> references?</li>
+      <li><strong>Empty List:</strong> When deleting the only node in a linked list with head and tail references, what must happen to both references?</li>
+      <li><strong>Array Comparison:</strong> Name one advantage and one disadvantage of linked lists compared with arrays.</li>
+    </ol>
+    <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
+    <div id="answers" class="answer" hidden>
+      <ol>
+        <li><strong>Answer:</strong> The list must follow links from the head until it reaches index <code>i</code>.</li>
+        <li><strong>Answer:</strong> Inserting at the tail.</li>
+        <li><strong>Answer:</strong> The predecessor's <code>next</code> reference must be changed to bypass the deleted node.</li>
+        <li><strong>Answer:</strong> Inserting after a known node only changes references; finding the first node with a value may require an \(O(n)\) search first.</li>
+        <li><strong>Answer:</strong> The old successor must be preserved. If it is overwritten too early, the rest of the list may become unreachable.</li>
+        <li><strong>Answer:</strong> If <code>x.next</code> is <code>y</code>, then <code>y.prev</code> should be <code>x</code>, and the reverse links must stay consistent after updates.</li>
+        <li><strong>Answer:</strong> Both <code>head</code> and <code>tail</code> should become <code>null</code> or whatever empty-list marker the implementation uses.</li>
+        <li><strong>Answer:</strong> Advantage: local insert/delete after a known node avoids shifting. Disadvantage: indexed access and search require traversal.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="activities" section-title="In-Class Activities">
+    <h2>In-Class Activities</h2>
+    <ol>
+      <li><strong>Pointer Trace:</strong> Draw the reference updates for inserting between two existing nodes.</li>
+      <li><strong>Boundary Cases:</strong> List all special cases for deleting the first copy of a value.</li>
+      <li><strong>Compare Workloads:</strong> Decide whether an array or linked list is better for several update patterns.</li>
+      <li><strong>Bug Hunt:</strong> Given an incorrect insertion snippet that overwrites <code>next</code> too early, identify exactly where the rest of the list is lost.</li>
+      <li><strong>Tail Debate:</strong> Decide which list operations justify storing a tail reference and which do not benefit from it.</li>
+      <li><strong>Doubly Linked Trace:</strong> Draw all <code>next</code> and <code>prev</code> changes needed to remove a middle node from a doubly linked list.</li>
+      <li><strong>Sentinel Design:</strong> Redesign a deletion algorithm using a dummy head node and identify which special cases disappear.</li>
+      <li><strong>Cycle Diagnosis:</strong> Draw a list with an accidental cycle and trace slow/fast references until they meet.</li>
+    </ol>
+  </section>
+
+  <section id="problems" section-title="Homework Problems">
+    <h2>Homework Problems</h2>
+    <ol>
+      <li><strong>Reverse:</strong> Write an iterative algorithm to reverse a singly linked list.</li>
+      <li><strong>Cycle Detection:</strong> Use two references moving at different speeds to detect whether a list has a cycle.</li>
+      <li><strong>Sorted Insert:</strong> Insert a value into a sorted singly linked list while preserving order.</li>
+      <li><strong>Delete All:</strong> Write an algorithm that removes every node containing a target value from a singly linked list.</li>
+      <li><strong>Merge Lists:</strong> Merge two sorted singly linked lists into one sorted list by relinking existing nodes.</li>
+      <li><strong>Find Middle:</strong> Use slow and fast references to return the middle node of a singly linked list. Explain what happens for even length lists.</li>
+      <li><strong>Doubly Linked Deque:</strong> Implement a deque using a doubly linked list with sentinel nodes and analyze each operation.</li>
+    </ol>
+  </section>
+</body>
+</html>

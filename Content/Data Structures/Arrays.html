@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Arrays</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <script src="../../scripts/chapterScripts.js"></script>
+  <link rel="stylesheet" href="../../css/style.css">
+  <link rel="stylesheet" href="../../css/chapter.css">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-DQ5LVZVFDC');
+  </script>
+</head>
+<body>
+  <h1>Arrays</h1>
+
+  <section id="overview" section-title="Overview">
+    <h2>Overview</h2>
+    <p>
+      An <strong>array</strong> stores a sequence of elements in consecutive memory locations. The position of an
+      element is called its <em>index</em>, and indexing gives arrays their most important feature: direct access to
+      any element in constant time.
+    </p>
+    <p>
+      Arrays are often the simplest data structure in a course, but they are also the foundation for many later
+      structures. Stacks, queues, heaps, hash tables, adjacency matrices, and dynamic-programming tables all commonly
+      use arrays internally.
+    </p>
+    <p>
+      The word <em>array</em> is used in two related ways. Sometimes it means a fixed-size block of memory, such as a
+      Java primitive array or a C++ built-in array. Other times it means an array-like sequence that can grow, such as
+      a Java <code>ArrayList</code>, C++ <code>vector</code>, or Python <code>list</code>. The fixed-size version is
+      the lower-level storage idea; the resizable version is usually built on top of it.
+    </p>
+  </section>
+
+  <section id="adt" section-title="Abstract Data Type and Operations">
+    <h2>Abstract Data Type and Operations</h2>
+    <p>
+      As an abstract sequence, an array-like structure stores values in positions from <code>0</code> to
+      <code>n - 1</code>. The user mainly thinks in terms of positions, not memory addresses.
+    </p>
+    <ul>
+      <li><strong><code>get(i)</code>:</strong> Return the value at index <code>i</code>.</li>
+      <li><strong><code>set(i, value)</code>:</strong> Replace the value at index <code>i</code>.</li>
+      <li><strong><code>search(value)</code>:</strong> Find whether a value occurs, and possibly where.</li>
+      <li><strong><code>append(value)</code>:</strong> Add a value after the current last element.</li>
+      <li><strong><code>insert(i, value)</code>:</strong> Add a value at index <code>i</code>, shifting later values right.</li>
+      <li><strong><code>delete(i)</code>:</strong> Remove the value at index <code>i</code>, shifting later values left.</li>
+    </ul>
+  </section>
+
+  <section id="conceptual-model" section-title="Conceptual Model">
+    <h2>Conceptual Model</h2>
+    <p>
+      The key idea is that the address of an element can be computed from its index. If each element takes the same
+      amount of space, then the element at index <code>i</code> is located a fixed distance from the beginning of the
+      array. This is why <code>A[i]</code> does not require scanning through earlier elements.
+    </p>
+    <p>
+      More formally, if the array begins at memory address <code>base</code> and each element uses <code>w</code>
+      bytes, then index <code>i</code> is found at <code>base + i * w</code>. This formula is the reason arrays have
+      constant-time random access. It is also why ordinary arrays require all elements to have the same size.
+    </p>
+    <table class="example-table">
+      <thead>
+        <tr>
+          <th>Index</th>
+          <th>0</th>
+          <th>1</th>
+          <th>2</th>
+          <th>3</th>
+          <th>4</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Value</td>
+          <td>14</td>
+          <td>8</td>
+          <td>31</td>
+          <td>5</td>
+          <td>20</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      Inserting at index <code>2</code> does not simply place a value into an empty gap. The values currently at
+      indices <code>2</code>, <code>3</code>, and <code>4</code> must shift one position to the right first.
+    </p>
+  </section>
+
+  <section id="worked-example" section-title="Worked Example">
+    <h2>Worked Example</h2>
+    <p>
+      Suppose a dynamic array has logical values <code>[14, 8, 31, 5, 20]</code>, size <code>5</code>, and capacity
+      <code>8</code>. The backing array has room for three more values, but those extra slots are not part of the
+      logical sequence yet.
+    </p>
+    <p>
+      To perform <code>insert(2, 99)</code>, the implementation must make a hole at index <code>2</code>.
+    </p>
+    <ol>
+      <li>Move <code>20</code> from index <code>4</code> to index <code>5</code>.</li>
+      <li>Move <code>5</code> from index <code>3</code> to index <code>4</code>.</li>
+      <li>Move <code>31</code> from index <code>2</code> to index <code>3</code>.</li>
+      <li>Store <code>99</code> at index <code>2</code>.</li>
+      <li>Increase the size from <code>5</code> to <code>6</code>.</li>
+    </ol>
+    <p>
+      The final logical array is <code>[14, 8, 99, 31, 5, 20]</code>. Three values moved, so this particular insertion
+      did work proportional to the number of elements after the insertion point. If the insertion had been at the end,
+      no shifting would have been needed.
+    </p>
+  </section>
+
+  <section id="core-operations" section-title="Core Operations">
+    <h2>Core Operations</h2>
+
+    <h3>Access and Update</h3>
+    <p>
+      Access and update are constant-time operations because the index maps directly to a memory position. The usual
+      corner case is an invalid index: values less than <code>0</code> or at least <code>n</code> are outside the
+      logical array.
+    </p>
+    <p>
+      The value stored at an index can be read or overwritten without affecting the positions of the other elements.
+      This makes arrays a good choice when an algorithm repeatedly revisits known positions, such as a dynamic
+      programming table where <code>dp[i]</code> has a specific meaning.
+    </p>
+
+    <h3>Sequential Search</h3>
+    <p>
+      Without extra information, searching an array for a value requires checking elements one at a time. This is the
+      same idea as <a class="algorithm" href="?path=Algorithms%2FBrute%20Force%2FSequential%20Search">Sequential Search</a>.
+    </p>
+    <p>
+      If the array is sorted, searching can be improved with binary search, but that changes the tradeoff. Keeping an
+      array sorted makes searches faster, but insertions may become more expensive because the new value must be placed
+      in its sorted position instead of simply appended.
+    </p>
+
+    <h3>Insertion and Deletion</h3>
+    <p>
+      Insertion and deletion are cheap at the end, but expensive near the front. The cost comes from shifting elements
+      to preserve the contiguous order.
+    </p>
+    <ol>
+      <li>To insert at index <code>i</code>, shift elements <code>i</code> through <code>n - 1</code> one step right.</li>
+      <li>Store the new value at index <code>i</code>.</li>
+      <li>Increase the logical size.</li>
+    </ol>
+    <p>
+      Deletion works in the opposite direction. To delete index <code>i</code>, shift elements <code>i + 1</code>
+      through <code>n - 1</code> one step left and then decrease the size. The old final slot may still contain a
+      leftover value in memory, but it is outside the logical array.
+    </p>
+
+    <h3>Resizing</h3>
+    <p>
+      A fixed array has a fixed capacity. A resizable array, often called a <em>dynamic array</em>, allocates a larger
+      backing array when it runs out of room and copies the old values over. If capacity is usually doubled, appending
+      has amortized <code>O(1)</code> time even though an individual resize costs <code>O(n)</code>.
+    </p>
+    <p>
+      Doubling is important. If the array grew by only one slot each time, then appending <code>n</code> items could
+      require copying about <code>1 + 2 + 3 + ... + n</code> old values, which is \(O(n^2)\) total work. Doubling
+      spreads the copying cost across many cheap appends.
+    </p>
+  </section>
+
+  <section id="demo" section-title="Interactive Demo">
+    <h2>Interactive Demo</h2>
+    <p>
+      This demo shows access, search, insertion, deletion, and resizing for a small dynamic array.
+    </p>
+    <div class="embeddedDemoContainer">
+      <iframe class="embeddedDemo"
+              src="../../Content/Demos/Data Structures/Array/Array Operations Demo.html"
+              allow="fullscreen"
+              name="array-operations-demo">
+      </iframe>
+    </div>
+  </section>
+
+  <section id="implementations" section-title="Implementation Options">
+    <h2>Implementation Options</h2>
+
+    <section id="implementation-fixed" section-title="Implementation 1: Fixed-Size Array">
+      <h3>Implementation 1: Fixed-Size Array</h3>
+      <p>
+        A fixed-size array stores exactly its allocated capacity. The main invariant is that every valid index maps
+        to one stored element, and the capacity does not change.
+      </p>
+      <p>
+        Fixed arrays are common when the number of elements is part of the problem statement. For example, if an
+        algorithm stores one distance value for each vertex in a graph with <code>V</code> vertices, an array of length
+        <code>V</code> is natural. There is no need to pay for resizing logic when the size is already known.
+      </p>
+      <h4>Notes</h4>
+      <ul>
+        <li>Good when the final size is known in advance.</li>
+        <li>Cannot append past capacity without allocating a different array.</li>
+        <li>Provides excellent cache locality because elements are adjacent in memory.</li>
+      </ul>
+    </section>
+
+    <section id="implementation-dynamic" section-title="Implementation 2: Resizable Array">
+      <h3>Implementation 2: Resizable Array</h3>
+      <p>
+        A resizable array stores a logical <code>size</code> and a physical <code>capacity</code>. The backing array
+        may have unused slots after the last logical element.
+      </p>
+      <p>
+        The main invariant is that the first <code>size</code> positions hold the logical sequence in order, and
+        positions from <code>size</code> through <code>capacity - 1</code> are available storage. Client code should
+        never treat those unused positions as meaningful elements.
+      </p>
+      <h4>Operation Sketch</h4>
+      <pre><code>append(value):
+    if size == capacity:
+        allocate a new array with about twice the capacity
+        copy the old elements into the new array
+        replace the old backing array
+    A[size] = value
+    size = size + 1
+
+insert(i, value):
+    check that 0 &lt;= i &lt;= size
+    resize if size == capacity
+    for j from size down to i + 1:
+        A[j] = A[j - 1]
+    A[i] = value
+    size = size + 1
+
+delete(i):
+    check that 0 &lt;= i &lt; size
+    removed = A[i]
+    for j from i to size - 2:
+        A[j] = A[j + 1]
+    size = size - 1
+    return removed</code></pre>
+      <div class="example-box">
+        <strong class="example-title">Implementation Exercise</strong>
+        <p>
+          Implement a resizable integer array with <code>get</code>, <code>set</code>, <code>append</code>,
+          <code>insert</code>, and <code>delete</code>.
+        </p>
+        <ul>
+          <li>Double capacity when <code>append</code> would exceed the current capacity.</li>
+          <li>Keep <code>size</code> separate from <code>capacity</code>.</li>
+          <li>Reject invalid indices before accessing the backing array.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="library-implementations" section-title="Library Implementations">
+      <h3>Library Implementations</h3>
+      <ul>
+        <li><strong>Java:</strong> primitive arrays such as <code>int[]</code>; <code>ArrayList&lt;E&gt;</code> for a resizable array.</li>
+        <li><strong>C++:</strong> <code>std::array</code> for fixed size; <code>std::vector</code> for dynamic arrays.</li>
+        <li><strong>Python:</strong> <code>list</code> is a dynamic array-like sequence.</li>
+      </ul>
+      <p>
+        These library structures usually handle resizing, bounds checks, and memory management for you. In normal
+        software development, use the library version unless the point of the assignment is to understand how it works.
+      </p>
+    </section>
+  </section>
+
+  <section id="costs" section-title="Operation Costs">
+    <h2>Operation Costs</h2>
+    <table class="example-table">
+      <thead>
+        <tr>
+          <th>Operation</th>
+          <th>Fixed Array</th>
+          <th>Resizable Array</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Access or update by index</td>
+          <td>\(O(1)\)</td>
+          <td>\(O(1)\)</td>
+          <td>Index arithmetic gives direct access.</td>
+        </tr>
+        <tr>
+          <td>Search by value</td>
+          <td>\(O(n)\)</td>
+          <td>\(O(n)\)</td>
+          <td>Without ordering or hashing, scan the elements.</td>
+        </tr>
+        <tr>
+          <td>Append at end</td>
+          <td>\(O(1)\) if space exists</td>
+          <td>\(O(1)\) amortized</td>
+          <td>A resize occasionally costs \(O(n)\).</td>
+        </tr>
+        <tr>
+          <td>Insert/delete near front</td>
+          <td>\(O(n)\)</td>
+          <td>\(O(n)\)</td>
+          <td>Elements must shift to keep order contiguous.</td>
+        </tr>
+        <tr>
+          <td>Extra space</td>
+          <td>\(O(n)\)</td>
+          <td>\(O(n)\), possibly with unused capacity</td>
+          <td>A dynamic array intentionally keeps extra room to make future appends cheap.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      The table gives asymptotic costs, but constants matter here. Arrays often outperform pointer-based structures
+      even when both have the same Big-O cost because nearby array elements tend to be loaded into cache together.
+    </p>
+  </section>
+
+  <section id="applications" section-title="Applications">
+    <h2>Applications</h2>
+    <ul>
+      <li><strong>Dynamic programming tables:</strong> Many dynamic programming algorithms define subproblems by one or more integer indices. Arrays are a natural fit because a state such as <code>dp[i]</code> or <code>dp[i][j]</code> can be accessed directly when the recurrence needs it.</li>
+      <li><strong>Backing storage for other structures:</strong> Stacks, circular queues, binary heaps, hash tables, and disjoint-set forests are commonly stored in arrays. The higher-level structure adds rules about how the array positions are interpreted.</li>
+      <li><strong>Graph representations:</strong> An adjacency matrix is a two-dimensional array where entry <code>A[u][v]</code> records whether an edge exists. Adjacency-list representations also often use an array indexed by vertex, where each entry stores that vertex's neighbor list.</li>
+      <li><strong>Numerical and systems code:</strong> Arrays are preferred when code repeatedly scans or indexes large blocks of data. Their contiguous layout helps hardware caches and makes them a good match for numerical kernels, image buffers, and low-level memory operations.</li>
+      <li><strong>Counting and frequency tables:</strong> If the keys are small integers or characters from a limited alphabet, an array can store counts directly. Counting sort, radix sort subroutines, histograms, and simple frequency analyses all use this idea.</li>
+      <li><strong>Precomputed lookup tables:</strong> Algorithms sometimes compute useful values once and store them by index for fast later access. Examples include parent pointers in graph search, powers in modular arithmetic, and cost tables in optimization problems.</li>
+      <li><strong>Sliding-window storage:</strong> A fixed array or circular buffer can store the most recent \(k\) observations in a stream. This is useful for moving averages, bounded logs, and producer-consumer buffers where old values are discarded as new ones arrive.</li>
+    </ul>
+  </section>
+
+  <section id="comparison" section-title="Comparisons and Tradeoffs">
+    <h2>Comparisons and Tradeoffs</h2>
+    <ul>
+      <li><strong>Arrays vs. linked lists:</strong> Arrays give constant-time indexed access and usually better cache performance. Linked lists avoid shifting for local insertions and deletions, but they must follow links to find positions.</li>
+      <li><strong>End updates vs. middle updates:</strong> Appending to a dynamic array is usually cheap, especially when extra capacity is available. Inserting near the front or middle may move many elements, so the cost depends on the insertion position.</li>
+      <li><strong>Dynamic arrays vs. fixed arrays:</strong> A fixed array is simple and predictable when the final size is known. A dynamic array is more flexible, but its implementation must manage capacity, resizing, and occasionally copying all elements.</li>
+      <li><strong>Arrays vs. hash tables:</strong> Arrays require integer-like indices or a way to map values to dense positions. Hash tables support more general keys, but arrays preserve a simple positional order and have less structural overhead.</li>
+      <li><strong>Arrays vs. trees:</strong> Trees maintain order or hierarchy explicitly and can support efficient ordered operations. Arrays by themselves do not maintain search order, but they are compact and support fast position-based access.</li>
+      <li><strong>Dense vs. sparse data:</strong> Arrays work well when most positions are meaningful. If almost all entries are empty or default values, a sparse representation may use far less memory.</li>
+    </ul>
+  </section>
+
+  <section id="variations" section-title="Variations and Extensions">
+    <h2>Variations and Extensions</h2>
+    <ul>
+      <li><strong>Multidimensional arrays:</strong> These arrays are indexed by two or more coordinates, such as <code>A[row][col]</code>. They are often stored internally in one contiguous block using row-major or column-major order.</li>
+      <li><strong>Circular buffers:</strong> A circular buffer treats the physical end of the backing array as adjacent to the beginning. This is the usual array-based implementation idea for queues and fixed-size rolling windows.</li>
+      <li><strong>Sparse arrays:</strong> A sparse array stores only the positions whose values differ from a default. This saves memory when the logical index range is large but most entries are unused.</li>
+      <li><strong>Sorted arrays:</strong> Keeping an array sorted allows binary search in \(O(\log n)\) time. The tradeoff is that insertion often requires shifting elements to preserve sorted order.</li>
+      <li><strong>Bit arrays:</strong> A bit array packs Boolean values into individual bits instead of full bytes or words. This can greatly reduce memory use for visited sets, masks, and simple flags.</li>
+      <li><strong>Array views and slices:</strong> Some languages provide lightweight views into part of an array. These can avoid copying, but they also require care because changes through the view may affect the original data.</li>
+    </ul>
+  </section>
+
+  <section id="pitfalls" section-title="Common Pitfalls">
+    <h2>Common Pitfalls</h2>
+    <ul>
+      <li><strong>Confusing size and capacity:</strong> The size is the number of meaningful elements; the capacity is the number of allocated slots. Treating unused capacity as real data leads to incorrect searches, prints, and updates.</li>
+      <li><strong>Shifting in the wrong direction:</strong> Insertion should shift from right to left so values are not overwritten before they are copied. Deletion should shift from left to right to fill the removed position.</li>
+      <li><strong>Ignoring bounds checks:</strong> Accessing an index less than <code>0</code> or at least <code>size</code> is outside the logical array. Depending on the language, this may raise an error, return garbage, or corrupt memory.</li>
+      <li><strong>Misusing amortized analysis:</strong> Dynamic-array append is amortized \(O(1)\), not worst-case \(O(1)\). A single append can still be expensive if it triggers a resize.</li>
+      <li><strong>Forgetting resize side effects:</strong> In some languages, resizing a dynamic array can invalidate references, pointers, or iterators into the old backing storage. Code that keeps such references must understand the library's guarantees.</li>
+      <li><strong>Leaving stale values after deletion:</strong> Decreasing the logical size does not necessarily erase the old final slot. If the stored values are references, some implementations deliberately clear that slot to allow garbage collection.</li>
+      <li><strong>Choosing arrays for sparse data:</strong> An array indexed over a huge range can waste memory if only a few positions are used. A map, dictionary, or sparse representation may be more appropriate.</li>
+    </ul>
+  </section>
+
+  <section id="summary" section-title="Summary">
+    <h2>Summary</h2>
+    <p>
+      Arrays store elements contiguously and support constant-time indexed access. Their main weakness is that
+      ordered insertions and deletions require shifting elements. Dynamic arrays reduce the pain of fixed capacity by
+      resizing as needed, giving amortized constant-time append.
+    </p>
+  </section>
+
+  <section id="related-pages" section-title="Related Pages">
+    <h2>Related Pages</h2>
+    <ul>
+      <li><a href="?path=Data%20Structures%2FStacks">Stacks</a>, often implemented with arrays.</li>
+      <li><a href="?path=Data%20Structures%2FQueues">Queues</a>, often implemented with circular arrays.</li>
+      <li><a href="?path=Data%20Structures%2FHeaps">Heaps</a>, commonly stored as arrays.</li>
+    </ul>
+  </section>
+
+  <section id="links" section-title="Helpful Links and Resources">
+    <h2>Helpful Links and Resources</h2>
+    <ul>
+      <li><a href="https://opendatastructures.org/ods-java/2_Array_Based_Lists.html" target="_blank">Open Data Structures: Array-Based Lists</a> Discusses backing arrays, shifting costs, and amortized resizing in a textbook style.</li>
+      <li><a href="https://runestone.academy/ns/books/published/pswadsup/basic-data-structures.html" target="_blank">Runestone: Basic Data Structures</a> Places arrays/lists in the broader context of stacks, queues, linked lists, and Python collection behavior.</li>
+      <li><a href="https://en.cppreference.com/w/cpp/container/vector" target="_blank">cppreference: <code>std::vector</code></a> Gives a C++ library view of dynamic-array behavior, contiguous storage, capacity, and iterator invalidation.</li>
+    </ul>
+  </section>
+
+  <section id="reading-questions" section-title="Reading Comprehension Questions">
+    <h2>Reading Comprehension Questions</h2>
+    <ol>
+      <li><strong>Indexed Access:</strong> Why is accessing <code>A[i]</code> an \(O(1)\) operation?</li>
+      <li><strong>Shifting:</strong> Why can inserting at the front of an array take \(O(n)\) time?</li>
+      <li><strong>Capacity:</strong> What is the difference between size and capacity in a dynamic array?</li>
+      <li><strong>Append Cost:</strong> Why is append described as amortized \(O(1)\) instead of worst-case \(O(1)\)?</li>
+      <li><strong>Deletion:</strong> After deleting from the middle of an array, why might an old value still appear beyond the logical end?</li>
+      <li><strong>Sorted Arrays:</strong> What operation becomes faster when an array is kept sorted, and what operation often becomes more expensive?</li>
+      <li><strong>Cache Locality:</strong> Why can arrays be fast in practice even when another structure has the same Big-O running time?</li>
+      <li><strong>Representation:</strong> Give one example of another data structure that commonly uses an array internally.</li>
+      <li><strong>Sparse Data:</strong> Why might an array be a poor choice when valid indices range from 0 to one billion but only a few positions are used?</li>
+    </ol>
+    <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
+    <div id="answers" class="answer" hidden>
+      <ol>
+        <li><strong>Answer:</strong> The memory position can be computed directly from the base address and the index.</li>
+        <li><strong>Answer:</strong> Every existing element may need to shift one position to the right.</li>
+        <li><strong>Answer:</strong> Size is the number of stored elements; capacity is the number of slots currently allocated.</li>
+        <li><strong>Answer:</strong> Most appends are constant time, but an append that triggers resizing must allocate a new array and copy existing values.</li>
+        <li><strong>Answer:</strong> Deletion reduces the logical size; the unused slot may still contain stale data even though it is no longer part of the array.</li>
+        <li><strong>Answer:</strong> Search can use binary search, but insertion may require finding the sorted position and shifting later elements.</li>
+        <li><strong>Answer:</strong> Adjacent array elements tend to be stored near each other in memory, so hardware caches often load useful neighboring values together.</li>
+        <li><strong>Answer:</strong> Examples include heaps, stacks, queues, hash tables, adjacency matrices, and dynamic-programming tables.</li>
+        <li><strong>Answer:</strong> A full array would allocate space for many unused positions; a sparse representation stores only the positions that actually matter.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="activities" section-title="In-Class Activities">
+    <h2>In-Class Activities</h2>
+    <ol>
+      <li><strong>Shift Count:</strong> For each insertion position in an array of length 10, count how many values move.</li>
+      <li><strong>Resize Trace:</strong> Starting with capacity 1, append 12 values and record each resize.</li>
+      <li><strong>Representation Choice:</strong> Decide whether an array or linked list is better for several workloads.</li>
+      <li><strong>Operation Sorting:</strong> Put common array operations into \(O(1)\), \(O(n)\), and amortized \(O(1)\) categories, then defend each choice.</li>
+      <li><strong>Sorted vs. Unsorted:</strong> Compare the cost of searching, appending, and inserting into a sorted array versus an unsorted array.</li>
+      <li><strong>Memory Model:</strong> Draw a backing array with capacity 8 and size 5, then show which slots are logical elements and which are unused capacity.</li>
+      <li><strong>Amortization Discussion:</strong> In small groups, explain why doubling capacity avoids \(O(n^2)\) total append cost.</li>
+    </ol>
+  </section>
+
+  <section id="problems" section-title="Homework Problems">
+    <h2>Homework Problems</h2>
+    <ol>
+      <li><strong>Dynamic Array:</strong> Implement a dynamic array and analyze the amortized cost of append.</li>
+      <li><strong>Ordered Insert:</strong> Write pseudocode for inserting into a sorted array while preserving order.</li>
+      <li><strong>Delete All:</strong> Remove all copies of a value from an array in-place and return the new size.</li>
+      <li><strong>Capacity Policy:</strong> Compare doubling capacity with increasing capacity by exactly 1. Analyze the total cost of appending \(n\) items under each policy.</li>
+      <li><strong>Rotate:</strong> Write an in-place algorithm that rotates an array left by \(k\) positions. State its time and extra-space complexity.</li>
+      <li><strong>Stable Partition:</strong> Rearrange an array so all negative numbers come before nonnegative numbers while preserving relative order. Analyze the cost.</li>
+      <li><strong>2D Indexing:</strong> For a row-major 2D array, derive the formula for mapping position <code>(row, col)</code> into a one-dimensional backing array.</li>
+      <li><strong>Sparse Alternative:</strong> Design a representation for a sparse array that supports <code>get(i)</code> and <code>set(i, value)</code>. Explain when it beats a dense array and when it does not.</li>
+    </ol>
+  </section>
+</body>
+</html>

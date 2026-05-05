@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Array Operations Demo</title>
+  <script src="../../../../scripts/demoScripts.js"></script>
+  <link rel="stylesheet" href="../../../../css/style.css">
+  <link rel="stylesheet" href="../../../../css/demo.css">
+  <style>
+    .array-demo-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .array-demo-controls label {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-right: 4px;
+    }
+    .array-demo-controls input {
+      width: 70px;
+    }
+    .array-stats {
+      margin: 8px 0;
+      font-weight: bold;
+    }
+    .array-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: flex-start;
+      margin-top: 10px;
+    }
+    .array-slot {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .array-cell {
+      width: 46px;
+      height: 42px;
+      border: 1px solid #333;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #cce3ff;
+      box-sizing: border-box;
+      font-weight: bold;
+    }
+    .array-index {
+      font-size: 12px;
+      color: #333;
+    }
+    .array-unused .array-cell {
+      background: #f6f6f6;
+      color: #777;
+      border-style: dashed;
+      font-weight: normal;
+    }
+    .array-cell.active {
+      background: #ffe16a;
+    }
+    .array-cell.shift {
+      background: #ffa088;
+    }
+    .array-cell.found {
+      background: #74b474;
+    }
+    .array-cell.inserted {
+      background: #8ecae6;
+    }
+    #status {
+      min-height: 42px;
+      margin: 8px 0;
+      padding: 6px 8px;
+      border-left: 4px solid #4a768b;
+      background: #f7fbfd;
+    }
+  </style>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-DQ5LVZVFDC');
+  </script>
+</head>
+<body class="no-tooltips">
+  <div id="demoContainer">
+    <h2>Array Operations Demo</h2>
+
+    <div class="array-demo-controls">
+      <label>Value <input id="valueInput" type="number" value="22"></label>
+      <label>Index <input id="indexInput" type="number" value="2" min="0"></label>
+      <button id="accessBtn">Access</button>
+      <button id="searchBtn">Search</button>
+      <button id="insertBtn">Insert</button>
+      <button id="deleteBtn">Delete</button>
+      <button id="appendBtn">Append</button>
+      <button id="resetBtn">Reset</button>
+    </div>
+
+    <div class="legend">
+      <strong>Legend:</strong>
+      <span class="legend-box" style="background:#ffe16a;"></span>Accessed
+      <span class="legend-box" style="background:#74b474;"></span>Found
+      <span class="legend-box" style="background:#ffa088;"></span>Shifted
+      <span class="legend-box" style="background:#f6f6f6;"></span>Unused capacity
+    </div>
+
+    <div class="array-stats" id="stats"></div>
+    <div id="status"></div>
+    <div id="arrayStrip" class="array-strip"></div>
+  </div>
+
+  <script>
+    let values;
+    let capacity;
+    let highlights = {};
+
+    function resetState() {
+      values = [14, 8, 31, 5, 20];
+      capacity = 8;
+      highlights = {};
+      render('Initial dynamic array. Size is the number of stored values; capacity is the number of allocated slots.');
+    }
+
+    function getIndex() {
+      return Number.parseInt(document.getElementById('indexInput').value, 10);
+    }
+
+    function getValue() {
+      return Number.parseInt(document.getElementById('valueInput').value, 10);
+    }
+
+    function ensureCapacity() {
+      if (values.length < capacity) {
+        return false;
+      }
+      capacity = Math.max(1, capacity * 2);
+      return true;
+    }
+
+    function render(message) {
+      document.getElementById('stats').textContent = `size = ${values.length}, capacity = ${capacity}`;
+      document.getElementById('status').textContent = message;
+
+      const strip = document.getElementById('arrayStrip');
+      strip.innerHTML = '';
+
+      for (let i = 0; i < capacity; i++) {
+        const slot = document.createElement('div');
+        slot.className = 'array-slot';
+        if (i >= values.length) {
+          slot.classList.add('array-unused');
+        }
+
+        const cell = document.createElement('div');
+        cell.className = 'array-cell';
+        if (highlights[i]) {
+          cell.classList.add(highlights[i]);
+        }
+        cell.textContent = i < values.length ? values[i] : '';
+
+        const label = document.createElement('div');
+        label.className = 'array-index';
+        label.textContent = i;
+
+        slot.appendChild(cell);
+        slot.appendChild(label);
+        strip.appendChild(slot);
+      }
+    }
+
+    function setMessage(message, newHighlights = {}) {
+      highlights = newHighlights;
+      render(message);
+    }
+
+    document.getElementById('accessBtn').addEventListener('click', () => {
+      const i = getIndex();
+      if (!Number.isInteger(i) || i < 0 || i >= values.length) {
+        setMessage(`Index ${i} is outside the logical array.`);
+        return;
+      }
+      setMessage(`A[${i}] = ${values[i]}. Direct indexed access is O(1).`, { [i]: 'active' });
+    });
+
+    document.getElementById('searchBtn').addEventListener('click', () => {
+      const target = getValue();
+      const index = values.indexOf(target);
+      if (index === -1) {
+        setMessage(`${target} is not present. Sequential search checks the array from left to right.`);
+        return;
+      }
+      setMessage(`${target} was found at index ${index}.`, { [index]: 'found' });
+    });
+
+    document.getElementById('appendBtn').addEventListener('click', () => {
+      const value = getValue();
+      const resized = ensureCapacity();
+      values.push(value);
+      setMessage(
+        resized
+          ? `Capacity doubled first, then ${value} was appended at the end.`
+          : `${value} was appended at the end.`,
+        { [values.length - 1]: 'inserted' }
+      );
+    });
+
+    document.getElementById('insertBtn').addEventListener('click', () => {
+      const i = getIndex();
+      const value = getValue();
+      if (!Number.isInteger(i) || i < 0 || i > values.length) {
+        setMessage(`Insertion index ${i} must be between 0 and ${values.length}.`);
+        return;
+      }
+      const resized = ensureCapacity();
+      values.splice(i, 0, value);
+      const shifted = {};
+      for (let j = i + 1; j < values.length; j++) {
+        shifted[j] = 'shift';
+      }
+      shifted[i] = 'inserted';
+      setMessage(
+        resized
+          ? `Capacity doubled, then elements from index ${i} onward shifted right.`
+          : `Elements from index ${i} onward shifted right to make room for ${value}.`,
+        shifted
+      );
+    });
+
+    document.getElementById('deleteBtn').addEventListener('click', () => {
+      const i = getIndex();
+      if (!Number.isInteger(i) || i < 0 || i >= values.length) {
+        setMessage(`Deletion index ${i} must be between 0 and ${values.length - 1}.`);
+        return;
+      }
+      const removed = values.splice(i, 1)[0];
+      const shifted = {};
+      for (let j = i; j < values.length; j++) {
+        shifted[j] = 'shift';
+      }
+      setMessage(`Removed ${removed}. Elements after index ${i} shifted left.`, shifted);
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', resetState);
+
+    resetState();
+  </script>
+</body>
+</html>

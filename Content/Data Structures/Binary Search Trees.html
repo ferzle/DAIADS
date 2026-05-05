@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Binary Search Trees</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <script src="../../scripts/chapterScripts.js"></script>
+  <link rel="stylesheet" href="../../css/style.css">
+  <link rel="stylesheet" href="../../css/chapter.css">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-DQ5LVZVFDC');
+  </script>
+</head>
+<body>
+  <h1>Binary Search Trees</h1>
+
+  <section id="overview" section-title="Overview">
+    <h2>Overview</h2>
+    <p>
+      A <strong>binary search tree</strong>, or <strong>BST</strong>, is a binary tree with an ordering invariant:
+      every value in a node's left subtree is smaller than the node's value, and every value in the right subtree is
+      larger. This invariant lets search make one comparison per level.
+    </p>
+    <p>
+      The BST idea is independent of the exact implementation. The tree might be represented by linked nodes, objects,
+      or records in memory. What matters conceptually is the ordering rule and the path it creates for search, insert,
+      and delete.
+    </p>
+  </section>
+
+  <section id="invariant" section-title="BST Invariant">
+    <h2>BST Invariant</h2>
+    <p>
+      For each node \(x\):
+    </p>
+    <ul>
+      <li>all values in \(x\)'s left subtree are less than \(x.value\), and</li>
+      <li>all values in \(x\)'s right subtree are greater than \(x.value\).</li>
+    </ul>
+    <p>
+      This rule applies recursively to every subtree. It is not enough for a node's immediate children to be on the
+      correct side; every descendant must also respect the range implied by its ancestors.
+    </p>
+    <p>
+      Different implementations make different choices about duplicate keys. Some disallow duplicates, some store a
+      count in each node, and some consistently put equal keys on one side. The demos on this page disallow duplicate
+      values so the ordering rule stays uncluttered.
+    </p>
+  </section>
+
+  <section id="search-insert" section-title="Search and Insert">
+    <h2>Search and Insert</h2>
+    <p>
+      Searching starts at the root. If the target equals the current value, the search succeeds. If the target is
+      smaller, move left. If it is larger, move right. The search fails only when the next subtree is empty.
+    </p>
+    <p>
+      Insertion follows the same comparison path. When the search reaches an empty child position, the new value is
+      placed there. This preserves the BST invariant because every comparison on the path has narrowed the valid range
+      for the new value.
+    </p>
+    <div class="embeddedDemoContainer">
+      <iframe class="embeddedDemo"
+              src="../../Content/Demos/Data Structures/Binary Search Tree/BST Search Insert Demo.html"
+              allow="fullscreen"
+              name="bst-search-insert-demo">
+      </iframe>
+    </div>
+  </section>
+
+  <section id="traversal" section-title="Traversal">
+    <h2>Traversal</h2>
+    <p>
+      In-order traversal of a BST visits the values in sorted order. This follows directly from the invariant:
+      the left subtree contains smaller values, the node itself comes next, and the right subtree contains larger
+      values.
+    </p>
+    <pre><code>inorder(node):
+    if node is empty:
+        return
+    inorder(node.left)
+    visit(node.value)
+    inorder(node.right)</code></pre>
+    <p>
+      The traversal still takes \(O(n)\) time because every node is visited once.
+    </p>
+  </section>
+
+  <section id="delete" section-title="Delete">
+    <h2>Delete</h2>
+    <p>
+      Deletion has three conceptual cases.
+    </p>
+    <ul>
+      <li><strong>Leaf:</strong> remove the node.</li>
+      <li><strong>One child:</strong> replace the node by its child.</li>
+      <li><strong>Two children:</strong> replace the value by its in-order predecessor or successor, then delete that replacement value from its old location.</li>
+    </ul>
+    <p>
+      The two-child case is the only one that feels different. The in-order successor is the smallest value in the
+      node's right subtree; the in-order predecessor is the largest value in the left subtree. Either replacement keeps
+      the values in sorted order.
+    </p>
+  </section>
+
+  <section id="rotations" section-title="Rotations">
+    <h2>Rotations</h2>
+    <p>
+      A <strong>rotation</strong> is a local restructuring operation. It changes which node is the parent inside a
+      small subtree while preserving the BST in-order sequence. Rotations are the basic tool used by AVL trees and
+      red-black trees to restore balance after updates.
+    </p>
+    <p>
+      The simple rotations are <em>left rotation</em> and <em>right rotation</em>. The double rotations are built from
+      those: a left-right rotation is a left rotation followed by a right rotation, and a right-left rotation is a
+      right rotation followed by a left rotation.
+    </p>
+    <div class="embeddedDemoContainer">
+      <iframe class="embeddedDemo"
+              src="../../Content/Demos/Data Structures/Binary Search Tree/BST Rotation Demo.html"
+              allow="fullscreen"
+              name="bst-rotation-demo">
+      </iframe>
+    </div>
+  </section>
+
+  <section id="complexity" section-title="Complexity">
+    <h2>Complexity</h2>
+    <p>
+      Search, insert, and delete follow a single root-to-leaf path, so their running time is \(O(h)\), where \(h\) is
+      the height of the tree.
+    </p>
+    <table class="example-table">
+      <thead>
+        <tr>
+          <th>Tree Shape</th>
+          <th>Height</th>
+          <th>Search/Insert/Delete</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Balanced</td>
+          <td>\(\Theta(\log n)\)</td>
+          <td>\(\Theta(\log n)\)</td>
+        </tr>
+        <tr>
+          <td>Degenerate</td>
+          <td>\(\Theta(n)\)</td>
+          <td>\(\Theta(n)\)</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      A plain BST does not automatically stay balanced. If values are inserted in sorted order, the tree can become a
+      chain. Balanced BST variants add rules and rotations to keep \(h = O(\log n)\).
+    </p>
+  </section>
+
+  <section id="implementation-sketch" section-title="Implementation Sketch">
+    <h2>Implementation Sketch</h2>
+    <pre><code>search(root, target):
+    current = root
+    while current is not empty:
+        if target == current.value:
+            return current
+        if target < current.value:
+            current = current.left
+        else:
+            current = current.right
+    return not found
+
+insert(root, value):
+    if root is empty:
+        return new node containing value
+    if value < root.value:
+        root.left = insert(root.left, value)
+    else if value > root.value:
+        root.right = insert(root.right, value)
+    return root</code></pre>
+    <p>
+      This sketch omits duplicate handling and parent references. Production implementations also need careful update
+      logic for deletion and, in balanced trees, rebalancing metadata such as heights or colors.
+    </p>
+  </section>
+</body>
+</html>

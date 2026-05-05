@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>BST Search and Insert Demo</title>
+  <script src="../../../../scripts/demoScripts.js"></script>
+  <link rel="stylesheet" href="../../../../css/style.css">
+  <link rel="stylesheet" href="../../../../css/demo.css">
+  <style>
+    .bst-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .bst-controls label {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .bst-controls input {
+      width: 80px;
+    }
+    #status {
+      min-height: 42px;
+      margin: 8px 0;
+      padding: 6px 8px;
+      border-left: 4px solid #4a768b;
+      background: #f7fbfd;
+    }
+    .bst-layout {
+      display: grid;
+      grid-template-columns: minmax(360px, 720px) minmax(220px, 1fr);
+      gap: 16px;
+      align-items: start;
+      margin-top: 12px;
+    }
+    svg {
+      width: 100%;
+      max-width: 720px;
+      min-height: 360px;
+      border: 1px solid #ccc;
+      background: #fff;
+      box-sizing: border-box;
+    }
+    .bst-edge {
+      stroke: #777;
+      stroke-width: 2;
+    }
+    .bst-node circle {
+      fill: #cce3ff;
+      stroke: #333;
+      stroke-width: 1.5;
+    }
+    .bst-node.visited circle {
+      fill: #74b474;
+    }
+    .bst-node.current circle {
+      fill: #ffe16a;
+      stroke-width: 3;
+    }
+    .bst-node.inserted circle {
+      fill: #8ecae6;
+      stroke-width: 3;
+    }
+    .bst-node text {
+      text-anchor: middle;
+      dominant-baseline: middle;
+      font-weight: bold;
+      fill: #111;
+    }
+    .path-panel {
+      line-height: 1.5;
+    }
+    .path-output {
+      min-height: 36px;
+      margin: 8px 0;
+      padding: 8px;
+      border: 1px solid #777;
+      background: #f6f6f6;
+      font-family: monospace;
+      font-size: 16px;
+    }
+  </style>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-DQ5LVZVFDC');
+  </script>
+</head>
+<body class="no-tooltips">
+  <div id="demoContainer">
+    <h2>BST Search and Insert Demo</h2>
+
+    <div class="bst-controls">
+      <label>Value <input id="valueInput" type="number" value="25"></label>
+      <button id="searchBtn">Search</button>
+      <button id="insertBtn">Insert</button>
+      <button id="prevBtn">Previous Step</button>
+      <button id="nextBtn">Next Step</button>
+      <button id="resetBtn">Reset Tree</button>
+    </div>
+
+    <div class="legend">
+      <strong>Legend:</strong>
+      <span class="legend-box" style="background:#ffe16a;"></span>Current comparison
+      <span class="legend-box" style="background:#74b474;"></span>Search path
+      <span class="legend-box" style="background:#8ecae6;"></span>Inserted value
+    </div>
+
+    <div id="status"></div>
+    <div class="bst-layout">
+      <svg id="bstSvg" preserveAspectRatio="xMidYMid meet"></svg>
+      <div class="path-panel">
+        <div><strong>BST rule:</strong> smaller values go left; larger values go right.</div>
+        <div><strong>Path:</strong></div>
+        <div id="pathOutput" class="path-output">(none)</div>
+        <div id="stepCount"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let tree;
+    let steps = [];
+    let stepIndex = -1;
+
+    function makeNode(value) {
+      return { value, left: null, right: null };
+    }
+
+    function insertValue(root, value) {
+      if (!root) return makeNode(value);
+      if (value < root.value) {
+        root.left = insertValue(root.left, value);
+      } else if (value > root.value) {
+        root.right = insertValue(root.right, value);
+      }
+      return root;
+    }
+
+    function buildTree(values) {
+      let root = null;
+      values.forEach((value) => {
+        root = insertValue(root, value);
+      });
+      return root;
+    }
+
+    function cloneTree(node) {
+      if (!node) return null;
+      return {
+        value: node.value,
+        left: cloneTree(node.left),
+        right: cloneTree(node.right)
+      };
+    }
+
+    function readValue() {
+      return Number.parseInt(document.getElementById('valueInput').value, 10);
+    }
+
+    function createSearchSteps(value) {
+      const result = [];
+      const path = [];
+      let current = tree;
+      let parent = null;
+      let side = '';
+
+      while (current) {
+        const currentValue = current.value;
+        let message;
+        if (value === currentValue) {
+          message = `${value} equals ${currentValue}. Search succeeds.`;
+          result.push({
+            tree: cloneTree(tree),
+            current: currentValue,
+            visited: path.slice(),
+            path: path.concat(currentValue),
+            message
+          });
+          return { result, found: true, parent: currentValue, side: '' };
+        }
+
+        if (value < currentValue) {
+          message = `${value} is less than ${currentValue}, so move left.`;
+          side = 'left';
+        } else {
+          message = `${value} is greater than ${currentValue}, so move right.`;
+          side = 'right';
+        }
+
+        result.push({
+          tree: cloneTree(tree),
+          current: currentValue,
+          visited: path.slice(),
+          path: path.concat(currentValue),
+          message
+        });
+
+        path.push(currentValue);
+        parent = current;
+        current = value < currentValue ? current.left : current.right;
+      }
+
+      result.push({
+        tree: cloneTree(tree),
+        current: parent ? parent.value : null,
+        visited: path.slice(),
+        path: path.slice(),
+        message: parent
+          ? `The ${side} child of ${parent.value} is empty. ${value} is not in the tree.`
+          : 'The tree is empty.'
+      });
+
+      return {
+        result,
+        found: false,
+        parent: parent ? parent.value : null,
+        side
+      };
+    }
+
+    function layoutTree(root) {
+      const positions = new Map();
+      const edges = [];
+      let nextX = 0;
+      let maxDepth = 0;
+
+      function walk(node, depth) {
+        if (!node) return;
+        maxDepth = Math.max(maxDepth, depth);
+        walk(node.left, depth + 1);
+
+        const x = 48 + nextX * 82;
+        const y = 42 + depth * 72;
+        positions.set(node.value, { x, y });
+        nextX++;
+
+        if (node.left) edges.push([node.value, node.left.value]);
+        if (node.right) edges.push([node.value, node.right.value]);
+
+        walk(node.right, depth + 1);
+      }
+
+      walk(root, 0);
+      return {
+        positions,
+        edges,
+        width: Math.max(640, 96 + Math.max(1, nextX) * 82),
+        height: Math.max(320, 90 + (maxDepth + 1) * 72)
+      };
+    }
+
+    function svgElement(name) {
+      return document.createElementNS('http://www.w3.org/2000/svg', name);
+    }
+
+    function renderTree(root, step) {
+      const svg = document.getElementById('bstSvg');
+      svg.innerHTML = '';
+
+      if (!root) {
+        svg.setAttribute('viewBox', '0 0 640 320');
+        return;
+      }
+
+      const layout = layoutTree(root);
+      svg.setAttribute('viewBox', `0 0 ${layout.width} ${layout.height}`);
+
+      layout.edges.forEach(([from, to]) => {
+        const a = layout.positions.get(from);
+        const b = layout.positions.get(to);
+        const line = svgElement('line');
+        line.setAttribute('x1', a.x);
+        line.setAttribute('y1', a.y);
+        line.setAttribute('x2', b.x);
+        line.setAttribute('y2', b.y);
+        line.setAttribute('class', 'bst-edge');
+        svg.appendChild(line);
+      });
+
+      layout.positions.forEach((pos, value) => {
+        const group = svgElement('g');
+        group.setAttribute('class', 'bst-node');
+        if (step && step.visited.includes(value)) group.classList.add('visited');
+        if (step && step.current === value) group.classList.add('current');
+        if (step && step.inserted === value) group.classList.add('inserted');
+
+        const circle = svgElement('circle');
+        circle.setAttribute('cx', pos.x);
+        circle.setAttribute('cy', pos.y);
+        circle.setAttribute('r', 22);
+
+        const text = svgElement('text');
+        text.setAttribute('x', pos.x);
+        text.setAttribute('y', pos.y + 1);
+        text.textContent = value;
+
+        group.appendChild(circle);
+        group.appendChild(text);
+        svg.appendChild(group);
+      });
+    }
+
+    function render() {
+      const activeStep = stepIndex >= 0 ? steps[stepIndex] : null;
+      const shownTree = activeStep ? activeStep.tree : tree;
+
+      document.getElementById('status').textContent = activeStep
+        ? activeStep.message
+        : 'Use Search or Insert to follow the comparison path from the root.';
+      document.getElementById('pathOutput').textContent =
+        activeStep && activeStep.path.length > 0 ? activeStep.path.join(' -> ') : '(none)';
+      document.getElementById('stepCount').textContent =
+        steps.length === 0 ? 'No active operation.' : `Step ${stepIndex + 1} of ${steps.length}`;
+
+      document.getElementById('prevBtn').disabled = stepIndex <= 0;
+      document.getElementById('nextBtn').disabled = stepIndex < 0 || stepIndex >= steps.length - 1;
+
+      renderTree(shownTree, activeStep);
+    }
+
+    document.getElementById('searchBtn').addEventListener('click', () => {
+      const value = readValue();
+      if (!Number.isInteger(value)) {
+        document.getElementById('status').textContent = 'Enter an integer value before searching.';
+        return;
+      }
+      steps = createSearchSteps(value).result;
+      stepIndex = steps.length > 0 ? 0 : -1;
+      render();
+    });
+
+    document.getElementById('insertBtn').addEventListener('click', () => {
+      const value = readValue();
+      if (!Number.isInteger(value)) {
+        document.getElementById('status').textContent = 'Enter an integer value before inserting.';
+        return;
+      }
+
+      const search = createSearchSteps(value);
+      steps = search.result;
+
+      if (search.found) {
+        steps[steps.length - 1].message = `${value} is already in the BST, so no duplicate is inserted.`;
+      } else {
+        const newTree = cloneTree(tree);
+        insertValue(newTree, value);
+        tree = newTree;
+        steps.push({
+          tree: cloneTree(tree),
+          current: null,
+          inserted: value,
+          visited: steps.length > 0 ? steps[steps.length - 1].path.slice() : [],
+          path: (steps.length > 0 ? steps[steps.length - 1].path.slice() : []).concat(value),
+          message: search.parent === null
+            ? `Inserted ${value} as the root.`
+            : `Inserted ${value} as the ${search.side} child of ${search.parent}.`
+        });
+      }
+
+      stepIndex = steps.length > 0 ? 0 : -1;
+      render();
+    });
+
+    document.getElementById('prevBtn').addEventListener('click', () => {
+      if (stepIndex > 0) {
+        stepIndex--;
+        render();
+      }
+    });
+
+    document.getElementById('nextBtn').addEventListener('click', () => {
+      if (stepIndex < steps.length - 1) {
+        stepIndex++;
+        render();
+      }
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      tree = buildTree([40, 20, 60, 10, 30, 50, 70, 25, 35]);
+      steps = [];
+      stepIndex = -1;
+      render();
+    });
+
+    tree = buildTree([40, 20, 60, 10, 30, 50, 70, 25, 35]);
+    render();
+  </script>
+</body>
+</html>

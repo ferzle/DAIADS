@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Linked List Operations Demo</title>
+  <script src="../../../../scripts/demoScripts.js"></script>
+  <link rel="stylesheet" href="../../../../css/style.css">
+  <link rel="stylesheet" href="../../../../css/demo.css">
+  <style>
+    .ll-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .ll-controls label {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .ll-controls input {
+      width: 90px;
+    }
+    #status {
+      min-height: 42px;
+      margin: 8px 0;
+      padding: 6px 8px;
+      border-left: 4px solid #4a768b;
+      background: #f7fbfd;
+    }
+    .list-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      gap: 8px;
+      margin-top: 14px;
+    }
+    .node-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .list-node {
+      min-width: 58px;
+      height: 44px;
+      border: 2px solid #333;
+      background: #cce3ff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 10px;
+      box-sizing: border-box;
+      font-weight: bold;
+    }
+    .list-node.inserted {
+      background: #8ecae6;
+    }
+    .list-node.touched {
+      background: #ffe16a;
+    }
+    .list-node.found {
+      background: #74b474;
+    }
+    .node-role {
+      font-size: 12px;
+      color: #333;
+      min-height: 16px;
+    }
+    .list-link {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      margin-top: 14px;
+      color: #555;
+    }
+    .list-arrow {
+      font-weight: bold;
+      font-size: 20px;
+      line-height: 1;
+    }
+    .link-label {
+      font-size: 11px;
+    }
+    .end-node,
+    .empty-state,
+    .result-box {
+      border: 1px solid #777;
+      color: #555;
+      background: #f6f6f6;
+      padding: 10px 12px;
+    }
+    .empty-state {
+      border-style: dashed;
+    }
+    .end-node {
+      margin-top: 14px;
+      border-style: dashed;
+    }
+    .list-info {
+      display: grid;
+      grid-template-columns: minmax(220px, 320px) minmax(220px, 1fr);
+      gap: 16px;
+      margin-top: 12px;
+      line-height: 1.5;
+    }
+    .removed-value {
+      display: inline-block;
+      min-width: 36px;
+      margin-left: 4px;
+      padding: 2px 8px;
+      border: 1px solid #333;
+      background: #ffa088;
+      text-align: center;
+      font-weight: bold;
+    }
+  </style>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-DQ5LVZVFDC');
+  </script>
+</head>
+<body class="no-tooltips">
+  <div id="demoContainer">
+    <h2>Linked List Operations Demo</h2>
+
+    <div class="ll-controls">
+      <label>Value <input id="valueInput" type="text" value="X"></label>
+      <label>Target <input id="targetInput" type="text" value="B"></label>
+      <button id="addFrontBtn">Add Front</button>
+      <button id="addBackBtn">Add Back</button>
+      <button id="insertAfterBtn">Insert After Target</button>
+      <button id="removeTargetBtn">Remove Target</button>
+      <button id="findBtn">Find Target</button>
+      <button id="resetBtn">Reset</button>
+    </div>
+
+    <div class="legend">
+      <strong>Legend:</strong>
+      <span class="legend-box" style="background:#8ecae6;"></span>Inserted item
+      <span class="legend-box" style="background:#ffe16a;"></span>Touched item
+      <span class="legend-box" style="background:#74b474;"></span>Found item
+      <span class="legend-box" style="background:#ffa088;"></span>Removed item
+    </div>
+
+    <div id="status"></div>
+    <div id="listWrap" class="list-wrap"></div>
+    <div class="list-info">
+      <div id="resultBox" class="result-box"></div>
+      <div>
+        <div><strong>Abstract rule:</strong> each item is connected to the next item in the list order.</div>
+        <div id="listSummary"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let items;
+    let highlights = {};
+    let lastRemoved = '';
+
+    function resetState() {
+      items = ['A', 'B', 'C', 'D'];
+      highlights = {};
+      lastRemoved = '';
+      render('Initial linked list. Start at the front and follow links to reach later items.');
+    }
+
+    function readValue() {
+      return document.getElementById('valueInput').value.trim();
+    }
+
+    function readTarget() {
+      return document.getElementById('targetInput').value.trim();
+    }
+
+    function render(message) {
+      document.getElementById('status').textContent = message;
+      document.getElementById('listSummary').textContent =
+        items.length === 0
+          ? 'Count: 0. Adding creates the first item.'
+          : `Count: ${items.length}. Traversal starts at ${items[0]}.`;
+
+      renderResultBox();
+      renderList();
+    }
+
+    function renderResultBox() {
+      const resultBox = document.getElementById('resultBox');
+      resultBox.innerHTML = '';
+
+      const firstLine = document.createElement('div');
+      firstLine.textContent = items.length === 0 ? 'First: none' : `First: ${items[0]}`;
+      resultBox.appendChild(firstLine);
+
+      const lastLine = document.createElement('div');
+      lastLine.textContent = items.length === 0 ? 'Last: none' : `Last: ${items[items.length - 1]}`;
+      resultBox.appendChild(lastLine);
+
+      if (lastRemoved !== '') {
+        const removedLine = document.createElement('div');
+        removedLine.textContent = 'Last removed:';
+        const removedValue = document.createElement('span');
+        removedValue.className = 'removed-value';
+        removedValue.textContent = lastRemoved;
+        removedLine.appendChild(removedValue);
+        resultBox.appendChild(removedLine);
+      }
+    }
+
+    function renderList() {
+      const wrap = document.getElementById('listWrap');
+      wrap.innerHTML = '';
+
+      if (items.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'empty-state';
+        empty.textContent = 'empty list';
+        wrap.appendChild(empty);
+        return;
+      }
+
+      items.forEach((value, index) => {
+        const nodeWrap = document.createElement('div');
+        nodeWrap.className = 'node-wrap';
+
+        const role = document.createElement('div');
+        role.className = 'node-role';
+        if (items.length === 1) {
+          role.textContent = 'first/last';
+        } else if (index === 0) {
+          role.textContent = 'first';
+        } else if (index === items.length - 1) {
+          role.textContent = 'last';
+        } else {
+          role.textContent = '';
+        }
+
+        const node = document.createElement('div');
+        node.className = 'list-node';
+        if (highlights[index]) {
+          node.classList.add(highlights[index]);
+        }
+        node.textContent = value;
+
+        nodeWrap.appendChild(role);
+        nodeWrap.appendChild(node);
+        wrap.appendChild(nodeWrap);
+
+        if (index < items.length - 1) {
+          const link = document.createElement('div');
+          link.className = 'list-link';
+
+          const arrow = document.createElement('div');
+          arrow.className = 'list-arrow';
+          arrow.textContent = '->';
+
+          const label = document.createElement('div');
+          label.className = 'link-label';
+          label.textContent = 'link';
+
+          link.appendChild(arrow);
+          link.appendChild(label);
+          wrap.appendChild(link);
+        } else {
+          const end = document.createElement('div');
+          end.className = 'end-node';
+          end.textContent = 'end';
+          wrap.appendChild(end);
+        }
+      });
+    }
+
+    function setMessage(message, newHighlights = {}, removedValue = '') {
+      highlights = newHighlights;
+      lastRemoved = removedValue;
+      render(message);
+    }
+
+    function markScanned(stopIndex) {
+      const scanned = {};
+      for (let i = 0; i < stopIndex; i++) {
+        scanned[i] = 'touched';
+      }
+      return scanned;
+    }
+
+    document.getElementById('addFrontBtn').addEventListener('click', () => {
+      const value = readValue();
+      if (value === '') {
+        setMessage('Enter a value before adding to the front.');
+        return;
+      }
+      const hadItems = items.length > 0;
+      items.unshift(value);
+      setMessage(
+        hadItems
+          ? `Added ${value} before the previous first item.`
+          : `Added ${value} as the first item in the list.`,
+        hadItems ? { 0: 'inserted', 1: 'touched' } : { 0: 'inserted' }
+      );
+    });
+
+    document.getElementById('addBackBtn').addEventListener('click', () => {
+      const value = readValue();
+      if (value === '') {
+        setMessage('Enter a value before adding to the back.');
+        return;
+      }
+      const oldLastIndex = items.length - 1;
+      items.push(value);
+      const newHighlights = { [items.length - 1]: 'inserted' };
+      if (oldLastIndex >= 0) {
+        newHighlights[oldLastIndex] = 'touched';
+      }
+      setMessage(
+        oldLastIndex >= 0
+          ? `Added ${value} after the previous last item.`
+          : `Added ${value} as the first item in the list.`,
+        newHighlights
+      );
+    });
+
+    document.getElementById('insertAfterBtn').addEventListener('click', () => {
+      const value = readValue();
+      const target = readTarget();
+      if (value === '') {
+        setMessage('Enter a value before inserting.');
+        return;
+      }
+      if (target === '') {
+        setMessage('Enter a target value before inserting.');
+        return;
+      }
+
+      const targetIndex = items.indexOf(target);
+      if (targetIndex === -1) {
+        setMessage(`${target} is not in the list, so nothing was inserted.`, markScanned(items.length));
+        return;
+      }
+
+      items.splice(targetIndex + 1, 0, value);
+      const newHighlights = {
+        [targetIndex]: 'touched',
+        [targetIndex + 1]: 'inserted'
+      };
+      if (targetIndex + 2 < items.length) {
+        newHighlights[targetIndex + 2] = 'touched';
+      }
+      setMessage(`Inserted ${value} immediately after ${target}.`, newHighlights);
+    });
+
+    document.getElementById('removeTargetBtn').addEventListener('click', () => {
+      const target = readTarget();
+      if (target === '') {
+        setMessage('Enter a target value before removing.');
+        return;
+      }
+
+      const targetIndex = items.indexOf(target);
+      if (targetIndex === -1) {
+        setMessage(`${target} is not in the list, so nothing was removed.`, markScanned(items.length));
+        return;
+      }
+
+      const removed = items.splice(targetIndex, 1)[0];
+      const newHighlights = {};
+      if (targetIndex - 1 >= 0) {
+        newHighlights[targetIndex - 1] = 'touched';
+      }
+      if (targetIndex < items.length) {
+        newHighlights[targetIndex] = 'touched';
+      }
+
+      let message;
+      if (items.length === 0) {
+        message = `Removed ${removed}; the list is now empty.`;
+      } else if (targetIndex === 0) {
+        message = `Removed ${removed}; ${items[0]} is now first.`;
+      } else if (targetIndex === items.length) {
+        message = `Removed ${removed}; the previous item is now last.`;
+      } else {
+        message = `Removed ${removed}; its neighbors are now connected.`;
+      }
+
+      setMessage(message, newHighlights, removed);
+    });
+
+    document.getElementById('findBtn').addEventListener('click', () => {
+      const target = readTarget();
+      if (target === '') {
+        setMessage('Enter a target value before finding.');
+        return;
+      }
+
+      const targetIndex = items.indexOf(target);
+      if (targetIndex === -1) {
+        setMessage(`Find reached the end without seeing ${target}.`, markScanned(items.length));
+        return;
+      }
+
+      const scanned = markScanned(targetIndex);
+      scanned[targetIndex] = 'found';
+      setMessage(`Find reaches ${target} by following links from the front.`, scanned);
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', resetState);
+
+    resetState();
+  </script>
+</body>
+</html>
