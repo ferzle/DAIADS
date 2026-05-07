@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Maps, Sets, and Hashing</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <script src="../../../scripts/chapterScripts.js"></script>
+  <link rel="stylesheet" href="../../../css/style.css">
+  <link rel="stylesheet" href="../../../css/chapter.css">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-DQ5LVZVFDC');
+  </script>
+</head>
+<body>
+  <h1>Maps, Sets, and Hashing</h1>
+
+  <section id="overview" section-title="Overview">
+    <h2>Overview</h2>
+    <p>
+      Maps, sets, and hash tables belong together because they all center on one question:
+      <em>How can a program quickly find whether a key is present?</em> A set stores keys. A map stores keys together
+      with associated values. Hashing is one of the most important implementation techniques for making lookup,
+      insertion, and deletion fast.
+    </p>
+    <p>
+      These structures appear everywhere in programming. They count frequencies, remove duplicates, cache previous
+      results, group records by identifier, test membership, store symbol tables, represent sparse data, and support
+      many graph and string algorithms. Students often first meet them as library types such as Java
+      <code>HashMap</code> and <code>HashSet</code>, C++ <code>unordered_map</code> and <code>unordered_set</code>,
+      or Python <code>dict</code> and <code>set</code>.
+    </p>
+    <p>
+      This section treats the ADTs first and the implementations second. That separation matters: a map or set can be
+      implemented with a hash table, a balanced search tree, a sorted array, a linked list, or a skip list. The ADT
+      describes the behavior; the implementation determines the costs and ordering guarantees.
+    </p>
+  </section>
+
+  <section id="why-together" section-title="Why These Topics Are Together">
+    <h2>Why These Topics Are Together</h2>
+    <p>
+      Sets and maps are closely related ADTs. A set answers membership questions:
+      <code>contains(key)</code>. A map answers lookup questions: <code>get(key)</code>. In fact, a set can often be
+      implemented as a map from each key to a simple marker value.
+    </p>
+    <p>
+      Hashing is grouped with them because hash tables are the standard implementation when the goal is fast average
+      lookup by key. A hash function maps a key to an array index. If the hash function spreads keys well and the table
+      is not too full, common operations are expected \(O(1)\).
+    </p>
+    <p>
+      The same section also includes skip lists because they solve a related dictionary problem with different
+      tradeoffs. A skip list keeps keys in sorted order and supports expected \(O(\log n)\) search, insert, and delete.
+      It is not a hashing method, but it is a useful comparison point for ordered maps and sets.
+    </p>
+  </section>
+
+  <section id="section-roadmap" section-title="Section Roadmap">
+    <h2>Section Roadmap</h2>
+    <p>
+      The pages in this section build from abstract behavior toward concrete implementation details.
+    </p>
+    <ul>
+      <li><strong><a href="?path=Data%20Structures%2FMaps%2C%20Sets%2C%20and%20Hashing%2FSet%20ADT">Set ADT</a>:</strong> membership, insertion, deletion, and set algebra such as union and intersection.</li>
+      <li><strong><a href="?path=Data%20Structures%2FMaps%2C%20Sets%2C%20and%20Hashing%2FMap%20and%20Dictionary%20ADT">Map and Dictionary ADT</a>:</strong> key-value lookup, update, deletion, and common dictionary use cases.</li>
+      <li><strong><a href="?path=Data%20Structures%2FMaps%2C%20Sets%2C%20and%20Hashing%2FHash%20Tables">Hash Tables</a>:</strong> hashing, buckets, load factor, resizing, and expected constant-time operations.</li>
+      <li><strong><a href="?path=Data%20Structures%2FMaps%2C%20Sets%2C%20and%20Hashing%2FSeparate%20Chaining">Separate Chaining</a>:</strong> collision handling by storing multiple keys in each bucket.</li>
+      <li><strong><a href="?path=Data%20Structures%2FMaps%2C%20Sets%2C%20and%20Hashing%2FOpen%20Addressing">Open Addressing</a>:</strong> collision handling by probing for another slot in the same array.</li>
+      <li><strong><a href="?path=Data%20Structures%2FMaps%2C%20Sets%2C%20and%20Hashing%2FSkip%20Lists">Skip Lists</a>:</strong> randomized ordered dictionaries that provide a tree-like alternative to hashing.</li>
+    </ul>
+  </section>
+
+  <section id="core-ideas" section-title="Core Ideas">
+    <h2>Core Ideas</h2>
+
+    <h3>Keys</h3>
+    <p>
+      A <strong>key</strong> is the value used for lookup. In a student-record map, the key might be a student ID. In
+      a word-frequency table, the key is a word. In a visited set for graph search, the key is a vertex.
+    </p>
+
+    <h3>Membership</h3>
+    <p>
+      A membership query asks whether a key is present. Sets make membership the central operation. Maps also use
+      membership internally, because <code>get(key)</code> must find whether the key exists before it can return the
+      associated value.
+    </p>
+
+    <h3>Key-Value Association</h3>
+    <p>
+      A map stores an association between a key and a value. The key identifies the entry; the value is the data
+      retrieved or updated. A map should not contain two separate entries with the same key. Inserting an existing key
+      usually updates its value or reports that the key is already present, depending on the chosen interface.
+    </p>
+
+    <h3>Collisions</h3>
+    <p>
+      A <strong>collision</strong> occurs when two different keys map to the same hash-table location. Collisions are
+      unavoidable when many possible keys are mapped into a finite array. Hash-table implementations differ mostly in
+      how they resolve collisions and when they resize.
+    </p>
+  </section>
+
+  <section id="worked-example" section-title="Worked Example">
+    <h2>Worked Example</h2>
+    <p>
+      Suppose a program scans the words:
+    </p>
+    <pre><code>to be or not to be</code></pre>
+    <p>
+      A set can record which distinct words have appeared:
+    </p>
+    <pre><code>{to, be, or, not}</code></pre>
+    <p>
+      A map can record how many times each word appears:
+    </p>
+    <table class="example-table">
+      <thead>
+        <tr>
+          <th>Key</th>
+          <th>Value</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>to</code></td>
+          <td><code>2</code></td>
+        </tr>
+        <tr>
+          <td><code>be</code></td>
+          <td><code>2</code></td>
+        </tr>
+        <tr>
+          <td><code>or</code></td>
+          <td><code>1</code></td>
+        </tr>
+        <tr>
+          <td><code>not</code></td>
+          <td><code>1</code></td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      A hash table can implement either structure. For each word, the hash function chooses a bucket. A set stores the
+      word in that bucket. A map stores the pair <code>(word, count)</code>. If another word hashes to the same
+      bucket, the collision-resolution strategy decides where that entry goes.
+    </p>
+  </section>
+
+  <section id="implementation-options" section-title="Implementation Options">
+    <h2>Implementation Options</h2>
+    <table class="example-table">
+      <thead>
+        <tr>
+          <th>Implementation</th>
+          <th>Typical Search/Insert/Delete</th>
+          <th>Ordering</th>
+          <th>Best Fit</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Unsorted list</td>
+          <td>\(O(n)\)</td>
+          <td>Insertion order can be preserved</td>
+          <td>Very small collections or simple teaching examples</td>
+        </tr>
+        <tr>
+          <td>Sorted array</td>
+          <td>\(O(\log n)\) search, \(O(n)\) insert/delete</td>
+          <td>Sorted</td>
+          <td>Mostly-static data with many searches</td>
+        </tr>
+        <tr>
+          <td>Balanced search tree</td>
+          <td>\(O(\log n)\)</td>
+          <td>Sorted</td>
+          <td>Ordered maps/sets and range queries</td>
+        </tr>
+        <tr>
+          <td>Hash table</td>
+          <td>Expected \(O(1)\)</td>
+          <td>Usually not sorted</td>
+          <td>Fast lookup, insertion, and deletion by key</td>
+        </tr>
+        <tr>
+          <td>Skip list</td>
+          <td>Expected \(O(\log n)\)</td>
+          <td>Sorted</td>
+          <td>Ordered dictionaries with randomized balancing</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      No implementation dominates every workload. Hash tables are often the fastest default for exact-key lookup, but
+      sorted structures are better when the program needs keys in order, range queries, predecessor/successor
+      operations, or predictable worst-case bounds.
+    </p>
+  </section>
+
+  <section id="hashing-preview" section-title="Hashing Preview">
+    <h2>Hashing Preview</h2>
+    <p>
+      A hash table uses an array of buckets. A hash function turns a key into an integer, and the table converts that
+      integer into a bucket index, often with modulo arithmetic:
+    </p>
+    <pre><code>index = hash(key) mod tableSize</code></pre>
+    <p>
+      The table should keep its <strong>load factor</strong> under control. The load factor is usually
+      \(\alpha = n/m\), where \(n\) is the number of stored entries and \(m\) is the number of buckets or slots. As the
+      table gets too full, collisions become more frequent and operations slow down. Resizing creates a larger table
+      and re-inserts the existing entries.
+    </p>
+    <p>
+      The two main collision-resolution families in this section are separate chaining and open addressing. Separate
+      chaining stores a small collection at each bucket. Open addressing stores entries directly in the array and
+      follows a probe sequence when a collision occurs.
+    </p>
+  </section>
+
+  <section id="applications" section-title="Applications">
+    <h2>Applications</h2>
+    <ul>
+      <li><strong>Counting frequencies:</strong> A map from item to count records how many times each key appears.</li>
+      <li><strong>Removing duplicates:</strong> A set records which keys have already been seen.</li>
+      <li><strong>Caching and memoization:</strong> A map stores previous results so repeated requests can be answered quickly.</li>
+      <li><strong>Symbol tables:</strong> Compilers and interpreters map variable names to information about declarations and types.</li>
+      <li><strong>Graph algorithms:</strong> Sets track visited vertices, and maps store distances, parents, colors, or adjacency information.</li>
+      <li><strong>Indexes:</strong> Databases and search tools map keys or terms to records where they occur.</li>
+      <li><strong>Sparse data:</strong> A map can store only the nonzero or meaningful entries in a large logical array or matrix.</li>
+    </ul>
+  </section>
+
+  <section id="pitfalls" section-title="Common Pitfalls">
+    <h2>Common Pitfalls</h2>
+    <ul>
+      <li><strong>Confusing keys and values:</strong> Maps search by key. Values are the data associated with keys and are not necessarily unique.</li>
+      <li><strong>Assuming hash tables are sorted:</strong> Most hash tables do not keep keys in sorted order.</li>
+      <li><strong>Ignoring collisions:</strong> A hash function alone is not a complete hash table. The implementation also needs a collision strategy.</li>
+      <li><strong>Letting the table get too full:</strong> High load factor increases collision cost and can make operations much slower.</li>
+      <li><strong>Mutating keys after insertion:</strong> If a key's hash or equality behavior changes while it is in a table, later lookups may fail.</li>
+      <li><strong>Expecting worst-case constant time:</strong> Hash-table operations are usually expected \(O(1)\), not guaranteed \(O(1)\) under every possible input.</li>
+      <li><strong>Choosing hashing for ordered questions:</strong> If the program needs the next largest key or all keys in a range, an ordered structure is usually a better fit.</li>
+    </ul>
+  </section>
+
+  <section id="summary" section-title="Summary">
+    <h2>Summary</h2>
+    <p>
+      Sets store keys; maps store key-value associations. Hash tables are a major implementation technique for both
+      because they provide fast expected lookup, insertion, and deletion. The rest of this section separates the ADTs
+      from their implementations, then studies how hashing handles collisions, resizing, and tradeoffs with ordered
+      alternatives such as skip lists and balanced trees.
+    </p>
+  </section>
+
+  <section id="related-pages" section-title="Related Pages">
+    <h2>Related Pages</h2>
+    <ul>
+      <li><a href="?path=Data%20Structures%2FMaps%2C%20Sets%2C%20and%20Hashing%2FSet%20ADT">Set ADT</a>, for membership and set algebra.</li>
+      <li><a href="?path=Data%20Structures%2FMaps%2C%20Sets%2C%20and%20Hashing%2FMap%20and%20Dictionary%20ADT">Map and Dictionary ADT</a>, for key-value associations.</li>
+      <li><a href="?path=Data%20Structures%2FMaps%2C%20Sets%2C%20and%20Hashing%2FHash%20Tables">Hash Tables</a>, for hashing and table-level behavior.</li>
+      <li><a href="?path=Data%20Structures%2FTrees%2FBinary%20Search%20Trees">Binary Search Trees</a>, an ordered alternative for dictionaries.</li>
+    </ul>
+  </section>
+
+  <section id="links" section-title="Helpful Links and Resources">
+    <h2>Helpful Links and Resources</h2>
+    <ul>
+      <li><a href="https://opendatastructures.org/ods-java/5_Hash_Tables.html" target="_blank">Open Data Structures: Hash Tables</a> Covers hash tables, chaining, open addressing, and load factor.</li>
+      <li><a href="https://opendsa.cs.vt.edu/ODSA/Books/Everything/html/Hashing.html" target="_blank">OpenDSA: Hashing</a> Explains hashing and collision handling with visual teaching examples.</li>
+      <li><a href="https://docs.python.org/3/tutorial/datastructures.html#dictionaries" target="_blank">Python tutorial: dictionaries</a> Shows a language-level map structure students may already use.</li>
+      <li><a href="https://docs.oracle.com/javase/8/docs/api/java/util/Map.html" target="_blank">Java <code>Map</code> documentation</a> Describes the standard Java map interface.</li>
+    </ul>
+  </section>
+
+  <section id="reading-questions" section-title="Reading Comprehension Questions">
+    <h2>Reading Comprehension Questions</h2>
+    <ol>
+      <li><strong>Set vs. Map:</strong> What is the main difference between a set and a map?</li>
+      <li><strong>Hashing:</strong> What does a hash function do in a hash table?</li>
+      <li><strong>Collision:</strong> Why are collisions unavoidable in hash tables?</li>
+      <li><strong>Load Factor:</strong> Why does a hash table resize?</li>
+      <li><strong>Ordering:</strong> Why might a balanced search tree or skip list be better than a hash table?</li>
+      <li><strong>Keys:</strong> Why can mutating an object used as a key cause lookup problems?</li>
+    </ol>
+    <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
+    <div id="answers" class="answer" hidden>
+      <ol>
+        <li><strong>Answer:</strong> A set stores keys only; a map stores keys with associated values.</li>
+        <li><strong>Answer:</strong> It converts a key into a number that the table uses to choose a bucket or slot.</li>
+        <li><strong>Answer:</strong> There are usually many more possible keys than table locations, so different keys can map to the same location.</li>
+        <li><strong>Answer:</strong> Resizing lowers the load factor and reduces collision cost.</li>
+        <li><strong>Answer:</strong> Ordered structures are better when the program needs sorted traversal, range queries, or predecessor/successor operations.</li>
+        <li><strong>Answer:</strong> If the key's hash or equality result changes, the table may search in the wrong bucket or fail to recognize the stored key.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="activities" section-title="In-Class Activities">
+    <h2>In-Class Activities</h2>
+    <ol>
+      <li><strong>Classify the ADT:</strong> For several programming tasks, decide whether a set, map, or neither is the best match.</li>
+      <li><strong>Frequency Table:</strong> Build a word-count map by hand for a short sentence.</li>
+      <li><strong>Collision Trace:</strong> Given a table size and hash values, identify which keys collide.</li>
+      <li><strong>Implementation Choice:</strong> Choose between a hash table, sorted array, balanced tree, and skip list for several workloads.</li>
+      <li><strong>Mutable Key Discussion:</strong> Explain what can go wrong if a key object changes after insertion into a hash table.</li>
+    </ol>
+  </section>
+
+  <section id="problems" section-title="Homework Problems">
+    <h2>Homework Problems</h2>
+    <ol>
+      <li><strong>Duplicate Detection:</strong> Use a set to report whether an array contains any duplicate value.</li>
+      <li><strong>Word Frequencies:</strong> Use a map to count words in a text file and return the most common word.</li>
+      <li><strong>Two Sum:</strong> Use a set or map to determine whether any two array values add to a target.</li>
+      <li><strong>Implementation Comparison:</strong> Compare hash tables and balanced search trees for exact lookup, sorted traversal, and range queries.</li>
+      <li><strong>Collision Policies:</strong> Preview separate chaining and open addressing by describing where colliding keys are stored in each approach.</li>
+      <li><strong>Load Factor Experiment:</strong> Simulate inserting keys into tables of different sizes and record how often collisions occur.</li>
+    </ol>
+  </section>
+</body>
+</html>

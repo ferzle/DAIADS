@@ -18,6 +18,7 @@ window.addEventListener('blur', () => aKeyDown = false);
 // ─── Ordering Constants ───────────────────────────────────────────────────────
 const TOP_LEVEL_ORDER = [
   'Home',
+  'Foundations',
   'Problems',
   'Data Structures',
   'Techniques',
@@ -55,6 +56,103 @@ const DECREASE_AND_CONQUER_ORDER = [
   'Variable-Size-Decrease',
   'Summary'
 ];
+const FOUNDATIONS_ORDERS = {
+  'Foundations/': [
+    'Introduction',
+    'Recursion',
+    'Measuring Efficiency',
+    'Recurrences',
+    'Amortized Analysis'
+  ],
+  'Foundations/Introduction/': [
+    'What Is an Algorithm',
+    'What Is a Data Structure',
+    'Abstract Data Types and Implementations'
+  ],
+  'Foundations/Recursion/': [
+    'Recursion and the Call Stack',
+    'Tracing Recursive Code',
+    'Designing Recursive Solutions'
+  ],
+  'Foundations/Measuring Efficiency/': [
+    'Cost Models and Input Size',
+    'Asymptotic Notation',
+    'Common Growth Rates',
+    'Counting Work in Iterative Algorithms'
+  ],
+  'Foundations/Recurrences/': [
+    'From Recursive Code to Recurrences',
+    'Iteration Method',
+    'Substitution Method',
+    'Recursion Trees',
+    'Master Theorem',
+    'Recursive Algorithm Case Studies'
+  ]
+};
+const DATA_STRUCTURES_ORDERS = {
+  'Data Structures/': [
+    'Data Structure List',
+    'Linear Structures',
+    'Trees',
+    'Priority Queues and Heaps',
+    'Maps, Sets, and Hashing',
+    'Graph Structures',
+    'Disjoint Sets',
+    'String Structures',
+    'Advanced Structures'
+  ],
+  'Data Structures/Linear Structures/': [
+    'Arrays',
+    'Dynamic Arrays and Array-Based Lists',
+    'Linked Lists',
+    'Stacks',
+    'Queues',
+    'Deques'
+  ],
+  'Data Structures/Trees/': [
+    'Tree Terminology',
+    'Binary Trees',
+    'Tree Traversals',
+    'Binary Search Trees',
+    'AVL Trees',
+    'Red-Black Trees',
+    'B-Trees'
+  ],
+  'Data Structures/Priority Queues and Heaps/': [
+    'Priority Queue ADT',
+    'Binary Heaps',
+    'Heap Operations'
+  ],
+  'Data Structures/Maps, Sets, and Hashing/': [
+    'Introduction',
+    'Set ADT',
+    'Map and Dictionary ADT',
+    'Hash Tables',
+    'Separate Chaining',
+    'Open Addressing',
+    'Skip Lists'
+  ],
+  'Data Structures/Graph Structures/': [
+    'Graph ADT',
+    'Edge Lists',
+    'Adjacency Lists',
+    'Adjacency Matrices'
+  ],
+  'Data Structures/Disjoint Sets/': [
+    'Union-Find'
+  ],
+  'Data Structures/String Structures/': [
+    'Tries',
+    'Suffix Arrays',
+    'Suffix Trees'
+  ],
+  'Data Structures/Advanced Structures/': [
+    'Fenwick Trees',
+    'Segment Trees',
+    'Sparse Tables',
+    'k-d Trees'
+  ]
+};
 
 // For "Demos", we just mirror the same order as the algorithm names:
 const DEMOS_ORDER = [...ALGORITHMS_ORDER];
@@ -749,6 +847,8 @@ const buildMenu = (chapters) => {
     if (pathPrefix === 'Problems/') return PROBLEMS_ORDER;
     if (pathPrefix === 'Algorithms/') return ALGORITHMS_ORDER;
     if (pathPrefix === 'Demos/') return DEMOS_ORDER;
+    if (FOUNDATIONS_ORDERS[pathPrefix]) return FOUNDATIONS_ORDERS[pathPrefix];
+    if (DATA_STRUCTURES_ORDERS[pathPrefix]) return DATA_STRUCTURES_ORDERS[pathPrefix];
     return [];
   })();
     sortEntries(items, orderList).forEach((item) => {

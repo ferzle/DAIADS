@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Skip Lists</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <script src="../../../scripts/chapterScripts.js"></script>
+  <link rel="stylesheet" href="../../../css/style.css">
+  <link rel="stylesheet" href="../../../css/chapter.css">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-DQ5LVZVFDC');
+  </script>
+</head>
+<body>
+  <h1>Skip Lists</h1>
+
+  <section id="overview" section-title="Overview">
+    <h2>Overview</h2>
+    <p>
+      A <strong>skip list</strong> is an ordered data structure for implementing maps and sets. It keeps keys in
+      sorted order like a binary search tree, but it uses layers of linked lists instead of tree rotations.
+    </p>
+    <p>
+      The bottom layer contains all keys in sorted order. Higher layers contain selected keys that act like express
+      lanes. Searching moves right while the next key is not too large, then drops down a level when moving right
+      would overshoot the target.
+    </p>
+    <p>
+      Skip lists are randomized. When a key is inserted, coin flips or random choices decide how many levels that key
+      appears in. With a good promotion rule, search, insertion, and deletion take expected \(O(\log n)\) time, while
+      the structure uses expected \(O(n)\) space.
+    </p>
+  </section>
+
+  <section id="ordered-dictionary" section-title="Ordered Dictionary Problem">
+    <h2>Ordered Dictionary Problem</h2>
+    <p>
+      A hash table is excellent for exact-key lookup, but it usually does not keep keys in sorted order. A skip list
+      solves the ordered dictionary problem: store keys so that lookup, insertion, deletion, and sorted traversal are
+      all efficient.
+    </p>
+    <p>
+      A skip list can support set operations such as <code>contains(key)</code>, <code>add(key)</code>, and
+      <code>remove(key)</code>. It can also support map operations such as <code>get(key)</code> and
+      <code>put(key, value)</code> by storing a value with each bottom-level key.
+    </p>
+    <p>
+      The structure is especially useful as a comparison point: it gives tree-like expected logarithmic performance
+      without maintaining heights, colors, or rotations.
+    </p>
+  </section>
+
+  <section id="layered-model" section-title="Layered Linked-List Model">
+    <h2>Layered Linked-List Model</h2>
+    <p>
+      A skip list can be drawn as several linked lists stacked on top of each other. The bottom list contains every
+      key. Each higher list contains a subset of the keys from the level below it.
+    </p>
+    <pre><code>Level 3:  -inf ----------------------------- +inf
+Level 2:  -inf -------- 17 ----------------- +inf
+Level 1:  -inf ---- 9 -- 17 ------ 31 ------ +inf
+Level 0:  -inf -- 4 -- 9 -- 17 -- 22 -- 31 -- 40 -- +inf</code></pre>
+    <p>
+      The <code>-inf</code> and <code>+inf</code> entries are sentinels. They are not real keys from the set; they
+      simplify the edge cases at the beginning and end of each level.
+    </p>
+    <p>
+      A key that appears in multiple levels forms a vertical tower. In the diagram, key <code>17</code> appears on
+      levels <code>0</code>, <code>1</code>, and <code>2</code>. Key <code>4</code> appears only at the bottom level.
+    </p>
+  </section>
+
+  <section id="search" section-title="Search">
+    <h2>Search</h2>
+    <p>
+      Search starts at the top-left sentinel. At each level, move right while the next key is less than or equal to
+      the target. If moving right would pass the target, move down one level. When the search reaches the bottom
+      level, the next key determines whether the target is present.
+    </p>
+    <pre><code>search(key):
+    current = top-left sentinel
+    while current has a lower level:
+        while current.next.key <= key:
+            current = current.next
+        current = current.down
+    while current.next.key <= key:
+        current = current.next
+    return current.key == key</code></pre>
+    <p>
+      Some implementations use nodes with arrays of forward pointers instead of explicit <code>down</code> pointers.
+      The movement idea is the same: scan right at the current level, then continue at the next lower level.
+    </p>
+  </section>
+
+  <section id="worked-example" section-title="Worked Example">
+    <h2>Worked Example</h2>
+    <p>
+      Search for key <code>22</code> in this skip list:
+    </p>
+    <pre><code>Level 2:  -inf -------- 17 ----------------- +inf
+Level 1:  -inf ---- 9 -- 17 ------ 31 ------ +inf
+Level 0:  -inf -- 4 -- 9 -- 17 -- 22 -- 31 -- 40 -- +inf</code></pre>
+    <ol>
+      <li>Start at <code>-inf</code> on level <code>2</code>.</li>
+      <li>Move right to <code>17</code>, because <code>17 <= 22</code>.</li>
+      <li>The next key is <code>+inf</code>, so drop to level <code>1</code>.</li>
+      <li>The next key is <code>31</code>, which is too large, so drop to level <code>0</code>.</li>
+      <li>Move right to <code>22</code>. The target is found.</li>
+    </ol>
+    <p>
+      The search skips over keys <code>4</code> and <code>9</code> at the bottom level because the higher-level link
+      reached <code>17</code> first. This is the purpose of the express lanes.
+    </p>
+  </section>
+
+  <section id="insertion" section-title="Insertion">
+    <h2>Insertion</h2>
+    <p>
+      Insertion has two phases. First, search for the position where the key belongs and remember the last node
+      visited at each level. Second, create the new key's tower and splice it into the relevant levels.
+    </p>
+    <pre><code>insert(key, value):
+    update = array of predecessors, one per level
+    current = top-left sentinel
+
+    for level from top down to 0:
+        while current.next.key < key:
+            current = current.next
+        update[level] = current
+        if level > 0:
+            current = current.down
+
+    if update[0].next.key == key:
+        update the existing value
+        return
+
+    height = randomHeight()
+    for level from 0 to height:
+        splice a new node after update[level]</code></pre>
+    <p>
+      The random height is usually chosen by repeated coin flips. Start with height <code>0</code>. Each time the
+      coin comes up heads, promote the key one more level. With promotion probability \(p=1/2\), about half the keys
+      appear on level <code>1</code>, about one quarter appear on level <code>2</code>, and so on.
+    </p>
+    <p>
+      If a new key's tower is taller than the current list, the implementation creates new top-level sentinels before
+      linking the new nodes.
+    </p>
+  </section>
+
+  <section id="deletion" section-title="Deletion">
+    <h2>Deletion</h2>
+    <p>
+      To delete a key, search for its predecessors on every level. Whenever the next node at that level contains the
+      key, unlink it.
+    </p>
+    <pre><code>delete(key):
+    current = top-left sentinel
+    found = false
+
+    for level from top down to 0:
+        while current.next.key < key:
+            current = current.next
+        if current.next.key == key:
+            current.next = current.next.next
+            found = true
+        if level > 0:
+            current = current.down
+
+    remove empty top levels if needed
+    return found</code></pre>
+    <p>
+      Deletion does not need rotations or rebalancing. It only removes the nodes in the deleted key's tower. Empty
+      top levels can be removed so future searches do not start above any useful links.
+    </p>
+  </section>
+
+  <section id="why-logarithmic" section-title="Why Search Is Fast">
+    <h2>Why Search Is Fast</h2>
+    <p>
+      Skip lists are fast because each higher level is expected to contain a constant fraction of the level below it.
+      With promotion probability \(p=1/2\), the expected number of keys on each level roughly halves:
+    </p>
+    <table class="example-table">
+      <thead>
+        <tr>
+          <th>Level</th>
+          <th>Expected Number of Keys</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>0</code></td>
+          <td>\(n\)</td>
+        </tr>
+        <tr>
+          <td><code>1</code></td>
+          <td>\(n/2\)</td>
+        </tr>
+        <tr>
+          <td><code>2</code></td>
+          <td>\(n/4\)</td>
+        </tr>
+        <tr>
+          <td><code>3</code></td>
+          <td>\(n/8\)</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      After about \(\log_2 n\) levels, the expected number of keys on the top level is constant. A search does a small
+      expected amount of horizontal movement per level and then moves down. This gives expected \(O(\log n)\) search
+      time.
+    </p>
+    <p>
+      The guarantee is expected rather than absolute. Random choices can produce an unlucky shape, but the probability
+      of a badly unbalanced skip list is small when the random choices are independent.
+    </p>
+  </section>
+
+  <section id="complexity" section-title="Time and Space Complexity">
+    <h2>Time and Space Complexity</h2>
+    <table class="example-table">
+      <thead>
+        <tr>
+          <th>Operation</th>
+          <th>Expected Cost</th>
+          <th>Worst Case</th>
+          <th>Reason</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Search</td>
+          <td>\(O(\log n)\)</td>
+          <td>\(O(n)\)</td>
+          <td>Expected logarithmic height, but an unlucky structure can have poor shortcuts.</td>
+        </tr>
+        <tr>
+          <td>Insert</td>
+          <td>\(O(\log n)\)</td>
+          <td>\(O(n)\)</td>
+          <td>Search for predecessors, then splice a random-height tower.</td>
+        </tr>
+        <tr>
+          <td>Delete</td>
+          <td>\(O(\log n)\)</td>
+          <td>\(O(n)\)</td>
+          <td>Search for predecessors and unlink the tower.</td>
+        </tr>
+        <tr>
+          <td>Sorted traversal</td>
+          <td>\(O(n)\)</td>
+          <td>\(O(n)\)</td>
+          <td>Walk the bottom level from left to right.</td>
+        </tr>
+        <tr>
+          <td>Space</td>
+          <td>\(O(n)\)</td>
+          <td>\(O(nL)\) with maximum level \(L\)</td>
+          <td>With geometric promotion, the expected total number of node levels is linear.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      Real implementations usually impose a maximum level, often based on the expected maximum number of entries, to
+      avoid unbounded tower heights.
+    </p>
+  </section>
+
+  <section id="implementation-notes" section-title="Implementation Notes">
+    <h2>Implementation Notes</h2>
+    <p>
+      A skip-list node usually stores a key, an optional value, and forward references. Two common representations are:
+    </p>
+    <ul>
+      <li><strong>Stacked nodes:</strong> Each level has a node, with right and down pointers.</li>
+      <li><strong>Forward-pointer array:</strong> One node stores an array of next pointers, one for each level in its tower.</li>
+    </ul>
+    <p>
+      The forward-pointer array representation is common because one logical entry has one object containing all of
+      its level links.
+    </p>
+    <pre><code>Node:
+    key
+    value
+    forward[0..height]</code></pre>
+    <p>
+      Duplicate-key behavior depends on whether the skip list is implementing a set or a map. A set should ignore or
+      reject a duplicate key. A map should update the existing key's value.
+    </p>
+  </section>
+
+  <section id="comparison" section-title="Comparison with Other Structures">
+    <h2>Comparison with Other Structures</h2>
+    <table class="example-table">
+      <thead>
+        <tr>
+          <th>Structure</th>
+          <th>Lookup</th>
+          <th>Ordering</th>
+          <th>Main Tradeoff</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Hash table</td>
+          <td>Expected \(O(1)\)</td>
+          <td>Usually not sorted</td>
+          <td>Fast exact lookup, but poor fit for sorted traversal and range queries.</td>
+        </tr>
+        <tr>
+          <td>Balanced search tree</td>
+          <td>Worst-case \(O(\log n)\)</td>
+          <td>Sorted</td>
+          <td>Strong worst-case bounds, but balancing rules and rotations add implementation complexity.</td>
+        </tr>
+        <tr>
+          <td>Skip list</td>
+          <td>Expected \(O(\log n)\)</td>
+          <td>Sorted</td>
+          <td>Simpler randomized balancing, but expected rather than worst-case guarantees.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      If the program only needs exact lookup, a hash table is often the fastest default. If the program needs keys in
+      order, a skip list or balanced tree is a better match.
+    </p>
+  </section>
+
+  <section id="pitfalls" section-title="Common Pitfalls">
+    <h2>Common Pitfalls</h2>
+    <ul>
+      <li><strong>Forgetting the bottom level:</strong> Every key must appear at level <code>0</code>.</li>
+      <li><strong>Using inconsistent comparisons:</strong> The ordering rule must treat keys consistently across all levels.</li>
+      <li><strong>Not remembering predecessors:</strong> Insertion and deletion need the predecessor at each level that will be changed.</li>
+      <li><strong>Promoting deterministically by accident:</strong> A predictable bad promotion rule can destroy the expected balance.</li>
+      <li><strong>Ignoring maximum level:</strong> Practical implementations usually cap the height.</li>
+      <li><strong>Expecting hash-table behavior:</strong> Skip lists keep sorted order, but they do not give expected constant-time exact lookup.</li>
+    </ul>
+  </section>
+
+  <section id="summary" section-title="Summary">
+    <h2>Summary</h2>
+    <p>
+      A skip list is a randomized ordered structure built from layers of linked lists. Search moves right and down
+      through express lanes until it reaches the target position. Insertion chooses a random tower height and splices
+      the new key into each selected level. Deletion unlinks the key's tower. With independent random promotion, skip
+      lists support expected \(O(\log n)\) search, insertion, and deletion with expected \(O(n)\) space.
+    </p>
+  </section>
+
+  <section id="related-pages" section-title="Related Pages">
+    <h2>Related Pages</h2>
+    <ul>
+      <li><a href="?path=Data%20Structures%2FMaps%2C%20Sets%2C%20and%20Hashing%2FMap%20and%20Dictionary%20ADT">Map and Dictionary ADT</a>, for key-value behavior.</li>
+      <li><a href="?path=Data%20Structures%2FMaps%2C%20Sets%2C%20and%20Hashing%2FSet%20ADT">Set ADT</a>, for membership behavior.</li>
+      <li><a href="?path=Data%20Structures%2FMaps%2C%20Sets%2C%20and%20Hashing%2FHash%20Tables">Hash Tables</a>, for expected constant-time exact lookup.</li>
+      <li><a href="?path=Data%20Structures%2FTrees%2FBinary%20Search%20Trees">Binary Search Trees</a>, for the ordered-search-tree model.</li>
+      <li><a href="?path=Data%20Structures%2FTrees%2FAVL%20Trees">AVL Trees</a> and <a href="?path=Data%20Structures%2FTrees%2FRed-Black%20Trees">Red-Black Trees</a>, for deterministic balanced-tree alternatives.</li>
+    </ul>
+  </section>
+
+  <section id="reading-questions" section-title="Reading Comprehension Questions">
+    <h2>Reading Comprehension Questions</h2>
+    <ol>
+      <li><strong>Definition:</strong> What is stored on the bottom level of a skip list?</li>
+      <li><strong>Search:</strong> What two directions does skip-list search move?</li>
+      <li><strong>Promotion:</strong> How does random promotion help keep the structure efficient?</li>
+      <li><strong>Insertion:</strong> Why does insertion remember predecessors at several levels?</li>
+      <li><strong>Comparison:</strong> Why might a skip list be a better choice than a hash table for sorted traversal?</li>
+      <li><strong>Guarantees:</strong> Are skip-list bounds expected or worst-case?</li>
+    </ol>
+    <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
+    <div id="answers" class="answer" hidden>
+      <ol>
+        <li><strong>Answer:</strong> The bottom level stores every key in sorted order.</li>
+        <li><strong>Answer:</strong> Search moves right along a level and down to the next lower level.</li>
+        <li><strong>Answer:</strong> It makes higher levels contain progressively fewer keys on average, creating useful shortcuts.</li>
+        <li><strong>Answer:</strong> The new tower must be spliced into each level where the key appears.</li>
+        <li><strong>Answer:</strong> A skip list keeps keys sorted, while a typical hash table organizes keys by hash value.</li>
+        <li><strong>Answer:</strong> The usual skip-list bounds are expected bounds based on random promotion.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="activities" section-title="In-Class Activities">
+    <h2>In-Class Activities</h2>
+    <ol>
+      <li><strong>Trace search:</strong> Given a three-level skip list, trace the right and down moves used to search for three target keys: one present, one missing between two keys, and one larger than every key.</li>
+      <li><strong>Build towers:</strong> Flip coins for the keys <code>5</code>, <code>8</code>, <code>12</code>, <code>19</code>, and <code>25</code>. Draw the resulting towers and bottom-level order.</li>
+      <li><strong>Insertion path:</strong> For a given skip list, mark the predecessor nodes that would be stored in the update array before inserting key <code>18</code>.</li>
+      <li><strong>Structure choice:</strong> Compare a hash table, balanced BST, and skip list for a word dictionary that must support exact lookup and alphabetical printing.</li>
+    </ol>
+  </section>
+
+  <section id="problems" section-title="Homework Problems">
+    <h2>Homework Problems</h2>
+    <ol>
+      <li><strong>Search pseudocode:</strong> Write pseudocode for <code>contains(key)</code> in a skip-list set using forward-pointer arrays.</li>
+      <li><strong>Insert trace:</strong> Insert a new key with height <code>2</code> into a drawn skip list. Show all pointer changes.</li>
+      <li><strong>Delete trace:</strong> Delete a key that appears on three levels. Show which nodes are unlinked.</li>
+      <li><strong>Expected levels:</strong> If \(p=1/2\) and the bottom level has \(64\) keys, estimate the expected number of keys on levels <code>1</code>, <code>2</code>, and <code>3</code>.</li>
+      <li><strong>Comparison essay:</strong> Compare skip lists and AVL trees in terms of implementation complexity, ordering, expected or worst-case bounds, and update behavior.</li>
+      <li><strong>Design tests:</strong> List tests for a skip-list map, including duplicate-key update, deletion of a missing key, deletion of a tall tower, and sorted traversal.</li>
+    </ol>
+  </section>
+</body>
+</html>

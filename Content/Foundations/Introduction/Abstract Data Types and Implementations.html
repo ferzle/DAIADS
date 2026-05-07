@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Abstract Data Types and Implementations</title>
+  <script src="../../../scripts/chapterScripts.js"></script>
+  <link rel="stylesheet" href="../../../css/style.css">
+  <link rel="stylesheet" href="../../../css/chapter.css">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-DQ5LVZVFDC');
+  </script>
+</head>
+<body>
+  <h1>Abstract Data Types and Implementations</h1>
+
+  <section id="overview" section-title="Overview">
+    <h2>Overview</h2>
+    <p>
+      An <strong>abstract data type</strong>, or <strong>ADT</strong>, describes what a collection
+      of data is allowed to do without saying exactly how it is represented in memory. An
+      <strong>implementation</strong> chooses the representation and writes the code that makes the
+      operations work.
+    </p>
+    <p>
+      This separation is one of the central ideas in data structures. A stack can be described by the
+      operations <code>push</code>, <code>pop</code>, and <code>peek</code>. It can be implemented
+      with an array, a dynamic array, or linked nodes. Client code should be able to use the stack
+      behavior without depending on which representation was chosen.
+    </p>
+  </section>
+
+  <section id="adt-contract" section-title="The ADT Contract">
+    <h2>The ADT Contract</h2>
+    <p>
+      An ADT is a contract between the code that uses a structure and the code that implements it.
+      The contract usually includes the values the ADT can store, the operations it provides, what
+      each operation returns, and what happens in boundary cases.
+    </p>
+    <table class="example-table left-align">
+      <thead>
+        <tr>
+          <th>Part of the contract</th>
+          <th>Question it answers</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Stored values</td>
+          <td>What kind of items can be placed in the structure?</td>
+        </tr>
+        <tr>
+          <td>Operations</td>
+          <td>What actions are allowed?</td>
+        </tr>
+        <tr>
+          <td>Preconditions</td>
+          <td>What must be true before an operation is called?</td>
+        </tr>
+        <tr>
+          <td>Postconditions</td>
+          <td>What must be true after the operation finishes?</td>
+        </tr>
+        <tr>
+          <td>Error behavior</td>
+          <td>What happens for cases such as removing from an empty structure?</td>
+        </tr>
+        <tr>
+          <td>Performance expectations</td>
+          <td>Which operations should be fast enough for the intended use?</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="stack-example" section-title="Example: Stack ADT">
+    <h2>Example: Stack ADT</h2>
+    <p>
+      A stack is a last-in, first-out collection. The most recently pushed item is the first item
+      removed by <code>pop</code>. The ADT description focuses on that behavior.
+    </p>
+    <table class="example-table left-align">
+      <thead>
+        <tr>
+          <th>Operation</th>
+          <th>Behavior</th>
+          <th>Boundary case</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>push(x)</code></td>
+          <td>Add <code>x</code> so it becomes the top item.</td>
+          <td>May fail or resize if capacity is fixed.</td>
+        </tr>
+        <tr>
+          <td><code>pop()</code></td>
+          <td>Remove and return the current top item.</td>
+          <td>Must define behavior for an empty stack.</td>
+        </tr>
+        <tr>
+          <td><code>peek()</code></td>
+          <td>Return the current top item without removing it.</td>
+          <td>Must define behavior for an empty stack.</td>
+        </tr>
+        <tr>
+          <td><code>isEmpty()</code></td>
+          <td>Return whether the stack currently has no items.</td>
+          <td>No special case needed.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      None of these operation descriptions say whether the stack uses an array or linked nodes.
+      That is intentional. The ADT says what clients are allowed to rely on; the implementation
+      decides how to make it happen.
+    </p>
+  </section>
+
+  <section id="implementing-an-adt" section-title="Implementing an ADT">
+    <h2>Implementing an ADT</h2>
+    <p>
+      To implement an ADT, you choose a representation and write algorithms for the operations. The
+      implementation must preserve a representation invariant, which is the rule that makes the
+      internal state valid.
+    </p>
+    <p>
+      For an array-based stack, the representation might be:
+    </p>
+    <ul class="spaced">
+      <li>An array named <code>items</code> that stores the stack values.</li>
+      <li>An integer named <code>size</code> that records how many stack values are currently present.</li>
+      <li>An invariant saying that the stack contents occupy <code>items[0]</code> through <code>items[size - 1]</code>, and the top item is at <code>items[size - 1]</code>.</li>
+    </ul>
+    <p>
+      With that representation, <code>push</code> stores the new item at <code>items[size]</code>
+      and increments <code>size</code>. <code>pop</code> reads <code>items[size - 1]</code>,
+      decreases <code>size</code>, and returns the saved value. The code may also clear the unused
+      array slot or resize the array, depending on the language and design goals.
+    </p>
+  </section>
+
+  <section id="multiple-implementations" section-title="Multiple Implementations">
+    <h2>Multiple Implementations</h2>
+    <p>
+      One ADT can have multiple correct implementations. They provide the same visible behavior but
+      make different tradeoffs internally.
+    </p>
+    <table class="example-table left-align">
+      <thead>
+        <tr>
+          <th>Stack implementation</th>
+          <th>Internal representation</th>
+          <th>Tradeoff</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Fixed array</td>
+          <td>Values stored in contiguous array positions.</td>
+          <td>Simple and fast, but capacity is limited unless resizing is added.</td>
+        </tr>
+        <tr>
+          <td>Dynamic array</td>
+          <td>Array grows when it becomes full.</td>
+          <td>Usually fast, but occasional resizing copies many items.</td>
+        </tr>
+        <tr>
+          <td>Linked nodes</td>
+          <td>Each item is stored in a node that points to the next node.</td>
+          <td>No array resizing, but each item needs extra link storage.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      If client code uses only the ADT operations, the implementation can often be changed later
+      without rewriting the client. This is one reason programmers care about interfaces,
+      encapsulation, and information hiding.
+    </p>
+  </section>
+
+  <section id="abstraction-boundary" section-title="The Abstraction Boundary">
+    <h2>The Abstraction Boundary</h2>
+    <p>
+      The abstraction boundary is the line between what clients are allowed to know and what the
+      implementation is allowed to change. For a stack, clients should know that <code>pop</code>
+      removes the most recently pushed item. They should not need to know whether that item is stored
+      at the end of an array or in the first linked node.
+    </p>
+    <p>
+      This boundary protects both sides. Client code becomes easier to read because it uses meaningful
+      operations instead of manipulating raw storage. Implementation code becomes easier to improve
+      because internal details are not scattered throughout the program.
+    </p>
+    <div class="example-box">
+      <strong class="example-title">Important Distinction</strong>
+      <p>
+        An ADT is not the same thing as a class in a programming language. A class is one way to
+        implement an ADT. The ADT is the behavioral idea; the class is one concrete programming
+        construct that can express it.
+      </p>
+    </div>
+  </section>
+
+  <section id="where-cost-fits" section-title="Where Cost Fits">
+    <h2>Where Cost Fits</h2>
+    <p>
+      ADT descriptions sometimes include performance expectations, but those expectations are only
+      achieved by particular implementations. For example, a priority queue ADT might promise
+      <code>insert</code> and <code>removeMin</code>. An unsorted array implementation makes insertion
+      easy but removal requires a scan. A heap implementation makes both operations efficient enough
+      for many algorithms.
+    </p>
+    <p>
+      This is why data structure pages often discuss the ADT first, then implementation options, then
+      time and space complexity. The behavior tells us what must happen. The representation determines
+      how expensive it is.
+    </p>
+  </section>
+
+  <section id="reading-questions" section-title="Reading Comprehension Questions">
+    <h2>Reading Comprehension Questions</h2>
+    <ol>
+      <li><strong>Definition:</strong> What does an ADT describe?</li>
+      <li><strong>Implementation:</strong> What additional decisions are needed to implement an ADT?</li>
+      <li><strong>Stack behavior:</strong> After <code>push(A)</code>, <code>push(B)</code>, and <code>push(C)</code>, what should <code>pop()</code> return?</li>
+      <li><strong>Boundary:</strong> Why should client code avoid depending on a stack's internal array or linked-node representation?</li>
+    </ol>
+    <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
+    <div id="answers" class="answer" hidden>
+      <ol>
+        <li><strong>Answer:</strong> It describes the values and operations of a structure, including visible behavior, without committing to a memory representation.</li>
+        <li><strong>Answer:</strong> The implementer must choose a representation, maintain invariants, write operation algorithms, define error handling, and meet expected costs when possible.</li>
+        <li><strong>Answer:</strong> It should return <code>C</code>, because a stack removes the most recently pushed item first.</li>
+        <li><strong>Answer:</strong> Depending only on the ADT operations allows the implementation to change without breaking client code.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="activities" section-title="In-Class Activities">
+    <h2>In-Class Activities</h2>
+    <ol>
+      <li><strong>Specify an ADT:</strong> Write an ADT contract for a playlist. Include at least five operations and define one boundary case for each.</li>
+      <li><strong>Representation choices:</strong> Propose two implementations for a queue. For each one, describe the internal state and the invariant.</li>
+      <li><strong>Client versus implementer:</strong> Mark each statement as something a stack client should know or something only the implementer should know: "pop removes the top item," "the array doubles when full," "size is the number of stored items," "peek does not remove an item."</li>
+    </ol>
+  </section>
+
+  <section id="problems" section-title="Homework Problems">
+    <h2>Homework Problems</h2>
+    <ol>
+      <li><strong>Design an ADT:</strong> Define an ADT for a simple undo history in a text editor. Specify operations, preconditions, postconditions, and empty-history behavior.</li>
+      <li><strong>Compare implementations:</strong> Compare an array-based stack and a linked-node stack. Explain the cost of <code>push</code>, <code>pop</code>, memory use, and what happens when the structure grows.</li>
+      <li><strong>Find the boundary:</strong> Look at a class you have written before. Identify which parts are part of the public ADT contract and which parts are implementation details.</li>
+    </ol>
+  </section>
+</body>
+</html>

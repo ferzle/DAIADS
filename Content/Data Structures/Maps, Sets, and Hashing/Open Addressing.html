@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Open Addressing</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <script src="../../../scripts/chapterScripts.js"></script>
+  <link rel="stylesheet" href="../../../css/style.css">
+  <link rel="stylesheet" href="../../../css/chapter.css">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-DQ5LVZVFDC');
+  </script>
+</head>
+<body>
+  <h1>Open Addressing</h1>
+
+  <section id="overview" section-title="Overview">
+    <h2>Overview</h2>
+    <p>
+      <strong>Open addressing</strong> is a collision-resolution strategy for hash tables where every entry is stored
+      directly inside the table array. There are no separate bucket lists. If a key's first-choice slot is already
+      occupied, the table follows a <strong>probe sequence</strong> until it finds the key or a usable slot.
+    </p>
+    <p>
+      Open addressing is space efficient because it avoids per-bucket linked structures. The tradeoff is that lookup,
+      insertion, and deletion depend heavily on the probe rule and on keeping the load factor below <code>1</code>.
+    </p>
+    <p>
+      This page covers the three standard probe families: <strong>linear probing</strong>,
+      <strong>quadratic probing</strong>, and <strong>double hashing</strong>.
+    </p>
+  </section>
+
+  <section id="table-states" section-title="Table States">
+    <h2>Table States</h2>
+    <p>
+      In open addressing, each table slot has a state:
+    </p>
+    <ul>
+      <li><strong>Empty:</strong> The slot has never held an entry.</li>
+      <li><strong>Occupied:</strong> The slot currently stores an entry.</li>
+      <li><strong>Deleted:</strong> The slot used to store an entry but now holds a tombstone marker.</li>
+    </ul>
+    <p>
+      The deleted state is important. During lookup, a tombstone cannot stop the search, because the key being
+      searched for may have been placed farther along the same probe sequence. During insertion, a tombstone may be
+      reused as a slot for a new entry.
+    </p>
+  </section>
+
+  <section id="probe-sequences" section-title="Probe Sequences">
+    <h2>Probe Sequences</h2>
+    <p>
+      A probe sequence is the order of table slots checked for a key. The general form is
+    </p>
+    <pre><code>h_0(key), h_1(key), h_2(key), ...</code></pre>
+    <p>
+      The first probe is the key's home slot. Later probes are alternate positions. A correct open-addressed table
+      must use the same probe sequence for insertion, lookup, and deletion.
+    </p>
+    <pre><code>lookup(key):
+    for i from 0 to table.length - 1:
+        j = probeIndex(key, i)
+        if table[j] is empty:
+            report missing key
+        if table[j] is occupied by key:
+            return table[j]
+        otherwise continue probing</code></pre>
+    <p>
+      The search stops at an empty slot because an empty slot means the key would have been inserted earlier in that
+      same probe sequence if it were present. A tombstone does not stop the search.
+    </p>
+
+    <section id="linear-probing" section-title="Linear Probing">
+      <h3>Linear Probing</h3>
+      <p>
+        <strong>Linear probing</strong> checks consecutive slots after the home slot:
+      </p>
+      <pre><code>h_i(key) = (h(key) + i) mod m</code></pre>
+      <p>
+        If the home slot is full, try the next slot, then the next, wrapping around at the end of the array.
+      </p>
+      <h4>Example</h4>
+      <p>
+        With \(m=10\), if a key hashes to <code>6</code>, its linear-probing sequence is:
+      </p>
+      <pre><code>6, 7, 8, 9, 0, 1, 2, 3, 4, 5</code></pre>
+      <h4>Advantages</h4>
+      <ul>
+        <li>Very simple to implement.</li>
+        <li>Good cache locality because nearby slots are checked together.</li>
+        <li>Uses no extra hash function.</li>
+      </ul>
+      <h4>Tradeoff: Primary Clustering</h4>
+      <p>
+        Linear probing suffers from <strong>primary clustering</strong>. Once a run of occupied slots forms, any key
+        that hashes into that run must move to the end of it, making the run longer. Longer runs make future operations
+        slower and attract even more keys.
+      </p>
+    </section>
+
+    <section id="quadratic-probing" section-title="Quadratic Probing">
+      <h3>Quadratic Probing</h3>
+      <p>
+        <strong>Quadratic probing</strong> spreads probes using a quadratic function of the probe number. A common form
+        is:
+      </p>
+      <pre><code>h_i(key) = (h(key) + c1 * i + c2 * i * i) mod m</code></pre>
+      <p>
+        In a simplified version, the offsets are square numbers:
+      </p>
+      <pre><code>h_i(key) = (h(key) + i * i) mod m</code></pre>
+      <h4>Example</h4>
+      <p>
+        With \(m=11\) and home slot <code>3</code>, square offsets give this sequence:
+      </p>
+      <pre><code>3, 4, 7, 1, 8, 6, ...</code></pre>
+      <p>
+        The probes jump away from the home slot instead of checking one long consecutive run.
+      </p>
+      <h4>Advantages</h4>
+      <ul>
+        <li>Reduces the primary clustering problem of linear probing.</li>
+        <li>Still uses a predictable formula and one main hash value.</li>
+        <li>Can perform well when the table size and constants are chosen carefully.</li>
+      </ul>
+      <h4>Tradeoff: Secondary Clustering</h4>
+      <p>
+        Quadratic probing can still suffer from <strong>secondary clustering</strong>. If two keys have the same home
+        slot, they follow the same probe sequence. Also, not every choice of table size and constants guarantees that
+        the sequence can reach every slot, so implementations must choose parameters carefully and resize before the
+        table becomes too full.
+      </p>
+    </section>
+
+    <section id="double-hashing" section-title="Double Hashing">
+      <h3>Double Hashing</h3>
+      <p>
+        <strong>Double hashing</strong> uses a second hash function to choose the step size for the probe sequence:
+      </p>
+      <pre><code>h_i(key) = (h1(key) + i * h2(key)) mod m</code></pre>
+      <p>
+        The first hash function chooses the home slot. The second hash function chooses how far to move on each probe.
+        The step size must not be <code>0</code>, and it should be relatively prime to the table size so the probe
+        sequence can visit every slot.
+      </p>
+      <h4>Example</h4>
+      <p>
+        Let \(m=11\), \(h_1(k)=k \bmod 11\), and \(h_2(k)=1+(k \bmod 10)\). For key <code>25</code>:
+      </p>
+      <pre><code>h1(25) = 3
+h2(25) = 6
+probe sequence: 3, 9, 4, 10, 5, 0, 6, 1, 7, 2, 8</code></pre>
+      <h4>Advantages</h4>
+      <ul>
+        <li>Usually reduces clustering more than linear or simple quadratic probing.</li>
+        <li>Keys with the same home slot can still have different probe sequences.</li>
+        <li>Can approximate uniform probing when the hash functions are well chosen.</li>
+      </ul>
+      <h4>Tradeoffs</h4>
+      <ul>
+        <li>Requires computing a second hash value.</li>
+        <li>The second hash function must be designed so the step size works with the table size.</li>
+        <li>It is slightly more complex to explain and implement correctly.</li>
+      </ul>
+    </section>
+  </section>
+
+  <section id="worked-example" section-title="Worked Example">
+    <h2>Worked Example</h2>
+    <p>
+      Use a table of size \(m=7\), hash function \(h(k)=k \bmod 7\), and linear probing. Insert
+      <code>10</code>, <code>17</code>, <code>24</code>, and <code>8</code>.
+    </p>
+    <table class="example-table">
+      <thead>
+        <tr>
+          <th>Key</th>
+          <th>Home Slot</th>
+          <th>Probes</th>
+          <th>Final Slot</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>10</code></td>
+          <td><code>3</code></td>
+          <td><code>3</code> is empty</td>
+          <td><code>3</code></td>
+        </tr>
+        <tr>
+          <td><code>17</code></td>
+          <td><code>3</code></td>
+          <td><code>3</code> occupied, <code>4</code> empty</td>
+          <td><code>4</code></td>
+        </tr>
+        <tr>
+          <td><code>24</code></td>
+          <td><code>3</code></td>
+          <td><code>3</code> occupied, <code>4</code> occupied, <code>5</code> empty</td>
+          <td><code>5</code></td>
+        </tr>
+        <tr>
+          <td><code>8</code></td>
+          <td><code>1</code></td>
+          <td><code>1</code> is empty</td>
+          <td><code>1</code></td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      Searching for <code>24</code> repeats the same sequence: check <code>3</code>, then <code>4</code>, then
+      <code>5</code>. It cannot jump directly to <code>5</code> unless it remembers or recomputes the same probing
+      rule.
+    </p>
+  </section>
+
+  <section id="insertion-deletion" section-title="Insertion and Deletion Details">
+    <h2>Insertion and Deletion Details</h2>
+    <h3>Insertion</h3>
+    <p>
+      To insert, follow the probe sequence until finding either the key, an empty slot, or a reusable tombstone. If
+      the key is found, update the existing map value or leave the set unchanged. If the key is absent, store the new
+      entry in the first valid slot.
+    </p>
+    <pre><code>put(key, value):
+    firstDeleted = none
+    for i from 0 to table.length - 1:
+        j = probeIndex(key, i)
+        if table[j] is occupied by key:
+            table[j].value = value
+            return
+        if table[j] is deleted and firstDeleted is none:
+            firstDeleted = j
+        if table[j] is empty:
+            if firstDeleted exists:
+                table[firstDeleted] = (key, value)
+            else:
+                table[j] = (key, value)
+            size = size + 1
+            return
+    resize and try again</code></pre>
+
+    <h3>Deletion</h3>
+    <p>
+      Deletion should usually mark a slot as deleted instead of making it empty. If the slot were made empty, later
+      lookups might stop too soon and fail to find keys placed farther along the same probe sequence.
+    </p>
+    <p>
+      Too many tombstones slow down probing. Implementations may rebuild the table when tombstones accumulate, even
+      if the number of live entries is not too high.
+    </p>
+  </section>
+
+  <section id="load-factor" section-title="Load Factor">
+    <h2>Load Factor</h2>
+    <p>
+      In open addressing, every live entry must occupy a table slot, so the load factor must stay below <code>1</code>.
+      In practice, tables resize well before they are full. As the table fills, probe sequences become longer and
+      operations slow down sharply.
+    </p>
+    <p>
+      Linear probing is especially sensitive to high load factors because clusters grow. Quadratic probing and double
+      hashing also slow down as fewer empty slots remain.
+    </p>
+  </section>
+
+  <section id="complexity" section-title="Time and Space Complexity">
+    <h2>Time and Space Complexity</h2>
+    <table class="example-table">
+      <thead>
+        <tr>
+          <th>Operation</th>
+          <th>Expected Cost</th>
+          <th>Worst Case</th>
+          <th>Reason</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Lookup</td>
+          <td>\(O(1)\)</td>
+          <td>\(O(n)\)</td>
+          <td>Expected short probe sequence; worst case may scan many slots.</td>
+        </tr>
+        <tr>
+          <td>Put</td>
+          <td>\(O(1)\) amortized expected</td>
+          <td>\(O(n)\)</td>
+          <td>May probe many slots or trigger a resize.</td>
+        </tr>
+        <tr>
+          <td>Remove</td>
+          <td>\(O(1)\)</td>
+          <td>\(O(n)\)</td>
+          <td>Must find the key before placing a tombstone.</td>
+        </tr>
+        <tr>
+          <td>Space</td>
+          <td>\(O(m)\)</td>
+          <td>\(O(m)\)</td>
+          <td>Entries and slot states are stored in the table array.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      Open addressing often uses less extra memory than separate chaining because it avoids a linked node for every
+      entry. Its performance depends more sharply on empty slots remaining available.
+    </p>
+  </section>
+
+  <section id="comparison" section-title="Probe Strategy Comparison">
+    <h2>Probe Strategy Comparison</h2>
+    <table class="example-table">
+      <thead>
+        <tr>
+          <th>Strategy</th>
+          <th>Formula</th>
+          <th>Main Strength</th>
+          <th>Main Risk</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Linear probing</td>
+          <td>\((h(k)+i) \bmod m\)</td>
+          <td>Simple and cache-friendly</td>
+          <td>Primary clustering</td>
+        </tr>
+        <tr>
+          <td>Quadratic probing</td>
+          <td>\((h(k)+c_1i+c_2i^2) \bmod m\)</td>
+          <td>Reduces primary clustering</td>
+          <td>Secondary clustering and parameter sensitivity</td>
+        </tr>
+        <tr>
+          <td>Double hashing</td>
+          <td>\((h_1(k)+i h_2(k)) \bmod m\)</td>
+          <td>Better-separated probe sequences</td>
+          <td>Needs a correct second hash and step size</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="pitfalls" section-title="Common Pitfalls">
+    <h2>Common Pitfalls</h2>
+    <ul>
+      <li><strong>Clearing deleted slots:</strong> Replacing a deleted entry with an empty slot can break future searches.</li>
+      <li><strong>Letting the table get full:</strong> Open addressing needs empty slots to terminate unsuccessful searches and support insertion.</li>
+      <li><strong>Using a bad step size in double hashing:</strong> If the step does not work with the table size, the probe sequence may miss many slots.</li>
+      <li><strong>Forgetting to reuse tombstones:</strong> Tombstones should be available for future insertion, or the table will appear fuller than necessary.</li>
+      <li><strong>Ignoring clustering:</strong> Long probe runs can make operations much slower than expected.</li>
+      <li><strong>Changing the probe rule:</strong> Lookup, insertion, and deletion must use the same sequence for a key.</li>
+    </ul>
+  </section>
+
+  <section id="summary" section-title="Summary">
+    <h2>Summary</h2>
+    <p>
+      Open addressing stores all entries directly in the table array and resolves collisions by probing alternate
+      slots. Linear probing checks consecutive slots and is simple but can form primary clusters. Quadratic probing
+      jumps by quadratic offsets, reducing primary clustering but requiring careful parameters. Double hashing uses a
+      second hash function for the step size and usually reduces clustering further. All open-addressed tables need a
+      controlled load factor, consistent probe sequences, and careful tombstone handling for deletion.
+    </p>
+  </section>
+
+  <section id="related-pages" section-title="Related Pages">
+    <h2>Related Pages</h2>
+    <ul>
+      <li><a href="?path=Data%20Structures%2FMaps%2C%20Sets%2C%20and%20Hashing%2FHash%20Tables">Hash Tables</a>, for the general hash-table model.</li>
+      <li><a href="?path=Data%20Structures%2FMaps%2C%20Sets%2C%20and%20Hashing%2FSeparate%20Chaining">Separate Chaining</a>, for bucket-based collision handling.</li>
+      <li><a href="?path=Data%20Structures%2FMaps%2C%20Sets%2C%20and%20Hashing%2FMap%20and%20Dictionary%20ADT">Map and Dictionary ADT</a>, for key-value behavior.</li>
+      <li><a href="?path=Data%20Structures%2FMaps%2C%20Sets%2C%20and%20Hashing%2FSet%20ADT">Set ADT</a>, for membership behavior.</li>
+    </ul>
+  </section>
+
+  <section id="reading-questions" section-title="Reading Comprehension Questions">
+    <h2>Reading Comprehension Questions</h2>
+    <ol>
+      <li><strong>Definition:</strong> Where are entries stored in an open-addressed hash table?</li>
+      <li><strong>Probing:</strong> Why must lookup use the same probe sequence as insertion?</li>
+      <li><strong>Linear probing:</strong> What is primary clustering?</li>
+      <li><strong>Quadratic probing:</strong> What problem does it reduce, and what clustering problem can remain?</li>
+      <li><strong>Double hashing:</strong> Why must the second hash function avoid a zero step size?</li>
+      <li><strong>Deletion:</strong> Why are tombstones needed?</li>
+    </ol>
+    <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
+    <div id="answers" class="answer" hidden>
+      <ol>
+        <li><strong>Answer:</strong> Entries are stored directly in the table array.</li>
+        <li><strong>Answer:</strong> The key may have been placed somewhere later in that sequence after earlier collisions.</li>
+        <li><strong>Answer:</strong> It is the growth of long consecutive occupied runs that attract more colliding keys and slow down probing.</li>
+        <li><strong>Answer:</strong> It reduces primary clustering, but keys with the same home slot still follow the same probe sequence, causing secondary clustering.</li>
+        <li><strong>Answer:</strong> A zero step would probe the same slot repeatedly and never search the rest of the table.</li>
+        <li><strong>Answer:</strong> A tombstone lets lookup continue past a deleted slot so it can still find keys placed farther along the probe sequence.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="activities" section-title="In-Class Activities">
+    <h2>In-Class Activities</h2>
+    <ol>
+      <li><strong>Linear trace:</strong> Insert <code>19</code>, <code>28</code>, <code>37</code>, and <code>10</code> into a table of size <code>9</code> using \(h(k)=k \bmod 9\) and linear probing. Record every probe.</li>
+      <li><strong>Quadratic trace:</strong> Use \(h_i(k)=(h(k)+i^2) \bmod 11\). Starting from home slot <code>4</code>, list the first six probe positions.</li>
+      <li><strong>Double-hashing trace:</strong> With \(m=11\), \(h_1(k)=k \bmod 11\), and \(h_2(k)=1+(k \bmod 10)\), list the probe sequence for key <code>38</code>.</li>
+      <li><strong>Tombstone discussion:</strong> Create a small table where clearing a deleted slot would make a later lookup fail. Explain the failure.</li>
+    </ol>
+  </section>
+
+  <section id="problems" section-title="Homework Problems">
+    <h2>Homework Problems</h2>
+    <ol>
+      <li><strong>Implement lookup:</strong> Write pseudocode for <code>contains</code> in an open-addressed hash set with tombstones.</li>
+      <li><strong>Implement put:</strong> Write pseudocode for a map <code>put</code> operation that updates existing keys and reuses tombstones for new keys.</li>
+      <li><strong>Compare strategies:</strong> Explain the difference between primary clustering and secondary clustering, and identify which probing strategies are affected by each.</li>
+      <li><strong>Step-size design:</strong> For double hashing, explain why a table size that is prime can make it easier to choose a useful step size.</li>
+      <li><strong>Load factor experiment:</strong> Simulate linear probing at load factors near <code>0.25</code>, <code>0.50</code>, and <code>0.80</code>. Record how probe counts change.</li>
+      <li><strong>Deletion test:</strong> Design a sequence of inserts, one deletion, and one lookup that verifies tombstones are handled correctly.</li>
+    </ol>
+  </section>
+</body>
+</html>

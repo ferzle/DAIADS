@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Heap Operations</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <script src="../../../scripts/chapterScripts.js"></script>
+  <link rel="stylesheet" href="../../../css/style.css">
+  <link rel="stylesheet" href="../../../css/chapter.css">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-DQ5LVZVFDC');
+  </script>
+</head>
+<body>
+  <h1>Heap Operations</h1>
+
+  <section id="overview" section-title="Overview">
+    <h2>Overview</h2>
+    <p>
+      This page explains the operations that maintain and use a binary max-heap:
+      <code>peekMax</code>, <code>heapify</code>, <code>buildMaxHeap</code>, <code>insert</code>, and
+      <code>extractMax</code>. Each operation preserves the heap's two invariants: the tree remains complete, and
+      every parent is at least as large as its children.
+    </p>
+    <p>
+      The page assumes the representation from
+      <a href="?path=Data%20Structures%2FPriority%20Queues%20and%20Heaps%2FBinary%20Heaps">Binary Heaps</a>:
+      a complete binary tree stored in an array, with a separate <code>heapSize</code> marking how much of the array
+      belongs to the active heap.
+    </p>
+    <p>
+      We focus on max-heaps to keep the comparisons consistent. A min-heap uses the same structure and the same
+      movement patterns, but reverses the comparisons.
+    </p>
+  </section>
+
+  <section id="representation-reminder" section-title="Representation Reminder">
+    <h2>Representation Reminder</h2>
+    <p>
+      With zero-based indexing, the relatives of the node at index \(i\) are:
+    </p>
+    <ul>
+      <li>left child: \(2i + 1\)</li>
+      <li>right child: \(2i + 2\)</li>
+      <li>parent: \(\lfloor(i - 1)/2\rfloor\)</li>
+    </ul>
+    <p>
+      The active heap contains indices <code>0</code> through <code>heapSize - 1</code>. Any index greater than or
+      equal to <code>heapSize</code> is outside the heap, even if it is still inside the physical array.
+    </p>
+    <div class="embeddedDemoContainer">
+      <iframe
+        class="embeddedDemo"
+        src="../../../Content/Demos/Data Structures/Heap/Heap Representation Demo.html"
+        allow="fullscreen"
+        name="heap-operations-representation-demo">
+      </iframe>
+    </div>
+  </section>
+
+  <section id="operation-summary" section-title="Operation Summary">
+    <h2>Operation Summary</h2>
+    <p>
+      The operations differ in where a possible heap-property violation begins and which direction the repair moves.
+    </p>
+    <table class="example-table">
+      <thead>
+        <tr>
+          <th>Operation</th>
+          <th>Main Idea</th>
+          <th>Worst-Case Time</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>peekMax</code></td>
+          <td>Read the root.</td>
+          <td>\(O(1)\)</td>
+        </tr>
+        <tr>
+          <td><code>heapify</code></td>
+          <td>Move a too-small parent downward.</td>
+          <td>\(O(\log n)\)</td>
+        </tr>
+        <tr>
+          <td><code>buildMaxHeap</code></td>
+          <td>Call <code>heapify</code> bottom-up on internal nodes.</td>
+          <td>\(O(n)\)</td>
+        </tr>
+        <tr>
+          <td><code>insert</code></td>
+          <td>Add at the next leaf and bubble upward.</td>
+          <td>\(O(\log n)\)</td>
+        </tr>
+        <tr>
+          <td><code>extractMax</code></td>
+          <td>Remove the root, replace it with the last item, then heapify downward.</td>
+          <td>\(O(\log n)\)</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="peek-max" section-title="peekMax">
+    <h2>peekMax(A, heapSize)</h2>
+    <p>
+      The maximum value in a max-heap is always at the root, which is stored at index <code>0</code>. Therefore
+      <code>peekMax</code> only needs to check that the heap is nonempty and return <code>A[0]</code>.
+    </p>
+    <pre><code>peekMax(A, heapSize):
+    if heapSize == 0:
+        report underflow
+    return A[0]</code></pre>
+    <p>
+      <strong>Time and space analysis:</strong> The operation does constant work and uses constant extra space, so it
+      runs in \(O(1)\) time and uses \(O(1)\) auxiliary space.
+    </p>
+  </section>
+
+  <section id="heapify" section-title="heapify">
+    <h2>heapify(A, i, heapSize)</h2>
+    <p>
+      <code>heapify</code> restores the max-heap property at index \(i\), assuming both child subtrees are already
+      valid heaps. The value at \(i\) may be too small. The operation compares it with its children, swaps it with the
+      larger child if needed, and repeats from the child position.
+    </p>
+    <ol>
+      <li>Compute the left and right child indices.</li>
+      <li>Find the largest value among the parent and the existing children.</li>
+      <li>If the parent is already largest, stop.</li>
+      <li>Otherwise, swap with the larger child and continue heapifying from that child.</li>
+    </ol>
+    <div class="embeddedDemoContainer">
+      <iframe class="embeddedDemo"
+              src="../../../Content/Demos/Data Structures/Heap/Heapify Demo.html"
+              allow="fullscreen"
+              name="heapify-demo">
+      </iframe>
+    </div>
+
+    <h3>Implementation in Java, C++, and Python</h3>
+    <p>
+      The Java and C++ snippets assume a helper named <code>swap</code>. The Python version swaps directly.
+    </p>
+    <div class="tab-group">
+      <div class="tabs" role="tablist">
+        <button id="tab-java-heapify-op" class="tablink active" data-lang="java-heapify-op" role="tab" aria-controls="java-heapify-op" aria-selected="true">Java</button>
+        <button id="tab-cpp-heapify-op" class="tablink" data-lang="cpp-heapify-op" role="tab" aria-controls="cpp-heapify-op" aria-selected="false">C++</button>
+        <button id="tab-python-heapify-op" class="tablink" data-lang="python-heapify-op" role="tab" aria-controls="python-heapify-op" aria-selected="false">Python</button>
+      </div>
+      <div id="java-heapify-op" class="code-container active" role="tabpanel" aria-labelledby="tab-java-heapify-op">
+        <pre><code class="language-java">public void heapify(int[] A, int i, int heapSize) {
+    int largest = i;
+    int left = 2 * i + 1;
+    int right = 2 * i + 2;
+
+    if (left < heapSize && A[left] > A[largest]) {
+        largest = left;
+    }
+    if (right < heapSize && A[right] > A[largest]) {
+        largest = right;
+    }
+
+    if (largest != i) {
+        swap(A, i, largest);
+        heapify(A, largest, heapSize);
+    }
+}</code></pre>
+      </div>
+      <div id="cpp-heapify-op" class="code-container" role="tabpanel" aria-labelledby="tab-cpp-heapify-op">
+        <pre><code class="language-cpp">void heapify(int A[], int i, int heapSize) {
+    int largest = i;
+    int left = 2 * i + 1;
+    int right = 2 * i + 2;
+
+    if (left < heapSize && A[left] > A[largest]) {
+        largest = left;
+    }
+    if (right < heapSize && A[right] > A[largest]) {
+        largest = right;
+    }
+
+    if (largest != i) {
+        swap(A, i, largest);
+        heapify(A, largest, heapSize);
+    }
+}</code></pre>
+      </div>
+      <div id="python-heapify-op" class="code-container" role="tabpanel" aria-labelledby="tab-python-heapify-op">
+        <pre><code class="language-python">def heapify(A, i, heapSize):
+    largest = i
+    left = 2 * i + 1
+    right = 2 * i + 2
+
+    if left < heapSize and A[left] > A[largest]:
+        largest = left
+    if right < heapSize and A[right] > A[largest]:
+        largest = right
+
+    if largest != i:
+        A[i], A[largest] = A[largest], A[i]
+        heapify(A, largest, heapSize)</code></pre>
+      </div>
+    </div>
+
+    <p>
+      <strong>Time and space analysis:</strong> Each recursive call moves one level down the heap. Since a complete
+      binary tree has height \(\lfloor \log n \rfloor\), <code>heapify</code> runs in \(O(\log n)\) time. The
+      recursive version uses \(O(\log n)\) call-stack space in the worst case; an iterative version uses \(O(1)\)
+      auxiliary space.
+    </p>
+  </section>
+
+  <section id="build-max-heap" section-title="buildMaxHeap">
+    <h2>buildMaxHeap(A)</h2>
+    <p>
+      <code>buildMaxHeap</code> converts an arbitrary array into a valid max-heap. It starts at the last internal
+      node, index \(\lfloor n/2 \rfloor - 1\), and calls <code>heapify</code> while moving backward to the root.
+      This order works because every child subtree is repaired before its parent is processed.
+    </p>
+    <div class="embeddedDemoContainer">
+      <iframe class="embeddedDemo"
+              src="../../../Content/Demos/Data Structures/Heap/Build Heap Demo.html"
+              allow="fullscreen"
+              name="build-max-heap-demo">
+      </iframe>
+    </div>
+
+    <h3>Implementation in Java, C++, and Python</h3>
+    <div class="tab-group" style="margin-top:10px;">
+      <div class="tabs" role="tablist">
+        <button id="tab-java-build-op" class="tablink active" data-lang="java-build-op" role="tab" aria-controls="java-build-op" aria-selected="true">Java</button>
+        <button id="tab-cpp-build-op" class="tablink" data-lang="cpp-build-op" role="tab" aria-controls="cpp-build-op" aria-selected="false">C++</button>
+        <button id="tab-python-build-op" class="tablink" data-lang="python-build-op" role="tab" aria-controls="python-build-op" aria-selected="false">Python</button>
+      </div>
+      <div id="java-build-op" class="code-container active" role="tabpanel" aria-labelledby="tab-java-build-op">
+        <pre><code class="language-java">public void buildMaxHeap(int[] A) {
+    int n = A.length;
+    for (int i = n / 2 - 1; i >= 0; i--) {
+        heapify(A, i, n);
+    }
+}</code></pre>
+      </div>
+      <div id="cpp-build-op" class="code-container" role="tabpanel" aria-labelledby="tab-cpp-build-op">
+        <pre><code class="language-cpp">void buildMaxHeap(int A[], int n) {
+    for (int i = n / 2 - 1; i >= 0; i--) {
+        heapify(A, i, n);
+    }
+}</code></pre>
+      </div>
+      <div id="python-build-op" class="code-container" role="tabpanel" aria-labelledby="tab-python-build-op">
+        <pre><code class="language-python">def build_max_heap(A):
+    n = len(A)
+    for i in range(n // 2 - 1, -1, -1):
+        heapify(A, i, n)</code></pre>
+      </div>
+    </div>
+
+    <p>
+      <strong>Time and space analysis:</strong> At first glance, <code>buildMaxHeap</code> looks like
+      \(O(n \log n)\), because it makes about \(n/2\) calls to <code>heapify</code>. The sharper bound is \(O(n)\):
+      most nodes are near the bottom of the heap, where <code>heapify</code> can move only a short distance. The
+      iterative loop uses \(O(1)\) auxiliary space, aside from any stack space used by <code>heapify</code>.
+    </p>
+  </section>
+
+  <section id="insert" section-title="insert">
+    <h2>insert(A, value, heapSize)</h2>
+    <p>
+      Insertion preserves the complete-tree shape by placing the new value at the next open leaf position, index
+      <code>heapSize</code>. The value may be larger than its parent, so the operation then <em>bubbles up</em>:
+      repeatedly swap the value with its parent until the parent is larger or the value reaches the root.
+    </p>
+    <div class="embeddedDemoContainer">
+      <iframe class="embeddedDemo"
+              src="../../../Content/Demos/Data Structures/Heap/Insert Demo.html"
+              allow="fullscreen"
+              name="insert-demo">
+      </iframe>
+    </div>
+
+    <h3>Implementation in Java, C++, and Python</h3>
+    <p>
+      These snippets show the operation core and return the updated <code>heapSize</code>. A full heap class would
+      usually store <code>heapSize</code> as a field and resize the backing array when it is full.
+    </p>
+    <div class="tab-group" style="margin-top:10px;">
+      <div class="tabs" role="tablist">
+        <button id="tab-java-insert-op" class="tablink active" data-lang="java-insert-op" role="tab" aria-controls="java-insert-op" aria-selected="true">Java</button>
+        <button id="tab-cpp-insert-op" class="tablink" data-lang="cpp-insert-op" role="tab" aria-controls="cpp-insert-op" aria-selected="false">C++</button>
+        <button id="tab-python-insert-op" class="tablink" data-lang="python-insert-op" role="tab" aria-controls="python-insert-op" aria-selected="false">Python</button>
+      </div>
+      <div id="java-insert-op" class="code-container active" role="tabpanel" aria-labelledby="tab-java-insert-op">
+        <pre><code class="language-java">public int insert(int[] A, int value, int heapSize) {
+    A[heapSize] = value;
+    heapSize++;
+    int i = heapSize - 1;
+
+    while (i > 0 && A[(i - 1) / 2] < A[i]) {
+        int parent = (i - 1) / 2;
+        swap(A, i, parent);
+        i = parent;
+    }
+    return heapSize;
+}</code></pre>
+      </div>
+      <div id="cpp-insert-op" class="code-container" role="tabpanel" aria-labelledby="tab-cpp-insert-op">
+        <pre><code class="language-cpp">int insert(int A[], int value, int heapSize) {
+    A[heapSize] = value;
+    heapSize++;
+    int i = heapSize - 1;
+
+    while (i > 0 && A[(i - 1) / 2] < A[i]) {
+        int parent = (i - 1) / 2;
+        swap(A, i, parent);
+        i = parent;
+    }
+    return heapSize;
+}</code></pre>
+      </div>
+      <div id="python-insert-op" class="code-container" role="tabpanel" aria-labelledby="tab-python-insert-op">
+        <pre><code class="language-python">def insert(A, value, heapSize):
+    A.append(value)
+    heapSize += 1
+    i = heapSize - 1
+
+    while i > 0:
+        parent = (i - 1) // 2
+        if A[parent] < A[i]:
+            A[i], A[parent] = A[parent], A[i]
+            i = parent
+        else:
+            break
+    return heapSize</code></pre>
+      </div>
+    </div>
+
+    <p>
+      <strong>Time and space analysis:</strong> In the worst case, the new value moves from a leaf to the root, one
+      level per swap. The running time is \(O(\log n)\). The operation uses \(O(1)\) auxiliary space.
+    </p>
+  </section>
+
+  <section id="extract-max" section-title="extractMax">
+    <h2>extractMax(A, heapSize)</h2>
+    <p>
+      <code>extractMax</code> removes and returns the root. Removing the root creates a hole at the top, but the heap
+      shape must stay complete. The standard fix is to move the last heap element into the root, decrement
+      <code>heapSize</code>, and call <code>heapify(A, 0, heapSize)</code>.
+    </p>
+    <ol>
+      <li>Save <code>A[0]</code> as the maximum value to return.</li>
+      <li>Move <code>A[heapSize - 1]</code> into <code>A[0]</code>.</li>
+      <li>Decrement <code>heapSize</code>.</li>
+      <li>Call <code>heapify</code> at the root to repair the heap property.</li>
+    </ol>
+    <div class="embeddedDemoContainer">
+      <iframe class="embeddedDemo"
+              src="../../../Content/Demos/Data Structures/Heap/ExtractMax Demo.html"
+              allow="fullscreen"
+              name="extract-max-demo">
+      </iframe>
+    </div>
+
+    <h3>Implementation in Java, C++, and Python</h3>
+    <p>
+      These snippets return both the extracted value and the updated heap size. A class-based implementation would
+      usually update a <code>heapSize</code> field directly.
+    </p>
+    <div class="tab-group" style="margin-top:10px;">
+      <div class="tabs" role="tablist">
+        <button id="tab-java-extract-op" class="tablink active" data-lang="java-extract-op" role="tab" aria-controls="java-extract-op" aria-selected="true">Java</button>
+        <button id="tab-cpp-extract-op" class="tablink" data-lang="cpp-extract-op" role="tab" aria-controls="cpp-extract-op" aria-selected="false">C++</button>
+        <button id="tab-python-extract-op" class="tablink" data-lang="python-extract-op" role="tab" aria-controls="python-extract-op" aria-selected="false">Python</button>
+      </div>
+      <div id="java-extract-op" class="code-container active" role="tabpanel" aria-labelledby="tab-java-extract-op">
+        <pre><code class="language-java">public static class ExtractResult {
+    public final int value;
+    public final int heapSize;
+
+    public ExtractResult(int value, int heapSize) {
+        this.value = value;
+        this.heapSize = heapSize;
+    }
+}
+
+public ExtractResult extractMax(int[] A, int heapSize) {
+    if (heapSize == 0) {
+        throw new IllegalStateException("empty heap");
+    }
+
+    int max = A[0];
+    A[0] = A[heapSize - 1];
+    heapSize--;
+    heapify(A, 0, heapSize);
+    return new ExtractResult(max, heapSize);
+}</code></pre>
+      </div>
+      <div id="cpp-extract-op" class="code-container" role="tabpanel" aria-labelledby="tab-cpp-extract-op">
+        <pre><code class="language-cpp">struct ExtractResult {
+    int value;
+    int heapSize;
+};
+
+ExtractResult extractMax(int A[], int heapSize) {
+    if (heapSize == 0) {
+        throw runtime_error("empty heap");
+    }
+
+    int maxValue = A[0];
+    A[0] = A[heapSize - 1];
+    heapSize--;
+    heapify(A, 0, heapSize);
+    return {maxValue, heapSize};
+}</code></pre>
+      </div>
+      <div id="python-extract-op" class="code-container" role="tabpanel" aria-labelledby="tab-python-extract-op">
+        <pre><code class="language-python">def extract_max(A, heapSize):
+    if heapSize == 0:
+        raise IndexError("empty heap")
+
+    max_value = A[0]
+    A[0] = A[heapSize - 1]
+    heapSize -= 1
+    heapify(A, 0, heapSize)
+    return max_value, heapSize</code></pre>
+      </div>
+    </div>
+
+    <p>
+      <strong>Time and space analysis:</strong> Moving the last value to the root is constant time. The repair call
+      may travel from the root to a leaf, so the running time is \(O(\log n)\). The operation uses \(O(1)\) auxiliary
+      space if <code>heapify</code> is iterative, or \(O(\log n)\) call-stack space with the recursive version above.
+    </p>
+  </section>
+
+  <section id="heapsort-connection" section-title="Heapsort Connection">
+    <h2>Heapsort Connection</h2>
+    <p>
+      Heapsort combines <code>buildMaxHeap</code> with repeated root removal. After building a max-heap, the algorithm
+      swaps the root with the last active heap element, decreases <code>heapSize</code>, and heapifies the root. The
+      removed maximum is now in its final sorted position at the end of the array.
+    </p>
+    <p>
+      This use of <code>heapSize</code> is important. During Heapsort, the same physical array holds two regions: an
+      active heap prefix and a sorted suffix. Child-index checks must use <code>heapSize</code> so the sorted suffix is
+      not pulled back into the heap.
+    </p>
+    <p>
+      See <a href="?path=Algorithms%2FTransform-and-Conquer%2FHeapsort">Heapsort</a> for the full sorting page.
+    </p>
+  </section>
+
+  <section id="min-heap-notes" section-title="Min-Heap Notes">
+    <h2>Min-Heap Notes</h2>
+    <p>
+      To adapt these max-heap operations to a min-heap, reverse the comparisons:
+    </p>
+    <ul>
+      <li><code>peekMin</code> returns the root.</li>
+      <li><code>heapify</code> swaps with the smaller child instead of the larger child.</li>
+      <li><code>insert</code> bubbles upward while the new value is smaller than its parent.</li>
+      <li><code>extractMin</code> removes the root, moves the last value to the root, and repairs downward.</li>
+    </ul>
+    <p>
+      This is why priority-queue libraries often expose a comparator: the structural algorithm is the same, but the
+      meaning of "higher priority" changes.
+    </p>
+  </section>
+
+  <section id="pitfalls" section-title="Common Pitfalls">
+    <h2>Common Pitfalls</h2>
+    <ul>
+      <li><strong>Using physical length instead of <code>heapSize</code>:</strong> Extra capacity or sorted Heapsort elements should not be treated as heap nodes.</li>
+      <li><strong>Forgetting to update size:</strong> A standalone insert or extract snippet must return the new size or update a field in a heap object.</li>
+      <li><strong>Choosing the wrong child in <code>heapify</code>:</strong> A max-heap must swap with the larger child, not just the left child.</li>
+      <li><strong>Calling <code>heapify</code> where bubble-up is needed:</strong> Insertion creates a possible violation between a new node and its parent, so the repair moves upward.</li>
+      <li><strong>Building a heap top-down:</strong> Repeated insertion works but costs \(O(n \log n)\). Bottom-up heap construction costs \(O(n)\).</li>
+      <li><strong>Ignoring empty heap cases:</strong> <code>peekMax</code> and <code>extractMax</code> need defined behavior when <code>heapSize == 0</code>.</li>
+    </ul>
+  </section>
+
+  <section id="summary" section-title="Summary">
+    <h2>Summary</h2>
+    <p>
+      Heap operations maintain a complete-tree shape and the heap property. <code>peekMax</code> is constant time,
+      <code>insert</code> repairs upward, <code>extractMax</code> repairs downward, <code>heapify</code> fixes a local
+      downward violation, and <code>buildMaxHeap</code> uses bottom-up repair to construct a heap in linear time.
+    </p>
+  </section>
+
+  <section id="related-pages" section-title="Related Pages">
+    <h2>Related Pages</h2>
+    <ul>
+      <li><a href="?path=Data%20Structures%2FPriority%20Queues%20and%20Heaps%2FPriority%20Queue%20ADT">Priority Queue ADT</a>, for the abstract interface and implementation choices.</li>
+      <li><a href="?path=Data%20Structures%2FPriority%20Queues%20and%20Heaps%2FBinary%20Heaps">Binary Heaps</a>, for heap representation and conceptual tradeoffs.</li>
+      <li><a href="?path=Algorithms%2FTransform-and-Conquer%2FHeapsort">Heapsort</a>, which uses build-heap and repeated extraction.</li>
+    </ul>
+  </section>
+
+  <section id="links" section-title="Helpful Links and Resources">
+    <h2>Helpful Links and Resources</h2>
+    <ul>
+      <li><a href="https://opendsa.cs.vt.edu/ODSA/Books/Everything/html/Heaps.html" target="_blank">OpenDSA: Heaps and Priority Queues</a> Includes heap operations and priority queue motivation.</li>
+      <li><a href="https://opendatastructures.org/ods-java/10_1_Implicit_Binary_Tree.html" target="_blank">Open Data Structures: BinaryHeap</a> Gives another treatment of the implicit array representation.</li>
+      <li><a href="https://docs.python.org/3/library/heapq.html" target="_blank">Python <code>heapq</code></a> Shows production heap operations in Python's standard library.</li>
+      <li><a href="https://en.wikipedia.org/wiki/Binomial_heap" target="_blank">Binomial Heap (Wikipedia)</a> Background on a merge-friendly heap family.</li>
+      <li><a href="https://www.geeksforgeeks.org/dsa/binomial-heap-2/" target="_blank">GeeksforGeeks: Binomial Heap</a> Additional examples of binomial heap operations.</li>
+      <li><a href="https://en.wikipedia.org/wiki/Fibonacci_heap" target="_blank">Fibonacci Heap (Wikipedia)</a> Background on theoretical decrease-key tradeoffs.</li>
+      <li><a href="https://www.geeksforgeeks.org/dsa/fibonacci-heap-set-1-introduction/" target="_blank">GeeksforGeeks: Fibonacci Heap</a> Additional examples of Fibonacci heap structure.</li>
+    </ul>
+  </section>
+
+  <section id="reading-questions" section-title="Reading Comprehension Questions">
+    <h2>Reading Comprehension Questions</h2>
+    <ol>
+      <li><strong>Peek:</strong> Why is <code>peekMax</code> constant time?</li>
+      <li><strong>Heapify Direction:</strong> Why does <code>heapify</code> move downward rather than upward?</li>
+      <li><strong>Build Order:</strong> Why does <code>buildMaxHeap</code> start at the last internal node?</li>
+      <li><strong>Insertion:</strong> Why does insertion bubble upward?</li>
+      <li><strong>Extraction:</strong> Why is the last heap element moved to the root after removing the maximum?</li>
+      <li><strong>Heapsort:</strong> Why must Heapsort use <code>heapSize</code> instead of the full array length after the first extraction?</li>
+    </ol>
+    <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
+    <div id="answers" class="answer" hidden>
+      <ol>
+        <li><strong>Answer:</strong> The max-heap property guarantees that the maximum is at the root, index <code>0</code>.</li>
+        <li><strong>Answer:</strong> Its precondition says the child subtrees are already heaps; only the value at the current root may need to move downward.</li>
+        <li><strong>Answer:</strong> Leaves are already heaps, so the first possible violations are at internal nodes. Processing bottom-up ensures child subtrees are fixed before their parent.</li>
+        <li><strong>Answer:</strong> The new item is added as a leaf, so the only possible violation is between it and its ancestors.</li>
+        <li><strong>Answer:</strong> Moving the last item preserves the complete-tree shape before the heap property is repaired.</li>
+        <li><strong>Answer:</strong> The end of the array begins holding sorted values that are no longer part of the active heap.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="activities" section-title="In-Class Activities">
+    <h2>In-Class Activities</h2>
+    <ol>
+      <li><strong>Manual Heapify:</strong> Start with one local heap-property violation and trace every comparison and swap.</li>
+      <li><strong>Build a Heap by Hand:</strong> Apply bottom-up <code>buildMaxHeap</code> to an unsorted array.</li>
+      <li><strong>Insert Trace:</strong> Insert a value that bubbles all the way to the root, then insert one that does not move.</li>
+      <li><strong>Extract Trace:</strong> Remove the maximum from a heap and trace the downward repair.</li>
+      <li><strong>Min-Heap Conversion:</strong> Rewrite one operation for a min-heap and identify every comparison that changes.</li>
+      <li><strong>Heapsort Regions:</strong> Draw an array during Heapsort and label the active heap prefix and sorted suffix after each extraction.</li>
+    </ol>
+  </section>
+
+  <section id="problems" section-title="Homework Problems">
+    <h2>Homework Problems</h2>
+    <ol>
+      <li><strong>Implement Max-Heap Operations:</strong> Implement <code>heapify</code>, <code>buildMaxHeap</code>, <code>insert</code>, <code>peekMax</code>, and <code>extractMax</code>.</li>
+      <li><strong>Iterative Heapify:</strong> Rewrite recursive <code>heapify</code> as an iterative loop and compare auxiliary space usage.</li>
+      <li><strong>Linear Build Proof:</strong> Prove that <code>buildMaxHeap</code> runs in \(O(n)\) time even though <code>heapify</code> can take \(O(\log n)\).</li>
+      <li><strong>Min-Heap Implementation:</strong> Convert the max-heap operations into min-heap operations and test them on the same input.</li>
+      <li><strong>Heapsort Trace:</strong> Use <code>buildMaxHeap</code> and repeated extraction to sort an array by hand.</li>
+      <li><strong>Operation Bug Hunt:</strong> Given a broken heap operation, identify whether it violates shape, heap order, or heap-size management.</li>
+    </ol>
+  </section>
+</body>
+</html>

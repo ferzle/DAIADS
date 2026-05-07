@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dynamic Arrays and Array-Based Lists</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <script src="../../../scripts/chapterScripts.js"></script>
+  <link rel="stylesheet" href="../../../css/style.css">
+  <link rel="stylesheet" href="../../../css/chapter.css">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-DQ5LVZVFDC');
+  </script>
+</head>
+<body>
+  <h1>Dynamic Arrays and Array-Based Lists</h1>
+
+  <section id="overview" section-title="Overview">
+    <h2>Overview</h2>
+    <p>
+      A <strong>list</strong> is an ordered collection whose elements occupy positions
+      <code>0</code> through <code>n - 1</code>. A <strong>dynamic array</strong> is one of the most common ways to
+      implement that list idea: it stores the elements in a contiguous backing array, keeps track of the current
+      logical size, and allocates a larger backing array when it runs out of room.
+    </p>
+    <p>
+      Java <code>ArrayList</code>, C++ <code>vector</code>, and Python <code>list</code> all behave like dynamic
+      arrays. They feel flexible because the list can grow, but internally they still rely on array storage. That
+      means they inherit the strengths of arrays, especially constant-time indexed access and good cache locality.
+    </p>
+    <p>
+      Dynamic arrays are also useful for understanding the difference between an abstract data type and an
+      implementation. The same list ADT can be implemented with a linked-based list, but the operation costs change:
+      array-based lists are fast at indexing and appending, while linked-based lists are better at local insertion or
+      deletion once the relevant node is already known.
+    </p>
+  </section>
+
+  <section id="adt" section-title="List ADT and Operations">
+    <h2>List ADT and Operations</h2>
+    <p>
+      The list ADT describes what the user can ask for, not how the data is stored. A typical positional list supports
+      these operations:
+    </p>
+    <ul>
+      <li><strong><code>get(i)</code>:</strong> Return the element at index <code>i</code>.</li>
+      <li><strong><code>set(i, value)</code>:</strong> Replace the element at index <code>i</code>.</li>
+      <li><strong><code>append(value)</code>:</strong> Add <code>value</code> after the current last element.</li>
+      <li><strong><code>insert(i, value)</code>:</strong> Add <code>value</code> so it becomes the element at index <code>i</code>.</li>
+      <li><strong><code>remove(i)</code>:</strong> Remove and return the element at index <code>i</code>.</li>
+      <li><strong><code>size()</code>:</strong> Return the number of logical elements in the list.</li>
+      <li><strong><code>isEmpty()</code>:</strong> Report whether the list has no elements.</li>
+    </ul>
+    <p>
+      In an array-based implementation, the index is central. The implementation can jump straight to index
+      <code>i</code>, but it must shift elements when an insertion or deletion changes the middle of the sequence.
+      In a linked-based implementation, the nodes are connected by references, so reaching index <code>i</code>
+      usually requires traversal.
+    </p>
+  </section>
+
+  <section id="conceptual-model" section-title="Conceptual Model">
+    <h2>Conceptual Model</h2>
+    <p>
+      A dynamic array stores two different quantities:
+    </p>
+    <ul>
+      <li><strong>Size:</strong> the number of meaningful elements currently in the list.</li>
+      <li><strong>Capacity:</strong> the number of slots currently allocated in the backing array.</li>
+    </ul>
+    <p>
+      For example, the logical list <code>[12, 4, 18, 7]</code> might be stored in a backing array with capacity
+      <code>8</code>:
+    </p>
+    <table class="example-table">
+      <thead>
+        <tr>
+          <th>Index</th>
+          <th>0</th>
+          <th>1</th>
+          <th>2</th>
+          <th>3</th>
+          <th>4</th>
+          <th>5</th>
+          <th>6</th>
+          <th>7</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Value</td>
+          <td>12</td>
+          <td>4</td>
+          <td>18</td>
+          <td>7</td>
+          <td>unused</td>
+          <td>unused</td>
+          <td>unused</td>
+          <td>unused</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      The unused slots are real memory, but they are not part of the list. Client code should see a list of size
+      <code>4</code>, not an array of length <code>8</code>. The extra capacity is reserved so future appends can be
+      fast.
+    </p>
+    <p>
+      A linked-based list represents the same logical sequence differently:
+    </p>
+    <pre><code>head -> [12 | next] -> [4 | next] -> [18 | next] -> [7 | next] -> null</code></pre>
+    <p>
+      Both structures can represent <code>[12, 4, 18, 7]</code>. The difference is not the abstract sequence; the
+      difference is how the sequence is stored and which operations become cheap.
+    </p>
+  </section>
+
+  <section id="worked-example" section-title="Worked Example">
+    <h2>Worked Example</h2>
+    <p>
+      Suppose a dynamic array has size <code>5</code>, capacity <code>8</code>, and logical contents
+      <code>[3, 9, 2, 6, 5]</code>. We call <code>insert(2, 14)</code>, so <code>14</code> should become the new
+      value at index <code>2</code>.
+    </p>
+    <ol>
+      <li>Check that index <code>2</code> is a valid insertion position.</li>
+      <li>Check whether size equals capacity. Here it does not, so no resize is needed.</li>
+      <li>Shift <code>5</code> from index <code>4</code> to index <code>5</code>.</li>
+      <li>Shift <code>6</code> from index <code>3</code> to index <code>4</code>.</li>
+      <li>Shift <code>2</code> from index <code>2</code> to index <code>3</code>.</li>
+      <li>Write <code>14</code> at index <code>2</code>.</li>
+      <li>Increase size from <code>5</code> to <code>6</code>.</li>
+    </ol>
+    <p>
+      The final logical list is <code>[3, 9, 14, 2, 6, 5]</code>. The operation is linear in the worst case because
+      many later values may have to move. If the same value were appended at the end, no shifting would be needed.
+    </p>
+    <p>
+      Now compare a linked-based list. If we already have a reference to the node containing <code>9</code>, inserting
+      <code>14</code> after it only changes a few links. But if the operation is still expressed as
+      <code>insert(2, 14)</code>, the linked list must first walk from the head to index <code>1</code>. That search
+      cost is part of the operation.
+    </p>
+  </section>
+
+  <section id="core-operations" section-title="Core Operations">
+    <h2>Core Operations</h2>
+
+    <h3>Indexed Access and Update</h3>
+    <p>
+      For <code>get(i)</code> and <code>set(i, value)</code>, an array-based list uses the same direct indexing idea
+      as a normal array. After a bounds check, the implementation reads or writes the backing array at index
+      <code>i</code>. No other elements move.
+    </p>
+
+    <h3>Append</h3>
+    <p>
+      Appending writes the new value at index <code>size</code> and then increments <code>size</code>. If there is
+      spare capacity, this is constant time. If the backing array is full, the dynamic array must resize first.
+    </p>
+    <pre><code>append(value):
+    if size == capacity:
+        resize to a larger capacity
+    A[size] = value
+    size = size + 1</code></pre>
+
+    <h3>Resize</h3>
+    <p>
+      Resizing allocates a new backing array, usually about twice the old capacity, copies the current logical
+      elements into it, and then makes the new array the backing storage. The resize itself costs \(O(n)\), but it
+      happens rarely enough that a long sequence of appends still has \(O(1)\) amortized cost per append.
+    </p>
+    <p>
+      Doubling capacity is the standard teaching policy because it spreads copying work over many future appends.
+      Growing by only one slot at a time would make repeated append unnecessarily expensive.
+    </p>
+
+    <h3>Insert and Remove</h3>
+    <p>
+      Inserting in the middle creates a hole by shifting later elements one position right. Removing from the middle
+      fills the gap by shifting later elements one position left. The closer the operation is to the front, the more
+      elements may move.
+    </p>
+    <pre><code>insert(i, value):
+    check that 0 &lt;= i &lt;= size
+    if size == capacity:
+        resize to a larger capacity
+    for j from size down to i + 1:
+        A[j] = A[j - 1]
+    A[i] = value
+    size = size + 1
+
+remove(i):
+    check that 0 &lt;= i &lt; size
+    removed = A[i]
+    for j from i to size - 2:
+        A[j] = A[j + 1]
+    size = size - 1
+    return removed</code></pre>
+  </section>
+
+  <section id="demo" section-title="Interactive Demo">
+    <h2>Interactive Demo</h2>
+    <p>
+      This demo shows access, search, insertion, deletion, and resizing for a small dynamic array.
+    </p>
+    <div class="embeddedDemoContainer">
+      <iframe class="embeddedDemo"
+              src="../../../Content/Demos/Data Structures/Array/Array Operations Demo.html"
+              allow="fullscreen"
+              name="dynamic-array-operations-demo">
+      </iframe>
+    </div>
+  </section>
+
+  <section id="implementations" section-title="Implementation Options">
+    <h2>Implementation Options</h2>
+
+    <section id="implementation-array-list" section-title="Implementation 1: Array-Based List">
+      <h3>Implementation 1: Array-Based List</h3>
+      <p>
+        An array-based list stores a backing array, a logical <code>size</code>, and a physical
+        <code>capacity</code>. Its main invariant is that positions <code>0</code> through <code>size - 1</code>
+        hold the list in order. Positions from <code>size</code> through <code>capacity - 1</code> are unused.
+      </p>
+      <h4>Operation Sketch</h4>
+      <ul>
+        <li><strong>Access:</strong> compute the address from the index and read the value.</li>
+        <li><strong>Append:</strong> write at <code>A[size]</code>, resizing first if needed.</li>
+        <li><strong>Insert:</strong> shift later values right, then write the new value.</li>
+        <li><strong>Remove:</strong> save the removed value, shift later values left, and decrement size.</li>
+      </ul>
+      <div class="example-box">
+        <strong class="example-title">Implementation Exercise</strong>
+        <p>
+          Implement an integer array-based list with <code>get</code>, <code>set</code>, <code>append</code>,
+          <code>insert</code>, <code>remove</code>, <code>size</code>, and <code>isEmpty</code>.
+        </p>
+        <ul>
+          <li>Keep logical size separate from physical capacity.</li>
+          <li>Double capacity when appending or inserting into a full backing array.</li>
+          <li>Reject invalid indices before touching the backing array.</li>
+          <li>Test empty lists, one-element lists, insertion at the front, insertion at the end, and removal at the end.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="implementation-linked-list" section-title="Implementation 2: Linked-Based List">
+      <h3>Implementation 2: Linked-Based List</h3>
+      <p>
+        A linked-based list stores values in nodes connected by references. It can support the same list ADT, but
+        positions are not mapped directly to memory addresses. To access index <code>i</code>, the implementation
+        usually starts at the head and follows <code>next</code> links until it reaches that position.
+      </p>
+      <p>
+        Linked-based lists are useful when updates happen near already-known nodes. If the program has a reference to
+        the node before the insertion point, inserting a new node only requires a few reference changes. If the program
+        has only an index or a value to search for, the traversal cost may dominate.
+      </p>
+      <h4>Notes</h4>
+      <ul>
+        <li>Singly linked lists use one forward link per node.</li>
+        <li>Doubly linked lists use forward and backward links, making some removals and deque operations easier.</li>
+        <li>Linked nodes avoid array resizing, but each element has node and reference overhead.</li>
+      </ul>
+      <p>
+        See the <a href="?path=Data%20Structures%2FLinear%20Structures%2FLinked%20Lists">Linked Lists</a> page for a
+        fuller treatment of node-based lists.
+      </p>
+    </section>
+
+    <section id="library-implementations" section-title="Library Implementations">
+      <h3>Library Implementations</h3>
+      <ul>
+        <li><strong>Java:</strong> <code>ArrayList&lt;E&gt;</code> is the standard dynamic-array list; <code>LinkedList&lt;E&gt;</code> is linked-based.</li>
+        <li><strong>C++:</strong> <code>std::vector</code> is a dynamic array; <code>std::list</code> is a doubly linked list.</li>
+        <li><strong>Python:</strong> <code>list</code> is dynamic-array-like; <code>collections.deque</code> is better for efficient end operations at both ends.</li>
+      </ul>
+      <p>
+        In ordinary programming, dynamic arrays are often the default sequence type because indexing, scanning, and
+        appending are efficient in practice. Linked lists are still important when the assignment or workload is about
+        reference manipulation, stable node positions, or frequent local splicing.
+      </p>
+    </section>
+  </section>
+
+  <section id="costs" section-title="Operation Costs">
+    <h2>Operation Costs</h2>
+    <table class="example-table">
+      <thead>
+        <tr>
+          <th>Operation</th>
+          <th>Array-Based List</th>
+          <th>Linked-Based List</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>get(i)</code>, <code>set(i)</code></td>
+          <td>\(O(1)\)</td>
+          <td>\(O(n)\)</td>
+          <td>Linked lists must traverse to the position.</td>
+        </tr>
+        <tr>
+          <td><code>append</code></td>
+          <td>\(O(1)\) amortized</td>
+          <td>\(O(1)\) with tail, \(O(n)\) without tail</td>
+          <td>Dynamic arrays occasionally resize.</td>
+        </tr>
+        <tr>
+          <td><code>insert(i, value)</code></td>
+          <td>\(O(n)\)</td>
+          <td>\(O(n)\) by index</td>
+          <td>Array shifts; linked list traverses.</td>
+        </tr>
+        <tr>
+          <td>insert after known node</td>
+          <td>\(O(n)\) if position must be opened</td>
+          <td>\(O(1)\)</td>
+          <td>This is where linked lists can be strongest.</td>
+        </tr>
+        <tr>
+          <td><code>remove(i)</code></td>
+          <td>\(O(n)\)</td>
+          <td>\(O(n)\) by index</td>
+          <td>Array shifts; linked list must find the predecessor or node.</td>
+        </tr>
+        <tr>
+          <td>extra space</td>
+          <td>unused capacity</td>
+          <td>node and link fields</td>
+          <td>Dynamic arrays are usually more compact per element.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      The phrase <em>amortized</em> matters. A single append can still cost \(O(n)\) if it triggers a resize, but over
+      a long sequence of appends, the average cost per append is constant when capacity grows geometrically.
+    </p>
+  </section>
+
+  <section id="applications" section-title="Applications">
+    <h2>Applications</h2>
+    <ul>
+      <li><strong>General-purpose sequences:</strong> Dynamic arrays are the usual default when programs need an ordered collection with fast indexing.</li>
+      <li><strong>Stacks:</strong> A dynamic array can implement a stack by treating the end of the list as the top.</li>
+      <li><strong>Heaps:</strong> Binary heaps use array indexing to represent complete binary trees compactly.</li>
+      <li><strong>Dynamic programming:</strong> Tables and memo arrays often rely on direct index access.</li>
+      <li><strong>Accumulating results:</strong> Algorithms commonly append outputs to a dynamic array when the final number of results is not known in advance.</li>
+      <li><strong>Small lists in performance-sensitive code:</strong> Contiguous storage often beats pointer-heavy structures because scans make good use of caches.</li>
+    </ul>
+  </section>
+
+  <section id="comparison" section-title="Comparisons and Tradeoffs">
+    <h2>Comparisons and Tradeoffs</h2>
+    <ul>
+      <li><strong>Array-based vs. linked-based lists:</strong> Array-based lists are better for indexed access and compact storage. Linked-based lists are better for local updates after known nodes.</li>
+      <li><strong>Append vs. front insertion:</strong> Appending to a dynamic array is usually cheap. Inserting at the front usually shifts every existing element.</li>
+      <li><strong>Worst case vs. amortized cost:</strong> Resizing creates expensive individual appends, but geometric growth keeps the long-run append cost small.</li>
+      <li><strong>Memory locality vs. pointer flexibility:</strong> Dynamic arrays store elements next to each other. Linked lists scatter nodes but can relink without moving the stored values.</li>
+      <li><strong>Library use vs. implementation practice:</strong> Use library dynamic arrays in production. Implementing one by hand is valuable because it exposes size, capacity, resizing, and shifting behavior.</li>
+    </ul>
+  </section>
+
+  <section id="pitfalls" section-title="Common Pitfalls">
+    <h2>Common Pitfalls</h2>
+    <ul>
+      <li><strong>Confusing size and capacity:</strong> Unused capacity is not part of the list and should not be searched, printed, or returned.</li>
+      <li><strong>Shifting in the wrong direction:</strong> Insertions shift right from the end toward the insertion point. Deletions shift left from the removed position toward the end.</li>
+      <li><strong>Forgetting insertion at <code>size</code>:</strong> Inserting at index <code>size</code> is valid and is the same as append.</li>
+      <li><strong>Calling append worst-case constant time:</strong> Append is amortized \(O(1)\), but a resize still costs \(O(n)\).</li>
+      <li><strong>Leaving stale references:</strong> After removal, some implementations should clear the old final slot so removed objects can be garbage collected.</li>
+      <li><strong>Ignoring traversal in linked lists:</strong> A linked-list insertion is constant time only after the relevant node has already been found.</li>
+    </ul>
+  </section>
+
+  <section id="summary" section-title="Summary">
+    <h2>Summary</h2>
+    <p>
+      Dynamic arrays implement the list ADT with contiguous backing storage, a logical size, and a physical capacity.
+      They provide constant-time indexed access and amortized constant-time append, but middle insertions and removals
+      require shifting. Linked-based lists represent the same abstract sequence with nodes and links, trading away
+      direct indexing for flexible local updates.
+    </p>
+  </section>
+
+  <section id="related-pages" section-title="Related Pages">
+    <h2>Related Pages</h2>
+    <ul>
+      <li><a href="?path=Data%20Structures%2FLinear%20Structures%2FArrays">Arrays</a>, the fixed-size storage idea dynamic arrays build on.</li>
+      <li><a href="?path=Data%20Structures%2FLinear%20Structures%2FLinked%20Lists">Linked Lists</a>, the main linked-based list representation.</li>
+      <li><a href="?path=Foundations%2FAmortized%20Analysis">Amortized Analysis</a>, which explains why dynamic-array append is \(O(1)\) amortized.</li>
+      <li><a href="?path=Data%20Structures%2FLinear%20Structures%2FStacks">Stacks</a>, often implemented with a dynamic array.</li>
+    </ul>
+  </section>
+
+  <section id="links" section-title="Helpful Links and Resources">
+    <h2>Helpful Links and Resources</h2>
+    <ul>
+      <li><a href="https://opendatastructures.org/ods-java/2_Array_Based_Lists.html" target="_blank">Open Data Structures: Array-Based Lists</a> Covers backing arrays, resizing, and shifting costs.</li>
+      <li><a href="https://docs.oracle.com/javase/8/docs/api/java/util/ArrayList.html" target="_blank">Java <code>ArrayList</code> documentation</a> Shows the library interface for a dynamic-array-backed list.</li>
+      <li><a href="https://en.cppreference.com/w/cpp/container/vector" target="_blank">cppreference: <code>std::vector</code></a> Documents C++ dynamic-array behavior, capacity, and iterator invalidation.</li>
+    </ul>
+  </section>
+
+  <section id="reading-questions" section-title="Reading Comprehension Questions">
+    <h2>Reading Comprehension Questions</h2>
+    <ol>
+      <li><strong>Size vs. Capacity:</strong> In a dynamic array, what is the difference between size and capacity?</li>
+      <li><strong>Append:</strong> Why is append amortized \(O(1)\) instead of worst-case \(O(1)\)?</li>
+      <li><strong>Insert:</strong> Why does inserting at index <code>0</code> usually take linear time?</li>
+      <li><strong>Linked Comparison:</strong> When can a linked-based list insert in constant time?</li>
+      <li><strong>Indexing:</strong> Why is <code>get(i)</code> constant time in an array-based list but linear in a linked-based list?</li>
+      <li><strong>Stale Slot:</strong> After removing the final logical element, why might an implementation clear the old slot?</li>
+    </ol>
+    <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
+    <div id="answers" class="answer" hidden>
+      <ol>
+        <li><strong>Answer:</strong> Size is the number of meaningful elements; capacity is the number of allocated backing-array slots.</li>
+        <li><strong>Answer:</strong> Most appends are constant time, but an append that triggers resizing must allocate a new array and copy existing elements.</li>
+        <li><strong>Answer:</strong> Every existing element must shift one position right to preserve order.</li>
+        <li><strong>Answer:</strong> When the program already has a reference to the node before the insertion point.</li>
+        <li><strong>Answer:</strong> Array indices map directly to positions in memory, while a linked list must follow links from an end to reach index <code>i</code>.</li>
+        <li><strong>Answer:</strong> If the slot holds a reference, clearing it can allow the removed object to be garbage collected.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="activities" section-title="In-Class Activities">
+    <h2>In-Class Activities</h2>
+    <ol>
+      <li><strong>Trace a Resize:</strong> Start with capacity <code>2</code>, append six values, and record every backing array allocation.</li>
+      <li><strong>Shift Count:</strong> For a list of length <code>10</code>, count how many elements move for each possible insertion index.</li>
+      <li><strong>Representation Choice:</strong> For several workloads, choose between an array-based list and a linked-based list and defend the choice.</li>
+      <li><strong>Bug Hunt:</strong> Given incorrect insertion pseudocode that shifts left-to-right, identify which value is overwritten first.</li>
+      <li><strong>Amortization Discussion:</strong> Explain why doubling capacity is different from increasing capacity by exactly one slot.</li>
+    </ol>
+  </section>
+
+  <section id="problems" section-title="Homework Problems">
+    <h2>Homework Problems</h2>
+    <ol>
+      <li><strong>Implement a Dynamic Array:</strong> Write a dynamic-array list with <code>append</code>, <code>insert</code>, <code>remove</code>, <code>get</code>, and <code>set</code>.</li>
+      <li><strong>Capacity Policy:</strong> Compare doubling capacity with adding one slot at a time. Analyze the total work for appending \(n\) values.</li>
+      <li><strong>Delete All:</strong> Remove all copies of a target value from an array-based list in-place and return the new size.</li>
+      <li><strong>Array vs. Linked:</strong> For each operation sequence, decide whether an array-based or linked-based list is likely better and explain the cost tradeoff.</li>
+      <li><strong>Iterator Invalidation:</strong> Research one language library and describe what happens to references, pointers, or iterators when a dynamic array resizes.</li>
+    </ol>
+  </section>
+</body>
+</html>

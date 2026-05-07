@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Priority Queue ADT</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <script src="../../../scripts/chapterScripts.js"></script>
+  <link rel="stylesheet" href="../../../css/style.css">
+  <link rel="stylesheet" href="../../../css/chapter.css">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-DQ5LVZVFDC');
+  </script>
+</head>
+<body>
+  <h1>Priority Queue ADT</h1>
+
+  <section id="overview" section-title="Overview">
+    <h2>Overview</h2>
+    <p>
+      A <strong>priority queue</strong> is an abstract data type for storing items where each item has a priority.
+      Removal is based on priority, not on arrival order. In a <strong>min-priority queue</strong>, the item with the
+      smallest key is removed first. In a <strong>max-priority queue</strong>, the item with the largest key is
+      removed first.
+    </p>
+    <p>
+      Priority queues are different from ordinary FIFO queues. A FIFO queue answers "Who arrived first?" A priority
+      queue answers "Which item is most urgent according to the priority rule?" This distinction is why priority
+      queues are central to algorithms such as Dijkstra's shortest path algorithm, Prim's minimum spanning tree
+      algorithm, event simulation, scheduling, and Huffman coding.
+    </p>
+    <p>
+      The priority queue is an ADT. It can be implemented with an unsorted array, a sorted array, a linked structure,
+      a binary heap, a balanced search tree, or a more specialized heap family. The ADT describes the behavior; the
+      implementation determines the costs.
+    </p>
+  </section>
+
+  <section id="adt" section-title="Abstract Data Type and Operations">
+    <h2>Abstract Data Type and Operations</h2>
+    <p>
+      A priority queue stores entries made from an item and a priority key. The key may be the item itself, such as an
+      integer priority, or a separate value attached to a record, such as a graph vertex's current distance estimate.
+    </p>
+    <ul>
+      <li><strong><code>insert(item, priority)</code>:</strong> Add a new entry to the priority queue.</li>
+      <li><strong><code>peek()</code>:</strong> Return the highest-priority entry without removing it.</li>
+      <li><strong><code>extract()</code>:</strong> Remove and return the highest-priority entry.</li>
+      <li><strong><code>changePriority(item, newPriority)</code>:</strong> Change an existing item's priority if the implementation supports it.</li>
+      <li><strong><code>isEmpty()</code>:</strong> Report whether the priority queue contains no entries.</li>
+      <li><strong><code>size()</code>:</strong> Return the number of entries currently stored.</li>
+    </ul>
+    <p>
+      The word <em>highest</em> depends on the convention. In a min-priority queue, a smaller key means higher
+      priority. In a max-priority queue, a larger key means higher priority. Always state the convention before
+      analyzing or tracing an algorithm.
+    </p>
+  </section>
+
+  <section id="conceptual-model" section-title="Conceptual Model">
+    <h2>Conceptual Model</h2>
+    <p>
+      Suppose a min-priority queue stores emergency-room patients, where smaller numbers mean more urgent treatment.
+    </p>
+    <table class="example-table">
+      <thead>
+        <tr>
+          <th>Patient</th>
+          <th>Priority</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Ana</td>
+          <td>4</td>
+        </tr>
+        <tr>
+          <td>Bo</td>
+          <td>2</td>
+        </tr>
+        <tr>
+          <td>Cy</td>
+          <td>5</td>
+        </tr>
+        <tr>
+          <td>Dia</td>
+          <td>1</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      The next extraction returns <code>Dia</code>, not <code>Ana</code>, because priority <code>1</code> is the
+      smallest key. The structure does not have to keep all entries sorted visibly; it only has to provide the correct
+      highest-priority entry when asked.
+    </p>
+    <p>
+      Ties require a policy. Some priority queues allow tied entries to come out in any order. Others are
+      <em>stable</em>, meaning tied priorities leave in the same order they arrived. Stability is not automatic; it
+      usually requires adding an insertion counter or another tie-breaking rule.
+    </p>
+  </section>
+
+  <section id="worked-example" section-title="Worked Example">
+    <h2>Worked Example</h2>
+    <p>
+      Trace this min-priority queue sequence. Lower numbers have higher priority:
+      <code>insert(A, 5)</code>, <code>insert(B, 3)</code>, <code>insert(C, 7)</code>, <code>peek()</code>,
+      <code>insert(D, 2)</code>, <code>extract()</code>, <code>extract()</code>, <code>insert(E, 4)</code>,
+      <code>extract()</code>.
+    </p>
+    <table class="example-table">
+      <thead>
+        <tr>
+          <th>Operation</th>
+          <th>Entries Afterward</th>
+          <th>Return Value</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>insert(A, 5)</code></td>
+          <td><code>{A:5}</code></td>
+          <td>none</td>
+        </tr>
+        <tr>
+          <td><code>insert(B, 3)</code></td>
+          <td><code>{A:5, B:3}</code></td>
+          <td>none</td>
+        </tr>
+        <tr>
+          <td><code>insert(C, 7)</code></td>
+          <td><code>{A:5, B:3, C:7}</code></td>
+          <td>none</td>
+        </tr>
+        <tr>
+          <td><code>peek()</code></td>
+          <td><code>{A:5, B:3, C:7}</code></td>
+          <td><code>B</code></td>
+        </tr>
+        <tr>
+          <td><code>insert(D, 2)</code></td>
+          <td><code>{A:5, B:3, C:7, D:2}</code></td>
+          <td>none</td>
+        </tr>
+        <tr>
+          <td><code>extract()</code></td>
+          <td><code>{A:5, B:3, C:7}</code></td>
+          <td><code>D</code></td>
+        </tr>
+        <tr>
+          <td><code>extract()</code></td>
+          <td><code>{A:5, C:7}</code></td>
+          <td><code>B</code></td>
+        </tr>
+        <tr>
+          <td><code>insert(E, 4)</code></td>
+          <td><code>{A:5, C:7, E:4}</code></td>
+          <td>none</td>
+        </tr>
+        <tr>
+          <td><code>extract()</code></td>
+          <td><code>{A:5, C:7}</code></td>
+          <td><code>E</code></td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      Notice that <code>C</code> arrived before <code>E</code>, but <code>E</code> is extracted first because its
+      priority is better. Arrival order only matters if the priority queue uses it as a tie-breaker.
+    </p>
+  </section>
+
+  <section id="core-operations" section-title="Core Operations">
+    <h2>Core Operations</h2>
+
+    <h3>Insert</h3>
+    <p>
+      <code>insert</code> adds a new entry. The implementation may place it anywhere internally as long as future
+      <code>peek</code> and <code>extract</code> operations still return the correct entry. In an unsorted list,
+      insertion can be trivial. In a heap, insertion adds the entry at the end and repairs the heap property.
+    </p>
+
+    <h3>Peek</h3>
+    <p>
+      <code>peek</code> returns the current highest-priority entry without removing it. Some implementations maintain
+      the best entry at a known position, making peek constant time. Others must scan to find it.
+    </p>
+
+    <h3>Extract</h3>
+    <p>
+      <code>extract</code> removes and returns the current highest-priority entry. This is the defining operation of
+      the ADT. If the priority queue is empty, extraction must report underflow, throw an exception, or follow another
+      clearly documented policy.
+    </p>
+
+    <h3>Changing Priority</h3>
+    <p>
+      Some algorithms need to change the priority of an item already in the queue. Dijkstra's and Prim's algorithms
+      are often described with <code>decreaseKey</code>, which improves an item's key in a min-priority queue.
+      Libraries do not always support this operation directly.
+    </p>
+    <p>
+      A common workaround is <em>lazy insertion</em>: insert the same item again with the better priority, and when an
+      old stale copy is later extracted, ignore it. This keeps the library interface simple, but the priority queue may
+      temporarily contain multiple entries for the same logical item.
+    </p>
+  </section>
+
+  <section id="implementations" section-title="Implementation Options">
+    <h2>Implementation Options</h2>
+
+    <section id="implementation-unsorted" section-title="Implementation 1: Unsorted Array or List">
+      <h3>Implementation 1: Unsorted Array or List</h3>
+      <p>
+        The simplest implementation stores entries in no particular order. Insertion appends to the end. To peek or
+        extract, the implementation scans all entries to find the best priority.
+      </p>
+      <h4>Operation Sketch</h4>
+      <pre><code>insert(item, priority):
+    append (item, priority)
+
+peek():
+    scan all entries and return the one with best priority
+
+extract():
+    scan all entries to find the best priority
+    remove that entry
+    return it</code></pre>
+      <p>
+        This version is reasonable when insertions are common but extractions are rare, or when the number of entries
+        is very small.
+      </p>
+    </section>
+
+    <section id="implementation-sorted" section-title="Implementation 2: Sorted Array or List">
+      <h3>Implementation 2: Sorted Array or List</h3>
+      <p>
+        A sorted implementation keeps entries ordered by priority. Then <code>peek</code> and <code>extract</code>
+        can look at one end. The cost moves to insertion, because the new entry must be placed in priority order.
+      </p>
+      <p>
+        If the backing structure is an array, insertion may require shifting many entries. If it is a linked list,
+        insertion still requires a search to find the correct position, but relinking after that position is cheap.
+      </p>
+    </section>
+
+    <section id="implementation-heap" section-title="Implementation 3: Binary Heap">
+      <h3>Implementation 3: Binary Heap</h3>
+      <p>
+        A binary heap is the standard introductory implementation because it balances the main costs: insertion and
+        extraction are both logarithmic, while peeking is constant time. The heap stores entries in an array that
+        represents a complete binary tree and maintains the heap property.
+      </p>
+      <p>
+        The heap property is enough to guarantee that the best entry is at the root. It does not mean the entire array
+        is sorted. This is one of the most important distinctions between a heap and a sorted list.
+      </p>
+      <p>
+        See <a href="?path=Data%20Structures%2FPriority%20Queues%20and%20Heaps%2FBinary%20Heaps">Binary Heaps</a>
+        and <a href="?path=Data%20Structures%2FPriority%20Queues%20and%20Heaps%2FHeap%20Operations">Heap Operations</a>
+        for the representation and repair operations.
+      </p>
+    </section>
+
+    <section id="implementation-tree" section-title="Implementation 4: Balanced Search Tree">
+      <h3>Implementation 4: Balanced Search Tree</h3>
+      <p>
+        A balanced search tree can also implement a priority queue by ordering entries by priority. The best entry is
+        stored at one extreme of the tree, so insertion, extraction, and arbitrary search can all be logarithmic if
+        the tree remains balanced.
+      </p>
+      <p>
+        This approach is useful when the program needs priority-queue behavior plus ordered traversal, search by key,
+        or removal of a known entry. It usually has more pointer overhead and less cache locality than a binary heap,
+        so a heap is still the simpler default when the only important operation is repeatedly extracting the best
+        item.
+      </p>
+    </section>
+
+    <section id="implementation-specialized-heaps" section-title="Implementation 5: Specialized Heaps">
+      <h3>Implementation 5: Specialized Heaps</h3>
+      <p>
+        Heap families such as binomial heaps, Fibonacci heaps, pairing heaps, and d-ary heaps make different
+        tradeoffs. Some improve merging, some improve decrease-key bounds, and some improve practical constants by
+        changing the branching factor. These structures are usually introduced after binary heaps because they solve
+        more specialized performance problems.
+      </p>
+    </section>
+
+    <section id="library-implementations" section-title="Library Implementations">
+      <h3>Library Implementations</h3>
+      <ul>
+        <li><strong>Java:</strong> <code>PriorityQueue&lt;E&gt;</code> is a min-priority queue by natural ordering or comparator.</li>
+        <li><strong>C++:</strong> <code>std::priority_queue</code> is max-oriented by default, though custom comparators can change the rule.</li>
+        <li><strong>Python:</strong> <code>heapq</code> provides heap operations on lists and is min-oriented.</li>
+      </ul>
+      <p>
+        Library priority queues usually support insertion, peek, and extraction. They may not support efficient
+        arbitrary removal or change-priority operations. When an algorithm textbook uses <code>decreaseKey</code>,
+        check whether the chosen language library actually provides it.
+      </p>
+    </section>
+  </section>
+
+  <section id="costs" section-title="Operation Costs">
+    <h2>Operation Costs</h2>
+    <table class="example-table">
+      <thead>
+        <tr>
+          <th>Operation</th>
+          <th>Unsorted Array/List</th>
+          <th>Sorted Array/List</th>
+          <th>Binary Heap</th>
+          <th>Balanced Search Tree</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>insert</code></td>
+          <td>\(O(1)\) amortized for dynamic array append</td>
+          <td>\(O(n)\)</td>
+          <td>\(O(\log n)\)</td>
+          <td>\(O(\log n)\)</td>
+        </tr>
+        <tr>
+          <td><code>peek</code></td>
+          <td>\(O(n)\)</td>
+          <td>\(O(1)\)</td>
+          <td>\(O(1)\)</td>
+          <td>\(O(\log n)\), or \(O(1)\) if an extreme pointer is stored</td>
+        </tr>
+        <tr>
+          <td><code>extract</code></td>
+          <td>\(O(n)\)</td>
+          <td>\(O(1)\) for linked list end removal, \(O(n)\) if array shifting is needed</td>
+          <td>\(O(\log n)\)</td>
+          <td>\(O(\log n)\)</td>
+        </tr>
+        <tr>
+          <td><code>changePriority</code></td>
+          <td>\(O(n)\)</td>
+          <td>\(O(n)\)</td>
+          <td>\(O(\log n)\) if the item position is known</td>
+          <td>\(O(\log n)\) if the entry is found or referenced</td>
+        </tr>
+        <tr>
+          <td>build from \(n\) entries</td>
+          <td>\(O(n)\)</td>
+          <td>\(O(n \log n)\) or \(O(n^2)\), depending on method</td>
+          <td>\(O(n)\) with bottom-up heap construction</td>
+          <td>\(O(n \log n)\) by repeated insertion</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      A binary heap is a good default because it avoids the extreme tradeoff of the unsorted and sorted versions.
+      It does not make every operation constant time, but it keeps the two most important update operations
+      logarithmic.
+    </p>
+  </section>
+
+  <section id="applications" section-title="Applications">
+    <h2>Applications</h2>
+    <ul>
+      <li><strong>Dijkstra's algorithm:</strong> A min-priority queue repeatedly selects the unsettled vertex with the smallest current distance estimate.</li>
+      <li><strong>Prim's algorithm:</strong> A min-priority queue selects the next vertex or edge that most cheaply expands the growing minimum spanning tree.</li>
+      <li><strong>Huffman encoding:</strong> A min-priority queue repeatedly extracts the two lowest-frequency trees and merges them.</li>
+      <li><strong>Event simulation:</strong> Future events are processed in increasing time order.</li>
+      <li><strong>Scheduling:</strong> Jobs can be selected by urgency, deadline, shortest processing time, or another priority rule.</li>
+      <li><strong>Top-\(k\) problems:</strong> A heap-backed priority queue can keep only the best \(k\) items seen so far.</li>
+      <li><strong>Search algorithms:</strong> Best-first search and A* use priorities to choose which state to explore next.</li>
+      <li><strong>Heapsort:</strong> A binary heap can repeatedly extract the maximum to produce sorted order; this is an application of the heap implementation rather than the abstract priority queue alone.</li>
+    </ul>
+  </section>
+
+  <section id="comparison" section-title="Comparisons and Tradeoffs">
+    <h2>Comparisons and Tradeoffs</h2>
+    <ul>
+      <li><strong>Priority queue vs. queue:</strong> A queue removes by arrival order. A priority queue removes by priority.</li>
+      <li><strong>Priority queue vs. sorted list:</strong> A sorted list keeps all entries ordered. A heap keeps only enough order to find the best entry efficiently.</li>
+      <li><strong>Priority queue vs. map:</strong> A map finds entries by key. A priority queue finds the entry with the best priority key.</li>
+      <li><strong>Heap vs. balanced tree:</strong> A heap gives very fast access to the best item but poor arbitrary search. A balanced tree supports ordered search and traversal, often with more overhead.</li>
+      <li><strong>Binary heap vs. specialized heaps:</strong> Binary heaps are simple and fast in practice. Binomial, Fibonacci, pairing, and d-ary heaps are considered when merge, decrease-key, or branching-factor tradeoffs dominate.</li>
+      <li><strong>Stable vs. unstable priority queues:</strong> Stability makes ties predictable but may require storing an extra insertion counter.</li>
+      <li><strong>Lazy insertion vs. decrease-key:</strong> Lazy insertion is easy with simple libraries but can leave stale entries in the queue. Decrease-key is cleaner conceptually but requires direct access to an item's heap position.</li>
+    </ul>
+  </section>
+
+  <section id="pitfalls" section-title="Common Pitfalls">
+    <h2>Common Pitfalls</h2>
+    <ul>
+      <li><strong>Mixing min and max conventions:</strong> Be explicit about whether smaller or larger keys mean higher priority.</li>
+      <li><strong>Assuming FIFO behavior:</strong> Equal priorities may not preserve arrival order unless the priority queue is designed to be stable.</li>
+      <li><strong>Assuming a heap is sorted:</strong> A heap guarantees the best item at the root, not a fully sorted array.</li>
+      <li><strong>Ignoring stale entries:</strong> Algorithms that use lazy insertion must check whether an extracted entry is still current.</li>
+      <li><strong>Forgetting empty cases:</strong> <code>peek</code> and <code>extract</code> need defined behavior when the priority queue is empty.</li>
+      <li><strong>Using the wrong library default:</strong> Java and Python are min-oriented by default; C++ <code>std::priority_queue</code> is max-oriented by default.</li>
+      <li><strong>Leaving priorities ambiguous:</strong> Complex records need a clear comparator or priority field. Otherwise different implementations may order them differently.</li>
+    </ul>
+  </section>
+
+  <section id="summary" section-title="Summary">
+    <h2>Summary</h2>
+    <p>
+      A priority queue stores entries with priorities and removes the highest-priority entry first. The ADT is defined
+      by operations such as <code>insert</code>, <code>peek</code>, and <code>extract</code>. Binary heaps are the
+      standard implementation because they provide constant-time peek and logarithmic insertion and extraction, while
+      simpler sorted or unsorted structures trade one operation's cost against another.
+    </p>
+  </section>
+
+  <section id="related-pages" section-title="Related Pages">
+    <h2>Related Pages</h2>
+    <ul>
+      <li><a href="?path=Data%20Structures%2FPriority%20Queues%20and%20Heaps%2FBinary%20Heaps">Binary Heaps</a>, the standard heap-backed implementation.</li>
+      <li><a href="?path=Data%20Structures%2FPriority%20Queues%20and%20Heaps%2FHeap%20Operations">Heap Operations</a>, covering heapify, build-heap, insert, and extract.</li>
+      <li><a href="?path=Algorithms%2FGreedy%2FHuffman%20Encoding">Huffman Encoding</a>, which repeatedly extracts the two lowest-priority items.</li>
+      <li><a href="?path=Data%20Structures%2FLinear%20Structures%2FQueues">Queues</a>, which remove by arrival order instead of priority.</li>
+    </ul>
+  </section>
+
+  <section id="links" section-title="Helpful Links and Resources">
+    <h2>Helpful Links and Resources</h2>
+    <ul>
+      <li><a href="https://docs.oracle.com/javase/8/docs/api/java/util/PriorityQueue.html" target="_blank">Java <code>PriorityQueue</code> documentation</a> Describes Java's priority queue interface and ordering behavior.</li>
+      <li><a href="https://en.cppreference.com/w/cpp/container/priority_queue" target="_blank">cppreference: <code>std::priority_queue</code></a> Documents the C++ priority queue adapter.</li>
+      <li><a href="https://docs.python.org/3/library/heapq.html" target="_blank">Python <code>heapq</code> documentation</a> Shows Python's heap-based priority queue operations.</li>
+      <li><a href="https://opendatastructures.org/ods-java/10_1_Implicit_Binary_Tree.html" target="_blank">Open Data Structures: Binary Heaps</a> Explains array-based heap storage and priority queue operations.</li>
+    </ul>
+  </section>
+
+  <section id="reading-questions" section-title="Reading Comprehension Questions">
+    <h2>Reading Comprehension Questions</h2>
+    <ol>
+      <li><strong>Queue Comparison:</strong> How is a priority queue different from a FIFO queue?</li>
+      <li><strong>Min vs. Max:</strong> In a min-priority queue, which key is extracted first?</li>
+      <li><strong>Peek:</strong> How is <code>peek</code> different from <code>extract</code>?</li>
+      <li><strong>Ties:</strong> What does it mean for a priority queue to be stable?</li>
+      <li><strong>Heap Ordering:</strong> Why is a heap not the same thing as a sorted array?</li>
+      <li><strong>Implementation Tradeoff:</strong> Why does an unsorted list have cheap insertion but expensive extraction?</li>
+      <li><strong>Decrease-Key:</strong> Why might a graph algorithm need to change an item's priority?</li>
+      <li><strong>Lazy Insertion:</strong> What problem does lazy insertion create, and how does an algorithm handle it?</li>
+    </ol>
+    <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
+    <div id="answers" class="answer" hidden>
+      <ol>
+        <li><strong>Answer:</strong> A FIFO queue removes the oldest item; a priority queue removes the item with the best priority.</li>
+        <li><strong>Answer:</strong> The smallest key.</li>
+        <li><strong>Answer:</strong> <code>peek</code> returns the best entry without removing it; <code>extract</code> returns and removes it.</li>
+        <li><strong>Answer:</strong> Tied priorities are removed in arrival order.</li>
+        <li><strong>Answer:</strong> A heap only guarantees parent-child priority order and the best item at the root, not total sorted order.</li>
+        <li><strong>Answer:</strong> Insertion can simply append, but extraction must scan to find the best priority.</li>
+        <li><strong>Answer:</strong> A better path or cheaper connection may be discovered after the item is already in the priority queue.</li>
+        <li><strong>Answer:</strong> It can leave old stale entries in the queue; the algorithm checks extracted entries and ignores ones that no longer match the current best priority.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="activities" section-title="In-Class Activities">
+    <h2>In-Class Activities</h2>
+    <ol>
+      <li><strong>Trace:</strong> Trace a sequence of priority queue operations under both min-priority and max-priority conventions.</li>
+      <li><strong>Tie-Breaking:</strong> Design a stable priority queue entry format using an insertion counter.</li>
+      <li><strong>Implementation Choice:</strong> Choose among unsorted list, sorted list, and binary heap for several workloads with different insert/extract frequencies.</li>
+      <li><strong>Tree Alternative:</strong> Identify a workload where a balanced search tree would be a better priority queue implementation than a binary heap.</li>
+      <li><strong>Heap vs. Sorted:</strong> Given a valid heap array, identify why it is not sorted but still has the correct next extraction.</li>
+      <li><strong>Lazy Insertion Trace:</strong> Simulate a small shortest-path relaxation sequence where the same vertex receives two different priority entries.</li>
+    </ol>
+  </section>
+
+  <section id="problems" section-title="Homework Problems">
+    <h2>Homework Problems</h2>
+    <ol>
+      <li><strong>Unsorted Priority Queue:</strong> Implement a priority queue with an unsorted dynamic array and analyze each operation.</li>
+      <li><strong>Sorted Priority Queue:</strong> Implement a sorted-array priority queue and compare its costs with the unsorted version.</li>
+      <li><strong>Stable Priority Queue:</strong> Modify a priority queue design so entries with equal priority are extracted in insertion order.</li>
+      <li><strong>Top-\(k\):</strong> Use a min-priority queue of size \(k\) to keep the \(k\) largest values from a stream.</li>
+      <li><strong>Event Simulation:</strong> Design a simple simulation where events are processed in time order using a min-priority queue.</li>
+      <li><strong>Tree-Based Priority Queue:</strong> Describe how a balanced search tree can implement <code>insert</code>, <code>peek</code>, and <code>extract</code>. Compare its strengths with a binary heap.</li>
+      <li><strong>Lazy Dijkstra:</strong> Explain how Dijkstra's algorithm can use lazy insertion instead of a true decrease-key operation.</li>
+    </ol>
+  </section>
+</body>
+</html>

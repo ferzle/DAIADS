@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Separate Chaining</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <script src="../../../scripts/chapterScripts.js"></script>
+  <link rel="stylesheet" href="../../../css/style.css">
+  <link rel="stylesheet" href="../../../css/chapter.css">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-DQ5LVZVFDC');
+  </script>
+</head>
+<body>
+  <h1>Separate Chaining</h1>
+
+  <section id="overview" section-title="Overview">
+    <h2>Overview</h2>
+    <p>
+      <strong>Separate chaining</strong> is a collision-resolution strategy for hash tables. Each table position is a
+      bucket, and each bucket stores all entries whose keys hash to that position. The bucket is often shown as a
+      linked list, but it can also be a dynamic array, small vector, or another local collection.
+    </p>
+    <p>
+      Chaining is conceptually direct: if several keys choose the same table index, keep them together in that
+      bucket. Searching for a key means hashing to the bucket and then searching only that bucket.
+    </p>
+    <p>
+      Chaining can implement both sets and maps. A hash set stores keys in the buckets. A hash map stores key-value
+      entries in the buckets.
+    </p>
+  </section>
+
+  <section id="bucket-model" section-title="Bucket Model">
+    <h2>Bucket Model</h2>
+    <p>
+      A chained hash table has an array of \(m\) bucket references. The table stores \(n\) entries total, spread
+      across those buckets.
+    </p>
+    <pre><code>table[0] -> bucket of entries whose hash index is 0
+table[1] -> bucket of entries whose hash index is 1
+table[2] -> bucket of entries whose hash index is 2
+...
+table[m-1] -> bucket of entries whose hash index is m-1</code></pre>
+    <p>
+      If \(h(k)=k \bmod m\), then key <code>17</code> belongs in bucket <code>17 mod m</code>. If another key lands
+      in the same bucket, it joins the same bucket collection instead of searching for another array position.
+    </p>
+  </section>
+
+  <section id="worked-example" section-title="Worked Example">
+    <h2>Worked Example</h2>
+    <p>
+      Use a table of size \(m=5\) and hash function \(h(k)=k \bmod 5\). Insert keys
+      <code>12</code>, <code>22</code>, <code>7</code>, <code>4</code>, and <code>17</code>.
+    </p>
+    <table class="example-table">
+      <thead>
+        <tr>
+          <th>Key</th>
+          <th>Bucket</th>
+          <th>Table State After Insertion</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>12</code></td>
+          <td><code>2</code></td>
+          <td><code>2: [12]</code></td>
+        </tr>
+        <tr>
+          <td><code>22</code></td>
+          <td><code>2</code></td>
+          <td><code>2: [12, 22]</code></td>
+        </tr>
+        <tr>
+          <td><code>7</code></td>
+          <td><code>2</code></td>
+          <td><code>2: [12, 22, 7]</code></td>
+        </tr>
+        <tr>
+          <td><code>4</code></td>
+          <td><code>4</code></td>
+          <td><code>2: [12, 22, 7], 4: [4]</code></td>
+        </tr>
+        <tr>
+          <td><code>17</code></td>
+          <td><code>2</code></td>
+          <td><code>2: [12, 22, 7, 17], 4: [4]</code></td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      A search for <code>17</code> hashes to bucket <code>2</code>, then searches that bucket. It does not inspect
+      buckets <code>0</code>, <code>1</code>, <code>3</code>, or <code>4</code>.
+    </p>
+  </section>
+
+  <section id="operations" section-title="Core Operations">
+    <h2>Core Operations</h2>
+
+    <h3>Lookup</h3>
+    <p>
+      Lookup hashes the key to a bucket, then scans that bucket for an equal key. In a map, lookup returns the value
+      associated with the matching key. In a set, lookup reports whether the key is present.
+    </p>
+    <pre><code>lookup(key):
+    i = hash(key) mod table.length
+    for each entry in table[i]:
+        if entry.key equals key:
+            return entry
+    report missing key</code></pre>
+
+    <h3>Insert or Put</h3>
+    <p>
+      In a map, insertion must first check whether the key is already in the bucket. If it is, the map updates the
+      existing value. If not, it adds a new entry to the bucket. In a set, adding an existing key leaves the set
+      unchanged.
+    </p>
+    <pre><code>put(key, value):
+    i = hash(key) mod table.length
+    for each entry in table[i]:
+        if entry.key equals key:
+            entry.value = value
+            return
+    add (key, value) to table[i]
+    size = size + 1</code></pre>
+    <p>
+      If the bucket is a linked list, the new entry is often inserted at the head because that takes constant time.
+      Inserting at the tail is also possible if the bucket maintains a tail reference.
+    </p>
+
+    <h3>Remove</h3>
+    <p>
+      Removal hashes to the bucket, searches for the matching key, and unlinks or removes that entry from the bucket.
+      Unlike open addressing, chaining does not need tombstones because deleting from one bucket does not break the
+      search path for another bucket.
+    </p>
+    <pre><code>remove(key):
+    i = hash(key) mod table.length
+    search table[i] for key
+    if found:
+        remove that entry from the bucket
+        size = size - 1</code></pre>
+  </section>
+
+  <section id="demo" section-title="Interactive Demo">
+    <h2>Interactive Demo</h2>
+    <p>
+      This demo shows how keys are assigned to buckets and how chains grow when collisions occur.
+    </p>
+    <div class="embeddedDemoContainer">
+      <iframe class="embeddedDemo"
+              src="../../../Content/Demos/Space-Time Tradeoff/Hashing-Chaining Demo.html"
+              allow="fullscreen"
+              name="hashing-chaining-demo">
+      </iframe>
+    </div>
+  </section>
+
+  <section id="load-factor" section-title="Load Factor">
+    <h2>Load Factor</h2>
+    <p>
+      For separate chaining, the load factor is still \(\alpha=n/m\), where \(n\) is the number of entries and \(m\)
+      is the number of buckets. Unlike open addressing, \(\alpha\) can be greater than <code>1</code>, because each
+      bucket can hold more than one entry.
+    </p>
+    <p>
+      If the hash function distributes entries uniformly, the average bucket length is about \(\alpha\). That is why
+      lookup and deletion are often described as expected \(O(1+\alpha)\): constant time to find the bucket, plus time
+      proportional to the bucket length.
+    </p>
+    <p>
+      Implementations usually resize when the load factor gets too high. Resizing creates more buckets and rehashes
+      existing entries, which lowers the average bucket length.
+    </p>
+  </section>
+
+  <section id="complexity" section-title="Time and Space Complexity">
+    <h2>Time and Space Complexity</h2>
+    <table class="example-table">
+      <thead>
+        <tr>
+          <th>Operation</th>
+          <th>Expected Cost</th>
+          <th>Worst Case</th>
+          <th>Reason</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Lookup</td>
+          <td>\(O(1+\alpha)\)</td>
+          <td>\(O(n)\)</td>
+          <td>Search one bucket; worst case all keys are in one bucket.</td>
+        </tr>
+        <tr>
+          <td>Put</td>
+          <td>\(O(1+\alpha)\)</td>
+          <td>\(O(n)\)</td>
+          <td>Must check whether the key already exists before adding or updating.</td>
+        </tr>
+        <tr>
+          <td>Remove</td>
+          <td>\(O(1+\alpha)\)</td>
+          <td>\(O(n)\)</td>
+          <td>Must find the key in its bucket before removing it.</td>
+        </tr>
+        <tr>
+          <td>Iterate all entries</td>
+          <td>\(O(n+m)\)</td>
+          <td>\(O(n+m)\)</td>
+          <td>Scan all buckets and all stored entries.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      If resizing keeps \(\alpha\) bounded by a constant, the expected costs for lookup, put, and remove are expected
+      \(O(1)\). The space usage is \(O(n+m)\): storage for the bucket array plus storage for the entries.
+    </p>
+  </section>
+
+  <section id="bucket-choices" section-title="Bucket Choices">
+    <h2>Bucket Choices</h2>
+    <p>
+      The classic teaching version uses linked lists for buckets, but the bucket representation is a design choice.
+    </p>
+    <ul>
+      <li><strong>Linked list:</strong> Simple insertion and deletion, but pointer overhead and poor cache locality.</li>
+      <li><strong>Dynamic array or small vector:</strong> Better cache locality for short buckets, but deletion may require shifting or swapping.</li>
+      <li><strong>Tree bucket:</strong> Can protect against long chains, but adds complexity and overhead for small buckets.</li>
+    </ul>
+    <p>
+      For a CS2 implementation, linked lists make the collision behavior easiest to see. Production libraries may use
+      more specialized bucket strategies when chains become long.
+    </p>
+  </section>
+
+  <section id="advantages-tradeoffs" section-title="Advantages and Tradeoffs">
+    <h2>Advantages and Tradeoffs</h2>
+    <ul>
+      <li><strong>Deletion is straightforward:</strong> Removing an entry from a bucket does not disturb other buckets.</li>
+      <li><strong>Load factor can exceed one:</strong> The table can still function even when there are more entries than buckets.</li>
+      <li><strong>Bucket overhead exists:</strong> Each entry may need node or reference storage beyond the key and value.</li>
+      <li><strong>Cache locality can be weaker:</strong> Linked nodes may be scattered in memory.</li>
+      <li><strong>Long chains are possible:</strong> A poor hash function or adversarial input can make one bucket very long.</li>
+    </ul>
+  </section>
+
+  <section id="pitfalls" section-title="Common Pitfalls">
+    <h2>Common Pitfalls</h2>
+    <ul>
+      <li><strong>Adding duplicates:</strong> A map or set implementation must search the bucket before inserting a duplicate key.</li>
+      <li><strong>Forgetting to update size:</strong> Size changes only when a new key is inserted or an existing key is removed.</li>
+      <li><strong>Assuming each bucket has at most one entry:</strong> Collisions are exactly why buckets can hold multiple entries.</li>
+      <li><strong>Ignoring load factor:</strong> Chains grow longer when the table has too few buckets for the number of entries.</li>
+      <li><strong>Rehashing incorrectly:</strong> Existing entries must be placed according to the new table size, not copied to the same indices.</li>
+    </ul>
+  </section>
+
+  <section id="summary" section-title="Summary">
+    <h2>Summary</h2>
+    <p>
+      Separate chaining resolves collisions by storing all entries with the same hash index in the same bucket. The
+      implementation hashes to a bucket, then searches within that bucket. When hashing distributes keys well and
+      resizing keeps the load factor bounded, lookup, insertion, and deletion are expected constant time. Chaining is
+      easy to understand and handles deletion cleanly, but it uses extra bucket storage and can degrade if chains
+      become long.
+    </p>
+  </section>
+
+  <section id="related-pages" section-title="Related Pages">
+    <h2>Related Pages</h2>
+    <ul>
+      <li><a href="?path=Data%20Structures%2FMaps%2C%20Sets%2C%20and%20Hashing%2FHash%20Tables">Hash Tables</a>, for the general hash-table model.</li>
+      <li><a href="?path=Data%20Structures%2FMaps%2C%20Sets%2C%20and%20Hashing%2FOpen%20Addressing">Open Addressing</a>, for probe-based collision handling.</li>
+      <li><a href="?path=Data%20Structures%2FLinear%20Structures%2FLinked%20Lists">Linked Lists</a>, for the common bucket representation.</li>
+    </ul>
+  </section>
+
+  <section id="reading-questions" section-title="Reading Comprehension Questions">
+    <h2>Reading Comprehension Questions</h2>
+    <ol>
+      <li><strong>Collision handling:</strong> Where does separate chaining store keys that hash to the same index?</li>
+      <li><strong>Lookup:</strong> After computing the bucket index, what must lookup do next?</li>
+      <li><strong>Load factor:</strong> Why can \(\alpha\) be greater than <code>1</code> in a chained table?</li>
+      <li><strong>Deletion:</strong> Why does chaining avoid tombstones?</li>
+      <li><strong>Complexity:</strong> Why is the expected bucket length about \(\alpha\)?</li>
+      <li><strong>Worst case:</strong> What input or hash-function behavior could make operations \(O(n)\)?</li>
+    </ol>
+    <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
+    <div id="answers" class="answer" hidden>
+      <ol>
+        <li><strong>Answer:</strong> They are stored together in the bucket at that table index.</li>
+        <li><strong>Answer:</strong> It searches the bucket for an equal key.</li>
+        <li><strong>Answer:</strong> Buckets can store multiple entries, so the table can hold more entries than array positions.</li>
+        <li><strong>Answer:</strong> Deleting from a bucket does not break the search path for keys in other buckets.</li>
+        <li><strong>Answer:</strong> If \(n\) entries are spread uniformly across \(m\) buckets, each bucket has about \(n/m=\alpha\) entries on average.</li>
+        <li><strong>Answer:</strong> If many or all keys hash to the same bucket, that bucket can contain \(n\) entries and require linear search.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="activities" section-title="In-Class Activities">
+    <h2>In-Class Activities</h2>
+    <ol>
+      <li><strong>Build chains:</strong> Insert <code>6</code>, <code>11</code>, <code>16</code>, <code>2</code>, and <code>7</code> into a chained table of size <code>5</code> using \(h(k)=k \bmod 5\). Draw the buckets after each insertion.</li>
+      <li><strong>Trace lookup:</strong> Using your table from the first activity, trace searches for <code>16</code>, <code>7</code>, and <code>12</code>.</li>
+      <li><strong>Delete carefully:</strong> Remove one key from the middle of a chain and show the bucket before and after deletion.</li>
+      <li><strong>Resize discussion:</strong> Rehash the same entries into a table of size <code>11</code>. Which chains get shorter?</li>
+    </ol>
+  </section>
+
+  <section id="problems" section-title="Homework Problems">
+    <h2>Homework Problems</h2>
+    <ol>
+      <li><strong>Pseudocode:</strong> Write <code>contains</code>, <code>add</code>, and <code>remove</code> for a chained hash set.</li>
+      <li><strong>Map update:</strong> Write <code>put</code> for a chained hash map and make sure updating an existing key does not increase the size.</li>
+      <li><strong>Analysis:</strong> If a table stores <code>120</code> entries in <code>40</code> buckets, what is the load factor? What is the expected bucket length under uniform hashing?</li>
+      <li><strong>Bad hashing:</strong> Describe a hash function that would put every integer key into the same bucket. What would happen to lookup cost?</li>
+      <li><strong>Bucket choice:</strong> Compare linked-list buckets and dynamic-array buckets for memory overhead, deletion, and cache locality.</li>
+    </ol>
+  </section>
+</body>
+</html>

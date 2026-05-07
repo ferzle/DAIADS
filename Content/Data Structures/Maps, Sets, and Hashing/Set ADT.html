@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Set ADT</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <script src="../../../scripts/chapterScripts.js"></script>
+  <link rel="stylesheet" href="../../../css/style.css">
+  <link rel="stylesheet" href="../../../css/chapter.css">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-DQ5LVZVFDC');
+  </script>
+</head>
+<body>
+  <h1>Set ADT</h1>
+
+  <section id="overview" section-title="Overview">
+    <h2>Overview</h2>
+    <p>
+      A <strong>set</strong> is an abstract data type that stores a collection of distinct keys. The central question
+      a set answers is simple: <em>is this key present?</em> If a value is already in the set, adding it again does
+      not create a second copy.
+    </p>
+    <p>
+      Sets are useful whenever a program cares about membership instead of position or frequency. They remove
+      duplicates, track visited vertices in graph algorithms, record banned words, test whether a user has a
+      permission, and represent mathematical collections such as \(A\), \(B\), and \(A \cap B\).
+    </p>
+    <p>
+      The set is an ADT, not a single implementation. A set can be implemented with a list, sorted array, balanced
+      search tree, hash table, bit vector, or skip list. The ADT describes the visible behavior; the implementation
+      determines the cost of each operation and whether traversal happens in any useful order.
+    </p>
+  </section>
+
+  <section id="adt" section-title="Abstract Data Type and Operations">
+    <h2>Abstract Data Type and Operations</h2>
+    <p>
+      A set stores keys with no duplicates. A typical set interface includes these operations:
+    </p>
+    <ul>
+      <li><strong><code>add(key)</code>:</strong> Insert <code>key</code> if it is not already present.</li>
+      <li><strong><code>remove(key)</code>:</strong> Delete <code>key</code> if it is present.</li>
+      <li><strong><code>contains(key)</code>:</strong> Return whether <code>key</code> is present.</li>
+      <li><strong><code>size()</code>:</strong> Return the number of distinct keys in the set.</li>
+      <li><strong><code>isEmpty()</code>:</strong> Return whether the set contains no keys.</li>
+      <li><strong><code>clear()</code>:</strong> Remove all keys from the set.</li>
+    </ul>
+    <p>
+      Some interfaces return a Boolean from <code>add</code> and <code>remove</code>. For example,
+      <code>add(key)</code> might return <code>true</code> only when the key was newly inserted, and
+      <code>remove(key)</code> might return <code>true</code> only when a key was actually removed. Other interfaces
+      simply perform the operation and leave the caller to use <code>contains</code> if it needs that information.
+    </p>
+  </section>
+
+  <section id="conceptual-model" section-title="Conceptual Model">
+    <h2>Conceptual Model</h2>
+    <p>
+      Think of a set as a bag of labels where each label may appear at most once.
+    </p>
+    <pre><code>S = { "red", "green", "blue" }</code></pre>
+    <p>
+      The expression <code>contains("green")</code> returns <code>true</code>, while
+      <code>contains("orange")</code> returns <code>false</code>. Calling <code>add("red")</code> does not make two
+      copies of <code>"red"</code>; the set still contains exactly three keys.
+    </p>
+    <p>
+      The set ADT does not promise that keys have positions such as index <code>0</code> or index <code>1</code>.
+      Some implementations let you iterate over the keys, but the order depends on the implementation. A hash set may
+      produce an order that seems arbitrary. A tree set may produce sorted order. A linked hash set may preserve
+      insertion order.
+    </p>
+  </section>
+
+  <section id="worked-example" section-title="Worked Example">
+    <h2>Worked Example</h2>
+    <p>
+      Suppose a program scans these course IDs and wants to report the distinct courses mentioned:
+    </p>
+    <pre><code>CS1, CS2, MATH, CS2, HIST, CS1</code></pre>
+    <p>
+      Start with an empty set and add each key in order.
+    </p>
+    <table class="example-table">
+      <thead>
+        <tr>
+          <th>Operation</th>
+          <th>Set Afterward</th>
+          <th>Did the Size Change?</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>add("CS1")</code></td>
+          <td><code>{CS1}</code></td>
+          <td>yes</td>
+        </tr>
+        <tr>
+          <td><code>add("CS2")</code></td>
+          <td><code>{CS1, CS2}</code></td>
+          <td>yes</td>
+        </tr>
+        <tr>
+          <td><code>add("MATH")</code></td>
+          <td><code>{CS1, CS2, MATH}</code></td>
+          <td>yes</td>
+        </tr>
+        <tr>
+          <td><code>add("CS2")</code></td>
+          <td><code>{CS1, CS2, MATH}</code></td>
+          <td>no</td>
+        </tr>
+        <tr>
+          <td><code>add("HIST")</code></td>
+          <td><code>{CS1, CS2, MATH, HIST}</code></td>
+          <td>yes</td>
+        </tr>
+        <tr>
+          <td><code>add("CS1")</code></td>
+          <td><code>{CS1, CS2, MATH, HIST}</code></td>
+          <td>no</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      The final set has size <code>4</code>, even though the input list had six entries. A list keeps all occurrences.
+      A set keeps only distinct keys.
+    </p>
+  </section>
+
+  <section id="core-operations" section-title="Core Operations">
+    <h2>Core Operations</h2>
+
+    <h3>Membership</h3>
+    <p>
+      <code>contains(key)</code> is the defining set operation. The implementation searches for an equal key and
+      returns whether it exists. Sets are often chosen specifically because membership should be faster or cleaner
+      than scanning a list.
+    </p>
+
+    <h3>Insertion</h3>
+    <p>
+      <code>add(key)</code> must preserve uniqueness. If the key is absent, the operation inserts it and increases
+      the size by one. If an equal key is already present, the visible set does not change.
+    </p>
+    <pre><code>add(key):
+    if contains(key):
+        do not insert a duplicate
+    else:
+        store key
+        size = size + 1</code></pre>
+    <p>
+      Many real implementations combine the search and insertion work instead of literally calling
+      <code>contains</code> first. The sketch shows the behavior, not necessarily the most efficient code structure.
+    </p>
+
+    <h3>Deletion</h3>
+    <p>
+      <code>remove(key)</code> deletes the key if it is present. Removing a key that is not present is usually not an
+      error; it simply leaves the set unchanged or returns <code>false</code>.
+    </p>
+
+    <h3>Iteration</h3>
+    <p>
+      Many sets support iteration over all stored keys. Iteration is useful for printing, copying, or applying a
+      function to every key. It is not the same as indexed access. Unless the set interface promises an order, client
+      code should not rely on the traversal order.
+    </p>
+  </section>
+
+  <section id="set-algebra" section-title="Set Algebra Operations">
+    <h2>Set Algebra Operations</h2>
+    <p>
+      Sets also support operations from mathematics. These operations create or update sets based on membership in
+      other sets.
+    </p>
+    <table class="example-table">
+      <thead>
+        <tr>
+          <th>Operation</th>
+          <th>Meaning</th>
+          <th>Example with \(A=\{1,2,3\}\), \(B=\{3,4\}\)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Union, \(A \cup B\)</td>
+          <td>Keys in \(A\), in \(B\), or in both.</td>
+          <td>\(\{1,2,3,4\}\)</td>
+        </tr>
+        <tr>
+          <td>Intersection, \(A \cap B\)</td>
+          <td>Keys that appear in both sets.</td>
+          <td>\(\{3\}\)</td>
+        </tr>
+        <tr>
+          <td>Difference, \(A - B\)</td>
+          <td>Keys in \(A\) that are not in \(B\).</td>
+          <td>\(\{1,2\}\)</td>
+        </tr>
+        <tr>
+          <td>Subset test, \(A \subseteq B\)</td>
+          <td>Every key in \(A\) also appears in \(B\).</td>
+          <td>false</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      These operations can be built from <code>contains</code>, <code>add</code>, and iteration. For example, to
+      compute an intersection, iterate over the smaller set and add a key to the result only if the other set contains
+      that key.
+    </p>
+    <pre><code>intersection(A, B):
+    result = empty set
+    for each key in A:
+        if B.contains(key):
+            result.add(key)
+    return result</code></pre>
+  </section>
+
+  <section id="implementations" section-title="Implementation Options">
+    <h2>Implementation Options</h2>
+    <p>
+      Different implementations provide the same set behavior with different costs and ordering guarantees.
+    </p>
+    <table class="example-table">
+      <thead>
+        <tr>
+          <th>Implementation</th>
+          <th>Membership</th>
+          <th>Add/Remove</th>
+          <th>Ordering</th>
+          <th>Best Fit</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Unsorted array or linked list</td>
+          <td>\(O(n)\)</td>
+          <td>\(O(n)\) because duplicates must be checked</td>
+          <td>Can preserve insertion order</td>
+          <td>Small sets and first implementations</td>
+        </tr>
+        <tr>
+          <td>Sorted array</td>
+          <td>\(O(\log n)\)</td>
+          <td>\(O(n)\) because elements may shift</td>
+          <td>Sorted</td>
+          <td>Mostly-static sets with many membership tests</td>
+        </tr>
+        <tr>
+          <td>Balanced search tree</td>
+          <td>\(O(\log n)\)</td>
+          <td>\(O(\log n)\)</td>
+          <td>Sorted</td>
+          <td>Ordered traversal and range-style queries</td>
+        </tr>
+        <tr>
+          <td>Hash table</td>
+          <td>Expected \(O(1)\)</td>
+          <td>Expected \(O(1)\)</td>
+          <td>Usually not sorted</td>
+          <td>Fast exact membership, insertion, and deletion</td>
+        </tr>
+        <tr>
+          <td>Bit vector</td>
+          <td>\(O(1)\)</td>
+          <td>\(O(1)\)</td>
+          <td>By numeric key order</td>
+          <td>Dense sets over a small integer universe</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      Hash tables are a common default for general-purpose sets, but they are not the only choice. If a program needs
+      the keys in sorted order, a tree-based set may be more appropriate. If keys are small nonnegative integers, a
+      bit vector can be extremely compact and fast.
+    </p>
+  </section>
+
+  <section id="sets-and-maps" section-title="Relationship to Maps">
+    <h2>Relationship to Maps</h2>
+    <p>
+      Sets and maps are closely related. A set stores keys only. A map stores keys with associated values. One common
+      way to implement a set is to use a map from each key to a simple marker value.
+    </p>
+    <pre><code>set contains key  &lt;==&gt;  markerMap contains key</code></pre>
+    <p>
+      This relationship is useful, but the ADTs answer different questions. A set asks whether a key is present. A
+      map asks what value is associated with a key. If the program needs counts, labels, records, or distances, use a
+      map. If it only needs membership, use a set.
+    </p>
+  </section>
+
+  <section id="edge-cases" section-title="Edge Cases and Pitfalls">
+    <h2>Edge Cases and Pitfalls</h2>
+    <ul>
+      <li><strong>Duplicate insertion:</strong> Adding an existing key should not increase the size.</li>
+      <li><strong>Removing a missing key:</strong> The interface should define whether this returns <code>false</code>, does nothing, or reports an error.</li>
+      <li><strong>Equality rules:</strong> The set needs a clear definition of when two keys count as the same key.</li>
+      <li><strong>Mutable keys:</strong> Changing a key after insertion can break hash-based or tree-based lookup if the key's hash, equality, or ordering changes.</li>
+      <li><strong>Iteration order:</strong> Do not assume sorted or insertion order unless the implementation promises it.</li>
+      <li><strong>Using a set when counts matter:</strong> A set loses frequency information. Use a map from key to count when occurrences matter.</li>
+    </ul>
+  </section>
+
+  <section id="applications" section-title="Applications">
+    <h2>Applications</h2>
+    <ul>
+      <li><strong>Duplicate detection:</strong> Insert each item into a set and report a duplicate when insertion finds an existing key.</li>
+      <li><strong>Visited tracking:</strong> Graph searches use a set to avoid processing the same vertex repeatedly.</li>
+      <li><strong>Filtering:</strong> A set of allowed or blocked keys can decide whether an item should be kept.</li>
+      <li><strong>Membership joins:</strong> Given two collections, convert one to a set so membership tests against it are fast.</li>
+      <li><strong>Feature flags and permissions:</strong> A user can have a set of permissions, enabled features, or roles.</li>
+      <li><strong>Mathematical modeling:</strong> Union, intersection, and difference model overlap between groups.</li>
+    </ul>
+  </section>
+
+  <section id="summary" section-title="Summary">
+    <h2>Summary</h2>
+    <p>
+      A set stores distinct keys and makes membership a primary operation. Adding an existing key leaves the set
+      unchanged, while removing a missing key usually has no effect or returns <code>false</code>. Sets can be
+      implemented in several ways, including lists, sorted arrays, balanced trees, hash tables, and bit vectors. The
+      right implementation depends on whether the program needs fast exact lookup, sorted traversal, compact integer
+      storage, or simple teaching code.
+    </p>
+  </section>
+
+  <section id="related-pages" section-title="Related Pages">
+    <h2>Related Pages</h2>
+    <ul>
+      <li><a href="?path=Data%20Structures%2FMaps%2C%20Sets%2C%20and%20Hashing%2FIntroduction">Maps, Sets, and Hashing</a>, for the section overview.</li>
+      <li><a href="?path=Data%20Structures%2FMaps%2C%20Sets%2C%20and%20Hashing%2FMap%20and%20Dictionary%20ADT">Map and Dictionary ADT</a>, for key-value lookup.</li>
+      <li><a href="?path=Data%20Structures%2FMaps%2C%20Sets%2C%20and%20Hashing%2FHash%20Tables">Hash Tables</a>, for the most common fast set implementation.</li>
+      <li><a href="?path=Data%20Structures%2FTrees%2FBinary%20Search%20Trees">Binary Search Trees</a>, for an ordered implementation idea.</li>
+    </ul>
+  </section>
+
+  <section id="reading-questions" section-title="Reading Comprehension Questions">
+    <h2>Reading Comprehension Questions</h2>
+    <ol>
+      <li><strong>Definition:</strong> What makes a set different from a list?</li>
+      <li><strong>Insertion:</strong> What should happen if <code>add(key)</code> is called when <code>key</code> is already present?</li>
+      <li><strong>Membership:</strong> Why is <code>contains</code> the central operation for a set?</li>
+      <li><strong>Implementation:</strong> Why might a hash set be preferred over an unsorted list for a large collection?</li>
+      <li><strong>Ordering:</strong> Why should client code avoid assuming that a general set iterates in sorted order?</li>
+      <li><strong>Set algebra:</strong> How can <code>contains</code> be used to compute an intersection?</li>
+    </ol>
+    <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
+    <div id="answers" class="answer" hidden>
+      <ol>
+        <li><strong>Answer:</strong> A set stores distinct keys and does not keep duplicate occurrences. A list may contain repeated values and has positions.</li>
+        <li><strong>Answer:</strong> The set should not insert a duplicate. The size should stay the same.</li>
+        <li><strong>Answer:</strong> A set is mainly used to answer whether a key is present, so membership is the defining query.</li>
+        <li><strong>Answer:</strong> A hash set usually supports expected constant-time membership, insertion, and deletion, while an unsorted list requires a linear scan.</li>
+        <li><strong>Answer:</strong> Different implementations use different internal layouts. Only ordered set implementations promise sorted traversal.</li>
+        <li><strong>Answer:</strong> Iterate through one set and add a key to the result only when the other set contains that key.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="activities" section-title="In-Class Activities">
+    <h2>In-Class Activities</h2>
+    <ol>
+      <li><strong>Trace the set:</strong> Starting from an empty set, trace <code>add(5)</code>, <code>add(2)</code>, <code>add(5)</code>, <code>remove(7)</code>, <code>add(7)</code>, and <code>contains(2)</code>. Record the set and size after each operation.</li>
+      <li><strong>Choose the structure:</strong> For each task, decide whether a list, set, or map is the best ADT: storing a playlist order, checking whether an ID is banned, counting word frequencies, and tracking visited maze cells.</li>
+      <li><strong>Set algebra by hand:</strong> Given \(A=\{a,b,c,d\}\) and \(B=\{b,d,e\}\), compute \(A \cup B\), \(A \cap B\), \(A-B\), and \(B-A\).</li>
+      <li><strong>Implementation debate:</strong> Compare a hash set and a tree set for a spell-check dictionary. Which operations matter, and does sorted order help?</li>
+    </ol>
+  </section>
+
+  <section id="problems" section-title="Homework Problems">
+    <h2>Homework Problems</h2>
+    <ol>
+      <li><strong>First duplicate:</strong> Write an algorithm that scans an array and returns the first value that appears twice. Explain how a set helps.</li>
+      <li><strong>Unique words:</strong> Given a text file, report how many distinct words appear. State what should count as the same word when capitalization or punctuation differs.</li>
+      <li><strong>Intersection algorithm:</strong> Write pseudocode for computing the intersection of two sets. Analyze the running time assuming <code>contains</code> is expected \(O(1)\).</li>
+      <li><strong>Implementation comparison:</strong> Compare an unsorted-list set, sorted-array set, hash set, and tree set for membership-heavy workloads.</li>
+      <li><strong>Mutable-key failure:</strong> Explain why changing an object after it has been inserted into a hash set can make later membership tests fail.</li>
+    </ol>
+  </section>
+</body>
+</html>

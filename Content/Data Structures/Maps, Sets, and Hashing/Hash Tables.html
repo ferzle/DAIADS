@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hash Tables</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <script src="../../../scripts/chapterScripts.js"></script>
+  <link rel="stylesheet" href="../../../css/style.css">
+  <link rel="stylesheet" href="../../../css/chapter.css">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-DQ5LVZVFDC');
+  </script>
+</head>
+<body>
+  <h1>Hash Tables</h1>
+
+  <section id="overview" section-title="Overview">
+    <h2>Overview</h2>
+    <p>
+      A <strong>hash table</strong> is a data structure for implementing maps and sets. Its goal is fast exact lookup:
+      given a key, find the stored key or key-value entry without scanning the whole collection.
+    </p>
+    <p>
+      The central idea is to use a <strong>hash function</strong> to turn a key into an array index. If the hash
+      function spreads keys out well and the table is kept at a reasonable load factor, lookup, insertion, and
+      deletion are expected \(O(1)\).
+    </p>
+    <p>
+      Hash tables are implementation structures. The same table machinery can store a set of keys or a map of
+      key-value entries. The ADT describes what the client sees; the hash table describes how the implementation
+      organizes the entries internally.
+    </p>
+  </section>
+
+  <section id="table-model" section-title="The Table Model">
+    <h2>The Table Model</h2>
+    <p>
+      A hash table uses an array of \(m\) positions. The table currently stores \(n\) entries. The
+      <strong>load factor</strong> is
+    </p>
+    <pre><code>alpha = n / m</code></pre>
+    <p>
+      The load factor measures how full the table is. A higher load factor means the table uses space more tightly,
+      but it also usually means more collisions and slower operations.
+    </p>
+    <p>
+      To place a key in the table, the implementation computes a hash code and converts it into a table index:
+    </p>
+    <pre><code>index = hash(key) mod tableSize</code></pre>
+    <p>
+      The actual hash function may be more complicated than this sketch, especially for strings or objects. In
+      introductory examples, integer keys and modulo arithmetic make the table behavior easier to trace.
+    </p>
+  </section>
+
+  <section id="collisions" section-title="Collisions">
+    <h2>Collisions</h2>
+    <p>
+      A <strong>collision</strong> occurs when two different keys are assigned to the same table position. Collisions
+      are unavoidable because there are usually many more possible keys than array positions.
+    </p>
+    <p>
+      For example, if \(h(k)=k \bmod 7\), then keys <code>10</code>, <code>17</code>, and <code>24</code> all map to
+      index <code>3</code>. A hash table is not complete until it says what to do when this happens.
+    </p>
+    <p>
+      The two collision-resolution families covered in this section are:
+    </p>
+    <ul>
+      <li><strong><a href="?path=Data%20Structures%2FMaps%2C%20Sets%2C%20and%20Hashing%2FSeparate%20Chaining">Separate Chaining</a>:</strong> Each array position stores a small collection, often a linked list, of entries that hash to that position.</li>
+      <li><strong><a href="?path=Data%20Structures%2FMaps%2C%20Sets%2C%20and%20Hashing%2FOpen%20Addressing">Open Addressing</a>:</strong> Entries are stored directly in the table array, and collisions are handled by probing other slots.</li>
+    </ul>
+  </section>
+
+  <section id="worked-example" section-title="Worked Example">
+    <h2>Worked Example</h2>
+    <p>
+      Suppose a table has \(m=7\) positions and uses \(h(k)=k \bmod 7\). Insert keys
+      <code>10</code>, <code>3</code>, <code>17</code>, <code>8</code>, and <code>24</code>.
+    </p>
+    <table class="example-table">
+      <thead>
+        <tr>
+          <th>Key</th>
+          <th>Hash Index</th>
+          <th>Observation</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>10</code></td>
+          <td><code>3</code></td>
+          <td>Bucket or slot <code>3</code> is selected.</td>
+        </tr>
+        <tr>
+          <td><code>3</code></td>
+          <td><code>3</code></td>
+          <td>Collision with <code>10</code>.</td>
+        </tr>
+        <tr>
+          <td><code>17</code></td>
+          <td><code>3</code></td>
+          <td>Another collision at index <code>3</code>.</td>
+        </tr>
+        <tr>
+          <td><code>8</code></td>
+          <td><code>1</code></td>
+          <td>No collision if index <code>1</code> is empty.</td>
+        </tr>
+        <tr>
+          <td><code>24</code></td>
+          <td><code>3</code></td>
+          <td>Collision again at index <code>3</code>.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      This example has many collisions because the selected keys share the same remainder modulo <code>7</code>. A
+      real hash table tries to avoid patterns like this by using a better hash function and resizing when the load
+      factor becomes too high.
+    </p>
+  </section>
+
+  <section id="operations" section-title="Core Operations">
+    <h2>Core Operations</h2>
+
+    <h3>Search or Lookup</h3>
+    <p>
+      To search for a key, the table hashes the key to find the first place to look. Then it follows the table's
+      collision strategy until it either finds the key or determines that the key is absent.
+    </p>
+    <pre><code>lookup(key):
+    index = tableIndex(key)
+    search according to the collision strategy
+    return the matching entry or report that key is absent</code></pre>
+
+    <h3>Insert or Put</h3>
+    <p>
+      In a set, insertion stores a key. In a map, insertion stores a key-value entry. If the key already exists, a map
+      usually updates the existing value and a set leaves the key unchanged.
+    </p>
+
+    <h3>Remove</h3>
+    <p>
+      Removal first finds the key, then deletes the entry according to the collision strategy. Deletion is especially
+      delicate in open addressing because simply clearing a slot can break later searches. That is why open-addressed
+      tables often use tombstones.
+    </p>
+  </section>
+
+  <section id="hash-functions" section-title="Hash Functions">
+    <h2>Hash Functions</h2>
+    <p>
+      A good hash function should be deterministic, fast to compute, and spread likely keys across the table. It does
+      not need to be random, but it should avoid predictable clustering for the data being stored.
+    </p>
+    <ul>
+      <li><strong>Deterministic:</strong> The same key must hash to the same value while it is stored.</li>
+      <li><strong>Uses the key's meaningful data:</strong> Equal keys must be treated consistently.</li>
+      <li><strong>Spreads common inputs:</strong> Similar keys should not all land in the same small part of the table.</li>
+      <li><strong>Fast:</strong> Hashing should not dominate the cost of lookup.</li>
+    </ul>
+    <p>
+      For object keys, the hash function and equality rule must agree: if two keys are equal, they must have the same
+      hash code. The reverse is not required. Different keys may have the same hash code, which is exactly why
+      collision handling is necessary.
+    </p>
+  </section>
+
+  <section id="load-factor-resizing" section-title="Load Factor and Resizing">
+    <h2>Load Factor and Resizing</h2>
+    <p>
+      Hash tables resize to keep operations fast. When the load factor crosses a chosen threshold, the implementation
+      allocates a larger table and inserts all existing entries into the new table. This process is called
+      <strong>rehashing</strong>.
+    </p>
+    <pre><code>resize():
+    oldTable = table
+    table = new larger empty table
+    size = 0
+    for each entry in oldTable:
+        insert entry into the new table</code></pre>
+    <p>
+      Rehashing is expensive when it happens because every entry is moved. If the table grows geometrically, such as
+      doubling in size, the cost is spread across many insertions and the average insertion cost can still be treated
+      as expected \(O(1)\).
+    </p>
+  </section>
+
+  <section id="complexity" section-title="Time and Space Complexity">
+    <h2>Time and Space Complexity</h2>
+    <table class="example-table">
+      <thead>
+        <tr>
+          <th>Operation</th>
+          <th>Expected Cost</th>
+          <th>Worst Case</th>
+          <th>Why</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Lookup</td>
+          <td>\(O(1)\)</td>
+          <td>\(O(n)\)</td>
+          <td>Expected constant if entries are well distributed; linear if many keys collide.</td>
+        </tr>
+        <tr>
+          <td>Insert or put</td>
+          <td>\(O(1)\) amortized expected</td>
+          <td>\(O(n)\)</td>
+          <td>Usually constant, but may scan a long collision group or trigger a resize.</td>
+        </tr>
+        <tr>
+          <td>Remove</td>
+          <td>\(O(1)\)</td>
+          <td>\(O(n)\)</td>
+          <td>Deletion first has to find the key.</td>
+        </tr>
+        <tr>
+          <td>Iterate all entries</td>
+          <td>\(O(n + m)\)</td>
+          <td>\(O(n + m)\)</td>
+          <td>The implementation may need to scan table positions as well as entries.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      The space usage is usually \(O(n+m)\), where \(n\) is the number of entries and \(m\) is the table capacity.
+      Some collision strategies add extra pointer or marker overhead.
+    </p>
+  </section>
+
+  <section id="pitfalls" section-title="Common Pitfalls">
+    <h2>Common Pitfalls</h2>
+    <ul>
+      <li><strong>Assuming guaranteed constant time:</strong> Hash tables usually provide expected constant time, not worst-case constant time.</li>
+      <li><strong>Ignoring collisions:</strong> A hash function alone is not a hash table implementation.</li>
+      <li><strong>Letting the table get too full:</strong> High load factor makes collisions more expensive.</li>
+      <li><strong>Mutating keys:</strong> If a key's hash or equality result changes after insertion, lookup may fail.</li>
+      <li><strong>Assuming sorted order:</strong> Most hash tables do not keep keys in sorted order.</li>
+      <li><strong>Using hashing for range questions:</strong> Hash tables are designed for exact-key lookup, not predecessor, successor, or range queries.</li>
+    </ul>
+  </section>
+
+  <section id="applications" section-title="Applications">
+    <h2>Applications</h2>
+    <ul>
+      <li><strong>Hash sets:</strong> Fast membership testing and duplicate removal.</li>
+      <li><strong>Hash maps:</strong> Fast key-value lookup, including frequency tables and indexes.</li>
+      <li><strong>Caches:</strong> Store previously computed results by input or request key.</li>
+      <li><strong>Graph algorithms:</strong> Store visited vertices, distances, parents, and adjacency lists keyed by vertex.</li>
+      <li><strong>Compilers:</strong> Symbol tables map identifiers to declaration information.</li>
+      <li><strong>Sparse data:</strong> Store only meaningful positions in a large logical array or matrix.</li>
+    </ul>
+  </section>
+
+  <section id="summary" section-title="Summary">
+    <h2>Summary</h2>
+    <p>
+      A hash table implements maps and sets by using a hash function to choose where entries belong in an array.
+      Collisions are unavoidable, so every hash table needs a collision-resolution strategy. Separate chaining stores
+      colliding entries in bucket collections. Open addressing keeps entries in the array and searches through a probe
+      sequence. Load factor and resizing are what keep expected operation costs close to constant.
+    </p>
+  </section>
+
+  <section id="related-pages" section-title="Related Pages">
+    <h2>Related Pages</h2>
+    <ul>
+      <li><a href="?path=Data%20Structures%2FMaps%2C%20Sets%2C%20and%20Hashing%2FSet%20ADT">Set ADT</a>, for membership behavior.</li>
+      <li><a href="?path=Data%20Structures%2FMaps%2C%20Sets%2C%20and%20Hashing%2FMap%20and%20Dictionary%20ADT">Map and Dictionary ADT</a>, for key-value behavior.</li>
+      <li><a href="?path=Data%20Structures%2FMaps%2C%20Sets%2C%20and%20Hashing%2FSeparate%20Chaining">Separate Chaining</a>, for bucket-based collision handling.</li>
+      <li><a href="?path=Data%20Structures%2FMaps%2C%20Sets%2C%20and%20Hashing%2FOpen%20Addressing">Open Addressing</a>, for probe-based collision handling.</li>
+    </ul>
+  </section>
+
+  <section id="reading-questions" section-title="Reading Comprehension Questions">
+    <h2>Reading Comprehension Questions</h2>
+    <ol>
+      <li><strong>Purpose:</strong> What ADTs are commonly implemented with hash tables?</li>
+      <li><strong>Hashing:</strong> What does a hash function do for a hash table?</li>
+      <li><strong>Collision:</strong> Why are collisions unavoidable?</li>
+      <li><strong>Load factor:</strong> What does \(\alpha=n/m\) measure?</li>
+      <li><strong>Resizing:</strong> Why must entries be reinserted when the table grows?</li>
+      <li><strong>Ordering:</strong> Why is a hash table usually a poor choice for sorted range queries?</li>
+    </ol>
+    <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
+    <div id="answers" class="answer" hidden>
+      <ol>
+        <li><strong>Answer:</strong> Hash tables commonly implement sets and maps.</li>
+        <li><strong>Answer:</strong> It turns a key into a number used to choose a table index.</li>
+        <li><strong>Answer:</strong> There are usually more possible keys than table positions, so different keys can be assigned to the same position.</li>
+        <li><strong>Answer:</strong> It measures how full the table is: stored entries divided by table capacity.</li>
+        <li><strong>Answer:</strong> Changing the table size changes the index calculation, so existing entries may belong in different positions.</li>
+        <li><strong>Answer:</strong> Hash tables organize entries by hash value, not by sorted key order.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="activities" section-title="In-Class Activities">
+    <h2>In-Class Activities</h2>
+    <ol>
+      <li><strong>Compute hash indices:</strong> For \(m=11\) and \(h(k)=k \bmod 11\), compute the table index for <code>21</code>, <code>32</code>, <code>43</code>, <code>17</code>, and <code>28</code>.</li>
+      <li><strong>Find collisions:</strong> Choose five integer keys that all collide when \(m=5\). Explain why they collide.</li>
+      <li><strong>Load-factor discussion:</strong> Compare two tables storing \(n=20\) entries, one with \(m=25\) and one with \(m=100\). What tradeoff is being made?</li>
+      <li><strong>Collision strategy preview:</strong> For a colliding key, describe where it would go under separate chaining and where it might go under open addressing.</li>
+    </ol>
+  </section>
+
+  <section id="problems" section-title="Homework Problems">
+    <h2>Homework Problems</h2>
+    <ol>
+      <li><strong>Trace a table:</strong> Insert <code>18</code>, <code>41</code>, <code>22</code>, <code>44</code>, and <code>59</code> into a table of size <code>7</code> using \(h(k)=k \bmod 7\). Identify every collision.</li>
+      <li><strong>Hash function critique:</strong> Explain why using only the first letter of a word as its hash value is a weak hash function for an English dictionary.</li>
+      <li><strong>Resizing:</strong> A table grows from capacity <code>8</code> to capacity <code>16</code>. Explain why entries cannot simply stay in the same array indices.</li>
+      <li><strong>Use-case choice:</strong> Decide whether a hash table, sorted array, or balanced search tree is best for exact lookup, sorted printing, and range queries.</li>
+      <li><strong>Mutable key:</strong> Give an example of a key object that would be unsafe to mutate after inserting it into a hash table.</li>
+    </ol>
+  </section>
+</body>
+</html>
