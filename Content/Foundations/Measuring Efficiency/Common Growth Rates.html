@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Common Growth Rates</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
   <script src="../../../scripts/chapterScripts.js"></script>
   <link rel="stylesheet" href="../../../css/style.css">
   <link rel="stylesheet" href="../../../css/chapter.css">
@@ -21,7 +24,199 @@
 
   <section id="overview" section-title="Overview">
     <h2>Overview</h2>
-    <p>This page is coming soon.</p>
+    <p>
+      Once a work count has been simplified with asymptotic notation, the result is useful only if
+      you understand what that growth rate means. This page summarizes the most common growth rates
+      in algorithms and data structures.
+    </p>
+    <p>
+      The order matters. A linear algorithm usually scales much better than a quadratic one, and a
+      polynomial-time algorithm usually scales much better than an exponential one.
+    </p>
+  </section>
+
+  <section id="growth-table" section-title="Growth Rate Table">
+    <h2>Growth Rate Table</h2>
+    <table class="example-table left-align">
+      <thead>
+        <tr>
+          <th>Class</th>
+          <th>Typical notation</th>
+          <th>Common source</th>
+          <th>Effect of doubling \(n\)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Constant</td>
+          <td>\(\Theta(1)\)</td>
+          <td>Fixed amount of work</td>
+          <td>About the same</td>
+        </tr>
+        <tr>
+          <td>Logarithmic</td>
+          <td>\(\Theta(\log n)\)</td>
+          <td>Repeatedly cutting the input by a constant factor</td>
+          <td>Adds about one step for base-2 logs</td>
+        </tr>
+        <tr>
+          <td>Linear</td>
+          <td>\(\Theta(n)\)</td>
+          <td>Scanning all items once</td>
+          <td>About twice as much work</td>
+        </tr>
+        <tr>
+          <td>Linearithmic</td>
+          <td>\(\Theta(n \log n)\)</td>
+          <td>Many divide-and-conquer sorting algorithms</td>
+          <td>A little more than twice as much work</td>
+        </tr>
+        <tr>
+          <td>Quadratic</td>
+          <td>\(\Theta(n^2)\)</td>
+          <td>All pairs, many simple nested-loop algorithms</td>
+          <td>About four times as much work</td>
+        </tr>
+        <tr>
+          <td>Polynomial</td>
+          <td>\(\Theta(n^k)\)</td>
+          <td>Nested loops with fixed depth, many tractable algorithms</td>
+          <td>Multiplies by about \(2^k\)</td>
+        </tr>
+        <tr>
+          <td>Exponential</td>
+          <td>\(\Theta(c^n)\), \(c &gt; 1\)</td>
+          <td>Trying all subsets, assignments, or paths</td>
+          <td>Multiplies by \(c^n\)'s doubling effect; grows very quickly</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="standard-order" section-title="Standard Ordering">
+    <h2>Standard Ordering</h2>
+    <p>
+      A useful ordering to remember is:
+    </p>
+    \[
+      1 \ll \log n \ll n \ll n\log n \ll n^2 \ll n^3 \ll 2^n \ll n! \ll n^n.
+    \]
+    <p>
+      The symbol \(\ll\) here means "grows much slower than." You do not need to memorize every
+      possible function, but you should understand the broad pattern: logarithms grow slowly,
+      polynomials grow faster as the exponent increases, and exponentials eventually beat every
+      polynomial.
+    </p>
+  </section>
+
+  <section id="constant-log-linear" section-title="Constant, Logarithmic, and Linear">
+    <h2>Constant, Logarithmic, and Linear</h2>
+    <p>
+      Constant-time operations do not grow with input size. Array indexing, stack push, and reading
+      a stored size field are often treated as constant under the usual cost model.
+    </p>
+    <p>
+      Logarithmic growth often appears when each step removes a constant fraction of the remaining
+      input. Binary search is the standard example: each comparison discards about half of the
+      remaining array.
+    </p>
+    <p>
+      Linear growth appears when the algorithm must inspect each item a constant number of times.
+      Sequential search, finding a maximum, and counting values in an array are typical examples.
+    </p>
+  </section>
+
+  <section id="nlogn-quadratic" section-title="n log n and Quadratic">
+    <h2>\(n \log n\) and Quadratic</h2>
+    <p>
+      The growth rate \(n\log n\) often appears in divide-and-conquer algorithms that split the
+      input into levels and do linear work across each level. Merge sort is the classic example.
+    </p>
+    <p>
+      Quadratic growth often appears when an algorithm considers all pairs of \(n\) items or uses
+      nested loops where both loops depend on \(n\). Some simple sorting algorithms, such as
+      selection sort and insertion sort in the worst case, have quadratic running time.
+    </p>
+  </section>
+
+  <section id="polynomial-exponential" section-title="Polynomial and Exponential">
+    <h2>Polynomial and Exponential</h2>
+    <p>
+      A polynomial running time has the form \(\Theta(n^k)\) for some constant \(k\). Linear,
+      quadratic, and cubic algorithms are all polynomial. In many theoretical settings,
+      polynomial time is treated as a rough boundary for "efficient," though constants and the
+      exponent still matter in practice.
+    </p>
+    <p>
+      Exponential algorithms have running time like \(\Theta(2^n)\), \(\Theta(3^n)\), or more
+      generally \(\Theta(c^n)\) for a constant \(c&gt;1\). These often come from exploring every
+      subset, every binary string, or every combination of choices. They become infeasible quickly.
+    </p>
+  </section>
+
+  <section id="logs-and-bases" section-title="Log and Exponential Bases">
+    <h2>Log and Exponential Bases</h2>
+    <p>
+      Logarithms with different constant bases have the same asymptotic growth rate:
+    </p>
+    \[
+      \log_2 n = \Theta(\log_{10} n).
+    \]
+    <p>
+      This is why algorithm analysis often writes \(\log n\) without specifying the base.
+      Changing the base only changes the value by a constant factor.
+    </p>
+    <p>
+      Exponentials are different. \(2^n\) and \(3^n\) do not have the same growth rate. The base
+      of an exponential matters.
+    </p>
+  </section>
+
+  <section id="practice-warnings" section-title="Practice Warnings">
+    <h2>Practice Warnings</h2>
+    <ul class="spaced">
+      <li><strong>Asymptotic better does not mean always faster:</strong> A more complex algorithm may have overhead that loses on small inputs.</li>
+      <li><strong>Same class does not mean same runtime:</strong> \(4n^2\) and \(10000n^2\) are both \(\Theta(n^2)\), but the constants still matter in real implementations.</li>
+      <li><strong>Faster-growing complexity means a slower algorithm:</strong> A running time of \(n^2\) grows faster than \(n\), so the quadratic algorithm scales worse.</li>
+      <li><strong>Use the right variable:</strong> If the input is an \(n \times m\) matrix, a bound may need both \(n\) and \(m\).</li>
+    </ul>
+  </section>
+
+  <section id="reading-questions" section-title="Reading Comprehension Questions">
+    <h2>Reading Comprehension Questions</h2>
+    <ol>
+      <li>Why do logarithmic algorithms scale well?</li>
+      <li>Why does a quadratic algorithm usually become much worse than a linear algorithm as \(n\) grows?</li>
+      <li>Why can we usually omit the base of a logarithm in asymptotic notation?</li>
+      <li>Why do exponential bases matter?</li>
+    </ol>
+    <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
+    <div id="answers" class="answer" hidden>
+      <ol>
+        <li><strong>Answer:</strong> They usually reduce the remaining input by a constant factor each step, so the number of steps grows very slowly.</li>
+        <li><strong>Answer:</strong> Doubling the input roughly doubles linear work but quadruples quadratic work.</li>
+        <li><strong>Answer:</strong> Changing a logarithm's base changes its value only by a constant factor.</li>
+        <li><strong>Answer:</strong> Exponentials with different bases differ by more than a constant factor as \(n\) grows.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="activities" section-title="In-Class Activities">
+    <h2>In-Class Activities</h2>
+    <ol>
+      <li><strong>Rank functions:</strong> Put \(n^2\), \(\log n\), \(2^n\), \(n\log n\), \(1\), and \(n\) in increasing order of growth.</li>
+      <li><strong>Classify algorithms:</strong> Match sequential search, binary search, merge sort, and all-subsets generation to their common growth classes.</li>
+      <li><strong>Crossover discussion:</strong> Discuss why an \(O(n^2)\) algorithm might beat an \(O(n\log n)\) algorithm for small \(n\).</li>
+    </ol>
+  </section>
+
+  <section id="problems" section-title="Homework Problems">
+    <h2>Homework Problems</h2>
+    <ol>
+      <li><strong>Growth ranking:</strong> Rank \(100n\), \(n^2\), \(n\log n\), \(2^n\), and \(\log^2 n\) from slowest to fastest growth.</li>
+      <li><strong>Class examples:</strong> Give one algorithm or operation from this course that is commonly constant, logarithmic, linear, quadratic, and exponential.</li>
+      <li><strong>Base comparison:</strong> Explain why \(\log_2 n\) and \(\log_{10} n\) are asymptotically equivalent but \(2^n\) and \(10^n\) are not.</li>
+    </ol>
   </section>
 </body>
 </html>

@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Counting Work in Iterative Algorithms</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
   <script src="../../../scripts/chapterScripts.js"></script>
   <link rel="stylesheet" href="../../../css/style.css">
   <link rel="stylesheet" href="../../../css/chapter.css">
@@ -21,7 +24,229 @@
 
   <section id="overview" section-title="Overview">
     <h2>Overview</h2>
-    <p>This page is coming soon.</p>
+    <p>
+      Counting work turns code into a function of the input size. The count does not need to be
+      exact. It needs to be accurate enough to identify the dominant growth pattern.
+    </p>
+    <p>
+      This page focuses on iterative code: straight-line statements, conditionals, sequential
+      loops, and nested loops. Recursive algorithms are handled later with recurrence relations.
+    </p>
+  </section>
+
+  <section id="straight-line-code" section-title="Straight-Line Code">
+    <h2>Straight-Line Code</h2>
+    <p>
+      Code with no loops and no recursive calls usually performs a constant amount of work.
+    </p>
+    <pre><code>int max2(int x, int y) {
+    if (x &gt;= y) {
+        return x;
+    } else {
+        return y;
+    }
+}</code></pre>
+    <p>
+      This method does one comparison and one return. The exact count depends on how detailed
+      the cost model is, but the count does not grow with the input size. It is constant work.
+    </p>
+  </section>
+
+  <section id="single-loop" section-title="Single Loops">
+    <h2>Single Loops</h2>
+    <p>
+      If a loop executes \(n\) times and each iteration does constant work, the total work grows
+      in proportion to \(n\).
+    </p>
+    <pre><code>int countZeros(int[] a) {
+    int count = 0;
+    for (int i = 0; i &lt; a.length; i++) {
+        if (a[i] == 0) {
+            count++;
+        }
+    }
+    return count;
+}</code></pre>
+    <p>
+      A good abstract operation is the comparison <code>a[i] == 0</code>. It executes once for
+      each array element, so it executes \(n\) times for an array of length \(n\).
+    </p>
+  </section>
+
+  <section id="sequential-loops" section-title="Sequential Loops">
+    <h2>Sequential Loops</h2>
+    <p>
+      Loops that happen one after another add their work.
+    </p>
+    <pre><code>for (int i = 0; i &lt; n; i++) {
+    total += a[i];
+}
+
+for (int j = 0; j &lt; n; j++) {
+    total += b[j];
+}</code></pre>
+    <p>
+      The first loop does about \(n\) units of repeated work. The second also does about \(n\).
+      Together they do about \(2n\). The factor \(2\) matters for exact timing, but not for the
+      growth-rate classification.
+    </p>
+  </section>
+
+  <section id="nested-loops" section-title="Nested Loops">
+    <h2>Nested Loops</h2>
+    <p>
+      Nested loops multiply when the inner loop runs completely for each outer-loop iteration.
+    </p>
+    <pre><code>for (int i = 0; i &lt; n; i++) {
+    for (int j = 0; j &lt; n; j++) {
+        table[i][j] = a[i] + a[j];
+    }
+}</code></pre>
+    <p>
+      The inner statement executes \(n\) times for each value of <code>i</code>. Since there are
+      \(n\) values of <code>i</code>, the statement executes \(n \cdot n = n^2\) times.
+    </p>
+    <p>
+      Do not memorize "nested loops mean \(n^2\)." Read the loop bounds. The following code has
+      a nested loop but still does work proportional to \(n\), because the inner loop always runs
+      exactly 6 times.
+    </p>
+    <pre><code>for (int i = 0; i &lt; n; i++) {
+    for (int j = 0; j &lt; 6; j++) {
+        total += a[i];
+    }
+}</code></pre>
+  </section>
+
+  <section id="dependent-bounds" section-title="Dependent Loop Bounds">
+    <h2>Dependent Loop Bounds</h2>
+    <p>
+      When an inner loop's bound depends on an outer-loop variable, write the count as a sum.
+    </p>
+    <pre><code>for (int i = 1; i &lt;= n; i++) {
+    for (int j = 1; j &lt;= i; j++) {
+        total++;
+    }
+}</code></pre>
+    <p>
+      The inner statement executes \(1\) time when \(i=1\), \(2\) times when \(i=2\), and so on.
+      The total is
+    </p>
+    \[
+      1 + 2 + 3 + \cdots + n = \frac{n(n+1)}{2}.
+    \]
+    <p>
+      The exact formula is useful, but for growth-rate analysis the important part is the
+      leading \(n^2\) term.
+    </p>
+  </section>
+
+  <section id="function-calls" section-title="Function Calls Are Not Automatically Constant">
+    <h2>Function Calls Are Not Automatically Constant</h2>
+    <p>
+      A common analysis mistake is treating every method call as one operation. That is only valid
+      when the called method really is constant time.
+    </p>
+    <pre><code>for (int i = 0; i &lt; a.length; i++) {
+    if (contains(b, a[i])) {
+        matches++;
+    }
+}</code></pre>
+    <p>
+      If <code>contains(b, a[i])</code> scans an array <code>b</code> of length \(m\), then each
+      call may take \(m\) work, and the loop may take about \(nm\) work. If <code>b</code> is a
+      hash set with expected constant-time lookup, the same loop may grow like \(n\).
+    </p>
+  </section>
+
+  <section id="simplification" section-title="Simplifying Counts">
+    <h2>Simplifying Counts</h2>
+    <p>
+      Counting work often gives expressions like these:
+    </p>
+    <table class="example-table left-align">
+      <thead>
+        <tr>
+          <th>Detailed count</th>
+          <th>Dominant growth</th>
+          <th>Why</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>\(7\)</td>
+          <td>constant</td>
+          <td>The count does not depend on \(n\).</td>
+        </tr>
+        <tr>
+          <td>\(5n + 2\)</td>
+          <td>linear</td>
+          <td>The \(n\) term dominates the constant.</td>
+        </tr>
+        <tr>
+          <td>\(3n^2 + 10n + 8\)</td>
+          <td>quadratic</td>
+          <td>The \(n^2\) term dominates for large \(n\).</td>
+        </tr>
+        <tr>
+          <td>\(2n + 6m\)</td>
+          <td>depends on \(n\) and \(m\)</td>
+          <td>There are two independent input-size variables.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      The next page formalizes this simplification using asymptotic notation.
+    </p>
+  </section>
+
+  <section id="analysis-checklist" section-title="Analysis Checklist">
+    <h2>Analysis Checklist</h2>
+    <ol class="spaced">
+      <li>Identify the input-size variable or variables.</li>
+      <li>Choose the case being analyzed: best, worst, average, or expected.</li>
+      <li>Choose one or more operations that capture the repeated work.</li>
+      <li>Count how many times those operations execute.</li>
+      <li>Check method calls and data structure operations instead of assuming they are constant.</li>
+      <li>Simplify the result to its growth rate.</li>
+    </ol>
+  </section>
+
+  <section id="reading-questions" section-title="Reading Comprehension Questions">
+    <h2>Reading Comprehension Questions</h2>
+    <ol>
+      <li>Why does a single loop that executes \(n\) times usually grow linearly?</li>
+      <li>Why do two sequential \(n\)-iteration loops not usually grow quadratically?</li>
+      <li>Why should dependent nested loop bounds often be written as a summation?</li>
+      <li>Why is it dangerous to assume every method call takes constant time?</li>
+    </ol>
+    <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
+    <div id="answers" class="answer" hidden>
+      <ol>
+        <li><strong>Answer:</strong> The repeated work happens once per input element, so the count is proportional to \(n\).</li>
+        <li><strong>Answer:</strong> Their work adds to about \(2n\); one loop is not repeated inside the other.</li>
+        <li><strong>Answer:</strong> The number of inner-loop iterations changes as the outer-loop variable changes.</li>
+        <li><strong>Answer:</strong> The called method may itself contain loops, recursion, or data structure operations whose cost depends on input size.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="activities" section-title="In-Class Activities">
+    <h2>In-Class Activities</h2>
+    <ol>
+      <li><strong>Loop count:</strong> Count the number of times the innermost statement executes in a triangular nested loop where \(j\) runs from \(0\) to \(i-1\).</li>
+      <li><strong>Sequential versus nested:</strong> Write one code fragment with two sequential loops and one with two nested loops. Explain the difference in work.</li>
+      <li><strong>Hidden cost:</strong> Give an example where replacing an array lookup with a search through a list changes the growth rate of a loop.</li>
+    </ol>
+  </section>
+
+  <section id="problems" section-title="Homework Problems">
+    <h2>Homework Problems</h2>
+    <ol>
+      <li><strong>Analyze loops:</strong> For each of three loop fragments, count the repeated operation and simplify the count to its dominant growth term.</li>
+      <li><strong>Dependent bounds:</strong> Analyze a nested loop where the inner loop runs from \(i\) to \(n\). Write the summation and simplify the leading term.</li>
+      <li><strong>Function call cost:</strong> Suppose <code>contains</code> takes linear time in a list of length \(m\). Analyze a loop that calls <code>contains</code> once for each of \(n\) elements.</li>
+    </ol>
   </section>
 </body>
 </html>

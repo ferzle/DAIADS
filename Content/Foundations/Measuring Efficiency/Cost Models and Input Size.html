@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cost Models and Input Size</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
   <script src="../../../scripts/chapterScripts.js"></script>
   <link rel="stylesheet" href="../../../css/style.css">
   <link rel="stylesheet" href="../../../css/chapter.css">
@@ -21,7 +24,187 @@
 
   <section id="overview" section-title="Overview">
     <h2>Overview</h2>
-    <p>This page is coming soon.</p>
+    <p>
+      Algorithm analysis asks a disciplined version of a simple question: how efficient is this
+      algorithm as the input grows? To answer that, we need a <strong>cost model</strong>: a decision
+      about what we will count and what we will treat as one unit of work.
+    </p>
+    <p>
+      The goal is not to predict the exact number of nanoseconds a program will take. Exact time
+      depends on the machine, language, compiler, operating system, memory layout, and current load
+      on the computer. Instead, we count enough work to understand the growth rate.
+    </p>
+  </section>
+
+  <section id="why-not-seconds" section-title="Why Not Just Time It?">
+    <h2>Why Not Just Time It?</h2>
+    <p>
+      Timing a program can be useful after an implementation exists, but timing alone is a poor way
+      to compare algorithms.
+    </p>
+    <ul class="spaced">
+      <li><strong>Wall-clock time</strong> measures elapsed real time, including delays from other processes and system activity.</li>
+      <li><strong>CPU time</strong> measures processor time spent on the program, but it still depends on the implementation and machine.</li>
+      <li><strong>Operation counts</strong> let us analyze an algorithm before choosing a language, compiler, or hardware platform.</li>
+    </ul>
+    <p>
+      If one program takes 3 minutes on a fast computer and another takes 1 hour on an old computer,
+      that does not prove the first algorithm is better. We need a machine-independent way to reason
+      about the amount of work being done.
+    </p>
+  </section>
+
+  <section id="cost-model" section-title="A Cost Model">
+    <h2>A Cost Model</h2>
+    <p>
+      A cost model says which operations we will count. For introductory analysis, we usually treat
+      simple operations as constant-time work:
+    </p>
+    <ul class="spaced">
+      <li>assigning a value to a variable,</li>
+      <li>comparing two primitive values,</li>
+      <li>performing basic arithmetic on primitive values,</li>
+      <li>accessing one array element by index,</li>
+      <li>returning a value from a function.</li>
+    </ul>
+    <p>
+      This is an abstraction. A comparison and an assignment may not take exactly the same number
+      of machine cycles. For growth-rate analysis, that level of detail usually does not matter.
+      What matters is how the number of counted operations changes when the input size doubles,
+      triples, or grows very large.
+    </p>
+  </section>
+
+  <section id="abstract-operation" section-title="Abstract Operations">
+    <h2>Abstract Operations</h2>
+    <p>
+      Often we do not count every simple instruction. Instead, we choose an
+      <strong>abstract operation</strong> that happens as often as the dominant work in the algorithm.
+      For sequential search, the natural abstract operation is comparing the current array element
+      with the target.
+    </p>
+    <pre><code>int sequentialSearch(int[] a, int target) {
+    for (int i = 0; i &lt; a.length; i++) {
+        if (a[i] == target) {
+            return i;
+        }
+    }
+    return -1;
+}</code></pre>
+    <p>
+      Counting only <code>a[i] == target</code> ignores loop increments, bounds checks, and returns,
+      but it still captures the growth rate. If the comparison executes once, the algorithm is fast.
+      If it executes \(n\) times, the algorithm's work grows in proportion to \(n\).
+    </p>
+  </section>
+
+  <section id="input-size" section-title="Input Size">
+    <h2>Input Size</h2>
+    <p>
+      The variable \(n\) should describe the size of the input, not the value of some temporary loop
+      variable. Choosing \(n\) clearly is part of the analysis.
+    </p>
+    <table class="example-table left-align">
+      <thead>
+        <tr>
+          <th>Input</th>
+          <th>Common size measure</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Array or list</td>
+          <td>\(n\), the number of elements</td>
+          <td>Extra parameters such as a target value usually do not change the size measure.</td>
+        </tr>
+        <tr>
+          <td>\(n \times m\) matrix</td>
+          <td>\(nm\), or both \(n\) and \(m\)</td>
+          <td>Some analyses need two independent size variables.</td>
+        </tr>
+        <tr>
+          <td>Graph</td>
+          <td>\(|V|\), \(|E|\), or both</td>
+          <td>Graph algorithms often depend on vertices and edges separately.</td>
+        </tr>
+        <tr>
+          <td>String</td>
+          <td>\(n\), the number of characters</td>
+          <td>Pattern-matching problems may use text length \(n\) and pattern length \(m\).</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      When an algorithm takes an array of \(n\) values plus a constant number of other primitive
+      parameters, we usually call the input size \(n\), not \(n+1\) or \(n+2\). Constants will not
+      affect the growth rate.
+    </p>
+  </section>
+
+  <section id="time-and-space" section-title="Time and Space">
+    <h2>Time and Space</h2>
+    <p>
+      This section mostly analyzes time: how many operations an algorithm performs. Space also
+      matters. A sorting algorithm might be fast but require a large auxiliary array. A recursive
+      algorithm might use one stack frame per recursive call. A hashing algorithm might spend extra
+      memory to make lookups faster.
+    </p>
+    <p>
+      When space use is important, we usually count <strong>extra space</strong>: memory beyond the
+      input itself. For example, scanning an array with a few variables uses constant extra space,
+      while making a full copy of the array uses linear extra space.
+    </p>
+  </section>
+
+  <section id="what-comes-next" section-title="What Comes Next">
+    <h2>What Comes Next</h2>
+    <p>
+      The rest of this section builds the analysis toolkit in stages:
+    </p>
+    <ol class="spaced">
+      <li>Decide whether we are analyzing the best, worst, average, or expected case.</li>
+      <li>Count enough work to get a function of the input size.</li>
+      <li>Use asymptotic notation to simplify that function and focus on growth rate.</li>
+      <li>Compare common growth rates so the result is meaningful.</li>
+    </ol>
+  </section>
+
+  <section id="reading-questions" section-title="Reading Comprehension Questions">
+    <h2>Reading Comprehension Questions</h2>
+    <ol>
+      <li>Why is wall-clock time not a reliable way to compare algorithms run on different machines?</li>
+      <li>What is a cost model?</li>
+      <li>For an array algorithm, why do we usually call the input size \(n\) instead of \(n+2\) when there are two extra primitive parameters?</li>
+      <li>What is an abstract operation?</li>
+    </ol>
+    <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
+    <div id="answers" class="answer" hidden>
+      <ol>
+        <li><strong>Answer:</strong> The time depends on hardware, system load, implementation details, and many factors other than the algorithm itself.</li>
+        <li><strong>Answer:</strong> It is a rule for what operations we count as units of work during analysis.</li>
+        <li><strong>Answer:</strong> A constant number of extra parameters does not affect how the input grows, so the growth rate is governed by the array length.</li>
+        <li><strong>Answer:</strong> It is a representative operation chosen because counting it captures the dominant work of the algorithm.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="activities" section-title="In-Class Activities">
+    <h2>In-Class Activities</h2>
+    <ol>
+      <li><strong>Choose \(n\):</strong> For an algorithm that takes two arrays of lengths \(n\) and \(m\), decide whether the input size should be \(n+m\), \(nm\), or two variables. Justify your choice for two different tasks.</li>
+      <li><strong>Pick an operation:</strong> For sequential search, maximum value, and counting zeros in an array, choose an abstract operation to count.</li>
+      <li><strong>Time versus operations:</strong> Describe a situation where a slower wall-clock run might still come from a better algorithm.</li>
+    </ol>
+  </section>
+
+  <section id="problems" section-title="Homework Problems">
+    <h2>Homework Problems</h2>
+    <ol>
+      <li><strong>Input-size choices:</strong> Give a natural input-size measure for each: an \(n \times n\) image, a graph stored as an edge list, and a dictionary of \(n\) words plus a query word.</li>
+      <li><strong>Cost model:</strong> Write a cost model for a simple array-scanning algorithm. State which operations you count and which details you ignore.</li>
+      <li><strong>Space use:</strong> Compare the extra space used by an algorithm that scans an array in place with one that first copies the array.</li>
+    </ol>
   </section>
 </body>
 </html>

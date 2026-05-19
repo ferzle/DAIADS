@@ -19,13 +19,28 @@ window.addEventListener('blur', () => aKeyDown = false);
 const TOP_LEVEL_ORDER = [
   'Home',
   'Foundations',
-  'Problems',
   'Data Structures',
   'Techniques',
   'Algorithms',
+  'Problems',
   'Demos',
   'More'
 ];
+const TOP_LEVEL_NUMBER_LABELS = {
+  'Foundations': '1',
+  'Data Structures': '2',
+  'Techniques': '3',
+  'Algorithms': '4',
+  'Problems': 'A',
+  'Demos': 'B',
+  'More': 'C'
+};
+const NUMBERED_CHILD_SECTIONS = new Set([
+  'Foundations',
+  'Data Structures',
+  'Techniques',
+  'Algorithms'
+]);
 const PROBLEMS_ORDER = [
   'Problem List',
   'Foundational',
@@ -76,9 +91,10 @@ const FOUNDATIONS_ORDERS = {
   ],
   'Foundations/Measuring Efficiency/': [
     'Cost Models and Input Size',
+    'Best, Worst, Average, and Expected Cases',
+    'Counting Work in Iterative Algorithms',
     'Asymptotic Notation',
-    'Common Growth Rates',
-    'Counting Work in Iterative Algorithms'
+    'Common Growth Rates'
   ],
   'Foundations/Recurrences/': [
     'From Recursive Code to Recurrences',
@@ -91,7 +107,7 @@ const FOUNDATIONS_ORDERS = {
 };
 const DATA_STRUCTURES_ORDERS = {
   'Data Structures/': [
-    'Data Structure List',
+    'Overview',
     'Linear Structures',
     'Trees',
     'Priority Queues and Heaps',
@@ -163,6 +179,12 @@ let menuSortMode = localStorage.getItem(MENU_ORDER_STORAGE_KEY) === 'flat'
   ? 'flat'
   : 'default';
 
+let menuNumbering = {
+  topLevel: new Map(),
+  entries: new Map(),
+  pages: new Map()
+};
+
 // ─── Utility Functions ────────────────────────────────────────────────────────
 // Return the current “path” either from history.state or URL param or fallback
 const getCurrentPath = () =>
@@ -188,10 +210,21 @@ const getDisplayLabel = (entry) => {
   return key.split('/').pop().replace(/Demo$/, '').trim();
 };
 
-const sortEntries = (items, orderList = []) => {
+const getOrderListForPath = (pathPrefix) => {
+  if (pathPrefix === 'Techniques/Decrease-and-Conquer/') return DECREASE_AND_CONQUER_ORDER;
+  if (pathPrefix === 'Techniques/') return TECHNIQUES_ORDER;
+  if (pathPrefix === 'Problems/') return PROBLEMS_ORDER;
+  if (pathPrefix === 'Algorithms/') return ALGORITHMS_ORDER;
+  if (pathPrefix === 'Demos/') return DEMOS_ORDER;
+  if (FOUNDATIONS_ORDERS[pathPrefix]) return FOUNDATIONS_ORDERS[pathPrefix];
+  if (DATA_STRUCTURES_ORDERS[pathPrefix]) return DATA_STRUCTURES_ORDERS[pathPrefix];
+  return [];
+};
+
+const sortEntries = (items, orderList = [], sortMode = menuSortMode) => {
   const sortedItems = [...items];
 
-  if (menuSortMode === 'flat') {
+  if (sortMode === 'flat') {
     return sortedItems.sort((a, b) =>
       getDisplayLabel(a).localeCompare(getDisplayLabel(b), undefined, {
         numeric: true,
@@ -205,6 +238,66 @@ const sortEntries = (items, orderList = []) => {
     const indexB = orderList.indexOf(getKey(b));
     return (indexA === -1 ? 9999 : indexA) - (indexB === -1 ? 9999 : indexB);
   });
+};
+
+const prefixNumber = (number, label) =>
+  number ? `${number} ${label}` : label;
+
+const buildMenuNumbering = (chapters) => {
+  const topLevel = new Map();
+  const entries = new Map();
+  const pages = new Map();
+
+  TOP_LEVEL_ORDER.forEach((sectionName) => {
+    const contents = chapters[sectionName];
+    const topNumber = TOP_LEVEL_NUMBER_LABELS[sectionName];
+    if (!contents || !topNumber) return;
+
+    topLevel.set(sectionName, topNumber);
+
+    if (!NUMBERED_CHILD_SECTIONS.has(sectionName)) return;
+
+    const sectionPath = `${sectionName}/`;
+    const orderedItems = sortEntries(
+      contents,
+      getOrderListForPath(sectionPath),
+      'default'
+    );
+
+    let entryIndex = 0;
+    orderedItems.forEach((item) => {
+      entryIndex += 1;
+      const entryNumber = `${topNumber}.${entryIndex}`;
+      const key = getKey(item);
+
+      if (typeof item === 'string') {
+        pages.set(`${sectionPath}${key}`, entryNumber);
+      } else {
+        entries.set(`${sectionPath}${key}/`, entryNumber);
+      }
+    });
+  });
+
+  return { topLevel, entries, pages };
+};
+
+const applyPageNumber = (doc, path) => {
+  const number = menuNumbering.pages.get(path);
+  if (!number) return;
+
+  const title = doc.querySelector('h1');
+  if (
+    title &&
+    title.dataset.menuNumber !== number &&
+    !title.textContent.trim().startsWith(`${number} `)
+  ) {
+    title.insertAdjacentText('afterbegin', `${number} `);
+    title.dataset.menuNumber = number;
+  }
+
+  if (doc.title && !doc.title.startsWith(`${number} `)) {
+    doc.title = `${number} ${doc.title}`;
+  }
 };
 
 const createMenuLink = (fullPath, label, level = 1, title = '') => {
@@ -344,6 +437,8 @@ const loadFromURLParams = () => {
 function hookIframeContent(iframe) {
   const innerDoc = getIframeDocument(iframe);
   if (!innerDoc) return;
+
+  applyPageNumber(innerDoc, getCurrentPath());
 
   // Inject glossary-tooltips.js (fresh each time)
   const head = innerDoc.head || innerDoc.getElementsByTagName('head')[0];
@@ -818,6 +913,8 @@ function hookIframeContent(iframe) {
 
 // ─── Build Sidebar Menu ───────────────────────────────────────────────────────
 const buildMenu = (chapters) => {
+  menuNumbering = buildMenuNumbering(chapters);
+
   const menuContainer = document.querySelector('#menu');
   menuContainer.innerHTML = `
     <div class="menu-controls">
@@ -841,16 +938,7 @@ const buildMenu = (chapters) => {
   const menuRoot = menuContainer.querySelector('ul');
 
   const buildList = (items, container, pathPrefix, level = 1) => {
-   const orderList = (() => {
-    if (pathPrefix === 'Techniques/Decrease-and-Conquer/') return DECREASE_AND_CONQUER_ORDER;
-    if (pathPrefix === 'Techniques/') return TECHNIQUES_ORDER;
-    if (pathPrefix === 'Problems/') return PROBLEMS_ORDER;
-    if (pathPrefix === 'Algorithms/') return ALGORITHMS_ORDER;
-    if (pathPrefix === 'Demos/') return DEMOS_ORDER;
-    if (FOUNDATIONS_ORDERS[pathPrefix]) return FOUNDATIONS_ORDERS[pathPrefix];
-    if (DATA_STRUCTURES_ORDERS[pathPrefix]) return DATA_STRUCTURES_ORDERS[pathPrefix];
-    return [];
-  })();
+   const orderList = getOrderListForPath(pathPrefix);
     sortEntries(items, orderList).forEach((item) => {
         const li = document.createElement('li');
         if (typeof item === 'string') {
@@ -858,12 +946,14 @@ const buildMenu = (chapters) => {
           const fullPath = (pathPrefix.includes('More/DRAFTS') && raw.includes('/'))
             ? raw // already a full path
             : pathPrefix + raw;
-          const a = createMenuLink(fullPath, raw.split('/').pop().replace(/Demo$/, '').trim(), level);
+          const label = raw.split('/').pop().replace(/Demo$/, '').trim();
+          const a = createMenuLink(fullPath, prefixNumber(menuNumbering.pages.get(fullPath), label), level);
           li.appendChild(a);
         } else {
           Object.entries(item).forEach(([dir, sub]) => {
+            const dirPath = `${pathPrefix}${dir}/`;
             const span = document.createElement('span');
-            span.textContent = dir;
+            span.textContent = prefixNumber(menuNumbering.entries.get(dirPath), dir);
             span.style.fontSize = `${1 - (level - 1) * 0.1}em`;
             /*span.onclick = () => li.classList.toggle('open');*/
 			span.onclick = (e) => {
@@ -874,7 +964,7 @@ const buildMenu = (chapters) => {
             li.appendChild(span);
 
             const ul = document.createElement('ul');
-            buildList(sub, ul, `${pathPrefix}${dir}/`, orderList, level + 1);
+            buildList(sub, ul, dirPath, level + 1);
             li.appendChild(ul);
           });
         }
@@ -890,7 +980,7 @@ const buildMenu = (chapters) => {
 
     const li = document.createElement('li');
     const span = document.createElement('span');
-    span.textContent = sectionName;
+    span.textContent = prefixNumber(menuNumbering.topLevel.get(sectionName), sectionName);
     span.style.fontSize = '1.1em';
     /*span.onclick = () => li.classList.toggle('open');*/
 	span.onclick = (e) => {
@@ -922,7 +1012,7 @@ const buildMenu = (chapters) => {
             ? `${item.label} (${item.context})`
             : item.label;
           itemLi.appendChild(
-            createMenuLink(item.fullPath, visibleLabel, 2, item.context)
+            createMenuLink(item.fullPath, prefixNumber(menuNumbering.pages.get(item.fullPath), visibleLabel), 2, item.context)
           );
           ul.appendChild(itemLi);
         });

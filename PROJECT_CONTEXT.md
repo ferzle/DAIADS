@@ -58,6 +58,12 @@ Because of this flow, test through a local HTTP server rather than `file://`.
 
 For authoring style and pedagogy, use `CONTENT_GUIDE.md`.
 
+Content pages should read as complete undergraduate teaching material, not terse reference notes. The main audience is CS2 and introductory algorithms students. A page should usually provide enough motivation, explanation, worked examples, visuals, and practice to serve as the student's sole reading source for that topic, except where it intentionally routes students to another DAIADS page.
+
+Templates are starting points. Keep recurring structures when they help students compare related pages, but do not force the same section shape, the same number of examples, or repeated short lists when the topic needs a more natural explanation.
+
+Use SVG for static instructional diagrams when relationships, state changes, recursion trees, pointer structures, graph structure, or array regions need to be seen spatially. Use tables for comparisons and traces. Use ASCII sketches only when they are genuinely the clearest lightweight choice.
+
 Algorithm pages usually include:
 
 - Problem solved.
@@ -94,6 +100,8 @@ Technique pages usually include:
 - Summary and exercises.
 
 Demo pages should be self-contained and should also work when embedded in a lesson page.
+
+Demo pages have different priorities from prose pages: clear interaction, stable controls, readable state, and concise step text matter more than long-form explanation inside the demo itself.
 
 Data structure pages should currently lean toward conceptual explanation and guided practice. They should make the structure, operations, expected behavior, edge cases, and complexity clear, then use starter code and exercises for much of the implementation work.
 

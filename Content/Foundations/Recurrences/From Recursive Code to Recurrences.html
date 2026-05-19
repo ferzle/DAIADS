@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>From Recursive Code to Recurrences</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
   <script src="../../../scripts/chapterScripts.js"></script>
   <link rel="stylesheet" href="../../../css/style.css">
   <link rel="stylesheet" href="../../../css/chapter.css">
@@ -21,7 +24,240 @@
 
   <section id="overview" section-title="Overview">
     <h2>Overview</h2>
-    <p>This page is coming soon.</p>
+    <p>
+      A recurrence is a way to describe work that is defined in terms of smaller work. Recursive
+      code naturally leads to recurrences because one call often does some local work and then asks
+      smaller calls to finish the rest.
+    </p>
+    <p>
+      The goal of this page is not to solve recurrences yet. The goal is to translate recursive
+      code into a clear mathematical description of its running time. The solving methods come
+      next.
+    </p>
+  </section>
+
+  <section id="what-is-recurrence" section-title="What a Recurrence Describes">
+    <h2>What a Recurrence Describes</h2>
+    <p>
+      In algorithm analysis, we usually define \(T(n)\) to mean the amount of work done by the
+      algorithm on an input of size \(n\). A recurrence for \(T(n)\) has two parts.
+    </p>
+    <ul class="spaced">
+      <li><strong>Base case:</strong> The work for an input small enough that no recursive call is made.</li>
+      <li><strong>Recursive case:</strong> The work done by smaller recursive calls plus the non-recursive work done by the current call.</li>
+    </ul>
+    <p>
+      The recursive terms come from calls to the same function. The non-recursive term comes from
+      everything else: comparisons, arithmetic, copying, splitting input, combining answers, and
+      other helper work.
+    </p>
+  </section>
+
+  <section id="factorial" section-title="Example: Factorial">
+    <h2>Example: Factorial</h2>
+    <p>
+      Consider this recursive factorial function. Instead of counting every statement, suppose we
+      count the number of multiplications.
+    </p>
+    <pre><code class="language-java">int factorial(int n) {
+    if (n &lt;= 0) {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}</code></pre>
+    <p>
+      Let \(M(n)\) be the number of multiplications performed by <code>factorial(n)</code>.
+      The base case performs no multiplication, so \(M(0)=0\). For \(n&gt;0\), the current call
+      performs one multiplication after the recursive call returns.
+    </p>
+    \[
+      M(n) =
+      \begin{cases}
+        0 & \text{if } n=0,\\
+        M(n-1)+1 & \text{if } n&gt;0.
+      \end{cases}
+    \]
+    <p>
+      The term \(M(n-1)\) comes from the recursive call. The \(+1\) comes from the multiplication
+      by <code>n</code> in the current call.
+    </p>
+  </section>
+
+  <section id="binary-search" section-title="Example: Binary Search">
+    <h2>Example: Binary Search</h2>
+    <p>
+      Recursive binary search has a different shape. Each non-base call does constant local work
+      and makes at most one recursive call on about half of the remaining array.
+    </p>
+    <pre><code class="language-java">int binarySearch(int[] a, int left, int right, int target) {
+    if (right &lt; left) {
+        return -1;
+    }
+
+    int middle = (left + right) / 2;
+    if (a[middle] == target) {
+        return middle;
+    } else if (target &lt; a[middle]) {
+        return binarySearch(a, left, middle - 1, target);
+    } else {
+        return binarySearch(a, middle + 1, right, target);
+    }
+}</code></pre>
+    <p>
+      Let \(T(n)\) be the worst-case running time on a sorted array segment of length \(n\). The
+      base case is an empty segment or a segment of size 1, depending on how detailed we want to
+      be. Either way, the base case is constant.
+    </p>
+    \[
+      T(n) = T(n/2) + c.
+    \]
+    <p>
+      The constant \(c\) represents the comparisons, midpoint calculation, and return logic in
+      one call. A more careful recurrence might use \(T(\lfloor n/2 \rfloor)\), but floors and
+      ceilings usually do not change the asymptotic result.
+    </p>
+  </section>
+
+  <section id="merge-sort" section-title="Example: Merge Sort">
+    <h2>Example: Merge Sort</h2>
+    <p>
+      Merge sort makes two recursive calls, one for each half of the array, and then merges the
+      two sorted halves. The merge step touches each element in the current subarray a constant
+      number of times, so the non-recursive work is linear.
+    </p>
+    <pre><code>mergeSort(array):
+    if array has length 0 or 1:
+        return
+    split array into two halves
+    mergeSort(left half)
+    mergeSort(right half)
+    merge the sorted halves</code></pre>
+    <p>
+      Let \(T(n)\) be the running time on an array of length \(n\). The two recursive calls each
+      cost \(T(n/2)\), and the merge costs \(cn\) for some constant \(c\).
+    </p>
+    \[
+      T(n) = 2T(n/2) + cn.
+    \]
+    <p>
+      Notice how the recurrence records the structure of the algorithm: two half-size calls plus
+      linear combine work.
+    </p>
+  </section>
+
+  <section id="translation-process" section-title="Translation Process">
+    <h2>Translation Process</h2>
+    <p>
+      Use this checklist when translating recursive code into a recurrence.
+    </p>
+    <ol class="spaced">
+      <li><strong>Choose the input-size variable:</strong> Decide what \(n\) measures: array length, range length, number of disks, tree height, or something else.</li>
+      <li><strong>Define the function:</strong> State what \(T(n)\) counts and which case is being analyzed.</li>
+      <li><strong>Identify base cases:</strong> Find inputs that return without making recursive calls and give them constant cost unless exact counts are needed.</li>
+      <li><strong>Count recursive calls:</strong> Record how many calls are made and what size input each call receives.</li>
+      <li><strong>Count local work:</strong> Add the work outside the recursive calls.</li>
+      <li><strong>State assumptions:</strong> Mention worst case, average case, balanced input, powers of two, or ignored floors and ceilings when relevant.</li>
+    </ol>
+  </section>
+
+  <section id="common-patterns" section-title="Common Patterns">
+    <h2>Common Patterns</h2>
+    <table class="example-table left-align">
+      <thead>
+        <tr>
+          <th>Code pattern</th>
+          <th>Typical recurrence</th>
+          <th>Example</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>One call on \(n-1\)</td>
+          <td>\(T(n)=T(n-1)+f(n)\)</td>
+          <td>Factorial, linear recursive sum</td>
+        </tr>
+        <tr>
+          <td>One call on \(n/2\)</td>
+          <td>\(T(n)=T(n/2)+f(n)\)</td>
+          <td>Binary search</td>
+        </tr>
+        <tr>
+          <td>Two calls on \(n/2\)</td>
+          <td>\(T(n)=2T(n/2)+f(n)\)</td>
+          <td>Merge sort</td>
+        </tr>
+        <tr>
+          <td>Two calls on \(n-1\)</td>
+          <td>\(T(n)=2T(n-1)+f(n)\)</td>
+          <td>Towers of Hanoi</td>
+        </tr>
+        <tr>
+          <td>Calls on \(n-1\) and \(n-2\)</td>
+          <td>\(T(n)=T(n-1)+T(n-2)+f(n)\)</td>
+          <td>Naive recursive Fibonacci</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="mistakes" section-title="Common Mistakes">
+    <h2>Common Mistakes</h2>
+    <ul class="spaced">
+      <li><strong>Counting the recursive call as one operation:</strong> A recursive call may do a large amount of work. Represent it with a term such as \(T(n-1)\) or \(T(n/2)\).</li>
+      <li><strong>Forgetting local work:</strong> Splitting, merging, copying, and scanning can dominate the running time.</li>
+      <li><strong>Using the wrong input size:</strong> In binary search, the array object may be the same, but the active range gets smaller.</li>
+      <li><strong>Confusing best case and worst case:</strong> Binary search may stop immediately if the target is at the middle, but the worst case follows one half until the range is empty.</li>
+      <li><strong>Over-focusing on exact constants:</strong> Constants are useful for exact counts, but asymptotic analysis usually keeps only the growth pattern.</li>
+    </ul>
+  </section>
+
+  <section id="where-next" section-title="Where This Goes Next">
+    <h2>Where This Goes Next</h2>
+    <p>
+      After writing a recurrence, the next task is to solve it or at least find a tight asymptotic
+      bound. The main tools in this section are the
+      <a href="?path=Foundations%2FRecurrences%2FIteration%20Method">iteration method</a>,
+      <a href="?path=Foundations%2FRecurrences%2FRecursion%20Trees">recursion trees</a>,
+      <a href="?path=Foundations%2FRecurrences%2FSubstitution%20Method">substitution method</a>,
+      and <a href="?path=Foundations%2FRecurrences%2FMaster%20Theorem">Master Theorem</a>.
+    </p>
+  </section>
+
+  <section id="reading-questions" section-title="Reading Comprehension Questions">
+    <h2>Reading Comprehension Questions</h2>
+    <ol>
+      <li>In a running-time recurrence, what does \(T(n)\) usually represent?</li>
+      <li>Where does the \(+1\) or \(+c\) term usually come from?</li>
+      <li>Why does recursive binary search lead to \(T(n)=T(n/2)+c\) in the worst case?</li>
+      <li>Why does merge sort lead to two \(T(n/2)\) terms instead of one?</li>
+    </ol>
+    <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
+    <div id="answers" class="answer" hidden>
+      <ol>
+        <li><strong>Answer:</strong> It represents the work done by the algorithm on an input of size \(n\), usually for a stated case such as worst case.</li>
+        <li><strong>Answer:</strong> It comes from the work done by the current call outside of its recursive calls.</li>
+        <li><strong>Answer:</strong> Each worst-case call does constant local work and continues on one subarray of about half the previous size.</li>
+        <li><strong>Answer:</strong> Merge sort recursively sorts both halves of the array before merging them.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="activities" section-title="In-Class Activities">
+    <h2>In-Class Activities</h2>
+    <ol>
+      <li><strong>Annotate code:</strong> Mark the base case, recursive calls, and local work in a recursive sum function.</li>
+      <li><strong>Compare shapes:</strong> Write recurrences for binary search, merge sort, and naive Fibonacci, then explain why their shapes differ.</li>
+      <li><strong>Case check:</strong> For binary search, write separate sentences describing the best case and worst case.</li>
+    </ol>
+  </section>
+
+  <section id="problems" section-title="Homework Problems">
+    <h2>Homework Problems</h2>
+    <ol>
+      <li><strong>Recursive maximum:</strong> A function finds the maximum of an array by comparing the first element to the maximum of the remaining \(n-1\) elements. Write a recurrence for the number of comparisons.</li>
+      <li><strong>Array split:</strong> An algorithm makes three recursive calls on arrays of size \(n/2\), then scans the current array once. Write a recurrence for its running time.</li>
+      <li><strong>Base cases:</strong> Explain why a recurrence should include base cases even when they do not affect the final asymptotic bound.</li>
+    </ol>
   </section>
 </body>
 </html>

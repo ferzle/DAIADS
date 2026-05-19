@@ -79,6 +79,14 @@ File and directory names often contain spaces, apostrophes, and parentheses. Quo
 
 Pages should teach, not merely summarize. Prefer conceptual clarity, worked examples, visible operations, and specific student tasks over terse reference-style descriptions.
 
+Treat content pages as the student's primary reading source. The audience is undergraduate students in CS2 or an introductory algorithms course, so pages should include enough explanation, examples, diagrams, and practice to stand on their own unless they explicitly link to another DAIADS page for prerequisite material.
+
+Do not force uniformity for its own sake. Templates, repeated section types, and lists are useful when they help students compare topics, but the writing should not become a mechanical outline. Avoid defaulting to terse three-item lists or identical page shapes when the concept needs a fuller explanation, a worked example, or a visual.
+
+Use polished textbook prose rather than checklist prose. Expand when additional detail removes likely confusion or explains why a step is valid; do not expand merely to increase length.
+
+Use well-designed SVG illustrations when they would clarify structure, state changes, recursion trees, pointer relationships, graph relationships, array ranges, or algorithm flow. Tables and ASCII sketches are acceptable when they are the clearest tool, but they should not substitute for a real diagram when spatial relationships matter.
+
 For complicated algorithms, include enough implementation discussion to support the learning goal, but do not force every low-level data-structure detail into the main explanation if the intended point is the high-level strategy. For example, Prim's and Kruskal's pages may mention priority queues, edge sorting, and disjoint sets without fully developing every support structure unless that page is explicitly about implementation.
 
 For data structures content, currently favor the idea of the structure, its operations, behavior, high-level implementation options, complexity, and exercises over full finished implementations in the prose page. Provide starter/template code when implementation practice is the goal.
@@ -121,6 +129,8 @@ When using the generic demo playback script, expose these functions on `window`:
 - `window.genSteps(arr)`: returns the recorded step list.
 - `window.renderStep(steps, idx, original)`: renders the selected step.
 - `window.setupAux(original, length)`: optional setup hook.
+
+Demo pages are the exception to the prose-first rule. For demos, prioritize interaction, stable controls, clear visual state, and concise step text. Put the fuller conceptual explanation on the surrounding lesson page.
 
 Embedded demos in lesson pages should use:
 

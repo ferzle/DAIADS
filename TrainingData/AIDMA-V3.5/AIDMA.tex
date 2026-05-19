@@ -1,0 +1,630 @@
+%% How To get it to compile in TexWorks (CAC, 5/2013)
+%% Go to this site: 
+%% https://code.google.com/p/texworks/wiki/AdvancedTypesettingTools#latex_->_dvips_->_ps2pdf
+%% and follow the directions.
+% Here is some of the text from this page:
+%Configuring LaTeX for .ps output is not straight-forward. TeXworks only supports running a single command at once, 
+%but for producing .ps files one needs to call both "latex" and "dvips". 
+%To be able to do that, you need to create a simple script, the content of which is platform dependent (see below). 
+%Then define a new typesetting tool using the following configuration:
+%
+%Program:   <path to your script goes here>
+%Arguments: $basename
+%
+%[ ] View PDF after running
+%Windows
+%Create a file "latex-dvips.bat" containing
+%
+%@latex "%1.tex" && dvips "%1.dvi"
+%(see also http://tug.org/pipermail/texworks/2009q2/000822.html and http://tug.org/pipermail/texworks/2009q4/001903.html)
+
+%%
+%\documentclass[12pt,openany]{book}
+%\documentclass[fullpage,10pt, openany]{book}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% I tried 12 and 10 as well.  12 looks a little obnoxiously big and 10 seems too small.
+% So I'll turn it up to 11.
+\documentclass[11pt]{book}
+
+\usepackage{amsmath, multicol, etex}
+\usepackage{multirow}
+
+\usepackage{fancyhdr} %%%%for page headers and footers
+\usepackage{pstricks}
+
+
+%\usepackage[amsmath,thmmarks,standard,thref]{ntheorem}
+
+%\usepackage[colorlinks=true,linkcolor=blue, pdftitle={discrete math lecture notes}, pdfauthor={Charles Cusack}, bookmarksopen, dvips, linktocpage=true]{hyperref}
+%\usepackage{hyperref}
+\usepackage[colorlinks=true,linkcolor=blue, pdftitle={discrete math lecture notes}, pdfauthor={Charles Cusack}, bookmarksopen, dvips, linktocpage=true]{hyperref}
+
+\usepackage{graphs}
+%%%%%                  FONTS
+\usepackage{pifont, marvosym,amssymb,mathrsfs, manfnt, amsfonts, yhmath, moreverb, pseudocode,stmaryrd }
+\usepackage[tiling]{pst-fill}      % PSTricks package for filling/tiling
+\usepackage{pst-text}              % PSTricks package for character path
+\usepackage{pst-grad}              % PSTricks package for gradient filling
+
+\usepackage{wrapfig}
+\usepackage{enumerate} % So I can specify type of enumeration.
+
+\usepackage{blkarray, bigstrut} 
+
+\usepackage{listings}
+\lstset{
+    language=c,
+    basicstyle=\ttfamily\small,
+    %basicstyle=\scriptsize,
+    upquote=true,
+    %aboveskip={1.5\baselineskip},
+    belowskip={0pt},
+    %columns=fullflexible,
+    showstringspaces=false,
+    extendedchars=true,
+    breaklines=true,
+    showtabs=false,
+    showspaces=false,
+    identifierstyle=\ttfamily,
+    keywordstyle=\color[rgb]{0,0,1},
+    commentstyle=\color[rgb]{0.133,0.545,0.133},
+    stringstyle=\color[rgb]{0.627,0.126,0.941},
+}
+
+\lstnewenvironment{code}{}{}
+
+\usepackage{cancel} % seems like overkill for a command I need once, but what are you going to do?
+
+%%%%%FLOAT PLACEMENT
+\renewcommand{\textfraction}{0.05}
+\renewcommand{\topfraction}{0.95}
+\renewcommand{\bottomfraction}{0.95}
+\renewcommand{\floatpagefraction}{0.35}
+% No idea what this is. CAC, 6/3/21
+\setcounter{totalnumber}{5}
+
+%%%%%%%%%PRINTED AREA
+%\topmargin -.6in 
+\topmargin -.4in 
+\textheight 9in 
+%\oddsidemargin -.3in
+%\evensidemargin -.3in 
+\oddsidemargin 0in
+\evensidemargin 0in 
+\textwidth 6.5in
+
+%%%%%%%%
+% Added 5/19/21
+% Makes the chapter number and title on the same line, 
+% modify the space after the title, etc.
+%
+\usepackage{titlesec}
+\titleformat{\chapter}[hang] 
+{\normalfont\huge\bfseries}{\chaptertitlename\ \thechapter: }{0em}{} 
+\titlespacing*{\chapter}{0pt}{0pt}{10pt}
+%%%%%%%%%%%%%%%%%
+
+
+%%%%%                    THEOREM-LIKE ENVIRONMENTS
+%This apparently makes the number appear before Theorem/Example/etc.  CAC, 7/30/13
+%I found documentation about the extension used to do this here:
+%http://www.fi.infn.it/pub/tex/doc/orig/theorem.pdf
+
+\usepackage{amsthm}
+%\theoremstyle{change} 
+
+% This section updated 5/13/2020
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Boxes a  the environments
+\usepackage{mdframed}
+
+% Added 6/2/21, CAC
+% But then removed. This changes the spacing before/after the frames.
+%\mdfsetup{skipabove=5pt,skipbelow=5pt}
+
+%\mdfsetup{hidealllines=true,innertopmargin=0,innerbottommargin=.1in}
+\mdfsetup{hidealllines=true,innertopmargin=0}
+%\mdfsetup{innertopmargin=0}
+
+\surroundwithmdframed[backgroundcolor=blue!15]{df}
+% I like orange better for PDF, but for print we'll go with blue.
+%\surroundwithmdframed[backgroundcolor=orange!15]{df}
+
+\surroundwithmdframed[backgroundcolor=red!15]{proc}
+\surroundwithmdframed[backgroundcolor=green!15]{thm}
+\surroundwithmdframed[backgroundcolor=green!15]{cor}
+\surroundwithmdframed[backgroundcolor=green!15]{lem}
+\surroundwithmdframed[backgroundcolor=yellow!25]{exa}
+%I like green for screen, but for print let's go with white.
+\surroundwithmdframed[hidealllines=false, linewidth=1]{ques}
+\surroundwithmdframed[hidealllines=false, linewidth=1]{eval}
+\surroundwithmdframed[hidealllines=false, linewidth=1]{fib}
+\surroundwithmdframed[hidealllines=false, linewidth=1]{exer}
+%rem is defined later.
+\surroundwithmdframed[backgroundcolor=red!15,innertopmargin=.125in]{rem}
+
+\newtheorem{thm}{Theorem}
+\newtheorem{cor}[thm]{Corollary}
+\newtheorem{lem}[thm]{Lemma}
+\newtheorem{rul}[thm]{Rule}
+\newtheorem{proc}[thm]{Procedure}
+\newtheorem{df}[thm]{Definition}
+
+% This will make these environments plain instead of italics, among (I am sure) other things.
+\theoremstyle{definition}
+
+\newtheorem{exa}[thm]{Example}
+
+% To fix the fact that the links always go to one line too low in the document, 
+% I added the \raisebox{\ht\strutbox}{...} around the hypertarget.
+% This fixes it when you click on the solution. CAC, 5/12/2020. Solution from:
+%https://tex.stackexchange.com/questions/17057/hypertarget-seems-to-aim-a-line-too-low
+%
+\newtheorem{fib}[thm]{\hyperlink{prob:\thefib}{$\bigstar$}\raisebox{\ht\strutbox}{\hypertarget{answer:\thefib}{}}Fill in the details}
+\newtheorem{eval}[thm]{\hyperlink{prob:\theeval}{$\bigstar$}\raisebox{\ht\strutbox}{\hypertarget{answer:\theeval}{}}Evaluate}
+\newtheorem{ques}[thm]{\hyperlink{prob:\theeval}{$\bigstar$}\raisebox{\ht\strutbox}{\hypertarget{answer:\theeval}{}}Question}
+\newtheorem{exer}[thm]{\hyperlink{prob:\thefib}{$\bigstar$}\raisebox{\ht\strutbox}{\hypertarget{answer:\thefib}{}}Exercise}
+
+\newtheorem{requ}{\hyperlink{requprob:\therequ}{$\bigstar$}\raisebox{\ht\strutbox}{\hypertarget{requanswer:\therequ}{}}Question}
+\numberwithin{requ}{chapter}
+
+% so it renumbers starting at each chapter and gives the numbers like 7.45 
+%(for the 45th numbered item in chapter 7).
+\numberwithin{thm}{chapter}
+
+%Number problems separately from everything else.
+\newtheorem{pro}{Problem}
+\numberwithin{pro}{chapter}
+
+\usepackage{answers}
+%\Newassociation{xxx}{yyy}{zzz}
+%xxx is environment--so used by \begin{xxx}...\end{xxx}, where it contains the solution.
+%yyy is the display environment--where it will be displayed in the document.
+%zzz is naming schema for the solution file.
+
+%% Oops. discovered the hard way that I had bad links. I had to change several things in several
+% places so separate exercise questions/answers and reading questions/answers.
+% CAC, 6/2/21.
+\Newassociation{answer}{Answer}{discans}
+\Newassociation{requanswer}{RequAnswer}{requdiscans}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% This links solutions back to problems, but I can't see how I could get it to work with several
+% different problem types.
+%
+% To fix the fact that the links always go to one line too low in the document, 
+% I added the \raisebox{\ht\strutbox}{...} around the hypertarget.
+% This fixes it when you click on the problem. CAC, 5/12/2020. Solution from:
+%https://tex.stackexchange.com/questions/17057/hypertarget-seems-to-aim-a-line-too-low
+\renewenvironment{Answer}[1]
+  {\par\noindent{\bfseries \raisebox{\ht\strutbox}{\hypertarget{prob:#1}{}}\hyperlink{answer:#1}{#1}} }
+  {\par}
+\renewenvironment{RequAnswer}[1]
+  {\par\noindent{\bfseries \raisebox{\ht\strutbox}{\hypertarget{requprob:#1}{}}\hyperlink{requanswer:#1}{#1}} }
+  {\par}
+
+%%%%%%%%%%%
+% The following is based on stuff from http://www.troubleshooters.com/linux/lyx/ownlists.htm
+\newcounter{qcounter}
+
+\newenvironment{pfenum}{\begin{list}{Proof \arabic{qcounter}:~}{\usecounter{qcounter}}}{\end{list}}
+\newenvironment{pfevalenum}{\begin{list}{Evaluation of Proof \arabic{qcounter}:~}{\usecounter{qcounter}}}{\end{list}}
+\newenvironment{solevalenum}{\begin{list}{Evaluation of Solution \arabic{qcounter}:~}{\usecounter{qcounter}}}{\end{list}}
+
+% lettered enumeration (e.g. (a), (b)).
+\newenvironment{lenum}{\begin{enumerate}[(a)]}{\end{enumerate}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Stuff for student solutions--will print in a handwriting font.
+%
+% For an enumeration that has items "Proof 1", "Proof 2", etc.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% New problem in May, 2021 and how I solved it:
+% If the handwriting font does not show up, see this link:
+% https://tex.stackexchange.com/questions/411213/miktex-makemf-did-not-succeed-for-the-following-reason
+% In case it goes away, go to C:\Program Files\MiKTeX\miktex\bin\x64 (in CMD) and run
+%updmap.exe  --force
+%(It also says updmap.exe  --admin, but that one didn't work for me.)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%
+% augie works...
+%\usepackage{emerald}
+%\usepackage{wedn} % for Deutsche Normalschrift (\wedn)
+%\usepackage{aurical}
+
+% The following is from
+% http://tex.stackexchange.com/questions/99596/different-font-family-in-math-mode
+
+\DeclareMathVersion{sfmath}
+% The following seems to change this for all math "modes" (or whatever this stuff is doing).
+% What I want seems to work without it.
+%\DeclareSymbolFont{sfletters}{OT1}{augie}{m}{sl}
+
+% This one seems to be causing an warning, but if 
+% I remove it, the characters in math mode are not what I want.
+\SetSymbolFont{letters}{sfmath}{OT1}{augie}{m}{sl} % alphabetic characters in math mode. Need it.
+
+% Does not seem to have any effect. Removed CAC, 6/3/21
+%\SetMathAlphabet\mathit{sfmath}{OT1}{augie}{m}{sl}
+
+%\DeclareSymbolFont{sfoperators}{OT1}{augie}{m}{n}
+\SetSymbolFont{operators}{sfmath}{OT1}{augie}{m}{n}
+
+\SetMathAlphabet\mathrm{sfmath}{OT1}{augie}{m}{n}
+% The following page has info about changing individual characters in the math font.
+% http://tex.stackexchange.com/questions/14570/change-math-font-only-in-some-parts-of-a-document 
+% The following are taken from that site:  
+% (See older version of this file for more commented out ones).   
+\DeclareSymbolFont{othersymbols}{OML}{cmr}{m}{n}    
+\DeclareMathSymbol{<}{3}{othersymbols}{"3C}
+\DeclareMathSymbol{/}{0}{othersymbols}{"3D}
+\DeclareMathSymbol{>}{3}{othersymbols}{"3E}
+\DeclareSymbolFont{mainsymbols}{OT1}{cmr}{m}{n} 
+\DeclareMathSymbol{,}{6}{mainsymbols}{"2C}
+\DeclareMathSymbol{.}{6}{mainsymbols}{"2E}
+
+% The following works pretty well (\itshape needed since the font only does italics?). 
+% Keeping this to remember.
+%\newenvironment{spfenum}{\sffamily\mathversion{sfmath}\fontfamily{pzc}\itshape\begin{list}{Proof \arabic{qcounter}:~}{\usecounter{qcounter}}}{\end{list}}
+% \ECFTallPaul is pretty good.  A little small, but is is also not too bold.
+% \ECFAugie (the first one I tried) looks pretty good.  A little bold looking, though.
+%\ECFJD looks a little too bold/large.
+%\ECFTeenSpirit looks a little too bold/large
+\newenvironment{spfenum}{\sffamily\mathversion{sfmath}\fontfamily{augie}\selectfont\begin{list}{Proof \arabic{qcounter}:~}{\usecounter{qcounter}}}{\end{list}}
+\newenvironment{ssolenum}{\sffamily\mathversion{sfmath}\fontfamily{augie}\selectfont\begin{list}{Solution \arabic{qcounter}:~}{\usecounter{qcounter}}}{\end{list}}
+
+\newenvironment{spf}[0]{\sffamily\mathversion{sfmath}\fontfamily{augie}\selectfont\begin{quote}Proof: }{\hfill$\square$\end{quote}}
+\newenvironment{ssol}[0]{\sffamily\mathversion{sfmath}\fontfamily{augie}\selectfont\begin{quote}\textbf{Solution:}}{\end{quote}}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Blanks for fill in the blank examples.
+% The rule adds height.
+\newcommand{\blankline}[1]{\underline{\hspace{#1in}}\rule{.000001in}{.35in}}
+\newcommand{\blanklinefill}{\rule{.000001in}{.35in}\hrulefill}
+\newcommand{\sblanklinefill}{\rule{.000001in}{.25in}\hrulefill}
+\newcommand{\blanklineqtr}{\blankline{.25}}
+\newcommand{\blanklinehalf}{\blankline{.5}}
+\newcommand{\blanklinethreeqtr}{\blankline{.75}}
+\newcommand{\blanklineinch}{\blankline{1}}
+
+\newcommand{\itemtf}{\item\blanklineqtr}
+
+\newcommand{\blanklinetwo}{\blanklinefill\\ \blanklinefill}
+\newcommand{\blanklinethree}{\blanklinetwo\\ \blanklinefill}
+
+\newcommand{\answerline}{\textrm{Answer} \blanklinefill}
+\newcommand{\answerlinetwo}{\answerline\\ \blanklinefill}
+\newcommand{\answerlinethree}{\answerlinetwo\\ \blanklinefill}
+\newcommand{\answerlinefour}{\answerlinethree\\ \blanklinefill}
+
+\newcommand{\evalline}{\textrm{Evaluation} \blanklinefill}
+\newcommand{\evallinetwo}{\evalline\\ \blanklinefill}
+\newcommand{\evallinethree}{\evallinetwo\\ \blanklinefill}
+\newcommand{\evallinefour}{\evallinethree\\ \blanklinefill}
+
+\newcommand{\solline}{\textrm{Solution} \blanklinefill}
+\newcommand{\sollinetwo}{\solline\\ \blanklinefill}
+\newcommand{\sollinethree}{\sollinetwo\\ \blanklinefill}
+\newcommand{\sollinefour}{\sollinethree\\ \blanklinefill}
+
+\newcommand{\pfline}{\textrm{Proof} \blanklinefill}
+\newcommand{\pflinetwo}{\pfline\\ \blanklinefill}
+\newcommand{\pflinethree}{\pflinetwo\\ \blanklinefill}
+\newcommand{\pflinefour}{\pflinethree\\ \blanklinefill}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newenvironment{pf}[0]{\begin{quote}{\bf Proof: \ }}{\hfill$\square$\end{quote}}
+\newenvironment{sol}[0]{\begin{quote}{\bf Solution: \ }}{\end{quote}}
+\newenvironment{rem}[0]{\noindent{\bf Note:}\itshape}{}
+
+%%%%%                Non-standard commands and symbols
+\newcommand{\BBZ}{\mathbb{Z}}
+\newcommand{\BBR}{\mathbb{R}}
+\newcommand{\BBN}{\mathbb{N}}
+\newcommand{\BBC}{\mathbb{C}}
+\newcommand{\BBQ}{\mathbb{Q}}
+\newcommand{\BBE}{\mathbb{E}}
+\newcommand{\BBO}{\mathbb{O}}
+\newcommand{\BBI}{\mathbb{I}}
+
+\newcommand{\dis}{\displaystyle}
+\def\ceil#1{\llceil #1 \rrceil}
+
+
+\def\mat#1#2{{\bf M}_{#1}(#2)}
+\def\mats#1{{\bf M}_{#1}}
+\def\tr#1{{\rm tr}\left(#1\right)}
+
+
+%%From other docs:
+
+%%%%%                Non-standard commands and symbols
+\newcommand{\integers}{\mathbb{Z}}
+\newcommand{\reals}{\mathbb{R}}
+\newcommand{\naturals}{\mathbb{N}}
+\newcommand{\complex}{\mathbb{C}}
+\newcommand{\rationals}{\mathbb{Q}}
+\newcommand{\checks}{\stackrel{\checkmark}{=}}
+\newcommand{\lcm}{\mathrm{LCM}}
+\newcommand{\nin}{\not\in}
+\newcommand\hole[1]{$\bullet$}
+\def\card#1{{\mathrm{card}}\left(#1\right)}
+
+\def\xkcd{{\em xkcd}}
+
+\usepackage[font=small,labelfont=bf]{caption}
+\def\meinecaption#1#2{\vspace{#1cm}\vfill \caption{#2} \vfill}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% From DS2
+\newcommand{\dsum}{\displaystyle\sum}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% From my notes (CAC, 8/1/13)
+\usepackage[dvips]{graphicx}
+\newcommand{\putfig}[1]{
+     \includegraphics[scale=.5]{#1}
+     }
+\newcommand{\sputfig}[2]{
+     \includegraphics[scale=#2]{#1}
+     }
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Added by CAC.
+\newcommand{\scode}[1]{{\small \texttt{#1}}}
+%% SO I can color table columns.  CAC, 6/13/13
+\usepackage{color, colortbl}
+\definecolor{Gray}{gray}{0.8}
+\newcolumntype{g}{>{\columncolor{Gray}}c}
+
+\newcommand{\inputifexists}[1]{\IfFileExists{#1}{\input{#1}}{}}
+
+\newcommand{\includechapter}[1]{
+    %\startsolutions{#1}
+    \Opensolutionfile{discans}[#1/#1SOLUTIONS]
+    \inputifexists{#1/#1Content.tex}
+    \Closesolutionfile{discans}
+    \newpage
+     \Opensolutionfile{requdiscans}[#1/#1RQ_SOLUTIONS]
+    \inputifexists{#1/#1RQ.tex}
+    \Closesolutionfile{requdiscans}
+    \newpage
+    \inputifexists{#1/#1HW.tex}
+}
+\newcommand{\includesolutions}[1]{
+% I can't figure out how to get the section number printed
+% I am trying to put it in the file in the startsolutions command
+% but haven't figured it out yet.
+% So for now, no headings for each set of solutions.    
+%\subsection*{Answers}
+    %\addcontentsline{toc}{section}{Answers}
+    %\markright{Answers}
+    \inputifexists{#1/#1SOLUTIONS.tex}
+}
+\newcommand{\includeRQsolutions}[1]{
+% I can't figure out how to get the section number printed
+% I am trying to put it in the file in the startsolutions command
+% but haven't figured it out yet.
+% So for now, no headings for each set of solutions.    
+%\subsection*{Answers}
+    %\addcontentsline{toc}{section}{Answers}
+    %\markright{Answers}
+    \inputifexists{#1/#1RQ_SOLUTIONS.tex}
+}
+% Removed. A one-line command not necessary.
+% 5/19/21
+%\newcommand{\startsolutions}[1]{
+%    \Opensolutionfile{discans}[#1/#1SOLUTIONS]
+%% Trying to write a header indicating section number but I can't figure it out.
+%%    \Writetofile{discans}{Solutions for chapter 
+%%        \getcurrentref{chapter}\ifnumeq{\getcurrentref{chapter}}{0}{}{.\getcurrentref{chapter}}}
+%%    \begin{Filesave}{discans}
+%%        Solutions for chapter \thechapter
+%%        \ifnumeq{\value{\thesection}}{0}{}{.\thesection}
+%%        \ifnumeq{\value{\thesubsection}}{0}{}{.\thesubsection}
+%%    \end{Filesave}
+%}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% From Jeremy Sydik.
+\newenvironment{absolutelynopagebreak}
+{\par\nobreak\vfil\penalty0\vfilneg
+\vtop\bgroup}
+{\par\xdef\tpd{\the\prevdepth}\egroup
+\prevdepth=\tpd}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\title{{\Huge An Active Introduction to\\ Discrete Mathematics and Algorithms}\\
+
+% \includegraphics[width=.8\textwidth]{fig/latinSquareCoverPhotoFixed.eps}
+%\includegraphics[width=.8\textwidth]{fig/42.eps}
+%\includegraphics[width=.8\textwidth]{fig/SpiralLatinSquare.eps}
+%\includegraphics[width=.8\textwidth]{fig/FibonacciMondrian}
+%\includegraphics[width=.8\textwidth]{fig/2021Cover}
+%\includegraphics[width=\textwidth]{fig/PascalCover}
+\includegraphics[width=.8\textwidth]{fig/SpotsCover}
+}
+\author{Charles A. Cusack\\
+\href{mailto:cusack@hope.edu}{cusack@hope.edu}
+%David A. Santos
+}
+
+\date{Version 3.5\\ \today}
+
+\makeatletter
+\newcommand{\twocoltoc}{%
+  \section*{\contentsname
+      \@mkboth{%
+        }{}}%
+  \begin{multicols}{2}\columnseprule 1pt \columnsep 25pt\multicoltolerance=900\small
+    \@starttoc{toc}%
+  \end{multicols}}
+\makeatother
+
+\usepackage{makeidx}
+\makeindex
+\usepackage[totoc]{idxlayout}
+
+
+\setcounter{chapter}{-1}
+
+%\input cap_c.tex
+%%%%%%                  And voil� the document !!!
+\begin{document}
+% Front matter may follow here
+\begin{frontmatter}
+ \maketitle
+
+\begin{quote}
+    Copyright \copyright{}  2024  Charles A. Cusack.
+    Permission is granted to copy, distribute and/or modify this document
+    under the terms of the GNU Free Documentation License, Version 1.2
+    or any later version published by the Free Software Foundation;
+    with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
+    A copy of the license is included in the section entitled ``GNU
+    Free Documentation License''.
+\end{quote}
+\begin{quote}
+    Copyright \copyright{}  2007  David Anthony Santos.
+    Permission is granted to copy, distribute and/or modify this document
+    under the terms of the GNU Free Documentation License, Version 1.2
+    or any later version published by the Free Software Foundation;
+    with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
+    A copy of the license is included in the section entitled ``GNU
+    Free Documentation License''.
+\end{quote}
+
+
+{\bf History}
+%\markboth{}{} 
+%\addcontentsline{toc}{chapter}{History}
+%\markright{History}
+\begin{itemize}
+\item 2024:
+Added sections on Matrices and Minimum Spanning Trees.
+Increased coverage of modular arithmetic, including GCD and
+Euclid's algorithm. 
+Improved some of the coverage of algorithms topics.
+Added matrix related problems to several chapters.
+Various other minor changes throughout.
+\item 2023: 
+Reordered content, moved some of the proof content throughout so it can be used in a course
+that does not want to be as proof focused.  Edited History to make it shorter.
+\item 2021: 
+More edits, added solutions to Reading Questions.
+\item 2020:
+Addition of Reading Comprehension Questions. 
+Added material in Chapters 2, 4, 5, and especially 10. 
+A few new Problems in several chapters. Minor edits throughout.
+\item 2017, 2018, 2019:
+Minor revisions/fixing of errors. A few additions/subtractions of material.
+\item 2016:
+Minor revisions.  Algorithm Analysis chapter had a few additions.
+\item 2015:
+Minor revisions.  Algorithm Analysis chapter had major revisions.
+\item 2014:
+A significant revision of the 2013 version, so a title change.
+\item 2013: Original version titled {\em An Introduction to Discrete Mathematics and Algorithms}:
+%%%\item
+This document draws some content from each of the following. 
+\begin{itemize}
+\item Discrete Mathematics Notes, 2008, David A. Santos.
+\item More Discrete Mathematics, 2007, David A. Santos.
+\item Number Theory for Mathematical Contests, 2007, David A. Santos.
+\item Linear Algebra Notes, 2008, David A. Santos.
+\item Precalculus, An Honours Course, 2008, David Santos.
+\end{itemize}
+These documents used to be available from  
+\href{http://www.opensourcemath.org/books/santos/}{http://www.opensourcemath.org/books/santos/},
+but the site appears to no longer be available.
+\end{itemize}
+
+\vspace*{.25in}
+\noindent
+{\bf About the cover}
+
+\noindent
+Spots with almost circles of various sizes
+using the Tol light color palette.
+Created by Charles Cusack. 
+For more of Dr. Cusack's digital art, go to 
+\href{https://cusack.hope.edu/Art/}{https://cusack.hope.edu/Art/}
+
+\newpage
+{\normalsize
+\twocoltoc{}
+%\tableofcontents{}
+}
+\input{misc/preface.tex}
+\input{misc/howToUse.tex}
+\end{frontmatter}
+
+\clearpage
+% This makes it print another page number at the bottom.
+% I never noticed that.  It doesn't seem to do much else that I can see.
+% I think it also prints lines at the bottom and top of the page.
+%CAC, 9/2/14
+%\pagestyle{fancy}
+
+\renewcommand{\headrulewidth}{1pt}
+\renewcommand{\footrulewidth}{1pt}
+\lhead[\rm\thepage]{\nouppercase{\textcolor{blue}{\it\rightmark}}}
+\rhead[\nouppercase{\textcolor{blue}{\it\leftmark}}]{\rm \thepage}
+\renewcommand{\chaptermark}[0]{\markboth{\chaptername\ \thechapter}}
+\renewcommand{\sectionmark}{\markright}
+\pagenumbering{arabic} 
+\setcounter{page}{1} 
+
+\includechapter{motivation}
+\includechapter{logic}
+\includechapter{proofs}
+\includechapter{setsFunctionsRelations}
+\includechapter{algorithms}
+\includechapter{sequencesAndSummations}
+\includechapter{algorithmAnalysis}
+\includechapter{recurrencesRecursionInduction}
+\includechapter{counting}
+\includechapter{graphs}
+
+\chapter*{Reading Question Solutions}
+\phantomsection  % so hyperref creates bookmarks
+\addcontentsline{toc}{chapter}{Reading Question Solutions}
+\includeRQsolutions{logic}
+\includeRQsolutions{proofs}
+\includeRQsolutions{setsFunctionsRelations}
+\includeRQsolutions{algorithms}
+\includeRQsolutions{sequencesAndSummations}
+\includeRQsolutions{algorithmAnalysis}
+\includeRQsolutions{recurrencesRecursionInduction}
+\includeRQsolutions{counting}
+\includeRQsolutions{graphs}
+
+
+\chapter*{Exercise Solutions}
+\phantomsection  % so hyperref creates bookmarks
+\addcontentsline{toc}{chapter}{Exercise Solutions}
+\includesolutions{logic}
+\includesolutions{proofs}
+\includesolutions{setsFunctionsRelations}
+\includesolutions{algorithms}
+\includesolutions{sequencesAndSummations}
+\includesolutions{algorithmAnalysis}
+\includesolutions{recurrencesRecursionInduction}
+\includesolutions{counting}
+\includesolutions{graphs}
+
+%%%%%
+% The GNU Documentation license.
+\clearpage
+{\tiny
+\input{misc/fdl-1.2.tex}
+}
+
+\printindex
+
+\end{document}

@@ -21,7 +21,231 @@
 
   <section id="overview" section-title="Overview">
     <h2>Overview</h2>
-    <p>This page is coming soon.</p>
+    <p>
+      A <strong>recursive</strong> algorithm solves a problem by calling itself on a smaller or
+      simpler version of the same problem. The idea is not just "a function calls itself."
+      The useful part is that each call has a more manageable job, and the calls eventually
+      reach a case that can be answered directly.
+    </p>
+    <p>
+      Recursive code is common in algorithms because many problems already have recursive
+      structure: search one half of a sorted array, process one node and then its subtrees,
+      sort each half of an array, or choose whether to include the next item in a candidate
+      solution. Understanding recursion also prepares you for recurrence relations, divide
+      and conquer, backtracking, trees, and graph traversal.
+    </p>
+  </section>
+
+  <section id="requirements" section-title="The Three Requirements">
+    <h2>The Three Requirements</h2>
+    <p>
+      A recursive algorithm needs three pieces. Missing any one of them usually leads to
+      incorrect output or nontermination.
+    </p>
+    <ul class="spaced">
+      <li><strong>Base case:</strong> One or more cases that are solved without another recursive call.</li>
+      <li><strong>Recursive case:</strong> A rule that reduces the current problem to one or more smaller instances of the same problem.</li>
+      <li><strong>Progress:</strong> Each recursive call must move toward a base case.</li>
+    </ul>
+    <p>
+      The base case is sometimes called the stopping case. Progress often means that a numeric
+      argument gets smaller, but the deeper idea is that some measure of the remaining work
+      decreases every time.
+    </p>
+  </section>
+
+  <section id="factorial" section-title="Worked Example: Factorial">
+    <h2>Worked Example: Factorial</h2>
+    <p>
+      The factorial function has a natural recursive definition. The value of <code>0!</code>
+      is <code>1</code>. For any positive <code>n</code>, the value of <code>n!</code> is
+      <code>n * (n - 1)!</code>.
+    </p>
+    <pre><code>int factorial(int n) {
+    if (n &lt;= 0) {
+        return 1;
+    } else {
+        return n * factorial(n - 1);
+    }
+}</code></pre>
+    <p>
+      In this code, <code>n &lt;= 0</code> is the base case. When <code>n &gt; 0</code>,
+      the function calls <code>factorial(n - 1)</code>, so it makes progress toward
+      the base case.
+    </p>
+    <table class="example-table left-align">
+      <thead>
+        <tr>
+          <th>Call</th>
+          <th>What it needs before it can return</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>factorial(4)</code></td>
+          <td>Needs <code>factorial(3)</code>, then returns <code>4 * factorial(3)</code>.</td>
+        </tr>
+        <tr>
+          <td><code>factorial(3)</code></td>
+          <td>Needs <code>factorial(2)</code>, then returns <code>3 * factorial(2)</code>.</td>
+        </tr>
+        <tr>
+          <td><code>factorial(2)</code></td>
+          <td>Needs <code>factorial(1)</code>, then returns <code>2 * factorial(1)</code>.</td>
+        </tr>
+        <tr>
+          <td><code>factorial(1)</code></td>
+          <td>Needs <code>factorial(0)</code>, then returns <code>1 * factorial(0)</code>.</td>
+        </tr>
+        <tr>
+          <td><code>factorial(0)</code></td>
+          <td>Base case. Returns <code>1</code> immediately.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      After the base case returns, the waiting calls finish in reverse order:
+      <code>factorial(1)</code>, then <code>factorial(2)</code>, then
+      <code>factorial(3)</code>, then <code>factorial(4)</code>.
+    </p>
+  </section>
+
+  <section id="call-stack" section-title="The Call Stack">
+    <h2>The Call Stack</h2>
+    <p>
+      Each function call gets its own <strong>stack frame</strong>, which stores information
+      such as parameter values, local variables, and where execution should continue after a
+      called function returns. Recursive calls are not special to the computer. They are
+      ordinary function calls, but several calls to the same function can be active at the
+      same time.
+    </p>
+    <p>
+      During <code>factorial(4)</code>, the call stack grows until it reaches the base case.
+      Then the stack unwinds as calls return.
+    </p>
+    <table class="example-table left-align">
+      <thead>
+        <tr>
+          <th>Moment</th>
+          <th>Top of stack</th>
+          <th>What is happening</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td>
+          <td><code>factorial(4)</code></td>
+          <td>The original call starts and waits for <code>factorial(3)</code>.</td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td><code>factorial(3)</code></td>
+          <td>A new frame is added. It waits for <code>factorial(2)</code>.</td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td><code>factorial(2)</code></td>
+          <td>A new frame is added. It waits for <code>factorial(1)</code>.</td>
+        </tr>
+        <tr>
+          <td>4</td>
+          <td><code>factorial(1)</code></td>
+          <td>A new frame is added. It waits for <code>factorial(0)</code>.</td>
+        </tr>
+        <tr>
+          <td>5</td>
+          <td><code>factorial(0)</code></td>
+          <td>The base case returns <code>1</code>. Frames now begin to finish.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      The maximum number of active frames is the <strong>recursion depth</strong>. For the
+      factorial code above, the depth is proportional to <code>n</code>, so the algorithm uses
+      <code>O(n)</code> extra stack space. This is different from an iterative loop version,
+      which can compute the same value using <code>O(1)</code> extra space.
+    </p>
+  </section>
+
+  <section id="demo" section-title="Interactive Demo">
+    <h2>Interactive Demo</h2>
+    <p>
+      Use the demo to step through a recursive factorial call. Watch the call stack grow while
+      calls are being made and shrink while return values are computed.
+    </p>
+    <div class="embeddedDemoContainer">
+      <iframe class="embeddedDemo" src="../../../Content/Demos/Decrease-and-Conquer/Factorial Demo.html" allow="fullscreen"></iframe>
+    </div>
+  </section>
+
+  <section id="recursion-versus-iteration" section-title="Recursion Versus Iteration">
+    <h2>Recursion Versus Iteration</h2>
+    <p>
+      Many recursive algorithms can also be written iteratively. For factorial, a loop is
+      shorter in memory use and avoids function-call overhead.
+    </p>
+    <pre><code>int factorialIterative(int n) {
+    int result = 1;
+    for (int i = 2; i &lt;= n; i++) {
+        result = result * i;
+    }
+    return result;
+}</code></pre>
+    <p>
+      Recursion is not automatically better or worse than iteration. It is a design tool. It
+      is especially useful when the problem naturally splits into smaller versions of itself,
+      as in tree traversal, divide-and-conquer algorithms, and backtracking. It is risky when
+      the base case is wrong, progress is unclear, or repeated recursive calls redo the same
+      work many times.
+    </p>
+  </section>
+
+  <section id="common-mistakes" section-title="Common Mistakes">
+    <h2>Common Mistakes</h2>
+    <ul class="spaced">
+      <li><strong>No base case:</strong> The function always calls itself again.</li>
+      <li><strong>Base case too narrow:</strong> The code handles <code>n == 0</code> but not negative values that can occur.</li>
+      <li><strong>No progress:</strong> The recursive call uses the same arguments, or arguments that can move away from the base case.</li>
+      <li><strong>Wrong return combination:</strong> The recursive call is correct, but the current call combines the smaller answer incorrectly.</li>
+      <li><strong>Unexpected stack growth:</strong> The algorithm works for small inputs but exceeds the call stack for large ones.</li>
+    </ul>
+  </section>
+
+  <section id="reading-questions" section-title="Reading Comprehension Questions">
+    <h2>Reading Comprehension Questions</h2>
+    <ol>
+      <li>What makes an algorithm recursive?</li>
+      <li>What are the three requirements every terminating recursive algorithm should satisfy?</li>
+      <li>In <code>factorial(4)</code>, which call reaches the base case?</li>
+      <li>Why does recursive factorial use <code>O(n)</code> extra stack space?</li>
+    </ol>
+    <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
+    <div id="answers" class="answer" hidden>
+      <ol>
+        <li><strong>Answer:</strong> It calls itself on a smaller or simpler instance of the same problem.</li>
+        <li><strong>Answer:</strong> It needs a base case, a recursive case, and progress toward a base case.</li>
+        <li><strong>Answer:</strong> <code>factorial(0)</code> reaches the base case and returns <code>1</code> immediately.</li>
+        <li><strong>Answer:</strong> Before the base case returns, there can be one active stack frame for each value from <code>n</code> down to <code>0</code>, so the maximum depth grows linearly with <code>n</code>.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="activities" section-title="In-Class Activities">
+    <h2>In-Class Activities</h2>
+    <ol>
+      <li><strong>Identify the pieces:</strong> For a recursive method that prints numbers from <code>n</code> down to <code>1</code>, identify the base case, recursive case, and progress measure.</li>
+      <li><strong>Stack frames by hand:</strong> Draw the stack frames created by <code>factorial(3)</code>. Include the value of <code>n</code> in each frame.</li>
+      <li><strong>Fix the bug:</strong> Explain what goes wrong if a recursive sum method stops only when <code>n == 0</code> but the caller is allowed to pass <code>n = -1</code>.</li>
+    </ol>
+  </section>
+
+  <section id="problems" section-title="Homework Problems">
+    <h2>Homework Problems</h2>
+    <ol>
+      <li><strong>Recursive product:</strong> Write pseudocode for <code>product(n)</code>, which returns <code>1 * 2 * ... * n</code> for <code>n &gt;= 1</code>. Identify the base case and recursive case.</li>
+      <li><strong>Stack depth:</strong> Suppose <code>mystery(n)</code> calls only <code>mystery(n - 2)</code> until <code>n &lt;= 0</code>. What is the maximum recursion depth as a function of <code>n</code>?</li>
+      <li><strong>Compare versions:</strong> Write both recursive and iterative versions of a method that computes the sum of the first <code>n</code> positive integers. Compare their time and extra space use.</li>
+    </ol>
   </section>
 </body>
 </html>

@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Asymptotic Notation</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
   <script src="../../../scripts/chapterScripts.js"></script>
   <link rel="stylesheet" href="../../../css/style.css">
   <link rel="stylesheet" href="../../../css/chapter.css">
@@ -21,7 +24,206 @@
 
   <section id="overview" section-title="Overview">
     <h2>Overview</h2>
-    <p>This page is coming soon.</p>
+    <p>
+      Asymptotic notation is a language for simplifying work counts. After we count enough
+      operations to understand how an algorithm's work grows, asymptotic notation lets us ignore
+      constants, lower-order terms, and machine-specific details.
+    </p>
+    <p>
+      The point is not to make analysis vague. The point is to focus on the part of the count that
+      controls performance for large inputs.
+    </p>
+  </section>
+
+  <section id="why-simplify" section-title="Why Simplify?">
+    <h2>Why Simplify?</h2>
+    <p>
+      Suppose one analysis gives \(5n+2\) operations and another gives \(100n+40\). The second
+      algorithm may be slower in practice for many inputs, but both grow linearly. Doubling \(n\)
+      roughly doubles the work in both cases.
+    </p>
+    <p>
+      Compare that with \(n^2\). Once \(n\) gets large, a quadratic algorithm eventually overtakes
+      any fixed constant multiple of a linear algorithm. This is why growth rate matters.
+    </p>
+    <table class="example-table left-align">
+      <thead>
+        <tr>
+          <th>Detailed expression</th>
+          <th>Asymptotic simplification</th>
+          <th>Reason</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>\(7\)</td>
+          <td>\(\Theta(1)\)</td>
+          <td>Constant work.</td>
+        </tr>
+        <tr>
+          <td>\(5n+2\)</td>
+          <td>\(\Theta(n)\)</td>
+          <td>Constants and lower-order terms do not change the growth rate.</td>
+        </tr>
+        <tr>
+          <td>\(\frac{n(n+1)}{2}\)</td>
+          <td>\(\Theta(n^2)\)</td>
+          <td>The leading term is \(\frac{1}{2}n^2\).</td>
+        </tr>
+        <tr>
+          <td>\(3n^2 + 10n + 8\)</td>
+          <td>\(\Theta(n^2)\)</td>
+          <td>The quadratic term dominates as \(n\) grows.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="theta" section-title="Theta: Tight Growth">
+    <h2>Theta: Tight Growth</h2>
+    <p>
+      \(T(n)=\Theta(g(n))\) means that \(T(n)\) grows at the same asymptotic rate as \(g(n)\).
+      It is a tight description of growth.
+    </p>
+    <p>
+      For example, if a loop always executes \(3n+12\) basic operations, then its running time is
+      \(\Theta(n)\). The constants matter for exact timing, but the growth rate is linear.
+    </p>
+    <p>
+      Most of the time, when we fully understand an algorithm's running time, \(\Theta\)-notation
+      is the clearest answer.
+    </p>
+  </section>
+
+  <section id="big-o" section-title="Big-O: Upper Bounds">
+    <h2>Big-O: Upper Bounds</h2>
+    <p>
+      \(T(n)=O(g(n))\) means that \(g(n)\) is an asymptotic upper bound on \(T(n)\). Informally,
+      \(T(n)\) grows no faster than \(g(n)\), up to constant factors.
+    </p>
+    <p>
+      Big-O is useful when we want a guarantee. If an algorithm is \(O(n^2)\), then for sufficiently
+      large \(n\), its work is bounded above by a constant multiple of \(n^2\).
+    </p>
+    <p>
+      Big-O may be loose. A linear algorithm is also \(O(n^2)\), but saying \(O(n^2)\) hides useful
+      information if the tighter answer is \(\Theta(n)\).
+    </p>
+  </section>
+
+  <section id="omega" section-title="Omega: Lower Bounds">
+    <h2>Omega: Lower Bounds</h2>
+    <p>
+      \(T(n)=\Omega(g(n))\) means that \(g(n)\) is an asymptotic lower bound on \(T(n)\). Informally,
+      \(T(n)\) grows at least as fast as \(g(n)\), up to constant factors.
+    </p>
+    <p>
+      Lower bounds are useful when we want to show that an algorithm or problem cannot be faster
+      than some amount of work. For example, any algorithm that must inspect every element of an
+      unsorted array has a lower bound of \(\Omega(n)\) element inspections.
+    </p>
+  </section>
+
+  <section id="relationship" section-title="How the Notations Relate">
+    <h2>How the Notations Relate</h2>
+    <table class="example-table left-align">
+      <thead>
+        <tr>
+          <th>Notation</th>
+          <th>Meaning</th>
+          <th>Analogy</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>\(O(g(n))\)</td>
+          <td>Upper bound: grows no faster than \(g(n)\)</td>
+          <td>Like \(\leq\)</td>
+        </tr>
+        <tr>
+          <td>\(\Omega(g(n))\)</td>
+          <td>Lower bound: grows at least as fast as \(g(n)\)</td>
+          <td>Like \(\geq\)</td>
+        </tr>
+        <tr>
+          <td>\(\Theta(g(n))\)</td>
+          <td>Tight bound: grows at the same rate as \(g(n)\)</td>
+          <td>Like \(=\)</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      Be careful with the equals sign in statements such as \(T(n)=O(n^2)\). It is conventional
+      notation, but it should be read as "is in" or "is bounded by," not as ordinary algebraic
+      equality.
+    </p>
+  </section>
+
+  <section id="justifying-constants" section-title="Why Constants Do Not Change the Class">
+    <h2>Why Constants Do Not Change the Class</h2>
+    <p>
+      Consider \(5n+2\). For every \(n \geq 1\),
+    </p>
+    \[
+      5n + 2 \leq 7n.
+    \]
+    <p>
+      So \(5n+2\) is at most a constant multiple of \(n\) once \(n\) is at least 1. Also,
+      \(5n+2 \geq n\) for \(n \geq 1\), so it is at least a constant multiple of \(n\).
+      Together, those two facts justify \(5n+2=\Theta(n)\).
+    </p>
+    <p>
+      The same idea explains why \(3n^2+10n+8=\Theta(n^2)\). For large \(n\), the lower-order
+      terms are bounded by constant multiples of the leading term.
+    </p>
+  </section>
+
+  <section id="common-mistakes" section-title="Common Mistakes">
+    <h2>Common Mistakes</h2>
+    <ul class="spaced">
+      <li><strong>Using Big-O when a tight bound is known:</strong> Prefer \(\Theta(n)\) over \(O(n)\) when you know the running time grows linearly.</li>
+      <li><strong>Keeping unnecessary detail:</strong> \(\Theta(3n^2+2n+1)\) should usually be simplified to \(\Theta(n^2)\).</li>
+      <li><strong>Confusing faster-growing functions with faster algorithms:</strong> A faster-growing running-time function means a slower algorithm.</li>
+      <li><strong>Forgetting the case:</strong> An algorithm may have different best-case and worst-case growth rates.</li>
+      <li><strong>Leaving loop variables in the answer:</strong> Complexity should be expressed using input-size variables, not temporary indexes such as \(i\) or \(j\).</li>
+    </ul>
+  </section>
+
+  <section id="reading-questions" section-title="Reading Comprehension Questions">
+    <h2>Reading Comprehension Questions</h2>
+    <ol>
+      <li>Why do we use asymptotic notation after counting operations?</li>
+      <li>What is the difference between \(O(g(n))\) and \(\Theta(g(n))\)?</li>
+      <li>Why is \(5n+2=\Theta(n)\)?</li>
+      <li>Why is it misleading to say a quadratic running-time function is "faster" than a linear one?</li>
+    </ol>
+    <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
+    <div id="answers" class="answer" hidden>
+      <ol>
+        <li><strong>Answer:</strong> It lets us focus on growth rate instead of exact constants, lower-order terms, and machine-specific details.</li>
+        <li><strong>Answer:</strong> \(O(g(n))\) gives an upper bound; \(\Theta(g(n))\) gives a tight growth-rate bound.</li>
+        <li><strong>Answer:</strong> It is bounded above and below by constant multiples of \(n\) for sufficiently large \(n\).</li>
+        <li><strong>Answer:</strong> A running-time function that grows faster means the algorithm takes more work as input size grows.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="activities" section-title="In-Class Activities">
+    <h2>In-Class Activities</h2>
+    <ol>
+      <li><strong>Simplify counts:</strong> Convert \(12n+50\), \(4n^2+n\), and \(10\log n+100\) into tight asymptotic notation.</li>
+      <li><strong>Bound discussion:</strong> Give one true but loose Big-O bound for a linear function, then give the tight Theta bound.</li>
+      <li><strong>Case labels:</strong> Find an algorithm whose best case and worst case have different asymptotic bounds. State both.</li>
+    </ol>
+  </section>
+
+  <section id="problems" section-title="Homework Problems">
+    <h2>Homework Problems</h2>
+    <ol>
+      <li><strong>Formal-ish justification:</strong> Show that \(4n+9=\Theta(n)\) by giving constants for upper and lower bounds.</li>
+      <li><strong>Dominant term:</strong> Simplify \(2n^3+100n^2+5000\) to a tight asymptotic bound and explain why the lower-order terms disappear.</li>
+      <li><strong>Upper versus tight:</strong> Explain why \(n=O(n^2)\) is true but not the best description of linear growth.</li>
+    </ol>
   </section>
 </body>
 </html>

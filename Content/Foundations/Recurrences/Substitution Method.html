@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Substitution Method</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
   <script src="../../../scripts/chapterScripts.js"></script>
   <link rel="stylesheet" href="../../../css/style.css">
   <link rel="stylesheet" href="../../../css/chapter.css">
@@ -21,7 +24,216 @@
 
   <section id="overview" section-title="Overview">
     <h2>Overview</h2>
-    <p>This page is coming soon.</p>
+    <p>
+      The substitution method is the "guess and prove" method for recurrences. First, use
+      examples, iteration, recursion trees, or the Master Theorem to guess a closed form or
+      asymptotic bound. Then prove that the guess satisfies the recurrence.
+    </p>
+    <p>
+      The proof usually uses induction because a recurrence defines \(T(n)\) using smaller values
+      of the same function.
+    </p>
+  </section>
+
+  <section id="what-it-proves" section-title="What Substitution Proves">
+    <h2>What Substitution Proves</h2>
+    <p>
+      Substitution is not mainly a discovery tool. It is a verification tool. If you already think
+      a recurrence has a certain solution, substitution lets you check that claim carefully.
+    </p>
+    <ul class="spaced">
+      <li><strong>For exact formulas:</strong> Prove \(T(n)=g(n)\) for all relevant \(n\).</li>
+      <li><strong>For upper bounds:</strong> Prove \(T(n)\leq c g(n)\) for a suitable constant \(c\) and all sufficiently large \(n\).</li>
+      <li><strong>For lower bounds:</strong> Prove \(T(n)\geq c g(n)\) for a suitable positive constant \(c\) and all sufficiently large \(n\).</li>
+      <li><strong>For tight bounds:</strong> Prove both an upper and a lower bound, or combine substitution with another argument.</li>
+    </ul>
+  </section>
+
+  <section id="exact-example" section-title="Exact Example">
+    <h2>Exact Example</h2>
+    <p>
+      Consider
+    </p>
+    \[
+      S(n)=S(n-1)+n,\quad S(1)=1.
+    \]
+    <p>
+      Expanding a few values gives \(1,3,6,10,\ldots\), suggesting
+      \(S(n)=n(n+1)/2\). Now prove it.
+    </p>
+    <p>
+      <strong>Base case:</strong> When \(n=1\),
+    </p>
+    \[
+      S(1)=1=\frac{1(1+1)}{2}.
+    \]
+    <p>
+      <strong>Inductive hypothesis:</strong> Assume \(S(k)=k(k+1)/2\) for some
+      \(k\geq 1\).
+    </p>
+    <p>
+      <strong>Inductive step:</strong>
+    </p>
+    \[
+      \begin{aligned}
+      S(k+1) &= S(k)+(k+1)\\
+             &= \frac{k(k+1)}{2}+(k+1)\\
+             &= \frac{k(k+1)+2(k+1)}{2}\\
+             &= \frac{(k+1)(k+2)}{2}.
+      \end{aligned}
+    \]
+    <p>
+      Therefore \(S(n)=n(n+1)/2\) for all \(n\geq 1\).
+    </p>
+  </section>
+
+  <section id="halving-example" section-title="Strong Induction Example">
+    <h2>Strong Induction Example</h2>
+    <p>
+      Recurrences that call \(T(n/2)\) often fit strong induction naturally because the recursive
+      call may jump to a value much smaller than \(n-1\).
+    </p>
+    \[
+      T(n)=T(n/2)+1,\quad T(1)=1.
+    \]
+    <p>
+      Guess \(T(n)=\log_2 n+1\) for powers of 2.
+    </p>
+    <p>
+      <strong>Base case:</strong> \(T(1)=1=\log_2 1+1\).
+    </p>
+    <p>
+      <strong>Inductive hypothesis:</strong> Assume the formula holds for every smaller power of
+      2. In particular, assume \(T(n/2)=\log_2(n/2)+1\).
+    </p>
+    <p>
+      <strong>Inductive step:</strong>
+    </p>
+    \[
+      \begin{aligned}
+      T(n) &= T(n/2)+1\\
+           &= \log_2(n/2)+1+1\\
+           &= \log_2 n-\log_2 2+2\\
+           &= \log_2 n+1.
+      \end{aligned}
+    \]
+    <p>
+      The formula is consistent with the recurrence and base case, so \(T(n)=\log_2 n+1\) for
+      powers of 2.
+    </p>
+  </section>
+
+  <section id="asymptotic-example" section-title="Asymptotic Example">
+    <h2>Asymptotic Example</h2>
+    <p>
+      Often we only need an asymptotic bound. For merge sort, suppose
+    </p>
+    \[
+      T(n)\leq 2T(n/2)+cn
+    \]
+    <p>
+      for a positive constant \(c\), and \(T(1)\) is constant. We want to prove
+      \(T(n)=O(n\log n)\). The target statement is: there is a constant \(d\) such that
+      \(T(n)\leq d n\log_2 n\) for all sufficiently large powers of 2.
+    </p>
+    <p>
+      Assume \(T(n/2)\leq d(n/2)\log_2(n/2)\). Then
+    </p>
+    \[
+      \begin{aligned}
+      T(n) &\leq 2T(n/2)+cn\\
+           &\leq 2\left(d\frac{n}{2}\log_2(n/2)\right)+cn\\
+           &= dn(\log_2 n-1)+cn\\
+           &= dn\log_2 n +(c-d)n.
+      \end{aligned}
+    \]
+    <p>
+      If we choose \(d\geq c\), then \((c-d)n\leq 0\), so
+      \(T(n)\leq dn\log_2 n\). Choosing \(d\) large enough to handle the base case completes
+      the upper-bound proof.
+    </p>
+    <p>
+      This proves an \(O(n\log n)\) upper bound. A tight \(\Theta(n\log n)\) result also needs a
+      matching lower bound, or another argument such as a recursion tree.
+    </p>
+  </section>
+
+  <section id="finding-guesses" section-title="Finding a Good Guess">
+    <h2>Finding a Good Guess</h2>
+    <p>
+      Substitution cannot prove a guess you do not have. Common ways to get a useful guess include:
+    </p>
+    <ul class="spaced">
+      <li><strong>Compute small values:</strong> Useful for exact sequences like \(1,3,7,15,\ldots\).</li>
+      <li><strong>Use iteration:</strong> Expand the recurrence until a pattern appears.</li>
+      <li><strong>Use a recursion tree:</strong> Estimate the cost per level and total number of levels.</li>
+      <li><strong>Use the Master Theorem:</strong> Get a fast asymptotic guess for \(aT(n/b)+f(n)\) recurrences.</li>
+      <li><strong>Strengthen the guess if needed:</strong> Sometimes \(T(n)\leq cn\) is too weak to prove directly, but \(T(n)\leq cn-d\) works.</li>
+    </ul>
+  </section>
+
+  <section id="proof-template" section-title="Proof Template">
+    <h2>Proof Template</h2>
+    <p>
+      A substitution proof should make the logical structure visible.
+    </p>
+    <ol class="spaced">
+      <li><strong>State the claim:</strong> Say exactly what formula or bound you are proving.</li>
+      <li><strong>Handle the base case:</strong> Check the recurrence's smallest relevant input.</li>
+      <li><strong>State the inductive hypothesis:</strong> For recursive calls on smaller inputs, assume the claim is true for those smaller inputs.</li>
+      <li><strong>Substitute:</strong> Replace recursive terms such as \(T(n/2)\) using the inductive hypothesis.</li>
+      <li><strong>Simplify:</strong> Use algebra to reach the desired expression for \(T(n)\).</li>
+      <li><strong>Close the proof:</strong> Conclude by induction.</li>
+    </ol>
+  </section>
+
+  <section id="common-mistakes" section-title="Common Mistakes">
+    <h2>Common Mistakes</h2>
+    <ul class="spaced">
+      <li><strong>Proving only that the answer looks plausible:</strong> A substitution proof must use the recurrence and base case.</li>
+      <li><strong>Using the desired result before it is justified:</strong> The inductive hypothesis applies only to smaller inputs.</li>
+      <li><strong>Forgetting constants in Big-O proofs:</strong> You may need to choose constants large enough for both the inductive step and the base cases.</li>
+      <li><strong>Trying to prove a false exact formula:</strong> Floors, ceilings, or base-case choices may change exact formulas even when the asymptotic bound is right.</li>
+      <li><strong>Stopping at an upper bound and calling it tight:</strong> \(O(g(n))\) alone does not prove \(\Theta(g(n))\).</li>
+    </ul>
+  </section>
+
+  <section id="reading-questions" section-title="Reading Comprehension Questions">
+    <h2>Reading Comprehension Questions</h2>
+    <ol>
+      <li>Why is the substitution method often described as "guess and prove"?</li>
+      <li>Why does the proof for \(T(n)=T(n/2)+1\) use an assumption about \(T(n/2)\)?</li>
+      <li>In the merge sort upper-bound proof, why do we choose \(d\geq c\)?</li>
+      <li>Why does proving \(T(n)=O(n\log n)\) not automatically prove \(T(n)=\Theta(n\log n)\)?</li>
+    </ol>
+    <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
+    <div id="answers" class="answer" hidden>
+      <ol>
+        <li><strong>Answer:</strong> You first guess the formula or bound, then prove it satisfies the recurrence using induction.</li>
+        <li><strong>Answer:</strong> The recurrence defines \(T(n)\) in terms of \(T(n/2)\), so the inductive step needs the claim for that smaller input.</li>
+        <li><strong>Answer:</strong> That makes \((c-d)n\leq 0\), allowing the expression to be bounded by \(dn\log_2 n\).</li>
+        <li><strong>Answer:</strong> Big-O is only an upper bound. A tight bound also requires a matching lower bound.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="activities" section-title="In-Class Activities">
+    <h2>In-Class Activities</h2>
+    <ol>
+      <li><strong>Exact proof:</strong> Prove by substitution that \(A(n)=A(n-1)+2\), \(A(1)=2\), has solution \(A(n)=2n\).</li>
+      <li><strong>Find the flaw:</strong> Review a proof that assumes \(T(n)=g(n)\) inside the step for \(T(n)\), and identify why it is circular.</li>
+      <li><strong>Upper-bound constants:</strong> Complete the constant choices needed to prove \(T(n)\leq 2T(n/2)+5n\) is \(O(n\log n)\).</li>
+    </ol>
+  </section>
+
+  <section id="problems" section-title="Homework Problems">
+    <h2>Homework Problems</h2>
+    <ol>
+      <li><strong>Closed form:</strong> Guess and prove a closed form for \(H(n)=2H(n-1)+1\), \(H(1)=1\).</li>
+      <li><strong>Logarithmic recurrence:</strong> Prove that \(T(n)=T(n/2)+4\), \(T(1)=3\), has solution \(T(n)=4\log_2 n+3\) for powers of 2.</li>
+      <li><strong>Upper bound:</strong> Use substitution to prove \(T(n)=2T(n/2)+n\) is \(O(n\log n)\).</li>
+      <li><strong>Lower bound:</strong> Use substitution to prove \(T(n)=2T(n/2)+n\) is \(\Omega(n\log n)\), assuming a suitable positive base-case constant.</li>
+    </ol>
   </section>
 </body>
 </html>

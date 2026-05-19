@@ -21,7 +21,233 @@
 
   <section id="overview" section-title="Overview">
     <h2>Overview</h2>
-    <p>This page is coming soon.</p>
+    <p>
+      Recursive design starts by giving one function call a clear meaning. Once the meaning of
+      a call is precise, the recursive call can be treated as a helper that correctly solves a
+      smaller instance. The current call then only has to reduce the problem and combine the
+      smaller answer.
+    </p>
+    <p>
+      This is the same idea that appears in induction proofs: prove a small case directly, then
+      show how solving a smaller case lets you solve the next case. In code, the base case gives
+      the direct answer, and the recursive case performs the reduction.
+    </p>
+  </section>
+
+  <section id="design-process" section-title="Design Process">
+    <h2>Design Process</h2>
+    <p>
+      A reliable recursive design usually follows these steps.
+    </p>
+    <ol class="spaced">
+      <li><strong>State the meaning of the function:</strong> Be precise about what one call should compute or do.</li>
+      <li><strong>Choose the base case:</strong> Identify the smallest input that can be answered immediately.</li>
+      <li><strong>Choose the smaller problem:</strong> Decide what recursive call solves a smaller instance of the same task.</li>
+      <li><strong>Combine the answer:</strong> Use the smaller answer to finish the current call.</li>
+      <li><strong>Check progress:</strong> Verify that every recursive path eventually reaches a base case.</li>
+    </ol>
+    <p>
+      The key question is: <em>If the recursive call already worked, what would I do with its
+      answer?</em> That question keeps the current call focused on one layer of work.
+    </p>
+  </section>
+
+  <section id="example-sum" section-title="Example: Sum of a Prefix">
+    <h2>Example: Sum of a Prefix</h2>
+    <p>
+      Suppose <code>sumFirst(n)</code> should return the sum <code>1 + 2 + ... + n</code> for
+      nonnegative <code>n</code>.
+    </p>
+    <ul class="spaced">
+      <li><strong>Meaning:</strong> <code>sumFirst(n)</code> returns the sum of the first <code>n</code> positive integers.</li>
+      <li><strong>Base case:</strong> <code>sumFirst(0)</code> should return <code>0</code>.</li>
+      <li><strong>Smaller problem:</strong> <code>sumFirst(n - 1)</code> returns <code>1 + 2 + ... + (n - 1)</code>.</li>
+      <li><strong>Combine:</strong> Add <code>n</code> to that smaller sum.</li>
+    </ul>
+    <pre><code>int sumFirst(int n) {
+    if (n &lt;= 0) {
+        return 0;
+    }
+    return n + sumFirst(n - 1);
+}</code></pre>
+    <p>
+      The recursive call is not a guess. It has the same meaning as the original call, just with
+      a smaller argument.
+    </p>
+  </section>
+
+  <section id="example-binary-search" section-title="Example: Binary Search">
+    <h2>Example: Binary Search</h2>
+    <p>
+      Some recursive algorithms reduce the input by changing a range instead of changing a single
+      number. Binary search looks for a value inside a sorted array segment.
+    </p>
+    <pre><code>int binarySearch(int[] a, int left, int right, int target) {
+    if (right &lt; left) {
+        return -1;
+    }
+
+    int middle = (left + right) / 2;
+    if (a[middle] == target) {
+        return middle;
+    } else if (target &lt; a[middle]) {
+        return binarySearch(a, left, middle - 1, target);
+    } else {
+        return binarySearch(a, middle + 1, right, target);
+    }
+}</code></pre>
+    <p>
+      The meaning of the helper is: search the sorted subarray from <code>left</code> through
+      <code>right</code>. The base case is an empty range. Each recursive call searches a smaller
+      range because it removes the middle element and one side of the array.
+    </p>
+  </section>
+
+  <section id="helper-functions" section-title="Helper Functions">
+    <h2>Helper Functions</h2>
+    <p>
+      Public methods often have a simple interface, while the recursive work needs extra
+      parameters. A wrapper method can protect callers from those details.
+    </p>
+    <pre><code>int search(int[] a, int target) {
+    return binarySearch(a, 0, a.length - 1, target);
+}</code></pre>
+    <p>
+      The caller asks to search the whole array. The helper keeps track of which part of the
+      array is still under consideration. This pattern also appears in recursive array processing,
+      tree traversal, backtracking, and divide-and-conquer algorithms.
+    </p>
+  </section>
+
+  <section id="example-palindrome" section-title="Example: Palindrome Test">
+    <h2>Example: Palindrome Test</h2>
+    <p>
+      A string is a palindrome if it reads the same forward and backward. Recursively, a string is
+      a palindrome if its first and last characters match and the inside substring is a palindrome.
+    </p>
+    <pre><code>boolean isPalindrome(String s, int left, int right) {
+    if (left &gt;= right) {
+        return true;
+    }
+    if (s.charAt(left) != s.charAt(right)) {
+        return false;
+    }
+    return isPalindrome(s, left + 1, right - 1);
+}</code></pre>
+    <p>
+      Here the progress measure is the number of unchecked characters between
+      <code>left</code> and <code>right</code>. Each call moves both ends inward, so the unchecked
+      region gets smaller.
+    </p>
+  </section>
+
+  <section id="correctness" section-title="Why the Design Works">
+    <h2>Why the Design Works</h2>
+    <p>
+      Recursive correctness arguments often follow the same shape as the code.
+    </p>
+    <ul class="spaced">
+      <li><strong>Base case:</strong> Show that the direct answer is correct for the smallest input.</li>
+      <li><strong>Inductive assumption:</strong> Assume the recursive call correctly solves the smaller instance.</li>
+      <li><strong>Current case:</strong> Explain why the current call combines that smaller answer correctly.</li>
+    </ul>
+    <p>
+      For <code>sumFirst</code>, the base case is correct because the sum of the first zero
+      positive integers is <code>0</code>. If <code>sumFirst(n - 1)</code> correctly returns
+      <code>1 + 2 + ... + (n - 1)</code>, then adding <code>n</code> gives the correct sum for
+      <code>n</code>.
+    </p>
+  </section>
+
+  <section id="efficiency-checks" section-title="Efficiency Checks">
+    <h2>Efficiency Checks</h2>
+    <p>
+      A recursive algorithm can be correct and still be a poor implementation. Before committing
+      to a recursive design, check the shape of the calls.
+    </p>
+    <table class="example-table left-align">
+      <thead>
+        <tr>
+          <th>Call shape</th>
+          <th>Typical sign</th>
+          <th>What to check</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Single chain</td>
+          <td>One recursive call per non-base case</td>
+          <td>Depth and stack space, often <code>O(n)</code> or <code>O(log n)</code>.</td>
+        </tr>
+        <tr>
+          <td>Balanced split</td>
+          <td>Two or more calls on smaller pieces</td>
+          <td>Combine cost and recurrence, common in divide and conquer.</td>
+        </tr>
+        <tr>
+          <td>Repeated subproblems</td>
+          <td>The same arguments appear many times</td>
+          <td>Whether memoization or dynamic programming is needed.</td>
+        </tr>
+        <tr>
+          <td>Large search tree</td>
+          <td>Many choices at each level</td>
+          <td>Whether pruning or backtracking constraints reduce the work.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="when-to-use" section-title="When to Use Recursion">
+    <h2>When to Use Recursion</h2>
+    <p>
+      Recursion is often a good fit when the problem naturally contains smaller versions of
+      itself. It is less attractive when a simple loop expresses the idea just as clearly and uses
+      less memory.
+    </p>
+    <ul class="spaced">
+      <li><strong>Good fits:</strong> Trees, divide and conquer, backtracking, recursive definitions, and nested structures.</li>
+      <li><strong>Use caution:</strong> Very deep inputs, repeated subproblems, and problems where the recursive version is only a disguised loop.</li>
+      <li><strong>Prefer iteration when:</strong> The loop version is just as clear and avoids unnecessary stack growth.</li>
+    </ul>
+  </section>
+
+  <section id="reading-questions" section-title="Reading Comprehension Questions">
+    <h2>Reading Comprehension Questions</h2>
+    <ol>
+      <li>Why is it useful to state the meaning of a recursive function before writing code?</li>
+      <li>In <code>sumFirst(n)</code>, what smaller problem does the recursive call solve?</li>
+      <li>Why does recursive binary search need <code>left</code> and <code>right</code> parameters?</li>
+      <li>What is one warning sign that a recursive algorithm may be inefficient?</li>
+    </ol>
+    <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
+    <div id="answers" class="answer" hidden>
+      <ol>
+        <li><strong>Answer:</strong> It clarifies what the recursive call is allowed to assume and what the current call must finish.</li>
+        <li><strong>Answer:</strong> It solves the sum of the first <code>n - 1</code> positive integers.</li>
+        <li><strong>Answer:</strong> The helper must remember which subarray is still being searched.</li>
+        <li><strong>Answer:</strong> Repeated calls with the same arguments, very large recursion depth, or a large branching search tree can all indicate efficiency problems.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="activities" section-title="In-Class Activities">
+    <h2>In-Class Activities</h2>
+    <ol>
+      <li><strong>Meaning first:</strong> For a recursive method <code>maxPrefix(a, n)</code>, write a precise sentence describing what the method should return.</li>
+      <li><strong>Design together:</strong> Design a recursive method that counts how many times a target value appears in an array. Identify the base case, smaller problem, and combine step.</li>
+      <li><strong>Helper parameters:</strong> Explain why a recursive palindrome method is easier to write with <code>left</code> and <code>right</code> indices than by creating a new substring at each call.</li>
+    </ol>
+  </section>
+
+  <section id="problems" section-title="Homework Problems">
+    <h2>Homework Problems</h2>
+    <ol>
+      <li><strong>Recursive maximum:</strong> Write pseudocode for a method that returns the maximum value in <code>a[0..n-1]</code>. State the meaning of the method and prove the recursive case informally.</li>
+      <li><strong>String reversal:</strong> Design a recursive method that returns the reverse of a string. Identify its base case and progress measure.</li>
+      <li><strong>Binary search wrapper:</strong> Write a public wrapper for the recursive binary search helper shown on this page. What arguments should the caller provide, and what arguments should the wrapper add?</li>
+      <li><strong>Efficiency reflection:</strong> Choose one recursive algorithm from this page. Describe its maximum recursion depth and whether it repeats subproblems.</li>
+    </ol>
   </section>
 </body>
 </html>

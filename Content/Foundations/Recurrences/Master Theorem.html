@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Master Theorem</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
   <script src="../../../scripts/chapterScripts.js"></script>
   <link rel="stylesheet" href="../../../css/style.css">
   <link rel="stylesheet" href="../../../css/chapter.css">
@@ -21,7 +24,278 @@
 
   <section id="overview" section-title="Overview">
     <h2>Overview</h2>
-    <p>This page is coming soon.</p>
+    <p>
+      The Master Theorem is a shortcut for many divide-and-conquer recurrences. Instead of
+      expanding the recurrence by hand, we identify the number of subproblems, the shrink factor,
+      and the non-recursive work, then compare how much work appears across levels of the
+      recursion tree.
+    </p>
+    <p>
+      The version on this page is the common polynomial-work version used in many first algorithm
+      analyses. More general versions exist, but this one is enough for many standard examples.
+    </p>
+  </section>
+
+  <section id="the-form" section-title="Required Form">
+    <h2>Required Form</h2>
+    <p>
+      The recurrence must fit this shape:
+    </p>
+    \[
+      T(n)=aT(n/b)+f(n),
+    \]
+    <p>
+      where \(a\geq 1\), \(b&gt;1\), and \(f(n)\) is the non-recursive work done by the current
+      call. In the simplified version here, we assume \(f(n)=\Theta(n^d)\) for some \(d\geq 0\).
+    </p>
+    <table class="example-table left-align">
+      <thead>
+        <tr>
+          <th>Symbol</th>
+          <th>Meaning</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>\(a\)</td>
+          <td>Number of recursive calls made by one non-base call.</td>
+        </tr>
+        <tr>
+          <td>\(b\)</td>
+          <td>Shrink factor. Each subproblem has size \(n/b\).</td>
+        </tr>
+        <tr>
+          <td>\(f(n)\)</td>
+          <td>Work done outside the recursive calls.</td>
+        </tr>
+        <tr>
+          <td>\(d\)</td>
+          <td>The exponent in the polynomial local work \(f(n)=\Theta(n^d)\).</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="theorem" section-title="The Theorem">
+    <h2>The Theorem</h2>
+    <p>
+      If
+    </p>
+    \[
+      T(n)=aT(n/b)+\Theta(n^d),
+    \]
+    <p>
+      then compare \(a\), the number of subproblems, with \(b^d\), the amount by which polynomial
+      work shrinks from one level to the next.
+    </p>
+    <table class="example-table left-align">
+      <thead>
+        <tr>
+          <th>Comparison</th>
+          <th>Tree behavior</th>
+          <th>Result</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>\(a&lt;b^d\)</td>
+          <td>Level costs shrink; top work dominates.</td>
+          <td>\(T(n)=\Theta(n^d)\)</td>
+        </tr>
+        <tr>
+          <td>\(a=b^d\)</td>
+          <td>Each level costs about the same.</td>
+          <td>\(T(n)=\Theta(n^d\log n)\)</td>
+        </tr>
+        <tr>
+          <td>\(a&gt;b^d\)</td>
+          <td>Level costs grow; leaves dominate.</td>
+          <td>\(T(n)=\Theta(n^{\log_b a})\)</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="how-to-use" section-title="How to Use It">
+    <h2>How to Use It</h2>
+    <ol class="spaced">
+      <li>Rewrite the recurrence in the form \(T(n)=aT(n/b)+\Theta(n^d)\).</li>
+      <li>Identify \(a\), \(b\), and \(d\).</li>
+      <li>Compute \(b^d\).</li>
+      <li>Compare \(a\) with \(b^d\).</li>
+      <li>Apply the matching case and simplify the result.</li>
+    </ol>
+    <p>
+      The theorem gives an asymptotic bound, not an exact closed form. That is usually what we
+      want for algorithm analysis.
+    </p>
+  </section>
+
+  <section id="binary-search" section-title="Example: Binary Search">
+    <h2>Example: Binary Search</h2>
+    <p>
+      Binary search has recurrence
+    </p>
+    \[
+      T(n)=T(n/2)+1.
+    \]
+    <p>
+      Here \(a=1\), \(b=2\), and \(f(n)=1=\Theta(n^0)\), so \(d=0\). Since
+      \(b^d=2^0=1\), we have \(a=b^d\). The second case gives
+    </p>
+    \[
+      T(n)=\Theta(n^0\log n)=\Theta(\log n).
+    \]
+  </section>
+
+  <section id="merge-sort" section-title="Example: Merge Sort">
+    <h2>Example: Merge Sort</h2>
+    <p>
+      Merge sort has recurrence
+    </p>
+    \[
+      T(n)=2T(n/2)+n.
+    \]
+    <p>
+      Here \(a=2\), \(b=2\), and \(d=1\). Since \(b^d=2^1=2\), we have
+      \(a=b^d\). The second case gives
+    </p>
+    \[
+      T(n)=\Theta(n\log n).
+    \]
+    <p>
+      This matches the recursion-tree explanation: each level costs \(\Theta(n)\), and there are
+      \(\Theta(\log n)\) levels.
+    </p>
+  </section>
+
+  <section id="root-dominated" section-title="Example: Root-Dominated Work">
+    <h2>Example: Root-Dominated Work</h2>
+    <p>
+      Consider
+    </p>
+    \[
+      T(n)=2T(n/2)+n^2.
+    \]
+    <p>
+      Here \(a=2\), \(b=2\), and \(d=2\). Since \(b^d=2^2=4\), we have
+      \(a&lt;b^d\). The first case gives
+    </p>
+    \[
+      T(n)=\Theta(n^2).
+    \]
+    <p>
+      The local work at the root is so large that the lower levels form a decreasing geometric
+      series.
+    </p>
+  </section>
+
+  <section id="leaf-dominated" section-title="Example: Leaf-Dominated Work">
+    <h2>Example: Leaf-Dominated Work</h2>
+    <p>
+      Consider
+    </p>
+    \[
+      T(n)=7T(n/2)+n^2.
+    \]
+    <p>
+      Here \(a=7\), \(b=2\), and \(d=2\). Since \(b^d=4\), we have \(a&gt;b^d\).
+      The third case gives
+    </p>
+    \[
+      T(n)=\Theta(n^{\log_2 7}).
+    \]
+    <p>
+      Since \(\log_2 7\) is about \(2.807\), this grows a little faster than \(n^2\), but the
+      exact exponent is \(\log_2 7\).
+    </p>
+  </section>
+
+  <section id="not-applicable" section-title="When It Does Not Apply">
+    <h2>When It Does Not Apply</h2>
+    <p>
+      The Master Theorem is powerful, but it is not a universal recurrence solver. This simplified
+      version does not apply directly to these recurrences:
+    </p>
+    <table class="example-table left-align">
+      <thead>
+        <tr>
+          <th>Recurrence</th>
+          <th>Why this version does not apply directly</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>\(T(n)=T(n-1)+n\)</td>
+          <td>The subproblem size is \(n-1\), not \(n/b\).</td>
+        </tr>
+        <tr>
+          <td>\(T(n)=T(n/3)+T(2n/3)+n\)</td>
+          <td>The recursive calls have different sizes.</td>
+        </tr>
+        <tr>
+          <td>\(T(n)=2T(n/2)+n\log n\)</td>
+          <td>The local work is not \(\Theta(n^d)\) for a constant \(d\).</td>
+        </tr>
+        <tr>
+          <td>\(T(n)=T(n-1)+T(n-2)+1\)</td>
+          <td>This is a linear recurrence with different previous terms, not a balanced divide-and-conquer recurrence.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      When the theorem does not fit, try iteration, recursion trees, substitution, or a more
+      advanced theorem if the course has introduced one.
+    </p>
+  </section>
+
+  <section id="common-mistakes" section-title="Common Mistakes">
+    <h2>Common Mistakes</h2>
+    <ul class="spaced">
+      <li><strong>Using \(b\) backward:</strong> If the subproblem size is \(2n/3\), then \(n/b=2n/3\), so \(b=3/2\), not \(2/3\).</li>
+      <li><strong>Comparing \(a\) with \(d\):</strong> Compare \(a\) with \(b^d\), not with \(d\).</li>
+      <li><strong>Dropping the logarithm in the equal case:</strong> When \(a=b^d\), the result is \(\Theta(n^d\log n)\).</li>
+      <li><strong>Rounding an exponent into an equality:</strong> \(\Theta(n^{\log_2 7})\) is not the same as \(\Theta(n^{2.8})\), even though \(2.8\) is a useful approximation.</li>
+      <li><strong>Forcing the theorem onto the wrong form:</strong> If the recurrence does not match the required shape, use another method.</li>
+    </ul>
+  </section>
+
+  <section id="reading-questions" section-title="Reading Comprehension Questions">
+    <h2>Reading Comprehension Questions</h2>
+    <ol>
+      <li>What do \(a\), \(b\), and \(f(n)\) represent in \(T(n)=aT(n/b)+f(n)\)?</li>
+      <li>In the simplified version, what do we compare to choose the case?</li>
+      <li>Why is merge sort the equal-case example?</li>
+      <li>Why does the theorem not directly apply to \(T(n)=T(n-1)+n\)?</li>
+    </ol>
+    <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
+    <div id="answers" class="answer" hidden>
+      <ol>
+        <li><strong>Answer:</strong> \(a\) is the number of recursive calls, \(b\) is the shrink factor, and \(f(n)\) is the non-recursive work.</li>
+        <li><strong>Answer:</strong> Compare \(a\) with \(b^d\), where \(f(n)=\Theta(n^d)\).</li>
+        <li><strong>Answer:</strong> Merge sort has \(a=2\), \(b=2\), and \(d=1\), so \(a=b^d=2\).</li>
+        <li><strong>Answer:</strong> The recursive call is on \(n-1\), not on \(n/b\) for a constant \(b&gt;1\).</li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="activities" section-title="In-Class Activities">
+    <h2>In-Class Activities</h2>
+    <ol>
+      <li><strong>Parameter practice:</strong> For \(T(n)=3T(n/4)+n^2\), identify \(a\), \(b\), and \(d\).</li>
+      <li><strong>Case sorting:</strong> Sort \(2T(n/2)+n\), \(2T(n/2)+n^2\), and \(4T(n/2)+n\) into the three Master Theorem cases.</li>
+      <li><strong>Non-example discussion:</strong> Explain why \(T(n)=T(n/2)+T(n/4)+n\) does not fit this version.</li>
+    </ol>
+  </section>
+
+  <section id="problems" section-title="Homework Problems">
+    <h2>Homework Problems</h2>
+    <ol>
+      <li><strong>Apply the theorem:</strong> Solve \(T(n)=4T(n/2)+n\).</li>
+      <li><strong>Equal case:</strong> Solve \(T(n)=9T(n/3)+n^2\).</li>
+      <li><strong>Root-dominated:</strong> Solve \(T(n)=3T(n/2)+n^3\).</li>
+      <li><strong>Careful shrink factor:</strong> Solve \(T(n)=3T(2n/3)+1\), identifying \(b\) correctly.</li>
+    </ol>
   </section>
 </body>
 </html>

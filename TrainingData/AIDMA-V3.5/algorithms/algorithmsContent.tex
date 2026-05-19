@@ -1,0 +1,2821 @@
+% The next line makes it so it compiles the main file if I hit the compile button
+% when editing this file in TeXworks.
+% !TEX root = ../AIDMA.tex
+\chapter{Programming Fundamentals and Algorithms}\label{ch:algs}
+The purpose of this chapter is to cover some of the 
+basic programming concepts you 
+may have picked up in previous classes while introducing you to some basic 
+algorithms and new terminology that we will find useful as we continue our study of
+discrete mathematics.
+We will also practice our skills at writing proofs 
+by sometimes proving that
+an algorithm does as specified. 
+ 
+Algorithms are presented in a syntax similar to Java and C++.  
+This can be helpful since you may already be familiar with
+one of these languages.  
+On the other hand, this sort of syntax ties our hands more than one often likes when
+discussing algorithms. When discussing algorithms, 
+we often want to gloss over some of the implementation details.
+For instance, we may not care about data types, or how parameters are passed
+(i.e. by value or by reference), but by using a Java-like syntax we are forcing
+ourselves to use particular data types and pass parameters in a certain way.  
+
+Consider an algorithm that swaps two values (we will see
+an implementation of this shortly).  The concept is the same regardless of what type of data is
+being swapped.  But given our choice of syntax, we will give an implementation that assumes a
+particular data type.  Most of the time the algorithms presented can be modified to work with
+other data types.  
+
+The issue of pass-by-value versus pass-by-reference is more complicated.  We will have a brief
+discussion of this later, but the bottom line is that whenever you implement an algorithm from
+{\em any} source, you need to consider how this and other language-specific features might
+change how you understand the algorithm, how you implement it, and/or whether you even {\em can}.
+
+\section{Basic Syntax and Algorithms}\label{section:algorithms}
+There are various ways of defining what an algorithm is, and
+there are subtle details that matter in certain contexts, but for
+our purposes, the following simple definition will suffice.
+
+\begin{df}
+An {\bf algorithm}\index{algorithm} is a clear 
+and unambiguous set of instructions
+that accomplishes a task in a finite amount of time.
+\end{df}
+
+Before we see our first algorithm, we need some notation.
+
+\begin{df}
+\index{assignment operator}
+The {\bf assignment operator}, $=$, assigns to the left-hand argument the value of the
+right-hand argument.
+\end{df}
+\begin{exa}
+The statement \verb@x = a + b@ means ``assign to $x$
+the value of $a$ plus the value of $b$.''
+\end{exa}
+
+\begin{rem}
+Most modern programming languages use $=$ for assignment.
+Other symbols used include $:=$, $=:$, $<<$, $\leftarrow$, etc.
+
+As it turns out, the most common symbol for assignment ($=$) is perhaps the most
+confusing  for someone who is first learning to program. 
+One of the most common assignment statements is \verb@x = x + 1;@.  
+What this {\em means} is ``assign to the $x$ its current value plus one.''
+However, what it {\em looks like} is the mathematical statement ``$x$ is equal to $x+1$'',
+which is false for every value of $x$.  
+If this has tripped you up in the recent past or still does,
+fear not.  Eventually you will instinctively interpret it correctly, probably forgetting you
+were ever confused by it.
+\end{rem}
+In our algorithms, we will work with various types of data,
+but two will show up often and if you do not know a programming
+language yet, they may be unfamiliar to you.
+An \verb+int+ is a variable that stores an integer value 
+(e.g. 45 or -123). A \verb+double+ or \verb+float+ is a
+variable that stores a real number (e.g. 3.14159 or 
+0.8675309). Technically, these store
+{\em approximations} of real numbers, but we won't
+concern ourselves with that detail here.
+A \verb+boolean+ is a variable that can be either {\bf true} or {\bf false}.
+
+In algorithms, {\em variables} store values that we can work with.
+
+\begin{exa}
+If I want to store a real number called x and have it store the value 5.5, I write it as
+\begin{code}
+double x = 5.5;
+\end{code}
+The ``\verb+double x+'' part of the code is specifying that I want \verb+x+ to store a real number. The ``\verb+x = 5.5+'' part is
+specifying that I want to store the specific value 5.5 into \verb+x+.
+\end{exa}
+
+\begin{rem}
+In many programming languages, semicolons (\verb+;+) 
+are used at the end of each statement. Since this is not a
+programming class, do not worry too much about this.
+\end{rem}
+
+Now we are ready for our first example of a simple algorithm. 
+We will discuss the syntax after presenting the algorithm 
+since it will make more sense if
+we can use an example to discuss it.
+
+\begin{exa}[Area of a Trapezoid]\label{exa:areaTrap}
+Write an algorithm that gives the area of a trapezoid with height
+$h$ and bases $a$ and $b$.  
+\begin{sol}
+One possible solution is
+\begin{code}
+double TrapezoidArea(double a, double b, double h) {
+    return h*(a+b)/2;
+}
+\end{code}
+\end{sol}
+\end{exa}
+
+The first line of most of our algorithms will give what is called
+a {\em function prototype} that specifies 3 important pieces
+of information about the algorithm:
+\begin{enumerate}
+\item What type of value/object is output by the algorithm.
+We will often use the term {\em returned} instead
+of output. They essentially mean the same thing.
+\item The name of the algorithm.
+\item The input to the algorithm, which we refer to as the 
+{\em parameters}, given as a comma-separated list 
+between parentheses after the name. 
+Each parameter is given by specifying what type of
+data it is and the name we will call it in the algorithm.
+\end{enumerate}
+In the previous example, the function prototype was
+\begin{code}
+    double TrapezoidArea(double a, double b, double h) {
+\end{code}
+We interpret it as follows:
+\begin{enumerate}
+\item
+This algorithm returns a real number (since the return type
+is \verb+double+). 
+\item The name of the algorithm is \verb+TrapezoidArea+, which
+makes sense because it is computing the area of a trapezoid.
+\item
+The inputs/parameters are 3 real numbers, \verb+a+,
+\verb+b+, and \verb+h+.
+\end{enumerate}
+The curly brace (\verb+{+) at the end of the first line is used to denote that everything between that and the matching
+end curly brace (\verb+}+) are the implementation of the algorithm.
+Curly braces are used in general to denote
+{\em blocks} of code. In addition to being used in this context,
+they are also used for conditional statements and loops,
+as we will see later. The simplest way to think about them is that
+the are there to make it clear where a section (or block) of code
+begins and ends.
+
+The \verb+return+ keyword  is used
+to indicate what value should be output/returned 
+from the algorithm. For instance, if someone calls \verb+x=TrapezoidArea(a, b, h)+,
+then $x$ will be assigned the value $h*(a+b)/2$ since this is what was {\em returned} by the algorithm.
+Those who know {\em Java}, {\em C}, {\em C++}, or just about any other programming language 
+should already be familiar with this concept.
+
+\begin{exa}
+If I execute the following code:
+\begin{code}
+double a = 10.0
+double b = 5.0
+double h = 3.5
+double x = TrapezoidArea(a,b,h);
+\end{code}
+Then the variable \verb+x+ will have the value 
+$(10.0+5.0)/2.5=4.2857142857.$
+\end{exa}
+
+\begin{exer}
+Write an algorithm that returns the area of a square with sides of length $s$.
+\begin{code}
+double areaSquare(double s) {
+
+
+}
+\end{code}
+\begin{answer}
+\begin{code}
+double areaSquare(double s) { return s*s; }
+\end{code}
+\end{answer}
+\end{exer}
+
+
+\begin{exa}[Swapping variables] \label{exa:swapping1}
+\index{swap}
+Write an algorithm that will interchange the values of two
+variables, $x$ and $y$. 
+That is, the contents of $x$ becomes that of $y$ and vice-versa.
+\begin{sol}
+We introduce a temporary variable $t$ in order to store
+the contents of $x$ in $y$ without erasing the contents of $y$.
+For simplicity, we will assume the data is of type \verb+Object+.
+Here is the algorithm:
+\begin{code}
+  void swap(Object x, Object y) {
+      Object t = x;  // Store x in a temporary variable
+      x = y;      // x now has the original value of y
+      y = t;      // y now has the original value of x
+  }
+\end{code}
+\end{sol}
+\end{exa}
+
+\begin{rem}
+Note that a return type of \verb+void+ means that
+the algorithm does not return anything.
+While some algorithms return values, other accomplish
+some task and there is no need to return anything.
+\end{rem}
+
+It can be very useful to be able to prove that an algorithm actually does what we think it does.
+Then when an error is found in a program we can focus our attention on the portions of the code
+that we are uncertain about, ignoring the code that we {\em know} is correct.
+
+\begin{exa}
+Prove that the algorithm in Example~\ref{exa:swapping1} works correctly.
+\begin{pf}
+Assume the values $a$ and $b$ are passed into \verb+swap+.  Then at the beginning of the algorithm,
+$x=a$ and $y=b$.  We need to prove that after the algorithm is finished, $x=b$ and $y=a$.
+
+After the first line, $x$ and $y$ are unchanged and $t=a$ since it was
+assigned the value stored in $x$, which is $a$.  After the second line, $x=b$ since it is assigned
+the value stored in $y$, which is $b$.  Currently $x=b$, $y=b$, and $t=a$.  Finally, after the 
+third line, $y=a$ since it is assigned the value stored in $t$, which is $a$.  Since $x$ is still $b$,
+and $y=a$, the algorithm works correctly. 
+\end{pf}
+\end{exa}
+
+
+\begin{rem}
+The correctness of this algorithm (and a few others in this chapter)
+is based on the assumption that the variables are 
+{\bf passed by reference} rather than {\bf passed by value}.  
+
+In C and C++, it is possible to pass by value or by reference, although we didn't use the
+proper syntax to do so.  The \verb+*+ or \verb+&+ you sometimes
+see in argument lists is related to this.
+In Java, everything is passed by value and it is impossible to pass by reference.  
+However, because non-primitive variables in Java are essentially reference variables 
+(that is, they store a reference to an object, not the object itself), in some ways they act as if
+they were passed by reference.
+This is where things start to get complicated.
+I don't want to get into the
+subtleties here, especially since there are arguments about whether or not these are the best
+terms to use.  Let me give an analogy instead.
+\footnote{Inspired by a response on 
+\url{http://stackoverflow.com/questions/373419/}.}
+
+If I share a Google Doc with you, I am passing by reference.  
+We both have a reference to the same document.
+If you change the document, I will see the changes.  
+If I change the document, you will see the changes.
+On the other hand, if I e-mail you a Word document, I am passing by value.  
+You have a copy of the document I have.  
+Essentially, I copied the current {\bf value} (or contents) of the document
+and gave that to you.
+If you change the document, my document will remain unchanged.  
+If I change my document, your document will remain unchanged.
+This sounds pretty simple.  However, it gets more complicated.  
+In Java, you can create a ``primitive'' Word document, 
+but in a sense you can't create an ``object'' Word document.  
+Instead, a Google Doc is created and you are given access (i.e. a reference) to it.
+This is why in some ways primitive and object variables seem to act differently in Java.
+
+I've already said too much.  
+You will/did learn a lot more about this issue in another course.  
+Here is the bottom line:  
+The assumption being made in the various swap algorithms is that
+when a variable is passed in, the algorithm has direct access to {\em that variable}
+and not just a copy of it.  
+Thus if changes are made to that variable in the algorithm, it is changing the variable that was
+passed in.  This subtlety does not matter for most of the algorithms here.  
+\end{rem}
+
+\begin{rem}
+We should be absolutely clear that it is {\bf impossible} 
+to implement the \verb+swap+ method from Example~\ref{exa:swapping1} in Java.
+In fact, there is no way to implement a method that swaps two arbitrary values in Java.
+As we will see shortly, it {\bf is} possible to implement a method that swaps two elements from an array.
+\end{rem}
+
+\begin{rem}
+One final note before we move on. Whether or not the \verb+swap+ method (or any method) 
+can be implemented,
+we can still use it in other algorithms as if it can.  This is because when discussing algorithms we are
+usually more concerned about the {\bf idea} behind the algorithm, not all of the implementation details.
+Using a method like \verb+swap+ in another algorithm often makes it easier to understand the overall
+concept of that algorithm.  If we actually wanted to implement an algorithm that uses \verb+swap+ in a context where it is
+impossible to implement, 
+we would simply need to replace the call to \verb+swap+ with 
+the 3 lines of code contained in it, replacing the variable names
+as appropriate.
+\end{rem}
+
+\begin{ques}
+Does the following swap algorithm work properly?  Why or why not?
+\begin{code}
+void swap(Object x, Object y) {
+    x = y;
+    y = x;
+}
+\end{code}
+\answerlinetwo
+\begin{answer}
+It does not work.  To see why,
+notice that if we pass in $a$ and $b$, then $x=a$ and $y=b$ at the beginning.
+After the first line, $x=b$ and $y=b$. 
+After the second line $x=b$ and $y=b$.  
+The problem is that the first line overwrites the value stored in $x$ ($a$), and we can't recover it.
+\end{answer}
+\end{ques}
+
+\begin{exa}\label{exa:swapnothird}\index{swap}
+Write an algorithm that will interchange the values of two
+variables $x$ and $y$ {\em without introducing a third variable}, assuming they are of some
+numeric type.
+
+\begin{sol}
+The idea is to use sums and differences to store the
+values. Assume that initially $x=a$ and $y = b$.
+\begin{code}
+  void swap(number x, number y) {
+      x = x + y;  // x = a+b        and  y = b
+      y = x - y;  // x = a+b        and  y = a+b-b = a  
+      x = x - y;  // x = a+b-a = b  and  y = a
+  }
+\end{code}
+Notice that the comments in the code sort of provide a proof that the algorithm is correct,
+although keep reading for an important disclaimer.
+\end{sol}
+\end{exa}
+
+
+\begin{exa}
+It was mentioned that the comments in the algorithm from Example~\ref{exa:swapnothird}
+provide a proof of its correctness.  What possibly faulty assumption is being made?
+\begin{sol}
+It is assumed that the arithmetic is performed with absolute precision, and that is 
+not always the case.  
+For instance, after the first line we are told that $x=a+b$.
+What if $a=10,000,000,000$ and $b=.00000000001$?  Will $x$ really be {\em exactly} $10,000,000,000.00000000001$? If it isn't, the algorithm will not work properly. 
+
+When talking about algorithms abstractly, we often ignore these
+sorts of details, but is is extremely important to realize when we are
+doing so.  
+\end{sol}
+\end{exa}
+
+Problem~\ref{pro:twoVarSwap} explores whether or not the algorithm in Example~\ref{exa:swapnothird}
+works for integer types--specifically 2's complement numbers.
+
+Once again I want to emphasize that there can often be a huge 
+difference between an algorithm as presented in a textbook and
+the implementation of an algorithm in a programming language.
+In this course, our focus is on the former. However, if you
+become a programmer some day, it is extremely important
+that you eventually understand some of the more subtle 
+issues I have been pointing out.
+
+
+\newpage
+
+\section{Remainders and Rounding Revisited}\label{section:moddivRepeat}
+
+Java, C, C++, and many other languages use $\%$ instead of the word {\em mod}.
+For instance, you would write \verb+int x = a % n+ instead of \verb+int x = a mod n+.
+
+\begin{rem}
+Recall earlier that we mentioned that $a\bmod n$ has 
+two possible values when $a<0$. 
+When using the {\rm mod} operator in computer programs in situations where the
+dividend might be negative, it is important to know which definition your
+programming language/compiler uses.  {\em Java} returns a negative number when the dividend is negative. 
+In {\em C}, the answer depends on the compiler.
+\end{rem}
+
+\begin{exer}
+If you write a {\em C} program that computes $-45\bmod 4$, what are the two possible answers it might give you?\\
+\answerline
+\begin{answer}
+Either $-1$ or $3$ are possible answers if we are uncertain whether it will return a positive
+or negative answer.  But we know it is one of these.  It won't be -5, for instance.
+\end{answer} 
+\end{exer}
+
+The next exercise explores a reasonable idea:  What if we want the answer to $ a\bmod b$ to 
+always be between $0$ and $b-1$, even if $a$ is negative?  In other words, we want to
+force the correct positive answer even if the compiler for the given language might return a
+negative answer.
+
+\begin{eval}\label{eval:negmod}
+Although different programming languages and compilers might 
+return different answers to the computation $a \bmod b$ when $a<0$, they always
+return a value between $-(b-1)$ and $b-1$.  Given that fact, give an algorithm that
+will always return an answer between $0$ and $b-1$, regardless of whether or not $a$ is negative.
+Try to do it without using any conditional statements.
+
+\begin{ssolenum}
+\item
+Use $(a\pmod{b} + b-1)/2$.  
+Since it always returns a value between $-(b-1)$ and $b-1$ by adding $b-1$ to both sides
+you get a value between $0$ and $2b-2$.  You then divide by $2$ to hit the target range of a return value that
+is between $0$ and $b-1$ whether the number is positive or negative.\\
+\evallinethree
+\item
+ Just return the absolute value of $a \bmod b$.\\
+\evallinethree
+\newpage
+\item
+Use the following:
+\begin{lstlisting}
+   int c = a % b;
+   if(c<0) {
+       return -c;
+   } else {
+       return c;
+   }
+   \end{lstlisting}
+\evallinethree
+\item
+Use $(a\bmod b)\bmod b$.\\
+\evallinethree
+\end{ssolenum}
+\begin{answer}
+\begin{solevalenum}
+\item
+This solution is both incorrect and a bit confusing. 
+The phrase `both sides' is confusing--both sides of what?
+We don't have an equation in this problem.  
+But there is a more serious problem. 
+If you thought it was correct, go back and try to figure out why it is incorrect before you
+continue reading this solution.
+The main problem is that although this may return 
+a value in the correct range, it doesn't always return the correct value.  In fact, what if
+$(a\pmod{b} + b-1)$ is odd?  Mathematically, this would result in a non-integer result which is
+clearly incorrect.  In most programming languages it would at least truncate and
+return an integer--but again, not always the correct one.
+This person focused on the wrong thing--getting the number in a particular range.  Although that
+is important, they needed to think more about how to get the {\em correct} number.
+They should have plugged in a few more values to double-check their logic.
+\item
+Incorrect. Generally speaking, $a\bmod b \neq -a\bmod b$.  
+In other words, returning the absolute value when the result is negative is almost always incorrect.
+\item
+Incorrect.  If you think about if for a few minutes you should see that this is just 
+one way of implementing the idea from the previous solution.
+\item
+Incorrect.  If $(a\bmod b)$ is negative, performing another $\bmod$ will still leave it negative.
+\end{solevalenum}
+\end{answer}
+\end{eval}
+
+\begin{exer}
+Devise a correct solution to the Evaluate~\ref{eval:negmod}.\\
+Answer:\\
+\vspace*{1.75in}
+\begin{answer}
+There are several possible answers, but the slickest is probably:
+\verb#(b+(a mod b)) mod b#.  Try it with both positive and negative
+numbers for $a$ and convince yourself that it is correct.
+\end{answer}
+\end{exer}
+
+
+
+\begin{eval}
+Implement an algorithm that will round a real number \verb+x+ to the closest integer, 
+but {\bf rounds {\em down} at .5}.
+You can {\em only} use numbers, basic arithmetic (+, --, *, /), and \verb+floor(y)+ and/or 
+\verb+ceiling(y)+ (which correspond to $\lfloor y \rfloor$ and $\lceil y\rceil$).
+Don't worry about the data types (i.e. returning either a \verb+double+ or an \verb+int+ is fine
+as long as the value stored represents an integer value).
+\begin{ssolenum}
+\item
+\verb@ return floor(x+.49)@.\\
+\evallinetwo
+\item
+\verb@ return floor(x+1/2)@.\\
+\evallinetwo
+\item
+\verb@ return ceiling(x+.5)@.\\
+\evallinetwo
+\item
+\verb@ return ceiling(x-.5)@.\\
+\evallinetwo
+\end{ssolenum}
+\begin{answer}
+\begin{solevalenum}
+\item
+This does not work.  What happens when $x=3.508$, for instance?
+\item
+This is incorrect for two reasons.  First, $1/2=0$ in most programming languages, so this
+will {\em always} round down.
+Second, even if we replaced this with $.5$ or $1.0/2.0$, it would round {\em up} at $.5$.
+\item
+Nice try, but still no good.  What if $x=2.5$?  This will round {\em up} to $3$.
+Worse, what if $x=2.0001$?  Again, it rounds {\em up} to $3$ which is really bad.
+\item
+This one is correct.  Plug in values like $2$, $2.1$, and $2.5$ to see that it rounds down to
+$2$ and values like $2.51$, $2.7$, and $2.9$ to see that it rounds up to $3$.
+\end{solevalenum}
+\end{answer}
+\end{eval}
+
+
+
+
+The floor function is important because in many programming languages, 
+including Java, C, and C++, integer division {\em truncates}. That is, when you compute 
+$n/k$ for integers $n$ and $k$, the result is rounded so it is {\em closer to zero} (as opposed to rounding down).
+That means that if $n,k\geq 0$, $n/k$ rounds down to $\lfloor n/k\rfloor$.
+But if $n<0$, $n/k$ rounds {\em up} to $\lceil n/k \rceil$.
+So in Java, C, and C++, $3/4=-3/4=0$, $11/5=2$ and $-11/5=-2$, for instance.
+
+\begin{exer}
+Compute each of the following, assuming they are expressions 
+in Java, C, or C++.
+
+\vspace*{-.25in}
+\begin{multicols}{3}
+\begin{lenum}
+\item 9/10 = \blankline{.5}
+\item 10/10 = \blankline{.5}
+\item 11/10 = \blankline{.5}
+\item 14/10 = \blankline{.5}
+\item 15/10 = \blankline{.5}
+\item 19/10 = \blankline{.5}
+\item 20/10 = \blankline{.5}
+\item 90/10 = \blankline{.5}
+\item -5/10 = \blankline{.5}
+\item -10/10 = \blankline{.5}
+\item -15/10 = \blankline{.5}
+\item -20/10 = \blankline{.5}
+\end{lenum}
+\end{multicols}
+\begin{answer}
+(a) 0; (b) 1; (c) 1; (d) 1; (e) 1 (f) 1; (g) 2; (h) 9; (i) 0; (j) -1; (k) -1; (l) -2.
+\end{answer}
+\end{exer}
+
+\newpage
+
+\begin{eval}\label{exer:roundNotTruncate}
+Let $n$ and $m$ be positive integers with $m>2$.  
+Assuming integer division truncates, write an algorithm that will compute $n/m$,  
+but will {\em round} the result instead of truncating it (round up at or above $.5$, down below $.5$).  
+For instance, $5/4$ should return $1$, but 
+$7/4$ should return $2$ instead of $1$.
+You may only use basic integer arithmetic, not including the $\bmod$ operator.
+\begin{ssolenum}
+\item
+\verb@floor(n/m+0.5)@\\
+\evallinetwo
+\item
+\verb@floor((n/m) + 1/2)@\\
+\evallinetwo
+\item
+\verb@(int) (n/m+0.5)@\\
+\evallinetwo
+\end{ssolenum}
+\begin{answer}
+\begin{solevalenum}
+\item
+$0.5$ is not an integer, and the \verb+floor+ function is not allowed.
+\item
+The \verb+floor+ function is not allowed.  Even if it were, this solution 
+doesn't work. $1/2$ is evaluated to $0$ so it doesn't help.
+\item
+This one works, but $0.5$ is not allowed so it does not follow the directions.
+\end{solevalenum}
+\end{answer}
+\end{eval}
+
+Although the previous example may seem like it is based on an unnecessary restriction,
+this is taken from a real-world situation.  
+When writing code for an embedded device (e.g. a thermostat or microwave oven), code space
+is often of great concern.  Performing just a single calculation using doubles/floats 
+can add a lot of code since it needs to add certain code to deal with the data type.
+Sometimes the amount of code added is too much since embedded processors have a lot
+less space than the processor in your laptop or desktop computer.
+Because of this,
+some embedded programmers do everything they can to avoid all non-integer computations 
+in their code when it is possible.  
+
+\begin{exer}\label{exer:roundNotTruncatetwo}
+Give a correct solution to round-instead-of-truncate problem from the previous example.\\
+Answer:\\
+\vspace*{.75in}
+\begin{answer}
+Two reasonable solutions include \verb@(n+m/2)/m@ and \verb@(2n+m)/(2m)@.
+\end{answer}
+\end{exer}
+
+\newpage
+\section{{\tt If-Else} Statements}\label{section:if}
+{\em Conditional statements} allow an algorithm to 
+do one of various things based on some condition.
+In this section we introduce the most common 
+{\em conditional statement}: the {\tt if-else} statement.
+
+\begin{df} 
+\index{if-else statement}
+The {\bf if-else} control statement has the
+following syntax:
+\begin{code}
+    if(expression) {
+       blockA
+    } else {
+       blockB
+    }
+\end{code}
+
+\noindent 
+where \verb+expression+ must evaluate to a boolean value, 
+and \verb+blockA+ and \verb+blockB+ are 0 or more statements
+(so they can be blank).
+If \verb+expression+ is true then the statements in \verb+blockA+ are executed. 
+Otherwise, the statements in \verb+blockB+ are executed.
+\end{df}
+
+\begin{exa}\label{exa:maxTwo}\index{maximum!of two numbers}
+Write an algorithm that will determine the maximum of two integers.  
+Prove your algorithm is correct.
+\begin{sol}
+The following algorithm will work.
+\begin{code}
+  int max(int x, int y) {
+      if(x >= y) {
+          return x;
+      } else {
+          return y;
+      }
+  }
+\end{code}
+There are three possible cases.  If $x>y$, then $x$ is the maximum, and it is returned
+since the algorithm returns $x$ if $x\geq y$.
+If $x=y$, then they are both the maximum, so returning either is correct.  In this case
+it returns $x$, the correct answer.
+If $x<y$, then $y$ is the maximum and the algorithm returns $y$, which is the correct answer.
+In any case it returns the correct answer.
+\end{sol}
+\end{exa}
+
+\begin{exer}\index{maximum!of three numbers}
+Write an algorithm that will determine the maximum of three numbers
+that uses the algorithm from Example~\ref{exa:maxTwo}.
+Prove that your algorithm is correct.
+\begin{code}
+  int max(int x, int y, int z) {
+	
+	
+	
+	
+  }
+\end{code}
+\pflinethree
+\begin{answer} 
+Here is one possibility:
+\begin{code}
+    int max(int x, int y, int z) {
+        int w = max(x,y);
+        return max(w,z);
+    }
+\end{code}
+We will use a proof by cases.  
+\begin{itemize}
+\item
+If $x$ is the maximum, then $w=$\verb+max+$(x,y) = x$.
+so it returns \verb+max+$(w,z)=x$, which is correct.  
+\item
+If $y$ is the maximum, the argument is essentially the same the previous case.
+\item
+If $z$ is the maximum, then $w$ is either $x$ or $y$, but in either case $w\leq z$, 
+so it returns \verb+max+$(w,z)=z$.
+\end{itemize}
+In each case the algorithm returns the correct answer.
+\end{answer}
+\end{exer}
+
+The previous exercise is an example of something that you are already familiar with: {\em code reuse}.
+We {\em could have} written an algorithm from scratch, but sometimes it is easier to use one that already
+exists.  Not only is the resulting algorithm simpler, it is easier to prove that it is correct
+since we know that the algorithm it uses is correct.
+
+\begin{exa}
+Write an algorithm that determines whether a given integer is between two other integers. 
+Have it return a \verb+boolean+ type 
+(which is a variable type that can be either 
+\verb+true+ or \verb+false+, as the name suggests).
+\begin{sol}
+Here is one possible solution:
+\begin{code}
+    boolean isBetween(int lo,int ho, in val) {
+        if(lo < val && val < hi) {
+            return true;
+        else {
+            return false;
+        }
+    }
+\end{code}
+Some people might prefer the conditional to be 
+\verb+if(val > lo && val < hi)+, which is also perfectly fine.
+
+In many programming languages, we can use
+the following shorthand version.
+\begin{code}
+    boolean isBetween(int lo,int ho, in val) {
+        return (lo < val && val < hi);
+    }
+\end{code}
+This is because the result of the boolean expression 
+turns out to be equal to what we want to return in each case.
+That is, when \verb+lo < val && val < hi+ is \verb+true+,
+we want to return \verb+true+, and if it is \verb+false+,
+we want to return \verb+false+. So we can just ditch the
+conditional statement in this case!
+\end{sol}
+\end{exa}
+
+For simplicity, we will sometimes use \scode{print} to output results and not worry
+about whitespace (i.e. spaces and newlines).  
+Think of it as being equivalent to Java's \scode{System.out.print(i+" ")} or
+C++'s \scode{cout<<i<<" "}, or C's \scode{printf("\%d ",i)} if you would like.
+
+\begin{exa}
+Here is an algorithm that prints the parity of an integer (that is,
+whether it is even or odd):
+\begin{code}
+    void printParity(int n) {
+        if(n%2==0) {
+            print("Even");
+        else {
+            print("Odd");
+        }
+    }
+\end{code}
+\end{exa}
+
+\newpage
+
+\begin{exer} 
+Write an algorithm that prints ``Hello'' if one enters a number between $4$ and $6$ (inclusive) and ``Goodbye'' otherwise. Use the function \verb+print(String s)+ to print.
+You are not allowed to use any boolean operators like \verb+&&+, 
+\verb+||+, etc.
+\begin{code}
+    void HelloGoodbye(int x) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    }
+\end{code}
+\begin{answer}
+Here is a possible answer.
+\begin{code}
+    void HelloGoodbye(int x) {
+        if(x >= 4) {
+            if(x <= 6) {
+                print("Hello");
+            } else {
+                print("Goodbye");
+            }
+        } else {
+            print("Goodbye");
+        }
+    }
+\end{code}
+\end{answer}
+\end{exer}
+
+
+\begin{ques}
+The solution given for the previous example uses three print statements, with two identical
+print statements appearing in different places.  Is it possible to write the algorithm using
+only two print statements while maintaining the restriction that you cannot use {\bf and} and {\bf or}?
+If so, give that version of the algorithm.  If not, explain why not.\\
+Answer:\\
+\vspace*{2.5in}
+\begin{answer}
+It is possible.  If you thought it wasn't, go back and try to write the algorithm before
+reading any further.
+
+Here is one way to do it using an extra variable and an additional conditional statement.
+\begin{code}
+    void HelloGoodbye(int x) {
+        boolean sayGoodbye = true;
+        if(x >= 4) {
+            if(x <= 6) {
+                sayGoodbye = false;
+            }
+        }
+        if(sayGoodbye) {
+            print("Goodbye");
+        } else {
+            print("Hello");
+        }
+    }
+\end{code}
+It can also be done by using a return statement
+(this version is not recommended!):
+\begin{code}
+    void HelloGoodbye(int x) {
+        if(x >= 4) {
+            if(x <= 6) {
+                print("Hello");
+                return;
+            }
+        }
+        print("Goodbye");
+    }
+\end{code}
+The second solution is simpler, 
+but this sort of code (with somewhat random \verb+return+ statements in the middle
+of them) can be tricky to debug if it is changed later.
+Did you come up with a better solution than these?
+\end{answer}
+\end{ques}
+
+\newpage
+
+\begin{exer}
+You need a program to execute some code only if the size of a list is not $0$.
+The variable is named \verb+list+, and its size is \verb+list.size()+.
+Give the expression that should go in the \verb+if+ statement.  
+In fact, give two different expressions that will work.
+\begin{enumerate}
+\item \blanklinefill
+\item \blanklinefill
+\end{enumerate}
+\begin{answer}
+\verb+list.size()!=0+ and \verb+!(list.size()==0)+ are the most obvious solutions.
+\end{answer}
+\end{exer}
+
+\begin{exa}
+Write a code fragment that determines whether or not three numbers can
+be the lengths of the sides of a triangle.
+\begin{sol}
+Let $a$, $b$, and $c$ be the numbers.  For simplicity, let's assume they are integers.
+First we must have $a > 0$, $b>0$, and $c>0$. 
+Also, the sum of any two of them must be larger than the third in order to form a triangle.
+More specifically, we need $ a+b>c$, $ b + c>a$, and $c+a>b$.  
+Since we need all of these to be true, this leads to the
+following algorithm.
+\begin{code}
+IsItATriangle(int a, int b, int c) {
+    if(a>0 && b>0 && c>0 && a+b>c && b+c>a && a+c>b) {
+        return true;
+    } else { return false; }
+}\end{code}
+\end{sol}
+\end{exa}
+
+\newpage
+\section{Logic in programming}\label{section:logicInProgramming}
+
+There are often times when conditional expressions can be simplified using logic. You are going to want to refer back
+to Table~\ref{table:logicLaws} while reading this section.
+Let's start with a simple example.
+
+\begin{exa}
+The conditional statement \verb+if(!(x<0))+ can be rewritten
+as \verb+if(x>=0)+ to make it more readable.
+\end{exa}
+
+Too easy. Let's try a slightly more complicated one.
+
+\begin{exa}
+Simplify the following code.
+\begin{code}
+    if (x<=0 && (x>0 || x<=0)) {
+       x=0;
+    }
+\end{code}
+\begin{sol}
+If we let $p$ be ``\verb+x<=0+,'' then $\neg p$ is ``\verb+x>0+,''
+and the conditional statement is equivalent to  $p \wedge(\neg p\vee p)$.
+But using negation and identity, we can see that
+$p \wedge(\neg p\vee p)=p\wedge T=p$.
+Thus, the code can be simplified to 
+\begin{code}
+    if(x<=0) { 
+        x=0; 
+    }
+\end{code}
+\end{sol}
+\end{exa}
+
+That wasn't so bad. Now we can do one that is a little trickier.
+Pay attention on this one!
+\begin{exa}
+Simplify the following code as much as possible. 
+\begin{code} 
+    if ( !(x==0 || y<x) ) {
+        x=y;
+    }
+\end{code}
+\begin{sol}
+First, notice that by DeMorgan's Law,  \verb+!(x==0 || y<x)+ is equivalent to
+\verb+!(x==0) && !(y<x)+.  Simplifying a bit more, we get 
+\verb+x!=0 && y>=x+.  Thus, the code becomes:
+\begin{code}
+    if (x!=0 && y>=x) {
+        x=y
+    }
+\end{code}
+This may not look much simpler, but it is definitely easier to understand.
+
+This simplification can also be done by defining $p$ to be \verb+x==0+ and $q$ to be \verb+y<x+.
+Then the expression is $\neg(p\vee q)$.  Applying De Morgan's Law, this is the same as $\neg p\wedge \neg q$,
+which we translate back to \verb+!(x==0) && !(y<x)+ and simplify as in the final step above.
+\end{sol}
+
+\end{exa}
+As the previous few examples demonstrate, you can apply the rules to propositions in various forms.
+Sometimes it is useful to explicitly define $p$ and $q$ (and sometimes $r$) and write expressions using
+formal mathematical notation, but at other times it is just as easy to apply the rules the the expressions
+as they are.  In the previous example, we didn't gain that much by defining $p$ and $q$.  
+But with more complicated expressions it certainly can be helpful.
+
+\begin{rem}
+A common mistake is to forget to use De Morgan's law when dealing with negation.
+For instance, in the last example, replacing the code \verb+!(x==0 || y<x )+
+with the code \verb+!(x==0) || !(y<x)+ would be incorrect.  
+You cannot just distribute a negation among other terms.  
+Always remember to use De Morgan's law: $\neg(p\vee q) \neq \neg p\vee\neg q$.
+\end{rem}
+
+
+\begin{exer}
+Simplify the following code as much as possible.
+\begin{code} 
+    if ((x>0 && x<y) || (x>0 && x>=y)) {
+        x=y;
+    }
+\end{code}
+\vspace*{2.25in}
+
+\begin{answer}
+Let $p=$``$x>0$'' and $q=$``$x<y$''.  
+Then the conditional above can be expressed as $(p\wedge q)\vee (p\wedge \neg q)$.
+Using a few of the logical equivalences from Table~\ref{table:logicLaws}, 
+it is not too difficult to see that
+ $(p\wedge q) \vee (p\wedge \neg q) = p\wedge (q \vee \neg q) = p\wedge T = p.$ 
+Therefore the code simplifies to:
+\begin{code} 
+    if (x>0) {
+        x=y;
+    }
+\end{code}
+\end{answer}
+\end{exer}
+
+
+\begin{eval}
+Simplify the following code as much as possible. 
+\begin{code} 
+    if (x>0) {
+        if(x<y || x>0) {
+            x=y;
+        }
+    }
+\end{code}
+\begin{ssol}
+Because the second if is in the first one which is if ($x>0$) then $x>0$ is duplicated but at
+the same time to satisfy the second one we just need to keep the second if and cut the first one.
+$x<y$ and $x>0$ are independent conditions so they cannot be more simplified.
+So the answer is: 
+\begin{code}
+    if(x<y || x>0) {
+        x=y;
+    }
+\end{code}
+\end{ssol}
+\evallinetwo
+\begin{answer}
+This is not equivalent to the original code.  Consider the case when $x=-1$ and $y=1$, for instance.
+\end{answer}
+\end{eval}
+
+\begin{exer}
+Simplify the following code as much as possible. 
+\begin{code} 
+    if (x>0) {
+        if(x<y || x>0) {
+            x=y;
+        }
+    }
+\end{code}
+\vspace*{1.5in}
+\begin{answer}
+After my head is done spinning trying to understand what they are
+saying, I suspect something isn't right here. In fact,
+since both conditions need to be true when if statements are nested, it is the same thing as a conjunction.
+In other words, the two ifs are equivalent to \verb+if( x>0 && (x<y || x>0) )+.
+By absorption, this is equivalent to \verb+if(x>0)+.
+So the simplified code is:
+\begin{code}
+    if(x>0) {
+        x=y;
+    }
+\end{code}
+You can also think about it this way.  The assignment \verb+x=y+ cannot happen unless \verb+x>0+ due to the outer
+if.\footnote{If you think about it, this is why the solution to this in the previous example failed.}
+But the inner if has a disjunction, one part of which is \verb+x>0+, which we already know is true.
+In other words, it doesn't matter whether or not \verb+x<y+.  This argument also leads to the solution we just gave.
+\end{answer}
+\end{exer}
+
+Although some of these examples may seem a bit contrived, in some sense they {\em are} realistic.  As code is
+refactored, code is added and removed in various places, conditionals are combined or separated, etc. and sometimes
+it leads to conditionals that are more complicated than they need to be.  In addition, when working on large teams,
+you will often work on code written by others.  Since some programmers don't have a good grasp on logic, you will
+certainly run into conditional statements that are way more complicated and convoluted than necessary. 
+As I believe these examples demonstrate, simplifying conditionals is not nearly as easy as one might think.
+It takes great care to ensure that your simplified version is still correct.
+
+\begin{rem}\index{short circuiting}
+There is an important difference between the logical operators as discussed here and 
+how they are implemented in programming languages such as Java, C, and C++.
+It is something that is sometimes called {\bf short circuiting}.
+You may be familiar with the concept even if you haven't heard it called that before.
+It exploits the {\bf domination laws:}
+$$F \wedge q = F$$
+$$T \vee q = T$$
+\end{rem}
+
+\begin{exa}
+Consider the following algorithm:
+\begin{code}
+if(x<0 || y<0) {
+    x=y;
+}
+\end{code}
+The conditional statement here involves an {\bf or} ($p\vee q$).
+Notice that when $x<0$, then because of the {\bf or}, 
+the conditional statement is true regardless of what the value of $y$ is. 
+Most programming languages with therefore not even check the second part of the conditional in this case.
+
+In general, when executing a conditional statement of the form
+$p\vee q$,
+$p$ is evaluated first. If it is true, the conditional is evaluated as true without determining the truth value of $q$. If $p$ is false,
+then then $q$ is evaluated and its truth value used.
+\end{exa}
+
+\begin{exer}
+Based on how short circuiting works with conditionals of the
+form $p\vee q$, explain what it does with conditionals 
+of the form $p\wedge q$.
+\vspace*{1.75in}
+
+\begin{answer}
+$p$ is evaluated. If it is false, then the whole expression is evaluated 
+as false without evaluating $q$ since no matter what the truth 
+value of $q$ is, $p\wedge q=F$. On the other hand, if
+$p$ is true, then the truth value of $p\wedge q$ is the same as
+the truth value of $q$, so it evaluates $q$ and uses that as
+the value of the whole expression.
+\end{answer}
+\end{exer}
+
+\begin{rem}
+If you forget that code short circuits, bad things can occasionally
+happen.
+Because of short circuiting, some of the code in your
+conditional statement may never execute. 
+The vast majority of the time that is fine.
+However, there are rare cases when it might cause a problem.
+Here is a simple example.
+Say you want to increment both $x$ and $y$, and
+then check if either is at least 100. 
+Most sensible people would implement it like this:
+{\rm
+\begin{code}
+    x++;
+    y++;
+    if( x==100 || y==100) {
+        // do something
+    }
+\end{code}
+}
+That code will always work just fine. 
+Alternatively, you can try to be clever and do this
+(but don't! Keep reading):
+{\rm
+\begin{code}
+    if( ++x==100 || ++y==100) {
+        // do something
+    }
+\end{code}
+}
+First notice that the \verb@++@ comes before the variable,
+so each variables is incremented before being compared to 100,
+which is what we want. {\em However}, if $x$ becomes 100, then
+short circuiting means that $y$ will never get incremented,
+and that is incorrect!
+
+Although this is a rather contrived example, there are certainly
+cases where this comes up in real code, especially when dealing
+with certain types of data structures.
+\end{rem}
+
+Below is a more complicated example involving short circuiting.
+Earlier examples did not make demonstrate the
+advantages to short circuiting, 
+other than skipping the execution of a little code, but it is
+very important in several contexts. The one in the next example 
+involves checking if something exists before trying to access it.
+This helps to avoid things like {\em segmentation faults} (C, C++), \verb+IndexOutOfBoundsException+ (Java),
+and {\em null pointers} (many languages).
+
+The example below uses a \verb+list+, which is exactly what it sounds like--an ordered list of 0 or more items of some sort 
+(the list in the example contains integers).
+If you have a list, calling \verb+list.isEmpty()+ will return
+\verb+true+ if the list is empty and \verb+false+ if it is not empty.
+Calling \verb+list.get(i)+ will get the $i$th element from the
+list (where we use $0$ to get the first element, $1$ for 
+the second, etc., for reasons I do not wish to get into right now). 
+If there is no $i$th element, \verb+list.get(i)+ will crash
+the program or return some bogus value, depending on 
+how the list was implemented. This means it is important
+to know that an item exists in a list before trying to access it.
+This leads to the next example.
+
+\begin{eval}
+Rewrite the following segment of code so that it is as simple as possible and logically equivalent.
+\begin{code}
+    if( !(list.isEmpty() && list.get(0)>=100) && !(list.get(0)<100) ) {
+        x++;
+    } else {
+        x--;
+    }
+    
+\end{code}
+\begin{ssolenum}
+\item
+The second and third statements mean the same thing.  Also, if the second is true then we got a value so
+we know the list is not empty, so the first statement is unnecessary.  This leads to the following
+equivalent code:
+\begin{code}
+    if(list.get(0) >= 100) {x++;} else {x--;}
+\end{code}
+\evallinetwo
+\item
+I used DeMorgan's law to obtain:
+\begin{code}
+    if(!list.isEmpty() || list.get(0) < 100) { 
+        x++; 
+    } else { 
+        x--; 
+    }
+\end{code}
+\evallinetwo
+\item
+Let $a$ be \verb+list.isEmpty()+ and $b$ be \verb+list.get(0)>=100+.  
+But then $\neg b=$\verb+list.get(0)<100+.
+The original expression is $\neg(a\wedge b)\wedge\neg(\neg b)$.
+But 
+\begin{eqnarray*}
+\neg(a\wedge b)\wedge\neg(\neg b)&=&\neg(a\wedge b)\wedge  b
+=(\neg a\vee \neg b)\wedge  b\\
+&=&(\neg a\wedge  b)\vee(\neg b\wedge  b)
+=(\neg a\wedge  b)\vee F
+=\neg a\wedge  b
+\end{eqnarray*}
+So my simplified code is
+\begin{code}
+    if( !list.isEmpty() && list.get(0)>= 100 ) {
+        x++;
+    } else {
+        x--;
+    }
+\end{code}
+\evallinetwo
+\end{ssolenum}
+\begin{answer}
+\begin{solevalenum}
+\item
+This solution is incorrect.
+There are a few problems.  The obvious one is that the first statement actually prevents the program
+from crashing so it is certainly not unnecessary!  Also, the second and third statements may be equivalent,
+but how are they connected?  For instance, given the expression $\neg (A\wedge B)\vee \neg A$,
+I cannot simply remove the `redundant' $\neg A$ to obtain an ``equivalent'' expression of $\neg (A\wedge B)$
+(if necessary, plug in different truth values for $A$ and $B$ to convince yourself that these are not the same).
+\item
+This is not correct.  The second part of the expression seems to have disappeared.  
+But how can we know it isn't equivalent?  We just need to find a scenario where the two versions do different
+things. Notice that the `simplified' expression is true when the list is not empty regardless of the value of
+element $0$.  But what if the list is not empty and element $0$ is 50?  The original expression is false and the
+`simplified' expression is true.  Clearly not the same.
+\item
+This solution is not only correct, but it is very well argued.
+\end{solevalenum}
+\end{answer}
+\end{eval}
+
+\begin{ques}
+In the solutions to the previous problem we said that the final solution was correct.
+But there might be a catch.  Go back to the original code and the final solution
+and look closer.  Is the final solution
+{\em really} equivalent to the original?  Explain why or why not.\\
+\evallinetwo
+\begin{answer}
+Technically speaking, the final solution is not equivalent.  
+However, it turns out that it is {\em better} than the
+original.  This is because the original code would actually crash if the list is empty.
+Go back and look at the code and verify that this is the case.  
+Then verify that the 
+final simplified version will {\em not} crash.
+\end{answer}
+\end{ques}
+
+Let's reinforce the point from the previous question.
+The code from the third solution and the original code are
+{\em logically} equivalent. 
+However, they are not actually equivalent
+when implemented in most programming languages. Why?
+Because of short circuiting. 
+What happens when you call \verb+get+ on an empty list? 
+Does it return some bogus value? Or crash? Either way, 
+the original code will either crash or return a bogus value.
+However, the code from the third solution will always work 
+correctly because short circuiting prevents the call to the
+\verb+get+ that would cause the problem. 
+
+\newpage
+
+\section{Bitwise Operations}\label{section:bit}
+
+In this section we will consider {\em bitwise operations}.  But first we need to review a few
+concepts you are probably already familiar with.
+
+Recall that a {\em boolean variable} is one that is either
+true or false. 
+Recall that a {\em bit} can have the value $0$ or $1$.  A bit can be used to represent a
+Boolean variable by assigning $0$ to false and $1$ to true.
+Table~\ref{tab:BooleanTruth} shows the truth tables for the various boolean operators 
+that are available in many languages.
+Notice that they are identical to the operators we discussed earlier except that we have 
+replaced $T$ and $F$ with $1$ and $0$ and have used the notation from Java/C/C++ instead of the mathematical
+notation.
+
+\begin{table}[h]
+\centering
+$
+\begin{array}{|cc||c|c|c|c|}
+\hline  &  & AND & OR & XOR & IFF \\
+\hline p & q & (p \&\& q) & (p || q) &p != q& (p  == q) \\
+\hline 
+1 & 1& 1 &1&0&1 \\
+1 & 0& 0 &1&1&0 \\
+0 & 1& 0 &1&1&0 \\
+0 & 0& 0 &0&0&1 \\
+\hline
+\end{array}
+$
+\footnotesize\caption{Truth Tables for the Boolean Operators}\label{tab:BooleanTruth}
+\end{table}
+
+We don't usually think about \verb+!=+ being XOR 
+and \verb+==+ being IFF (or biconditional).  We usually think of them in their more natural
+interpretation: `not equal' and `equal'.  
+
+\begin{rem}
+A note of caution: Although Java is a lot like C and C++, how it deals with logical expressions
+is very different.  Java has an explicit {\em boolean} type and you can only use the logical operators
+on boolean values.  Further, conditional statements in Java require boolean values.   
+In C and C++, the \verb+int+ type is used as a boolean value, where $0$ is false, and anything else is true.
+This is very convenient, but can also cause some confusion.
+\end{rem}
+
+\begin{exa}
+In C/C++, \verb+(5&&6)+, \verb+(5||0)+, \verb+(4!=5)+ are all true.  In Java the first two statements
+are illegal. 
+\end{exa}
+
+Now it's time to extend the concept of boolean operators to integer data types (including
+\verb+int+, \verb+short+, \verb+long+, \verb+byte+, etc.).
+
+\begin{df}
+A {\bf bitwise operation} is a boolean operation that operates on the individual bits of its argument(s).
+\end{df}
+
+\index{a bitwisenot@$\sim$ (bitwise compliment)}
+\index{compliment, bitwise}
+\index{bitwise operator!compliment}
+\index{bitwise operator!NOT}
+\begin{df}
+The {\bf complement} or {\bf bitwise NOT}, usually denoted by \verb+~+, just flips each bit.
+\end{df}
+
+\begin{exa}
+Assume \verb+10011001+ is in binary.  Then  
+\verb+~10011001=01100110+. 
+If this were a 32-bit integer, the answer would be
+\verb+11111111111111111111111101100110+ since the leading 24 bits (which we assume to be $0$) 
+would be flipped.  
+\end{exa}
+
+\begin{rem}
+For simplicity, the rest of the examples will assume numbers are represented with 8 bits.
+The concept is exactly the same regardless of how many bits are used for a particular data type.
+\end{rem}
+
+\begin{fib}
+$255$ is \verb+11111111+ in binary. 
+\verb+~11111111=00000000+, which is $0$ in decimal. 
+Therefore, \verb+~255=0+.\\
+Similarly, we can see that \verb+~240=15+ since $240$ is \blankline{1.5} in binary, and\\
+\verb+~+\blankline{1.5} = \blankline{1.5}, which is \blankline{1} in decimal.
+\begin{answer}
+\verb+11110000+; \verb+11110000+; \verb+00001111+; $15$.
+\end{answer}
+\end{fib}
+
+\begin{exer}
+\verb+~11000110+=\blankline{2}
+\begin{answer}
+\verb+00111001+.
+\end{answer}
+\end{exer}
+
+
+\index{a bitwiseand@\verb+&+ (bitwise AND)}
+\index{AND (bitwise)}
+\index{bitwise operator!AND}
+
+\index{a bitwiseor@$\vert$ (bitwise OR)}
+\index{OR (bitwise)}
+\index{bitwise operator!OR}
+
+\index{a bitwisexor@\verb+^+ (bitwise XOR)}
+\index{XOR (bitwise)}
+\index{bitwise operator!XOR}
+
+\begin{df}
+The following are the two-operator bitwise operators.
+\begin{itemize}
+\item
+{\bf Bitwise AND},  denoted by \verb+&+, applies $\wedge$ to the corresponding bits
+of each argument. 
+\item
+{\bf Bitwise OR},  denoted by \verb+|+, applies $\vee$ to the corresponding bits
+of each argument. 
+\item
+{\bf Bitwise XOR},  denoted by \verb+^+, applies $\oplus$ to the corresponding bits
+of each argument. 
+\end{itemize}
+\end{df}
+
+We will present examples in table form rather than `code form' since it is much easier to see
+what is going on when the bits are lined up.
+
+\begin{exa}
+\begin{tabular}[t]{rrrrr}
+ 			01011101&& 			  01011101			&& 01011101\\
+\verb+&+ 	11010100	&&\verb+|+11010100	&&\verb+^+ 11010100\\ \cline{1-1}\cline{3-3}\cline{5-5}
+			01010100&& 			  11011101			&& 10001001\\
+ \end{tabular}
+ \end{exa}
+ 
+
+\begin{rem}
+It is important to remember that \verb+&+ and \verb+&&+ are not the same thing!
+The same holds for \verb+|+ and \verb+||+.
+It is equally important to remember that \verb+^+ does {\em not} mean exponentiation in
+most programming languages.
+\end{rem}
+
+
+\begin{exer}
+{\Large
+\begin{tabular}[t]{rrrrr}
+ 			11110000&& 			  11110000			&& 11110000\\
+\verb+&+ 	11001100	&&\verb+|+11001100	&&\verb+^+ 11001100\\ \cline{1-1}\cline{3-3}\cline{5-5}
+			&& 			  			&& \\
+ \end{tabular}
+ }
+ \begin{answer}
+ \verb+11000000+; \verb+11111100+; \verb+00111100+.
+ \end{answer}
+ \end{exer}
+ 
+ \begin{rem}
+Remember: boolean operators and the bitwise operators are different!
+ \end{rem}
+
+
+\newpage
+\section{The {\tt for} loop}\label{section:for}
+
+Here is the first of the two types of loops we will consider.
+
+\begin{df}
+\index{for loop}
+\index{loop!for}
+The {\bf for} loop has the following 
+syntax:
+\begin{code}
+    for(initialize;condition;increment) {
+       blockA
+    }
+\end{code}
+where 
+\begin{itemize}
+\item
+\verb+initialize+ is one or more statements that set up the initial conditions and is
+executed once at the beginning of the loop.
+\item
+\verb+condition+ is the condition that is checked each time through the loop. It must evaluate to a boolean value.
+If \verb+condition+ is true, the statements in \verb+blockA+ are executed followed by the code in \verb+increment+.
+This process repeats until \verb+condition+ is false.
+\item
+\verb+increment+ is code that ensures the loop progresses.
+It is executed at the end of every loop.
+Typically \verb+increment+ is just a simple increment statement
+(e.g. \verb@i++@), but it can be anything.
+\end{itemize}
+\end{df}
+
+\begin{exa}\label{exa:factorial}\index{factorial}
+Write an algorithm that returns $n!$  when given $n$.
+\begin{sol}
+Here is one possible algorithm.
+\begin{code}
+	int factorial(int n) {
+	    if(n==0) {   return 1;
+	    } else {
+	        int fact = 1;
+	        for(int i=1;i<=n;i++) {
+	            fact = fact*i;
+	        }
+	        return fact;
+	    }
+	}
+\end{code}
+\end{sol}
+\end{exa}
+
+\begin{ques}
+Does the \verb+factorial+ algorithm from Example~\ref{exa:factorial} ever do something unexpected?
+If so, what does it do, when does it do it, and what should be done to fix it?\\
+\answerlinethree
+\begin{answer}
+It will return 1 for negative numbers which does not really make sense.
+%It will loop forever if $n<0$.  
+This should be fixed in two ways.  
+Since $n!$ is undefined when $n<0$, it can't return the correct answer for negative values.
+So the first change is to have it return $-1$ if $n<0$.  
+Some other value can be used, but $-1$ works well because $n!$ can't be negative, so if it returns $-1$, you know something is up.  
+Second, this behavior should be clearly documented so that it clearly states that it returns $n!$ for $n\geq 0$, and $-1$ for $n<0$.
+\end{answer}
+\end{ques}
+
+\newpage
+\begin{eval}
+Evaluate these algorithms that supposedly compute $n!$ for values of $n>0$. Don't worry about
+what they do when $n\leq 0$.
+\begin{ssolenum}
+\item
+\begin{code}
+
+    int fact = 1;
+    for(int i=0;i<=n;i++) {
+        fact = fact*i;
+    }
+    return fact;
+\end{code}
+\evallinetwo
+\item
+\begin{code}
+
+    int fact = 1;
+    for(int i=2;i<=n;i++) {
+        fact = fact*i;
+    }
+    return fact;
+\end{code}
+\evallinetwo
+\item
+\begin{code}
+
+    int fact = 1;
+    for(int i=n;i>0;i--) {
+        fact = fact*i;
+    }
+    return fact;
+\end{code}
+\evallinetwo
+\item
+\begin{code}
+
+    int fact = 1;
+    for(int i=1;i<n;i++) {
+        fact = fact*(n-i);
+    }
+    return fact;
+\end{code}
+\evallinetwo
+\end{ssolenum}
+\begin{answer}
+\begin{solevalenum}
+\item
+This algorithm always returns $0$.  If you don't see it right away, carefully work through the algorithm
+with a few values of $n$.
+\item
+This is correct.  It doesn't multiply by $1$, but that doesn't change the answer.
+\item
+This is also correct.  It is just multiplying the values in the reverse order of the other examples.
+\item
+This is incorrect.  It actually computes $(n-1)!$.
+To fix this, does $i$ have to start at $0$, or go to $n$ (instead of $n-1$)?  
+We'll leave it to you to work out which is correct.
+\end{solevalenum}
+\end{answer}
+\end{eval}
+
+\begin{exer}\label{exa:powers1} 
+Write an algorithm that will compute $x^n$, 
+where $x$ is a given real number and $n$ is a given positive integer.
+\begin{code}
+    double power(double x, int n) {
+        
+        
+        
+        
+        
+        
+        
+        
+    }
+\end{code}
+\begin{answer}
+This isn't really that much different than the algorithms to compute $n!$.
+Here is one algorithm that does the job:
+\begin{code}
+    double power(double x, int n) {
+        power = 1;
+        for(int i=0;i<n;i++) {
+            power = power*x;
+        }
+        return power;
+    }
+\end{code} 
+The loop could also have been \verb@for(int i=1;i<=n;i++)@, 
+or any loop that executes $n$ times since the loop index, $i$, is not used as part
+of the calculation.
+\end{answer}
+\end{exer}
+
+
+\newpage
+
+\section{Arrays}\label{section:arrays}
+\begin{df}
+\index{array}
+An {\bf array} is an aggregate of homogeneous types. The {\bf
+length} of the array is the number of entries it has.
+\end{df}
+A $1$-dimensional array is akin to a mathematical vector. Thus
+if $X$ is $1$-dimensional array of length $n$ then
+$$X = (X[0], X[1], \ldots , X[n-1]).$$ 
+You access the element at position $i$ of 
+an array using the syntax $X[i]$.
+We will
+follow the convention of common languages like Java, C, and C++ by indexing the arrays starting from $0$.
+This means that the last element is $X[n-1]$.
+We will typically declare the length of the array at the beginning of
+a code fragment by means of a comment.
+
+\bigskip
+A $2$-dimensional array is akin to a
+mathematical matrix. Thus if $Y$ is a $2$-dimensional array with
+$2$ rows and $3$ columns then 
+$$Y = \begin{bmatrix} Y[0][0] &
+Y[0][1] & Y[0][2] \cr Y[1][0] & Y[1][1] & Y[1][2] \cr
+\end{bmatrix} .
+$$
+Here, you obtain the entry in row $i$ and column $j$ using
+the syntax $Y[i][j]$.
+
+In many programming languages
+(including C++ and Java), arrays are declared using
+the syntax 
+\verb+int []a;+ (assuming an array of integers), 
+where the \verb+[]+ indicates it is an array.
+Without going into too much detail, there are actually two
+parts to creating an array. The syntax \verb+int []a;+
+is specifying that we want \verb+a+ to be an array, but
+we need to allocate space for the array. To do that, we use
+the syntax \verb+new int[n]+, where \verb+n+ is the 
+desired size. Putting it all together, creating an array of
+integers of size \verb+n+ is done using the syntax
+\verb+int [] a = new int[n]+.
+When specifying that we want to use an array as input
+into an algorithm, we just use the \verb+int []a+ part since
+we are not creating a new array.
+
+\begin{exa}\index{maximum!array element}
+Write an algorithm that determines the maximum element of a $1$-dimensional array of $n$ integers.
+\begin{sol}
+We declare the first value of the array (the $0$-th entry) to be the maximum (a {\em sentinel value}). 
+Then we successively compare it to other $n - 1$ entries. 
+If an entry is found to be larger than it, that entry is declared the maximum.
+\begin{code}
+MaxEntry(int[] X, int n) {
+    int max = X[0];
+    for(int i=1;i<n;i++) {
+        if(X[i]>max) {
+            max = X[i];
+        }
+    }
+    return max;
+}
+\end{code}
+\end{sol}
+\end{exa}
+
+If your primary language is Java, you might wonder why we did not use \verb+X.length+ in the previous
+algorithm.  There are two reasons.  First, not all languages store the length of an array as part
+of the array.  For example, C and C++ do not.  In these languages you always need to pass the length
+along with an array.  Second, sometimes you want to be able to process only part of an array.  
+Written as we did above, the algorithm will return the maximum of the first $n$ elements
+of an array.  The algorithm works as long as the array has at least $n$ elements.
+
+
+\begin{rem}
+If an algorithm has an array and a variable $n$ as parameters, you can probably assume $n$ is
+the length of the array unless it is otherwise specified.
+\end{rem}
+
+\begin{exer}
+Give an algorithm that will return true if an array of integers either starts or ends with a $0$, and
+false otherwise.  Assume array indexing starts at $0$ and that the array is of length $n$.
+Use only one conditional statement.  Be sure to deal with the possibility of an empty array.
+\begin{code}
+    boolean startsOrEndsWithZero(int[] a, int n) {
+
+
+
+
+
+
+
+
+
+    }
+\end{code}
+\begin{answer}
+Here is one possible solution.  Note that the parentheses are necessary.
+\begin{code}
+    boolean startsOrEndsWithZero(int[] a, int n) {
+        if( n>0 && (a[0]==0 || a[n-1]==0) ) {
+            return true;
+        else {
+            return false;
+        }
+    }
+\end{code}
+\end{answer}
+\end{exer}
+
+\begin{ques}
+Does the solution given for the previous exercise properly deal with arrays of size $0$ and $1$?  
+Prove it.\\
+\answerlinefour
+\begin{answer}
+The solution uses the expression  \verb+n>0 && (a[0]==0 || a[n-1]==0)+.
+If $n=0$, the expression is false because of the \verb+&&+, so the algorithm returns false as it should
+since an array with no elements certainly does not begin or end with a $0$.
+If $n=1$, first note that $n-1=0$, so $a[0]$ and $a[n-1]$ refer to the same element.
+Although this is redundant, it isn't a problem.  
+If $a[0]=0$, the expression evaluates to $T\wedge (T\vee T)=T$, and the algorithm returns
+true as expected.  
+If $a[0]\neq 0$, the expression evaluates to $T\wedge (F\vee F)=F$, and the algorithm returns
+false as expected.
+\end{answer}
+\end{ques}
+
+\begin{exa}\label{exa:swapforArray}\index{swap}
+Implement a method that swaps two elements of an array that works in Java and other languages
+that can't pass by reference.
+\begin{sol}
+Here is a method that swaps two elements of an {\em integer} array.  Except for the
+type of the parameter and \verb+temp+ variable, this works for any data type.
+\begin{code}
+swap(int[] X, int a, int b) {
+    int temp = X[a];
+    X[a]=X[b];
+    X[b]=temp;
+}
+\end{code}
+I don't want to get into the technical details of pass-by-value versus pass-by-reference since
+that is really the subject of another course.  But briefly, 
+this works because when the array is passed we have access to the individual array elements.
+Therefore when we change them, they are changed in the original array.
+\end{sol}
+\end{exa}
+
+\begin{exa}\index{reverse, an array}
+An array $(X[0], \ldots X[n - 1])$ is given. 
+Without introducing another array, put its entries in reverse order.
+\label{exa:ReverseArray}
+\begin{sol} 
+Observe that we want to exchange the first and last element, the second and second-to-last element, etc.
+That is, we want to exchange $X[0] \leftrightarrow X[n - 1]$, $X[1] \leftrightarrow X[n - 2]$, \ldots,
+$X[k] \leftrightarrow X[n - k - 1]$.  But what value of $k$ is correct?  If we go all the way to $n-1$,
+the result will be that every element is swapped and then swapped back, so we will accomplish nothing.
+Hopefully you can see that if we swap elements when $k<n-k-1$, we will swap each element at most once.  
+The ``at most once'' is because if the array has an odd number of elements, 
+the middle element occurs when $k=n-k-1$, but we can skip it since it doesn't need to be swapped with anything.
+Notice that $k<n-k-1$ if and only if $2k<n-1$. 
+Since $k$ and $n$ are integers, this is equivalent to $2k\leq n-2$.
+This is equivalent to $k\leq \lfloor (n-2)/2\rfloor$ by Corollary~\ref{floorCor}.
+Thus, we need to swap the elements $0,1,\ldots, \lfloor (n-2)/2\rfloor$
+with elements $n-1, n-2, \ldots, n-1-\lfloor (n-2)/2\rfloor=n-\lfloor n/2\rfloor$, respectively.
+The following algorithm implements this idea.
+\begin{code}
+    reverseArray(int[] X, int n) {
+        for(int i=0;i<=(n-2)/2;i++) {
+            swap(X,i,n-i-1);
+        }
+    }
+\end{code}
+\end{sol}
+\end{exa} 
+
+\begin{ques}
+The previous algorithm went until $i$ was $(n-2)/2$, not $\lfloor (n-2)/2\rfloor$.
+Why is this O.K.?  Does it depend on the language?  Explain.\\
+\answerlinetwo
+\begin{answer}
+As we already discussed, many languages truncate when performing integer division.
+When the numbers are positive (as they are here), that is the same thing as taking the floor.
+Even if a language does not do this, Theorem~\ref{floorThm} implies that it would still work.
+\end{answer}
+\end{ques}
+
+\begin{ques}
+Does the following algorithm correctly reverse the elements of an array? Explain.
+\begin{code}
+reverseArray(int[] X, int n) {
+    for(int i=0;i<n/2;i++) {
+        swap(X,i,n-i-1);
+    }
+}
+\end{code}
+\answerlinetwo
+\begin{answer}
+It is easiest to see that this is correct by comparing with the previous solution.
+The only difference is that the condition went from $i<=(n-2)/2$ to $i<n/2$.
+Notice that $(n-2)/2+1=n/2-2/2+1=n/2$.  
+But since we also replaced $<=$ with $<$, it still stops at the same point.
+\end{answer}
+\end{ques}
+
+Hopefully the previous example helps you realize that you need to be careful when working with arrays.
+Formulas related to array indices change depending on whether arrays are indexed starting at $0$ or $1$.
+In addition, formulas involving the number of elements in an array can be tricky, especially when the
+formulas relate to partitioning the array into pieces (e.g. into two halves).
+These can both lead to the so-called ``off by one'' error that is common in computer science.
+The next example illustrates these problems, and one way to deal with it.
+
+
+\begin{exa}
+Give a formula for the index of the middle element of an array of size $n$.
+If there are two middle elements (e.g. $n$ is even), use the first one.
+\begin{sol}
+Clearly the answer should be somewhere close to $n/2$.  Unfortunately, if $n$ is odd,
+$n/2$ isn't an integer.  
+And clearly the answer won't be the same when indexing starting at both $0$ and $1$.
+ Maybe we should try a few concrete examples.\\
+
+Let's first assume indexing starts at $1$.   
+If $n=9$, the middle element is the 5th element, which has index $5 = \lceil 9/2\rceil$.  
+If $n=10$, the middle element is also the 5th element.
+Then the index is $5 = 10/2 =\lceil 10/2\rceil$.
+Thus the formula $\lceil n/2\rceil$ should work.
+You should plug in a few more values to convince yourself that this is correct.\\
+
+Now let's assume indexing starts at $0$ (which is a lot more common).
+There are a a few equivalent formulas we can come up with.
+For starters, $\lceil n/2\rceil -1$ should work since this is just $1$ less 
+than the answer above, and the indices are all shifted by one.
+But let's come up with a formula from scratch.
+If $n=9$, the index of the middle element is $4 = \lfloor 9/2\rfloor$.  
+If $n=10$, the index is $4\neq \lfloor 10/2\rfloor$.  
+So $\lfloor n/2\rfloor$ works when $n$ is odd, but not when $n$ is even.
+This one is not as obvious as it was when we started indexing at $1$. 
+With a little thought, you may realize that $\lfloor (n-1)/2\rfloor$ works.
+
+\end{sol}
+\end{exa}
+
+\begin{ques}
+The previous example seems to suggest that $\lceil n/2\rceil -1=\lfloor (n-1)/2\rfloor$
+for all integers $n$.  Is this correct?  Do a few sample computations to try to convince
+yourself of your answer.\\
+\answerlinetwo
+\begin{answer}
+It is correct.  To convince yourself (but this is {\em not} a proof), 
+plug the numbers $1$ through $5$ (or some other set of both even and odd values) into both sides
+to see that you get the same number.
+\end{answer}
+\end{ques}
+
+\begin{rem}
+Always be very careful with formulas related to the index of an array.  
+Double-check your logic by plugging in some values to be certain your formula is correct.
+\end{rem}
+%Before we jump into the next example, we  need introduce a few concepts.
+
+\begin{exa}\label{exa:locker}[{\bf The Locker-Room Problem}] 
+
+A locker room contains $n$ lockers, numbered $1$ through $n$.
+Initially all doors are open. Person number $1$ enters and closes all the doors. Person number $2$ enters and opens all the doors
+whose numbers are multiples of $2$.
+ Person number $3$ enters and toggles all doors that are multiples of $3$.  That is, he closes them if they are
+open and opens them if they are closed. 
+This process continues, with person $i$ toggling each door that is a multiple of $i$.\\
+
+Write an algorithm to determine
+which lockers are closed when all $n$ people are done.
+\begin{sol} \ \\
+Here is one possible approach. We use a boolean array {\tt Locker} of size $n+1$ to denote the lockers (we will ignore \verb|Locker[0]|).  The value {\bf true} will denote an open
+locker and the value {\bf false} will denote a closed
+locker.\\
+%\footnote{We will later see that those locker doors whose numbers are squares are the ones which are closed.}
+
+\begin{code}
+    LockerRoomProblem(boolean[] Locker, int n) {
+        // Person 1: Close them all
+        for(int i=1;i<=n;i++) {
+           Locker[i]=false;
+        }
+        //People 2 through n: toggle appropriate ones
+        for(int j=2;j<=n;j++) {
+            for(k=j;k<=n;k++) {
+                if(k%j==0) {
+                    Locker[k] = !Locker[k];
+                }
+            }
+        }
+        // Print the results
+        print("Closed:");
+        for(int l=1;l<=n;l++) {
+            if(Locker[l]==false) {
+                print(l);
+                print(" ");
+            }
+        }
+    }
+\end{code}
+\end{sol}
+\end{exa}
+Can you see how to slightly improve the algorithm in Example~\ref{exa:locker}? 
+
+
+Let's revisit short circuiting with a common use of it with arrays.
+But first, in case you do not know, in languages like Java, you can get the length of an array \verb+a+ using \verb+a.length+
+(unfortunately, this does {\em not} work in C or C++).
+It can be helpful to determine the length before accessing 
+an element of an array since \verb+a[i]+ will cause a
+\verb+IndexOutOfBoundsException+ if \verb+i+$\geq$\verb+a.length+.
+
+\begin{exa}\label{exa:ss}
+Consider the statement \verb+if(x<a.length && a[x]!=0)+.  
+The first domination law implies that when \verb+x>=a.length+, the expression in the if statement will evaluate to 
+false regardless of the truth value of \verb+a[x]!=0+.  Therefore, many languages will simply
+not evaluate the second part of the expression---they will {\em short circuit}, as we have discussed previously.
+And it turns out that {\em this is a very good thing!} If
+short circuiting did not occur, that code would crash 
+whenever \verb+x>=a.length+ (If you do not see why,
+look back and try to figure it out). 
+That is one of the reasons many 
+languages use short circuiting.
+
+If \verb+x<a.length+, {\em only then} do we check that
+\verb+a[x]!=0+, in which case everything is 
+fine.\footnote{Well, sort of. If $x\leq 0$, this one will still crash.
+You will fix this shortly!}
+On the other hand, if \verb+x>=a.length+, the condition
+is guaranteed to be false, so we short circuit and never check
+the second condition {\em which is good, because it would
+cause the code to crash!}
+
+Therefore, even though the statements 
+\verb+if(x<a.length && a[x]!=0)+ and 
+\verb+if(a[x]!=0+ \verb+&&+ \verb+x<a.length)+ 
+are {\em logically equivalent}, 
+they are not {\em practically equivalent} (not an official term)
+when implemented in a language that does short circuiting.
+
+In general, since AND and OR operators are {\em commutative},
+$p\vee q$ and $q\vee p$ are equivalent, as are
+$p\wedge q$ and $q\wedge p$.
+But the same statements implemented in a programming 
+languages that short circuit are not precisely equivalent. 
+But as this example shows, it is a very good thing since
+(among other things) it allows us to write certain code 
+more concisely without the possibility of crashing.
+
+%% Too many examples that may or may not resonate,
+%%especially non-cs students.
+%The same thing happens for statements like \verb+if(x<0 || x>a.length)+. 
+%When $x<0$, the expression is true regardless of the truth value of \verb+x>a.length+.  
+%Again, many languages don't evaluate the second part of this expression if the first part is true.
+%Of course, if the first part is false, the second part is evaluated since the truth value now depends
+%on the truth value of the second part.
+%
+%There are at least two benefits of this.  First, it is more efficient since sometimes less code needs
+%to be executed. 
+%Second, it allows the checking of one condition before checking a second condition that might cause a crash.
+%You may have used it in statements like the one above to make sure you don't index outside the bounds of
+%an array.  Another use is to avoid attempting to access methods or fields when a variable refers to
+%\verb+null+ (e.g. if \verb+a+ is a list, you might see code like \verb+if(a!=null && a.size()>0)+ which verifies that the list 
+%actually exists before trying to access it).
+%
+%But this has at least two consequences that can cause subtle problems if you aren't careful.  
+%First, although the AND and OR operators are {\em commutative} (e.g. $p\vee q$ and $q\vee p$ are equivalent),
+%that is not always the case for boolean expressions in these languages.  
+%For instance, the statement \verb+if(x<a.length && a[x]!=0)+ is not equivalent to \verb+if(a[x]!=0 && x<a.length)+ 
+%since the first one always works, 
+%but second one will cause a crash if $x<a.length$.
+%Second, if the second part of the expression is code that 
+%you expect will always be executed,
+%you may spend a long time tracking down the bug that this creates.  
+\end{exa}
+
+\begin{ques}
+Explain again: Why are \verb+if(x<a.length && a[x]!=0)+ and 
+\verb+if(a[x]!=0+ \verb+&&+ \verb+x<a.length)+  
+{\em logically equivalent}?
+But then why are they not {\em practically equivalent}?\\
+\answerlinethree
+\begin{answer}
+They are equivalent by the commutative property.
+But they are not practically equivalent because
+whenever \verb+x>=a.length+, the first statement works
+properly because it does not try to access \verb+a[x]+
+which avoids an \verb+IndexOutOfBoundsException+,
+but the second one will try to access \verb+a[x]+ first,
+causing an \verb+IndexOutOfBoundsException+ {\em before}
+it checks if the index is valid.
+\end{answer}
+\end{ques}
+
+\begin{exer}
+Fix the conditional statement from Example~\ref{exa:ss}
+so that is {\em never crashes}.
+
+\vspace*{1in}
+\begin{answer} This is simple---we just need to add a check
+that the index is not negative:\\
+\verb+if(x>=0 && x<a.length && a[x]!=0)+.
+\end{answer}
+\end{exer}
+
+\begin{rem}
+It turns out that if a language does not implement short circuiting,
+we can obtain the same behavior by complicating the code just
+a little bit---it involves using nested if-else statements instead of OR
+and AND. You do not need worry too much about this since
+most languages short circuit.
+\end{rem}
+%% Doesn't really fit here, and I rewrote the same example
+%% (using DeMorgan's law) with simplified code earlier).
+%{\bf Put the following example in appropriate contexts/locations.}
+%In the following example, \verb+a+ is a list of some sort,
+%\verb+a.size()+ returns how many things are on the list,
+%and \verb+a.clear()+ removes everything from the list.
+%Also, the code \verb+a==null+ is a way of asking whether or
+%not \verb+a+ is
+%
+%\begin{exa}
+%Simplify the following code as much as possible. 
+%\begin{code} 
+%    if ( !(a==null || a.size()<=0) ) {
+%        a.clear();
+%    }
+%\end{code}
+%\begin{sol}
+%First, notice that by DeMorgan's Law,  \verb+!(a==null || a.size()<=0)+ is equivalent to
+%\verb+!(a==null) && !(a.size()<=0)+.  Simplifying a bit more, we get 
+%\verb+a!=null && a.size()>0+.  Thus, the code becomes:
+%\begin{code}
+%    if (a!=null && a.size()>0) {
+%        a.clear();
+%    }
+%\end{code}
+%This may not look much simpler, but it is much easier to understand.
+%
+%This simplification can also be done by defining $p$ to be \verb+a==null+ and $q$ to be \verb+a.size()<=0+.
+%Then the expression is $\neg(p\vee q)$.  Applying De Morgan's Law, this is the same as $\neg p\wedge \neg q$,
+%which we translate back to \verb+!(a==null) && !(a.size()<=0)+ and simplify as in the final step above.
+%\end{sol}
+%\end{exa}
+
+
+
+
+%% No longer needed since logic comes earlier now.
+%\begin{df} 
+%\index{boolean!variable}
+%A {\bf boolean variable} is a variable that can be either {\bf true} or {\bf false}.
+%\end{df}
+%\begin{df}
+%\index{not operator}
+%\index{negation operator}
+%\index{operator!not}
+%\index{operator!negation}
+%\index{boolean!operator!not}
+%\index{boolean!operator!negation}
+%The {\bf not} unary operator changes the status of a boolean variable from {\bf true} to {\bf false} and vice-versa.  In Java, C, and C++, the {\em not} operator is $!$ and it appears before the expression being
+%negated (e.g. \verb+!x+).
+%\end{df}
+%
+%The {\em not} operator is essentially the same thing as the {\em negation} we discussed earlier.
+%The difference is context---we are applying {\em not} to a boolean variable, whereas we applied 
+%{\em negation} to a statement.
+
+\newpage
+
+\section{Quantifiers and Algorithms}\label{section:quantsAndAlgs}
+
+Now let's see how quantifiers connect to algorithms.  
+If you want to determine whether or not something (e.g. $P(x)$) is true for all values in a domain
+(e.g., you want to determine the truth value of $\forall x P(x)$), 
+one method is to simply loop through all of the values and test whether or not $P(x)$ is true.  
+If it is false for any value, you know the answer is false.  
+If you test them all and none of them were false, you know it is true.
+
+
+\begin{exa}
+Here is how you might determine if $\forall x P(x)$ is true or false for the 
+domain $\{0, 1, 2, \ldots, 99\}$:
+{\small
+\begin{code}
+    boolean isTrueForAll() {
+        for(int i=0;i<100;i++) {
+            if( !P(i) ) {
+                return false;
+            }
+        }
+        return true;
+    }
+\end{code}
+}
+
+Notice the negation in the code---this can trip you up if you aren't careful.
+\end{exa}
+
+\begin{exa}
+Let $P(x)$ and $Q(x)$ be predicates and the domain be $\{0, 1, 2, \ldots, 99\}$.
+What is \verb+isTrueForAll2()+ determining?  
+\begin{code}
+	    boolean isTrueForAll2() {
+	        for(int i=0;i<100;i++) {
+	            if( !P(i) && !Q(i) )
+	                return false;
+	        }
+	        return true;
+	    }
+\end{code}
+\begin{sol}
+Notice that if both $P(i)$ and $Q(i)$ are false for the same value of $i$, 
+it returns false, and otherwise it returns true.  Put another way, it returns
+true if for every value of $i$, either $P(i)$ or $Q(i)$ is true. 
+Thus, \verb+isTrueForAll2+ is determining the truth value of $\forall i(P(i)\vee Q(i))$.
+\end{sol}
+\end{exa}
+
+\begin{exer}
+Rewrite the expression \verb+( !P(i) && !Q(i) )+ from the previous example so that it uses only one negation.\\
+Answer:\\
+\vspace*{1in}
+\begin{answer}
+Using De Morgan's Law, we get \verb+!(P(i) || Q(i))+.
+\end{answer}
+\end{exer}
+
+\newpage
+\begin{exer}
+Let $P(x)$ and $Q(x)$ be predicates and the domain be $\{0, 1, 2, \ldots, 99\}$.
+What is \verb+isTrueForAll3()+ determining?
+\begin{code}
+		boolean isTrueForAll3() {
+		    boolean result = true;
+		    for(int i=0;i<100;i++) {
+		        if(!P(i)) {
+		            result = false;
+		        }
+		    }
+		    if(result==true) {
+		        return true;
+		    }
+		    for(int i=0;i<100;i++) {
+		        if(!Q(i)) {
+		            return false;
+		        }
+		    }
+		    return true;
+		}
+\end{code}
+\answerlinethree
+\begin{answer}
+First notice that if $P(i)$ is true for every value of $i$, \verb+result+ will be true at the
+end of the first loop, so  \verb+isTrueForAll3+ will return true without even considering $Q$.
+However, if $P(i)$ is false for any value of $i$, then it will go onto the second loop.
+The second loop will return false if $Q(i)$ is false for any value of $i$.  But if $Q(i)$ is true
+for all values of $i$, the method returns true.
+So, how do we put this all together into a simple answer?
+Notice that the only time it returns true is if either $P(i)$ is always true or if $Q(i)$ is always true.
+In other words,  \verb+isTrueForAll3+ is determining the truth value of $(\forall i P(i)) \vee (\forall i Q(i))$.
+By the way, notice that I used the variable \verb+i+ for both quantifiers. This is sort of like using
+the same variables for two separate loops.
+\end{answer}
+\end{exer}
+
+\begin{exa}
+Now we are ready for the million dollar 
+question:\footnote{There is no million dollars for answering this question.  It's just an expression.}
+ Are \verb+isTrueForAll2+ and \verb+isTrueForAll3+ determining the same thing?
+\begin{sol}
+At first glance, it looks like they might be.  But we need to dig deeper, and we need to prove one way or the other.
+To prove it, we would need to show that these expressions evaluate to the same truth value, regardless of what $P$ and $Q$ are.   
+To disprove it, we just need to find a $P$ and a $Q$ for which these expressions have different truth values.
+But let's first talk it through to see if we can figure out which answer seems to be correct.
+
+$\forall i(P(i)\vee Q(i))$ is saying that for every value of $i$, either $P(i)$ or $Q(i)$ has to be true.
+$\forall i P(i) \vee \forall i Q(i)$ is saying that either $P(i)$ has to be true for every $i$, or that
+$Q(i)$ has to be true for every $i$.  These sound similar, but not exactly the same, so we cannot be sure yet.
+In particular, we cannot jump to the conclusion that they are not equivalent because we described each with
+different words.  There are many ways of wording the same concept. 
+
+At this point we either need to try to tweak the wording so that we can see that they are really saying the same
+thing, or we need to try to convince ourselves they aren't.  
+Let's try the latter.
+
+What if $P(i)$ is always true and $Q(i)$ is always false?  
+Then  both statements are true.  But that doesn't prove that they are always both true, so this doesn't help.
+
+Let's try something else.  
+What if we can find a $P(i)$ and a $Q(i)$ such that for any given value of $i$, we
+can ensure that either $P(i)$ or $Q(i)$ is true, but also that there is some value $j$ such that $P(j)$ is false
+and some value $k\neq j$ such that $Q(k)$ is false?  
+Then $\forall i(P(i)\vee Q(i))$ would be true, but $\forall i P(i) \vee \forall i Q(i)$ false, so this would work. 
+But in order to be certain, 
+we have to know that such a $P$ and $Q$ exist.\footnote{Consider this:  If I can find an even number
+that is prime but is not $2$, then there would be at least 2 even primes.  That's great.  Unfortunately, 
+I can't find such a number.}
+
+What if we let $P(i)$ be ``$i$ is even'', $Q(i)$ be ``$i$ is odd'', and
+the universe be $\BBZ$.  
+Then $\forall i P(i) = \forall i Q(i) = F$, so $\forall i P(i) \vee \forall i Q(i)=F$, 
+but  $\forall i(P(i)\vee Q(i))=T$. 
+Now we have all of the pieces.  Let's put this all together in the form of a proof.
+
+\begin{pf} (that  $\forall i(P(i)\vee Q(i)) \neq \forall i P(i) \vee \forall i Q(i)$)\\
+Let $P(i)$ be ``$i$ is even'', $Q(i)$ be ``$i$ is odd'', and
+the universe be $\BBZ$.  Then  $\forall i(P(i)\vee Q(i))$ is true since every integer is either even or odd.
+On the other hand, $\forall i P(i)$ is false since there are integers that are not even 
+and $\forall i Q(i)$ is false since there are integers that are not odd.  Thus, 
+$\forall i P(i) \vee \forall i Q(i)$ is false.  Since they have different truth values, 
+  $\forall i(P(i)\vee Q(i)) \neq \forall i P(i) \vee \forall i Q(i)$
+\end{pf}
+\end{sol}
+\end{exa}
+
+Let's do a slightly more practical example. 
+
+\begin{exer}
+Given an array $a$ of length $n$, give an algorithm that will determine the truth value of
+$\exists x ( (a[x]\mbox{ is even }) \vee (a[x] \mbox{ is a multiple of 3}) )$.
+\vspace*{2in}
+\begin{answer}
+\begin{code}
+boolean has2MultipleOr3Multiple(int[] a, int n) {
+   for(int i=0;i<n;i++) {
+       if(a[i]%2==0 || a[i]%3==0) {
+           return true;
+       }
+   }
+    return false;
+}
+\end{code}
+\end{answer}
+\end{exer}
+
+\newpage
+\section{The {\tt while} loop}\label{section:while}
+\begin{df}
+\index{loop!while}
+\index{while loop}
+The {\bf while} loop has syntax:
+\begin{code}
+    while(condition) {
+        blockA
+    }
+\end{code}
+where \verb+condition+ evaluates to a boolean value and
+\verb+blockA+ contains 1 or more statements.
+If \verb+condition+ evaluates to true,
+the statements in \verb+blockA+ will execute, 
+and the condition will be checked again.
+This repeats until \verb+condition+ evaluates to false.
+\end{df}
+
+While loops are generally used when you need to do something
+some unknown number of times, usually because you need 
+to check for some condition to be true before you know you are
+done. The general rule of thumb for when to use \verb+for+ loops
+versus \verb+while+ loops is that if you know the number of 
+iterations, use a \verb+for+, and otherwise use \verb+while+.
+On the other hand, anything that can be done with a \verb+for+
+loop can be done with a \verb+while+ loop and vice-versa.
+But using one of these loops in an unconventional manner can 
+confuse people who read your code.
+
+\begin{exa}
+Here is a silly example of an algorithm to determine 
+whether or not a number is a perfect square.
+It is definitely {\em not} the slickest way to solve this problem.
+\begin{code}
+boolean isSquare(int x) {
+   int i=1;
+   while (i*i<=x) {
+       if(i*i==x)  return true;
+       i++
+   }
+   return false;
+}
+\end{code}
+\end{exa}
+
+The following is a common use of while loops: iterating over
+a list of possibilities until you either find what you are looking
+for (at which point you do something with it) or you don't
+(which you know because you exited the while loop).
+
+\begin{exa}
+Here is a simple algorithm to determine if an array has any zero elements:
+\begin{code}
+boolean anyZeroes(int []a, int n) {
+    int i=0;
+    while(i<n) {
+       if( a[i]==0 ) { 
+           return true;
+       }
+       i++;
+   }
+   return false;
+}
+\end{code}
+\end{exa}
+
+\newpage
+
+\begin{exer}
+{\bf Sequential Search}\index{sequential search}
+Implement the following algorithm that determines
+whether or not a particular value is contained in the array.
+It should return the index of the location of the value if present,
+or -1 if not.
+\begin{code}
+int sequentialSearch(int []a, int n, int val) {
+
+
+
+
+
+
+
+
+
+}
+\end{code}
+\begin{answer}
+Here is one answer:\index{sequential search}
+\begin{code}
+int sequentialSearch(int []a, int n, int val) {
+    int i=0;
+    while(i<n) {
+       if( a[i]==val ) { 
+           return i;
+       }
+       i++;
+   }
+   return -1;
+\end{code}
+Notice that this algorithm is almost identical to the code from
+the previous example---I just made 3 minor changes to the code!
+This is because this is using a pattern that is common when 
+dealing with arrays.
+\end{answer}
+\end{exer}
+
+
+\begin{exa}
+An array $X$ satisfies $X[0] \leq X[1] \leq \cdots \leq X[n - 1]$. 
+Write an algorithm that finds the number of entries that are different.
+\begin{sol}
+Here is one possible approach.
+\begin{code}
+int differentElements(int[] X, int n) {
+    int i = 0;
+    int different = 1;
+    while(i<n-1) {
+        i++;
+        if(x[i]!=x[i-1]) {
+            different++;
+        }
+    }
+    return different;
+}
+\end{code}
+\end{sol}
+\end{exa}
+
+\begin{exer}
+What will the following
+algorithm return for $n = 5$? 
+Trace the algorithm carefully, outlining all of your steps. 
+\begin{code}
+    int mystery(int n) {
+        int x=0;
+        int i=1;
+        while(n>1) {
+            if(n*i>4) {
+                x=x+2*n;
+            } else {
+                x=x+n;
+            }
+            n=n-2;
+            i++;
+        }
+        return x;
+    }
+\end{code}
+%\answerlinetwo
+\begin{answer} In the first iteration in the loop, 
+$n = 5, i = 1$, $n*i > 4$ and thus $x = 10.$ 
+Next, $n = 3$, $i = 2$, and we go through the loop again. 
+Since $n*i > 4$, $x = 10 + 2*3 = 16$.
+Finally, $n = 1, i = 3$, and the loop stops. Hence $x = 16$ is
+returned.
+\end{answer}
+\end{exer}
+
+An interesting example of the use of a while loop is 
+implementing a simple algorithm to determine whether or
+not a positive integer is prime.
+
+\begin{thm}\label{thm:erathostenes_primality}
+If $n\in\BBZ^+$, $n$ is either prime or has a prime factor  no greater than
+$\sqrt{n}$.
+\begin{pf}
+If $n$ is prime there is nothing to prove. Assume that $n$ is composite. 
+Then  $n$ can be written as the product $n = ab$ with $1 <a\leq b$, where $a$ and $b$ are integers. 
+If every prime factor
+of $n$ were greater than $\sqrt{n}$, then $a>\sqrt{n}$ and $b>\sqrt{n}$.
+But then $n = ab > \sqrt{n}\sqrt{n} = n$, which is a contradiction. Thus $n$ must have a prime factor
+no greater than $\sqrt{n}$.
+\end{pf}
+\end{thm}
+
+
+\begin{exa}
+To determine whether $103$ is prime we proceed as follows. 
+Observe that $\lfloor \sqrt{103} \rfloor = 10$ 
+(According to Theorem~\ref{floorThm}, we only need concern ourselves with the floor).
+We now divide $103$ by every prime no greater than $10$. If one of these primes divides $103$, then $103$
+is not a prime. Otherwise, $103$ is a prime. 
+Notice that 
+$103 \bmod 2 = 1$, $103 \bmod 3 = 1$, $103 \bmod 5 = 3$, and $103 \bmod 7 = 5$.
+Since none of these remainders is $0$, $103$ is prime.
+\end{exa}
+
+\begin{exer}
+Give a complete proof of whether or not $101$ is prime.\\
+\pflinetwo
+\begin{answer}
+$\lfloor \sqrt{101}\rfloor=10$.  The only primes less than $10$ are $2$, $3$, $5$, and $7$.
+Since $101\bmod 2=1$, $101\bmod 3 = 2$, $101\bmod 5 = 1$, and $101\bmod 7 = 3$, none of
+which are $0$, Theorem~\ref{thm:erathostenes_primality} tells us that $101$ is prime.
+\end{answer}
+\end{exer}
+
+\begin{exer}
+Give a complete proof of whether or not $323$ is prime.\\
+\pflinetwo
+\begin{answer}
+$323=17*19$, so it is not prime.  I determined this by seeing if any of the primes
+no greater than $\lfloor\sqrt{323}\rfloor=17$ were factors.
+Although $2$, $3$, $5$, $7$, $11$, and $13$, are not, $17$ is.
+\end{answer}
+\end{exer}
+
+
+\begin{exa}\label{exa:primality}\index{primality testing}
+How can we determine if an integer $n$ is prime?
+If $n\leq 1$, it is not prime.
+Otherwise, for each integer from $2$ to $\sqrt{n}$,
+if $n$ is a multiple of it, $n$ is not prime.
+If $n$ was not a multiple of any of these, it must be prime
+by Theorem~\ref{thm:erathostenes_primality}.  
+Here is the algorithm based on these ideas.
+\label{exa:isprime1}
+\begin{code}
+boolean isPrime(int n) {
+    if(n<=1) {  return false; }
+    else {
+        int i = 2;
+        while( i <= sqrt(n) ) {
+            if( n%i==0 ) { return false; }
+            i++;
+        }
+        return true;  // It had no factors.
+}   }
+\end{code}
+\end{exa}
+
+\begin{exer}
+Improve the algorithm from the previous example
+by making it about twice as fast. Hint: The fact that
+I am asking you to make it {\em twice} as fast is a hint.
+
+\vspace*{3.5in}
+\begin{answer}
+No need to test the even integers. So
+we can modify the code to skip checking even numbers,
+so long as we first make sure that it gets the correct
+answer for 2. If you didn't think about this,
+go back and try to write the algorithm before
+continuing to read the solution. 
+Here is the modified code:
+\begin{code}
+boolean isPrime(int n) {
+    if(n<=1) {      // Anything less than 2 is not prime
+        return false; 
+    } else if (n==2) {
+       return true;    // Need to deal with this as a special case
+    } else if( n%2==0 ) {  // Discard even numbers.
+        return false;
+    } else {
+        // Determine if it has any odd factors.
+        int i = 3;
+        while( i <= sqrt(n) ) {
+            if( n%i==0 ) {
+                return false; 
+            }
+            i = i + 2;
+        }
+        return true;  // It had no factors.
+    }
+}
+\end{code}
+\end{answer}
+\end{exer}
+
+\begin{rem}
+It should be noted that although this algorithms in the last
+example and exercise work, 
+they are not very practical for large values of $n$.
+For instance, if we want to factor the number 
+$12,867,530,934,567,891$,
+we would still need to check about 
+$\sqrt{12,867,530,934,567,891}\approx 113,435,140$ factors.
+
+In fact, there is no known algorithm that can factor numbers efficiently on a ``classical'' computer.
+The most commonly used public-key cryptosystems rely on the assumption that there is no efficient algorithm
+to factor a number.  
+However, if you have a quantum computer, you are in luck.  
+Shor's algorithm actually {\bf can} factor numbers efficiently.
+\end{rem}
+
+Can we do the same thing for multiples of $3$, $5$, etc.
+to make the algorithm even faster? 
+That is, once we know that a number is not divisible by $3$, we don't really need
+to ask if it is divisible by $6$, $9$, $12$, etc.  Similarly for 5, 7, 11, etc. Can we somehow make it skip all of these multiples as we go?
+A first step would be to try to skip just multiples of either 2 or 3 (or both). If you can do that, you can then take into account 5, etc.
+But does it generalize? And would it help? I will leave these as
+questions for you to ponder.
+
+
+
+
+\newpage
+
+\begin{exer}
+Use the fact that integer division truncates to write 
+an algorithm that reverses the digits of a given positive integer. 
+For example, if $123476$ is the input, the output should
+be $674321$. 
+You should be able to do it with one extra variable,
+one {\tt while} loop, one $\bmod$ operation,
+one multiplication by $10$, one division by $10$, and one addition.
+\begin{code}
+    int reverseDigits(int n) {
+
+
+
+
+
+
+
+
+
+
+
+    }
+\end{code}
+\begin{answer} 
+The following algorithm does the job.
+\begin{code}
+	int reverseDigits(int n) {
+		x=0;
+		while(n!=0) {
+		    x = x*10+n%10;
+		    n=n/10;
+		}
+		return x;
+	}
+\end{code}
+\end{answer}
+\end{exer}
+
+\newpage
+\section{More fun with Algorithms}\label{section:funAlgs}
+
+Let's start with an example of how understanding sets and
+set operations can help understand how certain data structures
+work.
+
+\begin{exa}\label{exa:TreeSet}
+In Java, the \verb+TreeSet+ class is one implementation of a {\em set} that has several methods
+with perhaps unfamiliar names, but they do what should be familiar things.
+Let's discuss a few of them.\footnote{The method signatures and documentation have been modified from the 
+official definition so we can focus on the point at hand.}
+Let \verb+A+ and \verb+B+ be \verb+TreeSet+s.
+\begin{lenum}
+\item  The method \verb+retainAll(TreeSet other)+
+``{\em retains only the elements in this TreeSet that are contained in the \verb+other+ TreeSet. 
+In other words, removes from this TreeSet all of its elements that are not contained in \verb+other+.}''
+It is not too difficult to see that \verb+A.retainAll(B)+ is computing $A\cap B$.\footnote{Technically 
+it is doing more than that.  It is storing the result in $A$.  So it is like it is doing $A=A\cap B$,
+where $=$ here means assignment, not equals.}
+\item  The method \verb+boolean containsAll(TreeSet other)+
+``{\em returns true if this set contains all of the elements of \verb+other+ (and false otherwise).}''
+Thus, \verb+A.containsAll(B)+ returns true iff $B\subseteq A$.
+\item
+Even without documentation, it seems likely that \verb+A.size()+ is determining $|A|$.
+\item
+It also seems likely that \verb+A.isEmpty()+ is determining if $A=\emptyset$.
+\end{lenum}
+\end{exa}
+
+Here is a more advanced use of the \verb+while+ loop
+to compute exponents ($x^n$) more quickly than 
+using a simple for loop as was done in Example \ref{exa:powers1}. 
+
+\begin{exa}[Faster Exponentiation] \label{exa:powers2} 
+Write an algorithm that is more efficient than the one from 
+Example \ref{exa:powers1} to compute $x^n$, 
+where $x$ is a given real number and $n$ is a given 
+positive integer.
+\begin{sol}
+The solutions from Example \ref{exa:powers1} requires about $n-1$ multiplications.
+Here we give a solution that requires no more than $2\log_2 n$ multiplications, which is significantly better!
+We'll start with an example and then describe the process in more general terms.
+
+Let $n=11$.  We can write $n=8+2+1$, which is just expressing $n$ as a sum of powers of $2$.
+In other words, we express $n$ in terms of its binary representation.  
+Then $x^{11}=x^{8+2+1}=x^8x^2x^1$.  So if we can compute $x^8$, $x^2$, and $x^1$, then we
+only need 2 more multiplications to get $x^{11}$.  Notice that we can successively square $x$,
+giving the sequence $x \rightarrow x^2 \rightarrow x^4 \rightarrow x^8$ using just $3$ more
+multiplications.  So we can compute $x^{11}$ using only $5$ multiplications instead of $10$. 
+Notice that $5<2\log_2 11$.
+
+In general, we start by writing $n$ in binary.  We then express $x^n$  in terms of the binary representation
+of $n$.  We then successively square $x$ getting a sequence
+$$x \rightarrow x^2 \rightarrow x^4 \rightarrow x^8 \rightarrow \cdots \rightarrow x^{2^k},$$
+and we stop when $2^k \leq n < 2^{k+1}$.   
+As we go, we multiply our answer by the current power of $x$.
+Here is an implementation of this idea.
+\begin{code}
+double power(double x, int n) {
+   double ans = 1;
+   double pow = x; // Stores x, x^2, x^4, etc.
+   int k = n;
+   while( k!=0) {
+       if(k%2==0) {
+           k=k/2;
+           pow=pow*pow;
+       } else {
+           k=k-1;
+           ans=ans*pow;
+       }
+   }
+   return ans;
+   }
+\end{code}
+\end{sol}
+\end{exa}
+
+\begin{exer}
+Trace through the execution of \verb+power(2,23)+. Give a table
+with the values of $k$, $pow$, and $ans$ at every step.
+How many steps did it take? Was it more efficient than
+the algorithm from Example \ref{exa:powers1}? Did it use
+as few operations as we promised?
+
+\noindent
+{\LARGE
+\begin{tabular}{|p{.5in}|p{1.5in}|p{1.5in}|}
+\hline
+k&pow&ans\\
+\hline
+&&\\
+\hline
+&&\\
+\hline
+&&\\
+\hline
+&&\\
+\hline
+&&\\
+\hline
+&&\\
+\hline
+&&\\
+\hline
+&&\\
+\hline
+&&\\
+\hline
+&&\\
+\hline
+\end{tabular}
+}
+\begin{answer}
+Below is a table of the values the algorithm computes.
+The final answer of 8388608 is correct!
+It took 9 steps as opposed to the 22 required by the 
+algorithm from Example \ref{exa:powers1}, so it was
+definitely faster. Notice that 
+$2 \log_2(23) \approx 2*4.52356=9.04712>9$, 
+it works as advertised.
+
+\begin{tabular}{|l|l|l|}
+\hline
+k&pow&ans\\
+\hline
+23&2.0&1.0\\
+22&2.0&2.0\\
+11&4.0&2.0\\
+10&4.0&8.0\\
+5&16.0&8.0\\
+4&16.0&128.0\\
+2&256.0&128.0\\
+1&65536.0&128.0\\
+0&65536.0&8388608.0\\
+\hline
+\end{tabular}
+\end{answer}
+\end{exer}
+
+
+
+%%%%%%%%%%%%%%%%%%%%
+%% The end of this section depends on Partitions
+%% and Equivalence Relations...
+%%%%%%%%%%%%%%%%%%%%
+
+Now we will see some examples of how
+partitions and equivalence relations are relevant to algorithms.
+Feel free to skip the rest of this section if you did not
+cover Section~\ref{section:parts}.
+
+When creating test cases for an algorithm, you always want to
+ensure that you are covering `all of the cases'.  But what does that mean?  It means you are
+thinking about how to {\em partition} all of the possible inputs into several sets, where 
+the elements in one set are somehow different from those in another set, and are quite a lot
+like the other elements in the set.  Let's see an example.
+
+\begin{exa}\label{exa:factPart}
+Consider the following function that returns $n!$ if $n\geq 0$, and returns $-1$ if $n<0$
+($n!$ is undefined for negative values of $n$, but we have to return something, so why not a negative 
+number?)
+\begin{code}
+	int factorial(int n) {
+	    if(n<0)       { return -1; }
+	    else if(n==0) { return 1; }
+	    else {
+	        int fact = 1;
+	        for(int i=1;i<=n;i++) {
+	            fact = fact*i;
+	        }
+	        return fact;
+	    }
+	}
+\end{code}
+What values of $n$ should we use to test \verb+factorial+?
+\begin{sol}
+There seems to be three different types of values based on the structure of the code: $0$,
+numbers less than $0$, and numbers greater than $0$.  
+This suggests partitioning the possible test cases into these
+3 classes. If we test at least one number from each of these,
+we know we have covered the code in the \verb+if+,
+\verb+else if+, and \verb+else+ clauses. Since boundaries can sometimes cause problems, we should include those for each part
+as well as an arbitrary value in each part.
+In light of this, we might test $0$, $-1$, $-2$, $-10$, $1$, $2$, and $8$.
+Since these cover all of the cases, they should provide pretty good evidence of whether
+or not \verb+factorial+ is implemented properly.\footnote{But remember, testing never {\em proves}
+that code is correct!}
+\end{sol}
+\end{exa}
+
+It might be helpful to see another example of where equivalence relations and partitions are useful in computer science.
+
+\begin{exa}\label{exa:chance}
+Consider a method \verb+setRewardChance(double chance)+ that sets the percentage chance that a player will
+be rewarded for completing some task. 
+When the chance is set, we may want to take some action based on the value.
+For instance, the chance should certainly be non-negative, so we might want to throw some sort of error  
+if it is negative. Similarly, the chance should not be above 100 (We are assuming the values are being interpreted 
+as whole percentages, so 100 means 100\%). 
+We may also want to treat the case of a 0\% chance in a special way. 
+Further, chance below 20\%, between 20 and 50\% and above 50\% might all be treated in different ways.
+This might lead to code such as the following.
+\begin{code}
+    setRewardChance(double chance) {
+        if(chance<0)         { /* Throw an error */ }
+        else if(chance==0)   { /* deal chance==0 */ }
+        else if(chance<20)   { /* deal with 0<chance<20 */ }
+        else if(chance<50)   { /* deal with 20<= chance<50 */ }
+        else if(chance<=100) { /* deal with 50<=chance<=100) */ }
+        else                 { /* Throw an error */ }
+    }
+\end{code}
+Notice that a given value of \verb+chance+ will lead us down one of 6 different execution paths.
+If we want to write tests for this code, we need to make sure that every path of execution is tested.
+
+So what does this have to do with partitions and equivalence relations? It is simple: The code described
+above partitions the set of real numbers into 6 subsets, based on which section of code will be executed:
+$$\BBR=(-\infty,0)\cup\{0\}\cup(0,20)\cup[20,50)\cup[50,100]\cup(100,\infty).$$
+Therefore, to ensure the tests cover all of the code, we need to choose at least one value from each subset in
+the partition. In the words of equivalence classes, we need to choose one or more representatives from
+each equivalence class.
+
+Hopefully it is pretty straightforward to see where partitions come into play here. 
+But perhaps the concepts related to equivalence relations are more difficult to see.
+In this case our equivalence relation is a little more difficult to describe succinctly.  
+The most straightforward way is a bit vague: two numbers are related if they are in the same subset.
+Although vague, it is somewhat precise (assuming I know that it is referring to the subsets given above). 
+Are 40 and 2 related? No, because $40\in[20,50)$, but $2\in(0,20)$.
+Are 75 and 98 related? Yes, because $75\in[50,100]$ and $98\in [50,100]$.
+\end{exa}
+
+The previous two examples also demonstrates another 
+important concept: Although equivalence relations and partitions
+are two ways of thinking about the same concept, 
+sometimes it is easier to think in terms of one versus the other. 
+In Example~\ref{exa:factPart}, it is easiest to think about a
+partition of the integers as 
+$\BBR=(-\infty,0)\cup\{0\}\cup(0,\infty)$ rather than
+formally defining an equivalence relation
+on the integers that produces this partition.
+You can define the equivalence relation in this case by ``$x$ is related to $y$ if and only if they have the same sign'' if we assume there are
+three signs--positive, negative, and no sign (for zero). But that is not the way we usually think about it, so this is at best awkward and at worst incorrect.
+Similarly in Example~\ref{exa:chance}, 
+the partition $\BBR=(-\infty,0)\cup\{0\}\cup(0,20)\cup[20,50)\cup[50,100]\cup(100,\infty)$ is easy to write down and comprehend,
+but it is not so easy to write down a complete and succinct definition of 
+the equivalence relation. In fact, I am not even going to try to write
+one down in this case---can you think of how to describe this partition
+by finishing the phrase ``$x$ is related to $y$ if $\ldots$''? I certainly can't.
+
+On the other hand, 
+it is easier to think about congruence modulo $n$ in terms of the 
+formal definition of what it means for two integers to be related 
+(``$x$ is related to $y$ iff $x\equiv y\pmod n$'').
+It is a little more awkward and less informative to write this down as
+a partition: $\BBR=[0]\cup[1]\cup[2]\cup\cdots\cup[n-1]$,
+especially if you forgot what $[i]$ means.
+In any case, it seems to be a little less clear than the definition of the 
+equivalence relation given in the first sentence.
+
+In summary, 
+in some cases it is easier to talk about what it means for two things to be equivalent, 
+and in other cases it is easier to talk about how to partition a set into disjoint subsets. 
+But remember that both of these are accomplishing the same thing.\\
+
+In Chapter~\ref{ch:AlgAn}, we will present more sophisticated
+algorithms. We wait to present them because it is nice to be able
+to evaluate how good an algorithm is. 
+We mostly care how fast algorithms are, which is the main topic
+of that chapter. But we also sometimes want to know
+how much memory an algorithm uses, and how complicated it
+is to implement it is also of interest. 
+However, those topics are beyond the
+scope of this book.
+

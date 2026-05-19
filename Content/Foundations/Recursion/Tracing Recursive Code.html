@@ -21,7 +21,284 @@
 
   <section id="overview" section-title="Overview">
     <h2>Overview</h2>
-    <p>This page is coming soon.</p>
+    <p>
+      Tracing recursive code means following the actual calls the program makes. The most
+      important rule is that each call has its own parameters and local variables. A call that
+      has not reached a return statement waits while its recursive call runs.
+    </p>
+    <p>
+      This page focuses on tracing, not design. If you can trace recursion accurately, it becomes
+      much easier to debug recursive code and to understand why a base case or recursive case is
+      wrong.
+    </p>
+  </section>
+
+  <section id="method" section-title="A Reliable Tracing Method">
+    <h2>A Reliable Tracing Method</h2>
+    <p>
+      When recursion feels confusing, slow down and keep a written record of the calls.
+    </p>
+    <ol class="spaced">
+      <li><strong>Write the call:</strong> Record the function name and argument values.</li>
+      <li><strong>Check the base case:</strong> If the call reaches a base case, record the return value or output.</li>
+      <li><strong>Record the recursive call:</strong> If the call recurses, write the new call underneath the current one.</li>
+      <li><strong>Do not merge calls:</strong> Treat each call as a separate copy of the function with its own variables.</li>
+      <li><strong>Unwind in reverse order:</strong> Once a base case returns, finish the waiting calls from most recent to oldest.</li>
+    </ol>
+    <p>
+      This mirrors the call stack: calls are added as recursion goes deeper, then removed as
+      return values come back.
+    </p>
+  </section>
+
+  <section id="countdown" section-title="Example: Countdown">
+    <h2>Example: Countdown</h2>
+    <p>
+      This recursive method prints the current number before making the recursive call.
+    </p>
+    <pre><code>void countdown(int n) {
+    if (n &gt; 0) {
+        print(n);
+        countdown(n - 1);
+    }
+}</code></pre>
+    <p>
+      Tracing <code>countdown(4)</code> shows why the output is <code>4 3 2 1</code>.
+    </p>
+    <table class="example-table left-align">
+      <thead>
+        <tr>
+          <th>Call</th>
+          <th>Immediate output</th>
+          <th>Next call</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>countdown(4)</code></td>
+          <td><code>4</code></td>
+          <td><code>countdown(3)</code></td>
+        </tr>
+        <tr>
+          <td><code>countdown(3)</code></td>
+          <td><code>3</code></td>
+          <td><code>countdown(2)</code></td>
+        </tr>
+        <tr>
+          <td><code>countdown(2)</code></td>
+          <td><code>2</code></td>
+          <td><code>countdown(1)</code></td>
+        </tr>
+        <tr>
+          <td><code>countdown(1)</code></td>
+          <td><code>1</code></td>
+          <td><code>countdown(0)</code></td>
+        </tr>
+        <tr>
+          <td><code>countdown(0)</code></td>
+          <td>No output</td>
+          <td>Base case</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      The print happens before the recursive call, so the values appear while the stack is growing.
+    </p>
+  </section>
+
+  <section id="print-after" section-title="Call Before Work">
+    <h2>Call Before Work</h2>
+    <p>
+      A small change in line order reverses the output.
+    </p>
+    <pre><code>void countup(int n) {
+    if (n &gt; 0) {
+        countup(n - 1);
+        print(n);
+    }
+}</code></pre>
+    <p>
+      In <code>countup(4)</code>, the recursive calls happen first. The print statements execute
+      only while calls are returning.
+    </p>
+    <table class="example-table left-align">
+      <thead>
+        <tr>
+          <th>Call returns from</th>
+          <th>Then prints</th>
+          <th>Output so far</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>countup(0)</code></td>
+          <td>Nothing</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td><code>countup(1)</code></td>
+          <td><code>1</code></td>
+          <td><code>1</code></td>
+        </tr>
+        <tr>
+          <td><code>countup(2)</code></td>
+          <td><code>2</code></td>
+          <td><code>1 2</code></td>
+        </tr>
+        <tr>
+          <td><code>countup(3)</code></td>
+          <td><code>3</code></td>
+          <td><code>1 2 3</code></td>
+        </tr>
+        <tr>
+          <td><code>countup(4)</code></td>
+          <td><code>4</code></td>
+          <td><code>1 2 3 4</code></td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      A good tracing habit is to mark whether the work happens <em>before</em> the recursive
+      call, <em>after</em> the recursive call, or both.
+    </p>
+  </section>
+
+  <section id="return-values" section-title="Tracing Return Values">
+    <h2>Tracing Return Values</h2>
+    <p>
+      Recursive methods often return values instead of printing. In that case, record what each
+      waiting call still needs.
+    </p>
+    <pre><code>int sumFirst(int n) {
+    if (n &lt;= 0) {
+        return 0;
+    }
+    return n + sumFirst(n - 1);
+}</code></pre>
+    <table class="example-table left-align">
+      <thead>
+        <tr>
+          <th>Call</th>
+          <th>Waits for</th>
+          <th>Return value</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>sumFirst(4)</code></td>
+          <td><code>4 + sumFirst(3)</code></td>
+          <td><code>4 + 6 = 10</code></td>
+        </tr>
+        <tr>
+          <td><code>sumFirst(3)</code></td>
+          <td><code>3 + sumFirst(2)</code></td>
+          <td><code>3 + 3 = 6</code></td>
+        </tr>
+        <tr>
+          <td><code>sumFirst(2)</code></td>
+          <td><code>2 + sumFirst(1)</code></td>
+          <td><code>2 + 1 = 3</code></td>
+        </tr>
+        <tr>
+          <td><code>sumFirst(1)</code></td>
+          <td><code>1 + sumFirst(0)</code></td>
+          <td><code>1 + 0 = 1</code></td>
+        </tr>
+        <tr>
+          <td><code>sumFirst(0)</code></td>
+          <td>Base case</td>
+          <td><code>0</code></td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      The return values are computed from the bottom of the table back up to the top.
+    </p>
+  </section>
+
+  <section id="branching-recursion" section-title="Branching Recursion">
+    <h2>Branching Recursion</h2>
+    <p>
+      Some recursive functions make more than one recursive call. The naive Fibonacci method is
+      a classic example.
+    </p>
+    <pre><code>int fib(int n) {
+    if (n &lt;= 1) {
+        return n;
+    }
+    return fib(n - 1) + fib(n - 2);
+}</code></pre>
+    <p>
+      Tracing <code>fib(5)</code> creates a tree of calls rather than a single chain:
+    </p>
+    <pre><code>fib(5)
+  fib(4)
+    fib(3)
+      fib(2)
+        fib(1)
+        fib(0)
+      fib(1)
+    fib(2)
+      fib(1)
+      fib(0)
+  fib(3)
+    fib(2)
+      fib(1)
+      fib(0)
+    fib(1)</code></pre>
+    <p>
+      This trace shows repeated work. For example, <code>fib(3)</code> and
+      <code>fib(2)</code> are computed more than once. That does not make the code incorrect,
+      but it makes the naive recursive version much slower than it first appears.
+    </p>
+  </section>
+
+  <section id="debugging-checklist" section-title="Debugging Checklist">
+    <h2>Debugging Checklist</h2>
+    <ul class="spaced">
+      <li><strong>Check the first call:</strong> Are the initial arguments correct?</li>
+      <li><strong>Check the smallest inputs:</strong> What happens on empty input, one item, or zero?</li>
+      <li><strong>Check progress:</strong> Does every recursive path move toward a base case?</li>
+      <li><strong>Check call order:</strong> Does work happen before the recursive call, after it, or both?</li>
+      <li><strong>Check repeated work:</strong> Are identical subproblems being recomputed?</li>
+    </ul>
+  </section>
+
+  <section id="reading-questions" section-title="Reading Comprehension Questions">
+    <h2>Reading Comprehension Questions</h2>
+    <ol>
+      <li>Why should each recursive call be treated as having its own copy of the parameters?</li>
+      <li>Why does <code>countdown(4)</code> print <code>4</code> before <code>3</code>?</li>
+      <li>Why does <code>countup(4)</code> print <code>1</code> before <code>4</code>?</li>
+      <li>What does the call tree for <code>fib(5)</code> reveal about the naive recursive Fibonacci method?</li>
+    </ol>
+    <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
+    <div id="answers" class="answer" hidden>
+      <ol>
+        <li><strong>Answer:</strong> Each call has its own stack frame, so changing or returning from one call does not overwrite the parameters in the waiting calls.</li>
+        <li><strong>Answer:</strong> The method prints before making the recursive call.</li>
+        <li><strong>Answer:</strong> The method makes the recursive call first, so the print statements execute while the calls are returning.</li>
+        <li><strong>Answer:</strong> It reveals repeated subproblems, which explains why the naive method is inefficient.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="activities" section-title="In-Class Activities">
+    <h2>In-Class Activities</h2>
+    <ol>
+      <li><strong>Trace output:</strong> Trace <code>countdown(5)</code> and <code>countup(5)</code>. Explain why the output order differs.</li>
+      <li><strong>Trace returns:</strong> Complete a trace table for <code>sumFirst(5)</code>, including each waiting expression and return value.</li>
+      <li><strong>Find repeated work:</strong> Draw the call tree for <code>fib(6)</code>. Circle every repeated call to <code>fib(3)</code>.</li>
+    </ol>
+  </section>
+
+  <section id="problems" section-title="Homework Problems">
+    <h2>Homework Problems</h2>
+    <ol>
+      <li><strong>Trace mystery output:</strong> Given a recursive method that prints before and after its recursive call, predict the output for <code>mystery(3)</code> and justify it with a call trace.</li>
+      <li><strong>Trace a string method:</strong> Write a recursive method that prints a string backward. Trace it on <code>"cat"</code>.</li>
+      <li><strong>Compare call shapes:</strong> Give one example of a recursive method whose calls form a single chain and one whose calls form a branching tree. Explain the difference in possible running time behavior.</li>
+    </ol>
   </section>
 </body>
 </html>

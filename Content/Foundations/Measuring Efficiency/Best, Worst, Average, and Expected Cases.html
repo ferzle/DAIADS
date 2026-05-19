@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Best, Worst, Average, and Expected Cases</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <script src="../../../scripts/chapterScripts.js"></script>
+  <link rel="stylesheet" href="../../../css/style.css">
+  <link rel="stylesheet" href="../../../css/chapter.css">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-DQ5LVZVFDC');
+  </script>
+</head>
+<body>
+  <h1>Best, Worst, Average, and Expected Cases</h1>
+
+  <section id="overview" section-title="Overview">
+    <h2>Overview</h2>
+    <p>
+      The same algorithm can take different amounts of work on different inputs of the same size.
+      Before counting operations, we must say which case we are analyzing: best, worst, average,
+      or expected.
+    </p>
+    <p>
+      The phrase "of size \(n\)" matters. Best case does not mean "choose the smallest possible
+      input." It means: among all inputs of a fixed size \(n\), which one makes the algorithm do
+      the least work?
+    </p>
+  </section>
+
+  <section id="fixed-size" section-title="Always Fix the Input Size">
+    <h2>Always Fix the Input Size</h2>
+    <p>
+      Suppose an algorithm searches an array. If we allow ourselves to choose an array of length 1
+      for the best case, almost every search algorithm looks constant-time. That is not useful.
+    </p>
+    <p>
+      Instead, we fix the array length at \(n\), then compare different arrays and target values of
+      that size. This lets us ask meaningful questions about how the work grows as \(n\) grows.
+    </p>
+  </section>
+
+  <section id="running-example" section-title="Running Example: Sequential Search">
+    <h2>Running Example: Sequential Search</h2>
+    <p>
+      Sequential search scans from left to right until it finds the target or reaches the end.
+    </p>
+    <pre><code>int sequentialSearch(int[] a, int target) {
+    for (int i = 0; i &lt; a.length; i++) {
+        if (a[i] == target) {
+            return i;
+        }
+    }
+    return -1;
+}</code></pre>
+    <p>
+      We will count comparisons between <code>a[i]</code> and <code>target</code>. For an array
+      of length \(n\), the count depends on where the target appears, or whether it appears at all.
+    </p>
+  </section>
+
+  <section id="best-case" section-title="Best Case">
+    <h2>Best Case</h2>
+    <p>
+      The <strong>best case</strong> is the least work the algorithm can do on any input of size
+      \(n\).
+    </p>
+    <p>
+      For sequential search, the best case occurs when the target is the first element. The
+      comparison executes once, no matter how long the array is. So the best-case work is constant.
+    </p>
+    <p>
+      This does not mean the input has size 1. The array can have one million elements; the best
+      case is still that the target appears at index 0.
+    </p>
+  </section>
+
+  <section id="worst-case" section-title="Worst Case">
+    <h2>Worst Case</h2>
+    <p>
+      The <strong>worst case</strong> is the most work the algorithm can do on any input of size
+      \(n\).
+    </p>
+    <p>
+      For sequential search, the worst case occurs when the target is not present, or when it is
+      the last element. The comparison executes \(n\) times.
+    </p>
+    <p>
+      Worst-case analysis is common because it gives a guarantee: the algorithm will not do more
+      work than this bound for inputs of that size.
+    </p>
+  </section>
+
+  <section id="average-case" section-title="Average Case">
+    <h2>Average Case</h2>
+    <p>
+      The <strong>average case</strong> asks how much work the algorithm does on average over a
+      specified distribution of inputs. The distribution is part of the analysis.
+    </p>
+    <p>
+      For sequential search, suppose the target is equally likely to be in any one of the \(n\)
+      positions and is guaranteed to be present. If it is in position \(k\), counting from 1, then
+      the algorithm performs \(k\) comparisons. The average number of comparisons is
+    </p>
+    \[
+      \frac{1}{n}\sum_{k=1}^{n} k
+      =
+      \frac{1}{n}\cdot\frac{n(n+1)}{2}
+      =
+      \frac{n+1}{2}.
+    \]
+    <p>
+      This grows linearly with \(n\). The average count is about half the worst-case count, but
+      "half of \(n\)" still grows like \(n\).
+    </p>
+  </section>
+
+  <section id="expected-case" section-title="Expected Running Time">
+    <h2>Expected Running Time</h2>
+    <p>
+      The term <strong>expected running time</strong> is often used when randomness is involved or
+      when we are describing typical behavior less formally. It is closely related to average-case
+      analysis, but the assumptions must still be stated.
+    </p>
+    <p>
+      For example, randomized quicksort has an expected running time because the algorithm makes
+      random choices. Hash tables often have expected constant-time operations under assumptions
+      about hashing and load factor.
+    </p>
+  </section>
+
+  <section id="case-summary" section-title="Case Summary">
+    <h2>Case Summary</h2>
+    <table class="example-table left-align">
+      <thead>
+        <tr>
+          <th>Case</th>
+          <th>Question</th>
+          <th>Sequential search example</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Best</td>
+          <td>What input of size \(n\) makes the algorithm do the least work?</td>
+          <td>Target at the first position.</td>
+        </tr>
+        <tr>
+          <td>Worst</td>
+          <td>What input of size \(n\) makes the algorithm do the most work?</td>
+          <td>Target absent or at the last position.</td>
+        </tr>
+        <tr>
+          <td>Average</td>
+          <td>What is the mean work over a stated distribution of inputs?</td>
+          <td>Depends on assumptions about where the target is and whether it is present.</td>
+        </tr>
+        <tr>
+          <td>Expected</td>
+          <td>What work should we expect under randomness or a typical-case model?</td>
+          <td>Useful when algorithm choices or input assumptions are probabilistic.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="choosing-a-case" section-title="Which Case Should We Use?">
+    <h2>Which Case Should We Use?</h2>
+    <p>
+      Worst-case analysis is often the default because it is a guarantee. Best-case analysis is
+      useful for understanding possible behavior, but by itself it can be misleading. Average-case
+      or expected analysis can be very informative, but only when the assumptions are realistic and
+      clearly stated.
+    </p>
+    <ul class="spaced">
+      <li>Use <strong>worst case</strong> when users need a guarantee or when bad inputs are important.</li>
+      <li>Use <strong>average case</strong> when a meaningful input distribution is known.</li>
+      <li>Use <strong>expected time</strong> for randomized algorithms and probabilistic data structures.</li>
+      <li>Use <strong>best case</strong> mainly to understand the full range of behavior.</li>
+    </ul>
+  </section>
+
+  <section id="common-mistakes" section-title="Common Mistakes">
+    <h2>Common Mistakes</h2>
+    <ul class="spaced">
+      <li><strong>Using the smallest input as the best case:</strong> The input size must stay fixed at \(n\).</li>
+      <li><strong>Ignoring failed searches:</strong> For search algorithms, an absent target is often a worst-case input.</li>
+      <li><strong>Saying "average" without a distribution:</strong> Average over what set of inputs, with what probabilities?</li>
+      <li><strong>Assuming average and worst are always different:</strong> Sometimes they have the same growth rate, even if the exact counts differ.</li>
+    </ul>
+  </section>
+
+  <section id="reading-questions" section-title="Reading Comprehension Questions">
+    <h2>Reading Comprehension Questions</h2>
+    <ol>
+      <li>Why do we fix the input size \(n\) before discussing best or worst case?</li>
+      <li>What is the best case for sequential search on an array of length \(n\)?</li>
+      <li>What is the worst case for sequential search?</li>
+      <li>Why must an average-case analysis state its assumptions?</li>
+    </ol>
+    <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
+    <div id="answers" class="answer" hidden>
+      <ol>
+        <li><strong>Answer:</strong> Otherwise every algorithm could look artificially good by choosing a tiny input.</li>
+        <li><strong>Answer:</strong> The target is at the first position, so only one comparison is needed.</li>
+        <li><strong>Answer:</strong> The target is absent or at the last position, so \(n\) comparisons are needed.</li>
+        <li><strong>Answer:</strong> The average depends on which inputs are considered possible and how likely they are.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="activities" section-title="In-Class Activities">
+    <h2>In-Class Activities</h2>
+    <ol>
+      <li><strong>Case identification:</strong> For finding the maximum in an unsorted array, identify the best and worst cases. Are they different?</li>
+      <li><strong>Search scenarios:</strong> For sequential search, list three different assumptions about where the target might be. How would those assumptions affect average-case analysis?</li>
+      <li><strong>Insertion sort preview:</strong> Describe an input order that should be good for insertion sort and one that should be bad. Do not calculate the full complexity yet.</li>
+    </ol>
+  </section>
+
+  <section id="problems" section-title="Homework Problems">
+    <h2>Homework Problems</h2>
+    <ol>
+      <li><strong>Sequential search cases:</strong> For an array of length \(n\), count comparisons in the best case, worst case, and when the target is at position \(k\).</li>
+      <li><strong>Average present search:</strong> Reproduce the average-case calculation for sequential search assuming the target is guaranteed to be present and equally likely to appear in each position.</li>
+      <li><strong>Distribution matters:</strong> Suppose a target has a 50 percent chance of being absent and, if present, is equally likely to appear in any position. Set up the expected comparison count.</li>
+    </ol>
+  </section>
+</body>
+</html>

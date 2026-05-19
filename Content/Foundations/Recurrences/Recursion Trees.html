@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Recursion Trees</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
   <script src="../../../scripts/chapterScripts.js"></script>
   <link rel="stylesheet" href="../../../css/style.css">
   <link rel="stylesheet" href="../../../css/chapter.css">
@@ -21,7 +24,285 @@
 
   <section id="overview" section-title="Overview">
     <h2>Overview</h2>
-    <p>This page is coming soon.</p>
+    <p>
+      A recursion tree turns a recurrence into a picture of the recursive calls. Each node
+      represents one subproblem, and the label on the node represents the non-recursive work done
+      by that call.
+    </p>
+    <p>
+      The main move is to add the work across each level of the tree, then add the levels. This is
+      often the clearest way to understand divide-and-conquer running times.
+    </p>
+  </section>
+
+  <section id="anatomy" section-title="Anatomy of a Recursion Tree">
+    <h2>Anatomy of a Recursion Tree</h2>
+    <p>
+      Consider a recurrence of the form
+    </p>
+    \[
+      T(n)=aT(n/b)+f(n).
+    \]
+    <p>
+      The tree has one root for the original problem of size \(n\). Each internal node creates
+      \(a\) children, each with input size divided by \(b\). The work written inside a node is
+      the local work \(f(\text{that node's input size})\).
+    </p>
+    <table class="example-table left-align">
+      <thead>
+        <tr>
+          <th>Tree feature</th>
+          <th>Meaning in the recurrence</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Root</td>
+          <td>The original call on input size \(n\).</td>
+        </tr>
+        <tr>
+          <td>Children</td>
+          <td>The recursive calls made by one call.</td>
+        </tr>
+        <tr>
+          <td>Node label</td>
+          <td>The non-recursive work done by that call.</td>
+        </tr>
+        <tr>
+          <td>Level sum</td>
+          <td>Total non-recursive work done by all calls at the same depth.</td>
+        </tr>
+        <tr>
+          <td>Leaves</td>
+          <td>Base-case calls.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="merge-sort-tree" section-title="Example: Merge Sort">
+    <h2>Example: Merge Sort</h2>
+    <p>
+      Merge sort has the recurrence
+    </p>
+    \[
+      T(n)=2T(n/2)+n,\quad T(1)=1.
+    \]
+    <p>
+      The root does \(n\) merge work. The next level has two subproblems of size \(n/2\), each
+      doing \(n/2\) local work, for a level total of \(n\). The next level has four subproblems of
+      size \(n/4\), again for a level total of \(n\).
+    </p>
+    <table class="example-table left-align">
+      <thead>
+        <tr>
+          <th>Level</th>
+          <th>Number of subproblems</th>
+          <th>Size of each subproblem</th>
+          <th>Work per subproblem</th>
+          <th>Total level work</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>0</td>
+          <td>\(1\)</td>
+          <td>\(n\)</td>
+          <td>\(n\)</td>
+          <td>\(n\)</td>
+        </tr>
+        <tr>
+          <td>1</td>
+          <td>\(2\)</td>
+          <td>\(n/2\)</td>
+          <td>\(n/2\)</td>
+          <td>\(n\)</td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td>\(4\)</td>
+          <td>\(n/4\)</td>
+          <td>\(n/4\)</td>
+          <td>\(n\)</td>
+        </tr>
+        <tr>
+          <td>\(i\)</td>
+          <td>\(2^i\)</td>
+          <td>\(n/2^i\)</td>
+          <td>\(n/2^i\)</td>
+          <td>\(n\)</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      The recursion reaches size 1 when \(n/2^i=1\), so there are \(\log_2 n\) splitting levels,
+      plus the leaf level. Since each level costs \(\Theta(n)\), the total work is
+      \(\Theta(n\log n)\).
+    </p>
+  </section>
+
+  <section id="binary-search-tree" section-title="Example: Binary Search">
+    <h2>Example: Binary Search</h2>
+    <p>
+      Binary search has only one recursive call per non-base case:
+    </p>
+    \[
+      T(n)=T(n/2)+1.
+    \]
+    <p>
+      Its recursion tree is a single path, not a branching tree. Each level has one node and
+      constant work.
+    </p>
+    \[
+      1 + 1 + 1 + \cdots + 1.
+    \]
+    <p>
+      The input size halves until it reaches 1, so the path has \(\Theta(\log n)\) nodes. The
+      total work is \(\Theta(\log n)\).
+    </p>
+  </section>
+
+  <section id="leaf-dominated" section-title="When Leaves Dominate">
+    <h2>When Leaves Dominate</h2>
+    <p>
+      In some recurrences, the total work grows as we move down the tree. For example:
+    </p>
+    \[
+      T(n)=4T(n/2)+n.
+    \]
+    <p>
+      The level costs are
+    </p>
+    \[
+      n,\quad 4(n/2)=2n,\quad 16(n/4)=4n,\quad \ldots
+    \]
+    <p>
+      The work doubles each level. By the time the tree reaches the leaves, there are
+      \(4^{\log_2 n}=n^2\) leaf calls. The bottom levels dominate, so
+      \(T(n)=\Theta(n^2)\).
+    </p>
+  </section>
+
+  <section id="root-dominated" section-title="When the Root Dominates">
+    <h2>When the Root Dominates</h2>
+    <p>
+      Other recurrences spend most of their work near the top:
+    </p>
+    \[
+      T(n)=2T(n/2)+n^2.
+    \]
+    <p>
+      The level costs are
+    </p>
+    \[
+      n^2,\quad 2(n/2)^2=\frac{n^2}{2},\quad 4(n/4)^2=\frac{n^2}{4},\quad \ldots
+    \]
+    <p>
+      Each level costs half as much as the level above it. The total is a geometric series bounded
+      by a constant multiple of \(n^2\), so \(T(n)=\Theta(n^2)\).
+    </p>
+  </section>
+
+  <section id="level-sum-template" section-title="Level-Sum Template">
+    <h2>Level-Sum Template</h2>
+    <p>
+      For \(T(n)=aT(n/b)+f(n)\), the level-\(i\) information usually looks like this:
+    </p>
+    <table class="example-table left-align">
+      <thead>
+        <tr>
+          <th>Quantity</th>
+          <th>Value at level \(i\)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Number of nodes</td>
+          <td>\(a^i\)</td>
+        </tr>
+        <tr>
+          <td>Input size per node</td>
+          <td>\(n/b^i\)</td>
+        </tr>
+        <tr>
+          <td>Work per node</td>
+          <td>\(f(n/b^i)\)</td>
+        </tr>
+        <tr>
+          <td>Total work on level</td>
+          <td>\(a^i f(n/b^i)\)</td>
+        </tr>
+        <tr>
+          <td>Depth to size 1</td>
+          <td>\(\log_b n\)</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      The full running time is the sum of the level costs plus the base-case work at the leaves.
+    </p>
+  </section>
+
+  <section id="master-connection" section-title="Connection to the Master Theorem">
+    <h2>Connection to the Master Theorem</h2>
+    <p>
+      The Master Theorem is a shortcut for the same comparison a recursion tree reveals. It asks
+      whether the work per level grows, stays roughly equal, or shrinks as the tree goes downward.
+    </p>
+    <ul class="spaced">
+      <li><strong>Root-dominated:</strong> Level costs shrink, so the top-level work controls the answer.</li>
+      <li><strong>Balanced across levels:</strong> Each level costs about the same, so multiply one level by the number of levels.</li>
+      <li><strong>Leaf-dominated:</strong> Level costs grow, so the bottom of the tree controls the answer.</li>
+    </ul>
+  </section>
+
+  <section id="limitations" section-title="Limitations">
+    <h2>Limitations</h2>
+    <p>
+      Recursion trees are excellent for insight, but they can become messy when the recursive calls
+      have different sizes, when floors and ceilings matter, or when the recurrence branches in
+      several unrelated ways. In those cases, the tree may still suggest a good guess, but the
+      <a href="?path=Foundations%2FRecurrences%2FSubstitution%20Method">substitution method</a>
+      is often used to prove the bound carefully.
+    </p>
+  </section>
+
+  <section id="reading-questions" section-title="Reading Comprehension Questions">
+    <h2>Reading Comprehension Questions</h2>
+    <ol>
+      <li>What does one node in a recursion tree represent?</li>
+      <li>Why does merge sort have \(\Theta(n)\) work on each level of its recursion tree?</li>
+      <li>What does it mean for a recurrence to be leaf-dominated?</li>
+      <li>How does a recursion tree help explain the Master Theorem?</li>
+    </ol>
+    <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
+    <div id="answers" class="answer" hidden>
+      <ol>
+        <li><strong>Answer:</strong> It represents one recursive call or subproblem, labeled with the non-recursive work done by that call.</li>
+        <li><strong>Answer:</strong> At level \(i\), there are \(2^i\) subproblems of size \(n/2^i\), so the total merge work is \(2^i(n/2^i)=n\).</li>
+        <li><strong>Answer:</strong> The work grows as the tree goes downward, so the bottom levels or leaves determine the asymptotic total.</li>
+        <li><strong>Answer:</strong> It shows whether level costs shrink, stay balanced, or grow, which is exactly the comparison the theorem summarizes.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="activities" section-title="In-Class Activities">
+    <h2>In-Class Activities</h2>
+    <ol>
+      <li><strong>Draw levels:</strong> Draw the first four levels for \(T(n)=3T(n/2)+n\) and write the level totals.</li>
+      <li><strong>Classify:</strong> Decide whether \(T(n)=2T(n/2)+n^2\), \(T(n)=2T(n/2)+n\), and \(T(n)=4T(n/2)+n\) are root-dominated, balanced, or leaf-dominated.</li>
+      <li><strong>Tree to formula:</strong> Convert a recursion tree for \(T(n)=T(n/2)+1\) into a summation.</li>
+    </ol>
+  </section>
+
+  <section id="problems" section-title="Homework Problems">
+    <h2>Homework Problems</h2>
+    <ol>
+      <li><strong>Balanced tree:</strong> Use a recursion tree to solve \(T(n)=3T(n/3)+n\).</li>
+      <li><strong>Leaf growth:</strong> Use a recursion tree to give a tight bound for \(T(n)=5T(n/2)+n\).</li>
+      <li><strong>Root growth:</strong> Use a recursion tree to give a tight bound for \(T(n)=2T(n/2)+n^3\).</li>
+      <li><strong>Explain in words:</strong> For each previous recurrence, explain which levels dominate and why.</li>
+    </ol>
   </section>
 </body>
 </html>

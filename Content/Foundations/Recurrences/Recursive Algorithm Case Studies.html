@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Recursive Algorithm Case Studies</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
   <script src="../../../scripts/chapterScripts.js"></script>
   <link rel="stylesheet" href="../../../css/style.css">
   <link rel="stylesheet" href="../../../css/chapter.css">
@@ -21,7 +24,275 @@
 
   <section id="overview" section-title="Overview">
     <h2>Overview</h2>
-    <p>This page is coming soon.</p>
+    <p>
+      This page brings the recurrence tools together. For each recursive algorithm, we identify
+      the input size, write a recurrence, choose a solving method, and interpret the result in
+      algorithmic terms.
+    </p>
+    <p>
+      The important habit is to connect the code shape to the recurrence shape. The recurrence is
+      not separate from the algorithm; it is a compact description of the calls the algorithm
+      makes and the work each call does.
+    </p>
+  </section>
+
+  <section id="workflow" section-title="Analysis Workflow">
+    <h2>Analysis Workflow</h2>
+    <ol class="spaced">
+      <li><strong>Define \(T(n)\):</strong> State what input size \(n\) measures and which case is being analyzed.</li>
+      <li><strong>Read the base case:</strong> Identify the input sizes that stop recursing.</li>
+      <li><strong>Read the recursive calls:</strong> Count how many there are and how large their inputs are.</li>
+      <li><strong>Count local work:</strong> Include splitting, combining, comparisons, loops, and helper calls.</li>
+      <li><strong>Solve or bound the recurrence:</strong> Use iteration, recursion trees, substitution, or the Master Theorem.</li>
+      <li><strong>Interpret the answer:</strong> Explain what the growth rate says about the algorithm.</li>
+    </ol>
+  </section>
+
+  <section id="binary-search" section-title="Case Study: Binary Search">
+    <h2>Case Study: Binary Search</h2>
+    <p>
+      Recursive binary search keeps one half of the current sorted range and discards the other.
+    </p>
+    <pre><code class="language-java">int binarySearch(int[] a, int left, int right, int target) {
+    if (right &lt; left) {
+        return -1;
+    }
+
+    int middle = (left + right) / 2;
+    if (a[middle] == target) {
+        return middle;
+    } else if (target &lt; a[middle]) {
+        return binarySearch(a, left, middle - 1, target);
+    } else {
+        return binarySearch(a, middle + 1, right, target);
+    }
+}</code></pre>
+    <p>
+      Let \(T(n)\) be the worst-case time to search a range of length \(n\). Each call does
+      constant local work and makes at most one recursive call on a range of about half the size:
+    </p>
+    \[
+      T(n)=T(n/2)+1.
+    \]
+    <p>
+      Iteration gives \(T(n)=1+\log_2 n\) for powers of two, so the worst-case running time is
+      \(\Theta(\log n)\). The reason is structural: the recursion is a single path whose length
+      is the number of times \(n\) can be halved.
+    </p>
+  </section>
+
+  <section id="merge-sort" section-title="Case Study: Merge Sort">
+    <h2>Case Study: Merge Sort</h2>
+    <p>
+      Merge sort recursively sorts both halves of the array, then merges the two sorted halves.
+    </p>
+    <pre><code>mergeSort(array):
+    if length(array) &lt;= 1:
+        return array
+    left, right = split array into halves
+    sortedLeft = mergeSort(left)
+    sortedRight = mergeSort(right)
+    return merge(sortedLeft, sortedRight)</code></pre>
+    <p>
+      Let \(T(n)\) be the worst-case time for an array of length \(n\). There are two recursive
+      calls on size \(n/2\), and merging costs \(\Theta(n)\).
+    </p>
+    \[
+      T(n)=2T(n/2)+\Theta(n).
+    \]
+    <p>
+      The Master Theorem or a recursion tree gives
+      \[
+        T(n)=\Theta(n\log n).
+      \]
+      Merge sort is not logarithmic even though the input is repeatedly halved, because every
+      level of the recursion tree processes all \(n\) elements during merging.
+    </p>
+  </section>
+
+  <section id="hanoi" section-title="Case Study: Towers of Hanoi">
+    <h2>Case Study: Towers of Hanoi</h2>
+    <p>
+      The Towers of Hanoi algorithm moves \(n-1\) disks out of the way, moves the largest disk,
+      then moves the \(n-1\) disks onto the largest disk.
+    </p>
+    <pre><code>hanoi(n, source, destination, spare):
+    if n == 1:
+        move one disk from source to destination
+    else:
+        hanoi(n - 1, source, spare, destination)
+        move one disk from source to destination
+        hanoi(n - 1, spare, destination, source)</code></pre>
+    <p>
+      Let \(H(n)\) be the number of disk moves. The base case is \(H(1)=1\). For \(n&gt;1\), the
+      algorithm solves two subproblems of size \(n-1\) and makes one move in between.
+    </p>
+    \[
+      H(n)=2H(n-1)+1.
+    \]
+    <p>
+      Expanding or proving by substitution gives
+    </p>
+    \[
+      H(n)=2^n-1.
+    \]
+    <p>
+      This is exponential. Adding one more disk roughly doubles the number of required moves.
+    </p>
+  </section>
+
+  <section id="fibonacci" section-title="Case Study: Naive Fibonacci">
+    <h2>Case Study: Naive Fibonacci</h2>
+    <p>
+      The simple recursive Fibonacci function is a classic example of repeated subproblems.
+    </p>
+    <pre><code class="language-java">int fib(int n) {
+    if (n &lt;= 1) {
+        return n;
+    }
+    return fib(n - 1) + fib(n - 2);
+}</code></pre>
+    <p>
+      Let \(A(n)\) be the number of additions performed. The base cases perform no additions:
+      \(A(0)=A(1)=0\). For \(n&gt;1\), the function computes two recursive calls and then adds their
+      results.
+    </p>
+    \[
+      A(n)=A(n-1)+A(n-2)+1.
+    \]
+    <p>
+      This recurrence grows exponentially. The problem is not that recursion is automatically
+      slow. The problem is that the same Fibonacci values are recomputed many times. Memoization
+      or dynamic programming changes the recurrence shape by storing answers instead of rebuilding
+      the same call tree.
+    </p>
+  </section>
+
+  <section id="stooge-sort" section-title="Case Study: Stooge Sort">
+    <h2>Case Study: Stooge Sort</h2>
+    <p>
+      Stooge sort is intentionally inefficient, but it is useful for recurrence practice. It sorts
+      overlapping two-thirds portions of the array three times.
+    </p>
+    <pre><code>stoogeSort(A, left, right):
+    if right &lt;= left:
+        return
+    if A[right] &lt; A[left]:
+        swap A[left] and A[right]
+    if right - left &gt; 1:
+        third = (right - left + 1) / 3
+        stoogeSort(A, left, right - third)
+        stoogeSort(A, left + third, right)
+        stoogeSort(A, left, right - third)</code></pre>
+    <p>
+      Let \(T(n)\) be the time on a range of length \(n\). Outside the recursive calls, the
+      algorithm does constant work. It makes three recursive calls on ranges of about \(2n/3\).
+    </p>
+    \[
+      T(n)=3T(2n/3)+1.
+    \]
+    <p>
+      To use the Master Theorem, rewrite \(2n/3\) as \(n/(3/2)\). Thus \(a=3\), \(b=3/2\), and
+      \(d=0\). The theorem gives
+    </p>
+    \[
+      T(n)=\Theta\left(n^{\log_{3/2}3}\right),
+    \]
+    <p>
+      which is approximately \(n^{2.71}\). This is much worse than merge sort's
+      \(\Theta(n\log n)\).
+    </p>
+  </section>
+
+  <section id="method-choice" section-title="Choosing a Solving Method">
+    <h2>Choosing a Solving Method</h2>
+    <table class="example-table left-align">
+      <thead>
+        <tr>
+          <th>Recurrence shape</th>
+          <th>Good first method</th>
+          <th>Reason</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>\(T(n)=T(n-1)+f(n)\)</td>
+          <td>Iteration</td>
+          <td>Expands into a sum over \(n\) decreasing inputs.</td>
+        </tr>
+        <tr>
+          <td>\(T(n)=T(n/2)+f(n)\)</td>
+          <td>Iteration or recursion tree</td>
+          <td>There is one path with logarithmic depth.</td>
+        </tr>
+        <tr>
+          <td>\(T(n)=aT(n/b)+\Theta(n^d)\)</td>
+          <td>Master Theorem</td>
+          <td>The theorem directly summarizes the level-cost comparison.</td>
+        </tr>
+        <tr>
+          <td>Suspected exact formula</td>
+          <td>Substitution</td>
+          <td>Induction verifies that the formula satisfies the recurrence.</td>
+        </tr>
+        <tr>
+          <td>Messy or nonstandard recurrence</td>
+          <td>Tree for insight, substitution for proof</td>
+          <td>The tree suggests a bound; substitution checks it rigorously.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="interpretation" section-title="Interpreting the Result">
+    <h2>Interpreting the Result</h2>
+    <p>
+      A recurrence solution should lead back to an algorithmic explanation.
+    </p>
+    <ul class="spaced">
+      <li>\(\Theta(\log n)\): The algorithm follows one shrinking path, as in binary search.</li>
+      <li>\(\Theta(n)\): The algorithm does constant work per element or has total linear work across all calls.</li>
+      <li>\(\Theta(n\log n)\): The algorithm has logarithmically many levels with linear work per level, as in merge sort.</li>
+      <li>Exponential: The recursive call tree grows too quickly, often because the algorithm recomputes overlapping subproblems or branches on \(n-1\)-size inputs.</li>
+    </ul>
+  </section>
+
+  <section id="reading-questions" section-title="Reading Comprehension Questions">
+    <h2>Reading Comprehension Questions</h2>
+    <ol>
+      <li>Why is binary search \(\Theta(\log n)\) instead of \(\Theta(n)\)?</li>
+      <li>Why does merge sort have linear work at each recursion level?</li>
+      <li>What makes naive recursive Fibonacci inefficient?</li>
+      <li>For stooge sort, why is \(b=3/2\) rather than \(2/3\)?</li>
+    </ol>
+    <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
+    <div id="answers" class="answer" hidden>
+      <ol>
+        <li><strong>Answer:</strong> It follows one path that halves the remaining input each time, so the number of calls is logarithmic.</li>
+        <li><strong>Answer:</strong> At each level, all subarrays together contain \(n\) elements, and merging processes those elements linearly.</li>
+        <li><strong>Answer:</strong> It recomputes the same smaller Fibonacci values many times instead of saving them.</li>
+        <li><strong>Answer:</strong> The Master Theorem uses subproblem size \(n/b\). Since \(n/b=2n/3\), \(b=3/2\).</li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="activities" section-title="In-Class Activities">
+    <h2>In-Class Activities</h2>
+    <ol>
+      <li><strong>Trace calls:</strong> Draw the call tree for <code>fib(5)</code> and mark repeated subproblems.</li>
+      <li><strong>Annotate merge sort:</strong> Label each line of merge sort as base-case work, recursive work, or combine work.</li>
+      <li><strong>Method selection:</strong> Given five recurrences, choose a solving method before solving any of them.</li>
+    </ol>
+  </section>
+
+  <section id="problems" section-title="Homework Problems">
+    <h2>Homework Problems</h2>
+    <ol>
+      <li><strong>Recursive array sum:</strong> A function returns the sum of an array by adding the first element to the sum of the remaining \(n-1\) elements. Write and solve a recurrence for its running time.</li>
+      <li><strong>Five-way split:</strong> An algorithm creates five arrays of size \(n/3\), taking \(\Theta(n)\) time total, then recursively processes each one. Write and solve a recurrence.</li>
+      <li><strong>Repeated work:</strong> Explain how memoization changes the practical call structure of naive recursive Fibonacci.</li>
+      <li><strong>Algorithm comparison:</strong> Compare the growth rates of merge sort and stooge sort and explain which algorithm scales better.</li>
+    </ol>
   </section>
 </body>
 </html>

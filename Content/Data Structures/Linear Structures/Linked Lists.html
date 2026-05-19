@@ -10,6 +10,53 @@
   <script src="../../../scripts/chapterScripts.js"></script>
   <link rel="stylesheet" href="../../../css/style.css">
   <link rel="stylesheet" href="../../../css/chapter.css">
+  <style>
+    .ll-diagram {
+      max-width: 900px;
+      margin: 1.75rem auto;
+      padding: 1.25rem;
+      background: #f9fbff;
+      border: 1px solid #d9e5f6;
+      border-radius: 1rem;
+      box-shadow: 0 12px 30px rgba(15, 39, 74, 0.08);
+    }
+    .ll-svg {
+      width: 100%;
+      height: auto;
+      overflow: visible;
+    }
+    .ll-node {
+      fill: #ffffff;
+      stroke: #0a3974;
+      stroke-width: 2;
+      rx: 16;
+      ry: 16;
+      filter: drop-shadow(0 10px 20px rgba(15, 39, 74, 0.12));
+      transition: fill 0.3s ease, stroke 0.3s ease, opacity 0.3s ease;
+    }
+    .ll-node.highlight { fill: #fff3d9; stroke: #d9822b; }
+    .ll-node.deleted { fill: #f7d6d6; stroke: #b13636; opacity: 0.65; }
+    .ll-text { font: 700 16px "Segoe UI", sans-serif; fill: #0f264a; pointer-events: none; }
+    .ll-link { fill: none; stroke: #0a3974; stroke-width: 2; marker-end: url(#arrow); opacity: 0.8; transition: stroke 0.3s ease, opacity 0.3s ease; }
+    .ll-link.highlight { stroke: #d9822b; opacity: 1; }
+    .ll-controls { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1rem; }
+    .ll-button {
+      padding: 0.8rem 1.1rem;
+      border: none;
+      border-radius: 0.8rem;
+      background: #0a3974;
+      color: #ffffff;
+      font: 1rem "Segoe UI", sans-serif;
+      cursor: pointer;
+      box-shadow: 0 6px 12px rgba(10, 57, 116, 0.14);
+      transition: transform 0.2s ease, background 0.2s ease;
+    }
+    .ll-button:hover { background: #12509e; transform: translateY(-1px); }
+    .ll-button:focus { outline: 3px solid #ffbf47; outline-offset: 3px; }
+    .ll-status { margin-top: 1rem; font-size: 0.98rem; color: #1d315a; }
+    .example-box { background: #f8fbff; border: 1px solid #c7d7f4; padding: 1rem; border-radius: 0.9rem; }
+    .example-title { display: block; margin-bottom: 0.7rem; color: #0a3974; }
+  </style>
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
   <script>
@@ -25,55 +72,211 @@
   <section id="overview" section-title="Overview">
     <h2>Overview</h2>
     <p>
-      A <strong>linked list</strong> stores a sequence of values in separate node objects. Each node stores a value
-      and one or more links to other nodes. Instead of using an index to jump directly to a position, a linked list
-      is usually traversed by following links from the head.
-    </p>
-    <p>
-      Linked lists are useful when you often insert or remove nodes near known positions and do not need constant-time
-      random access. They also provide a clean way to teach pointer/reference manipulation.
-    </p>
-    <p>
-      The phrase <em>near known positions</em> is important. A linked list can insert after a node in constant time
-      once that node is already known, but finding the node may still require a traversal. Many incorrect analyses
-      accidentally count only the pointer update and ignore the search needed to reach the update location.
-    </p>
-  </section>
-
-  <section id="adt" section-title="Abstract Data Type and Operations">
-    <h2>Abstract Data Type and Operations</h2>
-    <p>
-      Abstractly, a linked list represents an ordered sequence. The implementation decides how nodes are linked.
+      A <strong>linked list</strong> stores a sequence of values in a chain of nodes. In a singly linked list, each
+      node contains two parts:
     </p>
     <ul>
-      <li><strong><code>front</code>:</strong> Return the first value.</li>
-      <li><strong><code>pushFront(value)</code>:</strong> Insert a value at the beginning.</li>
-      <li><strong><code>pushBack(value)</code>:</strong> Insert a value at the end.</li>
-      <li><strong><code>insertAfter(node, value)</code>:</strong> Insert a value after a known node.</li>
-      <li><strong><code>deleteAfter(node)</code>:</strong> Remove the node after a known node.</li>
-      <li><strong><code>search(value)</code>:</strong> Traverse until a matching value is found or the list ends.</li>
+      <li><strong>Value:</strong> the data stored in the node.</li>
+      <li><strong>Next:</strong> a reference or pointer to the following node in the list.</li>
     </ul>
+    <p>
+      The list is accessed through the <code>head</code> reference, which points to the first node. The last node in
+      the chain points to <code>null</code> (or an equivalent end marker), indicating the end of the list. 
+    </p>
+    <div class="ll-diagram" style="padding: 1rem 0.5rem; background: #ffffff; border-color: #ced9ea;">
+      <svg viewBox="65 20 700 60" class="ll-svg" aria-labelledby="overviewDiagramTitle overviewDiagramDesc" role="img">
+        <title id="overviewDiagramTitle">Linked list node diagram with head pointer</title>
+        <desc id="overviewDiagramDesc">A head pointer to a chain of nodes, each with value and next fields.</desc>
+        <defs>
+          <marker id="overview-arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#0a3974" />
+          </marker>
+        </defs>
+        <g>
+          <text x="70" y="55" class="ll-text" font-size="14" fill="#0a3974">head</text>
+          <path d="M 115 50 H 155" stroke="#0a3974" stroke-width="2" marker-end="url(#overview-arrow)" />
+          <g transform="translate(155, 25)">
+            <rect x="0" y="0" width="100" height="50" fill="#ffffff" stroke="#0a3974" stroke-width="2" rx="12" ry="12" />
+            <line x1="50" y1="0" x2="50" y2="50" stroke="#0a3974" stroke-width="2" />
+            <text x="25" y="30" text-anchor="middle" class="ll-text">value</text>
+            <text x="75" y="30" text-anchor="middle" class="ll-text">next</text>
+          </g>
+          <path d="M 255 50 H 295" stroke="#0a3974" stroke-width="2" marker-end="url(#overview-arrow)" />
+          <g transform="translate(295, 25)">
+            <rect x="0" y="0" width="100" height="50" fill="#ffffff" stroke="#0a3974" stroke-width="2" rx="12" ry="12" />
+            <line x1="50" y1="0" x2="50" y2="50" stroke="#0a3974" stroke-width="2" />
+            <text x="25" y="30" text-anchor="middle" class="ll-text">value</text>
+            <text x="75" y="30" text-anchor="middle" class="ll-text">next</text>
+          </g>
+          <path d="M 395 50 H 435" stroke="#0a3974" stroke-width="2" marker-end="url(#overview-arrow)" />
+          <g transform="translate(435, 25)">
+            <rect x="0" y="0" width="100" height="50" fill="#ffffff" stroke="#0a3974" stroke-width="2" rx="12" ry="12" />
+            <line x1="50" y1="0" x2="50" y2="50" stroke="#0a3974" stroke-width="2" />
+            <text x="25" y="30" text-anchor="middle" class="ll-text">value</text>
+            <text x="75" y="30" text-anchor="middle" class="ll-text">next</text>
+          </g>
+          <path d="M 535 50 H 575" stroke="#0a3974" stroke-width="2" marker-end="url(#overview-arrow)" />
+          <g transform="translate(575, 25)">
+            <rect x="0" y="0" width="100" height="50" fill="#ffffff" stroke="#0a3974" stroke-width="2" rx="12" ry="12" />
+            <line x1="50" y1="0" x2="50" y2="50" stroke="#0a3974" stroke-width="2" />
+            <text x="25" y="30" text-anchor="middle" class="ll-text">value</text>
+            <text x="75" y="30" text-anchor="middle" class="ll-text">next</text>
+          </g>
+          <path d="M 675 50 H 715" stroke="#0a3974" stroke-width="2" marker-end="url(#overview-arrow)" />
+          <text x="725" y="55" class="ll-text" font-size="14" fill="#0a3974">null</text>
+        </g>
+      </svg>
+    </div>
+    <p>
+      Some
+      implementations also keep a separate <code>tail</code> reference to the last node, which makes append and 
+      end-access operations faster by avoiding a full scan from the head.
+      This page focuses on singly linked lists, where each node points only to the next node. We will mention a 
+      few variations and extensions later, but the core ideas apply to all linked list types.
+    </p>
+    <p>
+      Unlike arrays, linked list nodes do not need to be adjacent in memory. The logical order comes entirely from the
+      links themselves, which avoids shifting elements but also means there is no direct formula for jumping to a
+      given position.
+    </p>
+    <p>
+      Linked lists are especially useful when you want clean, local insertions and deletions at or near the ends of
+      a chain of nodes, or when you already have a reference to the node before the change. They are less useful when
+      you need constant-time random access by position.
+    </p>
   </section>
 
-  <section id="conceptual-model" section-title="Conceptual Model">
-    <h2>Conceptual Model</h2>
+<section id="adt" section-title="ADT and Core Operations">
+  <h2>ADT and Core Operations</h2>
+
+  <p>
+    A linked list represents an ordered sequence of values. Unlike an array, the values are stored in separate
+    nodes connected by references. A singly linked list typically stores a reference to the first node, called
+    <code>head</code>. Some implementations also store a reference to the last node, called <code>tail</code>.
+  </p>
+
+  <p>
+    Common linked list operations include:
+  </p>
+
+  <ul>
+    <li>
+      <strong>Traversal:</strong>
+      Visit the nodes one at a time by following <code>next</code> references from the head.
+    </li>
+
+    <li>
+      <strong>Search:</strong>
+      Traverse the list until a node containing a desired value is found or the end of the list is reached.
+    </li>
+
+    <li>
+      <strong>Insert at the Front:</strong>
+      Add a new node before the current head node.
+    </li>
+
+    <li>
+      <strong>Insert at the End:</strong>
+      Add a new node after the current tail node. This is constant-time only if the implementation stores a
+      <code>tail</code> reference.
+    </li>
+
+    <li>
+      <strong>Insert After a Known Node:</strong>
+      Given a reference to a node already in the list, insert a new node immediately after it.
+    </li>
+
+    <li>
+      <strong>Delete the Front Node:</strong>
+      Remove the current head node and update the head reference.
+    </li>
+
+    <li>
+      <strong>Delete After a Known Node:</strong>
+      Remove the node immediately following a known node by bypassing it.
+    </li>
+  </ul>
+
+  <p>
+    The key distinction is between <em>finding</em> a position and <em>updating</em> a known position.
+    Once the relevant node is already known, many linked-list updates require changing only a few references.
+    However, finding that node may still require traversing much or all of the list.
+  </p>
+
+  <h3>Traversal</h3>
+
+  <p>
+    Traversal begins at <code>head</code> and repeatedly follows <code>next</code> references until reaching
+    <code>null</code>.
+  </p>
+
+  <pre><code>cur = head
+while cur != null:
+    visit cur.value
+    cur = cur.next</code></pre>
+
+  <p>
+    If the desired value is near the end of the list or absent entirely, traversal examines every node.
+  </p>
+
+  <h3>Insertion</h3>
+
+  <p>
+    Inserting a node requires changing references so that the new node becomes part of the chain.
+    For example, inserting after a known node typically involves:
+  </p>
+
+  <ol>
+    <li>Creating the new node.</li>
+    <li>Setting the new node's <code>next</code> reference.</li>
+    <li>Updating the previous node's <code>next</code> reference.</li>
+  </ol>
+
+  <p>
+    The order of these updates matters. If references are overwritten too early, part of the list may become
+    unreachable.
+  </p>
+
+  <h3>Deletion</h3>
+
+  <p>
+    Deletion removes a node from the chain by changing references so that the node is bypassed.
+    Deleting the head node changes the list's <code>head</code> reference directly, while deleting after a known
+    node changes the predecessor's <code>next</code> reference.
+  </p>
+
+  <p>
+    If deleting a node causes the list to become empty, both <code>head</code> and <code>tail</code> should
+    consistently represent the empty list.
+  </p>
+</section>
+
+  <section id="animated-operations" section-title="Animated Operations">
+    <h2>Animated Operations</h2>
     <p>
-      In a singly linked list, each node has a <code>next</code> reference. The list object usually stores a
-      reference to the <code>head</code> node, and sometimes also to the <code>tail</code> node.
+      The animation below demonstrates the same operations described above. Use the controls to trace traversal,
+      insert a node after <code>8</code>, or delete the node after <code>8</code>.
     </p>
-    <pre><code>head
- |
- v
-[14 | next] -> [8 | next] -> [31 | next] -> null</code></pre>
-    <p>
-      In a doubly linked list, each node also stores a <code>prev</code> reference. That extra link makes it easier
-      to move backward and to delete a known node, but it uses more memory and requires more pointer updates.
-    </p>
-    <p>
-      Unlike an array, the nodes do not need to be adjacent in memory. The logical order comes entirely from the links.
-      This flexibility avoids shifting elements, but it also means there is no formula like <code>base + i * w</code>
-      for jumping directly to index <code>i</code>.
-    </p>
+    <div class="ll-diagram">
+      <svg id="ll-svg" class="ll-svg" viewBox="0 0 860 240" aria-labelledby="llDiagramTitle llDiagramDesc" role="img">
+        <title id="llDiagramTitle">Animated linked list operation demonstration</title>
+        <desc id="llDiagramDesc">A set of linked list nodes connected by arrows with highlights for traversal, insertion, and deletion.</desc>
+        <defs>
+          <marker id="arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#0a3974" />
+          </marker>
+        </defs>
+        <g id="node-group"></g>
+        <g id="link-group"></g>
+      </svg>
+      <div class="ll-controls">
+        <button class="ll-button" id="traverse-btn">Traverse</button>
+        <button class="ll-button" id="insert-btn">Insert After 8</button>
+        <button class="ll-button" id="delete-btn">Delete After 8</button>
+        <button class="ll-button" id="reset-btn">Reset</button>
+      </div>
+      <div class="ll-status" id="ll-status">Current operation: Ready to animate.</div>
+    </div>
   </section>
 
   <section id="worked-example" section-title="Worked Example">
@@ -97,55 +300,6 @@
       then setting <code>8.next = x.next</code> bypasses <code>x</code>. In languages with garbage collection, the
       removed node is eventually reclaimed if nothing else references it. In languages with manual memory management,
       the removed node must also be freed appropriately.
-    </p>
-  </section>
-
-  <section id="core-operations" section-title="Core Operations">
-    <h2>Core Operations</h2>
-
-    <h3>Traversal and Search</h3>
-    <p>
-      Traversal starts at <code>head</code> and repeatedly follows <code>next</code>. Search is traversal with a
-      comparison at each node. If the desired value is near the end or absent, every node is inspected.
-    </p>
-    <p>
-      Traversal code usually uses a reference such as <code>cur</code>. At each step, <code>cur</code> points to the
-      current node, and <code>cur = cur.next</code> advances one node. The traversal stops when <code>cur</code> is
-      <code>null</code>. Forgetting that final null check is one of the most common sources of list bugs.
-    </p>
-
-    <h3>Insert at Head</h3>
-    <ol>
-      <li>Create a new node whose <code>next</code> points to the old head.</li>
-      <li>Update <code>head</code> to point to the new node.</li>
-      <li>If the list was empty, also update <code>tail</code>.</li>
-    </ol>
-    <p>
-      Inserting at the head is the simplest constant-time list update. It does not require traversal because the list
-      object already stores the head reference.
-    </p>
-
-    <h3>Insert After a Known Node</h3>
-    <ol>
-      <li>Create the new node.</li>
-      <li>Set its <code>next</code> reference to the known node's old <code>next</code>.</li>
-      <li>Set the known node's <code>next</code> reference to the new node.</li>
-    </ol>
-    <p>
-      If the known node was the tail, the new node becomes the tail. Implementations that store a tail reference must
-      remember to update it. Without a tail reference, appending at the end requires walking from the head to the last
-      node.
-    </p>
-
-    <h3>Delete After a Known Node</h3>
-    <p>
-      Deleting after a known node bypasses the removed node. The known node's <code>next</code> becomes the removed
-      node's <code>next</code>. The removed node is then unreachable from the list.
-    </p>
-    <p>
-      Deleting the head is a separate case because there is no predecessor node. The list's <code>head</code>
-      reference itself must change. If the list becomes empty, both <code>head</code> and <code>tail</code> should
-      represent an empty list consistently.
     </p>
   </section>
 
@@ -353,6 +507,76 @@ deleteFirst(value):
     </ul>
   </section>
 
+  <section id="doubly-linked-overview" section-title="Doubly Linked List Overview">
+    <h2>Doubly Linked List Overview</h2>
+    <p>
+      A doubly linked list stores both <code>next</code> and <code>prev</code> references in every node. This
+      allows traversal in either direction and makes deletion easier when the current node is already known.
+    </p>
+    <div class="ll-diagram" style="padding: 0.75rem 0.5rem; background: #ffffff; border-color: #ced9ea;">
+      <svg viewBox="0 10 800 90" class="ll-svg" aria-labelledby="doublyDiagramTitle doublyDiagramDesc" role="img">
+        <title id="doublyDiagramTitle">Doubly linked list node diagram</title>
+        <desc id="doublyDiagramDesc">Three doubly linked list nodes with forward and backward arrows plus head and tail pointers.</desc>
+        <defs>
+          <marker id="doubly-arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#0a3974" />
+          </marker>
+        </defs>
+        <g>
+          <text x="165" y="23" class="ll-text" font-size="14" fill="#0a3974">head</text>
+          <path d="M 185 25 V 45" stroke="#0a3974" stroke-width="2" marker-end="url(#doubly-arrow)" />
+          <g transform="translate(95, 45)">
+            <rect x="0" y="0" width="180" height="50" fill="#ffffff" stroke="#0a3974" stroke-width="2" rx="12" ry="12" />
+            <line x1="60" y1="0" x2="60" y2="50" stroke="#0a3974" stroke-width="2" />
+            <line x1="120" y1="0" x2="120" y2="50" stroke="#0a3974" stroke-width="2" />
+            <text x="30" y="32" text-anchor="middle" class="ll-text">prev</text>
+            <text x="90" y="32" text-anchor="middle" class="ll-text">value</text>
+            <text x="150" y="32" text-anchor="middle" class="ll-text">next</text>
+          </g>
+          <path d="M 95 70 H 45" stroke="#0a3974" stroke-width="2" marker-end="url(#doubly-arrow)" />
+          <text x="35" y="75" class="ll-text" font-size="14" fill="#0a3974" text-anchor="end">null</text>
+          <path d="M 275 60 H 305" stroke="#0a3974" stroke-width="2" marker-end="url(#doubly-arrow)" />
+          <path d="M 305 80 H 275" stroke="#0a3974" stroke-width="2" marker-end="url(#doubly-arrow)" />
+          <g transform="translate(305, 45)">
+            <rect x="0" y="0" width="180" height="50" fill="#ffffff" stroke="#0a3974" stroke-width="2" rx="12" ry="12" />
+            <line x1="60" y1="0" x2="60" y2="50" stroke="#0a3974" stroke-width="2" />
+            <line x1="120" y1="0" x2="120" y2="50" stroke="#0a3974" stroke-width="2" />
+            <text x="30" y="32" text-anchor="middle" class="ll-text">prev</text>
+            <text x="90" y="32" text-anchor="middle" class="ll-text">value</text>
+            <text x="150" y="32" text-anchor="middle" class="ll-text">next</text>
+          </g>
+          <path d="M 485 60 H 515" stroke="#0a3974" stroke-width="2" marker-end="url(#doubly-arrow)" />
+          <path d="M 515 80 H 485" stroke="#0a3974" stroke-width="2" marker-end="url(#doubly-arrow)" />
+          <g transform="translate(515, 45)">
+            <rect x="0" y="0" width="180" height="50" fill="#ffffff" stroke="#0a3974" stroke-width="2" rx="12" ry="12" />
+            <line x1="60" y1="0" x2="60" y2="50" stroke="#0a3974" stroke-width="2" />
+            <line x1="120" y1="0" x2="120" y2="50" stroke="#0a3974" stroke-width="2" />
+            <text x="30" y="32" text-anchor="middle" class="ll-text">prev</text>
+            <text x="90" y="32" text-anchor="middle" class="ll-text">value</text>
+            <text x="150" y="32" text-anchor="middle" class="ll-text">next</text>
+          </g>
+          <path d="M 695 70 H 755" stroke="#0a3974" stroke-width="2" marker-end="url(#doubly-arrow)" />
+          <text x="765" y="75" class="ll-text" font-size="14" fill="#0a3974" text-anchor="start">null</text>
+          <text x="590" y="23" class="ll-text" font-size="14" fill="#0a3974">tail</text>
+          <path d="M 605 25 V 45" stroke="#0a3974" stroke-width="2" marker-end="url(#doubly-arrow)" />
+        </g>
+      </svg>
+    </div>
+    <p>
+      The main difference from a singly linked list is that each node also keeps a backward reference.
+      This lets the list move from tail to head as easily as it moves from head to tail.
+    </p>
+    <ul>
+      <li><strong>Forward and backward traversal:</strong> <code>next</code> and <code>prev</code> make bidirectional iteration easy.</li>
+      <li><strong>Faster deletion of known nodes:</strong> Removing a node does not require finding its predecessor.</li>
+      <li><strong>Extra pointer overhead:</strong> Each node stores one additional reference, which increases space cost.</li>
+    </ul>
+    <p>
+      Other common variations include circular lists, sentinel-node lists, unrolled lists, skip lists, and intrusive
+      lists. These variations trade off boundary-case complexity, pointer overhead, and locality for different workloads.
+    </p>
+  </section>
+
   <section id="pitfalls" section-title="Common Pitfalls">
     <h2>Common Pitfalls</h2>
     <ul>
@@ -445,5 +669,117 @@ deleteFirst(value):
       <li><strong>Doubly Linked Deque:</strong> Implement a deque using a doubly linked list with sentinel nodes and analyze each operation.</li>
     </ol>
   </section>
+  <script>
+    (function () {
+      const initialNodes = [
+        { id: 'n1', value: '14' },
+        { id: 'n2', value: '8' },
+        { id: 'n3', value: '31' },
+        { id: 'n4', value: '5' },
+      ];
+      let currentNodes = [...initialNodes];
+      let animationState = { inserted: false, deleted: false };
+      const nodeGroup = document.getElementById('node-group');
+      const linkGroup = document.getElementById('link-group');
+      const status = document.getElementById('ll-status');
+      const traverseBtn = document.getElementById('traverse-btn');
+      const insertBtn = document.getElementById('insert-btn');
+      const deleteBtn = document.getElementById('delete-btn');
+      const resetBtn = document.getElementById('reset-btn');
+      const spacing = 180;
+      const nodeWidth = 110;
+      const nodeHeight = 70;
+      const baselineY = 90;
+
+      function render(nodes, highlighted = [], deleted = []) {
+        nodeGroup.innerHTML = '';
+        linkGroup.innerHTML = '';
+        nodes.forEach((node, index) => {
+          const x = 30 + index * spacing;
+          const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+          rect.setAttribute('x', x);
+          rect.setAttribute('y', baselineY);
+          rect.setAttribute('width', nodeWidth);
+          rect.setAttribute('height', nodeHeight);
+          rect.setAttribute('class', 'll-node' + (highlighted.includes(node.id) ? ' highlight' : '') + (deleted.includes(node.id) ? ' deleted' : ''));
+          nodeGroup.appendChild(rect);
+
+          const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          text.setAttribute('x', x + nodeWidth / 2);
+          text.setAttribute('y', baselineY + nodeHeight / 2 + 6);
+          text.setAttribute('text-anchor', 'middle');
+          text.setAttribute('class', 'll-text');
+          text.textContent = node.value;
+          nodeGroup.appendChild(text);
+
+          if (index < nodes.length - 1) {
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('d', `M ${x + nodeWidth} ${baselineY + nodeHeight / 2} H ${x + spacing - 20}`);
+            path.setAttribute('class', 'll-link' + (highlighted.includes(node.id) ? ' highlight' : ''));
+            linkGroup.appendChild(path);
+          }
+        });
+      }
+
+      function setStatus(message) {
+        status.textContent = message;
+      }
+
+      function reset() {
+        currentNodes = [...initialNodes];
+        animationState = { inserted: false, deleted: false };
+        render(currentNodes);
+        setStatus('Current operation: Ready to animate.');
+      }
+
+      function animateTraversal() {
+        const order = currentNodes.map(node => node.id);
+        let index = 0;
+        setStatus('Traversing from head to tail...');
+        const interval = setInterval(() => {
+          render(currentNodes, [order[index]]);
+          index += 1;
+          if (index === order.length) {
+            clearInterval(interval);
+            setStatus('Traversal complete. The highlight shows the last visited node.');
+          }
+        }, 700);
+      }
+
+      function animateInsertion() {
+        if (animationState.inserted) {
+          setStatus('Insertion already applied. Reset to replay.');
+          return;
+        }
+        setStatus('Inserting 99 after the node containing 8...');
+        currentNodes = [
+          initialNodes[0],
+          initialNodes[1],
+          { id: 'n5', value: '99' },
+          initialNodes[2],
+          initialNodes[3],
+        ];
+        render(currentNodes, ['n2', 'n5']);
+        animationState.inserted = true;
+      }
+
+      function animateDeletion() {
+        if (animationState.deleted) {
+          setStatus('Deletion already applied. Reset to replay.');
+          return;
+        }
+        setStatus('Deleting the node after 8 and bypassing it...');
+        currentNodes = [initialNodes[0], initialNodes[1], initialNodes[3]];
+        render(currentNodes, ['n2'], ['n3']);
+        animationState.deleted = true;
+      }
+
+      traverseBtn.addEventListener('click', animateTraversal);
+      insertBtn.addEventListener('click', animateInsertion);
+      deleteBtn.addEventListener('click', animateDeletion);
+      resetBtn.addEventListener('click', reset);
+      reset();
+    })();
+  </script>
 </body>
 </html>

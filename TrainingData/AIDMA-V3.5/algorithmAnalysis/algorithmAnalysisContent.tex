@@ -1,0 +1,4625 @@
+% The next line makes it so it compiles the main file if I hit the compile button
+% when editing this file in TeXworks.
+% !TEX root = ../AIDMA.tex
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Algorithm Analysis}\label{ch:AlgAn}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%This chapter is all my stuff.  CAC, 8/6/13
+%Some converted from lecture slides, other stuff from handouts,
+% and some stuff that is new.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+In this chapter we take a look at the analysis of algorithms.
+The analysis of algorithms is a very important topic in computer science.  
+It allows us to determine and express how efficient an algorithm is, 
+and it is one of the tools that allows us to compare multiple algorithms
+that solve the same problem.
+
+Before we dive into that topic, we first discuss 
+one of the most important tools used in algorithm analysis---{\em asymptotic notation}. 
+We will define several important notations,
+discuss some of the useful properties of the notations, and
+provide many examples of two common ways of proving things related to the notations.  
+We will then discuss the relative growth rates of several common functions,
+focusing on those that are relevant to the topic of algorithm analysis.
+We then move on to the most important topic of the chapter in which we 
+apply all of this material to the analysis of algorithms, providing
+numerous examples of determining the computational complexity of various algorithms.
+Finally, we discuss some of the most common time complexities that 
+occur in the study of algorithms.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Asymptotic Notation}\label{sec:asymptotic}
+{\em Asymptotic notation}\index{asymptotic notation}
+ is used to express and compare the growth rate of functions.
+In our case, the functions will typically represent the running time of algorithms.
+We will define the asymptotic notations in terms of nonnegative functions.
+You will find more general definitions of these notations in other books,
+but they are more complicated, more difficult to understand, and harder to work with.  
+These added difficulties are a result of the possibility of the functions involved
+being negative.
+But the main reason for our use of the notations is to express the running time 
+of algorithms.  Since the running time of an algorithm is always nonnegative, 
+there is really no good reason to use the more cumbersome definitions.
+We will focus on the notations most commonly used in the analysis of algorithms.
+
+Asymptotic notation allows us to express the behavior of a function as the input
+approaches infinity.  In other words, it is concerned about what happens to $f(n)$
+as $n$ gets larger, and is not concerned about the value of $f(n)$ for small values of $n$.
+
+
+We will define four of the most commonly used notations (an allude to the definition
+of a fifth), providing a few brief examples of each.  We will then discuss some of
+the most important and useful properties of these notations.  Finally, we will
+present many more detailed examples.  
+
+\subsection{The Notations}
+We begin with the most commonly used of the notations: {\em Big-O ($O$)}. We will define it and give several examples
+of its use. We will then present {\em Big-Omega ($\Omega$)}, {\em Big-Theta ($\Theta$)}, and {\rm little-o ($\omega$)} notations,
+providing definitions and examples, and discussing how the notations relate to each other.
+
+\newpage % Awkward break in the middle of the definition if I don't do this.
+
+\begin{df}[Big-O]\index{Big-O}\index{a asymptotic@$O(f(n))$ (Big-O)}
+Let $f$ be a nonnegative function. 
+
+\medskip
+\noindent
+\begin{minipage}{.4\textwidth}
+We say that $f(n)$ is {\bf Big-O} of $g(n)$, written as 
+$f(n) = O(g(n))$,
+iff there are positive constants $c$ and $n_{0}$ such that
+$$f(n)\leq c\,g(n)\mbox{ for all }n \ge n_{0}.$$
+If $f(n)=O(g(n))$, $f(n)$ grows no faster than $g(n)$. 
+In other words, $g(n)$ is an {\bf asymptotic upper bound} (or just {\bf upper bound})
+on $f(n)$.
+\end{minipage}
+\hfill
+\begin{minipage}{.55\textwidth}
+\sputfig{fig/c3-29.eps}{.55}
+\end{minipage}
+\end{df}
+
+\begin{rem}
+The ``='' in the statement ``$f(n)=O(g(n))$'' should be read and thought of as ``is'', not ``equals.''
+You can think of it as a one-way equals.  So saying $f(n)=O(g(n))$ is {\em not}
+the same thing as saying $O(g(n))=f(n)$, for instance 
+(with the latter statement not really making sense).
+
+An alternative notation is to write $f(n)\in O(g(n))$  instead of $f(n)=O(g(n))$. 
+It turns out that $O(g(n))$ is actually the set of all functions that grow no 
+faster than $g(n)$,
+so the set notation is actually in some sense more correct.
+The ``='' notation is used because it comes in handy when doing algebra.
+You can essentially think of these as being two different notations ($=$ and $\in$) 
+for the same thing.
+Similar statements are true for the other asymptotic notations.
+\end{rem}
+
+\begin{exa}
+Prove that $n^2+n=O(n^3)$.
+\begin{sol}
+Here, we have $f(n) = n^2+n$, and $g(n) = n^{3}$.
+Notice that if $n\geq 1$, $n\leq n^3$ and $n^2\leq n^3$.
+Therefore, 
+$$n^2+n\leq n^3+n^3=2 n^3$$
+Thus, 
+$$n^2+n\leq 2 n^3 \mbox{ for all } n\geq 1.$$
+Thus, we have shown that $n^2+n=O(n^3)$ by definition of Big-O, with $n_0=1$, and $c=2$.
+\end{sol}
+\end{exa}
+
+The following fact is a generalization of what was used in the previous example.
+It is used often in proofs involving asymptotic notation.
+\begin{thm}
+If $a$ and $b$ are real numbers with $a\leq b$, 
+then $n^a\leq n^b$ whenever $n\geq 1$. 
+\begin{pf}
+We will not provide a proof, but it should be fairly clear intuitively that this is true.
+If you cannot see why this is true, 
+you should work out a few examples to convince yourself.
+\end{pf}
+\end{thm}
+
+Sometimes the easiest way to prove that $f(n)=O(g(n))$ is to
+take $c$ to be the sum of the {\em positive} coefficients of $f(n)$, 
+although this trick doesn't always work.
+We can usually easily eliminate the lower order terms with negative coefficients if we make 
+the appropriate assumption.  Let's see how to do this in the next few examples.
+
+\begin{exa}\label{exa:firstbigO}
+Prove that $3n^{3}- 2n^2 + 13 n -15=O(n^3)$.
+\begin{sol} 
+First, notice that if $n\geq 0$, then $-2n^2-15\leq 0$, so 
+$$3n^{3}- 2n^2 + 13 n -15\leq 3n^{3}+13n.$$
+Next, if $n\geq 1$, then $13n\leq 13n^3$. 
+Therefore if $n\geq 1$, $$3n^{3}+13n\leq 3n^3+13n^3=16n^3.$$
+Also notice that if $n\geq 1$, then $n\geq 0$.
+Thus, our first step is still valid if we assume $n\geq 1$ since $n\geq 1$
+is a stronger condition than $n\geq 0$.  
+Putting this all together, if we assume $n\geq 1$, then
+\begin{eqnarray*}
+3n^{3}- 2n^2 + 13 n -15 &\leq&3n^{3} +13 n \\
+&\leq&3n^{3}+ 13 n^3 \\
+&=&16n^3.
+\end{eqnarray*} 
+Since we have shown that $3n^{3}- 2n^2 + 13 n -15\leq 16n^3$ for all $n\geq 1$,
+we have proven that $3n^{3}- 2n^2 + 13 n -15=O(n^3)$.  
+
+We used $n_0=1$ and $c=16$ in our proof.  It is not necessary to explicitly point
+this out in our proof, though.  We only do so to help you see the connection between
+the proof and the definition of Big-O.
+\end{sol}
+\end{exa}
+
+
+\begin{exa}\label{exa:bigoone}
+Prove that $5n^{2}- 3n +20=O(n^2)$.
+\begin{sol} 
+If $n\geq 1$,
+\begin{eqnarray}
+\label{bigoone:step1}5n^{2} - 3n + 20 &\leq& 5n^{2} + 20 \\ 
+\label{bigoone:step2}&\leq&5n^2+20n^2\\ 
+&=&25n^2.
+\end{eqnarray}
+Since $5n^{2} - 3n + 20 \leq 25n^2$ for all $n\geq 1$,
+$5n^{2} - 3n +20=O(n^2)$.
+
+In this proof we used $c=25$ and $n_0=1$.
+\end{sol}
+\end{exa}
+
+\begin{ques}
+Answer the following questions related to Example~\ref{exa:bigoone}.
+\begin{lenum}
+\item
+What allowed us to eliminate the $-3n$ term in step~\ref{bigoone:step1}?
+\blanklinetwo
+\item
+What is the justification for step~\ref{bigoone:step2}?
+\blanklinefill
+\end{lenum}
+\begin{answer}
+(a) Since we assumed that $n\geq 1$, $-3n$ is certainly negative.  In other words,
+$-3n\leq 0$.  That's why in the first step we could say that $5n^2-3n+20\leq 5n^2+20$.
+(b) We used the fact that $20\leq 20n^2$ whenever $n\geq 1$.
+If either of these solutions is not clear to you, 
+you need to brush up on your algebra.
+\end{answer}
+\end{ques}
+
+
+\begin{eval}
+Prove that $4n^{2}- 12n +10=O(n^2)$.
+\begin{ssol}
+If $n\geq 1$, $4 n^{2} - 12n + 10 \leq 
+4 n^{2} - 12n^2 + 10n^2 =2n^2.$
+Therefore,  $4n^{2} - 12n +10=O(n^2)$.
+\end{ssol}
+\evallinetwo
+\begin{answer}
+This is incorrect.  
+It is {\em not true} that $-12n\leq -12n^2$ when $n\geq 1$.
+(If this isn't clear to you after thinking about it for a few minutes, you may need to
+do some algebra review.)
+In fact, that error led to the statement
+$4 n^{2} - 12n + 10\leq 2n^2$ which cannot possibly be true as $n$ gets larger
+since it would require that $2n^2-12n+10\leq 0$.
+This is not true as $n$ gets larger.  
+In fact, when $n=10$, for instance, it is clearly not true.
+But it {\em is true} that $-12n<0$ when $n\geq 0$, so instead of replacing it
+with $-12n^2$, it should be replaced with $0$ as in previous examples.
+\end{answer}
+\end{eval}
+
+\begin{rem}
+The values of the constants used in the proofs do not need to be the best possible. 
+For instance, if you can show that $f(n)\leq 345\, g(n)$ for all $n\geq 712$, then $f(n)=O(g(n))$.
+It doesn't matter whether or not it is actually true that 
+$f(n)\leq 3\, g(n)$ for all $n\geq 5$.
+\end{rem}
+
+\begin{ques}
+Answer each of the following questions related to Example~\ref{exa:bigoone}.  
+Include a brief justification.
+\begin{lenum}
+\item
+Could we have used $c=50$ in the proof?
+
+\noindent
+\answerlinetwo
+\item
+Could we have used $c=2$ in the proof?
+
+\noindent
+\answerlinetwo
+\item
+Could we have used $n_0=100$ in the proof?
+
+\noindent
+\answerlinetwo
+\item
+Could we have used $n_0=0$ in the proof?
+
+\noindent
+\answerlinetwo
+\end{lenum}
+\begin{answer}
+(a) Sure.  Add the final step of $25n^2\leq 50n^2$ to the algebra in the proof.
+In fact, any number above $25$ can easily be used.
+Some values under 25 can also be used, but they would require a modification
+of the algebra used in the proof.  
+The bottom line is that there is generally no `right' value to
+use for $c$.  If you find a value that works, then it's fine.
+(b)  Clearly not.  For this to work, we would need
+$5n^2-3n+20<2n^2$ to hold as $n$ increases towards $\infty$.
+But this would imply that $3n^2-3n+20<0$.
+But when $n\geq 1$, $3n^2$ is positive and larger than $3n$, so 
+$3n^2-3n+20>0$.
+(c) Sure.  The proof used the fact that the inequality is true when $n\geq 1$,
+so it is clearly also true if $n\geq 100$.  And the definition of Big-O does
+not require that we use the smallest possible value for $n_0$.
+(d) No.  We would need a constant $c$ such that $5\cdot 0^2-3\cdot 0 + 20 = 20\leq 0= c\cdot 0^2$,
+which is clearly impossible.
+\end{answer}
+\end{ques}
+
+\newpage % another awkward one
+
+\begin{exer}\label{exer:firstbigoh}
+Prove that $5n^{5} -4n^4 + 3n^3 - 2n^2 +n=O(n^5)$.
+(Hint: Use the same techniques you saw in Example~\ref{exa:bigoone}.)
+
+\vspace*{3in}
+\begin{answer}
+If $n\geq 1$,
+\begin{eqnarray*} 
+5n^{5} -4n^4 + 3n^3 - 2n^2 +n
+&\leq&5n^{5} + 3n^3 +n\\
+&\leq&5n^{5} + 3n^5 +n^5\\
+&=&9n^5.
+\end{eqnarray*}
+Therefore, $5n^{5} -4n^4 + 3n^3 - 2n^2 +n=O(n^5)$.
+\end{answer}
+\end{exer}
+
+\begin{ques}
+What values did you use for $n_0$ and $c$ in your solution to 
+Exercise~\ref{exer:firstbigoh}?
+
+\noindent
+$n_0=\blankline{.75},\, \, \,  c=\blankline{.75}$
+\begin{answer}
+We used $n_0=1$ and $c=9$. 
+Your values for $n_0$ and $c$ may differ.  
+This is O.K. if you have the correct algebra to back it up.
+\end{answer}
+\end{ques}
+
+
+Things are not always so easy.  How would you show that 
+$(\sqrt{2})^{\log n}+\log^2 n + n^4=O(2^n)$?
+Or that $n^2=O(n^2-13n+23)$?
+In general, we simply (or in some cases with much effort) 
+find values $c$ and $n_0$ that work. 
+This gets easier with practice.
+
+Big-O is a notation to express the idea that one function is an upper bound for 
+another function.  The next notation allows us to express the opposite idea---that one
+function is a {\em lower bound} for another function.
+
+\begin{df}[Big-Omega]\index{Big-Omega}\index{a asymptotic@$\Omega(f(n))$ (Big-Omega)}
+Let $f$ and $g$ be nonnegative functions.
+
+\medskip
+\noindent
+\begin{minipage}{.4\textwidth}
+We say that $f(n)$ is {\bf Big-Omega} of $g(n)$, written as 
+$f(n) = \Omega(g(n))$,
+iff there are positive constants $c$ and $n_{0}$ such that
+$$c\,g(n) \leq f(n) \mbox{ for all } n \geq n_0.$$
+When we say $f(n)=\Omega(g(n))$, it means that 
+ $f(n)$ grows no slower than $g(n)$. In other words,
+$g(n)$ is an {\bf asymptotic lower bound} (or just {\bf lower bound}) 
+on $f(n)$.
+\end{minipage}
+\hfill
+\begin{minipage}{.55\textwidth}
+\sputfig{fig/c3-30.eps}{.55}
+\end{minipage}
+\end{df}
+
+
+\begin{exa} 
+Prove that $n^3+4\,n^2=\Omega(n^2)$.
+\begin{pf}
+Here, we have $f(n) = n^3+4\,n^2$, and $g(n) = n^2$.
+It is not too hard to see that if $n\geq 1$, 
+$$n^2\leq n^3\leq n^3+4\,n^2$$
+Therefore, 
+$$1\,n^2\leq n^3+4\,n^2 \mbox{ for all } n\geq 1$$
+so $n^3+4\,n^2=\Omega(n^2)$ by definition of $\Omega$, with $n_0=1$, and $c=1$.
+\end{pf}
+\end{exa}
+
+
+\begin{exer}\label{exer:omegaone}
+Prove that $4n^2+n+1=\Omega(n^2)$. 
+(This one should be really easy---follow the technique from the previous example and
+don't over think it.)
+
+\vspace*{1.3in}
+\begin{answer}
+Since $4n^2\leq 4n^2+n+1$ for $n\geq 0$, $4n^2=\Omega(n^2)$.
+\end{answer}
+\end{exer}
+
+\begin{ques}
+What values did you use for $n_0$ and $c$ in your solution to 
+Exercise~\ref{exer:omegaone}?
+
+\noindent
+$n_0=\blankline{.75},\, \, \,  c=\blankline{.75}$
+\begin{answer}
+We used $c=4$ and $n_0=0$.  You might have used $n_0=1$ or some other positive value.
+As long as you chose a positive value for $n_0$, it works just fine.  You could have also 
+used any value for $c$ larger than $0$ and at most $4$.
+\end{answer}
+\end{ques}
+
+Proving that $f(n)=\Omega(g(n))$ often requires more thought than proving that $f(n)=O(g(n))$.
+Although the lower-order terms with positive coefficients can be easily dealt with,
+those with negative coefficients make things a bit more complicated.
+Often, we have to pick $c<1$.  
+A good strategy is to pick a value of $c$ that you think will
+work, and determine which value of $n_0$ is needed.
+Being able to do some algebra helps.
+As it turns out, we won't have to worry a whole lot about this, though.  We will
+see a different technique to prove bounds shortly that, when it works, 
+makes things much easier.
+
+Our third notation allows us to express the idea that two functions grow at the 
+same rate.
+
+\begin{df}[Big-Theta]\index{Big-Theta}\index{a asymptotic@$\Theta(f(n))$ (Big-Theta)}
+Let $f$ and $g$ be nonnegative functions.
+
+\medskip
+\noindent
+\begin{minipage}{.45\textwidth}
+We say that $f(n)$ is {\bf Big-Theta} of $g(n)$, written as 
+$f(n) = \Theta(g(n))$,
+iff there are positive constants $c_1$, $c_2$ and $n_{0}$ such that
+$$c_1\,g(n)\leq f(n)\leq c_2\,g(n)\mbox{ for all }n \ge n_{0}.$$
+If $f(n)=\Theta(g(n))$,
+ $f(n)$ grows at the same rate as $g(n)$. In other words,
+$g(n)$ is an {\bf asymptotically tight bound} (or just {\bf tight bound}) on $f(n)$.
+\end{minipage}
+\hfill
+\begin{minipage}{.5\textwidth}
+\sputfig{fig/c3-31.eps}{.45}
+\end{minipage}
+\end{df}
+
+\begin{exa}
+Prove that $n^2+5n+7=\Theta(n^2)$
+\begin{pf}
+When $n\geq 1$, $n^2+5\,n+7\leq n^2+5\,n^2+7n^2\leq 13n^2.$
+
+\noindent
+When $n\geq 0$,  $n^2\leq n^2+5\,n+7$.
+
+\noindent
+Combining these, we can see that when $n\geq 1$, 
+$$n^2\leq n^2+5\,n+7\leq 13\,n^2,$$
+so $n^2{+}5\,n{+}7=\Theta(n^2)$ by definition of $\Theta$, 
+with $n_0{=}1$, $c_1{=}1$, and $c_2{=}13$.
+\end{pf}
+\end{exa}
+
+\begin{ques}
+In the previous example, we combined two inequalities.  One of them assumed $n\geq 0$, the other
+assumed that $n\geq 1$.  In the combined inequality, we said it held if $n\geq 1$.  
+Is that really O.K., or did we make a subtle error?
+
+\noindent
+\answerlinetwo
+\begin{answer}
+It is O.K.  Since the second inequality holds when $n\geq 0$, it also holds when $n\geq 1$.
+
+In general, when you want to combine inequalities that contain two different assumptions, 
+you simply make the more restrictive assumption.  In this case, $n\geq 1$ is more restrictive
+than $n\geq 0$.  In general, if you have assumptions $n\geq a$ and $n\geq b$, then to combine
+the results with these assumptions, you assume $n\geq max(a,b)$.
+\end{answer}
+\end{ques}
+
+
+Using the definition of $\Theta$ can be inconvenient since it involves a double inequality.  Luckily, the
+following theorem provides us with an easier approach. 
+
+\begin{thm}\label{thm:theta}
+If $f$ and $g$ are nonnegative functions, then $f(n) = \Theta(g(n))$ if and only if $f(n) = O(g(n))$ and $f(n) = \Omega(g(n))$.
+\begin{pf}
+The result follows almost immediately from the definitions.  We leave the details to the reader.
+\end{pf}
+\end{thm}
+
+This theorem implies that no new strategies are necessary for $\Theta$ proofs 
+since they can be split into two proofs---a Big-O proof and a $\Omega$ proof.
+Let's see an example of this approach.
+
+\begin{exa}\label{exa:secondtheta}
+Show that $\frac{1}{2} n^{2} + 3\,n=\Theta(n^{2})$
+\begin{pf}
+Notice that if $n\geq 1$, 
+$$\frac{1}{2} n^{2}+3\,n\leq \frac{1}{2}n^{2}+3\,n^{2}=\frac{7}{ 2}n^2,$$
+so  ${\displaystyle \frac{1}{2}n^2 +3\,n=O(n^2)}$.
+Also, when $n\geq 0$, 
+$$ \frac{1}{2}n^2 \leq \frac{1}{2}n^2 +3n,$$
+so ${\displaystyle \frac{1}{2}n^2 +3\,n=\Omega(n^2)}$.
+Since 
+$\frac{1}{2}n^2 +3\,n=O(n^2)$ and
+$\frac{1}{2}n^2 +3\,n=\Omega(n^2)$, then by Theorem~\ref{thm:theta},
+${\displaystyle \frac{1}{2}n^2 +3\,n=\Theta(n^2)}$
+\end{pf}
+\end{exa}
+
+How do you use asymptotic notation to express that $f(n)$ grows slower than $g(n)$?
+Saying $f(n)=O(g(n))$ doesn't work, because that only tells us that $f(n)$ grows 
+{\em no faster than} $g(n)$.  
+It might grow slower, but it also might grow at the same rate.
+With the notation we have, the best way to express this idea is to say 
+that $f(n)=O(g(n))$ and $f(n)\neq \Theta(g(n))$.  
+But that is awkward.  Let's learn a new notation for this instead.
+For technical reasons that we won't get into, this notation has to be defined
+somewhat differently than the others.
+
+\begin{df}\index{little-O}\index{a asymptotic@$o(f(n))$ (little-o)}
+Let $f$ and $g$ be nonnegative functions, with $g$ being eventually non-zero.
+We say that $f(n)$ is {\bf little-o} of $g(n)$, written $f(n)=o(g(n))$ iff
+$$\lim_{n\rightarrow \infty}\dfrac{f(n)}{g(n)}=0.$$ 
+If $f(n)=o(g(n))$, $f(n)$ grows {\bf asymptotically slower} than $g(n)$. 
+\end{df}
+
+\vspace*{-.1in}
+
+\begin{exa}
+You should be able to convince yourself that $3n+2=o(n^2)$, but $3n+2\neq o(n)$.
+Similarly, $n^2+n + 4=o(n^3)$ and $n^2+n + 4=o(n^4)$, but 
+$n^2+n + 4\neq o(n^2)$ and $n^2+n + 4\neq o(n)$.
+
+If you are not comfortable with limits you can still convince yourself of these
+statements by thinking of the informal definition.  
+For instance, $n^2+n + 4$ grows slower than $n^3$ so $n^2+n + 4=o(n^3)$.
+On the other hand, $n^2+n + 4$ grows at the same rate (so {\em not} slower than)
+$n^2$, so $n^2+n + 4\neq o(n^2)$.
+\end{exa}
+
+\vspace*{-.1in}
+
+\begin{ques}
+Why do we require that $g(n)$ be eventually non-zero in the definition of little-o?
+
+\noindent
+\answerline
+\begin{answer}
+$g(n)$ appears in the denominator of a fraction.  If at some point it does not become 
+(and remain) non-zero, the limit in the definition will be undefined.
+If you never took a calculus course and are not that familiar with limits, 
+do not worry a whole lot about this subtle point.
+\end{answer}
+\end{ques}
+
+Little-omega ($\omega$) can be defined similarly to little-o, 
+but the value of the limit is $\infty$ instead of $0$.
+\index{little-omega}\index{little-omega}\index{a asymptotic@$\omega(f(n))$ (little-omega)}
+We won't use $\omega$ very often.
+
+\begin{ques}
+Big-O notation is analogous to $\leq$ in certain ways. 
+If so, what would be the similar analogies for $o$ and $\omega$?
+
+\noindent
+\answerline
+\begin{answer}
+$o$ is like $<$ and $\omega$ is like $>$.
+\end{answer}
+\end{ques}
+
+\begin{rem}
+\begin{itemize}
+\item
+It is important to remember that a $O$-bound is only an {\bf upper bound},
+and that it may or may not be a tight bound.
+So if $f(n)=O(n^{2})$, it is possible that $f(n)=3n^2+4$, $f(n)=\log n$, or
+any other function that grows no faster than $n^2$.  But we also know that 
+$f(n)\neq n^3$ or any other function that grows faster than $n^2$.
+\item
+Conversely, a $\Omega$-bound is only a {\bf lower bound}.  
+Thus, if $f(n)=\Omega(n\log n)$, it might be the case that 
+$f(n)=2^n$, but we know that $f(n)\neq 3n$, for instance.
+\item
+Unlike the others, $\Theta$-bounds are precise.  So, if
+$f(n)=\Theta(n^2)$, then we know that $f$ has quadratic growth rate.
+It might be that $f(n)=3n^2$,  $2n^2-43\,n-4$, or even $n^2+n\log n$.
+But we are certain that the fastest growing term of $f$ is $c\, n^2$ for some constant $c$.
+\end{itemize}
+\end{rem}
+
+\begin{ques}
+Answer the following questions about the asymptotic notations.
+\begin{lenum}
+\item
+If $f(n)=\Theta(g(n))$, is it possible that $f(n)=o(g(n))$?  Explain.
+
+\noindent
+\blanklinetwo
+\item
+If $f(n)=O(g(n))$, is it possible that $f(n)=o(g(n))$?  Explain.
+
+\noindent
+\blanklinetwo
+\item
+If $f(n)=O(g(n))$, is it {\em certain} that $f(n)=o(g(n))$?  Explain.
+
+\noindent
+\blanklinetwo
+\item
+If $f(n)=o(g(n))$, is it possible that $f(n)=O(g(n))$?  Explain.
+
+\noindent
+\blanklinetwo
+%\item
+%If $f(n)=\Omega(g(n))$, is it {\em certain} that $f(n)=\Theta(g(n))$?  Explain.\\
+%\blanklinetwo
+\end{lenum}
+\begin{answer}
+(a) No.  If $f(n)=\Theta(g(n))$, $f$ and $g$ grow at the same rate.  But 
+$f(n)=o(g(n))$ expresses the idea that $f$ grows slower than $g$.
+It is impossible for $f$ to grow at the same rate as $g$ and slower than $g$.
+(b) Yes!  If $f$ grows no faster than $g$, then it is possible that it grows slower.
+For instance, $n=O(n^2)$ and $n=o(n^2)$ are both true.
+(c) No.  If $f$ and $g$ grow at the same rate, then $f(n)=O(g(n))$, but 
+$f(n)\neq o(g(n))$. For instance, $3n=O(n)$, but $3n\neq o(n)$. 
+(d) Yes.  In fact, it is guaranteed!  If $f$ grows slower than $g$, then
+$f$ grows no faster than $g$. 
+%(e) No.  It is possible, but not certain.  For instance, 
+%$n^2=\Omega(n)$, but $n^2\neq\Theta(n)$.
+\end{answer}
+\end{ques}
+
+
+
+\begin{eval}
+Let $a_0,\ldots, a_k\in \reals$, where $a_k>0$.
+Prove that $a_kn^k+a_{k-1}n^{k-1}+\cdots+a_1n+a_0=O(n^k)$.
+\begin{ssolenum}
+\item
+We can first eliminate all of the constants since they become irrelevant as $n$ grows large enough.
+This leaves us with $n^k+n^{k-1}+\cdots+n=O(n^k)$.  Next we can eliminate
+all terms growing slower than $n^k$, since they also become irrelevant as $n$ grows.
+This leaves us with $n^k=O(n^k)$, and since they are the same, they are effectively theta
+of each other, and by definition, anything that is theta of something is also omega and $O$,
+so we can correctly say that $n^k=O(n^k)$, thus proving that 
+$a_kn^k+a_{k-1}n^{k-1}+\cdots+a_1n+a_0=O(n^k)$.
+
+\noindent
+\evallinethree
+\item
+Let $c=\dsum_{i=0}^k |a_i|$.  
+Then if $n\geq 1$, 
+\begin{eqnarray*}
+a_kn^k+a_{k-1}n^{k-1}+\cdots+a_1n+a_0&\leq&|a_k|n^k+|a_{k-1}|n^{k-1}+\cdots+|a_1|n+|a_0|\\
+&\leq&|a_k|n^k+|a_{k-1}|n^k+\cdots+|a_1|n^k+|a_0|n^k\\
+&\leq&\dsum_{i=0}^k |a_i|n^k=cn^k.
+\end{eqnarray*}
+Therefore, $a_kn^k+a_{k-1}n^{k-1}+\cdots+a_1n+a_0=O(n^k)$.
+
+\noindent
+\evallinethree
+\end{ssolenum}
+\begin{answer}
+\begin{solevalenum}
+\item
+Although this proof sounds somewhat reasonable, it is way too informal and convoluted.  Here are
+some of the problems.
+\begin{enumerate}
+\item
+This student misunderstands the concept behind `ignoring the constants.'
+We can ignore the constants {\em after we know that $f(n)=O(g(n))$}.  We can't ignore them
+in order to prove it.
+\item
+The phrase `become irrelevant' (used twice) is not precise.  
+We have developed mathematical notation for
+a reason---it allows us to make statements like these precise.
+It's kind of like saying that a certain car costs `a lot'.  What is `a lot'?
+Although \$30,000 might be a lot for most of us, people with a lot more money
+than I have might not think that \$500,000 is a lot.
+\item
+The phrase `This leaves us with $n^k+n^{k-1}+\cdots+n=O(n^k)$' is odd.  What precisely do they mean?
+That this is true or that this is what we need to prove now?  In either case, it is incorrect.
+Similarly for the second time they use the phrase `This leaves us with'.
+\item
+The second half of the proof is unnecessarily convoluted.  They essentially are claiming that their
+proof has boiled down to showing that $n^k=O(n^k)$.  
+To prove this, they use an incredibly drawn out, yet vague, explanation that is 
+in a single unnecessarily long sentence.  Why are they even bringing $\Theta$ and $\Omega$ into this proof?  
+Why don't they just say something like `since $n^k\leq 1n^k$ for all $n\geq 1$, $n^k=O(n^k)$'?  
+I believe the answer is obvious:  they don't really understand what they are doing here.  
+They clearly have a vague understanding of the notation, but they don't understand the 
+formal definition.
+\end{enumerate}
+The bottom line is that this student understands that the statement they needed to prove is correct,
+and they have a vague sense of {\em why} it is true, but they did not have a clear understanding
+of how to use the definition of Big-O to prove it.
+The most important thing to take away from this example is this:  
+{\em Be precise, use the notation and
+definitions you have learned, and if your proofs look a lot different than those in the book, you
+might question whether or not you are on the right track.}
+\item
+This proof is correct.
+\end{solevalenum}
+\end{answer}
+\end{eval}
+
+\begin{exer}
+Assume that $f(n)=O(n^2)$ and $g(n)=O(n^3)$.
+What can you say about the relative growth rates of $f(n)$ and $g(n)$?
+In particular, does $g(n)$ grow faster than $f(n)$?
+
+\noindent
+\answerlinethree
+\begin{answer}
+We cannot say anything about the relative growth rates of $f(n)$ and $g(n)$
+because we are only given upper bounds for each. 
+It is possible that $f(n)=n^2$ and $g(n)=n$, so that 
+$f(n)$ grows faster, or vice-versa.  They could also both be $n$.
+\end{answer}
+\end{exer}
+
+Keep in mind that asymptotic notation only allows you
+to compare the asymptotic behavior of functions.  
+Except for $\Theta$-notation, it only provides
+a bound on the growth rate.  For instance, knowing that $f(n)=O(g(n))$ only tells
+you that $f(n)$ grows no faster than $g(n)$.  
+It is possible that $f(n)$ grows a lot slower than $g(n)$.
+
+
+
+\begin{exer}
+Let's test your understanding of the material so far. Answer each of the following
+true/false questions, giving a very brief justification/counterexample.
+Justifications can appeal to a definition and/or theorem.
+For counterexamples, use simple functions. For instance, $f(n)=n$ and $g(n)=n^2$.
+\begin{lenum}
+\itemtf
+If $f(n)=O(g(n))$, then $f(n)$ grows faster than $g(n)$
+\bigbreak
+\itemtf
+If $f(n)=\Theta(g(n))$, then $f(n)$ grows faster than $g(n)$ 
+\bigbreak
+\itemtf
+If $f(n)=O(g(n))$, then $f(n)$ grows at the same rate as $g(n)$
+\bigbreak
+\itemtf
+If $f(n)=\Omega (g(n))$, then $f(n)$ grows faster than $g(n)$ 
+\bigbreak
+\itemtf
+If $f(n)=O(g(n))$, then $f(n)=\Omega(g(n))$
+\bigbreak
+\itemtf
+If $f(n)=\Theta(g(n))$,  then $f(n)=O(g(n))$
+\bigbreak
+\itemtf
+If $f(n)=O(g(n))$,  then $f(n)=\Theta(g(n))$
+\bigbreak
+\itemtf
+If $f(n)=O(g(n))$,  then $g(n) = O(f(n))$
+\end{lenum}
+\vspace*{.25in}
+\begin{answer}
+(a) F. This is saying that $f(n)$ grows {\em no} faster than $g(n)$.
+(b) F. They grow at the same rate.
+(c) F. $f(n)$ might grow slower than $g(n)$.  For instance, $f(n)=n$ and $g(n)=n^2$.
+(d) F. They might grow at the same rate.  For instance, $f(n)=g(n)=n$.
+(e) F. If $f(n)=n$ and $g(n)=n^2$, $f(n)=O(g(n))$, but $f(n)\neq \Omega(g(n))$.
+(f) T. By Theorem~\ref{thm:theta}.
+(g) F. If $f(n)=n$ and $g(n)=n^2$, $f(n)=O(g(n))$, but $f(n)\neq \Theta(g(n))$. 
+(h) F. If $f(n)=n$ and $g(n)=n^2$, $f(n)=O(g(n))$, but $g(n)\neq O(f(n))$.
+\end{answer}
+\end{exer}
+
+\subsection{Properties of the Notations}
+There are a lot of properties that hold for Big-O, $\Theta$ and $\Omega$ notation
+(and $o$ and $\omega$ as well, but we won't focus on those ones in this section).
+We will only present a few of the most important ones.  We provide proofs for
+some of the results.  
+The rest can be proven without too much difficulty using the definitions of the notations.
+
+Before we present the properties, it might be useful to think about the properties of
+things you are already familiar with.  
+For instance, given real numbers $x$, $y$ and $z$, 
+you know that if $x\leq y$ and $y\leq z$, then $x\leq z$.  This is just the
+transitive property of $\leq$.  
+Similarly, you know that if $x\leq y$, then $a\,x\leq a\,y$ for any positive constant $a$.
+You can think of Big-O notation as being like $\leq$, $\Theta$ notation as being like $=$,
+and $\Omega$ notation as being like $\geq$.  Many of the properties of $\leq$, $=$ and $\geq$
+that you are already familiar with have an analog with Big-O, $\Theta$, and $\Omega$ notation.
+But you need to be careful because the analogies are not exact.  For instance, constants cannot
+be ignored with inequalities but can be ignored when using asymptotic notation.
+
+\begin{thm}\label{thm:asyprops}
+The transitive property holds for Big-O, $\Theta$, and $\Omega$.  That is,
+\begin{itemize}
+\item If $f(n)=O(g(n))$ and $g(n) =O(h(n)),$ then  $f(n) = O(h(n))$
+\item If $f(n)=\Theta(g(n))$ and $g(n) = \Theta(h(n))$, then $f(n) = \Theta(h(n))$
+\item If $f(n)=\Omega(g(n))$ and $g(n) = \Omega(h(n))$, then $f(n) = \Omega(h(n))$
+\end{itemize}
+\begin{pf}
+You will prove the transitive property of Big-O in Exercise~\ref{exer:bigoTranProof}.
+The proofs of the other two are very similar.
+\end{pf}
+\end{thm}
+
+Theorem~\ref{thm:asyprops} is pretty intuitive.  
+For instance,
+when applied to Big-O notation, Theorem~\ref{thm:asyprops} is
+essentially stating that if $g(n)$ is an upper bound on $f(n)$ and
+$h(n)$ is an upper bound on $g(n)$, then $h(n)$ is an upper bound for $f(n)$.
+Put another way, if $f(n)$ grows no faster than $g(n)$ and $g(n)$ grows no faster
+than $h(n)$, then $f(n)$ grows no faster than $h(n)$.
+This makes perfect sense if you think about it for a few minutes. 
+
+  
+\begin{exa}
+Let's take it for granted that $4n^2+3n+17=O(n^3)$ and $n^3=O(n^4)$
+(both of which you should be able to easily prove at this point).
+According to Theorem~\ref{thm:asyprops}, we can conclude that $4n^2+3n+17=O(n^4)$.
+\end{exa}
+
+\begin{thm}\label{thm:asyprops2}
+Scaling by a constant factor
+
+\noindent
+If $f(n)= O(g(n))$, then for any $k > 0$, $k f(n) = O(g(n))$.
+Similarly for $\Theta$ and $\Omega$.
+\begin{pf}
+We will give the proof for Big-O notation.  
+The other two proofs are similar.
+Assume $f(n)= O(g(n))$.  Then by the definition of Big-O, there are positive constants $c$ and
+$n_0$ such that $f(n)\leq c\,g(n)$ for all $n\geq n_0$.
+Thus, if $n\geq n_0$, 
+$$k\,f(n)\leq k\,c\,g(n)=c^{\prime}g(n),$$
+where $c^{\prime}=k\,c$ is a positive constant.
+By the definition of Big-O, $k f(n) = O(g(n))$.
+\end{pf}
+\end{thm}
+
+\begin{exa}
+Example~\ref{exa:secondtheta} showed that $\frac{1}{2} n^{2} + 3\,n=\Theta(n^{2})$.
+We can use Theorem~\ref{thm:asyprops2} to conclude that 
+$n^{2} + 6\,n=\Theta(n^{2})$ since $n^{2} + 6\,n=2\left(\frac{1}{2} n^{2} + 3\,n\right).$
+\end{exa}
+
+Perhaps now is a good time to point out a related issue.  Typically, we do not
+include constants inside asymptotic notations.  For instance, although it is technically
+correct to say that $34n^3+2n^2-45n+5=O(5n^3)$ (or $O(50n^3)$, or any other constant
+you care to place there), it is best to just say it is $O(n^3)$.  
+In particular, $\Theta(1)$ may be preferable to $\Theta(k)$.
+
+\begin{thm}\label{thm:asyprops3}
+Sums\\
+ If $f_{1}(n) = O(g_{1}(n))$ and $f_{2}(n) = O(g_{2}(n))$,
+then 
+$$f_{1}(n)+f_{2}(n) = O(g_{1}(n)+g_{2}(n))=O(max\{g_{1}(n),g_{2}(n)\}).$$
+Similarly for $\Theta$ and $\Omega$.
+\begin{pf}
+We will prove the assertion for Big-O.
+Assume $f_{1}(n) = O(g_{1}(n))$ and $f_{2}(n) = O(g_{2}(n))$.
+Then there exists positive constants $c_1$ and $n_1$ such that for all $n\geq n_1$, 
+$$f_1(n)\leq c_1g_1(n),$$
+and there exists positive constants $c_2$ and $n_2$ such that for all $n\geq n_2$, 
+$$f_2(n)\leq c_2g_2(n).$$
+Let $c_0=\max\{c_1,c_2\}$ and $n_0=\max\{n_1,n_2\}$.
+Since $n_0$ is at least as large as $n_1$ and $n_2$, then for all $n\geq n_0$, 
+$f_1(n)\leq c_1g_1(n)$ and $f_2(n)\leq c_2g_2(n)$.
+(If you don't see why this is, think about it.  This is a subtle but important step.)
+Similarly, if $f_1(n)\leq c_1g_1(n)$, then clearly $f_1(n)\leq c_0g_1(n)$ since
+$c_0$ is at least as big as $c_1$ (and similarly for $f_2$).
+Then for all $n\geq n_0$, we have
+\begin{eqnarray*}
+f_1(n)+f_2(n)&\leq& c_1g_1(n)+c_2g_2(n)\\
+&\leq& c_0g_1(n)+c_0g_2(n)\\
+&\leq& c_0[g_1(n)+g_2(n)]\\
+&\leq& c_0[\max\{g_1(n),g_2(n)\}+\max\{g_1(n),g_2(n)\}]\\
+&\leq& 2c_0\max\{g_1(n),g_2(n)\}\\
+&\leq& c\max\{g_1(n),g_2(n)\},
+\end{eqnarray*}
+where $c=2c_0$.
+By the definition of Big-O, we have shown that $f_{1}(n)+f_{2}(n)=O(max\{g_{1}(n),g_{2}(n)\})$.
+\end{pf}
+Notice that in this proof we used $c=2\max\{c_1,c_2\}$ and $n_0=\max\{n_1,n_2\}$.
+\end{thm}
+
+Without getting too technical,
+the previous theorem implies that you can upper bound
+the sum of two or more functions by finding the upper bound of the fastest growing 
+of the functions.  
+Another way of thinking about it is if you ever have two or more functions inside Big-O notation,
+you can simplify the notation by omitting the slower growing function(s).
+It should be pointed out that there is a subtle point in this result about how to 
+precisely define the maximum of two functions.  Most of the time the intuitive
+definition is sufficient so we won't belabor the point.  
+
+\begin{exa}
+Since we have previously shown that $5n^2-3n+20=O(n^2)$ and that $3n^3-2n^2+13n-15=O(n^3)$,
+we know that $(5n^2-3n+20) +(3n^3-2n^2+13n-15)=O(n^2+n^3)=O(n^3)$.
+\end{exa}
+
+\begin{thm}\label{thm:asyprops3b}
+Products\\
+ If $f_{1}(n) = O(g_{1}(n))$ and $f_{2}(n) = O(g_{2}(n))$,
+then 
+$$f_{1}(n)f_{2}(n) = O(g_{1}(n)g_{2}(n)).$$
+Similarly for $\Theta$ and $\Omega$.
+\end{thm}
+
+\begin{exa}
+Since we have previously shown that $5n^2-3n+20=O(n^2)$ and that $3n^3-2n^2+13n-15=O(n^3)$,
+we know that $(5n^2-3n+20)(3n^3-2n^2+13n-15)=O(n^2n^3)=O(n^5)$.  
+Notice that we could arrive at this same conclusion by multiplying the two polynomials
+and taking the highest term.  However, this would require a lot more work than is necessary.
+\end{exa}
+
+
+The next theorem essentially says that if $g(n)$ is an upper bound on $f(n)$, then
+$f(n)$ is a lower bound on $g(n)$.  This makes perfect sense if you think about it.
+
+\begin{thm}\label{thm:asyprops4}
+Symmetry (sort of)\\
+ $f(n)=O(g(n))$ iff $g(n)=\Omega(f(n))$.
+\end{thm}
+
+
+It turns out that $\Theta$ defines an equivalence relation on the set of functions
+from ${\bf Z}^{+}$ to ${\bf Z}^{+}$. That is, it defines a partition on these functions,
+with two functions being in the same partition (or the same equivalence class)
+if and only if they have the same growth rate.
+But don't take our word for it.  You will help to prove this fact next.
+
+
+\begin{fib}
+Let $R$ be the relation on the set of functions from ${\bf Z}^{+}$
+to ${\bf Z}^{+}$ such that $(f,g)\in R$ if and only if $f=\Theta(g)$.
+Show that $R$ is an equivalence relation.
+\begin{pf}
+We need to show that $R$ is reflexive, symmetric, and transitive.
+
+\noindent
+{\bf Reflexive:}
+Since $1\cdot f(n)\leq f(n) \leq 1\cdot f(n)$ for all $n\geq 1$, $f(n)=\Theta(f(n))$, so
+$R$ is reflexive.
+
+\noindent
+{\bf Symmetric:} 
+If $f(n)=\Theta(g(n))$, then there exist positive constants $c_1$, $c_2$, and $n_0$ such that
+\blanklinefill
+
+\noindent
+This implies that
+$$g(n)\leq \frac{1}{ c_1} f(n) \mbox{ and } g(n)\geq \frac{1}{ c_2} f(n) \mbox{ for all } n\geq n_0$$
+which is equivalent to 
+$$\blankline{1.8}\leq g(n) \leq\blankline{1.8}\mbox{ for all } n\geq n_0.$$
+Thus $g(n)=\Theta(f(n))$, and $R$ is symmetric.
+
+\noindent
+{\bf Transitive:}
+If $f(n)=\Theta(g(n))$, then there exist positive constants $c_1$, $c_2$, and $n_0$ such that
+$$c_1 g(n)\leq f(n) \leq c_2 g(n) \mbox{ for all } n\geq n_0.$$
+Similarly
+if $g(n)=\Theta(h(n))$, then there exist positive constants $c_3$, $c_4$, and $n_1$ such that
+\blanklinefill
+
+\noindent
+Then 
+$$f(n)\geq c_1\, g(n) \geq c_1c_3\, h(n) \mbox{ for all } n\geq \max\{n_0,n_1\},$$
+and 
+$$f(n)\leq \blankline{.75}\, g(n) \leq \blankline{.75}\, h(n) \mbox{ for all } n\geq \blankline{.75} $$
+$$\mbox{Thus, \, } \blankline{1} \leq f(n) \leq \blankline{1}  \mbox{ for all } n\geq \max\{n_0,n_1\}.$$
+Since $c_1 c_3$ and $c_2 c_4$ are both positive constants, 
+$f(n)=\blankline{1}$ by the definition of \blankline{.75}, so $R$ is \blankline{1}.
+\end{pf}
+\begin{answer}
+$c_1 g(n)\leq f(n) \leq c_2 g(n) \mbox{ for all } n\geq n_0$;
+$\frac{1}{ c_2} f(n)$;
+$\frac{1 }{ c_1} f(n)$;
+$c_3 h(n)\leq g(n) \leq c_4 h(n) \mbox{ for all } n\geq n_1.$;
+$c_2$; $c_2 c_4$;
+$\max\{n_0,n_1\}$;
+$c_1 c_3 h(n)$;
+$c_2 c_4 h(n)$;
+$\Theta(h(n))$;
+$\Theta$;
+transitive;
+\end{answer}
+\end{fib}
+
+\begin{exa}
+The functions $n^2$, $3n^2-4n+4$,
+$n^2+\log n$, and $3n^2+n+1$ are all $\Theta(n^2)$.  That is, they all have the 
+same rate of growth and all belong to the same equivalence class. 
+\end{exa}
+
+\begin{exer}
+Let's test your understanding of the material so far. Answer each of the following
+true/false questions, giving a very brief justification/counterexample.
+Justifications can appeal to a definition and/or theorem.
+For counterexamples, use simple functions. For instance, $f(n)=n$ and $g(n)=n^2$.
+\begin{lenum}
+\itemtf
+If $f(n)=O(g(n))$,  then $g(n) = \Omega(f(n))$ 
+\bigbreak
+\itemtf
+If $f(n)=\Theta(g(n))$, then $f(n)=\Omega(g(n))$ and $f(n)=O(g(n))$
+\bigbreak
+\itemtf
+If $f_1(n) = O(g_1(n))$ and $f_2(n) = O(g_2(n))$, 
+then $f_1(n) + f_2(n) = O(max( g_1(n) , g_2(n)) )$   
+\bigbreak
+\itemtf
+$f(n)=O(g(n))$  iff $f(n)=\Theta(g(n))$
+\bigbreak
+\itemtf
+$f(n)=O(g(n))$  iff $g(n) = O(f(n))$
+\bigbreak
+\itemtf
+$f(n)=O(g(n))$  iff $g(n) = \Omega(f(n))$
+\bigbreak
+\itemtf
+$f(n)=\Theta(g(n))$ iff $f(n)=\Omega(g(n))$ and $f(n)=O(g(n))$
+\bigbreak
+\itemtf
+If $f(n)=O(g(n))$ and $g(n) = O(h(n))$, then $f(n)=O(h(n))$
+\end{lenum}
+\vspace*{.25in}
+\begin{answer}
+(a) T. By Theorem~\ref{thm:asyprops4}.
+(b) T. By Theorem~\ref{thm:theta}.
+(c) T. By Theorem~\ref{thm:asyprops3}.
+(d) F. The backwards implication is true, but the forward one is not.  For instance, 
+if $f(n)=n$ and $g(n)=n^2$, clearly $f(n)=O(g(n))$, but $f(n)\neq \Theta(g(n))$.
+(e) F. Neither direction is true.  For instance, 
+if $f(n)=n$ and $g(n)=n^2$, $f(n)=O(g(n))$, but $g(n)\neq O(f(n))$.
+(f) T. By Theorem~\ref{thm:asyprops4}.
+(g) T. By Theorem~\ref{thm:theta}.
+(h) T. By Theorem~\ref{thm:asyprops}.
+\end{answer}
+\end{exer}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Proofs using the definitions}\label{subsec:alProof}
+
+In this section we provide more examples and exercises that use the definitions to 
+prove bounds.
+
+The first example is annotated with comments (given in footnotes)
+about the techniques that are used in many of these proofs.
+We use the following terminology in our explanation.
+By {\em lower order term} we mean a term that grows slower, and {\em higher order} means a term that 
+grows faster.  The {\em dominating term} is the term that grows the fastest.  For instance, 
+in $x^3+7\, x^2-4$, the $x^2$ term is a lower order term than $x^3$, and $x^3$ is the dominating term.
+We will discuss common growth rates, including how they relate to each other, 
+in Section~\ref{sec:growrates}.
+%\ref{section:growthRates}
+But for now we assume you know that
+$x^5$ grows faster than $x^3$, for instance.
+
+
+\begin{exa}\label{exa:boundExample}
+Find a tight bound on $f(n)=n^8+7n^7-10n^5-2n^4+3n^2-17$.
+\begin{sol}
+We will prove that $f(n)=\Theta(n^8)$.
+First, we will prove an upper bound for $f(n)$.  It is clear that 
+when $n\geq 1$, 
+\begin{eqnarray*}
+n^8+7n^7-10n^5-2n^4+3n^2-17&\leq& n^8+7n^7+3n^2\, \, \, \, 
+\footnote{We can upper bound any function by removing the lower order
+terms with negative coefficients, as long as $n\geq 0$.}\\
+&\leq& n^8+7n^8+3n^8\, \, \, \, 
+\footnote{We 
+can upper bound any function by replacing lower order terms 
+that have
+positive coefficients by the dominating term with the same coefficients.
+Here, we must make sure that the dominating term is larger than the 
+given term for all values of $n$ larger than some threshold $n_0$, and
+we must make note of the threshold value $n_0$.
+}\\
+&=&11n^8
+\end{eqnarray*}
+Thus, we have 
+$$f(n)=n^8+7n^7-10n^5-2n^4+3n^2-17\leq 11n^8 \mbox{ for all } n\geq 1,$$
+and we have proved that $f(n)=O(n^8)$.
+
+Now, we will prove the lower bound for $f(n)$.
+When $n\geq 1$, 
+\begin{eqnarray*}
+n^8+7n^7-10n^5-2n^4+3n^2-17 &\geq& n^8-10n^5-2n^4-17\, \, \, \, 
+\footnote{We can lower bound any function by removing the lower order
+terms with positive coefficients, as long as $n\geq 0$.}\\ 
+&\geq& n^8-10n^7-2n^7-17n^7\, \, \, \, 
+\footnote{We can lower bound any function by replacing lower order terms with
+negative coefficients by a sub-dominating term with the same coefficients.
+(By sub-dominating, I mean one which dominates all but the dominating
+term.)
+Here, we must make sure that the sub-dominating term is larger than the 
+given term for all values of $n$ larger than some threshold $n_0$, and
+we must make note of the threshold value $n_0$.
+Making a wise choice for which sub-dominating term to use is crucial
+in finishing the proof.}\\
+&=&n^8-29n^7
+\end{eqnarray*}
+Next, we need to find a value $c>0$ such that $n^8-29n^7\geq c n^8$.
+Doing a little algebra, we see that this is equivalent to
+$(1-c)n^8 \geq 29n^7$.  When $n\geq 1$, we can divide by $n^7$ and
+obtain $(1-c)n\geq 29$. Solving for $c$ we obtain 
+$$c\leq 1-\frac{29}{ n}.$$
+If $n\geq 58$, then $c=1/2$ suffices.
+We have just shown that if $n\geq 58$, then 
+$$f(n)=n^8+7n^7-10n^5-2n^4+3n^2-17\geq \frac{1}{2}n^8.$$
+Thus, $f(n)=\Omega(n^8)$.
+Since we have shown that $f(n)=\Omega(n^8)$ and that 
+$f(n)=O(n^8)$, we have shown that $f(n)=\Theta(n^8)$.
+\end{sol}
+\end{exa}
+
+Let's see another example of a $\Omega$ proof.  You should note
+the similarities between this and the second half of the proof in
+the previous example.
+\begin{exa}
+Show that $(n \log n - 2\,n + 13)=\Omega(n \log n)$
+\begin{pf}
+We need to show that there exist positive constants $c$ and $n_0$
+such that 
+$$c\,n\log n \leq n\log n -2\,n + 13\mbox{ for all } n\geq n_0.$$
+Since $n\log n -2\,n \leq n\log n -2\,n+13,$
+we will instead show that 
+$$c\,n\log n \leq n\log n -2\,n,$$
+which is equivalent to
+$$c\leq 1-\frac{2}{\log n}, \mbox{ when } n > 1.$$ 
+If $n\geq 8$, then $2/(\log n)\leq 2/3$, and picking
+$c=1/3$ suffices.
+In other words, we have just shown that if $n\geq 8$, 
+$$\frac{1}{3}\,n\log n \leq n\log n -2\,n.$$
+Thus if $c=1/3$ and $n_0=8$, then for all $n\geq n_0$, we have
+$$c\,n\log n \leq n\log n -2\,n \leq n\log n -2\,n + 13.$$
+Thus $(n \log n - 2\,n + 13)=\Omega(n \log n)$.
+\end{pf}
+\end{exa}
+
+\begin{fib}
+Show that $\frac{1}{2} n^{2} - 3n = \Theta(n^{2})$
+\begin{pf}
+We need to find positive constants $c_1$, $c_2$, and $n_0$ such that
+$$\blankline{1} \leq \frac{1}{2}n^2 - 3\,n \leq \blankline{1}\mbox{ for all } n\geq n_0$$
+Dividing by $n^{2}$, we get  $c_{1} \leq \blankline{1} \leq c_{2}.$
+
+Notice that if $n\geq 10$,  $\frac{1}{2} - \frac{3}{n} \geq \frac{1}{2} - \frac{3}{10} = \blankline{1.5},$
+so we can choose $c_1 =1/5$. 
+If $n\geq 10$, we also have that $\frac{1}{2} - \frac{3}{n}\leq \frac{1}{2},$
+so we can choose $c_2=1/2$.
+Thus, we have shown that 
+$$\blankline{1} \leq \frac{1}{2}n^2 - 3\,n \leq \blankline{1} 
+\mbox{ for all } n\geq \blankline{.5} .$$
+Therefore, $\frac{1}{2} n^{2} - 3n =\Theta(n^{2})$.
+\end{pf}
+\begin{answer}
+$c_{1}n^2$; 
+$c_{2}n^2$; 
+$\frac{1}{2} - \frac{3}{n}$;
+$\frac{10-6}{20}=\frac{1}{5}$; 
+$\frac{1}{5}n^2$; 
+$\frac{1}{2}n^2$; 
+ $10$.
+\end{answer}
+\end{fib}
+
+\begin{ques}
+In the previous proof, we claimed that if $n\geq 10$, 
+$$\frac{1}{2} - \frac{3}{n} \geq \frac{1}{2} - \frac{3}{10}.$$
+Why is this true?
+
+\noindent
+\answerlinethree
+\begin{answer}
+There are a few ways to think about this.  First, the larger $n$ is, the smaller $\frac{3}{n}$ is,
+so a smaller amount is being subtracted.  But that's perhaps too fuzzy.  Let's look at it this way:
+$$n\geq 10\Rightarrow 
+ \frac{10}{3} \leq \frac{n}{3}
+\Rightarrow \frac{3}{n}\leq \frac{3}{10}
+\Rightarrow -\frac{3}{n}\geq -\frac{3}{10}
+\Rightarrow \frac{1}{2}-\frac{3}{n}\geq \frac{1}{2}-\frac{3}{10}.
+$$
+\end{answer}
+\end{ques}
+
+
+\begin{exa}
+Show that $(\sqrt{2})^{\log n}=O(\sqrt{n})$, where the base of the $\log$ is 2.
+\begin{pf}
+It is not too hard to see that 
+$$(\sqrt{2})^{\log n}=n^{\log \sqrt{2}}=n^{\log 2^{1/2}}=
+n^{\frac{1}{2}\log 2}=n^{\frac{1}{2}}=\sqrt{n}.$$
+Thus it is clear that $(\sqrt{2})^{\log n}=O(\sqrt{n})$.
+\end{pf}
+\end{exa}
+
+\begin{rem}
+You may be confused by the previous proof.  It seems that we never showed that 
+$(\sqrt{2})^{\log n}\leq c\sqrt{n}$ for some constant $c$.  
+But we essentially did by showing that $(\sqrt{2})^{\log n}=\sqrt{n}$ since
+this implies that 
+$(\sqrt{2})^{\log n}\leq 1\sqrt{n}$. 
+ 
+We actually proved something stronger than was required.
+That is, since we proved the two functions are equal, it is in fact true that 
+$(\sqrt{2})^{\log n}=\Theta(\sqrt{n})$.  But we were only asked to prove 
+that $(\sqrt{2})^{\log n}=O(\sqrt{n})$.
+
+In general, if you need to prove a Big-O bound, you may instead prove a $\Theta$ 
+bound, and the Big-O bound essentially comes along for the ride.
+\end{rem}
+
+\begin{ques}
+In our previous note we mentioned that if you prove a $\Theta$ bound, 
+you get the Big-O bound for free.  
+\begin{lenum}
+\item
+What theorem implies this?
+
+\noindent
+\answerline
+\item
+If we prove $f(n)=O(g(n))$, does that imply that $f(n)=\Theta(g(n))$?
+In other words, does it work the other way around? Explain, giving an appropriate example.
+
+\noindent
+\answerlinetwo
+\end{lenum}
+\begin{answer}
+(a) Theorem~\ref{thm:theta}.
+(b) Absolutely not!  Theorem~\ref{thm:theta} requires that we also prove 
+$f(n)=\Omega(g(n))$.  Here is a counterexample: $n=O(n^2)$, but $n\neq\Theta(n^2)$. 
+So $f(n)=O(g(n))$ does not imply that $f(n)=\Theta(g(n))$.
+\end{answer}
+\end{ques}
+
+\begin{exer}
+Show that $n!=O(n^n)$. 
+(Don't give up too easily on this one---the proof is very short and only uses
+elementary algebra.)
+
+\vspace*{2.25in}
+\begin{answer}
+Notice that when $n\geq 1$, 
+$n!=1\cdot 2\cdot 3\cdots n \leq n\cdot n\cdots n = n^n.$
+Therefore $n!=O(n^n)$ (We used $n_0=1$, and $c=1$.)
+\end{answer}
+\end{exer}
+
+
+\begin{exa}
+Show that $\log (n!) = O(n\log n)$
+\begin{pf}
+It should be clear that if $n\geq 1$, $n!\leq n^n$ (especially after 
+completing the previous exercise). 
+Taking $\log$s of both sides of that inequality,
+we obtain 
+$$\log n!\leq \log (n^n) = n\log n.$$
+Therefore $\log n! = O(n\log n)$.
+\end{pf}
+The last step used the fact that $\log (f(n)^a)=a\log (f(n))$, a fact that we assume you 
+have seen previously (but may have forgotten).
+\end{exa}
+
+
+Proving properties of the asymptotic notations is actually no more difficult than the rest of
+the proofs we have seen.  You have already seen a few and helped write one.  
+Here we provide one more example and then ask you to prove another result on your own.
+
+\begin{exa}
+Prove that if $f(n)=O(g(n))$ and $g(n)=O(f(n))$, then
+$f(n)=\Theta(g(n))$.
+\begin{pf}
+If $f(n)=O(g(n))$, 
+then there are positive constants $c_2$ and $n_{0}^{\prime}$ such that 
+$$f(n)\leq c_2\,g(n)\mbox{ for all }n \ge n_{0}^{\prime}$$
+Similarly, if $g(x)=O(f(x))$, 
+then there are positive constants $c_1^{\prime}$ and $n_{0}^{\prime\prime}$
+such that 
+$$g(n)\leq c_1^{\prime}\,f(n)\mbox{ for all }n 
+\ge n_{0}^{\prime\prime}.$$
+We can divide this by $c_1^{\prime}$ to obtain 
+$$\frac{1}{c_1^{\prime}}g(n)\leq f(n)\mbox{ for all }n 
+\ge n_{0}^{\prime\prime}.$$
+Setting $c_1=1/c_1^{\prime}$ and 
+$n_0=\max\{n_0^{\prime},n_0^{\prime\prime}\}$, 
+we have 
+$$c_1 g(n)\leq f(n)\leq c_2\,g(n)\mbox{ for all }n \ge n_{0}.$$
+Thus, $f(x)=\Theta(g(x)).$
+\end{pf}
+\end{exa}
+
+\begin{exer}\label{exer:bigoTranProof}
+Let $f(x)=O(g(x))$ and $g(x)=O(h(x))$. Show that $f(x)=O(h(x))$.
+That is, prove Theorem~\ref{thm:asyprops} for Big-O notation.
+
+\vspace*{3.5in}
+\begin{answer}
+If $f(x)=O(g(x))$, 
+then there are positive constants $c_1$ and $n_{0}^{\prime}$
+such that 
+$$0\leq f(n)\leq c_1\,g(n)\mbox{ for all }n \ge n_{0}^{\prime},$$
+and if $g(x)=O(h(x))$, 
+then there are positive constants $c_2$ and 
+$n_{0}^{\prime\prime}$ such that 
+$$0\leq g(n)\leq c_2\,h(n)\mbox{ for all }n \ge n_{0}^{\prime\prime}.$$
+Set $n_0=\max(n_0^{\prime},n_0^{\prime\prime})$ and $c_3=c_1\,c_2$.
+Then
+$$0\leq f(n)\leq c_1\,g(n)\leq c_1\,c_2\,h(n)=c_3\,h(n) 
+\mbox{ for all }n \ge n_{0}.$$
+Thus $f(x)=O(h(x))$.
+\end{answer}
+\end{exer}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Proofs using limits}\label{subsec:limproof}
+So far we have used the definitions of the various notations in all of our proofs. 
+The following theorem provides another technique that is often much easier,
+assuming you understand and are comfortable with limits.
+
+\begin{thm}\label{thm:limits}
+Let $f(n)$ and $g(n)$ be functions such that 
+$$\lim_{n\rightarrow \infty}\frac{f(n)}{g(n)} = A.$$
+Then
+\begin{enumerate}
+\item If $A=0$, then $f(n)=O(g(n))$, and $f(n)\neq \Theta(g(n))$.  That is, $f(n)=o(g(n))$.
+\item If $A=\infty$, then $f(n)=\Omega(g(n))$, and $f(n)\neq \Theta(g(n))$. That is, $f(n)=\omega(g(n))$.
+\item If $A\neq 0$ is finite, then $f(n)=\Theta(g(n))$. 
+\end{enumerate}
+\end{thm}
+
+If the above limit does not exist, then you need to resort to
+using the definitions or using some other technique.  
+Luckily, in the analysis of algorithms the above approach works most of the time.
+
+Before we see some examples, let's review a few limits you should know.
+
+\begin{thm}\label{limitProps1}
+Let $a$ and $c$ be real numbers.  Then
+\begin{lenum}
+\item $\displaystyle \lim_{n\rightarrow \infty} a = a$
+\item If $a>0$, $\displaystyle \lim_{n\rightarrow \infty} n^a = \infty$
+\item If $a<0$, $\displaystyle \lim_{n\rightarrow \infty} n^a = 0$
+\item If $a>1$, $\displaystyle \lim_{n\rightarrow \infty} a^n = \infty$
+\item If $0<a<1$, $\displaystyle \lim_{n\rightarrow \infty} a^n = 0$
+\item If $c>0$, $\displaystyle \lim_{n\rightarrow \infty} \log_c n = \infty$.
+\end{lenum}
+\end{thm}
+ 
+\begin{exa}
+The following are examples based on Theorem~\ref{limitProps1}.
+\begin{lenum}
+\item
+$\displaystyle\lim_{n\rightarrow\infty} 13 = 13$
+\item
+$\displaystyle\lim_{n\rightarrow\infty} n = \infty$
+\item
+$\displaystyle\lim_{n\rightarrow\infty} n^4 = \infty$
+\item
+$\displaystyle\lim_{n\rightarrow\infty} n^{1/2} = \infty$
+\item
+$\displaystyle\lim_{n\rightarrow\infty} n^{-2} = 0$
+\item
+$\displaystyle\lim_{n\rightarrow\infty} \left(\frac{1}{2}\right)^{n} = 0$
+\item
+$\displaystyle\lim_{n\rightarrow\infty} 2^{n} = \infty$
+\item
+$\displaystyle\lim_{n\rightarrow\infty} \log_2 n = \infty$
+\end{lenum}
+\end{exa}
+ 
+Now it's your turn to try a few.
+ 
+\begin{exer}
+Evaluate the following limits
+\begin{lenum}
+  \setlength{\itemsep}{.25in}
+\item
+$\displaystyle\lim_{n\rightarrow\infty} \log_{10} n =$
+\item
+$\displaystyle\lim_{n\rightarrow\infty} n^3 =$
+\item
+$\displaystyle\lim_{n\rightarrow\infty} 3^n =$
+\item
+$\displaystyle\lim_{n\rightarrow\infty} \left(\frac{3}{2}\right)^n =$
+\item
+$\displaystyle\lim_{n\rightarrow\infty} \left(\frac{2}{3}\right)^n =$
+\item
+$\displaystyle\lim_{n\rightarrow\infty} n^{-1} =$
+\item
+$\displaystyle\lim_{n\rightarrow\infty} 8675309 =$
+\end{lenum}
+\begin{answer}
+(a) $\infty$ 
+(b) $\infty$ 
+(c) $\infty$ 
+(d) $\infty$ 
+(e) $0$
+(f) $0$
+(g) $8675309$
+\end{answer}
+\end{exer}
+ 
+\begin{exa}
+Prove that  $5n^8=\Theta(n^8)$ using Theorem~\ref{thm:limits}.
+\begin{sol}
+Notice that 
+$$\lim_{n\rightarrow\infty}\frac{5n^8}{n^8}= \lim_{n\rightarrow\infty}5=5,$$
+so $f(n)=\Theta(n^8)$ by Theorem~\ref{thm:limits} (case 3).
+\end{sol}
+\end{exa}
+ 
+The following theorem often comes in handy when using Theorem~\ref{thm:limits}.
+\begin{thm}\label{thm:oneoverlimit}
+If $\displaystyle \lim_{n\rightarrow \infty} f(n)=\infty$, then  
+$\displaystyle \lim_{n\rightarrow \infty} \frac{1}{f(n)}=0$.
+\end{thm}
+
+
+\begin{exa}
+Prove that  $n^2=o(n^4)$ using Theorem~\ref{thm:limits}.
+\begin{sol}
+Notice that 
+$$\lim_{n\rightarrow\infty}\frac{n^2}{n^4}=
+\lim_{n\rightarrow\infty}\frac{1}{n^2}=0,$$
+so $f(n)=o(n^4)$ by Theorem~\ref{thm:limits} (case 1).
+\end{sol}
+\end{exa}
+
+\begin{ques}
+The proof in the previous example used Theorems~\ref{limitProps1}
+and~\ref{thm:oneoverlimit}. How and where?
+
+\noindent
+\answerlinetwo
+\begin{answer}
+Theorem~\ref{limitProps1} part (b) implies that  
+$\displaystyle\lim_{n\rightarrow\infty} n^2=\infty$. 
+Since the limit being computed was actually 
+$\displaystyle \lim_{n\rightarrow\infty}\frac{1}{n^2}$,
+Theorem~\ref{thm:oneoverlimit}
+was used to obtain the final answer of $0$ for the limit.
+\end{answer}
+\end{ques}
+
+\begin{exer}
+Prove that $3x^3=\Omega(x^2)$ using Theorem~\ref{thm:limits}.  Which case did you use?
+
+\vspace*{1.75in}
+\begin{answer}
+Notice that $\lim_{x\rightarrow\infty}\frac{3x^3}{x^2}=
+\lim_{x\rightarrow\infty}3x=\infty,$
+so $3x^3=\omega(x^2)$ by the second case of the Theorem~\ref{thm:limits}, which also implies
+that $3x^3=\Omega(x^2)$.
+\end{answer}
+\end{exer}
+
+Here are a few more useful properties of limits.  
+Read carefully.  These do not apply in all situations.
+
+\begin{thm}\label{limitProps2}
+Let $a$ be a finite real number and let $\displaystyle\lim_{n\rightarrow \infty} f(n)=A$ and 
+$\displaystyle\lim_{n\rightarrow \infty} g(n)=B$, where $A$ and $B$ are finite real numbers. 
+Then
+\begin{lenum}
+\item 
+$\displaystyle \lim_{n\rightarrow \infty} a\,f(n) 
+%=a\lim_{n\rightarrow \infty} f(n)
+=a\,A$
+\item 
+$\displaystyle \lim_{n\rightarrow \infty} f(n)\pm g(n) 
+%=\lim_{n\rightarrow \infty} f(n)\pm\lim_{n\rightarrow \infty} f(n)
+=A\pm B$
+\item 
+$\displaystyle \lim_{n\rightarrow \infty} f(n)g(n) 
+%=\lim_{n\rightarrow \infty} f(n)\lim_{n\rightarrow \infty} g(n)
+=AB$
+\item 
+If $B\neq 0$, $\displaystyle \lim_{n\rightarrow \infty} \frac{f(n)}{g(n)} 
+%=\frac{\lim_{n\rightarrow \infty}f(n)}{\lim_{n\rightarrow \infty} g(n)}
+=\frac{A}{B}$
+\end{lenum}
+\end{thm}
+
+We usually use the results from the previous theorem without explicitly mentioning them.
+
+\begin{exa}
+Find a tight bound on $f(x)=x^8+7x^7-10x^5-2x^4+3x^2-17$ using Theorem~\ref{thm:limits}.
+
+\medskip
+
+\noindent
+{\bf Solution:}
+We guess (or know, if we remember the solution to Example~\ref{exa:boundExample}) 
+that $f(x)=\Theta(x^8)$.
+To prove this, notice that 
+\begin{eqnarray*}
+\lim_{x\rightarrow\infty}
+{x^8{+}7x^7{-}10x^5{-}2x^4{+}3x^2{-}\frac{17}{ x^8}}
+& =& \lim_{x\rightarrow\infty}
+\frac{x^8}{ x^8}+ \frac{7x^7}{ x^8}- \frac{10x^5}{ x^8}- \frac{2x^4}{ x^8}+
+\frac{3x^2}{ x^8}- \frac{17}{ x^8}\\
+& =& \lim_{x\rightarrow\infty}
+ 1+ \frac{7}{ x}- \frac{10}{ x^3}- \frac{2}{ x^4}+\frac {3}{ x^6}- \frac{17}{ x^8}\\
+&=&1+ 0 - 0 - 0 + 0 - 0=1
+\end{eqnarray*}
+Thus, $f(x)=\Theta(x^8)$ by the Theorem~\ref{thm:limits}.
+\end{exa}
+
+Compare the proof above with the proof given in Example~\ref{exa:boundExample}.
+It should be pretty obvious that using Theorem~\ref{thm:limits} makes the proof
+a lot easier.  
+Let's see another example that lets us compare the two proof methods.
+
+\newpage % Another awkward break.
+
+\begin{exa}
+Prove that $f(x)=x^4-23 x^3 + 12x^2 + 15 x - 21=\Theta(x^4)$.
+\begin{quote} 
+{\bf Proof \#1}
+
+\noindent
+We will use the definition of $\Theta$.
+It is clear that when $x\geq 1$, 
+$$x^4-23 x^3 + 12x^2 + 15 x - 21\leq x^4+12 x^2+15 x
+\leq x^4+12 x^4+15 x^4= 28 x^4.$$
+Also, if $x\geq 88$, then $\frac{1}{2}x^4\geq 44x^3$ or 
+$-44x^3\geq -\frac{1}{2}x^4$,
+so we have that
+$$x^4-23 x^3 + 12x^2 + 15 x - 21\geq x^4-23 x^3 - 21\geq 
+x^4 - 23 x^3 - 21 x^3= x^4 - 44 x^3\geq \frac{1}{2}x^4.$$
+%whenever 
+%$$\frac{1}{2}x^4\geq 44x^3 \Leftrightarrow x\geq 88.$$
+Thus
+$$\frac{1}{2}x^4\leq x^4-23 x^3 + 12x^2 + 15 x - 21\leq 28 x^4,
+\mbox{ for all } x\geq 88.$$
+We have shown that $f(x)=x^4-23 x^3 + 12x^2 + 15 x - 21=\Theta(x^4).$
+\hfill $\square$
+
+\noindent
+If you did not follow the steps in this first proof, you should really
+review your algebra rules.
+
+\noindent
+{\bf Proof \#2}
+
+\noindent
+Since
+\begin{eqnarray*}
+\lim_{x\rightarrow\infty}\frac{
+x^4-23 x^3 + 12x^2 + 15 x - 21}{x^4}
+& =& \lim_{x\rightarrow\infty}
+\frac{x^4}{ x^4} -\frac{23x^3}{ x^4} + \frac{12x^2}{ x^4} 
++ \frac{15x}{ x^4} - \frac{21}{ x^4}\\
+& =& \lim_{x\rightarrow\infty}
+1 - \frac{23}{ x}+ \frac{12}{ x^2} + \frac{15}{ x^3} - \frac{21}{ x^4}\\
+&=& \lim_{x\rightarrow\infty}
+1 - 0 + 0 + 0 - 0=1,
+\end{eqnarray*}
+$f(x)=x^4-23 x^3 + 12x^2 + 15 x - 21=\Theta(x^4)$
+\hfill $\square$
+\end{quote}
+\end{exa}
+
+\begin{exa}
+Prove that $n(n+1)/2=O(n^3)$ using Theorem~\ref{thm:limits}.
+
+\begin{pf}
+Because 
+${\displaystyle\lim_{n\rightarrow\infty}\frac{n(n+1)/2}{n^3} = 
+\lim_{n\rightarrow\infty}\frac{n^2+n}{2n^3} = 
+\lim_{n\rightarrow\infty}\frac{1}{2n} +\frac{1}{2n^2}= 0+0=0}$,
+$n(n+1)/2=o(n^3)$, which implies that $n(n+1)/2=O(n^3)$.
+\end{pf}
+\end{exa}
+
+\begin{exer}
+Prove that $n(n+1)/2=\Theta(n^2)$ using Theorem~\ref{thm:limits}.
+
+\vspace*{1.7in}
+\begin{answer}
+Notice that 
+${\displaystyle \lim_{n\rightarrow\infty}\frac{n(n+1)/2}{n^2} = 
+\lim_{n\rightarrow\infty}\frac{n^2+n}{2n^2} = 
+\lim_{n\rightarrow\infty}\frac{1}{2} +\frac{1}{2n}= \frac{1}{2}+0=\frac{1}{2}}$,
+so $n(n+1)/2=\Theta(n^2)$.
+\end{answer}
+\end{exer}
+
+
+\begin{exer}
+Prove that $2^x=O(3^x)$
+\begin{lenum}
+\item Using Theorem~\ref{thm:limits}.
+
+\vspace*{1.5in}
+\item Using the definition of Big-O.
+
+\vspace*{1.5in}
+\end{lenum}
+\begin{answer}
+(a)
+Since 
+${\displaystyle \lim_{x\rightarrow\infty} \frac{2^x}{ 3^x}
+= \lim_{x\rightarrow\infty} \left(\frac{2}{ 3}\right)^x
+= 0}$, the result follows.
+
+(b)
+If $x\geq 1$, then clearly $(3/2)^x\geq 1$, so 
+$2^x\leq 
+2^x\left(\frac{3}{ 2}\right)^x=
+\left(\frac{2\times 3}{ 2}\right)^x=3^x.$
+Therefore, $2^x=O(3^x)$.
+\end{answer}
+\end{exer}
+
+
+
+Now is probably a good time to recall a very useful theorem for computing
+limits, called {\bf l'Hopital's Rule}.  The version presented here is
+restricted to limits where the variable
+approaches infinity since those are the only limits of interest in our context.
+
+\begin{thm}[l'Hopital's Rule]\label{thm:lhop}\index{l'Hopital's Rule}
+Let $f(x)$ and $g(x)$ be differentiable functions.
+If 
+$$\lim_{x\rightarrow\infty}f(x)=\lim_{x\rightarrow\infty}g(x)=0 \mbox{ or}$$ 
+$$\lim_{x\rightarrow\infty}f(x)=\lim_{x\rightarrow\infty}g(x)=\infty,$$ 
+then
+$$
+\lim_{x\rightarrow\infty} \frac{f(x)}{ g(x)}=
+\lim_{x\rightarrow\infty} \frac{f^{\prime}(x)}{ g^{\prime}(x)}$$
+\end{thm}
+
+%\newpage % A weird one. It's giving a bad break warning, but puts this on the next page even without the newpage.
+  % What's the problem?
+
+\begin{exa}
+Since $\displaystyle \lim_{x\rightarrow\infty} 3x=\infty$ and
+$\displaystyle \lim_{x\rightarrow\infty} x^2=\infty$, 
+\begin{eqnarray*}
+\lim_{x\rightarrow\infty} \frac{3x}{x^2}
+&=&\lim_{x\rightarrow\infty} \frac{3}{2x} \, \, \, \,   \mbox{(l'Hopital)}\\
+&=&\frac{3}{2}\lim_{x\rightarrow\infty} \frac{1}{x}\\
+&=&\frac{3}{2}\,0\\
+&=&0.
+\end{eqnarray*}
+\end{exa}
+
+\begin{exa}
+Since $\displaystyle \lim_{x\rightarrow\infty} 3x^2+4x-9=\infty$ and
+$\displaystyle \lim_{x\rightarrow\infty} 12x=\infty$, 
+\begin{eqnarray*}
+\lim_{x\rightarrow\infty} \frac{3x^2+4x-9}{12x}
+&=&\lim_{x\rightarrow\infty} \frac{6x+4}{12} \, \, \, \,   \mbox{(l'Hopital)}\\
+&=&\lim_{x\rightarrow\infty} \frac{1}{2}x+\frac{1}{3}\\
+&=&\infty
+\end{eqnarray*}
+\end{exa}
+
+Now let's apply it to proving asymptotic bounds.
+
+\begin{exa}
+Show that $\log x=O(x)$.
+\begin{pf}
+Notice that 
+\begin{eqnarray*}
+\lim_{x\rightarrow\infty} \frac{\log x}{ x}
+&=&\lim_{x\rightarrow\infty} \frac{\frac{1}{ x}}{ 1}\, \, \, \,  \mbox{(l'Hopital)} \\
+&=&\lim_{x\rightarrow\infty} \frac{1}{ x}= 0.
+\end{eqnarray*}
+Therefore, $\log x=O(x)$.
+\end{pf}
+We should mention that applying l'Hopital's Rule in the first step is legal since 
+$$\lim_{x\rightarrow\infty} \log x = \lim_{x\rightarrow\infty}  x=\infty.$$
+\end{exa}
+
+\begin{exa}
+Prove that $x^3=O(2^x)$.
+\begin{pf}
+Notice that \begin{eqnarray*}
+\lim_{x\rightarrow\infty} \frac{x^3}{2^x}
+&=&\lim_{x\rightarrow\infty} \frac{3x^2}{2^x\ln(2)}\, \, \, \,  \mbox{(l'Hopital)} \\
+&=&\lim_{x\rightarrow\infty} \frac{6x}{2^x\ln^2(2)}\, \, \, \,  \mbox{(l'Hopital)} \\
+&=&\lim_{x\rightarrow\infty} \frac{6}{2^x\ln^3(2)}\, \, \, \,  \mbox{(l'Hopital)} \\
+&=&0.
+\end{eqnarray*}
+Therefore, $x^3=O(2^x)$.
+
+As in the previous example, at each step we checked that the functions on 
+both the top and bottom
+go to infinity as $n$ goes to infinity before applying l'Hopital's Rule.
+Notice that we did not apply it in the final step since $6$ does not go to infinity.
+\end{pf}
+\end{exa}
+
+\newpage
+
+\begin{eval}
+Prove that $7^x$ is an upper bound for $5^x$, but that it is not a tight bound.
+\begin{spfenum}
+\item
+This is true if and only if $7^x$ always grows faster than $5^x$ 
+which means $7^x-5^x>0$ for all $x\neq 0$.
+If it is a tight bound, then $7^x-5^x=0$, which is only true for $x=0$.
+So $7^x$ is an upper bound on $5^x$, but not a tight bound.
+
+\noindent
+\evallinetwo
+\item 
+${\displaystyle \lim_{x\rightarrow \infty}\frac{5^x}{7^x} = 
+\lim_{x\rightarrow \infty}\frac{x\log 5}{x\log 7}.}$
+Both go to infinity, but $x\log 7$ gets there faster, showing that $5^x=O(7^x)$.
+
+\noindent
+\evallinetwo
+\item
+${\displaystyle \lim_{x\rightarrow \infty}\frac{7^x}{5^x} = 
+\lim_{x\rightarrow \infty}\left(\frac{7}{5}\right)^x=\infty}$
+since $7/5>1$.  Thus $5^x=O(7^x)$ by the limit theorem.
+
+\noindent
+\evallinetwo
+\end{spfenum}
+\begin{answer}
+\begin{pfevalenum}
+\item
+$7^x$ grows faster than $5^x$ does not mean $7^x-5^x>0$ for all $x\neq 0$.
+For one thing, 
+we are really only concerned about positive values of $x$.  
+Further, we are specifically concerned about very large values of $x$.  
+In other words, we want something to be true for all $x$ that are `large enough'.
+Also, this statement does not take into account constant factors.  
+Similarly, a tight bound does {\em not} imply that $7^x-5^x=0$.  
+The bottom line:  This one is way off.  They are not conveying an understanding of
+what `upper bound' really means, and they certainly haven't proven anything.
+Frankly, I don't think they have a clue what they are trying to say in this proof.
+\item
+This one has several problems.  First, the application of l'Hopital's rule is incorrect.
+The result should be $\displaystyle\lim_{x\rightarrow \infty}\frac{5^x\log 5}{7^x\log 7}$, 
+which should make it obvious that l'Hopital's rule doesn't actually help in this case.
+(The key to this one is to do a little algebra.)
+The next problem is the statement `but $x\log 7$ gets there faster'.  
+What exactly does that mean?
+Asymptotically faster, or just faster?  If the former, it needs to be proven.  If the latter, that isn't enough to prove relative growth rates.  Finally, even if this showed that $5^x=O(7^x)$, that only shows
+that $7^x$ is an upper bound on $5^x$.  It does not show that the bound is not tight.
+The bottom line is that bad algebra combined with vague statements falls way short of
+a correct proof.
+\item
+This proof is {\em very} close to being correct.  The main problem is that they only stated
+that $5^x=O(7^x)$, but they also needed to show that $5^x\neq\Theta(7^x)$.  It turns out that the
+theorem they mention also gives them that. So all they needed to add is `and $5^x\neq \Theta(7^x)$' at the end.
+Technically, there is another problem---they should have taken the limit of $5^x/7^x$.  What they really showed
+using the limit theorem is that $7^x=\omega(5^x)$, which is equivalent to $5^x=o(7^x)$.  It isn't a major problem,
+but technically the limit theorem does not directly give them the result they say it does.  
+If you are trying to prove that $f(x)$ is bounded by $g(x)$, put $f(x)$ on the top and $g(x)$ on the bottom.
+\end{pfevalenum}
+\end{answer}
+\end{eval}
+We should mention that it is important to remember to verify that l'Hopital's Rule applies
+before just blindly taking derivatives. You can actually get the incorrect answer if
+you apply it when it should not be applied.
+
+\begin{exa}
+Find and prove a simple tight bound for  $\sqrt{5n^2-4n+12}$.
+\begin{sol}
+We will show that $\sqrt{5n^2-4n+12}=\Theta(n)$.
+Since we are letting $n$ go to infinity, we can assume that $n>0$.  In this case, 
+$n=\sqrt{n^2}$.
+Using this, we can see that 
+$$\lim_{n\rightarrow\infty}\frac{\sqrt{5n^2-4n+12}}{n}
+=\lim_{n\rightarrow\infty}\sqrt{\frac{5n^2-4n+12}{n^2}}
+=\lim_{n\rightarrow\infty}\sqrt{5 - \frac{4}{n}+\frac{12}{n^2}}
+=\sqrt{5}.
+$$
+Therefore, $\sqrt{5n^2-4n+12}=\Theta(n)$.
+\end{sol}
+\end{exa}
+
+\newpage
+
+\begin{exer}
+Find and prove a good simple upper bound on $n\ln (n^2+1) + n^2\ln n$.
+\begin{lenum}
+\item Using the definition of Big-O.
+
+\vspace*{3.5in}
+\item Using Theorem~\ref{thm:limits}. 
+You will probably need to use l'Hopital's Rule a few times.
+
+\vspace*{4in}
+\end{lenum}
+\begin{answer}
+You should have come up with $n^2\log n$ for the upper bound.  If you didn't,
+now that you know the answer, go back and try to write the proofs before
+reading them here.
+(a) 
+If $n> 1$, 
+$$\ln (n^2+1) \leq \ln (n^2+n^2)= \ln (2 n^2) =
+( \ln 2+ \ln n^2) \leq ( \ln n+ 2\ln n) =3\ln n$$
+Thus when $n > 1$,
+$$ n\ln (n^2+1) + n^2\ln n\leq n 3\ln n+n^2\ln n\leq
+3 n^2 \ln n+n^2\ln n\leq  4 n^2 \ln n. $$
+Thus, $n\ln (n^2+1) + n^2\ln n=O(n^2 \ln n).$
+(You may have different algebra in your proof.  Just make certain
+that however you did it that it is correct.)
+
+(b)
+$
+\begin{array}[t]{llll}
+\displaystyle\lim_{x\rightarrow\infty} \dfrac{{n\ln (n^2+1) + n^2\ln n}}{ n^2\ln n}
+& =& \displaystyle\lim_{x\rightarrow\infty}
+\dfrac{n\ln (n^2+1)}{ n^2\ln n}  + 1\\[.125in]
+& =& \displaystyle1+ \lim_{x\rightarrow\infty}
+\dfrac{\ln (n^2+1)}{ n\ln n} \\[.125in]
+& =& \displaystyle1+ \lim_{x\rightarrow\infty}
+\dfrac{\dfrac{2n}{n^2+1}}{1\cdot\ln n+n\cdot\frac{1}{n}} &\mbox{(l'Hopital)}\\[.125in]
+& =& \displaystyle1+ \lim_{x\rightarrow\infty}
+\dfrac{2n}{(n^2+1)(\ln n+1)} \\[.125in]
+& =&\displaystyle 1+ \lim_{x\rightarrow\infty}
+\dfrac{2}{2n(\ln n + 1) + (n^2+1)\cdot\frac{1}{n}} &\mbox{(l'Hopital)}\\[.125in]
+& =&\displaystyle 1+ \lim_{x\rightarrow\infty}
+\dfrac{2}{2n(\ln n + 1) + n+\frac{1}{n}}\\
+&=&1+0=1.
+\end{array}
+$\\
+Therefore,  $n\ln (n^2+1) + n^2\ln n=\Theta(n^2\log n)$.
+\end{answer}
+\end{exer}
+\newpage
+
+\begin{exa}
+Find and prove a simple tight bound for  $n\log(n^2)+(n-1)^2\log(n/2)$.
+\begin{sol}
+First notice that 
+$$n\log(n^2)+(n-1)^2\log(n/2)=2n\log n + (n-1)^2(\log n - \log 2).$$
+We can see that this is $\Theta(n^2\log n)$ since 
+\begin{eqnarray*}
+\lim_{n\rightarrow\infty}\frac{n\log(n^2)+(n-1)^2\log(n/2)}{n^2\log n}
+&=&\lim_{n\rightarrow\infty}\frac{2n\log n + (n-1)^2(\log n - \log 2)}{n^2\log n}\\
+&=&\lim_{n\rightarrow\infty}\frac{2}{n} + \frac{(n-1)^2}{n^2}\frac{(\log n - \log 2)}{\log n}\\
+&=&\lim_{n\rightarrow\infty}\frac{2}{n} + \left(1-\frac{1}{n}\right)^2\left(1-\frac{\log 2}{\log n}\right)\\
+&=&0+(1-0)^2(1-0) = 1.
+\end{eqnarray*}
+\end{sol}
+\end{exa}
+
+\begin{exer}
+Find and prove a simple tight bound for $(n^2-1)^5$.
+You may use either the formal definition of $\Theta$ or Theorem~\ref{thm:limits}.
+(The solution uses Theorem~\ref{thm:limits}.)
+
+\vspace*{4in}
+\begin{answer}
+We can see that $(n^2-1)^5=\Theta(n^{10})$ since 
+$$\lim_{n\rightarrow\infty}\frac{(n^2-1)^5}{n^{10}}
+=\lim_{n\rightarrow\infty}\left(\frac{n^2-1}{n^2}\right)^5
+=\lim_{n\rightarrow\infty}\left(1 - \frac{1}{n^2}\right)^5
+=1
+.$$
+\end{answer}
+\end{exer}
+
+\newpage
+
+\begin{exer}
+Find and prove a simple tight bound for $2^{n+1}+5^{n-1}$.
+You may use either the formal definition of $\Theta$ or Theorem~\ref{thm:limits}.
+(The solution uses Theorem~\ref{thm:limits}.)
+
+\vspace*{4in}
+\begin{answer}
+The following limit shows that $2^{n+1}+5^{n-1}=\Theta(5^n)$.
+$$\lim_{n\rightarrow\infty}\frac{2^{n+1}+5^{n-1}}{5^n}
+=\lim_{n\rightarrow\infty}\frac{2^{n+1}}{5^n}+\frac{5^{n-1}}{5^n}
+=\lim_{n\rightarrow\infty}2\left(\frac{2}{5}\right)^n+\frac{1}{5}
+=0+\frac{1}{5}.
+$$
+Note that we could also have shown that $2^{n+1}+5^{n-1}=\Theta(5^{n-1})$,
+but that is not as simple of a function.
+\end{answer}
+\end{exer}
+
+\newpage
+
+\section{Common Growth Rates}\label{sec:growrates}
+In this section we will take a look at the relative growth rates of various functions.
+
+\noindent
+\begin{figure}[h]
+\begin{minipage}{.5\textwidth}
+Figure~\ref{fig:comp1} shows the value of several functions for various values
+of $n$ to give you an idea of their relative rates of growth.  
+The bottom of the table is labeled relative to the last column 
+so you can get a sense of how slow $\log_2 m$ and $\log_2(\log_2 m)$ grow.
+For instance, the final row is showing that 
+$\log_2(262144) = 18$ and 
+$\log_2(\log_2 (262144) ) = 4.170$.
+
+Figures~\ref{fig:comp2} and~\ref{fig:comp3} demonstrate that as $n$ increases, 
+the constants and lower-order terms do not matter.
+For instance, notice that although $100n$ is much larger than $2^n$ for small values of $n$,
+as $n$ increases, $2^n$ quickly gets much larger than $100n$. 
+Similarly, in Figure \ref{fig:comp3}, notice that when $n=74$, $n^3$ and $n^3+234$ are virtually
+the same.
+
+\vspace*{.35in}
+\end{minipage}
+\hfill
+\begin{minipage}{.47\textwidth}
+{\footnotesize
+$
+%\begin{array}{|r|r|r|r|r|r|}
+%\hline
+%\log n&n&n\log n&n^2&n^3&2^n\rule{0in}{.15in}\\
+%\hline
+%0&1&0&1&1&2\\
+%0.6931&2&1.39&4&8&4\\
+%1.099&3&3.30&9&27&8\\
+%1.386&4&5.55&16&64&16\\
+%1.609&5&8.05&25&125&32\\
+%1.792&6&10.75&36&216&64\\
+%1.946&7&13.62&49&343&128\\
+%2.079&8&16.64&64&512&256\\
+%2.197&9&19.78&81&729&512\\
+%2.303&10&23.03&100&1000&1024\\
+%2.398&11&26.38&121&1331&2048\\
+%2.485&12&29.82&144&1728&4096\\
+%2.565&13&33.34&169&2197&8192\\
+%2.639&14&36.95&196&2744&16384\\
+%2.708&15&40.62&225&3375&32768\\
+%2.773&16&44.36&256&4096&65536\\
+%2.833&17&48.16&289&4913&131072\\
+%2.890&18&52.03&324&5832&262144\\
+%\hline
+%\log\log m&\log m&&&&m\\
+%\hline
+%\end{array}
+\begin{array}{|r|r|r|r|r|r|}
+\hline
+\log_2 n&n&n\ln n&n^2&n^3&2^n\rule{0in}{.15in}\\
+\hline
+0.000&1&0&1&1&2\\
+1.000&2&1.39&4&8&4\\
+1.585&3&3.30&9&27&8\\
+2.000&4&5.55&16&64&16\\
+2.321&5&8.05&25&125&32\\
+2.585&6&10.75&36&216&64\\
+2.807&7&13.62&49&343&128\\
+3.000&8&16.64&64&512&256\\
+3.170&9&19.78&81&729&512\\
+3.321&10&23.03&100&1000&1024\\
+3.460&11&26.38&121&1331&2048\\
+3.585&12&29.82&144&1728&4096\\
+3.700&13&33.34&169&2197&8192\\
+3.807&14&36.95&196&2744&16384\\
+3.907&15&40.62&225&3375&32768\\
+4.000&16&44.36&256&4096&65536\\
+4.087&17&48.16&289&4913&131072\\
+4.170&18&52.03&324&5832&262144\\
+\hline
+\log_2\log_2 m&\log_2 m&&&&m\\
+\hline
+\end{array}
+$
+}\caption{A comparison of growth rates}\label{fig:comp1}
+%\captionof{figure}{A comparison of growth rates}\label{fig:comp1}
+\end{minipage}
+\end{figure}
+
+
+
+
+\begin{figure}[h]
+\begin{minipage}{.4\textwidth}
+{\footnotesize
+$
+\begin{array}{|r|r|r|r|r|r|}
+\hline
+n&100 n&n^2&11 n^2&n^3&2^n\rule{0in}{.15in}\\
+\hline
+1&100&1&11&1&2\\
+2&200&4&44&8&4\\
+3&300&9&99&27&8\\
+4&400&16&176&64&16\\
+5&500&25&275&125&32\\
+6&600&36&396&216&64\\
+7&700&49&539&343&128\\
+8&800&64&704&512&256\\
+9&900&81&891&729&512\\
+10&1000&100&1100&1000&1024\\
+11&1100&121&1331&1331&2048\\
+12&1200&144&1584&1728&4096\\
+13&1300&169&1859&2197&8192\\
+14&1400&196&2156&2744&16384\\
+15&1500&225&2475&3375&32768\\
+16&1600&256&2816&4096&65536\\
+17&1700&289&3179&4913&131072\\
+18&1800&324&3564&5832&262144\\
+19&1900&361&3971&6859&524288\\
+\hline
+\end{array}
+$
+}
+\caption{Constants don't matter}\label{fig:comp2}
+\end{minipage}
+\hfill
+\begin{minipage}{.5\textwidth}
+{\footnotesize
+$
+\begin{array}{|r|r|r|r|r|r|}
+\hline
+n&n^2&n^2-n&n^2+99&n^3&n^3+234\rule{0in}{.15in}\\ % the rule gives some needed vertical space
+\hline
+2&4&2&103&8&242\\
+6&36&30&135&216&450\\
+10&100&90&199&1000&1234\\
+14&196&182&295&2744&2978\\
+18&324&306&423&5832&6066\\
+22&484&462&583&10648&10882\\
+26&676&650&775&17576&17810\\
+30&900&870&999&27000&27234\\
+34&1156&1122&1255&39304&39538\\
+38&1444&1406&1543&54872&55106\\
+42&1764&1722&1863&74088&74322\\
+46&2116&2070&2215&97336&97570\\
+50&2500&2450&2599&125000&125234\\
+54&2916&2862&3015&157464&157698\\
+58&3364&3306&3463&195112&195346\\
+62&3844&3782&3943&238328&238562\\
+66&4356&4290&4455&287496&287730\\
+70&4900&4830&4999&343000&343234\\
+74&5476&5402&5575&405224&405458\\
+\hline
+\end{array}
+$
+}
+\caption{Lower-order terms don't matter}\label{fig:comp3}
+\end{minipage}
+\end{figure}
+
+Figures \ref{fig:growthgraph1} through \ref{fig:growthgraph5} give a graphical
+representation of relative growth rates of functions. In these diagrams,
+\verb+**+ means exponentiation.  For instance, 
+\verb+x**2+ means $x^2$.
+
+%% Got rid of most undefull hboxes by replacing 
+%\begin{minipage}{.47\textwidth} for each figure with just multicols.
+\begin{figure}[ht]
+\begin{center}
+\begin{multicols}{2}
+\sputfig{fig/plot2.eps}{.4}
+\caption{Slow growing functions.}\label{fig:growthgraph1}
+\columnbreak
+\sputfig{fig/plot1.eps}{.4}
+\caption{Polynomials.}
+\end{multicols}
+\end{center}
+
+\smallskip
+\begin{center}
+\begin{multicols}{2}
+\sputfig{fig/plot3.eps}{.4}
+\caption{Polynomials and an exponential.  
+It looks like $x^4$ grows faster than $2^x$, but see Fig~\ref{fig:f2}.}\label{fig:f1}
+\columnbreak
+\sputfig{fig/plot4.eps}{.4}
+\caption{Polynomials and an exponential with larger $n$. Clearly $2^n$ grows faster than $n^4$.}\label{fig:f2}
+\end{multicols}
+\end{center}
+
+\smallskip
+\begin{multicols}{2}
+\sputfig{fig/plot5.eps}{.4}
+\caption{\raggedright Notice that as $n$ gets larger, the constants eventually matter less.}
+\label{fig:growthgraph5}
+\vspace*{0in} % gets rid of \vbox underfull warning.
+\columnbreak
+\vspace*{.5in}
+\end{multicols}
+\end{figure}
+
+It is important to point out that you should {\em never} rely on the graphs of functions
+to determine relative growth rates.  That is the point of Figures~\ref{fig:f1} and~\ref{fig:f2}.
+Although graphs sometimes give you an accurate picture of the relative growth rates of
+the functions, they might just as well present a distorted view of the data 
+depending on the values that are used on the axes.  Instead, you should use the
+techniques we develop in this section.
+
+Next we present some of the most important results about the relative growth rate of some 
+common functions.  We will ask you to prove each of them. 
+Theorems \ref{thm:limits} and \ref{thm:lhop} will help you do so.
+You will notice that most of the theorems are using little-o, not Big-O.
+Hopefully you understand the difference.  If not, review those definitions before
+continuing.
+
+We begin with something that is pretty intuitive: higher powers grow faster than lower powers.
+
+\begin{thm}\label{thm:polyComp}
+Let $a<b$ be real numbers.  Then 
+$n^a=o(n^b)$.
+\end{thm}
+
+\begin{exa}
+According to Theorem~\ref{thm:polyComp}, $n^2=o(n^3)$ and $n^5=o(n^{5.1})$.
+\end{exa}
+
+\begin{exer}\label{exer:polyComp}
+Prove Theorem~\ref{thm:polyComp}.
+(Hint: Use Theorem~\ref{thm:limits} 
+and do a little algebra before you try to compute the limit.)
+
+\vspace*{2in}
+\begin{answer}
+Since $a<b$, $b-a>0$.  
+Therefore, $\displaystyle \lim_{n\rightarrow\infty} \frac{n^a}{n^b} 
+=  \lim_{n\rightarrow\infty} n^{a-b} =  \lim_{n\rightarrow\infty} \frac{1}{n^{b-a}}=0$.
+By Theorem~\ref{thm:limits}, $n^a=o(n^b)$.
+\end{answer}
+\end{exer}
+
+
+The next theorem tells us that exponentials with different bases do not grow at the same rate.
+More specifically, the higher the base, the faster the growth rate.
+
+\begin{thm}\label{thm:expComp}
+Let $0<a<b$ be real numbers.  Then 
+$a^n=o(b^n)$.
+\end{thm}
+
+\begin{exa}
+According to Theorem~\ref{thm:expComp}, $2^n=o(5^n)$ and $4^n=o(4.5^n)$.
+\end{exa}
+
+\begin{exer}
+Prove Theorem~\ref{thm:expComp}.
+(See the hint for Exercise~\ref{exer:polyComp}.)
+
+\vspace*{2in}
+\begin{answer}
+Since $a<b$, $a/b<1$.  
+Therefore, $\displaystyle \lim_{n\rightarrow\infty} \frac{a^n}{b^n} 
+=  \lim_{n\rightarrow\infty}\left(\frac{a}{b}\right)^n = 0$.
+By Theorem~\ref{thm:limits}, $a^n=o(b^n)$.
+\end{answer}
+\end{exer}
+
+%Stupid page break issues.  I can't get the previous box to size to the bottom of the page.
+%It either goes to the next page or the next paragraph goes on this page.  Not sure why.
+%I should eventually figure out what this box environment is doing.  CAC, 6/10/15.
+
+\newpage
+
+Recall that a logarithmic function is the inverse of an exponential function.
+That is, $b^{x} = n$ is equivalent to $x = \log_{b} n$.
+The following identity is very useful.
+
+%\begin{thm}\label{thm:rellogs}
+%Let $a$ and $b$ be positive real numbers.  Then 
+%$$\log_a b = \frac{\log_a c}{\log_b c}.$$
+%This can be rearranged as 
+%$$\frac{\log_a c}{\log_a b} =\log_b c 
+%\mbox{\, \, \,  or \, \, \, \, }
+%(\log_a b)(\log_b c)=log_a c.$$
+%\end{thm}
+\begin{thm}\label{thm:rellogs}
+Let $a$, $b$, and $x$ be positive real numbers with $a\neq 1$ and $b\neq 1$.  Then 
+$$\log_a x = \frac{\log_b x}{\log_b a}.$$
+\end{thm}
+
+\begin{exa}
+Most calculators can compute $\ln n$ or $\log_{10} n$, but are unable to compute
+logarithms with any given base.  But Theorem~\ref{thm:rellogs} allows you to do so.
+For instance, you can compute $\log_2 39$ as $\log_{10} 39/\log_{10} 2$.
+\end{exa}
+
+Notice that the formula in Theorem~\ref{thm:rellogs}  can be rearranged as 
+$(\log_b a)(\log_a x) = \log_b x.$
+This form should make it evident that 
+changing the base of a logarithm just changes the value
+by a constant amount.  This leads to the following result.
+\begin{cor}\label{cor:thetalogs}
+Let $a$ and $b$ be positive real numbers with $a\neq 1$ and $b\neq 1$.
+
+\noindent
+Then $\log_a n=\Theta(\log_b n)$.
+\begin{pf}
+Follows from the definition of $\Theta$ and
+Theorem~\ref{thm:rellogs}.
+\end{pf}
+\end{cor}
+
+\begin{exa}
+According to Corollary~\ref{cor:thetalogs}, $\log_2 n =\Theta(\log_{10}n)$ 
+and $\ln n =\Theta(\log_2 n)$.
+\end{exa}
+
+Corollary~\ref{cor:thetalogs} is stating that all logarithms have the same 
+rate of growth regardless of their bases.
+That is, the base of a logarithm does not matter when it is used
+in asymptotic notation.
+Because of this, the base is often omitted  in asymptotic notation.  
+In computer science, it is usually safe to assume that 
+the base of logarithms is $2$ if it is not specified.
+
+\begin{exer}
+Indicate whether each of the following is {\em true} (T) or {\em false} (F).
+
+\vspace*{-2ex}
+\begin{lenum}
+\itemtf
+$2^n=\Theta(3^n)$
+\itemtf
+$2^n=o(3^n)$
+\itemtf
+$3^n=O(2^n)$
+\itemtf
+$\log_3 n=\Theta(\log_2 n)$
+\itemtf
+$\log_2 n=O(\log_3 n)$
+\itemtf
+$\log_{10} n=o(\log_3 n)$
+\end{lenum}
+\begin{answer}
+(a) False since $3^n$ grows faster than $2^n$.
+(b) True since $2^n$ grows slower than $3^n$.
+(c) False since $3^n$ grows faster than $2^n$, which means it does not grow
+slower or at the same rate.
+(d) True since they both have the same growth rate.  Remember, exponentials with
+different bases have different growth rates, but logarithms with different bases
+have the same growth rate.
+(e) True since they have the same growth rate.  Remember that if $f(n)=\Theta(g(n))$, 
+then $f(n)=O(g(n))$ and $f(n)=\Omega(g(n))$.
+(f) False since they have the same growth rate, so $\log_{10} n$ does not grow slower
+than $\log_3 n$.
+\end{answer}
+\end{exer}
+Next we see that logarithms grow slower than positive powers of $n$.  
+
+
+\begin{thm}\label{thm:logpower1}
+Let $b>0$ and $c>1$ be real numbers. Then $\log_c(n)=o(n^b)$.
+\end{thm}
+
+\begin{exa}
+According to Theorem~\ref{thm:logpower1}, $\log_2 n= o(n^2)$,  $\log_{10} n= o(n^{1.01})$, 
+and $\ln n =o(\sqrt{n})$.
+\end{exa}
+
+\begin{exer}
+Prove Theorem~\ref{thm:logpower1}.
+(Hint: This is easy if you use Theorems~\ref{thm:limits} and~\ref{thm:lhop})
+
+\vspace*{2.5in}
+\begin{answer}
+Using l'Hopital's rule, we have 
+$\displaystyle \lim_{n\rightarrow\infty} \frac{\log_c(n)}{n^b} 
+=  \lim_{n\rightarrow\infty}\frac{\frac{1}{n\ln(c)}}{b\, n^{b-1}}
+=  \lim_{n\rightarrow\infty}\frac{1}{\ln(c)b\, n^b}
+=0$ since $b>0$.  Thus, Theorem~\ref{thm:limits} tells us that $\log_c n=o(n^b)$.
+\end{answer}
+\end{exer}
+
+More generally, the next theorem states that 
+any positive power of a logarithm grows slower than any positive
+power of $n$.  Since this one is a little tricky, we will provide the proof.
+In case you have not seen this notation before, you should know that $\log^a n$
+means $(\log n)^a$, which is {\em not} the same thing as $\log (n^a)$.
+
+\begin{thm}\label{thm:logpowernpower}
+Let $a>0$, $b>0$, and $c>0$ be real numbers. Then $\log_c^a (n)=o(n^b)$.
+In other words, any power of a log grows slower than any polynomial.
+\begin{pf}
+First, we need to know that if $a>0$ is a constant, and
+$\displaystyle\lim_{n\rightarrow\infty}f(n)=C$, then
+$$\displaystyle\lim_{n\rightarrow\infty}(f(n))^a
+=\left(\displaystyle\lim_{n\rightarrow\infty}f(n)\right)^a
+=C^a.$$
+Using this and the limit computed in the proof of Theorem~\ref{thm:logpower1}, we have that 
+$$\displaystyle \lim_{n\rightarrow\infty} \frac{\log_c^a(n)}{n^b} 
+=\displaystyle \lim_{n\rightarrow\infty} \left(\frac{\log_c(n)}{n^{b/a}}\right)^a 
+=\left(\displaystyle \lim_{n\rightarrow\infty}\frac{\log_c(n)}{n^{b/a}}\right)^a 
+=0^a=0.
+$$
+Thus, Theorem~\ref{thm:limits} tells us that $\log_c^a(n)=o(n^b)$.
+\end{pf}
+\end{thm}
+
+\begin{exa}
+According to Theorem~\ref{thm:logpowernpower}, $\log_2^4 n= o(n^2)$,
+$\ln^{10} n =o(\sqrt{n})$,
+and
+
+\noindent
+$\log_{10}^{1,000,000} n= o(n^{.00000001})$.
+\end{exa}
+
+Finally, any exponential function with base larger than $1$ grows faster than any polynomial.
+
+
+\begin{thm}\label{thm:polyexp}
+Let $a>0$ and $b>1$ be real numbers. Then $n^a=o(b^n)$.
+\end{thm}
+
+\begin{exa}
+According to Theorem~\ref{thm:polyexp}, it is easy to see that $n^2=o(2^n)$, $n^{15}=o(1.5^n)$,
+and $n^{1,000,000}=o(1.0000001^n)$.
+\end{exa}
+
+There are several ways to prove Theorem~\ref{thm:polyexp}, including using repeated 
+applications of l'Hopital's rule, using induction, or doing a little
+algebraic manipulation and using one of several clever tricks.
+But the techniques are beyond what we generally need in the course, so we will
+omit a proof (and, perhaps more importantly, we will not ask you to provide a proof!).
+
+\begin{fib}
+Fill in the following blanks with  $\Theta$, $\Omega$, $O$, or $o$.
+You should give the most precise answer possible. (e.g. If you put $O$, but
+the correct answer is $o$, your answer is correct but not precise enough.)
+\begin{lenum}
+\item $n(n-1)=\blankline{.5}(500n^2)$.
+\item $50n^2=\blankline{.5}(.001n^4)$.
+\item $\log_2{n}=\blankline{.5}(\ln{n})$.
+\item $\log_2\left(n^2\right)=\blankline{.5}(\log_2^2(n))$.
+\item $2^{n-1}=\blankline{.5}(2^n)$.
+\item $5^{n}=\blankline{.5}(3^n)$.
+\item $(n-1)!=\blankline{.5}(n!)$.
+\item $n^3=\blankline{.5}(2^n)$.
+\item $\log^{100}n=\blankline{.5}(1.01^n)$.
+\item $\log^{100}n=\blankline{.5}(n^{1.01})$.
+\end{lenum}
+\begin{answer}
+(a) $\Theta$;
+(b) $o$ ($O$ is correct, but not precise enough.);
+(c) $\Theta$;
+(d) $o$ ($O$ is correct, but not precise enough.);
+(e) $\Theta$ since $2^n=2\,2^{n-1}$;
+(f) $\Omega$ (Technically it is $\omega$, but I'll let it slide if you put $\Omega$ since
+ we haven't used $\omega$ much.);
+(g) through (j) are all $o$ ($O$ is correct, but not precise enough.)
+\end{answer}
+\end{fib}
+
+An alternative notation for little-o is $\ll$.  In other words, $f(n)=o(g(n))$ iff
+$f(n)\ll g(n)$.  This notation is useful in certain contexts, including the following
+comparison of the growth rate of common functions.  The previous theorems in this section
+provide proofs of some of these relationships.  The others are given without proof.
+
+\begin{thm}
+Here are some relationships between the growth rates of common functions:
+$$c \ll \log n \ll log^{2} n \ll \sqrt n \ll 
+n \ll n \log n \ll n^{1.1} \ll n^{2} \ll  n^3 \ll n^4 \ll 2^n\ll 3^n\ll n!\ll n^n$$
+\end{thm}
+
+You should convince yourself that each of the relationships given in the previous
+theorem is correct.  You should also memorize them or (preferably) understand why
+each one is correct so you can `recreate' the theorem.
+
+\begin{exer}
+Give a $\Theta$ bound for each of the following functions. You do not need to prove them.
+\begin{lenum}
+  \setlength{\itemsep}{.5in}
+\item $f(n) = n^5 + n^3 + 1900 + n^7 + 21n + n^2 $
+\item $f(n) = (n^2+23n+19 ) (n^2+23n+ n^3+19 ) n^3 $  (Don't make this one harder than it is)
+\item $f(n) = n^2  + 10,000n + 100,000,000,000 $
+\item $f(n) = 49*2^n+34*3^n $
+\item $f(n) = 2^n + n^5 + n^3$
+\item $f(n) = n \log n + n^2$
+\item $f(n) = \log^{300} n + n^{.000001}$
+\item $f(n) = n!\log n + n^n+3^n$
+\end{lenum}
+\vspace*{.45in}
+\begin{answer}
+If your answers do not all start with $\Theta$, go back and redo them before reading the answers.  Your answers should match the following {\em exactly}.
+(a) $\Theta(n^7)$.
+(b) $\Theta(n^8)$.
+(c) $\Theta(n^2)$.
+(d) $\Theta(3^n)$.
+(e) $\Theta(2^n)$.
+(f) $\Theta(n^2)$.
+(g) $\Theta(n^{.000001})$.
+(h) $\Theta(n^n)$.
+\end{answer}
+\end{exer}
+
+\newpage % awkward pagebreak
+
+\begin{exer}
+Rank the following functions in increasing rate of growth.
+Clearly indicate if two or more functions have the same growth rate.
+Assume the $\log$s are base 2.
+\medskip
+
+\noindent
+$x$,\, \,  
+$x^2$,\, \,  
+$2^x$,\, \,  
+$10000$,\, \,    
+$\log^{300} x$,\, \,   
+$x^{5}$,\, \,   
+$\log x$,\, \,   
+$x^{\log 3}$,\, \,    
+$x^{.000001}$,\, \,     
+$3^x$,\, \,  
+$x \log(x)$,\, \,  
+$\log (x^{300})$,\, \,   
+$\log(2^x)$
+
+\vspace*{3.5in}
+\begin{answer}
+Here is the correct ranking (where $\sim$ indicates two functions grow at the same rate):
+
+\noindent
+$10000$,\, 
+$\log x$ $\sim$ $\log (x^{300})$,\, 
+$\log^{300} x$,\, 
+$x^{.000001}$, \,   
+$x$ $\sim$ $\log(2^x)$,  \,   
+$x \log(x)$,  \,   
+$x^{log_2 3}$, \,   
+$x^2$, \,   
+$x^{5}$, \,   
+$2^x$,  \,   
+$3^x$.
+\end{answer}
+\end{exer}
+
+
+
+\newpage
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Algorithm Analysis}\label{sec:algAnalysis}
+
+The overall goal of this chapter is to deal with a seemingly simple question:
+{\em Given an algorithm, how good is it?}
+I say ``seemingly'' simple because unless we define what we mean by ``good'', we cannot
+answer the question. 
+Do we mean how elegant it is?  How easy it is to understand?
+How easy it is to update if/when necessary?  Whether or not it can be generalized?
+
+Although all of these may be important questions, in algorithm analysis we are usually more interested
+in the following two questions:  
+{\em How long does the algorithm take to run, and how much space (memory) 
+does the algorithm require.}  
+In fact, we follow the tradition of most books and focus our discussion on the first question.
+This is usually reasonable since the amount of memory used by most algorithms is not large 
+enough to matter.  There are times, however, when analyzing the space required by an algorithm is
+important.  For instance, when the data is really large (e.g. the graph that represents 
+friendships on Facebook) or when you are implementing a {\em space-time-tradeoff} algorithm.
+
+Although we have simplified the question, we still need to be more specific.  
+What do we mean by ``time''?
+Do we mean how long it takes in real time (often called {\em wall-clock time})?
+\index{wall-clock time}  
+Or the actual amount of time our processor used (called {\em CPU time})?
+\index{CPU time}  
+Or the exact {\em number of instructions} (or {\em number of operations}) executed?  
+
+\begin{ques}
+Why aren't wall-clock time and CPU time the same? 
+
+\noindent
+\answerlinethree
+\begin{answer}
+Modern computers use multitasking to perform several tasks (seemingly) at the same time.
+Therefore, if an algorithm takes 1 minute of real time (wall-clock time), it might be that
+58 seconds of that time was spent running the algorithm, but it could also be the case that
+only 30 seconds of that time were spent on that algorithm, and the other 30 seconds spent
+on other processes.  In this case, the CPU time would be 30 seconds, but the wall-clock time
+60 seconds.
+
+Further complicating matters is increasing availability of machines
+with multiple processors.  If an algorithm runs on 4 processors rather than one, it 
+might take 1/4th the time in terms of wall-clock time, but it will probably take the
+same amount of CPU time (or close to it).
+\end{answer}
+\end{ques}
+
+Because the running time of an algorithm is greatly affected by the 
+characteristics of the computer system 
+(e.g. processor speed, number of processors, amount of memory, file-system type, etc.),
+the running time does not necessarily provide a comparable measure, 
+regardless of whether you use CPU time or wall-clock time.
+The next question asks you to think about why.
+
+\begin{ques}
+Sue and Stu were competing to write the fastest algorithm to solve a problem.
+After a week, Sue informs Stu that her program took 1 hour to run.  
+Stu declared himself victorious since his program took only 3 minutes. 
+But the real question is this:  Whose algorithm was more efficient?  
+Can we be certain Stu's algorithm was better than Sue's?  Explain.
+(Hint:  Make sure you don't jump to any conclusion too quickly.  Think about all of 
+the possibilities.)
+
+\noindent
+\answerlinethree
+\begin{answer}
+We cannot be certain whose algorithm is better with the given information.  
+Maybe Sue used a {\em TRS-80 Model IV} from the 1980s to run her program and Stu used 
+{\em Tianhe-2} (The fastest computer in the world from about 2013-2014).  
+In this case, it is possible that if Sue ran her program on {\em Tianhe-2} 
+it would have only taken 2 minutes, making her the real winner.
+\end{answer}
+\end{ques}
+
+The answer to the previous question should make it clear that you cannot compare the running times of algorithms
+if they were run on different machines.  
+Even if two algorithms are run on the same computer, the wall-clock times may not be comparable.
+
+\begin{ques}
+Why isn't the {\em wall-clock time} of two algorithms that are run on the same computer always
+a reliable indicator of their relative performances?
+
+\noindent
+\answerlinethree
+\begin{answer}
+As has already been mentioned, other processes on the machine can have a significant influence
+on the wall-clock time.  For instance, if I run two CPU-intensive programs at once, the wall-clock time of each might be about twice what it would be if I ran them one at a time.
+If they are run on a machine with multiple cores
+the wall-clock time might be closer to the CPU-time.  But other processes that are 
+running can still throw off the numbers.
+\end{answer}
+\end{ques}
+
+In fact, if you run the same algorithm on the same machine multiple times, 
+it will not always take the same amount of time.  
+Sometimes the differences between trial runs can be significant.
+
+\begin{ques}
+If two algorithms are run on the same machine, can we reliably compare the {\em CPU-times}?
+
+\noindent
+\answerlinethree
+\begin{answer}
+For the most part, yes.  This is especially true if the running times of the algorithms
+are not too close to each other (in other words, if one of the algorithms is significantly
+faster than the other).
+However, the number of other processes running on the machine 
+can have an influence on CPU-time.  For instance, if there are more processes running,
+there are more context switches, and depending on how the CPU-time is counted, these context
+switches can influence the runtime.  So although comparing the CPU-time of two algorithms
+that are run on the same computer gives a pretty good indication of which is better, it
+is still not perfect.
+\end{answer}
+\end{ques}
+
+So the CPU-time turns out to be a pretty good measure of algorithm performance. 
+Unfortunately, it does not really allow one to compare two {\em algorithms}.  It only allows
+us to compare specific {\em implementations of the algorithms}.  
+It also requires us to implement the algorithm in an actual programming language before we
+even know how good the algorithm is (that is, before we know if we should even spend the
+time to implement it).
+
+But we can analyze and compare algorithms before they are implemented if we use
+the {\em number of instructions} as our measure of performance.  
+There is still a problem with this measure.  
+What is meant by an ``instruction''?  
+When you write a program in a language such as Java or C++, it is not executed exactly
+as you wrote it.  It is compiled into some sort of machine language.  
+The process of compiling does not
+generally involve a one-to-one mapping of instructions, 
+so counting Java instructions versus C++ instructions
+wouldn't necessarily be fair.  
+On the other hand, we certainly do not want to look at the machine code in
+order to count instructions---machine code is ugly.
+Further, when analyzing an algorithm, should we even take into account the exact 
+implementation in a particular language, or should we analyze the algorithm apart from implementation?
+
+O.K., that's enough of the complications.  Let's get to the bottom line.  When analyzing algorithms, we 
+generally want to ignore what sort of machine it will run on and what language it will be implemented in.
+We also generally do not want to know {\em exactly} how many instructions it will take.  
+Instead, we want to know the {\em rate of growth} of the number of instructions.  
+This is sometimes called the {\em asymptotic running time} of an algorithm.
+In other words, as the size of the input increases, how does that affect the number of instructions executed?
+We will typically use the notation from Section~\ref{sec:asymptotic} 
+to specify the running time of an algorithm.
+We will call this the {\em time complexity} (or often just {\em complexity})
+of the algorithm.
+
+\subsection{Analyzing Algorithms}
+
+Given an algorithm, the {\em size of the input} is exactly what it sounds like---the amount of space
+required to specify the input.  For instance, if an algorithm operates on an array of size $n$, 
+we generally say the input is of size $n$.
+For a graph, it is usually the number of vertices or the number of vertices and edges. 
+When the input is a single number, things get more complicated for reasons I
+do not want to get into right now.  We usually don't need to worry about this, though.
+
+Algorithm analysis involves determining the size of the input, $n$,  and 
+then finding a function based on $n$ that tells us how long the algorithm will take if the
+input is of size $n$.  By ``how long'' we of course mean how many operations.
+
+\begin{exa}[Sequential Search]\index{sequential search}
+\index{search!sequential}
+Given an array of $n$ elements, often one needs to determine if a given number $val$ is in the array.  
+One way to do this is with the {\em sequential search} algorithm that simply looks through all of 
+the elements in the array until it finds it or reaches the end.  The most common version of this
+algorithm returns the index of the element, or $-1$ if the element is not in the array.
+Here is one implementation.
+\begin{code}
+    int sequentialSearch(int a[],int n, int val) {
+        for(int i=0;i<a.size();i++) {
+            if(a[i]==val) {
+                return i;
+            }
+        }
+        return -1;
+    }
+\end{code}
+What is the size of the input to this algorithm?
+\begin{sol}
+There are a few possible answers to this question.  The input technically consists of an array
+of $n$ elements, the numbers $n$, and the value we are searching for.  So we could consider
+the size of the input to be $n+2$.  However, typically we ignore constants with input sizes.
+So we will say the size of the input is $n$.
+\end{sol}
+\end{exa}
+
+In general, if an algorithm takes as input an array of size $n$ and some constant number of
+other numeric parameters, we will consider the size of the input to be $n$.  
+
+\begin{exer}
+Consider an algorithm that takes as input an
+$n$ by $m$ matrix, an integer $v$, and a real number $r$.  What is the size of the input?
+
+\noindent
+\answerline
+\begin{answer}
+This one is a little more tricky.  
+The answer is $n\cdot m$ since this is how many entries are in the matrix.  
+Sometimes we need to use two numbers to specify the input size.
+As suggested previously, we will ignore the size of the two other pieces of data.
+\end{answer}
+\end{exer}
+
+\begin{exa}
+How many operations does \scode{sequentialSearch} take on an array of size $n$?
+\begin{sol}
+As mentioned above, we consider $n$ as the size of the input.  
+Assigning $i=0$ takes one instruction.  
+Each iteration through the \verb+for+ loop increments $i$,
+compares $i$ with $a.size()$, and compares $a[i]$ with $val$.  
+Don't forget that accessing $a[i]$ and calling \scode{a.size()} 
+each take (at least) one instruction. 
+Finally, it takes an
+instruction to return the value.
+If the $val$ is in the array at position $k$, the algorithm will take $2+5k=\Theta(k)$
+operations, the $2$ coming from the assignment \scode{i=0} and the return statement.  
+If  $val$ is not in the array, the algorithm 
+takes $2+5n=\Theta(n)$ instructions.
+\end{sol}
+\end{exa}
+
+This last example should bring up a few questions.  Did we miss any instructions?  
+Did we miss any possible outcomes that would give us a different answer?  How exactly should we specify our analysis?
+
+Let's deal with the possible outcomes question first.  Generally speaking, when we analyze an algorithm we want to know what happens in one of three cases:  
+The  best case, the average case, or the worst case. 
+When thinking about these cases, 
+we always consider them for a given value of $n$ (the input size).  
+We will see in a moment why this matters.
+ 
+As the name suggests, when performing a {\em best case} analysis, 
+we are trying to determine the smallest
+possible number of instructions an algorithm will take.  
+Typically, this is the least useful type of analysis.
+If you have experienced a situation when someone said something like 
+``it will only take an hour (or a day) to fix your cell phone,'' 
+and it actually took 3 hours (or days), you will understand why.  
+
+When determining the best-case performance of an algorithm, remember that we need
+to determine the best-case performance for a given input size $n$.  This is important
+since otherwise every algorithm would take a constant amount of time in the best case simply by giving it an input of the smallest possible size (typically $0$ or $1$).  That sort of
+analysis is not very informative.
+
+\begin{rem}
+When you are asked to do a best-case analysis of an algorithm, remember that it is
+implied that what is being asked is the best-case analysis {\bf for an input of size $n$}.
+This actually applies to average and worst-case analysis as well, but it is easier to
+make this mistake when doing a best-case analysis.
+\end{rem}
+
+{\em Worst case} analysis considers what is the largest number of instructions that will execute
+(again, for a given input size $n$). 
+This is probably the most common analysis, and typically the most useful.  
+When you pay Amazon for guaranteed
+2-day delivery, you are paying for them to guarantee a worst-case delivery time.  
+However, this analogy is imperfect.  
+When you do a worst-case analysis, you know the algorithm will {\em never} take longer
+than what your analysis specified, but occasionally an Amazon delivery is lost or delayed.
+When you perform a worst-case analysis of an algorithm, you always consider what can happen
+that will make an algorithm take as long as possible, so it will never take longer than the worst-case analysis implies.
+ 
+The {\em average case} is a little more complicated, both to define and to compute.  
+The first problem is determining what ``average'' means for a particular input and/or algorithm.  
+For instance, what does an ``average'' array of values look like?
+The second problem is that even with a good definition, computing the average case
+complexity is usually much more difficult than the other two.
+It also must be used appropriately.  
+If you know what the average number of instructions for an algorithm is, 
+you need to remember that sometimes it might take less time and 
+sometimes it might take more time--possibly significantly more time.
+
+I sometimes use the term {\em expected running time} instead of one of these three.
+This is almost synonymous with {\em average case}, 
+but when I use this term I am being less formal.  
+Thus, I will not necessarily do a complete
+average case analysis to determine what I call the expected running time.  
+Think of it as being how long an algorithm will {\em usually} take.  It will typically
+coincide with either the average- or worst-case complexity.
+
+\begin{exa}
+Continuing the  \scode{sequentialSearch} example, notice that our analysis above reveals that the
+best-case performance is $7=\Theta(1)$ operations 
+(if the element sought is the first one in the array) and the worst-case performance is
+$2+5n=\Theta(n)$ operations (if the element is not in the array).  
+If we assume that the element we are searching for is
+equally likely to be anywhere in the array or not in the array, 
+then the average-case performance 
+should be about $2+5(n/2)=\Theta(n)$ operations.  
+We will do a more thorough average-case analysis of this algorithm shortly.
+\end{exa}
+
+Notice that in the previous example, 
+the average- and worst-case complexities are the same.  This makes sense. 
+We estimate that the average case takes about half as long as the worst case.  But no matter how
+large $n$ gets, it is still just half as long.  
+That is, the {\em rate of growth} of the average and worst-case running times are the same.
+Also note the logic we used to obtain the best-case complexity of $\Theta(1)$.
+We did not say the best case was $\Theta(1)$ because the best-case input was 
+an array of size one.  Instead it is $\Theta(1)$ because in the best case the element we
+are searching for is the first element of the array, no matter how large the array is.
+
+Here is another important question: 
+How do we know we counted all of the operations?
+As it turns out, we don't actually care.
+This is good because determining the exact number is very difficult, if not impossible. 
+Recall that we said we wanted to know the rate of growth of an algorithm, not the exact number of instructions. 
+As long as we count all of the ``important'' ones, we will get the correct rate of growth.  
+But what are the ``important'' ones?
+The term {\em abstract operation} is sometimes used to describe the operations that we will count.
+Typically you choose one type of operation or a set of operations that you know will be performed 
+the most often and consider those as the abstract operation(s).
+
+\begin{exa}\index{sequential search}\index{search!sequential}
+The analysis of \scode{sequentialSearch} can be done more easily than in the
+previous example.  
+We repeat the algorithm here for convenience.
+\begin{code}
+    int sequentialSearch(int a[],int n, int val) {
+        for(int i=0;i<a.size();i++) {
+            if(a[i]==val) {
+                return i;
+            }
+        }
+        return -1;
+    }
+\end{code}
+Notice that the comparison (\scode{a[i]==val}) is executed as often as any other instruction.
+Therefore if we count the number of times that instruction executes, we can use that 
+to determine the rate of growth of the running time.
+  
+In the best case the comparison is executed once (if the element being searched for is
+the first one in the array), so the best-case complexity is $\Theta(1)$.
+
+In the worst case the comparison is executed $n=\Theta(n)$ times
+(if the element being searched for is either at the end or not present in the array).
+  
+As before, we expect the average case to be about $n/2=\Theta(n)$, although
+in the next example we will do a more complete analysis.
+
+Notice that we obtained the same answers here as we did above when we tried to 
+take into account every operation.
+\end{exa}
+
+\begin{exa}
+Let's determine the average-case complexity of \scode{sequentialSearch}.
+If we assume that the element is equally likely to be anywhere in the array,
+then there is a $1/n$ chance that it will be in any given spot.  If it is in the
+first spot, the comparison executes once.  If it is in the second spot, it executes twice.
+In general it takes $k$ comparisons if it is in the $k$th spot.
+Since each possibility has a $1/n$ chance, the average expected search time is
+$$\sum_{k=1}^{n}\frac{k}{n}=\frac{1}{n}\sum_{k=1}^{n}k=\frac{1}{n}\frac{n(n+1)}{2}
+=\frac{n+1}{2}=\Theta(n).$$
+
+Our analysis simplified things a bit---we didn't take into account the possibility that
+the element was not in the array.  To do so, let's assume the element searched for is
+equally likely to be anywhere in the array or not in the array.
+That is, there is now a $1/(n+1)$ chance that it will be in any of the $n$ spots in the
+array and a $1/(n+1)$ chance that it is not in the array. (We divide by $n+1$
+because there are now $n+1$ possibilities, each equally likely.)  If it is not in the array,
+the number of comparisons is $n$. 
+In this case the expected time would be 
+$$\sum_{k=1}^{n}\left(\frac{k}{n+1}\right) + \frac{n}{n+1}
+=\frac{1}{n+1}\left(\sum_{k=1}^{n}k + n\right)
+=\frac{1}{n+1}\left(\frac{n(n+1)}{2}+ n\right)
+=\frac{n^2+3n}{2(n+1)}
+=\Theta(n).$$
+We'll leave it to you to prove that 
+$\frac{n^2+3n}{2(n+1)} =\Theta(n)$. (Use Theorem~\ref{thm:limits} and a little algebra).
+\end{exa}
+
+The previous example demonstrates how performing an average-case analysis is typically
+much more difficult than the other two, even with a relatively simple algorithm.  
+In fact, did we even do it correctly?
+Is it a valid assumption that there is a $1/(n+1)$ chance that the element searched for
+is not in the array?  If we are searching for a lot of values in a small array, 
+perhaps it is the case that most of the values we are searching for are {\em not} in the array.  
+Maybe it is more realistic to assume there is a $50\%$ chance it is in the array 
+and $50\%$ chance that it is not in the array.  
+I could propose several other reasonable
+assumptions, too.  As stated before, it can be difficult to define ``average.''
+In this case it actually doesn't matter a whole lot because under any reasonable
+assumptions the average-case analysis will always come out as $\Theta(n)$.
+
+As you might be able to imagine, things get much more complicated as the algorithms
+get more complex.  This is one of the reasons that in some cases we will skip or
+gloss over the details of the average-case analysis of an algorithm.
+
+It is important to make sure that you choose the operation(s) you will count carefully so
+your analysis is correct.  
+In addition, you need to look at every instruction in the algorithm to determine whether
+or not it can be accomplished in constant time.  If some step takes
+longer than constant time, that needs to be properly taken into consideration.
+In particular, consider function/method calls and operations on data structures 
+very carefully.  For instance, if you see a method call like \verb+insert(x)+
+or \verb+get(x)+, you cannot just assume they take constant time.  You need to determine
+how much time they actually take.
+
+\begin{rem}
+When you are asked for the {\em complexity} of an algorithm, you should 
+do the following three things:
+\begin{enumerate}
+\item
+Give the best, average, and worst-case complexities unless otherwise specified.
+Sometimes the average case is quite complicated and can be skipped.
+\item
+Give answers  in the form of $\Theta(f(n))$ for some function $f(n)$,
+or $O(f(n))$ if a tight bound is not possible.  The function $f(n)$ you choose should
+be as simple as possible.  For instance, instead of $\Theta(3n^2+2n+89)$, you should use
+$\Theta(n^2)$ since the constants and lower order terms don't matter.
+\item
+Clearly justify your answers by explaining how you arrived at them in sufficient detail.
+\end{enumerate}
+\end{rem}
+
+\newpage
+
+\begin{exa}
+What is the complexity of \verb+max(x,y)+?  Justify your answers.
+\begin{code}
+	int max(int x, int y) {
+	    if(x >= y) {
+	        return x;
+	    } else {
+	        return y;
+	    }
+	}
+\end{code}
+\begin{sol}
+No matter what, the algorithm does a single comparison followed by a return statement.  Therefore, in the best, average, and worst case, \verb+max+ takes
+about $2$ operations. Therefore, the complexity is always $\Theta(1)$ 
+(otherwise known as {\em constant}).
+\end{sol}
+\end{exa}
+
+
+\begin{exer}
+Analyze the following algorithm that finds the maximum value in an array.
+Start by deciding which operation(s) should be counted.
+Don't forget to give the best, worst, and average-case complexities.
+\begin{code}
+    int maximum(int a[],int n) {
+        int max = int.MIN_VAL; 
+        for (int i=0; i<n; i++)
+            max = max(max, a[i]);
+        return max; 
+    } 
+\end{code}
+\vspace*{3in}
+
+\begin{answer} 
+We focus on the assignment (=) inside the loop and ignore the other instructions.
+This should be fine since assignment occurs at least as often as any other instruction.  
+In addition, it is important to note that \verb+max+ takes constant time
+(did you remember to explicitly say this?), 
+as do all of the other operations, so we aren't under-counting.
+It isn't too difficult to see that the assignment will occur $n$ times for an array of size $n$
+since the code goes through a loop with $i=0,\ldots, n-1$.
+Thus, the complexity of \scode{maximum} is always $\Theta(n)$.  That is, $\Theta(n)$ is the best, average, and worst-case complexity of \scode{maximum}.
+\end{answer}
+\end{exer}
+
+When an algorithm has no conditional statements (like the \verb+maximum+ algorithm from the previous exercise),
+or at least none that can cause the algorithm to end earlier, the best, average, and worst-case
+complexities will usually be the same.  I say usually because there is always the possibility
+of a weird algorithm that I haven't thought of that could be an exception.
+
+\newpage
+
+\begin{exa}\label{exa:sequentialloops}
+Give the complexity of the following code.
+\begin{code}
+     int q=0;
+     for (int i=1; i<=n; i++) { 
+         q=q+i*i;
+     }
+     for (int j=1; j<=n; j++) {
+         q=q*j;
+     }
+\end{code}
+\begin{sol}
+This algorithm has two independent loops, 
+each of which do slightly different things. 
+Thus, we cannot pick a single operation to count.  
+Instead we will pick the assignment statements that involve $q$.
+That is, we will use both \verb#q=q+i*i# and \verb+q=q*j+.
+The first assignment executes $n$ times since the first loop executes for
+every value of $i$ from $1$ to $n$.  The second loop also executes its assignment
+$n$ times for the same reason.  Since the loops happen one after another, we
+add the number of operations, so the total is $n+n=2n$ assignment statements.
+Since there are no conditional statements, this is the best, worst, and
+average-case number of assignment statements.  Thus, the complexity for all three
+cases is $\Theta(n)$.
+ 
+\end{sol}
+\end{exa}
+ 
+
+\begin{exa}\label{exa:nestedloops}
+Give the complexity of the following code.
+\begin{code}
+    double V = 0;
+     for (int i=1; i<=n; i++) { 
+         for (int j=1; j<=n; j++) { 
+             V=V+A[i]*A[j];
+         }
+     }
+\end{code}
+\begin{sol}
+Clearly the assignment (\scode{V=A[i]*A[j])} occurs the most often.
+The inner loop\footnote{{\em Always} analyze from the inside out.  The more practice you get, the
+more it will be obvious that this is the only way that will consistently work.}
+always executes $n$ times, each time doing one assignment.
+The outer loop executes $n$ times, and each time it executes, it executes the inner loop.
+Therefore the total time is $n\cdot n=\Theta(n^2)$.  This is the best, worst, and average
+case complexity since nothing about the input can change what the algorithm does.
+
+Here is another way to think about it. 
+The inner loop executes the assignment statement $n$ times every time it executes.
+The first time through the outer loop, 
+the whole inner loop executes an calls the assignment $n$ times.
+The second time through the outer loop, 
+the whole inner loop executes an calls the assignment $n$ times.
+This happens all the way until the $n$th time through the outer loop during which the
+whole inner loop executes an calls the assignment $n$ times.
+Thus, the total number of times the assignment is called is 
+$n+n+\cdots+n$ times (where there are $n$
+terms in the sum), which is just $n\cdot n$.  Thus the complexity is $\Theta(n^2)$.
+ 
+\end{sol}
+\end{exa}
+ 
+Sometimes people mistakenly think the algorithm Example~\ref{exa:sequentialloops} 
+takes $\Theta(n^2)$ operations.  id
+But it is not executing one loop inside another loop.  
+It is executing one loop $n$ times followed by another loop $n$ times.
+On the other hand, the algorithm in Example~\ref{exa:nestedloops}
+does {\em not} take $n+n$ operations.  
+It is not executing one loop $n$ times followed by another loop $n$ times.
+It is executing one loop $n$ times, and each of those $n$ times it is executing another
+loop that takes $n$ time.
+
+Here is an analogy.  If you climb a flight of $10$ stairs followed by another flight of $10$ 
+stairs, you climbed a total of $10+10=20$ stairs.
+Now assume you go into a building that has $10$ floors.  There are $10$ steps between
+floors (so it takes $10$ steps to get from floor 1 to 2, etc.)  If you climb to the 
+top of the building, how many stairs did you climb? It is $10+10+\cdots+10$ (where there are
+$10$ terms in the sum), which is $100=10^2$.  How does this relate to the previous examples?
+Simple.  In the first case, you executed:
+\begin{code}
+    for(stair 1 through 10)
+        climb stair
+    for(stair 1 through 10)
+        climb stair
+\end{code}
+and in the second case you executed:
+\begin{code}
+    for(floors 1 through 10)
+        for(stair 1 through 10)
+            climb stair
+\end{code}
+Do you see the resemblance to the code from 
+Examples~\ref{exa:sequentialloops} and~\ref{exa:nestedloops}?
+And do you see how we are really performing the same analysis?
+ 
+It is important to be careful not to jump to conclusions when analyzing algorithms.  
+For instance, a double-nested for-loop should always take $\Theta(n^2)$ to execute, right?
+\begin{exer}
+What is the worst-case complexity of the following algorithm?
+\begin{code}
+    int k=50;
+    for (i = 0; i < n; i ++) {
+        for (j = 0; j < k; j ++) {
+            a[i][j] = b[i][j] * x;
+        }
+    }
+\end{code} 
+\vspace*{2in}
+\begin{answer}
+The line in the inner for loop takes constant time (let's call it $c$).
+The inner loop executes $k=50$ times, each time doing $c$ operations.
+Thus the inner loop does $50\cdot c$ operations, which is still just a constant.
+The outer loop executes $n$ times, each time executing the inner loop, which takes $50\cdot c$ operations.
+Thus, the whole algorithm takes $50\cdot c\cdot n=\Theta(n)$ time.
+\end{answer}
+\end{exer}
+
+If you read the solution to the previous exercise 
+(which you definitely should have---{\em always} read the solutions!), 
+you will see that you need to be careful not to jump to conclusions too quickly.
+A double-nested loop does not always mean an algorithm takes $\Theta(n^2)$ time.
+But does it guarantee it will take $O(n^2)$ (in other words, no more than quadratic
+time)?
+
+\newpage
+
+\begin{exer}
+What is the worst-case complexity of the following algorithm?
+\begin{code}
+    for (i = 0; i < n; i ++) {
+        for (j = 0; j < n*n; j ++) {
+            a[i][j] = b[i][j] * x;
+        }
+    }
+\end{code} 
+\vspace*{2.25in}
+\begin{answer}
+The line in the inner for loop takes constant time (let's call it $c$).
+The inner loop executes $n^2$ times since $j$ is going from
+$0$ to $n^2-1$, so each time the inner loop executes, it does $cn^2$ operations.
+The outer loop executes $n$ times, each time executing the inner loop.
+Thus, the total time is $n\times cn^2=\Theta(n^3)$.
+
+This is an example of an algorithm with a double-nested loop 
+that is {\em worse than} $\Theta(n^2)$.  The point of this exercise is to make
+it clear that you should never jump to conclusions too quickly when analyzing
+algorithms.  Read the limits on loops very carefully!
+\end{answer}
+\end{exer}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Common Time Complexities}\label{section:growthRates}
+
+We have already discussed the relative growth rates of functions.
+In this section we apply that understanding to the analysis of algorithms.
+That is, we will discuss common time complexities that are encountered
+when analyzing algorithms. 
+Let $n$ be the size of the input and $k$ a constant. 
+We will briefly discuss each of the following complexity classes,
+which are listed (mostly) in order of rate of growth.
+
+\begin{itemize}
+\item Constant: $\Theta(k)$, for example $\Theta(1)$
+\item Logarithmic: $\Theta(\log_{k}n)$
+\item Linear: $\Theta(n)$ 
+\item $n\log n$: $\Theta(n \log_{k}n)$
+\item Quadratic: $\Theta(n^{2})$ 
+\item Polynomial: $\Theta(n^k)$
+\item Exponential: $\Theta(k^{n})$
+\end{itemize}
+
+\begin{df}[Constant]\index{constant growth rate}\index{growth rate!constant}
+An algorithm with running time $\Theta(1)$ 
+(or $\Theta(k)$ for some constant $k$)
+is said to have {\bf constant} complexity.  
+Note that this does not necessarily mean that the algorithm takes 
+exactly the same amount of time for all inputs, but it {\bf does}
+mean that there is some number $K$ such that it always takes 
+no more than $K$ operations.
+\end{df}
+
+\begin{exa}
+The following algorithms have constant complexity.
+
+\begin{minipage}[t]{.45\textwidth}\begin{code}
+int FifthElement(int A[],int n) 
+{
+    return A[4];
+}
+
+\end{code} 
+\end{minipage}
+\hfill
+\begin{minipage}[t]{.5\textwidth}\begin{code}
+    int PartialSum(int A[],int n) {
+        int sum=0;
+        for(int i=0;i<42;i++) 
+           sum=sum+A[i];
+        return sum;
+    }
+\end{code} 
+\end{minipage}
+The algorithm \verb+FifthElement+ just indexes into an array and returns that value.
+Since array indexing takes constant time, as does returning a single value,
+this algorithm clearly takes just constant time, no matter how large $n$ is.
+
+The algorithm \verb+PartialSum+ might seem to take $O(n)$ time since it contains
+a loop.  But don't jump to conclusions too quickly.  Notice that the loop executes
+$42$ times, regardless of how large $n$ might be.  All of the other operations
+(both in and out of the loop) takes constant time.  Thus, the overall complexity
+is something like $c_1+42*c_2$, where $c_1$ is the time it takes to do the operations
+outside the loop, and $c_2$ is the time it takes to execute the code in the loop 
+each time it executes, including the comparison and increment in the for loop itself.
+Since both $c_1$ and $c_2$ are constant, so is $c_1+42*c_2$.  Thus, the algorithm
+takes constant time.
+\end{exa}
+
+\begin{exer}
+Which of the following algorithms have constant complexity?   
+Briefly justify your answers.
+\begin{lenum}
+\item
+The \verb+AreaTrapezoid+ algorithm from Example~\ref{exa:areaTrap}.
+
+\noindent
+\answerlinetwo
+\item
+The \verb+factorial+ algorithm from Example~\ref{exa:factorial}.
+
+\noindent
+\answerlinetwo
+\item 
+The \verb+absoluteValue+ algorithm from Problem~\ref{pro:ab1}.
+
+\noindent
+\answerlinetwo
+\end{lenum}
+\begin{answer}
+(a) \verb+AreaTrapezoid+ is constant.  
+(b) \verb+factorial+is not constant.  
+It should be easy to see that it has a complexity of $\Theta(n)$.
+(c)  \verb+absoluteValue+ is constant if we assume \verb+sqrt+ takes constant time.
+\end{answer}
+\end{exer}
+
+\begin{df}[Logarithmic]\index{logarithmic growth rate}\index{growth rate!logarithmic}
+Algorithms with running time $\Theta(\log n)$ are said to have {\bf logarithmic} complexity.
+As the input size $n$ increases, so does the running time, but very slowly.
+Logarithmic algorithms are typically found when the algorithm can systematically 
+ignore fractions of the input.
+\end{df}
+
+\begin{exa}
+In Example~\ref{exa:binSearchIter} we will see that 
+{\em binary search} has complexity $\Theta(\log n)$. 
+\end{exa}
+
+\begin{df}[Linear]\index{linear growth rate}\index{growth rate!linear}
+Algorithms with running time $\Theta(n)$ are said to have {\bf linear} complexity.
+As $n$ increases, the run time increases in proportion with $n$.
+Linear algorithms access each of their $n$ inputs at most some constant number of times.
+\end{df}
+
+\begin{exa}
+The following are linear algorithms.
+\medskip
+
+\noindent
+\begin{minipage}{.45\textwidth}
+\begin{code}
+  void sumFirstN(int n) {
+      int sum=0; 
+      for (int i=1;i<=n;i++)
+      sum = sum + i;  
+  }
+\end{code}
+\end{minipage}
+\hfill
+\begin{minipage}{.45\textwidth}
+\begin{code}
+  void mSumFirstN(int n) {
+      int sum=0;
+      for(int i=1;i<=n;i++)
+          for(int k=1;k<7;k++)
+              sum = sum + i;
+  }
+\end{code} 
+\end{minipage}
+
+It is pretty easy to see that \verb+sumFirstN+ takes linear time since it contains a
+single for loop that executes $n$ times and does a constant amount of work each time.
+
+At first glance it may seem that \verb+mSumFirstN+ takes $\Theta(n^2)$ time since it
+has a double nested loop.  You will think about why it is actually $\Theta(n)$ in 
+the next question.
+\end{exa}
+
+\begin{ques}
+Why is the complexity of \verb+mSumFirstN+ from the previous example
+$\Theta(n)$ and not $\Theta(n^2)$?
+
+\noindent
+\answerlinethree
+\begin{answer}
+Although it has a nested loop, the inside loop always executes $6$ times, which
+is a constant.  So the algorithm takes about $6\cdot c\cdot n=\Theta(n)$ operations, not $\Theta(n^2)$.
+\end{answer}
+\end{ques}
+
+
+\begin{df}[$n \log n$]
+Many divide-and-conquer algorithms have complexity $\Theta(n\log n)$.
+These algorithms break the input into a constant number
+of subproblems of the same type, solve them independently, and then
+combine the solutions together.  Not all divide-and-conquer algorithms
+have this complexity, however.
+\end{df}
+
+\begin{exa}
+Two of the most well known sorting algorithms, {\em Quicksort} and {\em merge sort}, 
+have an average case complexity of $\Theta(n\log n)$.  
+We will do a complete analysis of both algorithms in Chapter~\ref{ch:recurrences}.
+\end{exa}
+
+\begin{df}[Quadratic]\index{quadratic growth rate}\index{growth rate!quadratic}
+Algorithms with a running time of $\Theta(n^2)$ are said to have {\bf quadratic} complexity.
+As $n$ doubles, the running time quadruples.
+\end{df}
+
+\begin{exa}
+The following algorithm is quadratic.
+\begin{code}
+    int compute_sums(int A[], int n) {
+        int M[n][n];
+        for (int i=0;i<n;i++) 
+            for (int j=0;j<n;j++)
+                M[i][j]=A[i]+A[j];
+        return M;
+    }
+\end{code} 
+This one is pretty easy to see since it has double nested loops that each
+execute $n$ times, and the amount of work done in the inner loop is constant.
+\end{exa}
+
+
+\begin{exer}
+Which of the following algorithms have quadratic complexity?   
+Briefly justify your answers.
+\begin{lenum}
+\item
+The \verb+factorial+ algorithm from Example~\ref{exa:factorial}.
+
+\noindent
+\answerlinetwo
+\item
+An algorithm that tries to find the smallest element in an array of size $n\times n$
+by searching through the entire array.
+
+\noindent
+\answerlinetwo
+\end{lenum}
+\begin{answer}
+(a) Since \verb+factorial+ has a complexity of $\Theta(n)$, it is not quadratic.
+(b) Since there are $n^2$ entries it to consider, 
+the algorithm takes $\Theta(n^2)$ time, so it would be quadratic.\footnote{Technically this is linear with respect to the {\em size} of the input since the
+size of the input is $n^2$.  But it is quadratic in $n$.  In either case, it is
+$\Theta(n^2)$.}
+\end{answer}
+\end{exer}
+
+
+\begin{ques}
+In a previous course you may have encountered several quadratic sorting algorithms.  Name them.
+(Note: We will analyze two of them soon.)
+
+\noindent
+\answerline
+\begin{answer}
+Bubble sort, selection sort, and insertion sort are three of them that you may have seen before.
+\end{answer}
+\end{ques}
+
+\begin{df}[Polynomial]\index{polynomial growth rate}
+\index{growth rate!polynomial}
+Algorithms with running time $\Theta(n^k)$ for some constant $k$ are 
+said to have {\bf polynomial} complexity.  We call them 
+{\bf polynomial-time algorithms}.  
+Note that linear and quadratic are special cases of polynomial.
+When we say an {\bf efficient}\index{efficient algorithm} 
+algorithm exists to solve a problem,
+we typically mean a polynomial-time algorithm.
+\end{df}
+
+\begin{exa}
+As we will see in Example~\ref{exa:matmult}, \verb+MatrixMultiply+ takes $\Theta(n^3)$ time.
+Since $3$ is a constant, that is a polynomial-time algorithm.
+We will also mention Strassen's algorithm that has a complexity of about $\Theta(n^{2.8})$.
+That is also a polynomial-time algorithm.  It's actual complexity is 
+$\Theta(n^{\log_2 7})$.
+\end{exa}
+
+
+\begin{df}[Exponential]\index{exponential growth rate}\index{growth rate!exponential}
+Algorithms with running time $\Theta(k^n)$ for some constant $k$ are 
+said to have {\bf exponential} complexity. 
+Since exponential algorithms can only be run for small values of $n$, 
+they are not considered to be efficient.
+Brute-force algorithms are often exponential.
+\end{df}
+
+\begin{exa}
+Since there are $2^n$ binary numbers of length $n$, 
+an algorithm that lists all binary numbers of length $n$ would take $\Theta(2^n)$ time,
+which is exponential.
+\end{exa}
+
+\begin{rem}
+As we have already seen, 
+exponentials with different bases do not grow at the same rate.
+Thus, two exponential algorithms do not belong to the same complexity class 
+unless the base of the exponent is the same.
+In other words, $a^n\neq\Theta(b^n)$ unless $a=b$.
+\end{rem}
+
+Let me end on a very important note regarding analysis of algorithms and asymptotic growth of functions.
+If algorithm $A$ is faster than algorithm $B$, 
+then the running time of $A$ is less than the running time of $B$.
+On the other hand, if $A$'s running time is asymptotically faster than the running time of $B$,
+that means $B$ is a faster algorithm!  
+In other words, the words fast/slow need to be reversed when discussing
+algorithm speeds versus the growth of the functions.
+Put simply: {\em A faster growing complexity means a slower algorithm, and vice-versa}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Basic Sorting Algorithms}
+In this section we will analyze algorithms that are slightly more complex than the previous examples. 
+All of these algorithms take a list of $n$ integers and places them in ascending order. This is referred
+to as {\em sorting} the lists. This idea of course can be expanded to any type of list as long as there
+is a clear way to compare the elements to determine which is larger.
+If you have previously taken a data structures course, you should be familiar with these algorithms.
+In case you haven't had such a course, we provide very brief descriptions of the algorithms. 
+But our focus here is on determining how efficient the algorithms are, not on exactly how the 
+algorithms work.
+
+\begin{exa}\label{exa:bubble}\index{bubble sort}\index{sort!bubble}
+The \verb+bubblesort+ algorithm is one of the first sorting algorithms that students learn about.
+Here is one implementation of the algorithm.
+\begin{code}
+    void bubblesort(int a[],int n) {
+        for(int i=n-1;i>0;i--) {
+            for(int j=0;j<i;j++) {
+                if(a[j] > a[j+1]) {
+                    swap(a,j,j+1);
+                }
+            }
+        }
+    }
+    
+\end{code}
+If you have seen \verb+bubblesort+ previously, 
+hopefully you know by now that you should {\em never} use it.
+It is one of the worst sorting algorithms. 
+Because of this, we won't even describe the algorithm here and just focus on analyzing it.\\
+
+Find the complexity of \verb+bubblesort+, where $n$ is the size of the array $a$.
+\begin{sol}
+First, notice that the input size is $n$ since we are sorting an array 
+with $n$ elements.
+
+Example~\ref{exa:swapforArray} gives an implementation of \verb+swap+
+that takes constant time (verify this!).  The conditional statement,
+including the swap, takes constant time (we'll call it $c$, as usual), 
+regardless of whether or not
+the condition is true.  It takes longer if the condition is true, but
+it is constant either way---about $3$ operations (array indexing ($\times 2$) and
+comparison) versus about $6$ (the swap adds about $3$).
+
+The inner loop goes from $j=0$ to $j=i-1$, 
+so it executes $i$ times and takes $ci$ time.  
+But what is $i$?  This is where things
+get a little more complicated than in the previous examples.  
+Notice that the outer loop is changing the value of $i$.  
+We need to look at this a little more carefully.
+\begin{enumerate}
+\item 
+The first time through the outer loop $i=n-1$.  
+So the inner loop takes $c(n-1)$ time.
+\item
+The second time through the outer loop $i=n-2$.  
+So the inner loop takes $c(n-2)$ time.
+\item
+The $k$th time through the outer loop $i=n-k$.  
+So the inner loop takes $c(n-k)$ time.
+\item
+This goes all the way to the $n$th time through the outer loop when 
+$i=1$ and the inner loop takes $c\cdot 1$ time.
+\end{enumerate}
+The outer loop is simply causing the inner loop to be executed over and over again,
+but with different parameters (specifically, it is changing the limit on the inner loop).  
+Thus, we need to add up the time taken for all of these calls to the inner loop.  
+Doing so, we see that the total time required for \verb+bubblesort+ is 
+\begin{eqnarray*}
+c(n{-}1)+c(n{-}2)+c(n{-}3)+\cdots+c\, 1&=&c( (n{-}1) + (n{-}2) + (n{-}3)+\cdots + 1)\\
+&=&c(1+2+3+\cdots+(n-1))\\
+&=&c\sum_{k=1}^{n-1}k\\
+&=&c\frac{(n-1)n}{2}\\
+&=&\Theta(n^2)
+\end{eqnarray*}
+Thus, the complexity (worst, best, and average) of \verb+bubblesort+ is $\Theta(n^2)$.
+\end{sol}
+\end{exa}
+
+\begin{rem}
+Part way through our analysis of \verb+bubblesort+ we had $k$ as part of our complexity.
+But notice that the $k$ did not show up as part of the final complexity.  This is because
+in the context of the entire algorithm, $k$ has no meaning.  It is a local variable from the 
+algorithm that we needed to use to determine the overall complexity of the algorithm.
+{\bf The only variables that should appear in the complexity of an 
+algorithm are those that are related to the size of the input.}
+\end{rem}
+
+\newpage
+\begin{ques}
+In the best case, the code in the conditional statement in \verb+bubblesort+ never 
+executes.  Why does this still result in a complexity of $\Theta(n^2)$?
+
+\noindent
+\answerlinethree
+\begin{answer}
+As we mentioned in our analysis, executing the conditional statement takes about
+$3$ operations, and if it is true, about $3$ additional operations are performed.  So
+the worst case is no more than about twice as many operations as the best case.  In other
+words, we are comparing $c\cdot n^2$ to $2c\cdot n^2$, both of which are $\Theta(n^2)$.
+\end{answer}
+\end{ques}
+
+In reality, the best and worst case performance of \verb+bubblesort+ are different---the
+worst case is about twice as many operations.  But when we are discussing the {\em complexity}
+of algorithms, we care about the asymptotic behavior---that is, 
+what happens as $n$ gets larger.  In that case, the difference is still just a factor of $2$.
+The best and worst-case complexities have the same growth rate (quadratic).
+
+Consider how this is different if the best-case complexity of an algorithm is $\Theta(n)$ 
+and the worst-case complexity is $\Theta(n^2)$.  As $n$ gets larger, the gap between the
+performance in the best and worst cases also gets larger.  In this case, 
+the best and worst-case complexities are not the same since one is linear and the other
+is quadratic.
+
+\begin{rem}
+If an algorithm contains nested loops and the limit on one or more of
+the inner loops depends on a variable from an outer loop, analyzing the
+algorithm will generally involve one or more summations, as it did with the previous example.
+As mentioned previously, variables related to those loops that are 
+used in your analysis (e.g. $i$, $j$, $k$, etc.) should never show up in your final answer!
+They have no meaning in that context.
+\end{rem}
+
+
+\begin{exa}\index{insertion sort}\index{sort!insertion}
+One of the best simple sorting algorithms is \verb+insertionSort+. 
+It works much like one might sort a hand of playing cards.
+The first card is in order since there is one one. Compare the second card to the first card and
+swap if they are out of order. Now the first two are in order. Now pick up the third card and
+go down the list and place it where it belongs. Just keep repeating this process until the whole
+list is sorter. Here is an implementation of that idea:
+
+\begin{code}
+    void insertionSort(int a[], int n) {
+        for (int i=1;i<n;i++) { 
+            int v=a[i];  
+            int j=i-1;
+            while (j >= 0 && a[j] > v) {
+                a[j+1] = a[j];  
+                j--; 
+            }
+            a[j+1]=v;
+        }
+    }
+\end{code}
+
+Find the complexity of \verb+insertionSort+, where $n$ is the size of the array $a$.
+\begin{sol}
+The code inside the while loop takes constant time.
+The loop can end for one of two reasons---if $j$ gets to $0$, or if \verb+a[j]>v+.  
+In the worst case, it goes until $j=0$.
+Since $j$ starts out being $i$ at the beginning, and it is decremented in the loop,
+that means the loop executes $i$ times in the worst case.  
+
+The for loop (the outer loop) 
+changes the value of $i$ from $1$ to $n-1$, executing a constant amount
+of code plus the while loop each time. So the $i$th time through the outer loop
+takes $c_1+c_2i$ operations. 
+We will simplify this to just $i$ operations---you 
+can think of it as counting the number of assignments in the while loop if you wish.  
+So the worst-case complexity is 
+$$\sum_{i=1}^{n-1}i = \frac{(n-1)n}{2} =\Theta(n^2).$$
+This happens, by the way, if the elements in the array start out in reverse order.
+
+In the best case, the loop only executes once each time because \verb+a[j]>v+ is always true
+(which happens if the array is already sorted).  
+In this case, the complexity is $\Theta(n)$ since the outer loop executes $n-1$ times,
+each time doing a constant amount of work.
+\end{sol}
+
+We should point out that if we had done our computations using $c_1+c_2i$ 
+instead of $i$ we would have arrived at the same answer, 
+but it would have been more work:
+$$\sum_{i=1}^{n-1}c_1+c_2i = 
+\sum_{i=1}^{n-1}c_1+\sum_{i=1}^{n-1}c_2i = 
+c_1\cdot (n-1)+c_2\sum_{i=1}^{n-1}i = 
+c_1\cdot (n-1)+c_2\frac{(n-1)n}{2} =\Theta(n^2).$$
+The advantage of including the constants is that we can stop short of the final
+step and get a better estimate of the actual number of operations used by the algorithm.
+In other words, if we want an exact answer, we need to include the constants and lower
+order terms.
+If we just want a bound, the constants and lower order terms can often be ignored.
+\end{exa}
+
+\begin{rem}
+There are rare cases when ignoring constants and lower order terms can cause 
+trouble (meaning that it can lead to an incorrect answer) for subtle reasons
+that are beyond the scope of this book. 
+Unless you take more advanced courses dealing with these topics, 
+you most likely won't run into those problems.
+\end{rem}
+
+Let's complicate things a bit by bringing in some basic data structures.
+
+\begin{exa}\index{insertion sort}\index{sort!insertion}
+Consider the following implementation of insertion sort that works on lists of integers
+(written using Java syntax).
+\begin{code}
+void insertionSort(List<Integer> A, int n) {
+    for (int i = 1; i < n; i++) {
+        Integer T = A.get(i);
+        int j = i-1;
+        while (j >= 0 && A.get(j).compareTo(T) > 0) {
+            A.set(j + 1, A.get(j));
+            j--;
+        }
+        A.set(j+1, T);
+    }
+}
+\end{code}
+{\em Note: In some languages the size of the list, $n$, does not need to be passed in
+since it can be obtained with a method call (e.g. \verb+A.size()+). 
+We will pass it in just to be clear that the size of the list is $n$.}
+
+In this implementation \verb+A.get(i)+ retrieves that $i$th element from the list
+and \verb+A.set(i,x)+ sets the $i$th element of the list to $x$.
+Also, 
+ \verb+A.get(j).compareTo(T)+ returns a positive number if \verb+A.get(j)+
+ is greater than \verb+T+, 0 of they are the same, and a negative number otherwise.
+ It is essentially equivalent to \verb+A.get(j) > T+.
+
+Give the complexity of this version of \verb+insertionSort+ assuming that the list is an array-based
+implementation (e.g. an ArrayList in Java).  In case you are not aware from a previous course,
+this means that both \verb+get+ and \verb+set+ take constant time.
+In addition, we will assume that \verb+compareTo+ always takes constant time
+(which should be true for any reasonable implementation).
+
+\begin{sol}
+Notice that this algorithm is almost identical to the earlier version that is implemented
+on an array.  Array indexing and assignment are simply replaced with calls to \verb+get+
+and \verb+set+.  Since the time of these calls remains constant, the earlier analysis still
+holds.  Thus, the algorithm has a complexity of $\Theta(n^2)$.
+\end{sol}
+\end{exa}
+
+The following should be review from a previous course. If you have not 
+had a data structures course, read the solution and just take it as a given.
+
+\begin{ques}
+What are the complexities of the methods 
+\verb+set(i,x)+ (set the $i$th element of the the list to $x$) and 
+\verb+get(i)+ (return the $i$th element of the list) for a
+{\em linked list}, assuming a reasonable implementation?
+
+\noindent
+\answerlinetwo
+\begin{answer}
+Since both of these methods require accessing the $i$th element of the list
+for some integer $i$, and since we must traverse the list from the head, clearly
+the complexity of both methods is $\Theta(i)$.
+  
+We could be less specific and say that the complexity is $\Theta(n)$ since $0\leq i <n$.  
+However, when analyzing algorithms that make repeated calls to these methods,
+using $\Theta(i)$ might give a more accurate answer overall.  It makes the analysis 
+more difficult, but sometimes it is worth it.
+
+{\em Note: For doubly-linked lists, 
+some implementations traverse starting at the tail if the index is closer to the end
+of the list.  However, that just means the complexity is no worse than $\Theta(n/2)=\Theta(n)$.
+In other words, it only changes the complexity by a constant factor.}
+\end{answer}
+\end{ques}
+
+\begin{exa}
+Analyze the previous \verb+insertionSort+ algorithm assuming that the
+list is now a {\em linked list}. 
+\begin{sol}
+The analysis here is a bit more complicated than we have previously seen, but we can still do it.
+We start by analyzing the code inside the \verb+while+ loop.
+In the worst case, each iteration of the loop makes two calls to \verb+A.get(j)+
+and one call to \verb@A.set(j+1)@ and a constant amount of other work.  The total time for each iteration is therefore
+about $2j+(j+1)+c=3j+c+1=3j+c^{\prime}$, where $c^{\prime}=c+1$ is still just some constant.  
+The index of the while loop starts at $j=i$ and can go until
+$j=1$ (with $j$ decrementing each iteration).  Thus, the complexity of the while loop
+is about
+$$\sum_{j=1}^{i}(3j+c^{\prime} )
+= 3\sum_{j=1}^{i}j + \sum_{j=1}^{i} c^{\prime} 
+=3\frac{(i+1)i}{2} +ic^{\prime} =\Theta(i^2)$$
+The rest of the code inside the for loop takes constant time, except
+the one call to \verb+get+ and one call to \verb+set+ which take time
+$\Theta(i)$.\footnote{Note that there is a tricky part here.  It is subtle, but important.
+The call to $set$ actually takes $j$ as a parameter.  However we cannot
+use $\Theta(j)$ as the complexity of this because the $j$ has no meaning in this
+context.  Therefore we use the fact that $1\leq j \leq i$ to instead call it
+$\Theta(i)$.}
+Thus, the code inside the for loop has complexity
+$\Theta(i^2+i)=\Theta(i^2)$.
+The outer for loop makes $i$  go from $1$ to $n-1$.
+Thus, the overall complexity is 
+$$\sum_{i=1}^{n-1}\Theta(i^2)
+=\Theta\left(\sum_{i=1}^{n-1}i^2\right)
+=\Theta\left(\frac{(n-1)n(2(n-1)+1)}{6}\right)
+=\Theta(n^3).
+$$
+Clearly using a linked list in this implementation of insertion sort is a bad idea. 
+\end{sol}
+\end{exa}
+
+You will get a chance to analyze the third popular basic sorting algorithm, {\em Selection Sort}, in the exercises.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Basic Data Structures}\label{subsec:BDS}
+If you have had a previous data structures course, this section should be review.
+If you have not, you should probably skip this section since you will be unable to
+complete the exercises without understanding the data structures involved.
+%Now is a good time to review the complexities of operations on some
+%common data structures (It is assumed that you have either learned this material before
+%or that you can work them out based on your knowledge of how these data structures are implemented).
+
+\begin{exer}\index{stack}
+For each of the following implementations of a {\em stack}, 
+give a tight bound (using $\Theta$-notation, of course) 
+on the expected running time of the given operations, 
+assuming that the data structure has $n$ items in it before the operation is performed.
+
+\noindent
+{\LARGE
+\begin{tabular}{|l|l|l|}
+\hline
+{\bf Stack}&\, \, \,  array\, \, \, &\, \, linked list\, \,\\
+\hline
+\hline
+push&&\\
+\hline
+pop&&\\
+\hline
+peek&&\\
+\hline
+size&&\\
+%\hline
+%isEmpty&&\\
+\hline
+\end{tabular}
+}
+\begin{answer}
+All of them should be $\Theta(1)$, assuming we keep track of how many elements
+are currently in the stack (which is a reasonable thing to do).
+\end{answer}
+\end{exer}
+
+\begin{exer}\index{queue}
+For each of the following implementations of a {\em queue}, 
+give a tight bound 
+on the expected running time of the given operations, 
+assuming that the data structure has $n$ items in it before the operation is performed.
+
+\noindent
+{\LARGE
+\begin{tabular}{|l|l|l|l|}
+\hline
+{\bf Queue}&\, \, \,  array\, \, \, &\, \, linked list\, \, &circular array\\
+\hline
+\hline
+enqueue&&&\\
+\hline
+dequeue&&&\\
+\hline
+first&&&\\
+\hline
+size&&&\\
+%\hline
+%isEmpty&&&\\
+\hline
+\end{tabular}
+}
+\begin{answer}
+For an array, either enqueue or dequeue (but not both) will be $\Theta(n)$.  
+All of the others will be $\Theta(1)$, assuming we keep track of how many elements
+are currently in the queue.  Note that the advantage of the circular array implementation
+is that both enqueue and dequeue are $\Theta(1)$.
+\end{answer}
+\end{exer}
+
+
+\begin{exer}
+For each of the following implementations of a {\em list}, 
+give a tight bound
+on the expected running time of the given operations, 
+assuming that the data structure has $n$ items in it before the operation is performed.
+
+\noindent
+{\LARGE
+\begin{tabular}{|l|l|l|}
+\hline
+{\bf List}&\, \, \,  array\, \, \, &\, \, linked list\, \,\\
+\hline
+\hline
+addToFront&&\\
+\hline
+addToEnd&&\\
+\hline
+removeFirst&&\\
+\hline
+contains&&\\
+\hline
+size&&\\
+\hline
+isEmpty&&\\
+\hline
+\end{tabular}
+}
+\begin{answer}
+For the array implementation, addToFront, removeFirst and contains will all be $\Theta(n)$
+and the rest will be $\Theta(1)$.
+For the linked list implementation, contains will be $\Theta(n)$ and the rest will be 
+constant if we assume there is both a head and tail pointer.  If there is no tail pointer,
+addToEnd will be $\Theta(n)$.
+\end{answer}
+\end{exer}
+
+\begin{exer}\index{binary search tree}\index{BST}
+For each of the following implementations of a {\em binary search tree (BST)}, 
+give a tight bound
+on the expected running time of the given operations, 
+assuming that the data structure has $n$ items in it before the operation is performed.
+Assume a linked implementations (rather than arrays). 
+For balanced, assume an implementation like red-black tree or AVL tree.
+
+\noindent
+{\LARGE
+\begin{tabular}{|l|l|l|}
+\hline
+{\bf BST}&unbalanced&balanced\\
+\hline
+\hline
+insert/add&&\\
+\hline
+delete/remove&&\\
+\hline
+search/contains&&\\
+\hline
+maximum&&\\
+\hline
+successor&&\\
+\hline
+\end{tabular}
+}
+\begin{answer}
+For unbalanced, all operations can be done in $\Theta(h)$ time, where $h$ is the height 
+of the tree.  This is the best answer you can give.  You could also say $O(n)$ time since
+the height is no more then $n$, but this answer is not precise enough to be of much use.
+You {\em cannot} say $\Theta(\log n)$ since 
+this is not necessarily true for an unbalanced tree.
+
+For balanced (red-black, AVL, etc.), all operations can be implemented with complexity $\Theta(\log n)$.
+\end{answer}
+\end{exer}
+
+
+\begin{exer}\index{hash table}
+Give the average- and worst-case complexity of the following operations
+on a {\em hash table} (implemented with open-addressing or chaining--it doesn't matter),
+assuming that the data structure has $n$ items in it before the operation is performed.
+
+\noindent
+{\LARGE
+\begin{tabular}{|l|l|l|}
+\hline
+{\bf Hash Table}&average&\, \, worst\, \, \\
+\hline
+\hline
+insert/add&&\\
+\hline
+delete/remove&&\\
+\hline
+search/contains&&\\
+\hline
+\end{tabular}
+}
+\begin{answer}
+The average-case complexity for all of these operations is $\Theta(1)$, 
+and the worst-case complexity is $\Theta(n)$.
+\end{answer}
+\end{exer}
+
+
+\newpage
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{More Examples}
+Before presenting several more examples of algorithm analysis, let's
+summarize a few principles from the examples we have seen so far.  
+\begin{enumerate}
+\item
+We can usually replace constants with $1$.  For instance, if something performs 
+$30$ operations, we can say it is constant and call it $1$.  This is only valid if 
+it really is always $30$, of course.  
+\item
+We can usually ignore lower-order terms.
+So if an algorithm takes $c_1n+c_2$ operations, we can usually say that it takes $n$.
+\item
+Nested loops must be treated with caution.  If the limits in an inner loop change based
+on the outer loop, we generally need to write this as a summation.
+\item
+We should generally work from the inside-out.  Until you know how much time it takes
+to execute the code inside a loop, you cannot determine how much time the loop takes.
+\item
+Function calls must be examined carefully.  Do not assume that a function
+takes constant time unless you know that to be true. 
+We already saw a few examples where function calls did {\em not}
+take constant time, and the next example will demonstrate it again.
+\item
+Only the size of the input should appear as a variable in the complexity of an algorithm.
+If you have variables like $i$, $j$, or $k$ in your complexity 
+(because they were indexes of a loop, for instance), you should probably rethink
+your analysis of the algorithm.  
+Loop variables should {\em never} appear in the complexity of an algorithm.
+\end{enumerate}
+
+Now it's time to see if you can spot where someone didn't follow some of these principles.
+
+\newpage
+
+\begin{eval}\label{eval:addpow}
+Consider the following code that computes $a^0+a^1+a^2+\cdots+a^{n-1}$.
+\begin{code}
+	  double addPowers(double a, int n) {
+	      if(a==1) {
+	          return n;
+	      } else {
+	          double sum = 0;
+	          for(int i=0;i<n;i++) {
+	              sum += power(a,i); 
+	          }
+	          return sum;
+	      }
+	  }
+\end{code}  
+The function \verb+power(a,i)+ computes $a^i$, and takes $i$ operations.
+Regard the input size as $n$.
+What is the worst-case complexity of \verb+addPowers(a,n)+?
+\begin{ssolenum}
+\item
+Since $a^n$ is an exponential function, the complexity is $O(a^n)$.
+
+\noindent
+\evallinethree
+\item
+The worst-case is $n i$ since \verb+power(a,i)+ takes $i$ time and the for loop
+executes $n$ times.
+
+\noindent
+\evallinethree
+\item
+The for loop executes $n$ times.  Each time it executes, it calls \verb+power(a,i)+,
+which takes $i$ time.  In the worst case, $i=n-1$, so the complexity is
+$(n-1)n=O(n^2)$.
+
+\noindent
+\evallinethree
+\end{ssolenum}
+\begin{answer}
+\begin{solevalenum}
+\item
+I have no idea what logic they are trying to use here.  Sure, $a^n$ is an exponential
+function, but what does that have to do with how long this algorithm takes?
+This solution is way off.
+\item
+Having the $i$ in the answer is nonsense since it doesn't mean
+anything in the context of a complexity---it is just a variable that happens to be
+used to index a loop.  Further, the answer should be given using
+$\Theta$-notation.  So this solution is just plain wrong.
+Since having an $i$ in the complexity does not make any sense, this person either
+has a fundamental misunderstanding of how to analyze algorithms or they didn't 
+think about their final answer.  Don't be like this person!
+\item
+This solution is O.K., but it has a slight problem.  Although the analysis given estimates
+the worst-case behavior, it over-estimates it.  By replacing $i$ with $n-1$, they are
+over-estimating how long the algorithm takes. 
+The call to \verb+pow+ only takes $n-1$ time once.
+This solution can really only tell us
+that the complexity is $O(n^2)$.  Is it possible the over-estimation of time resulted
+in a bound that isn't tight?  Even if it turns out that $\Theta(n^2)$ is the correct bound,
+this solution does not prove it.
+Although they are on the right track, 
+this person needed to be a little more careful in their analysis.
+\end{solevalenum}
+\end{answer}
+\end{eval}
+
+\newpage
+
+\begin{exer}
+What is the worst-case complexity of \verb+addPowers+ from Evaluate~\ref{eval:addpow}?
+Justify your answer.
+
+\vspace*{2.25in}
+\begin{answer}
+Before you read too far: 
+if you did not use a summation in your solution, go back and try again!
+This is very similar to the analysis of \verb+bubblesort+.  The for loop takes $i$ from
+$0$ to $n-1$, and each time the code in the loop takes $i$ time (since that is how long
+\verb+power(a,i)+ takes).  Thus, the complexity is 
+$$\sum_{i=0}^{n-1} i = \frac{(n-1)n}{2}=\Theta(n^2).$$
+Notice that just because the answer is $\Theta(n^2)$, that does not mean that the
+third solution to Evaluate~\ref{eval:addpow} was correct.  As we stated in the solution
+to that problem, because they overestimated the number of operations,
+they only proved that the algorithm has complexity $O(n^2)$.
+\end{answer}
+\end{exer}
+
+\begin{exer}
+Give an implementation of the \verb+addPowers+ algorithm that takes $\Theta(n)$ time.
+Justify the fact that it takes $\Theta(n)$ time. 
+(Hint: Why compute $a^5$ (for instance) from scratch if you have already computed $a^4$?)
+\begin{code}
+	  double addPowers(double a, int n) {
+	     
+	     
+	     
+	     
+	     
+	     
+	     
+	     
+	     
+	     
+	     
+	     
+	     
+	     
+	     
+	     
+	  }
+\end{code}
+Justification of complexity:
+
+\vspace*{1.25in}
+\begin{answer}
+Here is one solution.
+\begin{code}
+	  double addPowers(double a, int n) {
+	      if(a==1) {
+	          return n;
+	      } else {
+	          double sum = 1; // for the $a^0$ term.
+	          double pow = 1;
+	          for(int i=1;i<n;i++) {
+	              pow = pow*a;
+	              sum += pow; 
+	          }
+	          return sum;
+	      }
+	  }
+\end{code} 
+If $a=1$, the algorithm takes constant time.
+Otherwise, it executes a constant number of operations and a single for loop $n$ times.
+The code in the loop takes constant time.  
+Thus the algorithm takes $\Theta(n)$ time.
+\end{answer} 
+\end{exer}
+
+\newpage % another awkward break
+
+\begin{exer}
+Give an implementation of the \verb+addPowers+ algorithm that takes $\Theta(n)$ time
+{\em but does not use a loop}.  Justify the fact that it takes $\Theta(n)$ time.
+(Hint:  This solution should be much shorter than your previous one.)
+\begin{code}
+	  double addPowers(double a, int n) {
+	     
+	     
+	     
+	     
+	     
+	     
+	     
+	     
+	     
+	     
+	     
+	     
+	     
+	     
+	  }
+\end{code}
+Justification of complexity:
+
+\vspace*{1.25in}
+\begin{answer}
+If you used recursion instead of a loop, cool idea.  However, go back and do it again.
+There is an even {\em simpler} way to do it.  Need a hint?  Apply some of that
+discrete mathematics material you have been learning!  When you have a solution that
+does not use a loop or recursion (or you get stuck), keep reading.
+
+The trick is to use the formula for a
+geometric series (did you recognize that this is what \verb+addPowers+ is really computing?).  
+We need a special case for $a=1$ because the 
+formula requires that $a\neq 1$. 
+
+\begin{code}
+	  double addPowers(double a, int n) {
+	      if(a==1) {
+	          return n;
+	      } else {
+	          return (1-power(a,n))/(1-a);
+	      }
+	  }
+\end{code} 
+
+If $a=1$, the algorithm takes constant time.
+Otherwise, it executes a constant number of operations and a single call
+to \verb@power(a,n)@ which takes $n$ time.
+Thus the algorithm takes $\Theta(n+1)=\Theta(n)$ time.
+
+It is worth noting that $a=0$ is a tricky case.
+\verb+addPowers+ can't really be computed for $a=0$ since $0^0$ is undefined.
+It is for this reason that the first term of a geometric sequence is technically $1$, not $a^0$.
+Since $a^0=1$ for all other values of $a$, the case of $a=0$ is usually glossed over.
+If you don't understand what the fuss is about, don't worry too much about it.
+\end{answer} 
+\end{exer}
+
+\begin{exa}\label{exa:summn}
+A student turned in the code below (which does as its name suggests).  
+I gave them a `C' on the assignment because although it works,
+it is very inefficient.  About how many operations does their
+implementation require?
+\begin{code}
+	int sumFromMToN(int m, int n) {
+	    int sum = 0;
+	    for(int i=1;i<=n;i++) {
+	        sum = sum + i;
+	    }
+	    for(int i=1;i<m;i++) {
+	        sum = sum - i;
+	    }
+	    return sum;
+	}
+\end{code}
+\begin{sol}
+The first loop takes about $1+4n$ operations, and the second loop takes about
+$1+4(m-1)$ operations.  The first statement and return statement add 2 operations.
+So the total number of operations is about $4+4n+4(m-1)=4(n+m)=\Theta(n+m)$.
+\end{sol}
+\end{exa}
+
+
+\begin{eval}
+Write an `A' version of the method from Example~\ref{exa:summn}.
+You can assume that $1\leq m\leq n$. 
+{\em For each solution, determine how many operations are required and
+evaluate it based on that as well as whether
+or not it is correct.}
+\begin{ssolenum}
+\item 
+\begin{code}
+
+	int sumFromMToN(int m,int n) {
+	    int sum = 0;
+	    for(int i=0;i<n;i++) {
+	        sum = sum + i;
+	    }
+	    for(int i=0;i<m;i++) {
+	        sum = sum - i;
+	    }
+	    return sum;
+	}
+\end{code}
+\evallinethree
+
+\item
+\begin{code}
+
+	int sumFromMToN(int m,int n) {
+	    int sum = 0;
+	    for(int i=m;i<n;i++) {
+	        sum = sum + i;
+	    }
+	    return sum;
+	}
+\end{code}
+\evallinethree
+
+\item
+\begin{code}
+
+	int sumFromMToN(int m,int n) {
+	    return (n*(n-1)/2 - m*(m-1)/2);
+	}
+\end{code}
+\evallinethree
+
+\end{ssolenum}
+\begin{answer}
+\begin{solevalenum}
+\item
+This takes about $2+4n+4m$ operations, which is essentially the
+same as the `C' version.  Unfortunately, it is slightly worse than the original
+solution since it is now incorrect.  All they did is omit adding the final $n$ in the first
+sum.  This went from a `C' to a `D' (at best).
+\item
+This one takes about $2+4(n-1-m+1)=2+4(n-m)$ operations.  This is a lot better than
+the previous solutions.  Unfortunately, it misses adding the final $n$, so it is incorrect.
+It also is not as efficient as possible.  I'd say this is still a `C'.
+\item
+This student figured out the trick---they know a formula to compute the sum, 
+so they tried to use it.  
+Unfortunately, they used the formula incorrectly and/or they made a mistake when
+manipulating the sum (it is impossible to tell exactly what they did wrong---they 
+made either one or two errors), so the algorithm is not correct.
+In terms of efficiency, their solution is great because it takes a constant
+number of operations no matter what $n$ and $m$ are.    
+Because their answer is efficient and {\em very close} to being correct, 
+I'd probably give them a `B'.
+\end{solevalenum}
+\end{answer}
+\end{eval}
+
+\begin{exer}
+Write an `A' version of the method from Example~\ref{exa:summn}.
+You can assume that $1\leq m\leq n$. 
+Explain why your solution is correct and give its efficiency.
+\begin{code}
+	int sumFromMToN(int m,int n) {
+	    
+	    
+	    
+	    
+	    
+	    
+	    
+	    
+	}
+\end{code}
+
+\noindent
+Justification
+
+\vspace*{1in}
+\noindent
+Efficiency with justification
+
+\vspace*{1in}
+\begin{answer}
+We use the fact that 
+${\displaystyle \sum_{k=m}^n k = \sum_{k=1}^n - \sum_{k=1}^{m-1}
+=\frac{n(n+1)}{2} - \frac{(m-1)m}{2} }$ to give us the following solution:
+\begin{code}
+    int sumFromMToN(int m,int n) {
+	    return n*(n+1)/2 - (m-1)*m/2;
+	}
+\end{code}
+Since this is just doing a fixed number of arithmetic operations no matter
+what the values of $m$ and $n$ are, it takes constant time.
+\end{answer}
+\end{exer}
+
+\begin{exa}\label{exa:matmult}\index{matrix multiplication}
+\index{matrix!multiplication}
+The \verb+MatrixMultiply+ algorithm given below is the standard algorithm used to 
+compute the product of two matrices.
+Find the worst-case complexity of \verb+MatrixMultiply+.
+Assume that $A$ and $B$ are $n\times n$ matrices.
+\begin{code}
+  Matrix MatrixMultiply(Matrix A, Matrix B) {
+      Matrix C;
+      for(int i=0 ; i < n; i++) {
+          for(int j=0 ; j < n ; j++) {
+              C[i][j]=0;
+              for(int k=0 ; k < n ; k++) {
+                  C[i][j] += A[i][k]*B[k][j];
+              }
+          }
+      }
+      return C;
+  }
+\end{code}
+\begin{sol}
+The code inside the inner loop does array indexing, multiplication, addition,
+and assignment.  All of these together take just constant time.  
+Therefore, let's count the number of times the statement \verb#C[i][j]+=A[i][k]*B[k][j]#
+executes.  We will ignore the calls to \verb+C[i][j]=0+ since it executes just once
+every time the entire middle loop executes, so it has a negligible contribution.
+Similarly, the statement \verb#C[i][j]+=A[i][k]*B[k][j]# is called at least as often
+as any of the code in the for loops (i.e. the comparisons and increments) so we will
+ignore that code as well.  The bottom line is that if we count the number of times 
+\verb#C[i][j]+=A[i][k]*B[k][j]# executes, it will give us a tight bound on the complexity
+of \verb+MatrixMultiply+.
+
+The inner loop executes the statement $n$ times.  
+The middle loop executes $n$ times, each time executing the inner loop (which executes
+the statement $n$ times).
+Thus, the middle loop executes the statement $n\times n=n^2$ times.
+The outer loop simply executes the middle loop $n$ times.  Therefore the outer loop
+(and thus the whole algorithm) executes the statement $n\times n^2=n^3$ times.
+Thus, the worst-case complexity of \verb+MatrixMultiply+ is $\Theta(n^3)$.
+Notice that this is also the best and average-case complexity since there are no
+conditional statements in this code.
+\end{sol}
+\end{exa}
+
+\begin{exa}\label{exa:retainAllAL}
+In Java, the ArrayList \verb+retainAll+ method is implemented as follows 
+(this code is simplified a little from the actual implementation, but the changes do not affect the complexity of the code).  
+Note that \verb+Object[] elementData+ and \verb+int size+ are fields of ArrayList whose meaning should be obvious.
+\begin{code}
+  public boolean retainAll(Collection<?> c) {
+      boolean modified = false;
+      int w = 0;
+      for (int r = 0; r < size; r++) {
+          if (c.contains(elementData[r])) {
+              elementData[w++] = elementData[r];
+          }
+      }
+      if (w != size) {
+          for (int i = w; i < size; i++)
+              elementData[i] = null;
+          size = w;
+          modified = true;
+      }
+      return modified;
+  }
+\end{code}
+Let \verb+al1+ be an ArrayList of size $n$.
+\begin{lenum}
+\item
+What is the complexity of \verb+al1.retainAll(al2)+, where \verb+al2+ is an ArrayList with $m$ elements?
+\begin{sol}
+The method call \verb+c.contains(elementData[r])+ takes $\Theta(m)$ time since $c$
+is an ArrayList.  The rest of the code in that for loop takes constant time.
+Since this is done inside a for loop that executes $n$ times, the first 
+half of the code takes $\Theta(n m)$ time.
+In the worst case ($w=0$), the second half of the code takes $\Theta(n)$ time.
+Thus, the worst-case complexity of the method is $\Theta(n m+n)=\Theta(n m)$.
+\end{sol}
+\item
+What is the complexity of \verb+al1.retainAll(ts2)+, where \verb+ts2+ is a TreeSet with $m$ elements?
+\begin{sol}
+The method call \verb+c.contains(elementData[r])+ takes $\Theta(\log m)$ time since $c$
+is a TreeSet.  The rest of the code in that for loop takes constant time.
+Since this is done inside a for loop that executes $n$ times, the first 
+half of the code takes $\Theta(n \log m)$ time.
+In the worst case ($w=0$), the second half of the code takes $\Theta(n)$ time.
+Thus, the worst-case complexity of the method is $\Theta(n \log m+n)=\Theta(n \log m)$.
+\end{sol}
+\end{lenum}
+\end{exa}
+
+\begin{exer}
+Answer the following two questions based on the code from Example~\ref{exa:retainAllAL}.
+\begin{lenum}
+\item
+What is the complexity of \verb+al1.retainAll(ll2)+, 
+where \verb+ll2+ is a LinkedList with $m$ elements?
+\answerlinetwo
+\item
+What is the complexity of \verb+al1.retainAll(hs2)+, 
+where \verb+hs2+ is a HashSet with $m$ elements?
+\answerlinetwo
+\end{lenum}
+\begin{answer}
+The analysis of these is very similar to the analysis of Examples~\ref{exa:retainAllAL}, so the details are omitted.
+(a) For a LinkedList the \verb+contains+ method takes $\Theta(m)$ time, so the overall
+complexity is $\Theta(nm)$.
+(b)For a HashSet it takes $\Theta(1)$ time to call \verb+contains+ (on average), so
+the overall complexity is $\Theta(n+n)=\Theta(n)$.
+\end{answer}
+\end{exer}
+
+
+
+
+
+
+
+
+\begin{exa}\label{exa:retainAllOthers}
+In Java, the \verb+retainAll+ method is implemented as follows for
+\verb+LinkedList+, \verb+TreeSet+, and \verb+HashSet+.
+\begin{code}
+    public boolean retainAll(Collection<?> c) {
+        boolean modified = false;
+        Iterator<E> iter = iterator();
+        while (iter.hasNext()) {
+            if (!c.contains(iter.next())) {
+                iter.remove();
+                modified = true;
+            }
+        }
+        return modified;
+    }
+\end{code}
+Assume that the calls \verb+iter.hasNext()+ and \verb+iter.next()+
+take constant time.  
+Let \verb+ts1+ be a TreeSet of size $n$. 
+Find the worst-case complexity of each of the following method calls.
+
+\begin{lenum}
+\item
+\verb+ts1.retainAll(al2)+, where \verb+al2+ is an ArrayList of size $m$.
+\begin{sol}
+The call to \verb+iter.remove()+ takes $\Theta(\log n)$ time since the iterator
+is over a TreeSet.  The call to \verb+contains+ takes $\Theta(m)$ time since in this
+case $c$ is the ArrayList \verb+al2+.   The other operations in the loop take constant time.
+Thus, each iteration of the while loop takes $\Theta(\log n+m)$ time in the worst case
+(which occurs if the conditional statement is always true and \verb+remove+ is called
+every time). 
+Since the
+loop executes $n$ times, and the rest of the code takes constant time, 
+the overall complexity is $\Theta(n(\log n + m))$.
+\end{sol}
+\item
+\verb+ts1.retainAll(hs2)+, where \verb+hs2+ is an HashSet of size $m$.
+\begin{sol}
+The call to \verb+iter.remove()+ takes $\Theta(\log n)$ time.  
+The call to \verb+contains+ takes $\Theta(1)$ time since $c$ is the HashSet \verb+hs2+.  
+Thus, each iteration of the while loop takes $\Theta(\log n+1)$ time and the
+overall complexity is therefore $\Theta(n(\log n + 1))=\Theta(n\log n)$.
+\end{sol}
+\end{lenum}
+\end{exa}
+
+\begin{exer}
+Using the setup and code from Example~\ref{exa:retainAllOthers}, 
+determine the complexity of the following method calls.
+\begin{lenum}
+\item
+\verb+ts1.retainAll(ll2)+, where \verb+ll2+ is a LinkedList of size $m$.
+\answerlinethree
+\item
+\verb+ts1.retainAll(ts2)+, where \verb+ts2+ is an TreeSet of size $m$.
+\answerlinethree
+\end{lenum}
+\begin{answer}
+(a) contains takes $\Theta(m)$ time so the complexity is
+$\Theta(n(\log n+m))$.
+
+(b) Here the contains method takes $\Theta(\log m)$ time, so the overall
+complexity is $\Theta(n(\log n+\log m))$ 
+(or $\Theta(n\log n + n\log m)$
+if you prefer to write it that way).
+
+Note that we don't know the relationship between
+$n$ and $m$ so we can't simplify either answer.
+\end{answer}
+\end{exer}
+
+It is important to note that the number of examples related to the \verb+retainAll+ method
+is not reflective of the importance of this method.  It just turns out to be an 
+interesting method to analyze the complexity of given different data structures.
+
+
+We end this section with a comment that perhaps too few people think about.
+{\em Theory} and {\em practice} don't always agree. 
+Since asymptotic notation ignores the {\em constants}, two algorithms that have the same
+complexity are not always equally good in practice.  
+For instance, if one takes $4\cdot n^2$ operations
+and the other $10,000\cdot n^2$ operations, clearly the first will be preferred even though
+they are both $\Theta(n^2)$ algorithms.
+
+As another example, consider matrix multiplication, which is used extensively in
+many scientific applications.
+As we saw, the standard algorithm has complexity $\Theta(n^3)$.  Strassen's 
+algorithm for matrix multiplication (the details of which are beyond the scope of this book)
+has complexity of about $\Theta(n^{2.8})$.
+Clearly, Strassen's algorithm is better asymptotically.  In other words, if your matrices
+are large enough, Strassen's algorithm is certainly the better choice.  However, it turns
+out that if $n=50$, the standard algorithm performs better.
+There is debate about the ``crossover point.''  This is the point at which the more efficient 
+algorithm is worth using.  For smaller inputs, the overhead associated with the cleverness
+of the algorithm isn't worth the extra time it takes.  For larger inputs, the extra overhead
+is far outweighed by the benefits of the algorithm.  For Strassen's algorithm, this point
+may be somewhere between $75$ and $100$, but don't quote me on that.
+The point is that for small enough matrices, the standard algorithm should be used.
+For matrices that are large enough, Strassen's algorithm should be used.
+Neither one is {\em always} better to use.
+
+Analyzing recursive algorithms can be a little more complex.  
+We will consider such algorithms in Chapter \ref{ch:recurrences}, 
+where we develop the necessary tools.
+
+\subsection{Binary Search}\label{section:binarySearchAnalysis}
+\index{binary search}
+\index{search!binary}
+Next we analyze the {\em binary search} algorithm.  
+If you haven't seen it before, the concept is simple: 
+If you want to find something in a sorted list, start by comparing with the middle element.
+If the array is empty, the element is not in it.
+If they are the middle and the element you are searching for are the same, you have found what you are looking for.
+If what you are looking for is smaller than the middle element, then it is in the first half of the array.
+If what you are looking for is bigger than the middle element, then it is in the second half of the array.
+Now we simply repeat the process on the appropriate half of the array until we have our answer.
+
+\begin{exa}
+Here is an implementation of {\em binary search}.
+\begin{code}
+    int binarySearch(int a[], int n, int val) {
+       int left=0, right=n-1;
+       while (right-left>=0) {
+           int middle = (left+right)/2;
+           if(val==a[middle]) 
+               return middle;
+           else if(val<a[middle]) 
+               right=middle-1;
+           else 
+               left=middle+1; 
+        }
+       return -1;
+    }
+\end{code}
+\end{exa}
+
+You may be familiar with the
+recursive version of this algorithm instead of this iterative implementation.
+In some ways it is more intuitive, but we have not yet covered recursion
+or the analysis of recursive algorithms so instead we will analyze the iterative version.
+
+Before we can analyze the algorithm, we need to develop a few useful results that will make the
+proof much easier to understand.
+We start by trying to get you to understand how the binary representation of $n$ and
+$\lfloor n/2\rfloor$ are related to each other.
+
+\begin{exa}
+How is the binary representation of a number $n$ related to the
+binary representation of $\lfloor n/2\rfloor$?  Let's try some examples.
+If $n=9$, $\lfloor n/2\rfloor=4$.  Notice that the binary representation of $9$ is $1001$
+and the binary representation of $4$ is $100$.  
+If $n=22$, $\lfloor n/2\rfloor=11$.  The binary representation of $22$ is $10110$
+and the binary representation of $11$ is $1011$.  
+Is there a pattern here?  This probably isn't enough data to be certain yet.  
+\end{exa}
+
+Let's see if you can find the pattern with just a few more data points.
+
+\begin{exer}
+Fill in the following table with the binary representations.
+\begin{center}
+{\Large
+\begin{tabular}{|c|c|c|c|}
+\hline
+\multicolumn{2}{|c|}{$n$}&
+\multicolumn{2}{c|}{$\lfloor n/2\rfloor$}\\
+decimal&\, \, \, binary\, \, \, &decimal&\, \, \, binary\, \, \, \\
+\hline
+\hline
+12&&6&\\
+\hline
+13&&6&\\
+\hline
+32&&16&\\
+\hline
+33&&16&\\
+\hline
+118&&59&\\
+\hline
+119&&59&\\
+\hline
+\end{tabular}
+}
+\end{center}
+
+\begin{answer}
+\begin{tabular}{|l|l|l|l|l|}
+\hline
+\multicolumn{2}{|c|}{$n$}&
+\multicolumn{2}{c|}{$\lfloor n/2\rfloor$}\\
+decimal&binary\, \, \, \, \, &decimal&binary\, \, \, \, \,\\
+\hline
+\hline
+12&1100&6&110\\
+\hline
+13&1101&6&110\\
+\hline
+32&100000&16&10000\\
+\hline
+33&100001&16&10000\\
+\hline
+118&1110110&59&111011\\
+\hline
+119&1110111&59&111011\\
+\hline
+\end{tabular}
+\end{answer}
+\end{exer}
+
+\begin{ques}
+How are the binary representations of 
+$n$ and $\lfloor n/2\rfloor$ related?
+
+\noindent
+\answerlinetwo
+\begin{answer}
+The next theorem answers the question about the pattern.
+\end{answer}
+\end{ques}
+
+Hopefully you observed a clear pattern in the previous exercise.  The next theorem formalizes 
+this idea.  We provide a proof of the theorem to make it clear what is going on.
+
+\begin{thm}\label{thm:binnovertwo}
+The binary representation of $\lfloor n/2\rfloor$ 
+is the binary representation of n shifted to the right one bit.  
+That is, the binary representation of $\lfloor n/2\rfloor$  is the same as that of 
+$n$ with the last bit (the lowest order bit) chopped off.
+\begin{pf}
+Let the binary representation of
+$n$ be $a_m a_{m-1}a_{m-2}\ldots a_2a_1a_0$, where $a_m=1$
+(so the highest order bit is a $1$).  
+Then 
+$$n=a_m\, 2^m + a_{m-1}\, 2^{m-1}+ \ldots+ a_2\, 2^2 + a_1\, 2^1 +a_0\, 2^0.$$
+From this we can see that
+\begin{eqnarray*}
+\lfloor n/2\rfloor
+&=&\lfloor (a_m\, 2^m + a_{m-1}\, 2^{m-1} + 
+    \ldots+ a_2\, 2^2 + a_1\, 2^1 + a_0\, 2^0)/2\rfloor \\
+&=&  \lfloor a_m\, 2^m/2 + a_{m-1}\, 2^{m-1}/2 + 
+    \ldots+ a_2\, 2^2/2 + a_1\, 2^1/2 + a_0\, 2^0/2\rfloor \\
+&=&  \lfloor a_m\, 2^{m-1} + a_{m-1}\, 2^{m-2} + 
+    \ldots+ a_2\, 2^1 + a_1\, 2^0 + a_0/2\rfloor\\
+&=&  a_m\, 2^{m-1} + a_{m-1}\, 2^{m-2} + 
+    \ldots+ a_2\, 2^1 + a_1\, 2^0.
+\end{eqnarray*}
+Notice that in the last step, $a_0/2$ is chopped off by the floor since it is
+either $0/2$ or $1/2$ and the other numbers are integers.
+From this we can see that the binary representation of 
+$\lfloor n/2\rfloor$  is $a_ma_{m-1}a_{m-2}\ldots a_2a_1$, 
+which is the binary representation of $n$ shifted to the right one bit.
+\end{pf}
+\end{thm}
+\begin{cor}\label{cor:kbits}
+If the number $n$ requires exactly $k$ bits to represent in binary, 
+then $\lfloor n/2\rfloor$ requires exactly $k-1$ bits to represent in binary.
+\begin{pf}
+According to Theorem~\ref{thm:binnovertwo}, 
+the binary representation of $\lfloor n/2\rfloor$ is the binary representation of
+$n$ shifted to the right one bit.  
+Thus it is clear that $\lfloor n/2\rfloor$ requires one less bit to represent.
+\end{pf}
+\end{cor}
+
+We need just one more result.
+
+\begin{thm}\label{thm:numbinarybits}
+It takes $\lfloor \log_2 n\rfloor +1$ bits to represent $n$ in binary.
+\begin{pf}
+Recall that $\log_c b$ is defined as 
+``the number that $c$ must be raised to in order to get $b$.'' 
+That is, if $k = \log_c b$, then $c^k=b$.  
+Also, it should be clear that $2^k$ is the smallest number that requires 
+$k+1$ bits to represent in binary. (If you are not convinced of this, write out
+some binary numbers near powers of two until you see it.)
+Let $k$ be the number such that 
+\begin{eqnarray}
+\label{eqn:binequ}&& 2^{k-1}\leq n < 2^k.
+\end{eqnarray}
+Since writing $2^{k-1}$ takes $k$ bits and $2^k$ is the smallest number
+that requires $k+1$ bits, it should be clear that 
+$n$ requires exactly $k$ bits to represent in binary.  
+Taking the logarithm of equation~\ref{eqn:binequ}, we get 
+$$\log_2 2^{k-1}\leq \log_2 n < \log_2 2^k,$$ 
+which leads to  
+$$k-1\leq \log_2 n < k.$$
+Clearly $\lfloor \log_2 n\rfloor =k-1$ since it is an integer.
+Thus, 
+$k=\lfloor \log_2 n\rfloor+1$, so it
+takes $\lfloor \log_2 n\rfloor +1$ bits to represent $n$ in binary.
+\end{pf}
+\end{thm}
+
+Now we are ready to analyze {\em binary search}.
+
+\begin{exa}\label{exa:binSearchIter}\index{binary search}
+We will show that {\em binary search} has worst-case complexity $\Theta(\log n)$.
+More precisely, 
+we will prove that the while loop executes no more than $\lfloor \log_2 n\rfloor +1$ times.
+Here is the algorithm as a reminder:
+\begin{code}
+    int binarySearch(int a[], int n, int val) {
+       int left=0, right=n-1;
+       while (right-left>=0) {
+           int middle = (left+right)/2;
+           if(val==a[middle]) 
+               return middle;
+           else if(val<a[middle]) 
+               right=middle-1;
+           else 
+               left=middle+1; 
+        }
+       return -1;
+    }
+\end{code}
+
+Recall that binary search finds the index of a value in a sorted array
+by comparing the value being searched for with the middle element of the array.
+If they are the same, it returns the index of the element.  Otherwise it
+continues the search in only half of the array.  In other words, it removes
+from consideration half of the array at each iteration.  Which half depends on whether
+the search value was greater than or less than the middle value.
+
+Since the code inside the while loop takes a constant amount of time, the
+complexity of {\em binary search} depends only on the number of iterations
+of the loop.  Clearly the worst case is when a value is not in the array since
+otherwise the loop ends early with the \verb+return+ statement.  Thus we will
+assume the value is not in the array.
+
+Notice that the value \verb+right-left+ is the number of entries of the array
+that are still under consideration by the algorithm.
+The loop executes until \verb+right-left+ $<0$.
+Before the first iteration, \verb+right-left+ $=n$.
+During each iteration,  
+either \verb+right+ or \verb+left+ is set to the
+middle value between \verb+right+ and \verb+left+ (plus or minus 1).
+So after the first iteration, \verb+right-left+ $\leq \lfloor n/2\rfloor$.
+In other words, the algorithm has discarded at least half of the entries of
+the array.
+During each subsequent iteration, \verb+right-left+ continues to be no more than the floor
+of half of its previous value, so the algorithm continues to discard half of the entries
+of the array each time through the loop.
+
+According to Corollary~\ref{cor:kbits}, each iteration of the loop reduces 
+the number of bits used to represent \verb+right-left+ by one.
+According to Theorem~\ref{thm:numbinarybits}, 
+it takes $\lfloor \log_2 n\rfloor +1$ bits to represent $n$ in binary, and
+$right-left$ started out as $n$.
+Therefore, after $\lfloor \log_2 n\rfloor$ iterations through the loop, \verb+right-left+
+becomes $1$, and the next iterations ensures that \verb+right-left+ becomes
+negative and the loop terminates (check this!).  
+Since the loop executes at most $\lfloor \log_2 n\rfloor +1$  times,
+the worst-case complexity of {\em binary search} is $\Theta(\log n)$.
+\end{exa}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+

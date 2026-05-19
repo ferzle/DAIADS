@@ -1,0 +1,3759 @@
+% The next line makes it so it compiles the main file if I hit the compile button
+% when editing this file in TeXworks.
+% !TEX root = ../AIDMA.tex
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% The newline causes a warning about \\ being invalid in a PDF string, but
+% I get an overfull hbox without it.
+\chapter{Recursion, Recurrences, and\\ 
+Mathematical Induction}\label{ch:recurrences}
+In this chapter we will explore 
+a proof technique, an algorithmic technique, and a mathematical technique.  
+Each topic is in some ways very different than the others, 
+yet they have a whole lot in common.  They are also often used in conjunction.
+
+You have already seen {\em recurrence relations}.  Recall that a recurrence relation is a way of
+defining a sequence of numbers with a formula that is based on previous numbers in the sequence.
+You are probably also familiar with {\em recursion},
+an algorithmic technique in which
+an algorithm calls itself (such an algorithm is called {\em recursive}), typically with ``smaller'' input.  
+Finally, the {\em principle of mathematical induction} is a slick 
+proof technique that works so well that sometimes it feels like 
+you are cheating.
+
+We will see that induction can be used to prove formulas, 
+prove that algorithms---especially recursive ones---are correct, and help solve recurrence
+relations.  Among other things, recurrence relations can be used to analyze recursive algorithm.  
+Recursive algorithms can be used to compute the values defined by recurrence
+relations and to solve problems that can be broken into smaller versions of themselves.
+
+As we will see, each of these has one or more {\em base cases} that can be proved/computed/determined
+directly and a {\em recursive} or {\em inductive} step that relies on previous steps.
+With each, the inductive/recursive steps must eventually lead to a base case.
+
+Because induction can be used to prove things about the other two, we will begin there.
+
+\section{Mathematical Induction}\label{sec:induction}
+\index{induction}
+\index{mathematical induction}
+Let's begin our study of mathematical induction (often just called induction) with an example that should look familiar.  
+It is actually Theorem~\ref{thm:powerSetSize} that we proved 
+in an earlier chapter.
+Following that, we will explain how/why induction works and give
+plenty of other examples.
+
+
+\begin{exa}\label{induction1}
+Let $A$ be a set with $n$ elements.  Prove that $|P(A)|=2^n$. 
+\begin{pf}
+We use induction and the idea from the solution to Exercise~\ref{exa:subsets4element}. 
+Clearly if $|A|= 1$, $A$
+has $2^1 = 2$ subsets: $\varnothing$ and $A$ itself.\\
+Assume every
+set with $n - 1$ elements has $2^{n-1}$ subsets. Let $A$ be a set
+with $n$ elements.  Choose some $x\in A$.  Every subset of $A$
+either contains $x$ or it doesn't.  
+Those that do not contain $x$  are subsets of $A\setminus \{x\}$.  Since
+$A\setminus \{x\}$ has $n - 1$ elements, the induction hypothesis implies that it has
+$2^{n-1}$ subsets.
+Every subset that does contain $x$ corresponds to one of the subsets of $A\setminus \{x\}$ with the element $x$ added.  That is, for each subset $S \subseteq A\setminus \{x\}$,  $S\cup \{x\}$ is a subset of $A$ containing $x$.
+Clearly there are $2^{n-1}$ such new subsets.
+Since this accounts for all subsets of $A$, $A$ has $2^{n-1} + 2^{n-1} = 2^n$ subsets.  
+\end{pf}
+\end{exa}
+
+Now we will go into detail about how and why induction works.
+You should come back and reread Example~\ref{induction1} 
+after reading section~\ref{sec:indBasic}.
+
+\subsection{The Basics}\label{sec:indBasic}
+The {\em principle of mathematical induction} 
+\index{mathematical induction}
+\index{induction}
+\index{proof!induction}
+({\em PMI}, or simply {\em induction}) is usually used to 
+prove statements of the form 
+$$\mbox{for all } n\geq a, P(n) \mbox{ is true},$$  
+where $a$ is an integer,
+and $P(n)$ is a propositional function with domain $\{a, a+1, a+2,\ldots\}$. 
+Usually $a$ is $0$ or $1$,
+so the domain is usually $\naturals$ (the natural numbers) or $\BBZ^+$
+(the positive integers).
+
+
+Induction is based on the following
+fairly intuitive observation (which we will formalize next). Suppose that we are to perform a
+task that involves a certain number of steps. Suppose that these
+steps must be followed in strict numerical order. Finally, suppose
+that we know how to perform the $n$-th task provided we have
+accomplished the $(n - 1)$-th task. Thus if we are ever able to
+start the job (that is, if we have a base case), then we should be
+able to finish it (because starting with the base case we go to
+the next case, and then to the case following that, etc.).
+
+\begin{exer}
+Based on the description so far, which of the following
+statements {\em might} we be able to prove with mathematical induction (indicate with `Y' or `N')?
+Briefly justify.
+\begin{lenum}
+\itemtf
+The square of any integer is positive.
+
+\vspace*{.125in}
+\itemtf
+Every positive integer can be written as the sum of two other
+positive integers.
+
+\vspace*{.125in}
+\itemtf
+Every integer greater than $1$ can be written as the product of
+prime numbers.
+
+\vspace*{.125in}
+\itemtf
+If $n\geq 1$, 
+$\dsum _{k=1}^n k^2 = \dfrac{n(n+1)(2n+1)}{6}$
+
+\vspace*{.125in}
+\itemtf
+Every real number is the square of another real number.
+
+\end{lenum}
+
+\vspace*{.25in} % After the enum because it doesn't work inside it for some reason.
+\begin{answer}
+(a) No.  The domain is $\BBZ$, which does not have a `starting point'.
+(b) Yes.  The domain is $\BBZ^+$.
+(c) Yes.  The domain is $\{2,3,4,\ldots\}$.
+(d) Yes.  The domain is $\BBZ^+$.
+(e) No.  
+The domain is $\reals$ which is not a subset of $\BBZ$.  
+Thus, not only is there no `starting point,'
+there is no clear ordering of the real numbers from one to the next.
+\end{answer}
+\end{exer}
+
+The following example illustrates the idea behind induction.
+It uses {\em modus ponens}\index{modus ponens}.
+Recall that modus ponens states that 
+if $p$ is true and $p\rightarrow q$ is true, then $q$ is true.  In English, 
+``If $p$ is true, and whenever $p$ is true $q$ is true, then $q$ is true.''\footnote{We can also write
+this as the tautology $[p\wedge(p\rightarrow q)]\rightarrow q$.}
+
+\begin{exa}\label{exa:ind1}
+Assume that we know that $P(1)$ is true and that 
+whenever $k\geq 1$, $P(k)\rightarrow P(k+1)$ is true.  What can we conclude?
+\begin{sol}
+Let's start from the ground up.
+We know that $P(1)$ is true.  We also know that $P(k)\rightarrow P(k+1)$ is true for 
+any integer $k\geq 1$.  
+For instance, since $4\geq 1$, we know that $P(4)\rightarrow P(5)$ is true.  
+It should be noted that we don't (yet) know anything about the truth values of 
+$P(4)$ and $P(5)$.
+\begin{itemize}
+\item 
+We know $P(1)$ is true and $1\geq 1$, $P(1)\rightarrow P(2)$ is true, therefore $P(2)$ is true.
+\item
+Since $P(2)$ is true and $2\geq 1$, $P(2)\rightarrow P(3)$ is true, therefore $P(3)$ is true.
+\item
+Since $P(3)$ is true and $3\geq 1$, $P(3)\rightarrow P(4)$ is true, therefore $P(4)$ is true.
+\item
+Since $P(4)$ is true and $4\geq 1$, $P(4)\rightarrow P(5)$ is true, therefore $P(5)$ is true.
+\item
+Since $P(5)$ is true and $5\geq 1$, $P(5)\rightarrow P(6)$ is true, therefore $P(6)$ is true.
+\end{itemize}
+It seems pretty clear that this pattern continues for all values of $k>6$ as well, 
+so $P(k)$ is true for all $k\geq 1$.
+\end{sol}
+\end{exa}
+
+\begin{ques}
+Example~\ref{exa:ind1} had several statements like the following:
+\begin{quote}
+``Since $P(4)$ is true and $4\geq 1$, $P(4)\rightarrow P(5)$ is true, therefore $P(5)$ is true.''
+\end{quote}
+What is the justification for the conclusion that $P(5)$ is true?
+
+\noindent
+\answerline
+\begin{answer}
+Modus ponens.
+\end{answer}
+\end{ques}
+
+Example~\ref{exa:ind1} did not give a formal
+{\em proof} of the conclusion. 
+The idea is to get you thinking
+about how mathematical induction works, 
+not to provide a formal proof that it does (yet).
+Hopefully this example will help prime your brain for the proof that 
+mathematical induction is a valid proof technique that we will 
+give shortly.
+%Once you wrap your head around mathematical induction (it takes some people
+%longer than others), you will believe it works regardless of whether
+%or not you remember the details of the proof.
+
+Before moving on, we should make sure you understand
+what has already been said.
+
+\begin{ques}
+If you know that $P(5)$ is true, and you also know that
+$P(k)\rightarrow P(k+1)$ whenever $k\geq 1$,
+what can you conclude?
+
+\answerline
+\begin{answer}
+You can immediately conclude that $P(6)$ is true using
+modus ponens.  If that was your answer, good.
+But you can keep going.  Since $P(6)$ is true,
+you can conclude that $P(7)$ is true (also by modus ponens).
+But then you can conclude that $P(8)$ is true.  
+And so on.  The most complete answer you can give is that
+$P(n)$ is true for all $n\geq 5$.
+You {\em cannot} conclude that $P(n)$ is true for
+all $n\geq 1$ because we don't know anything about
+the truth values of $P(1)$, $P(2)$, $P(3)$, and $P(4)$.
+\end{answer}
+\end{ques}
+
+\begin{ques}
+If you know that $P(17)$ is true and you also know that
+$P(k)\rightarrow P(k+1)$ whenever $k\geq 1$, what can you conclude
+about $P(10)$?
+
+\answerline
+\begin{answer}
+Nothing. We can conclude that $P(n)$ is true for any $n\geq 17$,
+but there is not enough information to say anything about values of $n$
+less than 17.
+\end{answer}
+\end{ques}
+
+Now it is time to get more formal with our discussion.
+Mathematical induction is based on the fact that
+if $P(a)$ is true for some $a\geq 0$ (the {\em base case}), 
+\index{base case (induction)}
+and for any $k\geq a$, if $P(k)$ is true, then $P(k+1)$ is true
+(the {\em inductive case}),
+then $P(n)$ is true for all $n\geq a$. 
+In other words, the principle of mathematical induction is based on the
+fact that 
+$$[P(a)\wedge\forall k(P(k)\rightarrow P(k+1))]\rightarrow (\forall n P(n)),$$
+where the universe is $\{a,a+1,a+2,\ldots\}$, is true.
+
+\begin{exer}
+Restate $[P(a)\wedge\forall k(P(k)\rightarrow P(k+1))]\rightarrow (\forall n P(n))$ 
+(where the universe is $\{a,a+1,a+2,\ldots\}$) in English.
+
+\noindent
+\answerlinethree
+\begin{answer}
+There are various ways to say this, including what was said in the paragraph above.
+Here is another way to say it:
+\begin{quote}
+If $P(a)$ is true, and for any value of $k\geq a$,
+$P(k)$ true implies that $P(k+1)$ is true, then $P(n)$ is true for all $n\geq a$.
+\end{quote}
+\end{answer}
+\end{exer}
+
+%We won't prove that this is a tautology, but 
+%hopefully 
+The proof that $[P(a)\wedge\forall k(P(k)\rightarrow P(k+1))]\rightarrow (\forall n P(n))$ is true is based on something called the 
+{\em well-ordering principle} which states that
+every nonempty subset of the natural numbers has a least element.
+Read the following proof very carefully, making sure you 
+understand the justification of every step. If you are not sure about
+any of the steps, it is important that you get them clarified!
+
+\begin{thm}
+Assume we are working over the universe $\{a, a+1, a+2, \ldots\}$.
+The statement $[P(a)\wedge\forall k(P(k)\rightarrow P(k+1))]\rightarrow (\forall n P(n))$ is true.
+\begin{pf}
+If the statement is false, then it must be that
+$P(a)\wedge\forall k(P(k)\rightarrow P(k+1))$
+is true but that $\forall n P(n)$ is false.
+Let $S=\{s\in \{a, a+1, a+2, \ldots\} | \neg P(s)\}$.
+That is, $S$ is the set of integers for which $P(n)$ is false.
+% be the set of integers such that $s\in S$ iff $P(s)$ is false. 
+Since $\forall n P(n)$ is false, $S$ is nonempty.
+Clearly $S$ is a subset of the natural numbers, so the well-ordering principle applies. Therefore there is some least element $b\in S$.
+Since $b\in S$, $P(b)$ is false, and since it is the
+least such element, $b-1\not\in S$, so $P(b-1)$ is true. 
+But we know that $\forall k(P(k)\rightarrow P(k+1))$ is true, so
+$P(b-1)\rightarrow P(b)$.
+By modus ponens, $P(b)$ is true, a contradiction.
+Therefore the statement is true.
+\end{pf}
+\end{thm}
+
+%Because this is a bit technical, 
+%we will omit a discussion of it along with a proof of the statement. 
+%However, hopefully
+%Example~\ref{exa:ind1} helped convince
+%you that it is indeed a true.  
+It is definitely worth your time to convince yourself that
+mathematical induction is a valid technique.
+If you aren't convinced, reread the proof, think about it some more, 
+and/or ask someone to help you understand it.
+
+\begin{ques}
+Are you convinced that $[P(a)\wedge\forall k(P(k)\rightarrow P(k+1))]\rightarrow (\forall n P(n))$ is true?
+
+\noindent
+\answerline
+\begin{answer}
+If you answered {\bf yes} and you aren't lying, great!  If you
+answered {\em no} or you answered {\bf yes} but you lied, 
+it is important that you think about it some more and/or
+get some help.  If you want to succeed at writing induction
+proofs, understanding this is an important step!
+\end{answer}
+\end{ques}
+
+
+We call $P(a)$ the {\em base case}.\index{base case}
+Sometimes we actually need to prove several
+base cases (we will see why later).  For instance,
+we might need to prove $P(a)$, $P(a+1)$, and $P(a+2)$ 
+are all true.
+
+The {\em inductive step}\index{inductive step}
+involves proving that  $\forall k(P(k)\rightarrow P(k+1))$
+is true.  To prove it, we show that if $P(k)$ is true for any $k$ 
+which is {\em at least as large as the base case(s)}, 
+then $P(k+1)$ is true. 
+The assumption that $P(k)$ is true is called the {\em inductive hypothesis}.\index{inductive hypothesis}
+
+Based on our discussion so far, here is the procedure for writing induction proofs.
+
+\newpage % A lot of empty space before here, but this should be on one page.
+
+\begin{proc}\label{proc:induct1}
+To use induction to prove that $\forall n P(n)$ is true on domain
+$\{a,a+1,\ldots\}$:
+\begin{enumerate}
+\item
+{\bf Base Case:} Show that $P(a)$ is true (and possible one or more additional base cases).
+\item 
+Show that $\forall k(P(k)\rightarrow P(k+1))$ is true.
+To show this:
+\begin{lenum}
+\item
+{\bf Inductive Hypothesis:} 
+Let $k\geq a$ be an integer and assume that $P(k)$ is true.
+\item
+{\bf Inductive Step:}
+Prove that $P(k+1)$ is true, typically using the fact that
+$P(k)$ is true.
+\end{lenum}
+Assuming we used no special facts about $k$ other than 
+$k\geq a$, this means we have shown that 
+$\forall k(P(k)\rightarrow P(k+1))$ 
+(again, where it is understood that the domain is $\{a,a+1,\ldots\})$.
+\item
+{\bf Summary:} Conclude that $\forall n P(n)$ is true, usually by saying
+something like ``Since $P(a)$ and $P(k)\rightarrow P(k+1)$ for all $k\geq a$, 
+$\forall n P(n)$ is true by induction.''
+\end{enumerate}
+\end{proc}
+
+As you will quickly learn, the {\em base case} is generally pretty easy, 
+as is writing down the {\em inductive hypothesis}. The {\em summary} is 
+even easier, since it almost always says the same thing.
+The {\em inductive step} is the longest and most complicated
+step.  In fact, in mathematics and theoretical computer science journals, induction
+proofs often only include the inductive step since anyone reading papers in such journals
+can generally fill in the details of the other three parts.
+But keep in mind that you are not (yet) writing papers for such journals, so you
+{\em cannot} omit these steps!
+
+Let's see another example. 
+
+
+
+\begin{exa}\label{exa:sumodd}
+Prove that the sum of the first $n$ odd integers is $n^2$. 
+That is, show that 
+$\dsum_{i=1}^{n}(2 i - 1) = n^2$ for all $n\geq 1$.
+\begin{pf}
+Let $P(n)$  be the statement  ``$\dsum_{i=1}^{n}(2 i - 1) = n^2$''.
+We need to show that $P(n)$ is true for all $n\geq 1$.
+
+\noindent
+{\bf Base Case:} 
+Since $\dsum_{i=1}^{1}(2 i - 1) = 2\cdot 1 - 1 = 1=1^2,$
+$P(1)$ is true. 
+
+\noindent
+{\bf Inductive Hypothesis:}
+Let $k\geq 1$ and assume that $P(k)$ is true.  That is,
+assume that $\dsum_{i=1}^{k}(2 i - 1) = k^2$ when $k\geq 1$. \hfill 
+
+\noindent
+{\bf Inductive Step:} 
+Then \hfill
+\begin{eqnarray*}
+\displaystyle \sum_{i=1}^{k+1} (2 i - 1)&=&
+\displaystyle \sum_{i=1}^{k}( 2 i - 1)+ (2(k+1) - 1) \, \, \, 
+\mbox{ (take }k+1\mbox{ term from sum)}\\
+&=&k^2+(2k+2-1)\, \, \, 
+\mbox{ (by the {\em inductive hypothesis})}\\
+&=&k^2+2k+1\\
+&=&(k+1)^2
+\end{eqnarray*}
+Thus $P(k+1)$ is true.
+
+\noindent
+{\bf Summary:}
+Since we proved that $P(1)$ is true, and that $P(k)\rightarrow P(k+1)$ whenever $k\geq 1$,
+$P(n)$ is true for all $n\geq 1$ by the principle of mathematical induction.
+\end{pf}
+\end{exa}
+
+The previous proof had the four components we discussed.
+We proved the {\em base case}.
+We then assumed it was true for $k$.  That is, we made the {\em inductive hypothesis}.
+Next we proved that it was true for $k+1$ based on the assumption that it is true for $k$.  
+That is, we did the {\em inductive step}.
+Finally, we appealed to the principle of mathematical induction in the {\em summary}.
+
+\begin{rem}
+Recall the following statement from 
+ Example~\ref{exa:sumodd}:
+\begin{quote}
+Let $P(n)$  be the statement  ``$\dsum_{i=1}^{n}(2 i - 1) = n^2$''.
+\end{quote} 
+Did you notice the quotes?  
+It is important that you include these.  This is particularly important if
+you use notation such as  $P(n)=$``$\dsum_{i=1}^{n}(2 i - 1) = n^2$''.  Without the quotes, 
+this becomes $P(n)=\dsum_{i=1}^{n}(2 i - 1) = n^2$, which is defining $P(n)$ to be $\dsum_{i=1}^{n}(2 i - 1)$
+and saying that it is also equal to $n^2$.  These are {\bf not} saying the same thing.
+With the quotes, $P(n)$ is a propositional function.  Without them, it is a function from
+$\BBZ$ to $\BBZ$.
+
+In fact, to avoid this confusion, I recommend that you never use the equals sign with propositional
+functions, especially when writing induction proofs.
+\end{rem}
+
+Now it's your turn to try to fill in the details of an induction proof.
+
+\newpage % On own page!
+
+\begin{fib}
+Reprove Theorem~\ref{thm:sum-of-first-n-integ} using induction.  That is, prove that
+for $n\geq 1$, $\dsum_{i=1}^{n} i = \dfrac{n(n+1)}{2}.$
+\begin{pf}
+Let $P(k)$ be the statement ``$\dsum_{i=1}^{k} i = \dfrac{k(k+1)}{2}$''.
+We need to show that $P(n)$ is true for all $n\geq 1$.
+
+\noindent
+{\bf Base Case:} 
+When $k=1$, we have
+$\dsum_{i=1}^1 i = 1 = \blankline{1}$.  Therefore, \blankline{2}.
+
+\noindent
+{\bf Inductive Hypothesis:} 
+Let $k\geq 1$, and assume that  \blankline{1.75}.
+That is, assume that \blankline{3}.
+
+\noindent
+\begin{quote}
+${[}$This is not part of the proof, but it will help us see what's next.
+Our goal in the next step is to prove that 
+\blankline{.75} is true.  That is, we need to show that
+\blankline{2.5}.${]}$
+\end{quote}
+{\bf Inductive Step:}
+Notice that
+\begin{eqnarray*}
+\dsum_{i=1}^{k+1}i&=&\blankline{1.5} + (k+1)\\
+&=&\blankline{2}+(k+1) \mbox{(by the inductive hypothesis)}\\
+&=&(k+1)\underline{\left(\hspace{1.5in}\rule{.000001in}{.35in}\right)}\\
+&=&\blankline{2}
+\end{eqnarray*}
+Thus, \blankline{1.5}.
+
+\noindent
+{\bf Summary: }
+We showed that \blankline{1.25} and that whenever \blankline{.75},
+$P(k)\rightarrow P(k+1)$, 
+therefore $P(n)$ is true for \blankline{1} by
+\blankline{1.25}
+\end{pf}
+\begin{answer}
+$\dfrac{1(1+1)}{2}$;
+$P(1)$ is true;
+$P(k)$ is true;
+$\dsum_{i=1}^{k} i = \dfrac{k(k+1)}{2}$;
+$P(k+1)$;
+$\dsum_{i=1}^{k+1} i = \dfrac{(k+1)(k+2)}{2}$;
+$\dsum_{i=1}^{k} i$;
+$\dfrac{k(k+1)}{2}$;
+$\dfrac{k}{2}+1$;
+$\dfrac{(k+1)(k+2)}{2}$;
+$P(k+1)$ is true;
+$P(1)$ is true;
+$k\geq 1$;
+all $n\geq 1$;
+induction {\em or} the principle of mathematical induction {\em or} PMI.
+\end{answer}
+\end{fib}
+
+\subsection{Equalities/Inequalities}
+The last few example induction proofs have dealt with statements of the form
+$$LHS(k)=RHS(k),$$
+where $LHS$ stands for {\em left hand side} 
+and $RHS$ stands for {\em right hand side}.
+For instance, in Example~\ref{exa:sumodd},
+the statement was
+$$\dsum_{i=1}^{n}(2 i - 1) = n^2,$$
+so $LHS(k)=\dsum_{i=1}^{k}(2 i - 1)$ and $RHS(k) = k^2$.
+
+
+\begin{ques}
+Let $P(n)$ be the statement 
+``$\dsum_{i=1}^{n} i\cdot i! = (n+1)!-1$.''
+Determine each of the following:
+\begin{lenum}
+\item $P(k)$ is the statement \blankline{3}.
+\item $P(k+1)$ is the statement \blankline{3}.
+\item $LHS(k)=\blankline{3}$
+\item $RHS(k)=\blankline{3}$
+\item $LHS(k+1)=\blankline{3}$
+\item $RHS(k+1)=\blankline{3}$
+\end{lenum}
+\begin{answer}
+\begin{lenum}
+\item $P(k)$ is the statement ``$\dsum_{i=1}^{k} i\cdot i! = (k+1)!-1$''
+\item $P(k+1)$ is the statement ``$\dsum_{i=1}^{k+1} i\cdot i! = (k+2)!-1$''
+\item $LHS(k)=\dsum_{i=1}^{k} i\cdot i!$
+\item $RHS(k)=(k+1)!-1$
+\item $LHS(k+1)=\dsum_{i=1}^{k+1} i\cdot i!$
+\item $RHS(k+1)=(k+2)!-1$
+\end{lenum}
+\end{answer}
+\end{ques}
+
+For statements of this form, the goal of the inductive step is to show that 
+$LHS(k+1)=RHS(k+1)$ given the fact that $LHS(k)$=$RHS(k)$ (the inductive hypothesis). 
+The way this should generally be done is as follows:
+\begin{proc}
+Given a proposition of the form ``$LHS(n)=RHS(n)$,'' the algebra in the
+inductive step of an induction proof should be done as follows:
+
+\medskip
+\noindent
+\begin{tabular}{lllp{3.4in}}
+$LHS(k+1)$&=&$LHS(k)+stuff$&(apply algebra to separate $LHS(k)$ from the rest)\\
+        &=&$RHS(k)+stuff$&(use the inductive hypothesis to replace $LHS(k)$ with $RHS(k)$)\\
+        &=&$\cdots$&(1 or more steps, usually involving algebra, that\\
+        &=&$RHS(k+1)$&result in the goal of getting to $RHS(k+1)$)
+\end{tabular}
+\end{proc}
+The last few examples followed this procedure, and your proofs should also follow it.
+Notice that these examples {\em do not} begin the inductive step by writing out $LHS(k+1)=RHS(k+1)$.
+One of them wrote it out, but it was {\em before} the inductive step for the purpose of
+making the goal in the inductive step clear. 
+The inductive step should always begin by writing just 
+$LHS(k+1)$, and should then use algebra, the inductive hypothesis, etc., 
+until $RHS(k+1)$ is obtained. 
+
+This technique also works (with the appropriate slight modifications) 
+with inequalities, e.g.
+$$LHS(k)\leq RHS(k) \mbox{ and}$$
+$$LHS(k)\geq RHS(k).$$ 
+For instance, if $P(k)$ is the statement ``$k>2^k$'', $LHS(k)=k$, and $RHS(k)=2^k$.
+In addition, the `$+stuff$' is not always literally addition.  For instance, it might be
+$LHS(k)\times stuff$.
+
+Here is another example of this type of induction proof--this time using an 
+inequality. 
+
+\begin{exa}
+Prove that $n<2^n$ for all integers $n\geq 1$.
+\begin{pf} 
+Let $P(n)$ be the statement ``$n<2^n$''.
+We want to prove that $P(n)$ is true for all $n\geq 1$.
+
+\noindent
+{\bf Base Case:} Since $1<2^1$, $P(1)$ is clearly true.
+
+\noindent
+{\bf Hypothesis:} We assume $P(k)$ is true if $k\geq 1$.  That is, $k<2^k$.
+\begin{quote}
+{\em Next we need to show that $P(k+1)$ is true.
+That is, we need to show that $(k+1)<2^{k+1}$.  (Notice that I did not
+state that this was true, and I do not start with this statement in the next step.
+I am merely pointing out what I {\em need to prove}.)  This paragraph is not
+really part of the proof--think of it as a side-comment or scratch work.}
+\end{quote}
+{\bf Inductive:}
+Given that $k<2^k$, we can see that 
+$$
+\begin{array}{llll}
+k+1&<&2^k+1&\mbox{(since $k<2^k$)}\\
+   &<&2^k+2^k&\mbox{(since $1<2^k$ when $k\geq 1$)}\\
+   &=&2(2^k)&\\
+   &=&2^{k+1}&
+\end{array}
+$$
+Since we have shown that $k+1<2^{k+1}$, $P(k+1)$ is true.
+
+\noindent
+{\bf Summary:} 
+Since we proved that $P(1)$ is true, and that
+$P(k)\rightarrow P(k+1)$,
+by {\em PMI}, $P(n)$ is
+true for all $n\geq 1$.
+\end{pf}
+\end{exa}
+
+In the previous example, $LHS(k)=k$, so $LHS(k+1)$ is already in the form
+$LHS(k)+stuff$ since $LHS(k+1)=k+1=LHS(k)+1$. So the first step of algebra is unnecessary
+and we were able to apply the inductive hypothesis immediately.
+Don't let this confuse you.  This is essentially the same as the other examples minus 
+the need for algebra in the first step.
+
+\begin{rem}
+By the time you are done with this section, you will likely be tired of hearing this, 
+but since it is the most common mistake made in induction proofs, it is worth repeating {\em ad nauseam}.
+{\bf Never begin the inductive step of an induction proof by writing down $\mathbf{P(k+1)}$.}
+You do not know it is true yet, so it is not valid to write it down as if it were true so that
+you can use a technique such as working both sides to verify that it is true (which, as we have
+also previously stated, is not a valid proof technique).
+
+You {\bf can} (and sometimes {\bf should}) write down $P(k+1)$ on another piece of paper
+or with a comment such as ``We need to prove that'' preceding it
+so that you have a clear direction for the inductive step.
+\end{rem}
+
+If you can complete the next exercise without too much difficulty, 
+you are well on your way to understanding how to write induction proofs.
+
+%\newpage
+
+\begin{exer}
+Use induction to prove that for all $n\geq 1$, 
+$\dsum _{i=1}^n i^2 = \dfrac{n(n+1)(2n+1)}{6}$.
+
+\noindent
+(Hint: Follow the techniques and format of the previous examples and 
+be smart about your algebra and it will go a lot easier.
+Also, you will need to factor a polynomial in the inductive step, 
+but if you determine what the goal is ahead of time, it shouldn't
+be too difficult.)
+
+\vspace*{6.5in}
+\begin{answer}
+Define $P(n)$ to be the statement ``$\dsum _{i=1}^n i^2 = \dfrac{n(n+1)(2n+1)}{6}$''.
+We need to show that $P(n)$ is true for all $n\geq 1$.
+
+\noindent
+{\bf Base Case:} 
+Since $\dsum _{i=1}^1 i^2 = 1^2 = 1 =  \dfrac{1(2)(3)}{6}$,
+$P(1)$ is true. (If your algebra is in a different order, like 
+$\dsum _{i=1}^1 i^2 = \dfrac{1(2)(3)}{6}= 1$, it is incorrect.  We only know that 
+$\dsum _{i=1}^1 i^2 = \dfrac{1(2)(3)}{6}$ because we first saw that $\dsum _{i=1}^1 i^2=1$,
+and then were able to see that $1 =  \dfrac{1(2)(3)}{6}$.)
+
+\noindent
+{\bf Inductive Hypothesis:}
+Let $k\geq 1$ and assume $P(k)$ is true.  That is, $\dsum _{i=1}^k i^2 = \dfrac{k(k+1)(2k+1)}{6}$.
+
+\noindent
+(As a side note, I know that what I need to prove next is
+
+\noindent
+$\displaystyle\dsum _{i=1}^{k+1} i^2 = \dfrac{(k+1)(k+2)(2(k+1)+1)}{6}=\dfrac{(k+1)(k+2)(2k+3)}{6}.$
+
+\noindent
+I am only writing this down now so that I know what my goal is.  I am not going to start working
+both sides of this or otherwise manipulate it.  I can't because I don't know whether or not it is
+true yet.)
+
+\noindent
+{\bf Inductive Step:}
+Notice that 
+\begin{eqnarray*}
+\dsum _{i=1}^{k+1} i^2&=&\dsum _{i=1}^k i^2+(k+1)^2\\
+&=&\dfrac{k(k+1)(2k+1)}{6}+(k+1)^2\\
+&=&(k+1)\left(\dfrac{k(2k+1)}{6}+(k+1)\right)\\
+&=&(k+1)\left(\dfrac{k(2k+1)+6(k+1)}{6}\right)\\
+&=&(k+1)\left(\dfrac{2k^2 + k + 6k+ 6}{6}\right)\\
+&=&(k+1)\left(\dfrac{2k^2 + 7k+ 6}{6}\right)\\
+&=&(k+1)\left(\dfrac{(2k+3)(k+2)}{6}\right)\\
+&=&\dfrac{(k+1)(k+2)(2k+3)}{6}.
+\end{eqnarray*}
+Therefore $P(k+1)$ is true.
+
+\noindent
+{\bf Summary:} Since $P(1)$ is true and $P(k)\rightarrow P(k+1)$ is true when $k\geq 1$,
+$P(n)$ is true for all $n\geq 1$ by induction.
+\end{answer}
+\end{exer}
+
+\subsection{Variations}
+
+In this section we will discuss a few slight variations of the details we have presented so far.
+First we discuss the fact that we do not need to use a propositional function.
+Then we will discuss a variation regarding the inductive hypothesis.
+
+It is not always necessary to explicitly define $P(k)$ for use in an induction proof.
+$P(k)$ is used mostly for convenience and clarity. For instance, in the solution to the previous
+exercise, it allowed us to just say 
+\begin{center}
+``$P(k)$ \mbox{is true}''
+\end{center}
+instead of saying 
+\begin{center}
+``$\dsum _{i=1}^n i^2 = \dfrac{n(n+1)(2n+1)}{6}$''\, \,  (which is long)
+\end{center}
+or
+\begin{center}
+``the statement is true for $k$''\, \,  (which is a little vague/awkward).
+\end{center}
+
+Here is an example that does not use $P(k)$.  It also does not label the four parts of the proof.  
+That is perfectly fine.  The main reason we have done so in previous examples 
+is to help you identify them more clearly.
+
+\begin{exa}\index{Fibonacci numbers}
+Let $f_n$ be the $n$-th Fibonacci number.
+Prove that for all integers $n \geq 1,$
+$$f_{n - 1}f_{n + 1} = f_n ^2 + (-1)^{n}.$$ 
+\begin{pf}
+For $k = 1,$ we have
+$$f_0f_2= 0\cdot 1 = 0 = 1 - 1 = 1^2 + (-1)^1 = f_1^2 +  (-1)^1,$$
+and so the assertion is true for $k = 1.$ 
+Suppose $k \geq 1,$ and  that the
+assertion is true for $k$.  That is,
+$$f_{k - 1}f_{k + 1} = f_k ^2 + (-1)^{k}.$$
+This can be rewritten as 
+$$f_k ^2  = f_{k - 1}f_{k + 1} -(-1)^{k}$$
+(a fact that we will find useful below).
+Then 
+$$\begin{array}{llll}
+f_{k}f_{k + 2} & =  & f_k(f_{k + 1} + f_k) &\mbox{(by definition of $f_n$ applied to $f_{k+2}$)}\\
+& = & f_kf_{k + 1} + f_k ^2\\
+& = & f_kf_{k + 1} + f_{k - 1}f_{k + 1} - (-1)^{k} &\mbox{(by rewritten inductive hypothesis)}\\
+& = & f_{k + 1}(f_k + f_{k - 1}) + (-1)^{k + 1} \\
+& = & f_{k + 1}f_{k + 1} + (-1)^{k + 1}&\mbox{(by the definition of $f_k$)}\\
+& = & f_{k + 1}^2 + (-1)^{k + 1},
+\end{array}$$
+and so the assertion is true for $k+1$.
+The result follows by induction.
+\end{pf}
+\end{exa}
+
+\begin{exer}\label{exer:sumi2i}
+Use induction to prove  that for all $n\geq 1$, 
+$$1\cdot 2 + 2\cdot 2^2 + 3\cdot 2^3 + \cdots + n\cdot 2^n = 2 + (n - 1)2^{n + 1}$$
+or if you prefer, 
+$$\sum_{i=1}^n i\cdot2^i =  2 + (n - 1)2^{n + 1}.$$
+Do so without using a propositional function.
+You may label the four parts of your proof, but it is not required.
+
+\vspace*{6.5in}
+\begin{answer}
+For $k = 1$ we have $1\cdot 2 = 2 + (1-1)2^2$, and so the
+statement is true for $n = 1$. 
+Let $k\geq 1$ and assume the statement is true for
+$k$. That is, assume
+$$1\cdot 2 + 2\cdot 2^2 + 3\cdot 2^3 + \cdots + k\cdot 2^k = 2 + (k - 1)2^{k + 1}.$$
+We need to show that
+$$1\cdot 2 + 2\cdot 2^2 + 3\cdot 2^3 + \cdots + (k+1)\cdot 2^{k+1} = 2 + k2^{k + 2}.$$
+Using some algebra and the inductive hypothesis, we can see that 
+\begin{eqnarray*}
+1\cdot 2 + 2\cdot 2^2 + 3\cdot 2^3 + \cdots + k\cdot 2^k + (k+1)2^{k+1} 
+&=& 2 + (k - 1)2^{k + 1} + (k+1)2^{k+1}\\
+&=& 2 + (k - 1+k+1)2^{k + 1}\\
+& =& 2 + 2k2^{k+1}\\ 
+&=& 2 + k2^{k+2}.
+\end{eqnarray*}
+Thus, the result is true for $k+1$.  The result follows by induction.
+\end{answer}
+\end{exer}
+
+
+\begin{exa}
+Prove the generalized form of DeMorgan's law.  That is, show that
+for any $n\geq 2$, if $p_1$, $p_2$, $\ldots$, $p_n$ are propositions, then 
+$$\neg(p_1\vee p_2 \vee\cdots\vee p_n)=(\neg p_1\wedge \neg p_2 \wedge \cdots\wedge\neg p_n).$$
+
+We provide several appropriate proofs of this one (and one inappropriate one).
+
+\medskip
+\noindent
+{\bf Proof 1:} (A typical proof)
+\begin{quote}
+Let $P(n)$ be the statement
+``$\neg(p_1\vee p_2 \vee\cdots\vee p_n)=(\neg p_1\wedge \neg p_2 \wedge \cdots\wedge\neg p_n)$.''
+We want to show that for all $n\geq 2$, $P(n)$ is true.
+$P(2)$ is DeMorgan's law, so the base case is true.
+Assume $P(k)$ is true.  Then 
+$$
+\begin{array}{llll}
+\neg(p_1\vee p_2 \vee\cdots\vee p_{k+1})
+&=&
+\neg((p_1\vee p_2 \vee\cdots\vee p_{k})\vee p_{k+1})
+&\mbox{associative law}\\
+&=&
+\neg(p_1\vee p_2 \vee\cdots\vee p_{k})\wedge \neg p_{k+1}
+&\mbox{DeMorgan's law}\\
+&=&
+(\neg p_1\wedge \neg p_2 \wedge \cdots\wedge\neg p_{k})\wedge \neg p_{k+1}
+&\mbox{hypothesis}\\
+&=&
+(\neg p_1\wedge \neg p_2 \wedge \cdots\wedge\neg p_{k}\wedge \neg p_{k+1})
+&\mbox{associative law}
+\end{array}
+$$
+Thus $P(k+1)$ is true.
+Since we proved that $P(2)$ is true, and that
+$P(k)\rightarrow P(k+1)$ if $k\geq 2$,
+by {\em PMI}, $P(n)$ is true for all $n\geq 2$.\hfill$\square$
+\end{quote}
+
+\noindent
+{\bf Proof 2:} (Not explicitly defining/using $P(n)$)
+\begin{quote}
+We know that 
+$\neg(p_1\vee p_2)=(\neg p_1\wedge \neg p_2)$ since
+this is simply DeMorgan's law.
+Assume the statement is true for $k$.  That is, 
+$\neg(p_1\vee p_2 \vee\cdots\vee p_{k})=
+(\neg p_1\wedge \neg p_2 \wedge \cdots\wedge\neg p_{k})$.
+Then we can see that 
+$$
+\begin{array}{llll}
+\neg(p_1\vee p_2 \vee\cdots\vee p_{k+1})
+&=&
+\neg((p_1\vee p_2 \vee\cdots\vee p_{k})\vee p_{k+1})
+&\mbox{associative law}\\
+&=&
+\neg(p_1\vee p_2 \vee\cdots\vee p_{k})\wedge \neg p_{k+1}
+&\mbox{DeMorgan's law}\\
+&=&
+(\neg p_1\wedge \neg p_2 \wedge \cdots\wedge\neg p_{k})\wedge \neg p_{k+1}
+&\mbox{hypothesis}\\
+&=&
+(\neg p_1\wedge \neg p_2 \wedge \cdots\wedge\neg p_{k}\wedge \neg p_{k+1})
+&\mbox{associative law}\\
+\end{array}
+$$
+Thus the statement is true for $k+1$. Since we have shown that the
+statement is true for $n=2$, and that whenever it is true for $k$ it
+is true for $k+1$, 
+by {\em PMI}, the statement is true for all $n\geq 2$.\hfill$\square$
+
+{\em Sometimes it is acceptable to omit the justification in the summary.
+That is, there isn't necessarily a need to restate what you have proven and
+you can just jump to the conclusion.
+So the previous proof could end as follows:}
+
+\begin{quote}
+Thus the statement is true for $k+1$. 
+By {\em PMI}, the statement is true for all $n\geq 2$.
+\end{quote}
+\end{quote}
+
+%\noindent
+%{\bf Proof 3:} (Algebra steps not justified)
+%\begin{quote}
+%The case $k=2$ is DeMorgan's law, and if the statement is true for $k$, then
+%{\small $$
+%\neg(p_1\vee\cdots\vee p_{k+1}) =
+%\neg(p_1\vee \cdots\vee p_{k})\wedge \neg p_{k+1} =
+%(\neg p_1\wedge \cdots\wedge\neg p_{k})\wedge \neg p_{k+1} =
+%(\neg p_1\wedge \neg p_2 \wedge \cdots\wedge\neg p_{k}\wedge \neg p_{k+1})
+%$$
+%}
+%Thus the statement is true for $k+1$. 
+%By {\em PMI}, the statement is true for all $n\geq 2$.\hfill$\square$
+%\end{quote}
+
+\noindent 
+{\bf Proof 3:} (common in journal articles, unacceptable for this class)
+\begin{quote}
+The result follows easily by induction.\hfill$\square$
+\end{quote}
+\end{exa}
+
+\newpage % Force it because it looks crappy otherwise.
+
+\begin{eval}
+Prove that for all positive integers $n$,
+${\displaystyle \sum_{i=1}^{n} i\cdot i! = (n+1)!-1}$.
+\begin{ssol}
+Base: $n=1$
+\begin{eqnarray*}
+1\cdot 1!&=&(1+1)!-1\\
+1&=&2!-1\\
+1&=&1
+\end{eqnarray*}
+Assume $\dsum_{i=1}^n i\cdot i! = (n+1)!-1$ for $n\geq 1$.\\
+Induction:
+\begin{eqnarray*}
+\sum_{i=1}^{n+1}i\cdot i! &=& \sum_{i=1}^{n}i\cdot i! + (n+1)(n+1)!\\
+&=& (n+1)! - 1 + (n+1)(n+1)!\\
+&=&  (n+1+1)(n+1)! -1\\
+&=&  (n+2)(n+1)! -1\\
+&=&  (n+2)! -1
+\end{eqnarray*}
+Therefore it is true for $n$.  Thus by PMI it is true for $n\geq 1$.
+\end{ssol}
+\evallinethree
+\begin{answer}
+This proof is very close to being correct, but is suffers from a few small but important errors:
+\begin{itemize}
+\item
+For the sake of clarity, it might have been better to use $k$ throughout most of the proof
+instead of $n$.  The exception is in the final sentence where $n$ is correct.
+\item
+The base case is just some algebra without context.  A few words are needed.  For instance, 
+`notice that when $n=1$,'.
+\item
+The base case is presented incorrectly.  Notice that the writer starts by writing down what
+she wants to be true and then deduces that it is indeed correct by doing algebra on both sides
+of the equation.  As we have already mentioned, 
+{\em you should {\bf never} start with what you want to prove and work both sides!}
+It is not only sloppy, but it can lead to incorrect proofs.
+Whenever I see students do this, I always tell them to use what I call the $U$ method.  What I mean
+is rewrite your work by starting at the upper left, going down the left side, then doing up the
+right side.  So the above should be rewritten as:
+$$1\cdot 1! = 1 = 2!-1 = (1+1)!-1.$$
+Notice that if the $U$ method does not work (because one
+or more steps isn't correct), it is probably an indication
+of an incorrect proof.  Consider what happens if you try it
+on the proof in Exercise~\ref{minusOneIsNotOne}.  You would
+write $-1=(-1)^2=1=1^2=1$.  Notice that the first equality
+is incorrect.
+
+The $U$ method can sometimes apply to inequalities as well.
+\item
+When the writer makes her assumption, she says `for $n\geq 1$'.  This is O.K., but there is some ambiguity
+here.  Does she mean for {\em all} $n$, or for a particular value of $n$?  She must mean the latter since
+the former is what she is trying to prove.  It would have been better for her to say `for some $n\geq 1$.'
+\item
+The algebra in the inductive step is perfect.  However, what does it mean?  She should include something like
+`Notice that' before her algebra just to give it a little context.  It often doesn't take a lot of words,
+but adding a few phrases here and there goes a long way to help a proof flow more clearly.
+\item
+She says `Therefore it is true for $n$'.  She must have meant $n+1$ since that is what she just proved.
+\item
+As with her assumption, her final statement could be clarified by saying `for all $n\geq 1$.'
+\end{itemize}
+Overall, the proof has almost all of the correct content.  
+Most of the problems have to do with presentation.
+But as we have seen with
+other types of proofs, 
+the details are really important to get right!
+\end{answer}
+\end{eval}
+
+\vspace*{.125in}
+The second variation we wish to discuss has to do with the inductive hypothesis/step.
+In the inductive step, we can replace 
+$P(k)\rightarrow P(k+1)$ with 
+$P(k-1)\rightarrow P(k)$ as long as we prove the statement
+for all $k$ {\em larger than any of the base cases}.
+In general, we can use whatever index we want for the inductive hypothesis as long as we use it to prove that the statement
+is true for the next index, and as long as we are sure to
+cover all of the indices down to the base case.
+For instance, if we prove $P(k+3)\rightarrow P(k+4)$, then
+we need to show it for all $k+3\geq a$ (that is, all $k\geq a-3$), assuming $a$ is the base case.
+Put simply, the assumption we make about the value of $k$
+must guarantee that the inductive hypothesis includes the base case(s).
+
+
+
+%Make sure the value of $k$ makes the hypothesis thingy include the base case.  haha.  lol.  jk.
+
+\begin{ques}
+Consider a `proof' of $\forall n P(n)$
+that shows that $P(1)$ is true and 
+that $P(k)\rightarrow P(k+1)$ for $k>1$.
+What is wrong with such a proof?
+
+\noindent
+\answerlinetwo
+\begin{answer}
+Given this proof, we know that $P(1)$ is true.
+We also know that 
+$P(2)\rightarrow P(3)$, $P(3)\rightarrow P(4)$, etc, 
+are all true.
+Unfortunately, the proof omits showing that $P(2)$ is true,
+so modus ponens never applies.   In other words, knowing that
+$P(2)\rightarrow P(3)$ is true does us no good unless we know
+$P(2)$ is true, which we don't.  Because of this, we don't
+know anything about the truth values of $P(3)$, $P(4)$, etc.
+The proof either needs to show that $P(2)$ is true as part of
+the base case, or the inductive step needs to start at $1$
+instead of $2$. 
+\end{answer}
+\end{ques}
+
+\begin{rem}
+Whether you assume $P(k)$ or $P(k-1)$ is true, 
+you must specify the values of $k$ precisely based on your choice.  
+For instance, if you assume $P(k)$ is true for all $k>a$, you have a problem.
+Although you known $P(a)$ is true (because it is a base case), when you assume 
+$P(k)$ is true for $k>a$, the smallest $k$ can be is $a+1$.  In other words, 
+when you prove $P(k)\rightarrow P(k+1)$, you leave out $P(a)\rightarrow P(a+1)$.
+But that means you can't get anywhere from the base case, so the whole proof is invalid.
+\end{rem}
+
+If you are wondering why we would use $P(k-1)$ as the inductive
+hypothesis instead of $P(k)$, it is because sometimes it makes
+the proof easier--for instance, the algebra steps involved might 
+be simpler.  
+
+
+\begin{exa} 
+Prove that the expression $$ 3^{3n + 3} - 26n -
+27$$is a multiple of $169$ for all natural numbers $n$.
+\begin{pf}
+Let $P(k)$ be the statement ``$3^{3k + 3} - 26k - 27 = 169 N$ for some $ N\in\BBN$.'' 
+We will prove that $P(0)$ is true and that 
+$P(k - 1) \rightarrow P(k)$.
+
+\noindent
+%When $k = 1$ notice that $3^{3\cdot 1 + 3} - 26\cdot 1 - 27= 676 = 169\cdot 4$, so $P(1)$ is true.
+
+\noindent
+When $k = 0$, $3^{3\cdot 0 + 3} - 26\cdot 0 - 27= 27-27=0 = 169\cdot 0$, so $P(0)$ is true.
+
+Let $k> 0$ and assume $P(k - 1)$ is true.
+That is, there is some $N\in\BBN$ such that 
+$3^{3(k - 1) + 3} - 26(k - 1) - 27 = 169N$.  After a little algebra, this is
+the same as $3^{3k} - 26k - 1 = 169N$. Then
+\begin{eqnarray*}
+3^{3k + 3} - 26k - 27 
+&=& 27\cdot 3^{3k} - 26k - 27\\
+&=& 27\cdot 3^{3k} +(26-27)26k - 27\\
+&=& 27\cdot 3^{3k} -27\cdot26 k - 27 + 26\cdot 26k\\
+& =& 27(3^{3k} - 26k -1) + 676k\\
+&=& 27\cdot 169N + 169\cdot 4k \, \, \, \mbox{(By the inductive hypothesis)}\\
+&=& 169(27\cdot N +\cdot 4k)
+\end{eqnarray*}
+which is divisible by 169. The assertion is thus established by
+induction.
+\end{pf}
+\end{exa}
+
+\begin{ques}
+Did you notice that in the previous example we assumed $k>0$ instead of $k\geq 0$?
+Why did we do that?
+
+\noindent
+\answerline
+\begin{answer}
+Because our inductive hypothesis was that $P(k-1)$ is true instead of $P(k)$.  
+If we assumed that $k\geq 0$, then when $k=0$ it would mean we are assuming $P(-1)$ is true, and
+we don't know whether or not it is since we never discussed $P(-1)$.
+\end{answer}
+\end{ques}
+
+
+\subsection{Strong Induction}
+The form of induction we have discussed up to this point only assumes the statement is true for 
+one value of $k$.  This is sometimes called {\em weak induction}.\index{weak induction}
+In {\em strong induction}, we assume that the statement is true for all values up to and including $k$.
+\index{strong induction}
+In other words, with strong induction, the inductive hypothesis involves proving that 
+$$[P(a)\wedge P(a+1)\wedge \cdots \wedge P(k)]\rightarrow P(k+1) 
+\mbox{ if } k\geq a.$$
+This may look more complicated, but practically speaking, there is really very little difference. 
+Essentially, strong induction just allows us to assume {\em more} than weak induction.  
+Let's see an example of why we might need strong induction.
+
+\begin{exa}
+Show that every integer $n\geq 2$ can be written as the product of primes.
+\begin{pf}
+Let $P(n)$ be the statement ``$n$ can be written as the product of primes.''
+We need to show that for all $n\geq 2$, $P(n)$ is true.
+
+Since 2 is clearly prime, it can be written as the product of one
+prime.  Thus $P(2)$ is true.
+
+Assume $[P(2)\wedge P(3)\wedge\cdots \wedge P(k-1)]$ is true for $k>2$.
+In other words, assume all of the numbers from $2$ to $k-1$ can be written as the product of primes.
+
+We need to show that $P(k)$ is true. 
+If $k$ is prime, clearly $P(k)$ is true.  If $k$ is not prime,
+then we can write $k=a\cdot b$, where $2\leq a\leq b< k.$
+By hypothesis, $P(a)$ and $P(b)$ are true, so $a$ and $b$ can be written as the product of primes.
+Therefore, $k$ can be written as the product of primes, namely the primes from the
+factorizations of $a$ and $b$. Thus $P(k)$ is true.
+
+Since we proved that $P(2)$ is true, and that
+$[P(2)\wedge P(3)\wedge\cdots\wedge P(k-1)]\rightarrow P(k)$ if $k> 2$,
+by the principle of mathematical induction, $P(n)$ is true for all $n\geq 2$.
+That is, every integers $n\geq 2$ can be written as the product of primes.
+\end{pf}
+\end{exa}
+
+
+\begin{exa}
+In the country of SmallPesia coins only come in values of $3$ and
+$5$ pesos. Show that any quantity of pesos greater than or equal
+to $8$ can be paid using the available coins.
+\begin{pf}
+{\bf Base Case:} Observe that $8 = 3 + 5$, $9 = 3 + 3 + 3$, and $10 = 5 + 5$, 
+so we can pay $8$, $9$, or $10$ pesos with the available coinage.
+
+{\bf Inductive Hypothesis:} Assume we can pay any value from $8$ to $k-1$ pesos, where
+$k\geq 11$.  
+
+{\bf Inductive step:}
+The inductive hypothesis implies that we can pay with $k-3$ pesos.
+We can add to the coins used for $k-3$ pesos a single coin of value
+$3$ in order to pay for $k$ pesos.
+
+{\bf Summary:}
+Since we can pay for $8$, $9$, and $10$ pesos, and whenever we can pay
+for anything between $8$ and $k-1$ pesos we can pay for $k$ pesos, the
+strong form of induction implies that we can pay for any quantity of
+pesos $n\geq 8$.
+
+{\em 
+Notice that the reason we needed three base cases for this proof was
+the fact that we looked back at $k-3$, three value previous to the value of
+interest.  If we had only proven it for $8$, we would have needed to
+prove $9$ and (more importantly) $10$ in the inductive step.  
+But the inductive step doesn't work for $10$ since there is no solution for $10-3=7$ pesos.
+}
+\end{pf}
+\end{exa}
+
+Notice that there is no way we could have used weak induction in either of the previous examples.
+
+\newpage
+\subsection{Induction Errors}
+
+The following examples should help you appreciate why we need 
+to be very precise/careful when writing induction proofs.
+
+
+
+\begin{exa}
+What is wrong with the following (supposed) proof that $a^n=1$ for $n\geq 0$:
+\begin{pf}
+{\em Base case:} Since $a^0=1$, the statement is true for $n=0$.
+
+\noindent
+{\em Inductive step:} Let $k>0$ and assume $a^j=1$ for $0\leq j\leq k$.
+Then
+$$a^{k+1} = \frac{a^k\cdot a^k}{a^{k-1}}=\frac{1\cdot 1}{1} = 1.$$
+{\em Summary:} Therefore by PMI, $a^n=1$ for all $n\geq 0$.
+\end{pf}
+\begin{sol}
+The base case is correct, and there is nothing wrong with the summary, assuming the
+inductive step is correct.
+$a^k=1$ and $a^{k-1}=1$ are correct by the inductive hypothesis
+since we are assuming $k>0$.  The algebra is also correct.
+So what is wrong?
+The problem is that when  $k=0$, $a^{-1}$ would be in the denominator.
+But we don't know whether or not $a^{-1}=1$.  Thus we needed to assume $k>0$.
+As it turns out, that is precisely where the problem lies.
+We proved that $P(0)$ is true and that $P(k)\rightarrow P(k+1)$ is true when $k>0$.
+Thus, we know that $P(1)\rightarrow P(2)$, and $P(2)\rightarrow P(3)$, etc., but 
+we never showed that $P(0)\rightarrow P(1)$ because, of course, it isn't true.
+The induction doesn't work without $P(0)\rightarrow P(1)$.
+\end{sol}
+\end{exa}
+
+
+\begin{eval}
+Prove or disprove that all goats are the same color.
+\begin{ssol}
+If there is one goat, it is obviously the same color as itself.
+Let $n\geq 1$ and assume that any collection of $n$ goats are
+all the same color.  Consider a collection of $n+1$ goats.
+Number the goats $1$ through $n+1$.
+Then goats $1$ through $n$ are the same color (since there
+are $n$ of them) and goats $2$ through $n+1$ are the same
+color (again, since there are $n$ of them).
+Since goat 2 is in both collections, the goats in both collections
+are the same color.  Thus, all $n+1$ goats are the same color.
+\end{ssol}
+\evallinethree
+\begin{answer}
+This contains a very subtle error.  Did you find it?
+If not, go back and carefully re-read the proof and think
+carefully--at least one thing said in the proof {\em must}
+be incorrect.  What is it?
+
+O.K., here it is:  The statement `goat 2 is in both collections'
+is not always true.  If $n=1$, then the first collection
+contains goats $1$ through $1$, and the second collection
+contains goats $2$ through $2$.  In this case, there is no overlap
+of goat $2$, so the proof falls apart.
+\end{answer}
+\end{eval}
+
+
+
+The next example deals with {\em binary palindromes}.
+Binary palindromes can be defined recursively by $\lambda, 0, 1\in P$, and whenever $p\in P$, then
+$1p1\in P$ and $0p0\in P$.  
+(Note: $\lambda$ is the notation sometimes used to denote the {\em empty string}---that is, the string of length $0$.  
+Also, $1p1$ means the binary string obtained by appending $1$ to the begin and end of string $p$.  Similarly for $0p0$.)
+Notice that there is 1 palindrome of length 0 ($\lambda$), 2 of length 1 (0, 1),
+2 of length 2 (00, 11), 4 of length 3 (000, 010, 101, 111), etc.
+
+\begin{eval}
+Use induction to prove that the number of binary palindromes of length $2n$ (even length) is 
+$2^n$ for all $n\geq 0$.
+\begin{spfenum}
+\item
+Base case: $k=1$.  The total number of palindromes of length $2=2$ is $2^1=2$.  It is true.
+
+\noindent
+Assume the total number of binary palindromes with length $2k$ is $2^k$.  To form a binary palindrome
+with length $2(k+1)=2k+2$, with every element in the set of binary palindromes with length $2k$ we either
+put $(00)$ or $(11)$ to the end or beginning of it.  
+Therefore, the number of binary palindromes with length $2(k+1)$ is twice as many as the number of
+binary palindromes with length $2k$, which is $2\times2^k=2^{k+1}$.  Thus it is true for $k+1$.
+By the principle of mathematical induction, the total number of binary palindromes of length
+$2n$ for $n\geq 1$ is $2^n$.
+
+\noindent
+\evallinethree
+\item
+For the base case, notice that there is $1=2^0$ palindromes of length $0$ (the empty string).
+Now assume it is true for all $n$.
+For each consecutive binary number with $n$ bits, you are adding a bit to either end, which multiplies
+the total number by $2^2$ permutations, but for it to be a palindrome, they both have to be either
+$0$ or $1$, so it would just be $2$ instead, so for binary numbers of length $2k$, there are $2^k$ 
+palindromes.
+
+\noindent
+\evallinethree
+\item
+The empty string is the only string of length $0$, and it is a palindrome.  
+Thus there is $1=2^0$ palindromes of length $0$.
+Let $2n$ be the length, assume $2n\rightarrow 2^n$ palindromes.
+Now we look at $n+1$ so we know the length is $2n+2$ and it starts and ends with
+either $0$ or $1$ and has $2n$ values in between.
+Both possibilities imply $2^n$ palindromes, so $2^n+2^n=2^{n+1}$.
+
+\noindent
+\evallinethree
+\end{spfenum}
+
+\begin{answer}
+\begin{pfevalenum}
+\item
+This solution is on the right track,  but it has several technical problems.  
+	\begin{itemize}
+	\item
+	The base case should
+	be $k=0$, not $k=1$.  
+	\item
+	The way the base case is worded could be improved.  For instance, 
+	what purpose does saying `$2=2$' serve?  Also, the separate sentence that just says `it is true' is
+	a little vague and awkward.  I would reword this as:
+		\begin{quote}
+		The total number of palindromes of length $2\cdot 1$ is $2=2^1$, so the statement is true for $k=1$.
+		\end{quote}
+	Of course, the base case should {\em really} be $k=0$, but if it were $k=1$, that is how I would word it.
+	\item 
+	The connection between palindromes of length $2k$ and $2(k+1)$ is not entirely clear and is incorrect
+	as stated.  A palindrome of length $2(k+1)$ can be formed from a palindrome of length $2k$ by adding
+	a $0$ to both the beginning and end or adding a $1$ to both the beginning and the end.  
+	This what was probably meant, but it is not what the proof actually says. 
+	 
+	But we need to say a little more about this.  Every palindrome of length
+	$2(k+1)$ can be formed from exactly one palindrome of length $2k$ with this method.  But is this enough?  
+	Not quite.  We also need to know that every palindrome of length $2k$ can be extended to a palindrome of
+	length $2(k+1)$, and it should be clear that this is the case.  
+	In summary, the inductive step needs to establish that there are twice as many binary palindromes of length $2(k+1)$ as there are of length $2k$.  
+	The argument has to convince the reader that there is a 2-to-1 correspondence between these sets of palindromes.  In other words, we did not omit or double-count any.
+	\end{itemize}
+\item
+	The base case correct.  Unfortunately, that is about the only thing that is correct.
+	\begin{itemize}
+	\item 
+	The second sentence is wrong. 
+	We cannot say that `it is true for all $n$'--that is precisely what we are trying to prove.  We need
+	to assume it is true for a {\em particular} $n$ and then prove it is true for $n+1$.
+	\item
+	The rest of the proof is one really long sentence that is difficult to follow.  It should be split
+	into much shorter sentences, each of which provides one step of the proof.	
+	\item
+	The term `binary number' should be replaced with `binary palindrome' throughout.  It causes
+	confusion, especially when the words `add' and `consecutive' are used.  These mean something
+	very different if we have numbers in mind instead of strings.
+	\item  
+	I don't think the phrase `each consecutive binary number' means what the writer thinks it means. 
+	The binary numbers $1001$ and $1010$ are consecutive (representing $9$ and $10$), but that is 
+	probably {\em not}	what the writer has in mind.
+	\item
+	The term `permutations' shows up for some reason.  
+	I think they might have mean `strings' or something else.
+	\item
+	Why bring up the $4$ possible ways to extend a binary
+	string by adding to the beginning and end if only two of them are relevant? 
+	Why not just consider the ones of interest in the first place?
+	\item
+	In the context of a proof, the phrase 'you are adding' doesn't make sense.  Why am I adding something
+	and what am I adding it to?  And do they mean addition (of the binary numbers) or appending (of strings)?
+	\item 
+	They switch from $n$ to $k$ in the middle of the proof to provide further confusion.
+	\end{itemize}
+\item
+This proof has most of the right ideas, but it does not put them together well.  
+The base case is correct.
+It sounds like the writer understands what is going on with the inductive step, 
+but needs to communicate it more clearly.
+More specifically, what does `assume $2k\rightarrow 2^k$ palindromes' mean?
+I think I am supposed to read this as `assume that there are $2^k$ palindromes of length $2k$.'
+\footnote{In general, avoid the use of mathematical symbols in constructing the grammar of an English sentence.
+One of the most common abuses I see is the use of $\rightarrow$ in the middle of a sentence.}
+
+The final sentence is also problematic.  The first phrase tries to connect to the previous sentence,
+but the connection needs to be a little more clear.  The final phrase is not a complete thought.
+In the first place, I know that  $2^k+2^k=2^{k+1}$ and this has nothing to do with the previous
+phrases.  In other words, the `so' connecting the phrases doesn't make sense.  But more seriously,
+why do I care that $2^k+2^k=2^{k+1}$?  What he meant was something like 
+`so there are $2^k+2^k=2^{k+1}$ palindromes of length $2k+2$'.
+\end{pfevalenum}
+\end{answer}
+\end{eval}
+
+\newpage
+
+\begin{exer}
+Based on the feedback from the previous Evaluate exercise, construct a proper proof that 
+the number of binary palindromes of length $2n$ is $2^n$ for all $n\geq 0$.
+
+\vspace*{4.75in}
+\begin{answer}
+The empty string is the only string of length $0$, and it is a palindrome.  
+Thus there is $1=2^0$ palindromes of length $0$.
+
+Now assume there are $2^n$ binary palindromes of length $2n$.
+For every palindrome of length $2n$, exactly two palindromes of length $2(n+1)$ can be constructed
+by appending either a $0$ or a $1$ to both the beginning and the end.  Further, every palindrome
+of length $2(n+1)$ can be constructed this way.  Thus, there are twice as many palindromes of
+length $2(n+1)$ as there are of length $2n$.  By the inductive hypothesis, there are $2\cdot 2^n=2^{n+1}$
+binary palindromes of length $2(n+1)$.
+
+The result follows by PMI.
+\end{answer}
+\end{exer}
+
+\subsection{Summary/Tips}
+
+Induction proofs are both intuitive and non-intuitive.  On the one hand, when you talk through
+the idea, it seems to make sense.  On the other hand, it almost seems like you are using
+{\em circular reasoning}.  It is important to understand that induction proofs do {\em not}
+rely on circular reasoning.  Circular reasoning is when you assume $p$ in order to prove $p$.
+But here we are not doing that.  We are assuming $P(k)$ and using that fact to prove $P(k+1)$, 
+a different statement.  However, we are {\em not} assuming that $P(k)$ is true for all $k\geq a$.  
+We are proving that {\bf\em if we assume that $P(k)$ is true}, then $P(k+1)$ is true.  
+The difference between these statements may seem subtle, but it is important.
+
+Let's summarize our approach to writing an induction proof.  
+This is similar to Procedure~\ref{proc:induct1} except we include several of the unofficial steps
+we have been using that often come in handy.
+You are not required to use this procedure, but if you are having a difficult time with
+induction proofs, try this out.  Here is the brief version.  After this we provide some
+further comments about each step.
+
+\newpage % This should be together on one page.
+
+\begin{proc}\label{proc:induct2}
+A slightly longer approach to writing an induction proof is as follows:
+\begin{enumerate}
+\item{\bf Define:} (optional) 
+Define $P(n)$ based on the statement you need to prove.
+\item{\bf Rephrase:}  (optional)
+Rephrase the statement you are trying to prove using $P(n)$. 
+This step is mostly to help you be clear on what you need to prove.
+\item{\bf Base Case:} 
+Prove the base case or cases.
+\item{\bf Inductive Hypothesis:} 
+Write down the inductive hypothesis. Usually it is as simple as ``Assume that $P(k)$ is true''.
+\item{\bf Goal:} (optional)
+Write out the goal of the {\em inductive step} (coming next).
+It is usually ``I need to show that $P(k+1)$ is true''
+It can be helpful to explicitly write out $P(k+1)$, although see important comments
+about this step below.
+This is another step that is mostly for your own clarity.
+\item{\bf Inductive:} Prove the {\em goal} statement, usually using the 
+{\em inductive hypothesis}.
+\item{\bf Summary:} The typical induction summary.
+\end{enumerate}
+\end{proc}
+
+
+Here are some comments about the steps in Procedure~\ref{proc:induct2}.
+
+\begin{enumerate}
+\item{\bf Define:} 
+$P(n)$ should be a statement
+about a single instance, not about a series of instances.  For example,
+it should be statements like 
+``$2 n$ is even''  or 
+``A set with $n$ elements has $2^n$ subsets.''
+It should {\em NOT} be of the form 
+``$2 n$ is even if $n>1$,'' ``$n^2>0$ if $n\neq 0$,''
+or ``For all $n>1$, a set with $n$ elements has $2^n$ subsets.''
+\item{\bf Rephrase:} 
+In almost all cases, the rephrased statement should be 
+``For all $n\geq a$, $P(n)$ is true,'' where $a$ is some constant,
+often 0 or 1. If the statement cannot be phrased in this way, induction may
+not be appropriate.
+\item{\bf Base Case:} 
+For most statements, this means showing that $P(a)$ is true, where $a$ is
+the value from the rephrased statement.  
+Although usually one base case suffices, sometimes one must prove multiple
+base cases, usually $P(a)$, $P(a+1)$, \ldots, $P(a+i)$ for some $i>0$.
+This depends on the details of the inductive step.
+\item{\bf Inductive Hypothesis:}
+This is almost always one of the following: 
+\begin{itemize}
+\item
+Assume that $P(k) \mbox{ is true}$.
+\item
+Assume that $P(k-1) \mbox{ is true}$.
+\item
+Assume that $[P(a)\wedge P(a+1)\wedge \cdots \wedge P(k)] \mbox{ is true}$ (strong induction)
+\end{itemize}
+Sometimes it is helpful to write out the hypothesis explicitly (that is,
+write down the whole statement with $k$ or $k-1$ plugged in).
+
+\item{\bf Goal:}
+As previously stated, this is almost always ``I need to show that $P(k+1)$ is true'' 
+(or ``I need to show that $P(k)$ is true'').
+But it can be very helpful to explicitly write out what $P(k+1)$ is so you have a clear
+direction for the next step.  However, {\em it is very important that you do not just
+write out $P(k+1)$ without prefacing it with a statement like ``I need to show that...''.}
+Since you are about to prove that $P(k+1)$ is true, you don't know that it is true
+yet, so writing it down as if it is a fact is incorrect and confusing.
+In fact, it is probably better write the goal separate from the rest if the proof
+(e.g. on another piece of paper).  
+
+The goal does not need to be written down and is not really part of the proof.  The 
+only purpose of doing so it to help you see what you need to do in the next step. 
+For instance, knowing the goal often helps you to figure out the required algebra steps to get there.
+
+%$$\mbox{I need to show that if } k\geq a, P(k)\rightarrow P(k+1)$$
+%or
+%$$\mbox{I need to show that if } k> a,[P(a)\wedge P(a+1)\wedge \cdots \wedge P(k)]\rightarrow P(k+1).$$
+%As mentioned previously, this step can also be 
+%$$\mbox{I need to show that if } k> a, P(k-1)\rightarrow P(k)$$
+%if it makes the induction step easier (e.g. it simplifies the necessary algebra). 
+
+\item{\bf Inductive:} 
+This is the longest, and most varied, part of the proof.
+Once you get the hang of induction, you will typically only think about two parts of the 
+proof---the base case and this step.  The rest will become second nature.
+
+The inductive step should {\em not} start with writing down $P(k+1)$.
+Some students want to write out $P(k+1)$ and
+work both sides until they get them to be the same.  
+As we have emphasized on several occasions, this is {\em not} a proper
+proof technique.  You cannot start with something you do not know and then work it until
+you get to something you do know and then declare it is true.  
+\item{\bf Summary:} 
+This is easy.  It is almost always either:
+\begin{quote}
+``Since we proved that $P(a)$ is true, and that
+$P(k)\rightarrow P(k+1),$ for $k\geq a$, 
+then we know that $P(n)$ is true for all $n\geq a$ by {\em PMI}, '' or
+\end{quote}
+\begin{quote}
+``Since we proved that $P(a)$ is true, and that
+$[P(a)\wedge P(a+1)\wedge\cdots\wedge P(k)]\rightarrow P(k+1),$ for $k\geq a$, 
+$P(n)$ is true for all $n\geq a$ by {\em PMI}.''
+\end{quote}
+The details change a bit depending on what your inductive hypothesis was
+(e.g. if it was $P(k-1)$ instead of $P(k)$).
+Technically speaking, you can just summarize your proof by saying
+\begin{quote}
+``Thus, $P(n)$ is true for all $n\geq a$ by {\em PMI}.''
+\end{quote}
+As long as someone can look back and see that you included the two necessary parts of the
+proof, you do not necessarily need to point them out again. 
+\end{enumerate}
+
+\newpage
+\section{Recursion}\label{sec:recursion}
+
+You have seen examples of recursion if you have seen Russian Matryoshka dolls (Google it),
+two almost parallel mirrors, a video camera pointed at the monitor, or a picture of a
+painter painting a picture of a painter painting a picture of a painter...
+More importantly for us, recursion is a very useful tool to implement algorithms.
+You probably already learned about recursion in a previous programming course, but we 
+present the concept in this brief section for the sake of review, and because it ties in
+nicely with the other two topics in this chapter.\index{recursion}
+
+\begin{df}\label{df:rec}
+An algorithm is \hyperref[df:rec]{\em recursive} if it calls itself.\index{recursive}\index{recursion}
+\end{df}
+
+Examples of recursion that you may have already seen include {\em binary search}, 
+{\em Quicksort}, and {\em merge sort}.
+
+\begin{ques}\label{ques:ferzlerec}
+Is following algorithm recursive?
+Briefly explain.
+\begin{code}
+	int ferzle(int n) {
+	    if(n<=0) {
+	        return 3;
+	    } else {
+	        return ferzle(n-1) + 2;
+	    }
+	}
+\end{code}
+\answerlinetwo
+\begin{answer}
+Yes.  It clearly calls itself in the else clause.
+\end{answer}
+\end{ques}
+
+If a subroutine/function simply called itself as a part of its execution, 
+it would result in infinite recursion.  This is a bad thing.
+Therefore, when using recursion, one must ensure that at some point,
+the subroutine/function terminates without calling itself.
+We will return to this point after we see what is perhaps 
+the quintessential example of recursion.
+
+\begin{exa}\label{exa:factRec}\index{factorial}
+Notice that 
+$$
+\begin{array}{lllll}
+0!&=&1 \\
+1!&=&1 &=& 1 \times 0!\\
+2!&=&2 \times 1 &=& 2 \times 1!\\
+3!&=&3 \times 2 \times 1 &=& 3\times 2! \\
+4!&=&4 \times 3\times 2\times 1 &=& 4\times 3!\\ 
+5!&=&5\times 4 \times 3\times 2\times 1 &=& 5\times 4!\\ 
+\multicolumn{5}{c}{\mbox{and in general, when } n>1,}\\
+n!&=&n \times (n-1)\times\cdots\times 2\times 1 &=& n\times (n-1)!\\ 
+\end{array}
+$$
+
+In other words, we can define $n!$ recursively as follows:
+
+$$
+n! = \left\{ \begin{array}{ll}
+1 & \mbox{when $n = 0$}\\
+ n * (n-1)! & \mbox{otherwise.}\\
+\end{array}
+\right.
+$$
+
+This leads to the following recursive algorithm to compute $n!$ when $n\geq 0$.
+
+\begin{code}
+    int factorial(int n) {
+        if(n<=0) {
+            return 1;
+        } else {
+            return n*factorial(n-1);
+        }
+    }
+\end{code} 
+\end{exa}
+
+To guarantee that they will terminate, every recursive algorithm needs all
+of the following.
+\begin{enumerate}
+\item
+\index{base case (recursion)}
+{\em Base case(s)}: One or more cases which are solved non-recursively.  
+In other words, when an algorithm gets to the base case, it does not call itself again.
+This is also called a {\em stopping case} or {\em terminating condition}.
+\item 
+{\em Inductive case(s)}: One or more recursive rule for all cases except the base case.
+\index{inductive case (recursion)}
+\item
+{\em Progress:} The inductive case(s) should always progress toward the base case.
+Often this means the arguments will get smaller until they approach the base case,
+but sometimes it is more complicated than this.
+\end{enumerate}
+  
+\vspace*{-.1in}
+
+\begin{exa}
+Let's take a closer look at the \scode{factorial} algorithm from Example~\ref{exa:factRec}.
+If $n\leq 0$, \scode{factorial} does not make a recursive call.  Thus,
+it has a {\em base case}.
+When $n>0$, it is clearly making a recursive call, so it has {\em inductive cases}.
+When a recursive call is made to \scode{factorial}, the
+argument is smaller, so it is approaching a base case (i.e. making {\em progress}).
+\end{exa}
+
+\vspace*{-.1in}
+
+\begin{ques}
+Consider the \verb+ferzle+ algorithm from Question~\ref{ques:ferzlerec} above.
+\begin{lenum}
+\item What is/are the base case/cases?
+
+\noindent
+\answerline
+\item What are the inductive cases?
+
+\noindent
+\answerline
+\item Do the inductive cases make progress?
+
+\noindent
+\answerline
+\end{lenum}
+\begin{answer}
+(a) The base cases are $n<\leq 0$.
+(b) The inductive cases are $n>0$.
+(c) Yes.  For any value $n>0$, the recursive call uses the value $n-1$, which is getting
+closer to the base case of $0$.
+\end{answer}
+\end{ques}
+
+\vspace*{-.1in}
+
+\begin{exa}
+Prove that the recursive \scode{factorial(n)} algorithm from Example~\ref{exa:factRec} 
+returns $n!$ for all $n\geq 0$.
+\begin{pf}
+Notice that if $n=0$, \scode{factorial(0)} returns $1=0!$, so it works in that case.
+For $k\geq 0$, assume \scode{factorial(k)} works correctly.
+That is, it returns $k!$.
+\scode{factorial(k+1)} return $k+1$ times the value returned by \scode{factorial(k)}.  
+By the inductive hypothesis, \scode{factorial(k)} returns $k!$, so
+\scode{factorial(k+1)} returns $(k+1)\times k!=(k+1)!$, as it should.
+By PMI,  \scode{factorial(n)} returns $n!$ for all $n\geq 0$.
+\end{pf}
+\end{exa}
+
+\begin{exa}\label{exa:countdown}
+Implement an algorithm \scode{countdown(int n)} that outputs the integers from $n$ down to $1$, where $n>0$.
+So, for example, \scode{countdown(5)} would output ``5 4 3 2 1''.
+\begin{sol}
+One way to do this is with a simple 
+loop:
+{\small
+\begin{code}
+    void countdown(int n) {
+        for(i=n;i>0;i--) 
+      	    print(i);	
+    }
+\end{code}
+}
+We wouldn't learn anything about recursion if we used this solution.
+So let's consider how to do it with recursion.
+Notice that \scode{countdown(n)} outputs $n$ followed by the numbers from $n-1$ down to $1$.
+But the numbers $n-1$ down to $1$ are the output from \scode{countdown(n-1)}.
+This leads to the following recursive algorithm:
+{\small
+\begin{code}
+    void countdown(int n) {
+        print(n);
+        countdown(n-1):
+    }
+\end{code} 
+}
+To see if this is correct, we can trace through the
+execution of \scode{countdown(3)}. The following table give 
+the result.
+
+\begin{center}
+\begin{tabular}{|lcl|}
+\hline
+Execution of &outputs&then executes\\
+\hline
+\scode{countdown(3)}&3&\scode{countdown(2)}\\
+\scode{countdown(2)}&2&\scode{countdown(1)}\\
+\scode{countdown(1)}&1&\scode{countdown(0)}\\
+\scode{countdown(0)}&0&\scode{countdown(-1)}\\
+\scode{countdown(-1)}&-1&\scode{countdown(-2)}\\
+\multicolumn{1}{|c}{$\vdots$}&$\vdots$&\multicolumn{1}{c|}{$\vdots$}\\
+\hline
+\end{tabular}
+\end{center}
+ 
+Unfortunately, \scode{countdown} will never terminate.  
+We are supposed to stop printing when $n=1$, 
+but we didn't take that into account.
+In other words, we don't have a base case in our algorithm.
+To fix this, we can modify it so that 
+a call to \scode{countdown(0)} produces no output and does not call 
+\scode{countdown} again.
+
+
+Calls to \scode{countdown(n)} should also produce no output when $n<0$.
+The following algorithm takes care of both problems and is our final solution.
+{\small\begin{code}
+    void countdown(int n) {
+        if(n>0) {
+            print(n);
+            countdown(n-1);
+        }
+    }
+\end{code}
+}
+Notice that when $n\leq 0$, \scode{countdown(n)} does nothing, 
+making $n\leq 0$ the {\em base cases}.  
+When $n>0$, \scode{countdown(n)} calls \scode{countdown(n-1)}, 
+making $n>0$ the {\em inductive cases}.
+Finally, when \scode{countdown(n)} makes a recursive call it is to \scode{countdown(n-1)}, 
+so the inductive cases {\em progress} to the base case.
+\end{sol}
+\end{exa}
+
+\newpage
+\begin{exer}
+Prove that the recursive \scode{countdown(n)} algorithm from Example~\ref{exa:countdown} 
+works correctly.
+(Hint:  Use induction.)
+
+\vspace*{1.75in}
+\begin{answer}
+Notice that if $n\leq 0$, \scode{countdown(0)} prints nothing, so it works in that case.
+For $k\geq 0$, assume \scode{countdown(k)} works correctly.\footnote{We are letting $n=0$ be the base case.  
+You could also let $n=1$ be the base case, but then you would need to prove that \scode{countdown(1)} works.}  
+Then \scode{countdown(k+1)} will print `$k+1$' 
+and call \scode{countdown(k)}.  By the inductive hypothesis, 
+\scode{countdown(k)} will print `k\, k-1\, $\ldots$ 2\, 1', so \scode{countdown(k+1)} will print `k+1\, k\, k-1 $\ldots$ 2\, 1',
+so it works properly.  By PMI,  \scode{countdown(n)} works for all $n\geq 0$.
+\end{answer}
+\end{exer}
+
+
+In general, we can solve a problem with recursion if we can: 
+\begin{enumerate}
+\item
+Find one or more simple cases of the problem that can be solved directly.
+\item
+Find a way to break up the problem into smaller instances of the {\em same} problem.
+\item
+Find a way to combine the smaller solutions.
+\end{enumerate}
+
+Let's see a few classic examples of the use of recursion.
+
+\begin{exa}\label{exa:binSearchComp}
+Consider the {\em binary search} algorithm to find an item $v$ on a sorted list of size $n$.
+The algorithm works as follows. 
+\begin{itemize}
+\item We compare the middle value $m$ of the array to $v$.
+\item If the $m=v$, we are done.
+\item Else if $m<v$, we binary search the left half of the array.
+\item Else ($m>v$), we binary search the right half of the array.
+\item Now, we have the same problem, but only half the size.
+\end{itemize}
+In Example~\ref{exa:binSearchIter} we saw the following iterative implementation of
+binary search:
+\begin{code}
+    int binarySearch(int a[], int n, int val) {
+       int left=0, right=n-1;
+       while (right>=left) {
+           int middle = (left+right)/2;
+           if(val==a[middle]) 
+               return middle;
+           else if(val<a[middle]) 
+               right=middle-1;
+           else 
+               left=middle+1; 
+        }
+       return -1;
+    }
+\end{code} 
+Here is a version that uses recursion.  In this version we need to pass the 
+endpoints of the array so we know what part of the array we are currently looking at.
+\begin{code}
+    int binarySearch(int[] a, int left, int right, int val) {
+        if(right>=left) {
+            int middle = (left+right)/2;
+            if(val==a[middle])      
+                return middle;
+            else if(val<a[middle])  
+                return binarySearch(a,left,middle-1,val);
+            else                   
+                return binarySearch(a,middle+1,right,val);
+        } else {
+            return -1;
+        }
+    }
+\end{code}\index{binary search}\index{search!binary}
+You should notice that in this case, the iterative and recursive algorithms are
+very similar, and it is not clear that one implementation is better than the other.
+However, if you were asked to write the algorithm from scratch, it is probably easier to
+get the details right for the recursive one.
+\end{exa}
+
+\begin{exa}
+Prove that the {\em recursive} \verb+binarySearch+ algorithm from
+Example~\ref{exa:binSearchComp} is correct.
+\begin{pf}
+We will prove it by induction on $n=right-left+1$ (that is, the size of the array).
+
+\noindent
+{\bf Base case:}
+If $n=0$, that means $right<left$, and \verb+binarySearch+ returns $-1$ as it should (since $val$ cannot possible be in an empty array).  
+So it works
+correctly for $n=0$.
+
+\noindent
+{\bf Inductive Hypothesis:}
+Assume that \verb+binarySearch+ works for arrays of size $0$ through $k-1$ (we need strong induction for this proof).
+
+\noindent
+{\bf Inductive step:}
+Assume \verb+binarySearch+ is called on an array of size $k$.  There are three cases.
+\begin{itemize}
+\item
+If $val=a[middle]$, the algorithm returns $middle$ which is the correct answer.
+\item
+If $val<a[middle]$, a recursive call is made on the first half of the array (from $left$ to $middle-1$).  
+Because $a$ is sorted, if $val$ is in the array, it is in that half of the array, so we just need to prove that the
+recursive call returns the correct value.
+Notice that the first half of the array has less than $n$ elements (it does not contain $middle$ or anything to the right of $middle$, so
+it is clearly smaller by at least one element).
+Thus, by the inductive hypothesis, it returns the correct index or $-1$ if $val$ is not in that part of the array.  
+Therefore it returns the correct value.
+\item
+The case for $val>a[middle]$ is symmetric to the previous case and the details are left to the reader.
+\end{itemize}
+In all cases, it works correctly on an array of size $k$.
+
+\noindent
+{\bf Summary:}
+Since it works for an array of size $0$ and whenever it works for arrays of size at most $k-1$ it works for arrays of size $k$,
+by the principle of mathematical induction, it works for arrays of any nonnegative size.
+\end{pf}
+\end{exa}
+
+\begin{rem}
+You might think the base case in the previous proof should be $n=1$, but that is not actually correct. A failed search will always
+make a final call to \verb+binarySearch+ with $n=0$.  If we don't prove it works for an empty array then we cannot
+be certain that it works for failed searches.
+\end{rem}
+
+\begin{exa}\label{exa:fibAlg}\index{Fibonacci numbers}
+Recall the {\em Fibonacci sequence}, defined by the recurrence relation
+$$f_n=\left\{
+\begin{array}{ll}
+0&\mbox{ if $n$=0}\\
+1&\mbox{ if $n$=1}\\
+f_{n-1}+f_{n-2}&\mbox{ if }n>1.\\
+\end{array}
+\right.
+$$
+Let's see an iterative and a recursive algorithm to compute $f_n$.
+The iterative algorithm (on the left) starts with $f_0$ and $f_1$ and computes
+each $f_i$ based on $f_{i-1}$ and $f_{i-2}$ for $i$ from $2$ to $n$.
+As it goes, it needs to keep track of the previous two values.
+The recursive algorithm (on the right) just uses the definition and is pretty
+straightforward.
+
+\noindent
+\begin{minipage}[t]{.4\textwidth}
+\begin{code}
+int Fib(int n) {
+    int fib;
+    if(n <= 1) {
+       return(n);
+    } else {
+       int fibm2=0;
+       int fibm1=1;
+       int index=1;
+       while(index < n) {
+          fib=fibm1+fibm2;
+          fibm2=fibm1;
+          fibm1=fib;
+          index++;
+       }
+       return(fib); 
+    }
+}
+\end{code} 
+\end{minipage}
+\hfill 
+\begin{minipage}[t]{.5\textwidth}
+\begin{code}
+int FibR(int n) {
+    if(n <= 1) {
+       return(n);
+    } else { 
+       return(FibR(n-1)+FibR(n-2));
+    }
+}
+\end{code} 
+\end{minipage}
+\end{exa}
+
+\begin{ques}\label{ques:fibrineff}
+Which algorithm is better, \verb+Fib+ or \verb+FibR+? Give several reasons to justify your answer.
+
+\noindent
+\answerlinethree
+\begin{answer}
+It is pretty clear that the recursive algorithm
+is much shorter and was a lot easier to write.  
+It is also a lot easier to
+make a mistake implementing the iterative algorithm.
+So far, it looks like the recursive algorithm is the clear winner.
+However, in the next section we will show you why the recursive 
+algorithm we gave should never be implemented.  It turns out that is is
+very inefficient.
+
+The bottom line is that the iterative algorithm is better in this case.
+Don't feel bad if you thought the recursive algorithm was better.
+After the next section, you will be better prepared to compare
+recursive and iterative algorithms in terms of efficiency.
+\end{answer}
+\end{ques}
+
+Although recursion is a great technique to solve many problems, care must be taken when 
+using it.  It easy to make simple mistakes like we did in Example~\ref{exa:countdown}.
+They can also be very inefficient on occasion, as we alluded to in the previous example
+(and will prove later).
+In addition, recursive algorithms often take more memory than iterative ones, as we will see next.
+
+\begin{exa}
+Consider our algorithms for $n!$.  
+The iterative one from Example \ref{exa:factorial} uses memory to store four numbers: 
+$n$, $f$, $i$, and return value.\footnote{I won't get technical here,
+but memory needs to be allocated for the value returned by a function.}
+The recursive one from Example \ref{exa:factRec} uses memory to store two numbers: $n$ and the
+return value.
+Although the recursive algorithm uses less memory, it is called multiple times, and every 
+call needs its own memory.  
+For instance, a call to \scode{factorial(3)} will
+call \scode{factorial(2)} which will call \scode{factorial(1)}.  
+Thus, computing $3!$ requires enough memory to store $6$ numbers, which is more than the $4$ required by the
+iterative algorithm.  In general, the recursive algorithm to compute $n!$
+will need to store $2n$ numbers, whereas the iterative one will still just need $4$, no matter
+how large $n$ gets.
+\end{exa}
+
+Since computers have a finite amount of memory, and since every call to a function requires its own memory,
+there is a limit to how many recursive calls can be made in practice.  
+In fact some languages, including Java, have a defined limit of how deep the recursion can be.
+Even for those that don't have a limit, if you run out of memory, you can certainly expect bad things to happen.
+This is one of the reasons recursion is avoided when possible. 
+
+Good compilers attempt to remove recursion, but it is not always possible.
+Good programmers do the same.  Since recursive algorithms are often more intuitive, it often makes sense
+to think in terms of them.  But many recursive algorithms can be turned into iterative algorithms
+that are as efficient and use less memory.  There is no single technique to
+do so, and it is not always necessary, but it is a good thing to keep in mind.
+
+Let's see a few more examples of the subtle problems that we can run into when using recursion.
+
+\begin{exa}
+The following algorithm is supposed to sum the numbers from $1$ to $n$:
+{\small\begin{code}
+    void Sum1toN(int n) {
+        if (n == 0)  return(0);
+        else         return(n + Sum1toN(n-1));
+    }
+\end{code} 
+}
+Although this algorithm works fine for non-negative values of $n$, 
+it will go into infinite recursion if $n<0$.
+Like our original solution to the \scode{countdown} problem, the
+mistake here is an {\em improper base case}.
+\end{exa}
+
+It is easy to get things backwards when recursion is involved.
+Consider the following example.
+
+\begin{ques}
+One of these routines prints from 1 up to $n$,
+the other from $n$ down to 1.
+Which does which?
+
+\begin{minipage}{.4\textwidth}
+\begin{code}
+     void PrintN(int n) { 
+          if (n > 0) {
+             PrintN(n-1);
+             print(n);
+          }                          
+     }
+\end{code}
+\end{minipage}
+\hfill 
+\begin{minipage}{.4\textwidth}
+\begin{code}
+     void NPrint(int n) {
+         if (n > 0) {
+            print(n);
+            NPrint(n-1);
+         }
+     }
+\end{code} 
+\end{minipage}
+
+\answerlinetwo
+\begin{answer}
+\verb+PrintN+ will print from $1$ to $n$, and \verb+NPrint+ will print from $n$ to $1$.
+If you go the answer wrong, go back and convince yourself that this is correct.
+\end{answer}
+\end{ques}
+
+
+We conclude this section by summarizing some of the advantages and disadvantages
+of recursion.
+
+The advantages include:
+\begin{enumerate}
+\item 
+Recursion often mimics the way we think about a problem, thus the
+recursive solutions can be very intuitive to program.
+\item 
+Often recursive algorithms to solve problems are much shorter than
+iterative ones. This can  make the code easier to understand, modify, and/or debug.
+\item  
+The best known algorithms for many problems are based on
+a divide-and-conquer approach:
+\begin{itemize}
+\item  Divide the problem into a set of smaller problems
+\item  Solve each small problem separately
+\item  Put the results back together for the overall solution
+\end{itemize}
+These divide-and-conquer techniques are often best thought of in terms of
+recursive algorithms. 
+\end{enumerate}
+
+Perhaps the main disadvantage of recursion is the extra time and space
+required.
+We have already discussed the extra space.  
+The extra time comes from the fact that when a recursive call is made,
+the operating system has to record how to restart the calling subroutine later on,
+pass the parameters from the calling subroutine to the called
+subroutine (often by pushing the parameters onto a stack controlled by the system),
+set up space for the called subroutine's local variables, etc.
+The bottom line is that calling a function is not ``free''.  
+
+Another disadvantage is the fact that sometimes a slick-looking recursive algorithm 
+turns out to be very inefficient.  We alluded to this in Example~\ref{ques:fibrineff}.
+On the other hand, if such inefficiencies are found, there are techniques
+that can often easily remove them 
+(e.g. a technique called memoization\footnote{No, that's not a typo.  Google it.}).
+But you first have to remember to analyze 
+your algorithm to determine whether or not there might be an efficiency problem.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newpage
+
+\section{Solving Recurrence Relations}\label{sec:recRel}
+Recall that a {\em recurrence relation}\index{recurrence relations}
+is simply a sequence that is recursively defined.
+More formally, a recurrence relation is a formula that defines $a_n$ 
+in terms of $a_i$, for one or more values of $i<n$.\footnote{You might also see recurrence relations
+written using function notation, like $a(n)$.
+Although there are technical differences between these notations, you can think of them as
+being essentially equivalent in this context.}
+
+\begin{exa}\index{Fibonacci numbers}
+We previously saw that we can define $n!$ by $0!=1$, and if $n>0$, $n!=n\cdot(n-1)!$.
+This is a recurrence relation for the sequence $n!$.
+
+Similarly, we have seen the Fibonacci sequence several times.
+Recall that $n$-th Fibonacci number is given by $f_0=f_1=1$ and for $n>1$, 
+$f_n=f_{n-1}+f_{n-2}$.  This is recurrence relation for the sequence of Fibonacci numbers.
+\end{exa}
+
+\vspace*{-.05in} % For later exercise that wants to go to next page.
+
+\begin{exa}\label{exa:somerecs}
+Each of the following are recurrence relations.
+\begin{eqnarray*}
+t_n &=& n\cdot t_{n-1} + 4\cdot t_{n-3}\\
+r_n &=& r_{n/2}+1\\
+a_n &=& a_{n-1}+2\cdot a_{n-2}+3\cdot a_{n-3}+4\cdot a_{n-4}\\
+p_n &=& p_{n-1}\cdot p_{n-2}\\
+s_n &=& s_{n-3} + n^2 - 4 n + 32
+\end{eqnarray*}
+We have not given any initial conditions for these recurrence relations.
+Without initial conditions, we cannot compute particular values.
+We also cannot solve the recurrence relation uniquely.
+\end{exa}
+
+Recurrence relations have 2 types of terms: {\em recursive} term(s) and
+the {\em non-recursive} terms.
+\index{non-recursive term (recurrence relation)}\index{recursive term (recurrence relation)}
+%% Huh?  This isn't correct--the base cases are independent of the recursive definition.
+%% Where did I get this idea?  CAC, 6/11/14.
+%These are synonymous with the {\em inductive} and {\em base} cases of recursive algorithms.
+In the previous example, the recursive term of $s_n$ is $s_{n-3}$
+and the non-recursive term is  $n^2 - 4 n + 32$.  
+
+\begin{ques}
+Consider the recurrence relations $r_n$ and $a_n$ from Example~\ref{exa:somerecs}.
+\begin{lenum}
+\item
+What are the {\em recursive} terms of $r_n$?
+
+\noindent
+\answerline
+\item
+What are the {\em non-recursive} terms of $r_n$?
+
+\noindent
+\answerline
+\item
+What are the {\em recursive} terms of $a_n$?
+
+\noindent
+\answerline
+\item
+What are the {\em non-recursive} terms of $a_n$?
+
+\noindent
+\answerline
+\end{lenum}
+\begin{answer}
+(a) $r_{n/2}$.
+(b) $1$.
+(c) $a_{n-1}+2\cdot a_{n-2}+3\cdot a_{n-3}+4\cdot a_{n-4}$.
+(d) There are none.
+\end{answer}
+\end{ques}
+
+In computer science, the most common place we use recurrence relations is to analyze recursive algorithms.
+We won't get too technical yet, but let's see a simple example.
+
+\begin{exa}\label{exa:factMuls}
+How many multiplications are required to compute $n!$ using the \verb+factorial+ algorithm given
+in Example \ref{exa:factRec} (repeated below)?
+\begin{code}
+    int factorial(int n) {
+        if(n<=0) {
+            return 1;
+        } else {
+            return n*factorial(n-1);
+        }
+    }
+\end{code} 
+\begin{sol}
+Let $M_n$ be the number of multiplications needed to compute $n!$ using 
+the \verb+factorial+ algorithm from Example \ref{exa:factRec}.
+From the code, it is obvious that $M_0=0$.  If $n>0$, 
+the algorithm uses one multiplication and then makes a recursive call to \verb+factorial(n-1)+.
+By the way we defined $M_n$, \verb+factorial(n-1)+ does $M_{n-1}$ multiplications.
+Therefore, $M_n=M_{n-1}+1$.  
+
+So the recurrence relation for the number of multiplications is 
+$$M_n=\left\{
+\begin{array}{ll}
+0&\mbox{ if $n$=0}\\
+M_{n-1}+1&\mbox{ if }n>0.\\
+\end{array}
+\right.
+$$
+\end{sol}
+\end{exa}
+
+Given a recurrence relation for $a_n$, you can't just plug in $n$ and get an answer.  For instance, 
+if $a_n=n\cdot a_{n-1}$, and $a_1=1$, what is $a_{100}$?  The only obvious way to compute it is
+to compute $a_2, a_3,\ldots, a_{99}$, and then finally $a_{100}$.  That is the reason why
+{\em solving} recurrence relations is so important.  As mentioned previously, solving a recurrence
+relation simply means finding a {\em closed form expression} for it.
+\index{closed form (recurrence relation)}
+\index{recurrence relations!solving}
+
+\begin{exa}
+It is not too difficult to see that the recurrence from Example \ref{exa:factMuls} has the
+solution $M_n=n$.  To prove it, notice that with this assumption, $M_{n-1}+1= (n-1)+1 = n=M_{n}$,
+so the solution is consistent with the recurrence relation.
+
+We can also prove it with induction: 
+We know that $M_0=0$, so the base case of $k=0$ is true.
+Assume $M_k=k$ for $k\ge 0$.  Then we have
+$$M_{k+1} = M_{k} + 1 = k + 1,$$
+so the formula is correct for $k+1$.  Thus, by PMI, the formula is correct for all $k\geq 0$.
+\end{exa}
+
+The last example demonstrates an important fact about recurrence relations used to analyze algorithms.
+The recursive terms come from when a recursive function calls itself.  
+The non-recursive terms come from the other work that is done by the function,
+including any splitting or combining of data that must be done.
+
+\newpage
+
+\begin{exa}\label{exa:binSearchRecRel}
+\index{binary search}\index{search!binary}
+Consider the recursive {\em binary search} algorithm we saw in Example~\ref{exa:binSearchComp}:
+\begin{code}
+    int binarySearch(int[] a, int left, int right, int val) {
+        if(right>=left) {
+            int middle = (left+right)/2;
+            if(val==a[middle])      
+                return middle;
+            else if(val<a[middle])  
+                return binarySearch(a,left,middle-1,val);
+            else                   
+                return binarySearch(a,middle+1,right,val);
+        } else {
+            return -1;
+        }
+    }
+\end{code}
+Find a recurrence relation for the worst-case complexity of \scode{binarySearch}.
+\begin{sol}
+Let $T_n$ be the complexity of \scode{binarySearch} for an array of size $n$.
+Notice that the only things done in the algorithm are to find the middle element,
+make a few comparisons, perhaps make a recursive call, and return a value.  Aside from
+the recursive call, the amount of work done is constant, which we will just call $1$ operation.  
+Notice that at most one recursive call is made, and that the array passed in is half
+the size.
+Therefore  $T_n=T_{n/2}+1$.\footnote{Technically, 
+the recurrence relation is  $T_n=T_{\lfloor n/2\rfloor}+1$ since $n/2$ might not be an integer. 
+It turns out that most of the time we can ignore the floors/ceilings and still obtain the correct answer.
+}
+If we want a base case, we can use $T_0=1$ since the algorithm will simply return $-1$ for an
+empty array, and that clearly takes constant time.
+We'll see how to solve this recurrence shortly.
+\end{sol}
+\end{exa}
+
+We will discuss using recurrence relations to analyze recursive algorithms in more detail
+in section~\ref{sec:anaRecAlg}.  But first we will discuss how to solve recurrence relations.
+There is no general method to solve recurrences.
+There are many strategies, however.  In the next few sections we will discuss
+four common techniques: 
+the {\em substitution method},  
+the {\em iteration method},
+the {\em Master Theorem} (or {\em Master Method}),
+and the {\em characteristic equation method} for linear recurrences.
+
+\begin{ques}
+Let's see if you have been paying attention.  
+What does it mean to solve a recurrence relation?
+
+\noindent
+\answerlinetwo
+\begin{answer}
+It means to find a closed-form expression for it.  In other words, one that does not
+define the sequence recursively.
+\end{answer}
+\end{ques}
+
+As we continue our discussion of recurrence relations, you will notice that we will begin to
+sometimes use the function notation (e.g. $T(n)$ instead of $T_n$).  
+We do this for several reasons.  The first is so that you are comfortable with either notation.
+The second is that in algorithm analysis, this notation seems to be more common,
+at least in my experience.
+
+\subsection{Substitution Method}
+The {\em substitution method} might be better called the 
+{\em guess and prove it by induction method}. 
+\index{substitution method}
+\index{recurrence relations!solving!substitution method} 
+Why?  Because to use it, you first have to figure out what you think the
+solution is, and then you need to actually prove it.  Because of the close
+tie between recurrence relations and induction, it is the most natural technique to use.
+Let's see an example.
+\begin{exa}
+Consider the recurrence 
+$$
+S(n) = \left\{ 
+\begin{array}{ll}
+1&\mbox{when $n = 1$}\\
+S(n-1) + n & \mbox{otherwise}
+\end{array}
+\right.
+$$
+Prove that the solution is 
+${\displaystyle S(n)=\frac{n(n+1)}{2}.}$
+
+\medskip
+\noindent
+\begin{pf}
+When $n=1$, $S(1)=1 = \frac{1(1+1)}{2}$.
+Assume that $S(k-1)=\frac{(k-1)k}{2}$.
+Then
+\begin{eqnarray*}
+S(k)&=&S(k-1)+k\, \, \, \mbox{(Definition of }S(k)\mbox{)}\\
+&=&\dfrac{(k-1)(k)}{2}+k\, \, \, \mbox{(Inductive hypothesis)}\\
+&=&\dfrac{k^2-k}{2}+k\, \, \, \mbox{(The rest is just algebra)}\\
+&=&\dfrac{k^2-k+2 k}{2}\\
+&=&\dfrac{k^2+k}{2}\\
+&=&\dfrac{k(k+1)}{2}.
+\end{eqnarray*}
+By PMI, $S(n)=\frac{n(n+1)}{2}$ for all $n\geq 1$.
+\end{pf}
+\end{exa}
+
+\begin{exer}
+Recall that in Example~\ref{exa:binSearchRecRel}, we
+developed the recurrence relation $T(n)=T(n/2)+1, T(0)=1$ for the complexity of \verb+binarySearch+.
+For technical reasons, ignore $T(0)$ and assume $T(1)=1$ is the base case.
+Use substitution to prove that $T(n)=\log_2 n + 1$ is a solution to this 
+recurrence relation.
+
+\vspace*{2.5in}
+\begin{answer}
+When $n=1$, $T(1)=1=0+1=\log_2 1 + 1$.
+Assume that $T(k)=\log_2 k + 1$ for all $1\leq k <n$ 
+(we are using strong induction).
+Then 
+\begin{eqnarray*}
+T(n)&=&T(n/2)+1\\
+&=&(\log_2 (n/2) + 1) + 1\\
+&=&\log_2 n - \log_2 2 + 2\\
+&=&\log_2 n - 1 + 2\\
+&=&\log_2 n +1.
+\end{eqnarray*}
+So by PMI, $T(n)=\log_2 n + 1$ for all $n\geq 1$.
+\end{answer}
+\end{exer}
+
+\begin{exa}\label{exa:Hanoi1}
+Solve the recurrence
+$$
+H_n = \left\{ 
+\begin{array}{ll}
+1&\mbox{when $n = 1$}\\
+2 H_{n-1} + 1 & \mbox{otherwise}
+\end{array}
+\right.
+$$
+\begin{pf}
+Notice that $H_1=1$, $H_2=2\cdot 1 + 1 = 3$, $H_3=2\cdot 3+1 = 7$, and $H_4=2\cdot 7 + 1=15$.
+It sure looks like $H_n=2^n-1$,  but now we need to prove it.  
+Since $H_1=1=2^1-1$, we have our base case of $n=1$.  Assume $H_n=2^n-1$.  Then
+\begin{eqnarray*}
+H_{n+1}&=&2H_n+1\\
+&=&2(2^n-1)+1\\
+&=&2^{n+1}-1,
+\end{eqnarray*}
+and the result follows by induction.
+\end{pf}
+\end{exa}
+
+\begin{exer}
+Solve the following recurrence relation and use induction to prove
+your solution is correct:  $A(n)=A(n-1)+2$, $A(1)=2$.
+
+\vspace*{4.5in}
+\begin{answer}
+We begin by computing a few values to see if we can find a pattern.
+$A(2)=A(1)+2 = 2+2= 4$, $A(3)=A(2)+2=4+2=6$, $A(4)=8$, $A(5)=10$, etc.
+It seems pretty obvious that $A(n)=2n$.  It holds for $n=1$, so we have our base case.
+Assume $A(n)=2n$.  Then $A(n+1)=A(n)+2 = 2n+2=2(n+1)$, so it holds for $n+1$.
+By PMI, $A(n)=2n$ for all $n\geq 1$.
+\end{answer}
+\end{exer}
+
+\newpage
+\begin{exa}\index{Fibonacci numbers}
+Why was the recursive algorithm to compute $f_n$ from Example \ref{exa:fibAlg} so bad?
+\begin{sol}
+Let's count the number of additions \scode{FibR(n)} computes since that is the main
+thing that the algorithm does.\footnote{Alternatively, we could count the number of recursive calls made.
+This is reasonable since the amount of work done by the algorithm, aside from the recursive calls,
+is constant.  Therefore, the time it takes to compute $f_n$ is proportional to 
+the number of recursive calls made.
+This would produce a slightly different answer, but they would be comparable.}
+%Footnote causes an undefull vbox, but I don't see how to get rid of it.
+Let $F(n)$ be the number of additions required to compute $f_n$ using \scode{FibR(n)}.
+Since \scode{FibR(n)} calls \scode{FibR(n-1)} and \scode{FibR(n-2)}
+and then performs one addition,
+it is easy to see that 
+$$F(n)=F(n-1)+F(n-2)+1,$$
+where $F(0)=F(1)=0$ is clear from the algorithm.
+We could use the method for linear recurrences that will be outlined later to solve this, 
+but the algebra gets a bit messy.  
+Instead, Let's see if we can figure it out by computing some values.
+\begin{eqnarray*}
+F(0)&=&0\\
+F(1)&=&0\\
+F(2)&=&F(1)+F(0)+1 = 1\\
+F(3)&=&F(2)+F(1)+1 = 2\\
+F(4)&=&F(3)+F(2)+1 = 4\\
+F(5)&=&F(4)+F(3)+1 = 7\\
+F(6)&=&F(5)+F(4)+1 = 12\\
+F(7)&=&F(6)+F(5)+1 = 20
+\end{eqnarray*}
+
+No pattern is evident unless you add one to each of these. If you do, you will
+get $1,1,2,3,5,8,13,21$, etc., which looks a lot like the Fibonacci sequence starting with
+$f_1$.  So it appears $F(n)=f_{n+1}-1$.
+To verify this, first notice that $F(0)=0=f_1-1$ and $F(1)=0=f_2-1$.
+Assume it holds for all values less than $k$.
+Then
+\begin{eqnarray*}
+F(k)&=&F(k-1)+F(k-2)+1\\
+&=&f_{k}-1+f_{k-1}-1 + 1\\
+&=&f_{k}+f_{k-1} -1\\
+&=&f_{k+1}-1.
+\end{eqnarray*}
+%\vspace*{0in} % gets rids of \vbox underfull warning.
+
+\noindent
+The result follows by induction.
+
+So what does this mean?  It means in order to compute $f_n$, 
+\scode{FibR(n)} performs $f_{n+1}-1$ additions.
+In other words, it computes $f_n$ by adding a bunch of $0$s and $1$s,
+which doesn't seem very efficient.  
+Since $f_n$ grows exponentially (we'll see this in Example \ref{exa:fibSol}),
+then $F(n)$ does as well.  That pretty much explains what is wrong with the recursive algorithm.
+\end{sol}
+
+\end{exa}
+
+\subsection{Iteration Method} 
+
+With the iteration method (sometimes called {\em backward substitution}, 
+we expand the recurrence and express
+it as a summation dependent only on $n$ and initial conditions.
+Then we evaluate the summation.
+Sometimes the closed form of the sum is obvious as we are iterating
+(so no actual summation appears in our work), while at other times
+it is not (in which case we {\em do} end up with an actual summation).
+\index{iteration method}
+\index{recurrence relations!solving!iteration method} 
+
+Our first example perhaps has too many steps of algebra, but it never
+hurts to be extra careful when doing so much algebra.
+We also don't provide a whole lot of justification or explanation for
+the steps.  We will do that in the next example.  It is easier to see
+the overall idea of the iteration method if we don't interrupt it
+with comments.  If this example does not make sense, come back to it
+after reading the next example.
+
+\begin{exa}\label{exa:R}
+Solve the recurrence 
+$$
+R(n) = \left\{ 
+\begin{array}{ll}
+1&\mbox{when $n = 1$}\\
+2 R(n/2) + n/2 & \mbox{otherwise}
+\end{array}
+\right.
+$$
+\begin{pf}
+We have
+\begin{eqnarray*}
+R(n)&=&2 R(n/2) + n/2\\
+&=&2(2 R(n/4) + n/4 ) + n/2\\
+&&=2^2R(n/4) + n/2+n/2\\
+&&= 2^2R(n/4) + n\\
+&=&2^2(2 R(n/8) + n/8 ) + n\\
+&&=  2^3R(n/8) + n/2+n\\
+&&=  2^3R(n/8) + 3n/2\\
+&=&2^3(2 R(n/16) + n/16 ) + 3n/2\\
+&&=2^4R(n/16) + n/2 + 3n/2\\
+&&=2^4R(n/16) + 2n\\
+&\hfill\vdots\hfill\hfill\\
+&=&2^k R(n/(2^k)) + k n/2\\
+&=&2^{\log_2 n} R(n/(2^{\log_2 n})) + (\log_2 n) n/2\\
+&=&n R(n/n) + (\log_2 n) n/2\\
+&=&n R(1) + (\log_2 n) n/2\\
+&=&n + (\log_2 n) n/2
+\end{eqnarray*}
+\end{pf}\end{exa}
+
+
+Using this method requires a little abstract thinking and pattern recognition.
+It also requires good algebra skills.  
+Care must be taken when doing algebra, especially with the non-recursive terms. 
+Sometimes you should add/multiply  (depending on context) them all together,
+and other times you should leave them as is.  The problem is that it takes
+experience (i.e. practice) to determine which one is better in a given situation.
+The key is flexibility.  If you try doing it one way and don't see a pattern, 
+try another way.
+
+Here is my suggestion for using this method
+\begin{enumerate}
+\item
+Iterate enough times so you are certain of what the pattern is.  Typically this means
+at least 3 or 4 iterations.
+\item
+As you iterate, make adjustments to your algebra as necessary so you can see the pattern.
+For instance, whether you write $2^3$ or $8$ can make a difference in seeing the pattern.
+\item
+Once you see the pattern, generalize it, writing what it should look like after $k$ iterations.
+\item
+Determine the value of $k$ that will get you to the base case, and then plug it in.
+\item
+Simplify.
+\end{enumerate}
+
+\begin{ques}
+The {\em iteration method} is probably not a good choice to solve the following recurrence relation.
+Explain why. 
+$$T(n)=T(n-1)+3T(n-2)+n*T(n/3)+n^2,\, \, \,  T(1)=17$$
+\answerlinethree
+\begin{answer}
+It contains 3 very different looking recursive terms so it is very unlikely we will
+be able to find any sort of meaningful pattern by iteration.
+\end{answer}
+\end{ques}
+
+Here is an example that contains more of an explanation of the technique.
+\begin{exa}\label{exa:longiterone}
+Solve the recurrence relation $T(n)=2T(n/2)+ n^3$, $T(1)=1$.
+\begin{sol}
+We start by backward substitution:
+\begin{eqnarray*}
+T(n)&=&2T(n/2)+n^3\\
+    &=&2[2T(n/4)+(n/2)^3]+n^3\\
+    &=&2[2T(n/4)+n^3/8)]+n^3\\
+    &=&2^2T(n/4)+n^3/4+n^3
+\end{eqnarray*}
+Notice that in the second line we have $(n/2)^3$ and not $n^3$.  
+This may be more clear if rewrite the formula using $k$: $T(k)=2T(k/2)+k^3$.
+When applying the formula to $T(n/2)$, we have $k=n/2$, so we get
+$$T(n/2)=2T((n/2)/2)+(n/2)^3=2T(n/4)+n^3/8.$$
+Back to the second line, 
+also notice that the $2$ is multiplied by both the $2T(n/4)$ and the $(n/2)^3$ terms.
+A common error is to lose one of the $2$s on the $T(n/4)$ term or miss it on
+the $(n/2)^3$ term when simplifying.
+Also, $(n/2)^3=n^3/8$, not $n^3/2$.  This is another common mistake.
+Continuing,
+
+\begin{eqnarray*}
+T(n)&=&\ldots\\
+    &=&2^2T(n/4)+n^3/4+n^3\\
+    &=&2^2[2T(n/8)+(n/4)^3]+n^3/4+n^3\\
+    &=&2^2[2T(n/8)+n^3/4^3]+n^3/4+n^3\\
+    &=&2^3T(n/8)+n^3/4^2+n^3/4+n^3.
+\end{eqnarray*}
+By now you should have noticed that I use 2 or more steps for every iteration--I do one substitution
+and then simplify it before moving on to the next substitution.  This helps to 
+ensure I don't make algebra mistakes and that I can write it out in a way that 
+helps me see a pattern.
+
+Next, notice that we can write the last line as
+$$2^3T(n/2^3)+n^3/4^2+n^3/4^1+n^3/4^0,$$
+so it appears that we can generalize this to 
+$$2^kT(n/2^k)+\sum_{i=0}^{k-1} n^3/4^i.$$
+The sum starts at $i=0$ (not $1$) and goes to $k-1$ (not $k$).  
+It is easy to get either (or both) of these wrong if you aren't careful.
+We should be careful to make sure we have seen the correct pattern.
+Too often I have seen students make a pattern out of 2 iterations.
+Not only is this not enough iterations to be sure of anything, 
+the pattern they usually come up with only holds for the last iteration they did. 
+The pattern has to match {\em every} iteration.  
+To be safe, go one more iteration after you
+identify the pattern to verify that it is correct.
+
+Continuing (with a few more steps shown to make all of the algebra as clear as possible), we get
+\begin{eqnarray*}
+T(n)&=&\ldots\\
+    &=&2^3T(n/2^3)+n^3/4^2+n^3/4^1+n^3/4^0\\
+    &=&2^3[2T(n/2^4)+(n/2^3)^3]+n^3/4^2+n^3/4^1+n^3/4^0\\
+    &=&2^3[2T(n/2^4)+n^3/2^9]+n^3/4^2+n^3/4^1+n^3/4^0\\
+    &=&2^4T(n/2^4)+n^3/2^6+n^3/4^2+n^3/4^1+n^3/4^0\\
+    &=&2^4T(n/2^4)+n^3/4^3+n^3/4^2+n^3/4^1+n^3/4^0\\
+    &=&\ldots\\
+    &=&2^kT(n/2^k)+\sum_{i=0}^{k-1} n^3/4^i.
+\end{eqnarray*}
+Notice that this {\em does} seem to match the pattern we saw above.
+We can evaluate the sum to simplify it a little more:
+
+\begin{eqnarray*}
+T(n)&=&\ldots\\
+    &=&2^kT(n/2^k)+\sum_{i=0}^{k-1} n^3/4^i\\
+    &=&2^kT(n/2^k)+n^3\sum_{i=0}^{k-1} 1/4^i\\
+    &=&2^kT(n/2^k)+n^3\sum_{i=0}^{k-1} (1/4)^i\\
+    &=&2^kT(n/2^k)+n^3\left(\frac{1-(1/4)^k}{1-1/4}\right)\\
+    &=&2^kT(n/2^k)+n^3(4/3)(1-(1/4)^k)\\
+\end{eqnarray*}
+We are almost done.  We just need to find a $k$ that allows us to get rid of the recursion.
+Thus, we need to determine what value of $k$ makes $T(n/2^k)=T(1)=1$.  In other words, we need
+$k$ such that  
+$$n/2^k=1.$$
+This is equivalent to 
+$$n=2^k.$$
+Taking log (base 2) of both sides, we obtain 
+$$\log_2 n=\log_2(2^k)=k\log_{2} 2=k.$$  
+So $k=\log_2 n$.
+We plug in $k$ and use the fact that $2^{\log_2 n}=n$ along with the exponent rules to obtain
+\begin{eqnarray*}
+T(n)&=&\ldots\\
+    &=&2^kT(n/2^k)+n^3(4/3)(1-(1/4)^k)\\
+    &=&2^{\log_2 n}T(n/2^{\log_2 n})+n^3(4/3)(1-(1/4)^{\log_2 n})\\
+    &=&nT(1)+n^3(4/3)\left(1-\frac{1}{(2^2)^{\log_2 n}}\right)\\
+    &=&n\cdot 1+n^3(4/3)\left(1-\frac{1}{(2^{\log_2 n})^2}\right)\\
+    &=&n+n^3(4/3)\left(1-\frac{1}{n^2}\right)\\
+    &=&n+\frac{4}{3}n^3-\frac{4}{3}n\\
+    &=&\frac{4}{3}n^3-\frac{1}{3}n.
+\end{eqnarray*}
+So we have that $T(n)=\frac{4}{3}n^3-\frac{1}{3}n$.
+\end{sol}
+\end{exa}
+
+\begin{exer}\label{exa:Hanoi2}
+Use iteration to solve the recurrence
+$$
+H(n) = \left\{ 
+\begin{array}{ll}
+1&\mbox{when $n = 1$}\\
+2 H(n-1) + 1 & \mbox{otherwise}
+\end{array}
+\right.
+$$
+\vspace*{7.5in}
+\begin{answer} 
+\begin{eqnarray*}
+H(n)&=&2 H(n-1) + 1\\
+&=&2(2 H(n-2) + 1) + 1\\
+&&= 2^2 H(n-2) + 2 + 1\\
+&=&2^2(2 H(n-3) + 1) + 2 + 1\\
+&&= 2^3 H(n-3) + 2^2 + 2 + 1\\
+&\vdots&\\
+&=&2^{n-1}H(1) + 2^{n-2} + 2^{n-3}+\cdots + 2 + 1\\
+&=&2^{n-1} + 2^{n-2} + 2^{n-3}+\cdots + 2 + 1\\
+&=&2^n-1
+\end{eqnarray*}
+Thus, $H(n)=2^n-1$. Luckily, this matches our answer from Example~\ref{exa:Hanoi1}. 
+\end{answer}
+\end{exer}
+
+\newpage
+
+\begin{exa}
+Give a tight bound for the recurrence $T(n)=T(\sqrt{n})+1$, where $T(2)=1$.
+\begin{sol}
+We can see that 
+\begin{eqnarray*}
+T(n)&=&T(n^{1/2})+1\\
+&=&T(n^{1/4})+1+1\\
+&=&T(n^{1/8})+1+1+1\\
+&=&T(n^{1/2^k})+k\\
+\end{eqnarray*}
+If we can determine when $n^{1/2^k}=2$, we can obtain a solution.
+Taking logs (base 2) on both sides, we get 
+$$\log_2(n^{1/2^k})=\log_2 2.$$ 
+We apply the power-inside-a-log rule
+and the fact that $\log_2 2=1$ to get
+$$(1/2^k)\log_2 n=1.$$
+Multiplying both sides by $2^k$ and flipping it around, we get
+$$2^k= \log_2 n.$$
+Again taking logs, we get 
+$$k=\log_2\log_2 n.$$
+Therefore, 
+\begin{eqnarray*}
+T(n)&=&T(n^{1/2^{\log_2\log_2 n}})+\log_2\log_2 n\\
+     &=&T(2)+\log_2\log_2 n\, \, \, \mbox{(since $n^{1/2^{\log_2\log_2 n}}=2$ by the way we chose $k$)}\\
+     &=&1+\log_2\log_2 n.\\
+\end{eqnarray*}
+Therefore, $T(n)=1+\log_2\log_2 n$.
+\end{sol}
+\end{exa}
+
+\newpage
+\begin{exer}
+Use iteration to solve the recurrence relation that we developed in Example~\ref{exa:binSearchRecRel}
+for the complexity of \verb+binarySearch+:
+$$T(n)=T(n/2)+1, T(1)=1.$$
+\vspace*{7.5in}
+\begin{answer}
+Iterating a few steps, we discover:
+\begin{eqnarray*}
+T(n)&=&T(n/2)+1\\
+&=&T(n/4)+1+1\\
+&=&T(n/2^2)+2\, \, \, \, \mbox{(I think I see a pattern!)}\\
+&=&T(n/2^3)+1+2\\
+&=&T(n/2^3)+3\, \, \, \, \mbox{(I {\em do} see a pattern!)}\\
+&\vdots&\\
+&=&T(n/2^k)+k\\
+\end{eqnarray*}
+We need to find $k$ such that $n/2^k=1$.
+We already saw in Example~\ref{exa:longiterone} that $k=\log_2 n$ is the solution.
+Therefore, we have
+\begin{eqnarray*}
+T(n)&=&T(n/2^k)+k\\
+&=&T(n/2^{\log_2 n})+\log_2 n\\
+&=&T(1)+\log_2 n\\
+&=&1+\log_2 n\\
+\end{eqnarray*}
+Therefore, 
+$T(n)=1+\log_2 n$.
+\end{answer}
+\end{exer}
+
+\newpage
+
+If you can do the following exercise correctly, then you have a firm grasp of the 
+iteration method and your algebra skills are superb.  If you have difficulty, keep
+working at it and/or get some assistance. I strongly recommend that you do your
+best to solve this one on your own.
+
+\begin{exer}
+Solve the recurrence relation $T(n)=2T(n-1)+n$, $T(1)=1$.
+(Hint:  You will need the result from Exercise~\ref{exer:sumi2i}.)
+\vspace*{7.5in}
+\begin{answer}
+The final answer is $T(n)=2^{n+1}-n-2$ or $T(n)=4\cdot2^{n-1}-n-2$.
+It is important that you can work this out yourself, so try your best to get this
+answer without looking further.  But if you get stuck or have a different answer,
+you can refer to the following skeleton of steps--we have omitted many of the steps
+because we want you to work them out.  It does provide a few reference points
+along the way, however.
+\begin{eqnarray*}
+T(n)&=&2T(n-1)+n\\
+&=&2(2T(n-2)+(n-1))+n\, \, \, \mbox{(having $n$ instead of $(n-1)$ is a common error)}\\
+&=&2^2T(n-2)+3n-2\, \, \, \mbox{(it is unclear yet if I should have $3n-2$ or some other form)}\\
+&\vdots& \, \, \, \, \, \, \mbox{(many skipped steps)}\\
+&=&2^kT(n-k)+(2^k-1)n-\dsum_{i=1}^{k-1}i2^i\, \, \, \, \mbox{(the all-important pattern revealed)}\\
+&\vdots& \, \, \, \, \, \, \mbox{(plug in appropriate value of $k$ and simplify)}\\
+&=&2^{n+1}-n-2.
+\end{eqnarray*}
+\end{answer}
+\end{exer}
+
+\newpage
+
+\subsection{Master Theorem} 
+We will omit the proof of the following theorem which is particularly
+useful for solving recurrence relations that result from the analysis of
+certain types of recursive algorithms--especially divide-and-conquer algorithms.
+
+\begin{thm}[Master Theorem]\index{Master Theorem}
+\index{recurrence relations!solving!Master Theorem} 
+Let $T(n)$ be a monotonically increasing function satisfying 
+\begin{eqnarray*}
+T(n)&=&aT(n/b)+f(n)\\
+T(1)&=&c
+\end{eqnarray*}
+where $a\geq 1$, $b>1$, and $c>0$.
+If $f(n)=\Theta(n^d)$, where $d\geq 0$, then
+$$T(n)=\left\{
+\begin{array}{ll}
+\Theta(n^d)&\text{if } a<b^d\\
+\Theta(n^d\log n)&\text{if } a=b^d\\
+\Theta(n^{\log_b{a}})&\text{if } a>b^d
+\end{array}
+\right.$$
+\end{thm}
+
+\begin{exa}
+Use the Master Theorem to solve the recurrence 
+$$T(n) = 4T(n/2) + n, T(1)=1.$$
+ \begin{sol} 
+We have $a=4, b=2$, and $d = 1$. 
+Since $4>2^1$, $T(n)=\Theta(n^{\log_2{4}})=\Theta(n^2)$ by the third case of the Master Theorem.
+\end{sol}
+\end{exa}
+
+\begin{exa}
+Use the Master Theorem to solve the recurrence 
+$$T(n) = 4T(n/2) + n^{2}, T(1)=1.$$
+\begin{sol} 
+We have $a=4, b=2$, and $d=2$.
+Since $4=2^2$, we have $T(n)=\Theta(n^2\log n)$ by the second case of the Master Theorem.
+\end{sol}
+\end{exa}
+
+\begin{exa}
+Use the Master Theorem to solve the recurrence 
+$$T(n) = 4T(n/2) + n^{3}, T(1)=1.$$
+\begin{sol}
+Here, $a=4, b=2$, and $d=3$.
+Since $4<2^3$, we have $T(n)=\Theta(n^3)$ by the first case of the Master Theorem.
+\end{sol}
+\end{exa}
+
+Wow.  That was easy.\footnote{Almost {\em too} easy.}
+But the ease of use of the Master Method comes with a cost.  Well, two actually.
+First, notice that we do not
+get an {\em exact} solution, but only an {\em asymptotic bound} on the solution.  Depending on
+the context, this may be good enough.  If you need an exact numerical solution, the Master
+Method will do you no good.  But when analyzing algorithms, typically we are more interested
+in the asymptotic behavior.  In that case, it works great.
+Second, it only works for recurrences that have the exact form $T(n)=aT(n/b)+f(n)$.
+It won't even work on similar recurrences, 
+such as $T(n)=T(n/b)+T(n/c)+f(n)$.
+
+
+\begin{exer}
+Use the Master Theorem to solve the recurrence 
+$$T(n) = 2T(n/2) + 1, T(1)=1.$$
+\vspace*{1.25in}
+\begin{answer}
+Here, $a=2, b=2$, and $d=0$. ($d=0$ since $1=1\cdot n^0$.  In general, $c=c\cdot n^0$, so when 
+$f(n)$ is a constant, $d=0$.)
+Since $a>2^0$, we have $T(n)=\Theta(n^{\log_aa})=\Theta(n^1)=\Theta(n)$ 
+by the third case of the Master Theorem.
+\end{answer}
+\end{exer}
+
+\begin{exa}
+Let's redo one from a previous section.  
+Use the Master Theorem to solve the recurrence 
+$$
+R(n) = \left\{ 
+\begin{array}{ll}
+1&\mbox{when $n = 1$}\\
+2 R(n/2) + n/2 & \mbox{otherwise}
+\end{array}
+\right.
+$$
+\begin{sol}
+Here, we have $a=2$, $b=2$, and $d=1$.  Since $2=2^1$, $R(n)=\Theta(n^1\log n)=\Theta(n\log n)$.
+Recall that in Example~\ref{exa:R} we showed that $R(n)=n + (\log_2 n) n/2$. Since
+$n + (\log_2 n) n/2=\Theta(n\log n)$, our solution is consistent.
+\end{sol}
+\end{exa}
+
+\begin{exer}
+Use the Master Theorem to solve the recurrence 
+$$T(n)=7T(n/2)+15n^2/4, T(1)=1.$$
+\vspace*{1.25in}
+\begin{answer}
+We have $a=7$, $b=2$, and $d=2$.  Since $7>2^2$, the third case of the
+Master Theorem applies so $T(n)=\Theta(n^{\log_{2} 7})$, which is about $\Theta(n^{2.8})$.
+\end{answer}
+\end{exer}
+
+\begin{ques}
+In the solution to the previous exercise, we stated that
+\begin{quote}
+`$T(n)=\Theta(n^{\log_{2} 7})$, which is about $\Theta(n^{2.8})$.'
+\end{quote}
+Why didn't we just say 
+`$T(n)=\Theta(n^{\log_{2} 7})=\Theta(n^{2.8})$'?
+
+\noindent
+\answerlinetwo
+\begin{answer} 
+Because it isn't true.  Although the growth rate of $n^{\log_{2} 7}$ and $n^{2.8}$ are
+close, they are not exactly the same, so $\Theta(n^{\log_{2} 7})\neq \Theta(n^{2.8})$.
+We {\em could} say that $T(n)=\Theta(n^{\log_{2} 7})=O(n^{2.81})$, but then we have lost
+the `tightness' of the bound.  And I want to be able to say ``Yo dawg, that bound is really {\em tight}!''
+\end{answer}
+\end{ques}
+
+\begin{exer}
+We saw in Example~\ref{exa:binSearchRecRel} that the complexity of binary search is
+given by the recurrence relation $T(n)=T(n/2)+1$, $T(0)=1$ (and you may assume that $T(1)=1$). 
+Use the Master Theorem to solve this recurrence.
+
+\vspace*{1.5in}
+\begin{answer} 
+Here we have $a=1$, $b=2$, and $d=0$.  Since $1=2^0$,
+the second case of the Master Theorem tells is that $T(n)=\Theta(n^0\log n)=\Theta(\log n)$.
+Since we have already seen several times that $T(n)=\log_2 n +1$, we can notice that 
+this answer is consistent with those.  It's a good thing.
+\end{answer}
+\end{exer}
+
+\subsection{Linear Recurrence Relations}\label{subsec:linear}
+
+Although in my mind linear recurrence relations are of the least importance of
+these four methods for computer scientists, we will discuss them very briefly, both for
+completeness sake, and because we can talk about the Fibonacci numbers again.
+
+\index{recurrence relations!solving!linear} 
+
+\begin{df}
+Let $c_1, c_2, \ldots , c_k$ be real constants and $f:\BBN \to \BBR$
+a function. A recurrence relation of the form 
+\begin{equation}\label{eq:linRec}
+a_{n} = c_{1}a_{n-1}+c_{2}a_{n-2}+\cdots+c_{k}a_{n-k}+f(n)
+\end{equation}
+is called a {\bf linear recurrence relation} (or {\bf linear difference equation}). 
+\index{linear recurrence relation}
+\index{recurrence relations!linear}
+If $f(n)=0$ (that is, there is no non-recursive term), 
+we say that the equation is {\bf homogeneous}, and otherwise
+we say the equation is {\bf nonhomogeneous}.
+\index{homogeneous recurrence relation}
+\index{nonhomogeneous recurrence relation}
+\index{recurrence relation!homogeneous}
+\index{recurrence relation!nonhomogeneous}
+\end{df}
+
+The {\em order} of the recurrence is  the difference between the
+highest and the lowest subscripts. 
+\begin{exa} $u_{n} = u_{n -1} + 2$ is of the first order, and
+$u_{n} = 9u_{n-4} + n^5$ is of the fourth order.
+\end{exa}
+
+There is a general technique that can be used to solve linear homogeneous recurrence relations.
+However, we will restrict our discussion to certain first and second order recurrences.
+
+\subsubsection{First Order Recurrences}
+\index{first order recurrence}
+\index{recurrence relations!first-order} 
+\index{recurrence relations!solving!first-order} 
+
+In this section we will learn a technique to solve some first-order recurrences.
+We won't go into detail about why the technique works.
+
+\begin{proc}
+Let $f(n)$ be a polynomial and $a\neq 1$.  Then the following 
+technique can be used to solve a first order linear recurrence
+relations of the form
+$$x_n = ax_{n - 1} + f(n).$$
+\begin{enumerate}
+\item First, ignore $f(n)$.  That is, solve the homogeneous recurrence $x_n = ax_{n - 1}$.
+This is done as follows:
+\begin{lenum}
+\item
+`Raise the subscripts', so  $x_n = ax_{n - 1}$ becomes $x^n = ax^{n - 1}$. 
+This is called the {\em characteristic equation}. \index{characteristic equation}
+\item
+Canceling this gives $x = a.$ 
+\item
+The solution to the homogeneous equation $x_n = ax_{n - 1}$
+will be of the form $x_n = Aa^n$, where $A$ is a constant to be determined.
+\end{lenum} 
+\item
+Assume that the solution to the original recurrence relation, 
+$x_n = ax_{n - 1} + f(n)$, is of the form $x_n = Aa^n + g(n),$ 
+where $g$ is a polynomial of the same degree as $f(n)$.
+\item
+Plug in enough values to determine the correct constants for the coefficients of $g(n)$.
+\end{enumerate}
+\end{proc}
+
+This procedure is a bit abstract, so let's just jump into seeing it in action.
+
+\begin{exa} 
+Let $x_0 = 7$ and $x_n = 2x_{n - 1}, n \geq 1.$ Find a closed form for $x_n.$
+\begin{sol} 
+Raising subscripts we have the characteristic equation
+$x^n = 2x^{n - 1}$. Canceling, $x = 2$. Thus we try a solution of
+the form $x_n = A2^n$, were $A$ is a constant. But $7 = x_0 =
+A2^0=A$ and so $A = 7.$
+The solution is thus $x_n = 7(2)^n$.
+% Skip it for now.  What's the point?
+% CAC, 6/16/14
+%For kicks, here is a different method that sometimes works. 
+%We have:
+%$$
+%\begin{array}{lcl}
+%x_0 & = & 7 \\
+%x_1 & = & 2x_0 \\
+%x_2 & = & 2x_1 \\
+%x_3 & = & 2x_2 \\
+%\vdots & \vdots & \vdots \\
+%x_n & = & 2x_{n-1} \\
+%\end{array}
+%$$
+%Multiplying both columns,
+%$$x_0x_1\cdots x_n = 7\cdot 2^nx_0x_1x_2\cdots x_{n - 1}.$$
+%Canceling the common factors on both sides of
+%the equality,
+%$$x_n = 7\cdot 2^n.$$
+\end{sol}
+\end{exa}
+
+\begin{exa}\label{exa:partSol}
+Let $x_0 = 7$ and $x_n = 2x_{n - 1} + 1, n \geq 1.$ Find a closed form for $x_n.$
+\begin{sol}
+By raising the subscripts in the homogeneous equation we
+obtain $x^n = 2x^{n - 1}$ or $x = 2$. A solution to the
+homogeneous equation will be of the form $x_n = A(2)^n$. 
+Now $f(n)= 1$ is a polynomial of degree 0 (a constant) and 
+so the general solution should have
+the form $x_n = A2^n + B$. Now, $7 = x_0 = A2^0 + B = A + B$.
+Also, $x_1 = 2x_0 + 1 = 15$ and so $15 = x_1 = 2A + B$. Solving
+the simultaneous equations
+$$A + B = 7,$$
+$$2A + B = 15,$$
+Using these equations, we can see that $A=7-B$ and $B=15-2A$.
+Plugging the latter into the former, we have $A=7-(15-2A)=-8+2A$, or $A=8$.
+Plugging this back into either equation, we can see that $B=-1$.
+So the solution is $x_n = 8(2^n) - 1 = 2^{n + 3} - 1.$
+\end{sol}
+\end{exa}
+
+\newpage
+\begin{exer}
+Let $x_0 = 2, x_n = 9x_{n - 1} - 56n + 63$. Find a closed form for
+this recurrence.
+\vspace*{3.75in}
+\begin{answer}
+By raising the subscripts in the homogeneous equation we
+obtain the characteristic equation $x^n = 9x^{n - 1}$ or $x = 9$.
+A solution to the homogeneous equation will be of the form $x_n =
+A(9)^n$. Now $f(n) = -56n + 63$ is a polynomial of degree 1 and so
+we assume that the solution will have the form $x_n = A9^n + Bn + C$. 
+Now $x_0 = 2,
+x_1 = 9(2) - 56 + 63 = 25, x_2 = 9(25) - 56(2) + 63 = 176$. We
+thus solve the system
+$$2 = A + C,$$
+$$25 = 9A + B + C,$$
+$$176 = 81A + 2B + C.$$
+We find $A = 2, B = 7, C = 0$, so the solution is $x_n = 2(9^n) + 7n.$
+\end{answer}
+\end{exer}
+
+
+% Too many variables to solve for.
+% CAC, 6/16/14
+%\begin{exa}
+%Let $x_0 = 1, x_n = 3x_{n - 1} - 2n^2 + 6n - 3$. Find a closed
+%form for this recursion.
+%\begin{sol}  By raising the subscripts in the homogeneous equation we
+%obtain the characteristic equation $x^n = 3x^{n - 1}$ or $x = 9$.
+%A solution to the homogeneous equation will be of the form $x_n =
+%A(3)^n$. Now $f(n) = - 2n^2 + 6n - 3$ is a polynomial of degree 2
+%and so we test a particular solution of the form $Bn^2 + Cn + D$.
+%The general solution will have the form $x_n = A3^n + Bn^2 + Cn +
+%D$. Now $x_0 = 1, x_1 = 3(1) - 2 + 6 - 3 = 4, x_2 = 3(4) - 2(2)^2
+%+ 6(2) - 3 = 13, x_3 = 3(13) - 2(3)^2 + 6(3) - 3 = 36$. 
+%We thus solve the system
+%$$1 = A + D,$$
+%$$4 = 3A + B + C + D,$$
+%$$13 = 9A + 4B + 2C + D,$$
+%$$36 = 27A + 9B + 3C + D.$$
+%We find $A = B = 1, C = D = 0.$ The general solution is $x_n = 3^n
+%+ n^2.$
+%\end{sol}
+%\end{exa}
+
+
+% The discussion above mentions $f(n)$ being a polynomial, so why
+%an example with an exponential?
+%\begin{exa}
+%Find a closed form for $x_{n} = 2x_{n - 1} + 3^{n - 1}, x_0 = 2.$
+%\begin{sol}  We test a solution of the form $x_n = A2^n + B3^n$. Then
+%$x_0 = 2, x_1 = 2(2) + 3^0 = 5.$ We solve the system
+%$$2 = A + B,$$
+%$$7 = 2A + 3B.$$We find $A = 1, B = 1.$ The general solution is $x_n = 2^n + 3^n.$
+%\end{sol}
+%\end{exa}
+
+% I don't want to get into this special case.
+% CAC, 6/16/14
+%
+%We now tackle the case when $a = 1.$ In this case, we simply
+%consider a polynomial $g$ of degree 1 higher than the degree of
+%$f$.
+%
+%\begin{exa} Let $x_0 = 7$ and $x_n = x_{n - 1} + n, n \geq 1.$ Find a closed formula for $x_n.$ 
+%\begin{sol}  
+%By raising the subscripts in the homogeneous equation we
+%obtain the characteristic equation $x^n = x^{n - 1}$ or $x = 1$. A
+%solution to the homogeneous equation will be of the form $x_n =
+%A(1)^n = A$, a constant. Now $f(n) = n$ is a polynomial of degree
+%1 and so we test a particular solution of the form $Bn^2 + Cn +
+%D$, one more degree than that of $f$. The general solution will
+%have the form $x_n = A + Bn^2  + Cn + D$. Since $A$ and $D$ are
+%constants, we may combine them to obtain $x_n = Bn^2 + Cn + E.$
+%Now, $x_0 = 7, x_1 = 7 + 1 = 8, x_2 = 8 + 2 = 10.$ So we solve the
+%system
+%$$7 = E,$$
+%$$8 = B + C + E,$$
+%$$10 = 4B + 2C + E.$$ We find $\dis{B = C = \frac{1}{2}, E = 7}$. The general solution is
+%$\dis{x_n = \frac{n^2}{2} + \frac{n}{2} + 7}$.
+%
+%Here is another way to solve it.
+% We have
+%$$
+%\begin{array}{lcl}
+%x_0 & = & 7 \\
+%x_1 & = & x_0 + 1 \\
+%x_2 & = & x_1  + 2\\
+%x_3 & = & x_2  + 3\\
+%\vdots & \vdots & \vdots \\
+%x_n & = & x_{n-1} + n \\
+%\end{array}
+%$$
+%Adding both columns,
+%$$x_0 + x_1 + x_2 + \cdots + x_n = 7 + x_0 + x_2 + \cdots + x_{n - 1} + (1 + 2 + 3 + \cdots + n).$$
+%Cancelling and using the fact that $\dis{1 + 2 + \cdots + n =
+%\frac{n(n + 1)}{2}}$,
+%$$x_n = 7 + \frac{n(n + 1)}{2}.$$
+%\end{sol}
+%\end{exa}
+
+\subsubsection{Second Order Recurrences} 
+Let us now briefly examine how to solve some
+second order recursions.
+\index{second order recurrence}
+\index{recurrence relations!second-order} 
+\index{recurrence relations!solving!second-order} 
+
+\begin{proc} 
+Here is how to solve a second-order homogeneous
+linear recurrence relations of the form
+$$x_n = ax_{n - 1} + bx_{n - 2}.$$
+\begin{enumerate}
+\item Find the characteristic equation  by ``raising the
+subscripts.'' We obtain $x^n = ax^{n - 1}  + bx^{n - 2}$.
+\item
+Canceling this gives $x^2 - ax - b = 0.$ This equation has two
+roots $r_1$ and $r_2.$
+\index{characteristic equation}
+\item If the roots are different, the
+solution will be of the form $x_n = A(r_1)^n + B(r_2)^n$, where
+$A, B$ are  constants. \item If the roots are identical, the
+solution will be of the form $x_n = A(r_1)^n + Bn(r_1)^n$.
+\end{enumerate}
+\end{proc}
+
+\begin{exa}
+Let $x_0 = 1, x_1 = -1, x_{n + 2} + 5x_{n + 1} + 6x_n = 0$.
+\begin{sol}  The characteristic equation is $x^2 + 5x + 6 = (x + 3)(x
++ 2) = 0$. Thus we test a solution of the form $x_n = A(-2)^n +
+B(-3)^n.$ Since $1 = x_0 = A + B$, and $-1 = -2A - 3B$, we quickly find
+$A = 2$, and $B = -1.$ Thus the solution is $x_{n} = 2(-2)^n -(-3)^n.$
+\end{sol}
+\end{exa}
+
+\begin{exa}\label{exa:fibSol}\index{Fibonacci numbers}
+Find a closed form for the Fibonacci recurrence $f_0 = 0, f_1 = 1,
+f_n = f_{n - 1} + f_{n - 2}$.
+\begin{sol}  The characteristic equation is $f^2 - f - 1 = 0$.
+This has roots $\frac{1 \pm \sqrt{5}}{2}$.
+Therefore, a solution will have the form $${f_n = A\left(\frac{1 +
+\sqrt{5}}{2}\right)^n + B\left(\frac{1 - \sqrt{5}}{2}\right)^n}.$$
+The initial conditions give
+$$0 = A + B, \mbox{ and}$$
+$$1 = A\left(\frac{1 + \sqrt{5}}{2}\right) + B\left(\frac{1 - \sqrt{5}}{2}\right)
+= \frac{1}{2}\left(A + B\right) + \frac{\sqrt{5}}{2}\left(A -
+B\right) = \frac{\sqrt{5}}{2}\left(A - B\right).$$ 
+From these two equations, we obtain
+$\dis{A = \frac{1}{\sqrt{5}}, B = -\frac{1}{\sqrt{5}}}$. 
+We thus have 
+$$
+f_n = \frac{1}{\sqrt{5}}\left(\frac{1 + \sqrt{5}}{2}\right)^n -
+\frac{1}{\sqrt{5}}\left(\frac{1 - \sqrt{5}}{2}\right)^n.
+$$
+\end{sol}
+\end{exa}
+
+%\begin{exa}
+%Why was the recursive algorithm to compute $f_n$ from Example \ref{exa:fibAlg} so bad?
+%\end{exa}
+%\begin{sol}
+%Let's count the number of additions \scode{FibR(n)} computes since that is the main
+%thing that the algorithm does.
+%Let $F(n)$ be the number of additions required to compute $f_n$ using \scode{FibR(n)}.
+%Since \scode{FibR(n)} performs one addition and then calls \scode{FibR(n-1)} and \scode{FibR(n-2)},
+%it is easy to see that 
+%$$F(n)=F(n-1)+F(n-2)+1,$$
+%where $F(0)=F(1)=0$ is clear from the algorithm.
+%%From Example \ref{exa:fibSol} and following the ideas from Example \label{exa:partSol},
+%%we know that $$F(n)= A\frac{1}{\sqrt{5}}\left(\frac{1 + \sqrt{5}}{2}\right)^n -
+%%B\frac{1}{\sqrt{5}}\left(\frac{1 - \sqrt{5}}{2}\right)^n+C$$
+%%for some constants $A$, $B$, and $C$.
+%%From the algorithm, it is clear that $F(0)=F(1)=0$, and it is easy to compute $F(2)=F(1)+F(0)+1 = 1$.
+%%Therefore 
+%%\begin{eqnarray*}
+%%0=F(0)&=&A\frac{1}{\sqrt{5}}\left(\frac{1 + \sqrt{5}}{2}\right)^0 +
+%%B\frac{1}{\sqrt{5}}\left(\frac{1 - \sqrt{5}}{2}\right)^0+C
+%%=A\frac{1}{\sqrt{5}}+B\frac{1}{\sqrt{5}}+C\\
+%%0=F(1)&=&A\frac{1}{\sqrt{5}}\left(\frac{1 + \sqrt{5}}{2}\right) +
+%%B\frac{1}{\sqrt{5}}\left(\frac{1 - \sqrt{5}}{2}\right)+C\\
+%%1=F(2)&=&A\frac{1}{\sqrt{5}}\left(\frac{1 + \sqrt{5}}{2}\right)^2 +
+%%B\frac{1}{\sqrt{5}}\left(\frac{1 - \sqrt{5}}{2}\right)^2+C\\
+%%\end{eqnarray*}
+%\end{sol}
+
+\begin{exer}
+Find a closed form for the recurrence $x_0 = 1, x_1 = 4, x_n = 4x_{n - 1}  - 4x_{n -
+2}.$
+\vspace*{4in}
+\begin{answer} 
+The characteristic equation is $x^2 - 4x + 4 = (x - 2)^2
+= 0$. There is a multiple root and so we must test a solution of
+the form $x_n = A2^n + Bn2^n.$ The initial conditions give
+$$1 = A,$$
+$$4 = 2A + 2B.$$ 
+This solves to $A = 1, B = 1.$ The solution is thus $x_n = 2^n + n2^n$.
+\end{answer}
+\end{exer}
+
+
+% Interesting example, but what point does it serve?
+%CAC, 6/12/14
+%\begin{exer}
+%Solve the recursion $a_n=1+\sum _{k=1} ^{n-1} a_k$ for $n\geq 2$ and  $a_1=1$.
+%\begin{answer}
+%Observe that
+%$$a_n-a_{n-1} =\left(1+\sum _{k=1} ^{n-1} a_k\right)-\left(1+\sum _{k=1} ^{n-2} a_k\right)=a_{n-1}.   $$
+%This means that $a_n=2a_{n-1}$ and so
+%$$ \begin{array}{lll} a_n& = & 2a_{n-1}\\  a_{n-1}& = & 2a_{n-2}\\     \vdots & \vdots & \vdots \\  a_2& = & 2a_1\\ \end{array}$$
+%Multiplying all these equalities,
+%$$a_na_{n-1}\cdots a_2 = 2^{n-1}a_{n-1}a_{n-2}\cdots a_1 \implies a_n = 2^{n-1}a_1 = 2^{n-1}. $$
+%\end{answer}
+%\end{exer}
+
+% Also interesting, but perhaps beyond the scope/purpose of this chapter.
+%CAC, 6/12/14
+%\begin{exer}[Derangements] An absent-minded secretary is filling $n$
+%envelopes with $n$ letters. Find a recurrence relation for the number $D_n$ of
+%ways in which she never stuffs the right letter into the right
+%envelope. 
+%\begin{answer} Number the envelopes $1, 2, 3, \cdots , n$.
+%We condition on the last envelope.  Two events might happen. Either
+%$n$ and $r$ (for some $1 \leq r \leq n - 1)$ trade places or they do not.
+%
+% In the first case, the two letters $r$ and $n$ are
+%misplaced. Our task is just to misplace the other $n - 2$ letters,
+%$(1, 2, \cdots , r - 1, r + 1, \cdots , n - 1)$ in the slots $(1, 2,
+%\cdots , r - 1, r + 1, \cdots , n - 1).$ This can be done in $D_{n -
+%2}$ ways. Since $r$ can
+%be chosen in $n - 1$ ways, the first case can happen in $(n - 1)D_{n - 2}$ ways.
+%
+%In the second case, let us say that letter $r$, $(1 \leq r \leq n -
+%1)$ moves to the $n$-th position but $n$ moves not to the $r$-th
+%position.  Since $r$ has been misplaced, we can just ignore it.
+%Since $n$ is not going to the $r$-th position, we may relabel $n$ as
+%$r$.  We now have $n - 1$ numbers to misplace, and this can be done
+%in
+%$D_{n - 1}$ ways.
+%
+%As $r$ can be chosen in $n - 1$ ways, the total number of ways for
+%the second case is $(n - 1)D_{n - 1}.$  Thus $D_n = (n - 1)D_{n - 2}
+%+ (n - 1)D_{n - 1}.$
+%\end{answer}
+%\end{exer}
+
+\newpage
+
+\section{Analyzing Recursive Algorithms}\label{sec:anaRecAlg}
+In Section \ref{sec:recRel} we already saw a few examples of analyzing recursive algorithms.
+We will provide a few more examples in this section. 
+In case it isn't clear, the most common method to analyze a recursive algorithm is to develop
+and solve a recurrence relation for its running time.  Let's see some examples.
+
+The two most two popular recursive sorting algorithms
+are {\em merge sort} and {\em Quicksort}. We will briefly discuss
+each algorithm and then analyze the running time of each.
+
+The basic idea behind {\em merge sort} is simple:\index{merge sort}\index{sort!merge}
+Divide an array in half. Sort the first half, then sort the
+second half, then merge the two halves together.
+The first question you might be asking is how do you sort the
+two halves. Easy: merge sort them! But we need a base case
+otherwise the recursion will go on forever. That is also easy:
+An array of size 0 or 1 is clearly already sorted.
+
+Now we are left with two questions: how do we merge the two 
+halves and how do we use that to implement the entire algorithm?
+Here we will simply provide both algorithms without much
+explanation and we will focus on analyzing them. If you want to
+better understand both merge sort and Quicksort, I recommend you 
+take a data structures and algorithms course.
+
+\begin{exa}\index{merge}
+The \verb+Merge+ algorithm needs to take two sorted arrays
+and combine them into a single sorted array.
+More accurately, it takes as input an array $A$ which
+is sorted from $left$ to $mid$ and from $mid+1$ to $right$,
+and modifies $A$ so it is sorted from $left$ to $right$.
+
+For instance, we might have 
+$left=5$, $right=15$, $mid=9$, and 
+$$A=[73, 23, 45, 67, 34, \underline{23, 37, 41, 45, 65}, \overline{12, 28, 39, 59, 68, 89}, 12, 34, 48, 47],$$
+where the underlined portion, indexed from $left$ to $mid$, is sorted,
+and the overlined portion, indexed from $mid+1$ to $right$ is also sorted,
+and we want merge to return the array
+$$A=[73, 23, 45, 67, 34, \underline{12, 23, 28, 37, 39, 41, 45, 59,  65, 68, 89}, 12, 34, 48, 47]$$
+in which the underlined portion, indexed from $left$ to $right$
+is now fully sorted (check carefully that it is correct).
+
+Now that we better understand what \verb+Merge+ is supposed to do,
+we can present an algorithm that accomplishes the task.
+\begin{code}
+void Merge(int A[],int left,int mid,int right) {
+    int n=right-left+1;
+    int m=mid-left+1;
+    int *B=new int[n]; // Create new array
+    for(int i=0;i<m;i++)
+        B[i]=A[left+i]; // copy 1st half forward
+    for(int j=m;j<n;j++)
+        B[j]=A[right-j+m]; // copy 2nd half reversed
+    int i=0; 
+    int j=n-1;
+    for(int k=left;k<=right;k++) // Now merge back to A
+        if(B[i]<B[j]) 
+            A[k]=B[i++];
+        else
+            A[k]=B[j--];
+}
+\end{code}
+If we set $n=right-left+1$, the size of the portion of the array that we are dealing with,
+we should be able to easily see that \verb+Merge+ takes $O(n)$ time since 
+it executes two loops whose total number of iterations is $n$, and the third loop
+which has $n$ iterations, and the rest of the code takes constant time.
+\end{exa}
+
+\begin{exa}
+Now that we have the \verb+Merge+ algorithm, implementing merge sort is pretty straightforward 
+given the description above. 
+
+\begin{code}\index{merge sort}\index{sort!merge}
+MergeSort(int[] A,int left,int right) {
+   if (left < right) {
+       int mid = (left + right)/2;
+       MergeSort(A, left, mid);
+       MergeSort(A, mid + 1, right);
+       Merge(A, left, mid, right);
+   }
+}
+\end{code}
+
+Notice that if $left\geq right$ the algorithm does nothing.
+Also notice that this corresponds to subarrays with 0 or 1 elements, which 
+clear do not need to be sorted. This is the base case we mentioned above.
+\end{exa}
+
+\begin{exa}\label{exa:meregesortAnal}
+\index{merge sort}
+What is the worst-case running time of merge sort?
+\begin{sol}
+The algorithm for \verb+MergeSort+ is below.
+Let $T(n)$ be the worst-case running time of 
+\verb+MergeSort+ on an array of size $n=right-left$.
+Recall that \verb+Merge+ takes two sorted arrays and merges them into
+one sorted array in time $\Theta(n)$, where $n$ is the number of
+elements in both arrays.\footnote{Since our goal here is to analyze the algorithm,
+we won't provide a detailed implementation of \texttt{Merge}. % \verb doesn't work in footnotes?!  
+All we need to know is its complexity.}  
+Since the two recursive calls to \verb+MergeSort+
+ are on arrays
+of half the size, they each require time $T(n/2)$ in the worst-case.
+The other operations take constant time.  Below we annotate the \verb+MergeSort+ algorithm
+with these running times.
+\begin{center}
+\begin{tabular}{|l|c|}
+\hline
+Algorithm&Time required\\
+\hline
+\verb-MergeSort(int[] A,int left,int right) {-&$T(n)$\\
+\verb-   if (left < right) {-                 &$C_1$\\
+\verb-       int mid = (left + right)/2;-     &$C_2$\\
+\verb-       MergeSort(A, left, mid);-        &$T(n/2)$\\
+\verb-       MergeSort(A, mid + 1, right);-   &$T(n/2)$\\
+\verb-       Merge(A, left, mid, right);-     &$\Theta(n)\leq C_3n$\\
+\verb-   }-&\\
+\verb-}-&\\
+\hline
+\end{tabular}
+\end{center}
+
+Given this, we can see that
+\begin{eqnarray*}
+T(n)&=&C_1+C_2+T(n/2)+T(n/2)+\Theta(n)\\
+&=&2 T(n/2) +\Theta(n).
+\end{eqnarray*}
+Notice that we absorbed the constants $C_1$ and $C_2$ into the $\Theta(n)$ term.
+For simplicity, we will also replace the $\Theta(n)$ term with $cn$ (where $c$ is a constant)
+and rewrite this as
+ $$T(n)=2 T(n/2)+c n.$$
+We could use the Master Theorem to prove that $T(n)=\Theta(n\log n)$,
+ but that would be too easy. 
+Instead, we will use induction to prove that $T(n)=O(n\log n)$, 
+and leave the $\Omega$-bound to the reader.
+
+By definition, $T(n)=O(n\log n)$ if and only if there exists constants
+$k$ and $n_0$ such that $T(n)\leq k n\log n$ for all $n\geq n_0$.
+
+For the base case, notice that $T(2)=a$ for some constant $a$,
+and $a\leq k 2\log 2= 2 k$ as long as we pick $k\geq a/2$.
+Now, assume that $T(n/2)\leq k(n/2)\log (n/2)$. Then
+
+\begin{eqnarray*}
+T(n)&=&2 T(n/2) + c n\\
+&\leq&2(k(n/2)\log(n/2)+ c n\\
+&=&k n \log(n/2)+ c n\\
+&=&k n \log n - k n\log 2 + c n\\
+&=&k n\log n + (c-k)n\\
+&\leq& k n\log n \,\,\,\,\, \mbox{ if } k\geq c
+\end{eqnarray*}
+As long as we pick $k=\max\{a/2,c\}$, we have 
+$T(n)\leq k n\log n$, so $T(n)=O(n\log n)$ as desired.
+\end{sol}
+\end{exa}
+
+\begin{exer}
+We stated in the previous example that we could use the
+Master Theorem to prove that if $T(n)=2 T(n/2)+c n,$
+then $T(n)=\Theta(n\log n)$.  Verify this.
+\vspace*{1.5in}
+\begin{answer}
+We have $a=2$, $b=2$, and $d=1$. Since $2=2^1$, we have that 
+$T(n)=\Theta(n\log n)$ by the second case of the Master Theorem.
+\end{answer}
+\end{exer}
+
+\begin{ques}
+Answer  the following questions about points that were made in Example~\ref{exa:meregesortAnal}.
+\begin{lenum}
+\item
+Why were we allowed to absorb the constants $C_1$ and $C_2$ into the $\Theta(n)$ term?
+
+\noindent
+\answerlinethree
+\item
+Why were we able to replace the $\Theta(n)$ term with $cn$?
+
+\noindent
+\answerlinethree
+\end{lenum}
+\begin{answer}
+(a) $C_1$ and $C_2$ are of lower order than $n$.
+Thus, we can do this according to part (c) of Theorem~\ref{thm:asyprops}.
+(b) We know that the $\Theta(n)$ represents some function $f(n)$.  By definition of $\Theta$,
+there are constants, $c_1$ and $c_2$ such that $c_1n\leq f(n)\leq c_2n$ for all $n\geq n_0$
+for some constant $n_0$.  So we essentially replaced $f(n)$ with $c_2n$ (since we are
+looking for a worst-case). 
+Note that it doesn't matter what $c_2$ is.  
+We know there is some constant that works, so we just call it $c$. 
+\end{answer}
+\end{ques}
+
+
+\begin{exa}[Towers of Hanoi]\index{Towers of Hanoi}\index{Hanoi, Towers of}
+The following legend is attributed to
+ French mathematician Edouard Lucas in 1883. 
+In an Indian temple there are 64 gold disks resting on three pegs. 
+At the beginning of time, God placed these disks on the first peg
+and ordained that a group of priests should transfer them to the third peg according to the following rules:
+\begin{enumerate}
+\item The disks are initially stacked on peg A, in decreasing order (from bottom to top).
+\item The disks must be moved to another peg in such a way that only one disk 
+is moved at a time and without stacking a larger disk onto a smaller disk.
+\end{enumerate}
+When they finish, the Tower will crumble and the world will end. 
+How many moves does it take to solve the {\em Towers of Hanoi} problem with $n$ disks?
+\begin{sol}
+The usual (and best) algorithm to solve the 
+{\em Towers of Hanoi} is:
+\begin{itemize}
+\item
+Move the top $n-1$ disk to from peg 1 to peg 2.
+\item
+Move the last disk from peg 1 to peg 3.
+\item
+Move the top $n-1$ disks from peg 2 to peg 3.
+\end{itemize}
+The only question is how to move the top $n-1$ disks.
+The answer is simple: use recursion but switch the peg numbers.
+Here is an implementation of this idea:
+\begin{code}
+  void solveHanoi(int N,int source,int dest,int spare) {
+      if(N==1) {
+          moveDisk(source,dest);
+      } else {
+          solveHanoi(N-1,source,spare,dest);
+          moveDisk(source,dest);
+          solveHanoi(N-1,spare,dest,source);
+      }
+  }
+\end{code}
+Don't worry if you don't see why this algorithm works.
+Our main concern here is analyzing the algorithm.
+
+The exact details of \verb+moveDisk+ depend on how the pegs/disks
+are implemented, so we won't provide an implementation of it.
+But it doesn't actually matter anyway since we just need to count 
+the number of times \verb+moveDisk+ is called.  As it turns out,
+any reasonable implementation of \verb+moveDisk+ will take
+constant time, so the complexity of the algorithm is essentially
+the same as the number of calls to \verb+moveDisk+.
+
+Let $H(n)$ be the number of moves it takes to solve the {\em Towers of Hanoi} problem 
+with $n$ disks.  
+Then $H(n)$ is the number of times \verb+moveDisk+ is called
+when running \verb+solveHanoi(n,1,2,3)+.
+It should be clear that $H(1)=1$ since the algorithm simply makes a single
+call to \verb+moveDisk+ and quits.
+When $n>1$, the algorithm makes two calls to \verb+solveHanoi+ with the
+first parameter being $n-1$ and one call to \verb+moveDisk+.
+Therefore, we can see that
+
+\noindent
+\hspace*{2in} $H(n)=2H(n-1)+1.$
+
+\noindent
+As with the first example, we want a closed form for $H(n)$.
+But we already showed that $H(n)=2^{n}-1$ in Examples \ref{exa:Hanoi1} and \ref{exa:Hanoi2}.
+\end{sol}
+\end{exa}
+
+\begin{exer}
+Let $T(n)$  be the complexity of \verb+blarg(n)+. 
+Give a recurrence relation for $T(n)$.
+\begin{code}
+int blarg(int n) {
+     if(n>5) {
+        return blarg(n-1)+blarg(n-1)+blarg(n-5)+blarg(sqrt(n));
+     }
+     else {
+        return n;
+     }
+}
+\end{code}
+\answerline
+\begin{answer}
+$T(n)=2 T(n-1)+T(n-5)+T(\sqrt{n})+1$ if $n>5$,
+$T(1)=T(2)=T(3)=T(4)=T(5)=1$.
+You can also have $+c$ instead of $+1$ in the recursive definition.
+\end{answer}
+\end{exer}
+
+\begin{exer}\label{exer:stooge}\index{Stooge sort}\index{sort!Stooge}
+Give a recurrence relation for the running time of \verb+stoogeSort(A,0,n-1)+.
+(Hint: Start by letting $T(n)$ be the running time of \verb+stoogeSort+ on an array of size $n$.)
+\begin{code}
+  void stoogeSort(int[] A,int L,int R){
+      if(R<=L) return; // Array has at most one element
+      if(A[R]<A[L]) {  // Swap first and last element 
+          Swap(A,L,R); // if they are out of order
+      }
+      if(R-L>1){ // If the list has at least 2 elements
+          int third=(R-L+1)/3;
+          stoogeSort(A,L,R-third); // Sort first two-thirds
+          stoogeSort(A,L+third,R); // Sort last two-thirds
+          stoogeSort(A,L,R-third); // Sort first two-thirds again
+      }
+  }
+\end{code}
+\answerline
+\begin{answer}
+Beyond the recursive calls, \verb+StoogeSort+ does only a constant amount of work--we'll call it $1$.
+Then it makes three calls with sub-arrays of size $(2/3)n$.  Therefore, 
+$T(n)=3T((2/3)n)+1$ or $T(n)=3T(2n/3)+1$, with base case $T(1)=1$.
+\end{answer}
+\end{exer}
+
+\newpage
+
+\begin{exer}
+Solve the recurrence relation you developed for \verb+StoogeSort+ in the previous exercise.
+(Make sure you verify your solution to the previous problem before you attempt to solve
+your recurrence relation).
+\vspace*{2in}
+\begin{answer}
+We can use the Master Theorem for this one.  
+$a=3$, $b=3/2$ and $d=0$.  
+(Notice that $b\neq 2/3$!  If you made this mistake, make sure you understand why it is incorrect.)
+Since $3>1=(3/2)^0$, the third case of the Master Theorem tells us that
+$T(n)=\Theta\left(n^{\log_{3/2}(3)}\right)$.  Although this looks weird, we can have a rational number as
+the base of a logarithm (in fact, the base of $ln(n)$ is $e$, an irrational number).
+It might be helpful to compute the $\log$ since it isn't clear how good or bad this complexity is.
+Notice that $\log_{3/2}(3)\approx 2.71$, so $T(n)$ is approximately $\Theta(n^{2.71})$, but 
+$T(n)\neq \Theta(n^{2.71})$, so resist the urge to place an equals sign between these.
+\end{answer}
+\end{exer}
+
+\begin{ques}
+Which sorting algorithm is faster, \verb+MergeSort+ or \verb+StoogeSort+?
+Justify your answer.
+
+\noindent
+\answerlinethree
+\begin{answer}
+The complexity of \verb+MergeSort+ is $\Theta(n\log n)$ and the complexity of
+\verb+StoogeSort+ is $\Theta\left(n^{\log_\frac{3}{2}(3)}\right)$
+which is $\Omega(n^{2.7})$.
+Clearly $\Theta\left(n^{\log_\frac{3}{2}(3)}\right)$ grows faster than $\Theta(n\log n)$,
+so \verb+MergeSort+ is faster. 
+{\em Remember: Faster growth rate means slower algorithm!}
+\end{answer}
+\end{ques}
+
+\begin{exer}
+Give and solve a recurrence relation for the running time of an algorithm that does as follows:
+The algorithm is given an input array of size $n$.
+If $n<3$, the algorithm does nothing.
+If $n\geq 3$, create 5 separate arrays, 
+each one-third of the size of the original array.
+This takes $\Theta(n)$ to accomplish.  
+Then call the same algorithm on each of the 5 arrays.
+\vspace*{3in}
+\begin{answer}
+Let $T(n)$ be the complexity of this algorithm.
+From the description, it seems pretty clear that $T(n)=5T(n/3)+cn$.
+Using the Master Theorem with $a=5$, $b=3$, and $d=1$, we see that $5>3^1$, 
+so the third case applies and $T(n)=\Theta\left(n^{\log_3(5)}\right)$,
+which is approximately $\Theta(n^{1.46})$.
+\end{answer}
+\end{exer}
+
+\subsection{Analyzing Quicksort}\label{sec:qsa}
+
+In this section we give a proof that the average case running time of
+randomized quicksort is $\Theta(n\log n)$.\index{Quicksort}\index{sort!Quicksort}
+This proof gets its own section because the analysis is fairly involved.
+This proof is based on the one presented in Section 8.4 of
+the classic {\em Introduction to Algorithms} by Cormen, Leiserson, and Rivest.
+The algorithm they give is slightly different, 
+and they include some interesting insights, so read their proof/discussion if 
+you get a chance.
+  
+There are several slight variations of
+the quicksort algorithm, and 
+although the exact running times are different
+for each, the asymptotic running times
+are all the same. 
+Below is the version of \verb+Quicksort+ we will analyze.
+
+\begin{exa}\label{exa:quicksortImp}
+Here is one implementation of \verb+Quicksort+:
+
+\noindent
+\begin{minipage}[t]{.45\textwidth}
+\begin{code}
+Quicksort(int A[],int l,int r){
+   if (r > l) {
+     int p = Partition(A,l,r);
+     Quicksort(A,l,p-1);
+     Quicksort(A,p+1,r);
+   }
+}
+\end{code}
+\end{minipage}
+\hfill
+\begin{minipage}[t]{.52\textwidth}
+\begin{code}
+int Partition(int A[],int l,int r){ 
+    int piv=l+(rand()%(r-l+1));
+    swap(A,l,piv);
+    int i = l+1;
+    int j = r;
+    while (1) {
+        while (A[i] <= A[l] && i<r) 
+            i++;
+        while (A[j] >= A[l] && j>l) 
+            j--;
+        if (i >= j) {
+           swap(A,j,l);
+           return j;
+         }
+        else swap(A,i,j);
+    }
+}
+\end{code}
+\end{minipage}
+\end{exa}
+
+We will base our analysis on this version of \verb+Quicksort+.
+It is straightforward to see that the runtime of 
+\verb+Partition+ is $\Theta(n)$ (Problem~\ref{pro:rpartComp}
+asks you to prove this). 
+We start by developing a recurrence
+relation for the average case runtime of \verb+Quicksort+.
+\begin{thm}
+Let $T(n)$ be the average case runtime of \verb+Quicksort+ on an
+array of size $n$.  Then 
+$$T(n)=\frac{2}{ n}\sum_{k=1}^{n-1} T(k) +\Theta(n).$$
+
+\noindent
+{\bf Proof: }
+Since the pivot element is chosen randomly, it is equally likely that
+the pivot will end up at any position from $l$ to $r$.
+That is, the probability that the pivot ends up at location $l+i$ 
+is $1/n$ for each $i=0,\ldots, r-l$.  If we average over all of the possible
+pivot locations, we obtain (the last step holds since $T(0)=0$)
+\begin{eqnarray*}
+T(n)&=&\frac{1}{ n}\left( \sum_{k=0}^{n-1}\left(T(k)+T(n-k-1)\right)\right)
++\Theta(n)\\
+&=&\frac{1}{ n}\sum_{k=0}^{n-1} T(k) 
++\frac{1}{ n}\sum_{k=0}^{n-1}T(n-k-1) +\Theta(n)\\
+&=&\frac{1}{ n}\sum_{k=0}^{n-1} T(k) 
++\frac{1}{ n}\sum_{k=0}^{n-1}T(k) +\Theta(n)\\
+&=&\frac{2}{ n}\sum_{k=0}^{n-1} T(k) +\Theta(n)\\
+&=&\frac{2}{ n}\sum_{k=1}^{n-1} T(k) +\Theta(n).
+\end{eqnarray*}
+\end{thm}
+
+We will need the following result in order to solve the recurrence relation.
+
+\begin{lem}
+For any $n\geq 3$, 
+$$\sum_{k=2}^{n-1} k\log k \leq \frac{1}{2}n^2\log n - \frac{1}{8}n^2.$$
+\begin{pf}
+We can write the sum as
+$$\sum_{k=2}^{n-1} k\log k =
+\sum_{k=2}^{\lceil n/2 \rceil-1} k\log k +
+\sum_{k=\lceil n/2 \rceil}^{n-1} k\log k $$
+Then we can bound $(k\log k)$ by $(k\log(n/2))=k(\log n - 1)$ in the first sum, 
+and by $(k\log n)$ in the second sum.
+This gives 
+
+\begin{eqnarray*}
+\sum_{k=2}^{n-1} k\log k &=&
+\sum_{k=2}^{\lceil n/2 \rceil-1} k\log k + 
+\sum_{k=\lceil n/2 \rceil}^{n-1} k\log k\\
+&\leq& \sum_{k=2}^{\lceil n/2 \rceil-1} k(\log n -1) + 
+\sum_{k=\lceil n/2 \rceil}^{n-1} k\log n\\
+&=&(\log n - 1)\sum_{k=2}^{\lceil n/2 \rceil-1} k +
+\log n\sum_{k=\lceil n/2 \rceil}^{n-1} k\\
+&=&\log n\sum_{k=2}^{\lceil n/2 \rceil-1} k -
+\sum_{k=2}^{\lceil n/2 \rceil-1} k +
+\log n\sum_{k=\lceil n/2 \rceil}^{n-1} k\\
+&=&\log n \sum_{k=2}^{n-1} k - \sum_{k=2}^{\lceil n/2 \rceil-1} k\\
+&\leq&\log n \sum_{k=1}^{n-1} k - \sum_{k=1}^{\lceil n/2 \rceil-1} k\\
+&\leq&(\log n) \frac{1}{ 2}(n-1)n  - \frac{1}{ 2}(\frac{n}{ 2}-1)\frac{n}{ 2}\\
+&=&\frac{1}{ 2}n^2\log n  - \frac{n}{ 2}\log n- \frac{1}{ 8}n^2+ \frac{n}{ 4}\\
+&\leq&\frac{1}{ 2}n^2\log n  - \frac{1}{ 8}n^2.\\
+\end{eqnarray*}
+The last step holds since 
+$$\frac{n}{ 4}\leq \frac{n}{ 2}\log n,$$
+when $n\geq 3$.
+\end{pf}
+\end{lem}
+
+\newpage
+
+Now we are ready for the final analysis.
+
+\begin{thm}
+Let $T(n)$ be the average case runtime of \verb+Quicksort+ on an
+array of size $n$.  Then 
+$$T(n)=\Theta(n\log n).$$
+\begin{pf}
+We need to show that $T(n)=O(n\log n)$ and $T(n)=\Omega(n\log n)$.
+To prove that $T(n)=O(n\log n)$, we will show that for some constant
+$a$, 
+$$T(n)\leq a n\log n \mbox{\ \  for all } n\geq 2.\footnote{We pick 2 for the 
+base case since $n\log n$=0 if $n=1$, so we cannot make
+the inequality hold. Another solution would be to show
+that $T(n)\leq a n\log n + b$. In this case, $b$ can be chosen
+so that the inequality holds for $n=1$.}$$
+When $n=2$, 
+$$a n\log n=a 2 \log 2=2 a,$$
+and $a$ can be chosen
+large enough so that $T(2)\leq 2a$.  Thus, the inequality holds for the
+base case.  
+Let $T(1)=C$, for some constant $C$.
+For $2<k<n$, assume $T(k)\leq a k \log k$.   Then
+$$
+\begin{array}{lcll}
+T(n)&=&{\displaystyle \frac{2}{n}\sum_{k=1}^{n-1} T(k) +\Theta(n)}\\[.25in]
+&\leq&{\displaystyle \frac{2}{n}\sum_{k=2}^{n-1} a k \log k 
++\frac{2}{n}T(1)+\Theta(n)}&
+(\mbox{by assumption})\\[.25in]
+&=&{\displaystyle \frac{2 a }{ n}\sum_{k=2}^{n-1} k \log k 
++\frac{2}{n} C +\Theta(n)}\\[.25in]
+&\leq&{\displaystyle \frac{2 a }{ n}\sum_{k=2}^{n-1} k \log k + C +\Theta(n)}& 
+(\mbox{since } \frac{2 }{ n}\leq 1)\\[.25in]
+&\leq&{\displaystyle \frac{2 a }{ n}\left( \frac{1}{2}n^2\log n - \frac{1}{8}n^2
+\right) +C +\Theta(n)}&
+(\mbox{by Lemma 2})\\[.25in]
+&=&{\displaystyle a n\log n -\frac{a}{ 4} n +  C +\Theta(n)}\\[.25in]
+&=&{\displaystyle a n\log n +
+\left( \Theta(n) + C -\frac{a}{ 4} n\right) }\\[.25in]
+&\leq&{\displaystyle a n\log n}&(\mbox{choose } a \mbox{ so }
+\Theta(n) + C \leq \frac{a}{ 4} n)\\
+\end{array}
+$$
+We have shown that with an appropriate choice of $a$, $T(n)\leq a n \log n$
+for all $n\geq 2$, so 
+$T(n)=O(n\log n)$.
+
+\noindent
+We leave it to the reader to show that
+$T(n)=\Omega(n\log n)$.  
+\end{pf}
+\end{thm}
+
+\newpage

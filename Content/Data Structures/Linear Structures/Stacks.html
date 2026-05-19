@@ -9,7 +9,7 @@
   <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
   <script src="../../../scripts/chapterScripts.js"></script>
   <link rel="stylesheet" href="../../../css/style.css">
-  <link rel="stylesheet" href="../../../css/chapter.css">
+  <link rel="stylesheet" href="../../../css/chapter.css?a=3">
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
   <script>
@@ -25,60 +25,147 @@
   <section id="overview" section-title="Overview">
     <h2>Overview</h2>
     <p>
-      A <strong>stack</strong> is a last-in, first-out data type. The most recently inserted item is the first item
-      removed. This rule is usually abbreviated <strong>LIFO</strong>.
+      A <strong>stack</strong> stores values so that the most recently added value is the first one removed.
+      This rule is called <strong>last-in, first-out</strong>, or <strong>LIFO</strong>.
     </p>
     <p>
-      Stacks appear throughout algorithms and programming languages: function calls, recursion, undo history,
-      expression evaluation, depth-first search, and backtracking all use stack behavior.
+      The active end of a stack is called the <em>top</em>. New values are pushed onto the top, and removals also
+      happen from the top. Values below the top are still stored, but the stack interface does not allow the caller
+      to reach into the middle or remove from the bottom.
     </p>
     <p>
-      A stack is an <em>abstract data type</em>, not a single implementation. The rule is about what operations are
-      allowed and what order values leave. The same stack behavior can be implemented with an array, a linked list, or
-      another sequence structure.
+      This restriction is useful because many programs need to remember unfinished work in reverse order. Function
+      calls, recursion, undo history, expression evaluation, depth-first search, and backtracking all rely on stack
+      behavior. A stack is an <em>abstract data type</em>, so the LIFO rule matters more than the particular storage
+      representation. The same stack behavior can be implemented with an array, a linked list, or a library container.
     </p>
+    <svg viewBox="0 0 620 220" role="img" aria-labelledby="stackModelTitle stackModelDesc"
+         style="display:block; max-width:620px; width:100%; height:auto; margin:1.25rem 0;">
+      <title id="stackModelTitle">Stack conceptual model</title>
+      <desc id="stackModelDesc">A vertical stack with values 14, 8, and 31, showing push and pop at the top.</desc>
+      <defs>
+        <marker id="stack-arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#0a3974" />
+        </marker>
+      </defs>
+      <rect x="170" y="42" width="180" height="52" fill="#fff3d9" stroke="#d9822b" stroke-width="2" rx="8" ry="8" />
+      <rect x="170" y="96" width="180" height="52" fill="#ffffff" stroke="#0a3974" stroke-width="2" rx="8" ry="8" />
+      <rect x="170" y="150" width="180" height="52" fill="#ffffff" stroke="#0a3974" stroke-width="2" rx="8" ry="8" />
+      <text x="260" y="75" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="20" font-weight="700" fill="#0f264a">31</text>
+      <text x="260" y="129" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="20" font-weight="700" fill="#0f264a">8</text>
+      <text x="260" y="183" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="20" font-weight="700" fill="#0f264a">14</text>
+      <path d="M 420 22 H 360" stroke="#0a3974" stroke-width="2.5" marker-end="url(#stack-arrow)" />
+      <path d="M 360 67 H 420" stroke="#0a3974" stroke-width="2.5" marker-end="url(#stack-arrow)" />
+      <text x="438" y="25" font-family="Segoe UI, sans-serif" font-size="16" fill="#0f264a">push adds here</text>
+      <text x="438" y="70" font-family="Segoe UI, sans-serif" font-size="16" fill="#0f264a">pop removes here</text>
+      <text x="105" y="70" font-family="Segoe UI, sans-serif" font-size="16" font-weight="700" fill="#0a3974">top</text>
+      <path d="M 140 67 H 160" stroke="#0a3974" stroke-width="2" marker-end="url(#stack-arrow)" />
+      <text x="95" y="185" font-family="Segoe UI, sans-serif" font-size="16" fill="#0f264a">bottom</text>
+      <line x1="150" y1="214" x2="370" y2="214" stroke="#0a3974" stroke-width="4" stroke-linecap="round" />
+    </svg>
+    <p>When we want to represent a stack using text, 
+      we typically show the top of the stack at the right side of the list and the bottom at the left side. 
+    For example, the stack from the diagram above would be written as [14, 8, 31], with 31 at the top.</p>
   </section>
 
-  <section id="adt" section-title="Abstract Data Type and Operations">
-    <h2>Abstract Data Type and Operations</h2>
+  <section id="core-operations" section-title="Core Operations">
+    <h2>Core Operations</h2>
     <p>
-      A stack exposes only one end of the sequence, called the <em>top</em>.
+      The following are the core operations of a stack ADT. The ones in bold are the essential LIFO operations.
+      The exact method signatures and error-handling policies may vary, 
+      but the same basic operations are needed to maintain the LIFO abstraction.
     </p>
-    <ul>
-      <li><strong><code>push(value)</code>:</strong> Add <code>value</code> to the top.</li>
-      <li><strong><code>pop()</code>:</strong> Remove and return the top value.</li>
-      <li><strong><code>peek()</code>:</strong> Return the top value without removing it.</li>
-      <li><strong><code>isEmpty()</code>:</strong> Report whether the stack has no elements.</li>
-      <li><strong><code>size()</code>:</strong> Return the number of stored elements.</li>
-    </ul>
-  </section>
+    <table class="example-table left-top-align">
+      <thead>
+        <tr>
+          <th>Operation</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><b><code>push(value)</code></b></td>
+          <td>Add <code>value</code> to the top of the stack. 
+            If the stack is full, the implementation must report overflow or use a documented full-stack policy.</td>
+        </tr>
+        <tr>
+          <td><b><code>pop()</code></b></td>
+          <td>Remove and return the top value. If the stack is empty, the implementation must report underflow or use a documented empty-stack policy.</td>
+        </tr>
+        <tr>
+          <td><b><code>peek()</code></b></td>
+          <td>Return the top value without removing it. It has the same empty-stack issue as <code>pop()</code>.</td>
+        </tr>
+        <tr>
+          <td><code>isEmpty()</code></td>
+          <td>Report whether the stack currently stores no values.</td>
+        </tr>
+        <tr>
+          <td><code>size()</code></td>
+          <td>Return the number of values currently stored.</td>
+        </tr>
+        <tr>
+          <td><code>isFull()</code></td>
+          <td>(Optional) For a bounded stack (i.e. one with fixed capacity),
+            report whether the stack currently stores the maximum number of values.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p>
+      As seen above, a bounded stack needs an overflow policy 
+      for <code>push</code> when it is full, as well as a method <code>isFull()</code> to
+      check its status. 
+      Depending on the implementation, this might mean throwing an exception, 
+      returning a boolean, or otherwise signaling the overflow condition.
+      On the other hand, a resizable stack can grow its backing storage instead, 
+      but even a resizable stack can run out of memory in a real program.
+    </p>
+    <p>Here are a few more details about the essential operations of a stack.</p>
 
-  <section id="conceptual-model" section-title="Conceptual Model">
-    <h2>Conceptual Model</h2>
+    <h3>Push</h3>
     <p>
-      Think of a stack as a vertical pile. You can add to the top and remove from the top, but you do not reach into
-      the middle through the stack interface.
-    </p>
-    <pre><code>top -> 31
-       8
-       14</code></pre>
-    <p>
-      If the next operation is <code>pop()</code>, the value <code>31</code> is removed. If the next operation is
-      <code>push(20)</code>, the value <code>20</code> becomes the new top.
+      <code>push</code> makes a new value the top value. It does not disturb the relative order of the values already
+      in the stack; it only places a new item above them. If the stack previously stored <code>[4, 7]</code>, then
+      <code>push(9)</code> updates the stack to <code>[4, 7, 9]</code>.
     </p>
     <p>
-      Notice that the stack does not expose an operation like <code>removeBottom</code> or <code>get(1)</code>. Those
-      operations may be possible in the underlying array or linked list, but they are not part of the stack interface.
-      Restricting the interface is useful because algorithms that use stacks depend on the LIFO rule.
+      The caller should not need to know where that new value is stored physically. An array stack might write into
+      the next open array cell, while a linked stack might allocate a new head node. Both are still the same abstract
+      operation. We will discuss both implementations in more detail later.
     </p>
-  </section>
 
-  <section id="worked-example" section-title="Worked Example">
-    <h2>Worked Example</h2>
+    <h3>Pop</h3>
     <p>
-      Start with an empty stack and perform the operations
+      <code>pop</code> removes the current top and returns it to the caller. The operation changes the stack's state.
+      Calling <code>pop()</code> on a stack with contents <code>[4, 7, 9]</code> returns <code>9</code> and 
+      leaves the stack with contents <code>[4, 7]</code>.
+    </p>
+    <p>
+      Popping from an empty stack is called <em>underflow</em>. A clean stack implementation should define this case
+      explicitly, usually by throwing an exception, returning an optional value (often a boolean), or otherwise reporting an error.
+    </p>
+
+    <h3>Peek</h3>
+    <p>
+      <code>peek</code> reads the top value without removing it. Calling <code>peek()</code> on <code>[4, 7, 9]</code>
+      returns <code>9</code> and leaves the stack unchanged. 
+      Peeking at an empty stack should be dealt with in the same way as it was for <code>pop</code>.
+    </p>
+    <p>
+      <code>peek</code> is useful when the next decision depends on the top value but the value should remain available
+      for later operations. Parentheses matching, for example, often peeks at the most recent unmatched opening
+      delimiter before deciding whether a closing delimiter matches it.
+    </p>
+
+    <div class="example-box">
+      <strong class="example-title">Example Trace of Stack Operations</strong>
+    <p>
+      Below we can see what happens when we start with an empty stack that can hold up to 4 elements (a bounded stack) 
+      and perform the following sequence of operations. 
+      <code>pop()</code>,
       <code>push(4)</code>, <code>push(7)</code>, <code>push(9)</code>, <code>pop()</code>,
-      <code>push(2)</code>, <code>peek()</code>.
+      <code>push(2)</code>, <code>peek()</code>, <code>push(5)</code>, <code>push(8)</code>, <code>pop()</code>.
     </p>
     <table class="example-table">
       <thead>
@@ -89,6 +176,11 @@
         </tr>
       </thead>
       <tbody>
+        <tr>
+          <td><code>pop()</code></td>
+          <td><code>[]</code></td>
+          <td><code>underflow</code></td>
+        </tr>
         <tr>
           <td><code>push(4)</code></td>
           <td><code>[4]</code></td>
@@ -119,48 +211,33 @@
           <td><code>[4, 7, 2]</code></td>
           <td><code>2</code></td>
         </tr>
+        <tr>
+          <td><code>push(5)</code></td>
+          <td><code>[4, 7, 2, 5]</code></td>
+          <td>none</td>
+        </tr>
+        <tr>
+          <td><code>push(8)</code></td>
+          <td><code>[4, 7, 2, 5]</code></td>
+          <td><code>overflow</code></td>
+        </tr>
+        <tr>
+          <td><code>pop()</code></td>
+          <td><code>[4, 7, 2]</code></td>
+          <td><code>5</code></td>
+        </tr>
       </tbody>
     </table>
     <p>
-      The left side of the displayed list is the bottom and the right side is the top. The important point is that
-      <code>pop()</code> removes <code>9</code>, not <code>4</code>, because <code>9</code> was the most recent value
-      pushed at that moment.
-    </p>
-  </section>
-
-  <section id="core-operations" section-title="Core Operations">
-    <h2>Core Operations</h2>
-
-    <h3>Push</h3>
-    <p>
-      <code>push</code> adds a new value at the top. In an array-backed stack, the top is usually the next open
-      position at the end of the logical array. In a linked stack, the top is usually the head node.
-    </p>
-    <p>
-      Placing the top at the end of an array is intentional. Adding or removing at the end avoids shifting elements,
-      whereas adding at the front of an ordinary array would move every existing value.
-    </p>
-
-    <h3>Pop</h3>
-    <p>
-      <code>pop</code> removes the current top. A correct implementation must handle underflow: popping from an empty
-      stack should either signal an error or return a clearly documented special value.
-    </p>
-    <p>
-      The returned value should be saved before the stack is changed in a way that makes it inaccessible. In a linked
-      implementation, that means saving <code>head.value</code> before moving <code>head</code> to
-      <code>head.next</code>.
-    </p>
-
-    <h3>Peek</h3>
-    <p>
-      <code>peek</code> returns the top value without changing the stack. It has the same empty-stack issue as
-      <code>pop</code>, but it does not remove anything.
-    </p>
-    <p>
-      <code>peek</code> is useful when the next decision depends on the top value but the value should remain available
-      for later operations. Parentheses matching, for example, often peeks at the most recent unmatched opening
-      delimiter before deciding whether a closing delimiter matches it.
+      In the example, we specified return values of <code>underflow</code> and <code>overflow</code>.
+      The most common ways of actually doing this are to return a boolean or throw an exception. In the former case,
+      instead of having "none" as a return value, the calls to <code>push</code> would return <code>true</code> when the push succeeded and <code>false</code> when it failed. 
+      <code>pop</code> and <code>peek</code> are more difficult to handle with a boolean return because they also need to 
+      return a value when successful. If the stack is storing objects, one option is to return <code>null</code> on underflow, 
+      but that only works if <code>null</code> is not a valid stack value. 
+      Another option is to return a known invalid value, such as <code>-1</code>, 
+      but that only works if the stack is storing integers and <code>-1</code> is not a valid value.
+      The fallback is to throw an exception, which is more flexible but also more complex to use because the caller must handle the possibility of an exception.
     </p>
   </section>
 
@@ -180,13 +257,46 @@
 
   <section id="implementations" section-title="Implementation Options">
     <h2>Implementation Options</h2>
+    <p>
+      The stack ADT can be implemented using several representations. The best representation depends on whether the
+      program values compact storage, predictable fixed capacity, avoidance of resizing, or compatibility with a
+      language library. The two standard teaching implementations are an array-backed stack and a linked stack.
+    </p>
 
     <section id="implementation-array" section-title="Implementation 1: Array-Backed Stack">
       <h3>Implementation 1: Array-Backed Stack</h3>
       <p>
         An array-backed stack stores the bottom at index <code>0</code> and the top at index <code>size - 1</code>.
-        The invariant is that only the first <code>size</code> slots are logically part of the stack.
+        The main invariant is that only positions <code>0</code> through <code>size - 1</code> are logically part of
+        the stack. Slots at positions <code>size</code> and beyond are unused capacity.
       </p>
+      <p>
+        Placing the top at the logical end of the array is deliberate. Adding or removing at the end avoids shifting
+        elements, whereas using the front of an ordinary array would move every existing value on each operation.
+      </p>
+
+      <h4>How the Operations Work</h4>
+
+      <h5>Push</h5>
+      <p>
+        If there is free capacity, <code>push</code> writes the new value at index <code>size</code> and then
+        increments <code>size</code>. If the backing array is full, a bounded stack reports overflow, while a
+        resizable stack allocates a larger array and copies the existing values before writing the new one.
+      </p>
+
+      <h5>Pop</h5>
+      <p>
+        <code>pop</code> first checks whether <code>size</code> is zero. If the stack is nonempty, it decrements
+        <code>size</code> and returns the value that was stored at the old top index. In languages with references,
+        clearing the old slot can help garbage collection, but that clearing is not part of the abstract operation.
+      </p>
+
+      <h5>Peek, Size, and Empty Checks</h5>
+      <p>
+        <code>peek</code> returns <code>A[size - 1]</code> after checking for an empty stack. <code>size()</code>
+        returns the stored count, and <code>isEmpty()</code> checks whether that count is zero.
+      </p>
+
       <h4>Operation Sketch</h4>
       <pre><code>push(value):
     if size == capacity:
@@ -204,6 +314,19 @@ peek():
     if size == 0:
         report underflow
     return A[size - 1]</code></pre>
+
+      <h4>Implementation Analysis</h4>
+      <p>
+        The normal stack operations touch only the top position. The only expensive event is resizing, and resizing
+        happens infrequently if capacity grows geometrically.
+      </p>
+      <ul>
+        <li><strong><code>push</code>:</strong> \(O(1)\) when there is room. With doubling resize, it is \(O(1)\) amortized, though an individual resizing push costs \(O(n)\).</li>
+        <li><strong><code>pop</code>:</strong> \(O(1)\), because it only reads the top slot and updates <code>size</code>.</li>
+        <li><strong><code>peek</code>, <code>size</code>, and <code>isEmpty</code>:</strong> \(O(1)\).</li>
+        <li><strong>Extra space:</strong> The backing array may contain unused capacity. The stack does not need a separate node for each value.</li>
+      </ul>
+
       <div class="example-box">
         <strong class="example-title">Implementation Exercise</strong>
         <p>
@@ -213,16 +336,55 @@ peek():
           <li><code>push</code> writes at index <code>size</code>, then increments <code>size</code>.</li>
           <li><code>pop</code> decrements <code>size</code>, then returns the old top value.</li>
           <li>Resize when the backing array is full.</li>
+          <li>Define exactly what <code>pop</code> and <code>peek</code> do when the stack is empty.</li>
         </ul>
+        <p>Suggested test sequence:</p>
+        <pre><code>push(4), push(7), push(9), pop(), push(2), peek(), pop(), pop(), pop()</code></pre>
       </div>
+
+      <h4>Notes</h4>
+      <ul>
+        <li>Array stacks are usually compact and cache-friendly because values are stored next to one another.</li>
+        <li>A bounded array stack has predictable capacity but must report overflow when full.</li>
+        <li>A resizable array stack is easier to use, but occasional resizing copies all current values.</li>
+      </ul>
     </section>
 
     <section id="implementation-linked" section-title="Implementation 2: Linked Stack">
       <h3>Implementation 2: Linked Stack</h3>
       <p>
         A linked stack stores the top as the head of a singly linked list. Pushing creates a new head node, and popping
-        removes the current head node. No tail reference is needed.
+        removes the current head node. The main invariant is that following <code>next</code> references from
+        <code>head</code> visits the stack from top to bottom.
       </p>
+      <p>
+        No tail reference is needed, because all stack work happens at the top. A tail would point to the bottom, but
+        the stack interface never removes from the bottom.
+      </p>
+
+      <h4>How the Operations Work</h4>
+
+      <h5>Push</h5>
+      <p>
+        <code>push</code> allocates a new node, stores the value in that node, points the new node at the old
+        <code>head</code>, and then makes <code>head</code> refer to the new node. This makes the new value the top
+        without scanning the existing chain.
+      </p>
+
+      <h5>Pop</h5>
+      <p>
+        <code>pop</code> checks for an empty stack, saves <code>head.value</code>, moves <code>head</code> to
+        <code>head.next</code>, decreases the size, and returns the saved value. Saving the value before changing
+        <code>head</code> prevents the old top from becoming inaccessible before it is returned.
+      </p>
+
+      <h5>Peek, Size, and Empty Checks</h5>
+      <p>
+        <code>peek</code> reads <code>head.value</code> without changing <code>head</code>. A linked stack can keep a
+        stored <code>size</code> field so <code>size()</code> is constant time; without that field, counting nodes
+        would require traversal.
+      </p>
+
       <h4>Operation Sketch</h4>
       <pre><code>push(value):
     node = Node(value)
@@ -237,6 +399,32 @@ pop():
     head = head.next
     size = size - 1
     return value</code></pre>
+
+      <h4>Implementation Analysis</h4>
+      <p>
+        A linked stack never shifts values and never copies the whole structure to grow. Each update changes only the
+        head reference and, when tracked, the size field.
+      </p>
+      <ul>
+        <li><strong><code>push</code>:</strong> \(O(1)\), because it creates one node and changes a constant number of references.</li>
+        <li><strong><code>pop</code>:</strong> \(O(1)\), because it removes the head node.</li>
+        <li><strong><code>peek</code> and <code>isEmpty</code>:</strong> \(O(1)\). <code>size()</code> is \(O(1)\) if the implementation maintains a size field.</li>
+        <li><strong>Extra space:</strong> Each value requires a node and at least one reference in addition to the value itself.</li>
+      </ul>
+
+      <div class="example-box">
+        <strong class="example-title">Implementation Exercise</strong>
+        <p>
+          Implement a linked stack using a private node class and a <code>head</code> reference.
+        </p>
+        <ul>
+          <li>Use the head node as the top of the stack.</li>
+          <li>Handle <code>pop</code> and <code>peek</code> on an empty stack.</li>
+          <li>Maintain <code>size</code> consistently after every successful push or pop.</li>
+          <li>Write tests that pop the final remaining node and then push again.</li>
+        </ul>
+      </div>
+
       <h4>Notes</h4>
       <ul>
         <li>Every operation touches only the head node.</li>
@@ -247,6 +435,11 @@ pop():
 
     <section id="library-implementations" section-title="Library Implementations">
       <h3>Library Implementations</h3>
+      <p>
+        In everyday programming, it is usually better to use the standard library's stack-like structure than to write
+        a new one. In a data structures course, implementing stacks by hand is still valuable because it clarifies the
+        ADT, boundary cases, and representation tradeoffs.
+      </p>
       <ul>
         <li><strong>Java:</strong> <code>ArrayDeque&lt;E&gt;</code> is usually preferred for stack behavior.</li>
         <li><strong>C++:</strong> <code>std::stack</code> is a container adapter.</li>
@@ -260,8 +453,12 @@ pop():
     </section>
   </section>
 
-  <section id="costs" section-title="Operation Costs">
-    <h2>Operation Costs</h2>
+  <section id="cost-summary" section-title="Implementation Cost Summary">
+    <h2>Implementation Cost Summary</h2>
+    <p>
+      Both main implementations make the core stack operations constant time. The practical differences are memory
+      layout, resizing behavior, and per-element overhead.
+    </p>
     <table class="example-table">
       <thead>
         <tr>
@@ -313,6 +510,10 @@ pop():
 
   <section id="applications" section-title="Applications">
     <h2>Applications</h2>
+    <p>
+      Stacks appear whenever the newest unfinished item should be handled next. The structure is small, but the LIFO
+      rule fits many programming and algorithmic situations.
+    </p>
     <ul>
       <li><strong>Function calls and recursion:</strong> Programming languages use a call stack to remember active function calls. Each stack frame stores enough information to resume the caller after the current function returns.</li>
       <li><strong>Depth-first search and backtracking:</strong> A stack stores the most recently discovered unfinished state. This makes it natural for maze search, DFS, N-Queens, subset search, and other algorithms that explore one path deeply before returning to alternatives.</li>
@@ -327,6 +528,10 @@ pop():
 
   <section id="comparison" section-title="Comparisons and Tradeoffs">
     <h2>Comparisons and Tradeoffs</h2>
+    <p>
+      A stack is intentionally less flexible than a general sequence. That smaller interface is a strength when an
+      algorithm depends on reverse-order processing, but it is a poor fit when the program needs arbitrary access.
+    </p>
     <ul>
       <li><strong>Stack vs. general list:</strong> A stack exposes only top-based operations. This restriction makes algorithms easier to reason about because values leave in exactly the reverse of the order they entered.</li>
       <li><strong>Stack vs. queue:</strong> A stack removes the newest item first, while a queue removes the oldest item first. Use a stack when unfinished work should resume in reverse order; use a queue when arrival order matters.</li>
@@ -339,6 +544,10 @@ pop():
 
   <section id="variations" section-title="Variations and Extensions">
     <h2>Variations and Extensions</h2>
+    <p>
+      Many useful structures are stacks with an added constraint, extra operation, or specialized interpretation.
+      These variants are still easiest to understand after the basic LIFO behavior is clear.
+    </p>
     <ul>
       <li><strong>Bounded stack:</strong> A bounded stack has fixed capacity and reports overflow when full. This is common in embedded systems or assignments where memory limits are explicit.</li>
       <li><strong>Resizable stack:</strong> A resizable stack grows its backing storage when it fills. This is the usual dynamic-array approach and gives amortized constant-time pushes.</li>
@@ -351,6 +560,9 @@ pop():
 
   <section id="pitfalls" section-title="Common Pitfalls">
     <h2>Common Pitfalls</h2>
+    <p>
+      Most stack mistakes come from breaking the LIFO abstraction or forgetting boundary cases.
+    </p>
     <ul>
       <li><strong>Ignoring underflow:</strong> <code>pop</code> and <code>peek</code> need a defined behavior on an empty stack. Returning an arbitrary value or accessing invalid memory hides a real error.</li>
       <li><strong>Choosing the wrong array end:</strong> The top of an array-backed stack should usually be the logical end of the array. Using the front causes unnecessary shifts on every push or pop.</li>
@@ -364,8 +576,11 @@ pop():
   <section id="summary" section-title="Summary">
     <h2>Summary</h2>
     <p>
-      A stack stores items so the most recent item is removed first. Its small interface makes it ideal for algorithms
-      that need to remember unfinished work in reverse order.
+      A stack stores items so the most recent item is removed first. Its core operations are
+      <code>push</code>, <code>pop</code>, <code>peek</code>, <code>isEmpty</code>, and often <code>size</code>.
+      Array-backed stacks are compact and have amortized constant-time pushes when resizable; linked stacks avoid
+      resizing but use extra node storage. Use a stack when the problem naturally processes unfinished work in reverse
+      order.
     </p>
   </section>
 
@@ -375,6 +590,7 @@ pop():
       <li><a href="?path=Data%20Structures%2FLinear%20Structures%2FArrays">Arrays</a>, a common stack implementation.</li>
       <li><a href="?path=Data%20Structures%2FLinear%20Structures%2FLinked%20Lists">Linked Lists</a>, another common stack implementation.</li>
       <li><a href="?path=Algorithms%2FExhaustive%20Search%2FDepth-First%20Search">Depth-First Search</a>, which naturally uses a stack.</li>
+      <li><a href="?path=Foundations%2FRecursion%2FRecursion%20and%20the%20Call%20Stack">Recursion and the Call Stack</a>, which connects stacks to recursive execution.</li>
     </ul>
   </section>
 
