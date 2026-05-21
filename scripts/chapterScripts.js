@@ -79,6 +79,36 @@ function initTabGroups() {
 }
 
 
+function initCodeCopyButtons() {
+  document.querySelectorAll('.code-container.copyable-code').forEach(container => {
+    const pre = container.querySelector('pre');
+    const code = container.querySelector('code');
+    if (!pre || !code) return;
+
+    const button = document.createElement('button');
+    button.className = 'copy-code-button';
+    button.type = 'button';
+    button.textContent = 'Copy';
+
+    button.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(code.innerText);
+        button.textContent = 'Copied';
+        setTimeout(() => {
+          button.textContent = 'Copy';
+        }, 1200);
+      } catch (err) {
+        button.textContent = 'Copy failed';
+        setTimeout(() => {
+          button.textContent = 'Copy';
+        }, 1200);
+      }
+    });
+    container.insertBefore(button, pre);
+  });
+}
+
+
 /**
  * Hook up the “Show/Hide Answers” button.
  */
@@ -105,5 +135,6 @@ document.addEventListener('DOMContentLoaded', () => {
     hljs.highlightAll();
   }
   initTabGroups();
+  initCodeCopyButtons();
 
 });

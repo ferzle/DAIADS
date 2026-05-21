@@ -7,6 +7,9 @@
   <link rel="stylesheet" href="../../../../css/style.css">
   <link rel="stylesheet" href="../../../../css/demo.css">
   <style>
+    #demoContainer h2 {
+      padding-right: 120px;
+    }
     .stack-controls {
       display: flex;
       flex-wrap: wrap;
@@ -31,17 +34,30 @@
     }
     .stack-layout {
       display: grid;
-      grid-template-columns: minmax(150px, 230px) minmax(220px, 1fr);
+      grid-template-columns: minmax(160px, 240px) minmax(420px, 630px);
       gap: 18px;
       align-items: start;
       margin-top: 12px;
+    }
+    .stack-panel {
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      max-width: 240px;
+    }
+    .top-marker {
+      min-height: 20px;
+      margin-bottom: 4px;
+      color: #333;
+      font-size: 13px;
+      font-weight: bold;
+      text-align: center;
     }
     .stack-view {
       display: flex;
       flex-direction: column;
       gap: 6px;
       align-items: stretch;
-      max-width: 230px;
     }
     .stack-item {
       min-height: 42px;
@@ -58,10 +74,9 @@
       background: #ffe16a;
       border-width: 2px;
     }
-    .stack-role {
-      color: #555;
-      font-size: 12px;
-      font-weight: normal;
+    .stack-item.returned {
+      background: #74b474;
+      border-width: 2px;
     }
     .stack-base {
       border-top: 3px solid #333;
@@ -77,23 +92,92 @@
       background: #f6f6f6;
       padding: 10px 12px;
     }
+    .empty-state {
+      font-style: italic;
+      text-align: center;
+    }
     .result-box {
+      display: grid;
+      gap: 8px;
       border-style: solid;
+      border-left: 4px solid #4a768b;
       margin-bottom: 10px;
       line-height: 1.5;
     }
-    .removed-value {
-      display: inline-block;
-      min-width: 36px;
-      margin-left: 4px;
-      padding: 2px 8px;
-      border: 1px solid #333;
-      background: #ffa088;
-      text-align: center;
+    .result-box.has-return {
+      border-left-color: #2e7d32;
+      background: #f4fbf4;
+    }
+    .result-box.has-error {
+      border-left-color: #b3261e;
+      background: #fff5f5;
+    }
+    .result-box.no-return {
+      border-left-color: #777;
+    }
+    .result-label {
+      color: #555;
+      font-size: 12px;
       font-weight: bold;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+    .return-display {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+    .return-word {
+      font-weight: bold;
+    }
+    .return-value {
+      display: inline-flex;
+      min-width: 54px;
+      min-height: 42px;
+      align-items: center;
+      justify-content: center;
+      padding: 0 12px;
+      border: 1px solid #333;
+      background: #74b474;
+      color: #111;
+      font-weight: bold;
+      box-sizing: border-box;
+    }
+    .return-value.empty {
+      border-style: dashed;
+      background: #fff;
+      color: #555;
+      font-weight: normal;
+    }
+    .return-value.error {
+      background: #ffa088;
+      color: #111;
     }
     .stack-notes {
       line-height: 1.5;
+      max-width: 630px;
+    }
+    .stack-facts {
+      display: grid;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .fact {
+      padding: 8px 10px;
+      border: 1px solid #ccc;
+      background: #fff;
+    }
+    .fact strong {
+      margin-right: 4px;
+    }
+    @media (max-width: 620px) {
+      .stack-layout {
+        grid-template-columns: 1fr;
+      }
+      .stack-panel {
+        max-width: 260px;
+      }
     }
   </style>
   <!-- Google tag (gtag.js) -->
@@ -117,34 +201,37 @@
       <button id="resetBtn">Reset</button>
     </div>
 
-    <div class="legend">
-      <strong>Legend:</strong>
-      <span class="legend-box" style="background:#ffe16a;"></span>Top item
-      <span class="legend-box" style="background:#ffa088;"></span>Removed item
-    </div>
-
     <div id="status"></div>
     <div class="stack-layout">
-      <div>
+      <div class="stack-panel">
+        <div id="topMarker" class="top-marker"></div>
         <div id="stackView" class="stack-view"></div>
         <div class="stack-base">bottom</div>
       </div>
       <div class="stack-notes">
         <div id="resultBox" class="result-box"></div>
-        <div><strong>Abstract rule:</strong> the only accessible item is the top item.</div>
-        <div id="stackSummary"></div>
+        <div class="stack-facts">
+          <div class="fact"><strong>Top:</strong><span id="topValue"></span></div>
+          <div class="fact"><strong>Size:</strong><span id="stackSize"></span></div>
+        </div>
       </div>
     </div>
   </div>
 
   <script>
     let items;
-    let lastRemoved = '';
+    let returnedValue = null;
+    let resultMode = 'none';
+    let returnText = '';
+    let highlightedReturnIndex = -1;
 
     function resetState() {
       items = ['A', 'B', 'C'];
-      lastRemoved = '';
-      render('Initial stack. The most recently added item is on top.');
+      returnedValue = null;
+      resultMode = 'none';
+      returnText = 'No operation has returned a value yet.';
+      highlightedReturnIndex = -1;
+      render('Initial stack. C is on top because it was added most recently.');
     }
 
     function readValue() {
@@ -157,25 +244,49 @@
 
     function render(message) {
       document.getElementById('status').textContent = message;
-      document.getElementById('stackSummary').textContent =
-        items.length === 0
-          ? 'Count: 0. Push adds the next item.'
-          : `Count: ${items.length}. Next pop or peek looks at ${topItem()}.`;
+      document.getElementById('topMarker').textContent = items.length === 0 ? '' : 'top';
+      document.getElementById('topValue').textContent = items.length === 0 ? 'none' : topItem();
+      document.getElementById('stackSize').textContent = items.length;
 
       const resultBox = document.getElementById('resultBox');
+      resultBox.className =
+        resultMode === 'error'
+          ? 'result-box has-error'
+          : returnedValue === null
+            ? 'result-box no-return'
+            : 'result-box has-return';
       resultBox.innerHTML = '';
-      const topLine = document.createElement('div');
-      topLine.textContent = items.length === 0 ? 'Top: none' : `Top: ${topItem()}`;
-      resultBox.appendChild(topLine);
-      if (lastRemoved !== '') {
-        const removedLine = document.createElement('div');
-        removedLine.textContent = 'Last removed:';
-        const removedValue = document.createElement('span');
-        removedValue.className = 'removed-value';
-        removedValue.textContent = lastRemoved;
-        removedLine.appendChild(removedValue);
-        resultBox.appendChild(removedLine);
+
+      const label = document.createElement('div');
+      label.className = 'result-label';
+      label.textContent = 'Result';
+      resultBox.appendChild(label);
+
+      const display = document.createElement('div');
+      display.className = 'return-display';
+
+      const word = document.createElement('span');
+      word.className = 'return-word';
+      word.textContent = resultMode === 'error' ? 'throws' : 'returns';
+      display.appendChild(word);
+
+      const value = document.createElement('span');
+      value.className = 'return-value';
+      if (returnedValue === null) {
+        value.classList.add('empty');
+        value.textContent = 'none';
+      } else {
+        if (resultMode === 'error') {
+          value.classList.add('error');
+        }
+        value.textContent = returnedValue;
       }
+      display.appendChild(value);
+      resultBox.appendChild(display);
+
+      const note = document.createElement('div');
+      note.textContent = returnText;
+      resultBox.appendChild(note);
 
       const stackView = document.getElementById('stackView');
       stackView.innerHTML = '';
@@ -194,16 +305,14 @@
         if (i === items.length - 1) {
           item.classList.add('top');
         }
+        if (i === highlightedReturnIndex) {
+          item.classList.add('returned');
+        }
 
         const value = document.createElement('span');
         value.textContent = items[i];
 
-        const role = document.createElement('span');
-        role.className = 'stack-role';
-        role.textContent = i === items.length - 1 ? 'top' : '';
-
         item.appendChild(value);
-        item.appendChild(role);
         stackView.appendChild(item);
       }
     }
@@ -215,26 +324,42 @@
         return;
       }
       items.push(value);
-      lastRemoved = '';
+      returnedValue = null;
+      resultMode = 'none';
+      returnText = 'Push changes the stack; it does not remove or reveal a value.';
+      highlightedReturnIndex = -1;
       render(`Push adds ${value} to the top of the stack.`);
     });
 
     document.getElementById('popBtn').addEventListener('click', () => {
       if (items.length === 0) {
-        lastRemoved = '';
-        render('Pop has no result because the stack is empty.');
+        returnedValue = 'StackUnderflowError';
+        resultMode = 'error';
+        returnText = 'There is no element on the stack to pop.';
+        highlightedReturnIndex = -1;
+        render('Stack underflow: pop throws an error because the stack is empty.');
         return;
       }
-      lastRemoved = items.pop();
-      render(`Pop removes ${lastRemoved}, which was the top item.`);
+      returnedValue = items.pop();
+      resultMode = 'value';
+      returnText = `${returnedValue} was removed from the top of the stack.`;
+      highlightedReturnIndex = -1;
+      render(`Pop returns ${returnedValue} and removes it from the stack.`);
     });
 
     document.getElementById('peekBtn').addEventListener('click', () => {
-      lastRemoved = '';
       if (items.length === 0) {
-        render('Peek has no result because the stack is empty.');
+        returnedValue = 'StackUnderflowError';
+        resultMode = 'error';
+        returnText = 'There is no element on the stack to peek at.';
+        highlightedReturnIndex = -1;
+        render('Stack underflow: peek throws an error because the stack is empty.');
         return;
       }
+      returnedValue = topItem();
+      resultMode = 'value';
+      returnText = `${returnedValue} stays on the stack after peek.`;
+      highlightedReturnIndex = items.length - 1;
       render(`Peek returns ${topItem()} without removing it.`);
     });
 
