@@ -78,117 +78,6 @@ function positionTooltipAt(x, y, tip) {
     : `${y + margin}px`;
 }
 
-/*
-function positionTooltipAt(x, y, tip) {
-  tip.style.position = "fixed";
-  tip.style.display  = "block";
-
-  // 1) Figure out our text‐frame (for horizontal clamping)
-  const frame = document.querySelector('#content')
-             || document.querySelector('main')
-             || document.body;
-  const frameRect = frame.getBoundingClientRect();
-
-  // 2) Reset any left/top so we can measure width & height
-  tip.style.left = "0px";
-  tip.style.top  = "0px";
-
-  // 3) Measure
-  const tipRect = tip.getBoundingClientRect();
-  const tipWidth  = tipRect.width;
-  const tipHeight = tipRect.height;
-
-  // 4) Clear previous positioning classes
-  tip.classList.remove("to-right", "to-left", "to-center");
-
-  // 5) Compute horizontal placement exactly as you had it
-  const relX  = x - frameRect.left;
-  const third = frameRect.width / 3;
-  let left;
-  if (relX < third) {
-    tip.classList.add("to-right");
-    left = x + 8;
-  }
-  else if (relX > 2*third) {
-    tip.classList.add("to-left");
-    left = x - tipWidth - 8;
-  }
-  else {
-    tip.classList.add("to-center");
-    left = x - tipWidth/2;
-    // clamp to frame
-    left = Math.min(
-      Math.max(left, frameRect.left + 8),
-      frameRect.right - tipWidth - 8
-    );
-  }
-  tip.style.left = `${left}px`;
-
-  // 6) Decide whether to show *above* or *below*
-  //    Option A: if you're in the lower half of the viewport:
-  //const showAbove = y > (window.innerHeight / 2);
-
-  //    Option B: if there’s not enough room *below*:
-  const margin = 8;
-  const showAbove = (y + tipHeight + margin) > window.innerHeight;
-
-  // 7) Finally, set top
-  if (showAbove) {
-    tip.style.top = `${y - tipHeight - margin}px`;
-  } else {
-    tip.style.top = `${y + margin}px`;
-  }
-}
-*/
-/*
-function positionTooltipAt(x, y, tip) {
-  tip.style.position = "fixed";
-  tip.style.display  = "block";
-
-  // 1) Measure your content‐frame
-  const frame = document.querySelector('#content')
-               || document.querySelector('main')
-               || document.body;
-  const frameRect = frame.getBoundingClientRect();
-
-  // 2) Measure the tooltip’s own width
-  tip.style.left = "0px";
-  const tipWidth = tip.getBoundingClientRect().width;
-
-  // 3) Clear previous positioning classes
-  tip.classList.remove("to-right", "to-left", "to-center");
-
-  // 4) Compute mouse‐x relative to the frame’s left edge
-  const relX = x - frameRect.left;
-  const third = frameRect.width / 3;
-
-  if (relX < third) {
-    tip.classList.add("to-right");
-    tip.style.left = `${x + 8}px`;
-    tip.style.top  = `${y}px`;
-  }
-  else if (relX > 2 * third) {
-    tip.classList.add("to-left");
-    tip.style.left = `${x - tipWidth - 8}px`;
-    tip.style.top  = `${y}px`;
-  }
-  else {
-    tip.classList.add("to-center");
-    
-    // center tooltip on the mouse X
-    let left = x - tipWidth / 2;
-    
-    // clamp so it never bleeds past the frame edges
-    const minLeft = frameRect.left + 8;
-    const maxLeft = frameRect.right - tipWidth - 8;
-    left = Math.min(Math.max(left, minLeft), maxLeft);
-    
-    tip.style.left = `${left}px`;
-    tip.style.top  = `${y + 8}px`;
-  }
-}
-*/
-
 // ————————————————————————————————————————————————
 // 3) Build & wrap glossary terms in text nodes
 // ————————————————————————————————————————————————
@@ -237,15 +126,36 @@ function buildAndWrap() {
 	  "SVG",
 	  "FIGURE",
       "STRONG"]);
+      function acceptNode(node) {
+  let el = node.parentElement;
+  while (el) {
+    const tag = el.tagName.toUpperCase();
+
+    if (
+      SKIP.has(tag) ||
+      el.namespaceURI === "http://www.w3.org/2000/svg" ||
+      el.classList.contains("tooltip-content")
+    ) {
+      return NodeFilter.FILTER_REJECT;
+    }
+
+    el = el.parentElement;
+  }
+  return NodeFilter.FILTER_ACCEPT;
+}
+/*
+* replaced with the previous that is more SVG-aware and skips more (supposedly)
+* 5/22/26
   function acceptNode(node) {
     let el = node.parentElement;
     while (el) {
-      if (SKIP.has(el.tagName) || el.classList.contains("tooltip-content"))
+      if (SKIP.has(el.tagName.toUpperCase()) || el.classList.contains("tooltip-content"))
         return NodeFilter.FILTER_REJECT;
       el = el.parentElement;
     }
     return NodeFilter.FILTER_ACCEPT;
   }
+  */
 
   // Collect text nodes
   const walker = document.createTreeWalker(rootEl, NodeFilter.SHOW_TEXT, { acceptNode }, false);

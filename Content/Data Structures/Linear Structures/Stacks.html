@@ -7,9 +7,9 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
   <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-  <script src="../../../scripts/chapterScripts.js?a=36"></script>
-  <link rel="stylesheet" href="../../../css/style.css?b=4">
-  <link rel="stylesheet" href="../../../css/chapter.css?a=56">
+  <script src="../../../scripts/chapterScripts.js"></script>
+  <link rel="stylesheet" href="../../../css/style.css">
+  <link rel="stylesheet" href="../../../css/chapter.css">
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
   <script>
@@ -102,12 +102,7 @@
       happen from the top. Values below the top are still stored, but the stack interface does not allow the caller
       to reach into the middle or remove from the bottom.
     </p>
-    <p>
-      This restriction is useful because many programs need to remember unfinished work in reverse order. Function
-      calls, recursion, undo history, expression evaluation, depth-first search, and backtracking all rely on stack
-      behavior. A stack is an <em>abstract data type</em>, so the LIFO rule matters more than the particular storage
-      representation. The same stack behavior can be implemented with an array, a linked list, or a library container.
-    </p>
+   
     <svg viewBox="0 0 620 220" role="img" aria-labelledby="stackModelTitle stackModelDesc"
          style="display:block; max-width:620px; width:100%; height:auto; margin:1.25rem 0;">
       <desc id="stackModelDesc">A vertical stack with values 14, 8, and 31, showing push and pop at the top.</desc>
@@ -131,6 +126,12 @@
       <text x="95" y="185" font-family="Segoe UI, sans-serif" font-size="16" fill="#0f264a">bottom</text>
       <line x1="150" y1="214" x2="370" y2="214" stroke="#0a3974" stroke-width="4" stroke-linecap="round" />
     </svg>
+     <p>
+      This restriction is useful because many programs need to remember unfinished work in reverse order. Function
+      calls, recursion, undo history, expression evaluation, depth-first search (in graphs), and backtracking all rely on stack
+      behavior. A stack is an <em>abstract data type</em>, so the LIFO rule matters more than the particular storage
+      representation. The same stack behavior can be implemented with an array, a linked list, or a library container.
+    </p>
     <p>When we want to represent a stack using text, 
       we typically show the top of the stack at the right side of the list and the bottom at the left side. 
     For example, the stack from the diagram above would be written as [14, 8, 31], with 31 at the top.</p>
@@ -546,8 +547,8 @@ size():
     <strong><code>size</code>:</strong> \(O(1)\). It returns <code>top + 1</code>.
   </li>
 </ul>
-<p>
-  <h5>Storage used:</h5> This implementation uses \(O(c)\) space, where \(c\) is the capacity of the backing
+ <h5>Storage used:</h5> 
+<p>This implementation uses \(O(c)\) space, where \(c\) is the capacity of the backing
   array. If the stack currently contains \(n\) items, then \(n = top + 1\), and the
   array has \(c - n\) unused slots. In addition to the array, the implementation uses
   only \(O(1)\) space for variables such as <code>top</code>.
@@ -1601,7 +1602,7 @@ size():
 
     <li>
       <strong>Balanced Delimiters 1:</strong> Trace the stack while checking whether
-      <code>([{()}])</code> is balanced. What is pushed and popped?
+      <code>[{()}]</code> is balanced. What is pushed and popped?
     </li>
         <li>
       <strong>Balanced Delimiters 2:</strong> Trace the stack while checking whether
@@ -1622,6 +1623,10 @@ size():
       <strong>Choosing a Structure:</strong> Give one situation where a stack is a better
       choice than a queue, and briefly explain why.
     </li>
+    <li>
+    <strong>Array vs. Linked Implementation:</strong> Give one advantage of an array-backed
+    stack and one advantage of a linked stack.
+  </li>
   </ol>
 
   <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
@@ -1916,6 +1921,12 @@ size():
         unfinished item should be handled first. Examples include undo history,
         balanced delimiter checking, postfix evaluation, and backtracking.
       </li>
+      <li>
+        <strong>Answer:</strong> An array-backed stack is compact and usually
+        cache-friendly because values are stored next to one another. A linked stack
+        grows one node at a time and avoids fixed unused capacity, but each value
+        requires a node and at least one extra reference.
+      </li>
     </ol>
   </div>
 </section>
@@ -1926,34 +1937,46 @@ size():
     <li>
       <strong>Trace Basic Stack Operations:</strong>
       Start with an empty stack and trace the following operations:
-    </br>
+    <p>
       <pre><code>push(6), push(2), push(9), pop(), push(4), peek(), pop(), push(8)</code></pre>
-    </br>
+    </p><p>
       After each operation, write the stack contents using the notation from this page,
       with the top at the right. Also record the return value for each
       <code>pop</code> and <code>peek</code>.
+    </p>
     </li>
 
     <li>
       <strong>Trace a Bounded Stack:</strong>
       Work with a bounded stack that can hold at most four values. Trace the following
-      operations:</br>
+      operations:<p></p>
       <pre><code>push(3), push(5), push(1), push(7), push(9), pop(), push(4), pop()</code></pre>
-    </br>Assume <code>push</code> returns <code>true</code> when it succeeds and
+    </p><p>Assume <code>push</code> returns <code>true</code> when it succeeds and
       <code>false</code> when the stack is full. After each operation, write the stack
-      contents and the return value, if there is one.
+      contents and the return value, if there is one.</p>
     </li>
 
     <li>
   <strong>Implement a Fixed-Size Array Stack:</strong>
-  Copy and paste the starter code for a stack of nonnegative integers into your favorite IDE,
-  implement all of the methods marked with a <code>TODO</code> comment, and run the tests.
-  To deal with overflow, we are assuming that <code>push</code> returns <code>true</code> if the value is added properly and
-  <code>false</code> if the stack is full. 
-  To deal with underflow, we are assuming that <code>pop</code> and <code>peek</code> return the top value, 
-  or <code>-1</code> if the stack is empty (Thus the reason we specify that the stack only stores nonnegative integers).
-    </br> Note that in the current implementation, some of the operations return dummy values. 
-    You will need to replace those with the correct logic.
+  Implement a stack based on the fixed-size array representation described earlier in this page: an array
+  <code>A</code> stores the values, and <code>top</code> stores the index of the current
+  top item. Copy and paste the starter code for a stack of nonnegative integers into
+  your preferred IDE, complete each method marked with a <code>TODO</code> comment, and
+  run the tests.
+
+  <p>
+    For this exercise, <code>push</code> should return <code>true</code> if the value
+    is added and <code>false</code> if the stack is full. The methods <code>pop</code>
+    and <code>peek</code> should return the top value, or <code>-1</code> if the stack
+    is empty. We restrict the stack to nonnegative integers so that <code>-1</code> can
+    safely indicate underflow.
+  </p>
+
+  <p>
+    The starter code contains dummy return values such as <code>false</code> and
+    <code>-1</code>. Replace those dummy values with the correct logic while preserving
+    the specified overflow and underflow behavior.
+  </p>
   <div class="tab-group scrollable-code-tabs">
     <div class="tabs" role="tablist">
       <button id="tab-java-stack-activity" class="tablink active" data-lang="java-stack-activity" role="tab" aria-controls="java-stack-activity" aria-selected="true">Java</button>
@@ -2303,79 +2326,807 @@ test_stack()</code></pre>
 
 <li>
   <strong>Implement a Resizable Array Stack:</strong>
-  Modify the fixed-size array stack so that the backing array doubles in size
-  whenever it runs out of room. Since this version resizes instead of reporting
-  overflow, <code>push</code> should always add the value and does not need to return
+  Start with your fixed-size array stack from the previous activity and modify it so
+  that the backing array doubles in size whenever it runs out of room. Since this
+  version resizes instead of reporting overflow, remove <code>isFull()</code>, and
+  change <code>push</code> so that it always adds the value and does not return
   <code>true</code> or <code>false</code>.
+
+  <p>
+    Your implementation should satisfy the following requirements:
+  </p>
   <ul>
     <li>Start with a small capacity, such as <code>2</code>, so that resizing happens during testing.</li>
-    <li>When <code>top == A.length - 1</code>, create a new array with twice the old capacity.</li>
-    <li>Copy the current stack values into the new array in the same order.</li>
-    <li>Make <code>A</code> refer to the new array before inserting the new value.</li>
-    <li>Make sure <code>top</code> still refers to the same logical top item after resizing.</li>
-    <li>Keep the same underflow behavior for <code>pop</code> and <code>peek</code> as in the fixed-size version.</li>
-    <li>Add a <code>capacity()</code> method that returns <code>A.length</code> for testing.</li>
-  </ul>
-  Write a test method that pushes enough values to trigger at least two resizes.
-  The test should check the result of <code>pop</code>, <code>peek</code>, and
-  <code>size</code> after several operations. Also include a way to check the current
-  array capacity so you can verify that the capacity doubles when expected.
-</li>
-
     <li>
-      <strong>Implement a Resizable Array Stack:</strong>
-      Modify the fixed-size array stack so that the backing array doubles in size
-      whenever it is full.
+      When <code>top == A.length - 1</code>, resize the backing array:
       <ul>
-        <li>Start with a small capacity, such as 2 or 4, so that resizing happens during testing.</li>
-        <li>When the array is full, create a new array with twice the old capacity.</li>
+        <li>Create a new array with twice the old capacity.</li>
         <li>Copy the current stack values into the new array in the same order.</li>
         <li>Make <code>A</code> refer to the new array before inserting the new value.</li>
         <li>Make sure <code>top</code> still refers to the same logical top item after resizing.</li>
       </ul>
-      Test with enough pushes to trigger at least two resizes. Record the array capacity
-      after each successful push.
     </li>
+    <li>Keep the same underflow behavior for <code>pop</code> and <code>peek</code> as in the fixed-size version.</li>
+    <li>Add a <code>capacity()</code> method that returns <code>A.length</code> for testing.</li>
+  </ul>
 
-    <li>
-      <strong>Implement a Linked Stack:</strong>
-      Implement a linked stack using a private node class and a <code>head</code>
-      reference.
-      <ul>
-        <li>Each node should store a value and a <code>next</code> reference.</li>
-        <li>Use <code>head</code> as the top of the stack.</li>
-        <li><code>push</code> should create a new node and make it the new <code>head</code>.</li>
-        <li><code>pop</code> should save <code>head.value</code>, move <code>head</code> to <code>head.next</code>, and return the saved value.</li>
-        <li>Maintain a <code>count</code> variable so that <code>size()</code> is \(O(1)\).</li>
-        <li>Write tests that pop the final remaining node and then push again.</li>
-      </ul>
-    </li>
+<p>
+  Modify the tests from the previous activity to check the resizing behavior. Write a
+  test method that pushes enough values to trigger at least two resizes. Since
+  <code>push</code> no longer reports overflow, the test should instead check
+  <code>capacity()</code>, <code>size()</code>, <code>peek()</code>, and the values
+  returned by <code>pop()</code> after several operations.
+</p>
+</li>
 
-    <li>
-      <strong>Implement a Linked Stack with a Sentinel Head Node:</strong>
-      Implement a linked stack using a sentinel head node. A <em>sentinel node</em>
-      is a special node that is always present but does not store a stack value.
-      It is used to simplify boundary cases.
-      <ul>
-        <li>The sentinel node's <code>next</code> reference should point to the top real node.</li>
-        <li>An empty stack has <code>sentinel.next == null</code>.</li>
-        <li><code>push</code> should insert a new real node immediately after the sentinel.</li>
-        <li><code>pop</code> should remove the node immediately after the sentinel.</li>
-        <li>The sentinel itself should never be removed or returned as a stack value.</li>
-        <li>Compare the empty-stack checks in this version with the ordinary linked stack using <code>head</code>.</li>
-      </ul>
-      After implementing it, draw the node structure for the stack <code>[12, 7, 19]</code>.
-      Label the sentinel node, the top real node, and the bottom real node.
-    </li>
+<li>
+  <strong>Implement a Linked Stack:</strong>
+  Implement a stack based on the linked-stack representation described earlier in this page: a stack of
+  nonnegative integers stored in linked nodes, with <code>head</code> referring to the
+  top node. Complete the starter code below and run the tests. Unlike the fixed-size
+  array stack, this version does not need <code>isFull()</code>, because it creates a
+  new node for each successful <code>push</code>.
+  <p>
+    Your implementation should satisfy the following requirements:
+  </p>
+  <ul>
+    <li>Each node should store a value and a <code>next</code> reference.</li>
+    <li>An empty stack should have <code>head == null</code>.</li>
+    <li><code>push</code> should create a new node and make it the new <code>head</code>.</li>
+    <li><code>pop</code> should save <code>head.value</code>, move <code>head</code> to <code>head.next</code>, and return the saved value.</li>
+    <li><code>pop</code> and <code>peek</code> should return <code>-1</code> if the stack is empty.</li>
+    <li>Maintain a <code>count</code> variable so that <code>size()</code> is \(O(1)\).</li>
+  </ul>
 
+  <div class="tab-group scrollable-code-tabs">
+    <div class="tabs" role="tablist">
+      <button id="tab-java-linked-stack-activity" class="tablink active" data-lang="java-linked-stack-activity" role="tab" aria-controls="java-linked-stack-activity" aria-selected="true">Java</button>
+      <button id="tab-cpp-linked-stack-activity" class="tablink" data-lang="cpp-linked-stack-activity" role="tab" aria-controls="cpp-linked-stack-activity" aria-selected="false">C++</button>
+      <button id="tab-python-linked-stack-activity" class="tablink" data-lang="python-linked-stack-activity" role="tab" aria-controls="python-linked-stack-activity" aria-selected="false">Python</button>
+    </div>
+
+    <div id="java-linked-stack-activity" class="code-container active copyable-code" role="tabpanel" aria-labelledby="tab-java-linked-stack-activity">
+      <pre><code class="language-java">public class LinkedStackExercise {
+    static class IntStack {
+        private static class Node {
+            int value;
+            Node next;
+
+            Node(int value, Node next) {
+                this.value = value;
+                this.next = next;
+            }
+        }
+
+        private Node head;
+        private int count;
+
+        public IntStack() {
+            head = null;
+            count = 0;
+        }
+
+        public boolean isEmpty() {
+            // TODO
+            return false;
+        }
+
+        public void push(int value) {
+            // TODO
+        }
+
+        public int pop() {
+            // TODO
+            return -1;
+        }
+
+        public int peek() {
+            // TODO
+            return -1;
+        }
+
+        public int size() {
+            // TODO
+            return -1;
+        }
+    }
+
+    static void check(int actual, int expected) {
+        if (actual == expected) {
+            System.out.println("pass");
+        } else {
+            System.out.println("fail: expected " + expected + " but got " + actual);
+        }
+    }
+
+    static void check(boolean actual, boolean expected) {
+        if (actual == expected) {
+            System.out.println("pass");
+        } else {
+            System.out.println("fail: expected " + expected + " but got " + actual);
+        }
+    }
+
+    static void testStack() {
+        IntStack stack = new IntStack();
+
+        check(stack.isEmpty(), true);
+        check(stack.size(), 0);
+        check(stack.pop(), -1);
+        check(stack.peek(), -1);
+        check(stack.size(), 0);
+
+        stack.push(4);
+        check(stack.isEmpty(), false);
+        check(stack.size(), 1);
+        check(stack.peek(), 4);
+        check(stack.size(), 1);
+
+        stack.push(7);
+        check(stack.size(), 2);
+        check(stack.peek(), 7);
+
+        stack.push(9);
+        check(stack.size(), 3);
+        check(stack.peek(), 9);
+
+        check(stack.pop(), 9);
+        check(stack.size(), 2);
+        check(stack.peek(), 7);
+
+        stack.push(2);
+        check(stack.size(), 3);
+        check(stack.peek(), 2);
+
+        check(stack.pop(), 2);
+        check(stack.pop(), 7);
+        check(stack.pop(), 4);
+        check(stack.size(), 0);
+        check(stack.isEmpty(), true);
+
+        check(stack.pop(), -1);
+        check(stack.peek(), -1);
+        check(stack.size(), 0);
+
+        stack.push(6);
+        check(stack.isEmpty(), false);
+        check(stack.size(), 1);
+        check(stack.peek(), 6);
+        check(stack.pop(), 6);
+        check(stack.size(), 0);
+        check(stack.isEmpty(), true);
+    }
+
+    public static void main(String[] args) {
+        testStack();
+    }
+}</code></pre>
+    </div>
+
+    <div id="cpp-linked-stack-activity" class="code-container copyable-code" role="tabpanel" aria-labelledby="tab-cpp-linked-stack-activity">
+      <pre><code class="language-cpp">#include &lt;iostream&gt;
+using namespace std;
+
+class IntStack {
+private:
+    struct Node {
+        int value;
+        Node* next;
+
+        Node(int v, Node* n) {
+            value = v;
+            next = n;
+        }
+    };
+
+    Node* head;
+    int count;
+
+public:
+    IntStack() {
+        head = nullptr;
+        count = 0;
+    }
+
+    ~IntStack() {
+        while (head != nullptr) {
+            Node* old = head;
+            head = head-&gt;next;
+            delete old;
+        }
+    }
+
+    bool isEmpty() {
+        // TODO
+        return false;
+    }
+
+    void push(int value) {
+        // TODO
+    }
+
+    int pop() {
+        // TODO
+        return -1;
+    }
+
+    int peek() {
+        // TODO
+        return -1;
+    }
+
+    int size() {
+        // TODO
+        return -1;
+    }
+};
+
+void check(int actual, int expected) {
+    if (actual == expected) {
+        cout &lt;&lt; "pass" &lt;&lt; endl;
+    } else {
+        cout &lt;&lt; "fail: expected " &lt;&lt; expected &lt;&lt; " but got " &lt;&lt; actual &lt;&lt; endl;
+    }
+}
+
+void check(bool actual, bool expected) {
+    if (actual == expected) {
+        cout &lt;&lt; "pass" &lt;&lt; endl;
+    } else {
+        cout &lt;&lt; "fail: expected " &lt;&lt; expected &lt;&lt; " but got " &lt;&lt; actual &lt;&lt; endl;
+    }
+}
+
+void testStack() {
+    IntStack stack;
+
+    check(stack.isEmpty(), true);
+    check(stack.size(), 0);
+    check(stack.pop(), -1);
+    check(stack.peek(), -1);
+    check(stack.size(), 0);
+
+    stack.push(4);
+    check(stack.isEmpty(), false);
+    check(stack.size(), 1);
+    check(stack.peek(), 4);
+    check(stack.size(), 1);
+
+    stack.push(7);
+    check(stack.size(), 2);
+    check(stack.peek(), 7);
+
+    stack.push(9);
+    check(stack.size(), 3);
+    check(stack.peek(), 9);
+
+    check(stack.pop(), 9);
+    check(stack.size(), 2);
+    check(stack.peek(), 7);
+
+    stack.push(2);
+    check(stack.size(), 3);
+    check(stack.peek(), 2);
+
+    check(stack.pop(), 2);
+    check(stack.pop(), 7);
+    check(stack.pop(), 4);
+    check(stack.size(), 0);
+    check(stack.isEmpty(), true);
+
+    check(stack.pop(), -1);
+    check(stack.peek(), -1);
+    check(stack.size(), 0);
+
+    stack.push(6);
+    check(stack.isEmpty(), false);
+    check(stack.size(), 1);
+    check(stack.peek(), 6);
+    check(stack.pop(), 6);
+    check(stack.size(), 0);
+    check(stack.isEmpty(), true);
+}
+
+int main() {
+    testStack();
+    return 0;
+}</code></pre>
+    </div>
+
+    <div id="python-linked-stack-activity" class="code-container copyable-code" role="tabpanel" aria-labelledby="tab-python-linked-stack-activity">
+      <pre><code class="language-python">class Node:
+    def __init__(self, value, next_node):
+        self.value = value
+        self.next = next_node
+
+
+class IntStack:
+    def __init__(self):
+        self.head = None
+        self.count = 0
+
+    def is_empty(self):
+        # TODO
+        return False
+
+    def push(self, value):
+        # TODO
+        pass
+
+    def pop(self):
+        # TODO
+        return -1
+
+    def peek(self):
+        # TODO
+        return -1
+
+    def size(self):
+        # TODO
+        return -1
+
+
+def check(actual, expected):
+    if actual == expected:
+        print("pass")
+    else:
+        print("fail: expected", expected, "but got", actual)
+
+
+def test_stack():
+    stack = IntStack()
+
+    check(stack.is_empty(), True)
+    check(stack.size(), 0)
+    check(stack.pop(), -1)
+    check(stack.peek(), -1)
+    check(stack.size(), 0)
+
+    stack.push(4)
+    check(stack.is_empty(), False)
+    check(stack.size(), 1)
+    check(stack.peek(), 4)
+    check(stack.size(), 1)
+
+    stack.push(7)
+    check(stack.size(), 2)
+    check(stack.peek(), 7)
+
+    stack.push(9)
+    check(stack.size(), 3)
+    check(stack.peek(), 9)
+
+    check(stack.pop(), 9)
+    check(stack.size(), 2)
+    check(stack.peek(), 7)
+
+    stack.push(2)
+    check(stack.size(), 3)
+    check(stack.peek(), 2)
+
+    check(stack.pop(), 2)
+    check(stack.pop(), 7)
+    check(stack.pop(), 4)
+    check(stack.size(), 0)
+    check(stack.is_empty(), True)
+
+    check(stack.pop(), -1)
+    check(stack.peek(), -1)
+    check(stack.size(), 0)
+
+    stack.push(6)
+    check(stack.is_empty(), False)
+    check(stack.size(), 1)
+    check(stack.peek(), 6)
+    check(stack.pop(), 6)
+    check(stack.size(), 0)
+    check(stack.is_empty(), True)
+
+
+test_stack()</code></pre>
+    </div>
+  </div>
+</li>
+
+ <li>
+  <strong>Implement a Linked Stack with a Sentinel Head Node:</strong>
+  Implement a linked stack of nonnegative integers using a sentinel head node. A
+  <em>sentinel node</em> is a special node that is always present but does not store a
+  stack value. In this implementation, the stack should have a reference named
+  <code>sentinel</code>, not <code>head</code>. The top real node is always
+  <code>sentinel.next</code>.
+
+
+  <p>
+    This representation is different from the ordinary linked stack above. The sentinel
+    node stays in the structure even when the stack is empty, so <code>push</code> and
+    <code>pop</code> work with the node after the sentinel rather than replacing the
+    sentinel itself.
+  </p>
+
+  <p>
+    Your implementation should satisfy the following requirements:
+  </p>
+  <ul>
+    <li>The constructor should create exactly one sentinel node.</li>
+    <li>The sentinel node may store a dummy value such as <code>-1</code>, but that value is not part of the stack.</li>
+    <li>The top real node should be <code>sentinel.next</code>.</li>
+    <li>An empty stack should have <code>sentinel.next == null</code>.</li>
+    <li><code>push</code> should insert a new real node immediately after the sentinel.</li>
+    <li><code>pop</code> should remove and return the value from the node immediately after the sentinel.</li>
+    <li><code>peek</code> should return the value from the node immediately after the sentinel without removing it.</li>
+    <li><code>pop</code> and <code>peek</code> should return <code>-1</code> if the stack is empty.</li>
+    <li>The sentinel itself should never be removed, returned, or counted as a stack value.</li>
+    <li>Maintain a <code>count</code> variable so that <code>size()</code> is \(O(1)\).</li>
+  </ul>
+
+    <p>
+    Use the starter code below. You should not change the code in the constructor, 
+    and you should not add any new instance variables. 
+    The constructor creates the sentinel node and initializes the count, 
+    so your code should only modify the methods marked with <code>TODO</code> comments. 
+    Run the tests to check your implementation.
+  </p>
+
+  <div class="tab-group scrollable-code-tabs">
+    <div class="tabs" role="tablist">
+      <button id="tab-java-sentinel-stack-activity" class="tablink active" data-lang="java-sentinel-stack-activity" role="tab" aria-controls="java-sentinel-stack-activity" aria-selected="true">Java</button>
+      <button id="tab-cpp-sentinel-stack-activity" class="tablink" data-lang="cpp-sentinel-stack-activity" role="tab" aria-controls="cpp-sentinel-stack-activity" aria-selected="false">C++</button>
+      <button id="tab-python-sentinel-stack-activity" class="tablink" data-lang="python-sentinel-stack-activity" role="tab" aria-controls="python-sentinel-stack-activity" aria-selected="false">Python</button>
+    </div>
+
+    <div id="java-sentinel-stack-activity" class="code-container active copyable-code" role="tabpanel" aria-labelledby="tab-java-sentinel-stack-activity">
+      <pre><code class="language-java">public class SentinelStackExercise {
+    static class IntStack {
+        private static class Node {
+            int value;
+            Node next;
+
+            Node(int value, Node next) {
+                this.value = value;
+                this.next = next;
+            }
+        }
+
+        private Node sentinel;
+        private int count;
+
+        public IntStack() {
+            sentinel = new Node(-1, null); // dummy value, not part of the stack
+            count = 0;
+        }
+
+        public boolean isEmpty() {
+            // TODO
+            return false;
+        }
+
+        public void push(int value) {
+            // TODO
+        }
+
+        public int pop() {
+            // TODO
+            return -1;
+        }
+
+        public int peek() {
+            // TODO
+            return -1;
+        }
+
+        public int size() {
+            // TODO
+            return -1;
+        }
+    }
+
+    static void check(int actual, int expected) {
+        if (actual == expected) {
+            System.out.println("pass");
+        } else {
+            System.out.println("fail: expected " + expected + " but got " + actual);
+        }
+    }
+
+    static void check(boolean actual, boolean expected) {
+        if (actual == expected) {
+            System.out.println("pass");
+        } else {
+            System.out.println("fail: expected " + expected + " but got " + actual);
+        }
+    }
+
+    static void testStack() {
+        IntStack stack = new IntStack();
+
+        check(stack.isEmpty(), true);
+        check(stack.size(), 0);
+        check(stack.pop(), -1);
+        check(stack.peek(), -1);
+        check(stack.size(), 0);
+
+        stack.push(12);
+        check(stack.isEmpty(), false);
+        check(stack.size(), 1);
+        check(stack.peek(), 12);
+
+        stack.push(7);
+        check(stack.size(), 2);
+        check(stack.peek(), 7);
+
+        stack.push(19);
+        check(stack.size(), 3);
+        check(stack.peek(), 19);
+
+        check(stack.pop(), 19);
+        check(stack.size(), 2);
+        check(stack.peek(), 7);
+
+        check(stack.pop(), 7);
+        check(stack.size(), 1);
+        check(stack.peek(), 12);
+
+        check(stack.pop(), 12);
+        check(stack.size(), 0);
+        check(stack.isEmpty(), true);
+
+        check(stack.pop(), -1);
+        check(stack.peek(), -1);
+        check(stack.size(), 0);
+
+        stack.push(5);
+        check(stack.isEmpty(), false);
+        check(stack.size(), 1);
+        check(stack.peek(), 5);
+        check(stack.pop(), 5);
+        check(stack.size(), 0);
+        check(stack.isEmpty(), true);
+    }
+
+    public static void main(String[] args) {
+        testStack();
+    }
+}</code></pre>
+    </div>
+
+    <div id="cpp-sentinel-stack-activity" class="code-container copyable-code" role="tabpanel" aria-labelledby="tab-cpp-sentinel-stack-activity">
+      <pre><code class="language-cpp">#include &lt;iostream&gt;
+using namespace std;
+
+class IntStack {
+private:
+    struct Node {
+        int value;
+        Node* next;
+
+        Node(int v, Node* n) {
+            value = v;
+            next = n;
+        }
+    };
+
+    Node* sentinel;
+    int count;
+
+public:
+    IntStack() {
+        sentinel = new Node(-1, nullptr); // dummy value, not part of the stack
+        count = 0;
+    }
+
+    ~IntStack() {
+        while (sentinel != nullptr) {
+            Node* old = sentinel;
+            sentinel = sentinel-&gt;next;
+            delete old;
+        }
+    }
+
+    bool isEmpty() {
+        // TODO
+        return false;
+    }
+
+    void push(int value) {
+        // TODO
+    }
+
+    int pop() {
+        // TODO
+        return -1;
+    }
+
+    int peek() {
+        // TODO
+        return -1;
+    }
+
+    int size() {
+        // TODO
+        return -1;
+    }
+};
+
+void check(int actual, int expected) {
+    if (actual == expected) {
+        cout &lt;&lt; "pass" &lt;&lt; endl;
+    } else {
+        cout &lt;&lt; "fail: expected " &lt;&lt; expected &lt;&lt; " but got " &lt;&lt; actual &lt;&lt; endl;
+    }
+}
+
+void check(bool actual, bool expected) {
+    if (actual == expected) {
+        cout &lt;&lt; "pass" &lt;&lt; endl;
+    } else {
+        cout &lt;&lt; "fail: expected " &lt;&lt; expected &lt;&lt; " but got " &lt;&lt; actual &lt;&lt; endl;
+    }
+}
+
+void testStack() {
+    IntStack stack;
+
+    check(stack.isEmpty(), true);
+    check(stack.size(), 0);
+    check(stack.pop(), -1);
+    check(stack.peek(), -1);
+    check(stack.size(), 0);
+
+    stack.push(12);
+    check(stack.isEmpty(), false);
+    check(stack.size(), 1);
+    check(stack.peek(), 12);
+
+    stack.push(7);
+    check(stack.size(), 2);
+    check(stack.peek(), 7);
+
+    stack.push(19);
+    check(stack.size(), 3);
+    check(stack.peek(), 19);
+
+    check(stack.pop(), 19);
+    check(stack.size(), 2);
+    check(stack.peek(), 7);
+
+    check(stack.pop(), 7);
+    check(stack.size(), 1);
+    check(stack.peek(), 12);
+
+    check(stack.pop(), 12);
+    check(stack.size(), 0);
+    check(stack.isEmpty(), true);
+
+    check(stack.pop(), -1);
+    check(stack.peek(), -1);
+    check(stack.size(), 0);
+
+    stack.push(5);
+    check(stack.isEmpty(), false);
+    check(stack.size(), 1);
+    check(stack.peek(), 5);
+    check(stack.pop(), 5);
+    check(stack.size(), 0);
+    check(stack.isEmpty(), true);
+}
+
+int main() {
+    testStack();
+    return 0;
+}</code></pre>
+    </div>
+
+    <div id="python-sentinel-stack-activity" class="code-container copyable-code" role="tabpanel" aria-labelledby="tab-python-sentinel-stack-activity">
+      <pre><code class="language-python">class Node:
+    def __init__(self, value, next_node):
+        self.value = value
+        self.next = next_node
+
+
+class IntStack:
+    def __init__(self):
+        self.sentinel = Node(-1, None)  # dummy value, not part of the stack
+        self.count = 0
+
+    def is_empty(self):
+        # TODO
+        return False
+
+    def push(self, value):
+        # TODO
+        pass
+
+    def pop(self):
+        # TODO
+        return -1
+
+    def peek(self):
+        # TODO
+        return -1
+
+    def size(self):
+        # TODO
+        return -1
+
+
+def check(actual, expected):
+    if actual == expected:
+        print("pass")
+    else:
+        print("fail: expected", expected, "but got", actual)
+
+
+def test_stack():
+    stack = IntStack()
+
+    check(stack.is_empty(), True)
+    check(stack.size(), 0)
+    check(stack.pop(), -1)
+    check(stack.peek(), -1)
+    check(stack.size(), 0)
+
+    stack.push(12)
+    check(stack.is_empty(), False)
+    check(stack.size(), 1)
+    check(stack.peek(), 12)
+
+    stack.push(7)
+    check(stack.size(), 2)
+    check(stack.peek(), 7)
+
+    stack.push(19)
+    check(stack.size(), 3)
+    check(stack.peek(), 19)
+
+    check(stack.pop(), 19)
+    check(stack.size(), 2)
+    check(stack.peek(), 7)
+
+    check(stack.pop(), 7)
+    check(stack.size(), 1)
+    check(stack.peek(), 12)
+
+    check(stack.pop(), 12)
+    check(stack.size(), 0)
+    check(stack.is_empty(), True)
+
+    check(stack.pop(), -1)
+    check(stack.peek(), -1)
+    check(stack.size(), 0)
+
+    stack.push(5)
+    check(stack.is_empty(), False)
+    check(stack.size(), 1)
+    check(stack.peek(), 5)
+    check(stack.pop(), 5)
+    check(stack.size(), 0)
+    check(stack.is_empty(), True)
+
+
+test_stack()</code></pre>
+    </div>
+  </div>
+
+    <p>Note: The purpose of the sentinel node is to make the front of the linked structure behave
+    more uniformly. In an ordinary linked stack, pushing onto an empty stack and popping
+    the final node require special attention because <code>head</code> changes between
+    <code>null</code> and a real node. With a sentinel, the stack always has one node
+    present, and the top real node is always found at <code>sentinel.next</code>. This
+    can make the code easier to reason about, even though it uses one extra node. 
+    Although the sentinel node does not simplify the implementation of a stack, 
+    it is a common technique for simplifying other linked data structures such as general linked lists,
+    so practicing using it is worthwile.
+  </p>
+</li>
     <li>
       <strong>Check Balanced Delimiters by Hand:</strong>
       Use a stack to determine whether each expression is balanced:
-      <ul>
+      <ol>
         <li><code>[{()}()]</code></li>
         <li><code>(()({)}))</code></li>
         <li><code>{[()()]}</code></li>
-      </ul>
+      </ol>
       For each expression, show the stack after each delimiter is processed. If an
       expression is not balanced, identify the first character where the algorithm
       can determine failure.
@@ -2384,11 +3135,11 @@ test_stack()</code></pre>
     <li>
       <strong>Evaluate Postfix Expressions:</strong>
       Evaluate each postfix expression by writing the stack after each token:
-      <ul>
+      <ol>
         <li><code>4 7 5 - / 3 +</code></li>
         <li><code>6 2 3 + *</code></li>
         <li><code>9 3 / 2 5 + *</code></li>
-      </ul>
+      </ol>
       Pay attention to operand order for subtraction and division. The first popped
       value is the right operand, and the second popped value is the left operand.
     </li>
@@ -2397,19 +3148,23 @@ test_stack()</code></pre>
       <strong>Compare Array and Linked Storage:</strong>
       Compare a fixed-size array stack of capacity 20 with a linked stack after
       performing 13 successful pushes.
-      <ul>
+      <ol>
         <li>How many unused array slots does the array stack have?</li>
         <li>How many nodes does the linked stack have?</li>
         <li>What extra reference storage does the linked stack use?</li>
         <li>Which implementation is likely to have better locality in memory?</li>
-      </ul>
+        <li>Discuss the trade-offs between the two implementations.</li>
+        <li>Discuss under what circumstances each implementation might be preferred.</li>
+      </ol>
     </li>
 
     <li>
       <strong>Decide Whether Each Operation Belongs:</strong>
       For each proposed operation, decide whether it belongs naturally in the stack
-      ADT or whether it belongs in a more general data structure:
-      <ul>
+      ADT or whether it belongs in a more general data structure.
+      For each operation that does not belong, explain which part of the LIFO
+      abstraction it breaks.
+      <ol>
         <li><code>push(value)</code></li>
         <li><code>removeBottom()</code></li>
         <li><code>peek()</code></li>
@@ -2417,220 +3172,106 @@ test_stack()</code></pre>
         <li><code>isEmpty()</code></li>
         <li><code>insertAt(index, value)</code></li>
         <li><code>pop()</code></li>
-      </ul>
-      For each operation that does not belong, explain which part of the LIFO
-      abstraction it breaks.
+      </ol>
     </li>
   </ol>
 </section>
 
-
-OLD
-
-<section id="activities" section-title="In-Class Activities">
-  <h2>In-Class Activities</h2>
+ <section id="problems" section-title="Homework Problems">
+  <h2>Homework Problems</h2>
   <ol>
     <li>
-      <div class="example-box">
-        <strong class="example-title">Trace Basic Stack Operations</strong>
-        <p>
-          Start with an empty stack and trace the following operations:
-        </p>
-        <pre><code>push(6), push(2), push(9), pop(), push(4), peek(), pop(), push(8)</code></pre>
-        <p>
-          After each operation, write the stack contents using the notation from this page,
-          with the top at the right. Also record the return value for each
-          <code>pop</code> and <code>peek</code>.
-        </p>
-      </div>
+      <strong>Resizable Array Stack:</strong>
+      Implement a stack of nonnegative integers using a resizable array. Start with
+      capacity <code>2</code>. Whenever the array is full, double its capacity before
+      completing the <code>push</code>. Include <code>push</code>, <code>pop</code>,
+      <code>peek</code>, <code>isEmpty</code>, <code>size</code>, and
+      <code>capacity</code>. Use <code>-1</code> as the underflow return value for
+      <code>pop</code> and <code>peek</code>. Write tests that trigger at least two
+      resizes.
     </li>
 
     <li>
-      <div class="example-box">
-        <strong class="example-title">Trace a Bounded Stack</strong>
-        <p>
-          Work with a bounded stack that can hold at most four values. Trace the following
-          operations:
-        </p>
-        <pre><code>push(3), push(5), push(1), push(7), push(9), pop(), push(4), pop()</code></pre>
-        <p>
-          Assume <code>push</code> returns <code>true</code> when it succeeds and
-          <code>false</code> when the stack is full. After each operation, write the stack
-          contents and the return value, if there is one.
-        </p>
-      </div>
+      <strong>Linked Stack with a Sentinel Node:</strong>
+      Implement a linked stack using a sentinel head node. The sentinel node should
+      always be present and should not store a stack value. The top real node should be
+      <code>sentinel.next</code>. Include <code>push</code>, <code>pop</code>,
+      <code>peek</code>, <code>isEmpty</code>, and <code>size</code>. Write tests that
+      push several values, pop all values, then push again.
     </li>
 
     <li>
-      <div class="example-box">
-        <strong class="example-title">Implement a Fixed-Size Array Stack</strong>
-        <p>
-          Implement a stack using a fixed-size array <code>A</code> and an integer
-          <code>top</code>.
-        </p>
-        <ul>
-          <li>Use <code>top = -1</code> for an empty stack.</li>
-          <li><code>isEmpty()</code> should check whether <code>top == -1</code>.</li>
-          <li><code>isFull()</code> should check whether <code>top == A.length - 1</code>.</li>
-          <li><code>push</code> should return <code>true</code> when it succeeds and <code>false</code> when the array is full.</li>
-          <li><code>pop</code> and <code>peek</code> should have a clearly defined underflow policy.</li>
-        </ul>
-        <p>Suggested test sequence:</p>
-        <pre><code>push(4), push(7), push(9), pop(), push(2), peek(), pop(), pop(), pop()</code></pre>
-      </div>
+      <strong>Min Stack:</strong>
+      Design and implement a stack of integers that supports <code>push</code>,
+      <code>pop</code>, <code>peek</code>, and <code>getMin</code>, where
+      <code>getMin</code> returns the current minimum value in \(O(1)\) time. One
+      approach is to maintain a second stack of running minimum values. Explain why
+      each operation is \(O(1)\).
     </li>
 
     <li>
-      <div class="example-box">
-        <strong class="example-title">Implement a Resizable Array Stack</strong>
-        <p>
-          Modify the fixed-size array stack so that the backing array doubles in size
-          whenever it is full.
-        </p>
-        <ul>
-          <li>Start with a small capacity, such as 2 or 4, so that resizing happens during testing.</li>
-          <li>When the array is full, create a new array with twice the old capacity.</li>
-          <li>Copy the current stack values into the new array in the same order.</li>
-          <li>Make <code>A</code> refer to the new array before inserting the new value.</li>
-          <li>Make sure <code>top</code> still refers to the same logical top item after resizing.</li>
-        </ul>
-        <p>
-          Test with enough pushes to trigger at least two resizes. Record the array capacity
-          after each successful push.
-        </p>
-      </div>
+      <strong>Undo and Redo History:</strong>
+      Implement a simple editor history using two stacks. The program should support
+      <code>do(action)</code>, <code>undo()</code>, and <code>redo()</code>. A new
+      action should clear the redo stack. Demonstrate the behavior on the sequence
+      <code>do(A), do(B), do(C), undo(), undo(), redo(), do(D), redo()</code>.
     </li>
 
     <li>
-      <div class="example-box">
-        <strong class="example-title">Implement a Linked Stack</strong>
-        <p>
-          Implement a linked stack using a private node class and a <code>head</code>
-          reference.
-        </p>
-        <ul>
-          <li>Each node should store a value and a <code>next</code> reference.</li>
-          <li>Use <code>head</code> as the top of the stack.</li>
-          <li><code>push</code> should create a new node and make it the new <code>head</code>.</li>
-          <li><code>pop</code> should save <code>head.value</code>, move <code>head</code> to <code>head.next</code>, and return the saved value.</li>
-          <li>Maintain a <code>count</code> variable so that <code>size()</code> is \(O(1)\).</li>
-          <li>Write tests that pop the final remaining node and then push again.</li>
-        </ul>
-      </div>
+      <strong>Balanced Delimiter Checker:</strong>
+      Write an algorithm that checks whether parentheses, brackets, and braces are
+      correctly nested. Your algorithm should ignore all non-delimiter characters.
+      For each invalid string, report whether the problem is a mismatched closing
+      delimiter, an extra closing delimiter, or one or more unmatched opening
+      delimiters.
     </li>
 
     <li>
-      <div class="example-box">
-        <strong class="example-title">Implement a Linked Stack with a Sentinel Head Node</strong>
-        <p>
-          Implement a linked stack using a sentinel head node. A <em>sentinel node</em>
-          is a special node that is always present but does not store a stack value.
-          It is used to simplify boundary cases.
-        </p>
-        <ul>
-          <li>The sentinel node's <code>next</code> reference should point to the top real node.</li>
-          <li>An empty stack has <code>sentinel.next == null</code>.</li>
-          <li><code>push</code> should insert a new real node immediately after the sentinel.</li>
-          <li><code>pop</code> should remove the node immediately after the sentinel.</li>
-          <li>The sentinel itself should never be removed or returned as a stack value.</li>
-          <li>Compare the empty-stack checks in this version with the ordinary linked stack using <code>head</code>.</li>
-        </ul>
-        <p>
-          After implementing it, draw the node structure for the stack <code>[12, 7, 19]</code>.
-          Label the sentinel node, the top real node, and the bottom real node.
-        </p>
-      </div>
+      <strong>Postfix Calculator:</strong>
+      Implement a postfix calculator for integer expressions. The input should be a
+      list of tokens such as <code>["4", "7", "5", "-", "/", "3", "+"]</code>. Support
+      <code>+</code>, <code>-</code>, <code>*</code>, and <code>/</code>. Be careful
+      about operand order for subtraction and division. Report an error if the expression
+      does not contain enough operands or if extra operands remain at the end.
     </li>
 
     <li>
-      <div class="example-box">
-        <strong class="example-title">Check Balanced Delimiters by Hand</strong>
-        <p>
-          Use a stack to determine whether each expression is balanced:
-        </p>
-        <ul>
-          <li><code>[{()}()]</code></li>
-          <li><code>(()({)}))</code></li>
-          <li><code>{[()()]}</code></li>
-        </ul>
-        <p>
-          For each expression, show the stack after each delimiter is processed. If an
-          expression is not balanced, identify the first character where the algorithm
-          can determine failure.
-        </p>
-      </div>
+      <strong>Browser Back Button:</strong>
+      Simulate browser navigation using stacks. Support <code>visit(page)</code>,
+      <code>back()</code>, and <code>forward()</code>. Visiting a new page should clear
+      the forward stack. Demonstrate the behavior on a specific sequence of at least
+      ten operations and show the current page, back stack, and forward stack after each
+      operation.
     </li>
 
     <li>
-      <div class="example-box">
-        <strong class="example-title">Evaluate Postfix Expressions</strong>
-        <p>
-          Evaluate each postfix expression by writing the stack after each token:
-        </p>
-        <ul>
-          <li><code>4 7 5 - / 3 +</code></li>
-          <li><code>6 2 3 + *</code></li>
-          <li><code>9 3 / 2 5 + *</code></li>
-        </ul>
-        <p>
-          Pay attention to operand order for subtraction and division. The first popped
-          value is the right operand, and the second popped value is the left operand.
-        </p>
-      </div>
+      <strong>Stack Sort:</strong>
+      Sort the values in a stack using one additional stack and no arrays or lists.
+      The smallest value should end up on the top of the original stack. Give pseudocode,
+      trace your algorithm on <code>[4, 1, 7, 3]</code>, and analyze the worst-case
+      running time.
+    </li>
+    <li>
+      <strong>HTML Tag Checker:</strong>
+      Write a stack-based checker for simplified HTML tags such as
+      <code>&lt;p&gt;</code>, <code>&lt;b&gt;</code>, and <code>&lt;em&gt;</code>.
+      Proper HTML requires that tags be balanced and properly nested, just like parentheses.
+      Opening tags should be pushed, and closing tags should match the most recent unmatched
+      opening tag. Report the first mismatched or extra closing tag.
+      Here is an example of a valid string:<br>
+      <code>&lt;html&gt;&lt;body&gt;&lt;p&gt;Hello, &lt;b&gt;world&lt;/b&gt;!&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</code>.
+      <br> Here is an example of an invalid string:<br>
+      <code>&lt;html&gt;&lt;body&gt;&lt;p&gt;Hello, &lt;b&gt;world&lt;/p&gt;&lt;/b&gt;&lt;/body&gt;&lt;/html&gt;</code>.  
     </li>
 
     <li>
-      <div class="example-box">
-        <strong class="example-title">Compare Array and Linked Storage</strong>
-        <p>
-          Compare a fixed-size array stack of capacity 20 with a linked stack after
-          performing 13 successful pushes.
-        </p>
-        <ul>
-          <li>How many unused array slots does the array stack have?</li>
-          <li>How many nodes does the linked stack have?</li>
-          <li>What extra reference storage does the linked stack use?</li>
-          <li>Which implementation is likely to have better locality in memory?</li>
-        </ul>
-      </div>
-    </li>
-
-    <li>
-      <div class="example-box">
-        <strong class="example-title">Decide Whether Each Operation Belongs</strong>
-        <p>
-          For each proposed operation, decide whether it belongs naturally in the stack
-          ADT or whether it belongs in a more general data structure:
-        </p>
-        <ul>
-          <li><code>push(value)</code></li>
-          <li><code>removeBottom()</code></li>
-          <li><code>peek()</code></li>
-          <li><code>get(index)</code></li>
-          <li><code>isEmpty()</code></li>
-          <li><code>insertAt(index, value)</code></li>
-          <li><code>pop()</code></li>
-        </ul>
-        <p>
-          For each operation that does not belong, explain which part of the LIFO
-          abstraction it breaks.
-        </p>
-      </div>
+      <strong>Two-Stack Queue:</strong>
+      Implement a FIFO queue using two stacks, an input stack and an output stack.
+      Analyze the amortized cost of <code>enqueue</code> and <code>dequeue</code>.
+      Explain why an individual <code>dequeue</code> may take \(O(n)\) time but a
+      sequence of operations still has amortized \(O(1)\) time per operation.
     </li>
   </ol>
 </section>
-
-  <section id="problems" section-title="Homework Problems">
-    <h2>Homework Problems</h2>
-    <ol>
-      <li><strong>Postfix:</strong> Evaluate postfix expressions using a stack.</li>
-      <li><strong>Min Stack:</strong> Design a stack that returns the minimum value in \(O(1)\).</li>
-      <li><strong>Iterative DFS:</strong> Rewrite a recursive DFS using an explicit stack.</li>
-      <li><strong>Balanced Delimiters:</strong> Write an algorithm that checks whether parentheses, brackets, and braces are correctly nested.</li>
-      <li><strong>Two-Stack Queue:</strong> Implement a FIFO queue using two stacks and analyze the amortized cost of enqueue and dequeue.</li>
-      <li><strong>Undo/Redo:</strong> Design a simple text editor history using two stacks. Explain what happens after a new edit is made following undo.</li>
-      <li><strong>Stack Sort:</strong> Sort the values in a stack using one additional stack and no arrays. Analyze the running time.</li>
-    </ol>
-  </section>
 </body>
 </html>

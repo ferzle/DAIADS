@@ -18,6 +18,70 @@
     gtag('js', new Date());
     gtag('config', 'G-DQ5LVZVFDC');
   </script>
+  <style>
+.queue-display {
+  display: inline-block;
+  margin: 1em 0;
+  font-family: Verdana, sans-serif;
+}
+.queue-row,
+.array-queue-main,
+.array-queue-indices {
+  display: grid;
+  grid-template-columns: auto auto auto;
+  column-gap: 1em;
+  align-items: center;
+}
+.queue-cells,
+.array-queue,
+.array-indices {
+  border-collapse: collapse;
+  text-align: center;
+  table-layout: fixed;
+  width: 18em;
+}
+.queue-cells td,
+.array-queue td,
+.array-indices td {
+  width: 3em;
+  box-sizing: border-box;
+  text-align: center;
+}
+.queue-cells td,
+.array-queue td {
+  height: 2em;
+  border: 1px solid #555;
+}
+.array-indices td {
+  height: 1.25em;
+  border: 1px solid transparent;
+  font-size: 0.85em;
+  color: #555;
+}
+.queue-label,
+.queue-value {
+  font-family: 'Fira Code', 'Source Code Pro', Menlo, Consolas, monospace;
+}
+.library-queue-table th:nth-child(3),
+.library-queue-table th:nth-child(4),
+.library-queue-table th:nth-child(5),
+.library-queue-table td:nth-child(3),
+.library-queue-table td:nth-child(4),
+.library-queue-table td:nth-child(5) {
+  min-width: 5.5em;
+  white-space: nowrap;
+}
+.cost-summary-table th:nth-child(1),
+.cost-summary-table td:nth-child(1),
+.cost-summary-table th:nth-child(5),
+.cost-summary-table td:nth-child(5) {
+  text-align: left;
+}
+.queue-trace-table th:nth-child(2),
+.queue-trace-table td:nth-child(2) {
+  text-align: left;
+}
+  </style>
 </head>
 <body>
   <h1>Queues</h1>
@@ -25,144 +89,216 @@
   <section id="overview" section-title="Overview">
     <h2>Overview</h2>
     <p>
-      A <strong>queue</strong> is a first-in, first-out data type. The earliest inserted item is the first item
-      removed. This rule is usually abbreviated <strong>FIFO</strong>.
+      A <strong>queue</strong> stores values so that the earliest added value is the first one removed.
+      This rule is called <strong>first-in, first-out</strong>, or <strong>FIFO</strong>.
     </p>
     <p>
-      Queues are the natural structure for waiting lines, buffers, scheduling, and breadth-first search. They preserve
-      arrival order.
+      A queue has two active ends. New values enter at the <em>back</em>, and removals happen at
+      the <em>front</em>. Values in the middle are waiting in order, but the queue interface does
+      not allow the caller to remove an arbitrary middle value or skip ahead to a later arrival.
     </p>
-    <p>
-      Like a stack, a queue is an abstract data type. The FIFO rule is the essential idea; the implementation might be
-      a circular array, a linked list, or a specialized library deque. The queue interface deliberately hides random
-      access to the middle of the sequence.
-    </p>
-  </section>
 
-  <section id="adt" section-title="Abstract Data Type and Operations">
-    <h2>Abstract Data Type and Operations</h2>
-    <p>
-      A queue exposes two ends: values enter at the <em>back</em> and leave from the <em>front</em>.
-    </p>
-    <ul>
-      <li><strong><code>enqueue(value)</code>:</strong> Add <code>value</code> to the back.</li>
-      <li><strong><code>dequeue()</code>:</strong> Remove and return the front value.</li>
-      <li><strong><code>front()</code>:</strong> Return the front value without removing it.</li>
-      <li><strong><code>isEmpty()</code>:</strong> Report whether the queue has no elements.</li>
-      <li><strong><code>size()</code>:</strong> Return the number of stored elements.</li>
-    </ul>
-  </section>
+    <svg viewBox="-10 60 750 80" role="img" aria-labelledby="queueModelTitle queueModelDesc"
+         style="display:block; max-width:700px; width:100%; height:auto; margin:1.25rem 0;">
+      <desc id="queueModelDesc">A horizontal queue with values 14, 8, and 31. Dequeue happens at the front and enqueue happens at the back.</desc>
+      <defs>
+        <marker id="queue-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#0a3974" />
+        </marker>
+      </defs>
+      <rect x="210" y="65" width="85" height="48" fill="#fff3d9" stroke="#d9822b" stroke-width="2" rx="7" ry="7" />
+      <rect x="300" y="65" width="85" height="48" fill="#ffffff" stroke="#0a3974" stroke-width="2" rx="7" ry="7" />
+      <rect x="390" y="65" width="85" height="48" fill="#ffffff" stroke="#0a3974" stroke-width="2" rx="7" ry="7" />
+      <text x="252.5" y="95" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="20" font-weight="700" fill="#0f264a">14</text>
+      <text x="342.5" y="95" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="20" font-weight="700" fill="#0f264a">8</text>
+      <text x="432.5" y="95" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="20" font-weight="700" fill="#0f264a">31</text>
+      <text x="252.5" y="138" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="16" font-weight="700" fill="#0a3974">front</text>
+      <text x="432.5" y="138" text-anchor="middle" font-family="Segoe UI, sans-serif" font-size="16" font-weight="700" fill="#0a3974">back</text>
+      <line x2="130" y2="89" x1="198" y1="89" stroke="#0a3974" stroke-width="2.5" marker-end="url(#queue-arrow)" />
+      <text x="0" y="84" font-family="Segoe UI, sans-serif" font-size="16" fill="#0f264a">dequeue removes</text>
+      <text x="20" y="104" font-family="Segoe UI, sans-serif" font-size="16" fill="#0f264a">from here</text>
+      <line x1="560" y1="89" x2="488" y2="89" stroke="#0a3974" stroke-width="2.5" marker-end="url(#queue-arrow)" />
+      <text x="565" y="84" font-family="Segoe UI, sans-serif" font-size="16" fill="#0f264a">enqueue adds</text>
+      <text x="585" y="104" font-family="Segoe UI, sans-serif" font-size="16" fill="#0f264a">to here</text>
+    </svg>
 
-  <section id="conceptual-model" section-title="Conceptual Model">
-    <h2>Conceptual Model</h2>
     <p>
-      A queue behaves like a line. New arrivals join the back, and service happens at the front.
-    </p>
-    <pre><code>front -> [14] [8] [31] &lt;- back</code></pre>
-    <p>
-      Calling <code>dequeue()</code> removes <code>14</code>. Calling <code>enqueue(20)</code> adds
-      <code>20</code> after <code>31</code>.
+      This restriction is useful because many programs need fairness by arrival order. Waiting lines,
+      print jobs, network buffers, task schedulers, breadth-first search, level-order tree traversal,
+      and producer-consumer systems all use queue behavior. A queue is an <em>abstract data type</em>,
+      so the FIFO rule matters more than the particular storage representation. The same queue behavior
+      can be implemented with linked nodes, an ordinary array, a circular array, or a library container.
     </p>
     <p>
-      The front and back move in the same direction over time. A naive array implementation might physically shift
-      every value left after each <code>dequeue</code>, but efficient queues avoid that shifting by moving an index or
-      by relinking nodes.
-    </p>
-  </section>
-
-  <section id="worked-example" section-title="Worked Example">
-    <h2>Worked Example</h2>
-    <p>
-      Start with an empty queue and perform
-      <code>enqueue(4)</code>, <code>enqueue(7)</code>, <code>enqueue(9)</code>, <code>dequeue()</code>,
-      <code>enqueue(2)</code>, <code>front()</code>.
-    </p>
-    <table class="example-table">
-      <thead>
-        <tr>
-          <th>Operation</th>
-          <th>Queue Afterward</th>
-          <th>Return Value</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><code>enqueue(4)</code></td>
-          <td><code>[4]</code></td>
-          <td>none</td>
-        </tr>
-        <tr>
-          <td><code>enqueue(7)</code></td>
-          <td><code>[4, 7]</code></td>
-          <td>none</td>
-        </tr>
-        <tr>
-          <td><code>enqueue(9)</code></td>
-          <td><code>[4, 7, 9]</code></td>
-          <td>none</td>
-        </tr>
-        <tr>
-          <td><code>dequeue()</code></td>
-          <td><code>[7, 9]</code></td>
-          <td><code>4</code></td>
-        </tr>
-        <tr>
-          <td><code>enqueue(2)</code></td>
-          <td><code>[7, 9, 2]</code></td>
-          <td>none</td>
-        </tr>
-        <tr>
-          <td><code>front()</code></td>
-          <td><code>[7, 9, 2]</code></td>
-          <td><code>7</code></td>
-        </tr>
-      </tbody>
-    </table>
-    <p>
-      The left side is the front and the right side is the back. The first value enqueued, <code>4</code>, is the first
-      value dequeued. This is the opposite of stack behavior.
+      When we represent a queue using text, we usually show the front on the left and the back on the right.
+      For example, the queue from the diagram above is written as <code>[14, 8, 31]</code>, with
+      <code>14</code> at the front and <code>31</code> at the back. 
     </p>
   </section>
 
   <section id="core-operations" section-title="Core Operations">
     <h2>Core Operations</h2>
+    <p>
+      The following are the core operations of a queue ADT. The ones in bold are the essential FIFO operations.
+      Exact method names and error-handling policies vary by language and implementation, but the same basic
+      operations are needed to maintain the queue abstraction.
+    </p>
+    <table class="example-table left-top-align">
+      <thead>
+        <tr>
+          <th>Operation</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><b><code>enqueue(value) &nbsp; </code></b></td>
+          <td>Add <code>value</code> to the back of the queue. If the queue is full, the implementation must report overflow or use a documented full-queue policy.</td>
+        </tr>
+        <tr>
+          <td><b><code>dequeue()</code></b></td>
+          <td>Remove and return the front value. If the queue is empty, the implementation must report underflow or use a documented empty-queue policy.</td>
+        </tr>
+        <tr>
+          <td><b><code>front()</code></b></td>
+          <td>Return the front value without removing it. Some libraries call this operation <code>peek()</code>.</td>
+        </tr>
+        <tr>
+          <td><code>isEmpty()</code></td>
+          <td>Report whether the queue currently stores no values.</td>
+        </tr>
+        <tr>
+          <td><code>size()</code></td>
+          <td>Return the number of values currently stored.</td>
+        </tr>
+        <tr>
+          <td><code>isFull()</code></td>
+          <td>(Optional) For a bounded queue, report whether the queue currently stores the maximum number of values.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p>
+      A bounded queue needs an overflow policy for <code>enqueue</code> when it is full. It might return
+      <code>false</code>, throw an exception, block until space is available, overwrite an old value, or reject
+      the operation in some other documented way. A resizable queue can grow its backing storage instead, but it
+      can still run out of memory in a real program. Similarly, <code>dequeue</code> and <code>front</code> need
+      a defined underflow policy for the empty-queue case.
+    </p>
 
     <h3>Enqueue</h3>
     <p>
-      <code>enqueue</code> stores a new value at the back of the queue. In a linked implementation this usually means
-      updating the tail. In an array implementation it means writing at the back index.
-    </p>
-    <p>
-      If the queue is bounded, enqueue must check whether there is room. If the queue is resizable, enqueue may trigger
-      a resize, similar to a dynamic array. The abstract operation is still simple, but the implementation must define
-      what happens when capacity is exhausted.
+      <code>enqueue</code> makes a new value the back value. It does not disturb the relative order of the
+      values already waiting. If the queue previously stored <code>[4, 7]</code>, then
+      <code>enqueue(9)</code> updates the queue to <code>[4, 7, 9]</code>.
     </p>
 
     <h3>Dequeue</h3>
     <p>
-      <code>dequeue</code> removes the front value. A correct implementation handles underflow when the queue is empty.
+      <code>dequeue</code> removes the current front and returns it to the caller. Calling
+      <code>dequeue()</code> on a queue with contents <code>[4, 7, 9]</code> returns <code>4</code>
+      and leaves the queue with contents <code>[7, 9]</code>.
     </p>
     <p>
-      In a circular array, dequeuing does not move every element. It clears or ignores the old front slot, advances the
-      front index, and decreases the size. This is what keeps the operation constant time.
+      Dequeuing from an empty queue is called <em>underflow</em>. A clean queue implementation should define
+      this case explicitly rather than accessing invalid memory or returning an arbitrary value.
     </p>
 
-    <h3>Circular Array Movement</h3>
+    <h3>Front</h3>
     <p>
-      A circular array uses modular arithmetic so the logical front and back can wrap around the physical end of the
-      array. If the capacity is <code>m</code>, advancing an index uses <code>(index + 1) mod m</code>.
+      <code>front</code> reads the front value without removing it. Calling <code>front()</code> on
+      <code>[4, 7, 9]</code> returns <code>4</code> and leaves the queue unchanged. It has the same
+      empty-queue issue as <code>dequeue()</code>.
     </p>
-    <p>
-      Many circular queues store <code>frontIndex</code> and <code>size</code>. Then the next enqueue position is
-      <code>(frontIndex + size) mod capacity</code>. Storing <code>size</code> also avoids the ambiguity where
-      <code>frontIndex == backIndex</code> could mean either empty or full.
+
+    <div class="example-box">
+      <strong class="example-title">Example Trace of Queue Operations</strong>
+      <p>
+        Below we start with an empty bounded queue that can hold up to four elements and perform the following
+        sequence of operations: <code>dequeue()</code>, <code>enqueue(4)</code>, <code>enqueue(7)</code>,
+        <code>enqueue(9)</code>, <code>dequeue()</code>, <code>enqueue(2)</code>, <code>front()</code>,
+        <code>enqueue(5)</code>, <code>enqueue(8)</code>, <code>dequeue()</code>.
+      </p>
+      <table class="example-table">
+        <thead>
+          <tr>
+            <th>Operation</th>
+            <th>Queue Afterward</th>
+            <th>Return Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>dequeue()</code></td>
+            <td><code>[]</code></td>
+            <td><code>underflow</code></td>
+          </tr>
+          <tr>
+            <td><code>enqueue(4)</code></td>
+            <td><code>[4]</code></td>
+            <td>none</td>
+          </tr>
+          <tr>
+            <td><code>enqueue(7)</code></td>
+            <td><code>[4, 7]</code></td>
+            <td>none</td>
+          </tr>
+          <tr>
+            <td><code>enqueue(9)</code></td>
+            <td><code>[4, 7, 9]</code></td>
+            <td>none</td>
+          </tr>
+          <tr>
+            <td><code>dequeue()</code></td>
+            <td><code>[7, 9]</code></td>
+            <td><code>4</code></td>
+          </tr>
+          <tr>
+            <td><code>enqueue(2)</code></td>
+            <td><code>[7, 9, 2]</code></td>
+            <td>none</td>
+          </tr>
+          <tr>
+            <td><code>front()</code></td>
+            <td><code>[7, 9, 2]</code></td>
+            <td><code>7</code></td>
+          </tr>
+          <tr>
+            <td><code>enqueue(5)</code></td>
+            <td><code>[7, 9, 2, 5]</code></td>
+            <td>none</td>
+          </tr>
+          <tr>
+            <td><code>enqueue(8)</code></td>
+            <td><code>[7, 9, 2, 5]</code></td>
+            <td><code>overflow</code></td>
+          </tr>
+          <tr>
+            <td><code>dequeue()</code></td>
+            <td><code>[9, 2, 5]</code></td>
+            <td><code>7</code></td>
+          </tr>
+        </tbody>
+      </table> <p>
+      In the example, we specified return values of <code>underflow</code> and <code>overflow</code>.
+      The most common ways of actually doing this are to return a boolean or throw an exception. In the former case,
+      instead of having "none" as a return value, the calls to <code>enqueue</code> would return <code>true</code> when the enqueue 
+      succeeded and <code>false</code> when it failed. 
+      <code>dequeue</code> and <code>front</code> are more difficult to handle with a boolean return because they also need to 
+      return a value when successful. If the queue is storing objects, one option is to return <code>null</code> on underflow, 
+      but that only works if <code>null</code> is not a valid queue value. 
+      Another option is to return a known invalid value, such as <code>-1</code>, 
+      but that only works if the queue is storing integers and <code>-1</code> is not a valid value.
+      The fallback is to throw an exception, which is more flexible but also more complex to use because the caller must 
+      handle the possibility of an exception.
     </p>
+    </div>
   </section>
 
   <section id="demo" section-title="Interactive Demo">
     <h2>Interactive Demo</h2>
     <p>
-      This demo shows a queue implemented with a circular array.
+      This demo shows how <code>enqueue</code>, <code>dequeue</code>, and <code>front</code> affect a queue.
     </p>
     <div class="embeddedDemoContainer">
       <iframe class="embeddedDemo"
@@ -175,248 +311,813 @@
 
   <section id="implementations" section-title="Implementation Options">
     <h2>Implementation Options</h2>
+    <p>
+      The queue ADT can be implemented using several representations. This page develops a linked queue and
+      an ordinary array queue in detail, then outlines the circular array queue. The circular array version is
+      often the efficient array-based implementation used in practice, but the simpler ordinary array version
+      is useful for seeing exactly where the shifting cost comes from.
+    </p>
 
-    <section id="implementation-circular-array" section-title="Implementation 1: Circular Array Queue">
-      <h3>Implementation 1: Circular Array Queue</h3>
-      <p>
-        Store a backing array, a <code>frontIndex</code>, a <code>size</code>, and a capacity. The back position for
-        the next enqueue is <code>(frontIndex + size) mod capacity</code>.
-      </p>
-      <h4>Operation Sketch</h4>
-      <pre><code>enqueue(value):
-    if size == capacity:
-        report overflow or resize
-    backIndex = (frontIndex + size) mod capacity
-    A[backIndex] = value
-    size = size + 1
+    <section id="implementation-linked" section-title="Implementation 1: Linked Queue">
+      <h3>Implementation 1: Linked Queue</h3>
 
-dequeue():
-    if size == 0:
-        report underflow
-    value = A[frontIndex]
-    A[frontIndex] = empty
-    frontIndex = (frontIndex + 1) mod capacity
-    size = size - 1
-    return value
-
-front():
-    if size == 0:
-        report underflow
-    return A[frontIndex]</code></pre>
-      <div class="example-box">
-        <strong class="example-title">Implementation Exercise</strong>
+      <section id="implementation-linked-basics" section-title="Basics">
+        <h4>Basics</h4>
         <p>
-          Implement <code>enqueue</code>, <code>dequeue</code>, and <code>front</code> using a circular array.
+          A linked queue stores each item in a separate node. Each node contains a stored value and a reference
+          to the next node behind it in the queue. The queue itself keeps two references: <code>head</code>,
+          which points to the front node, and <code>tail</code>, which points to the back node.
         </p>
-        <ul>
-          <li>Use modulo arithmetic whenever an index advances.</li>
-          <li>Keep <code>size</code> so you can distinguish empty from full.</li>
-          <li>Decide whether the queue is bounded or resizes when full.</li>
-        </ul>
-      </div>
-    </section>
+        <p>
+          The <code>tail</code> reference is the important addition compared with a simple singly linked list
+          that stores only a head reference. Without <code>tail</code>, adding at the back would require walking
+          from the front to the last node every time, taking \(O(n)\) time. With <code>tail</code>, enqueue can
+          link the new node after the old tail and update <code>tail</code> in constant time.
+        </p>
+        <p>
+          The main invariant is that <code>head</code> points to the front node, <code>tail</code> points to the
+          back node, and following <code>next</code> references from <code>head</code> visits the queue from
+          front to back. If the queue is empty, then both <code>head == null</code> and <code>tail == null</code>.
+        </p>
 
-    <section id="implementation-linked" section-title="Implementation 2: Linked Queue">
-      <h3>Implementation 2: Linked Queue</h3>
-      <p>
-        A linked queue stores references to both the head and tail nodes. The head is the front of the queue; the tail
-        is the back. Enqueue changes the tail, and dequeue changes the head.
-      </p>
-      <h4>Operation Sketch</h4>
-      <pre><code>enqueue(value):
-    node = Node(value)
-    if tail == null:
+        <div class="example-box">
+          <p><strong class="example-title">Visual Representation of a Linked Queue</strong></p>
+          <svg viewBox="0 20 760 130" role="img" aria-labelledby="linkedQueueTitle linkedQueueDesc"
+               style="display:block; max-width:760px; width:100%; height:auto; margin:1em 0;">
+            <title id="linkedQueueTitle">Linked queue representation</title>
+            <desc id="linkedQueueDesc">The head reference points to 12, then 7, then 19. The tail reference points to 19.</desc>
+            <defs>
+              <marker id="linked-queue-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="#0a3974" />
+              </marker>
+            </defs>
+
+            <text x="32" y="73" font-family="Verdana, sans-serif" font-size="16" fill="#0f264a">head</text>
+            <line x1="78" y1="68" x2="125" y2="68" stroke="#0a3974" stroke-width="2.5" marker-end="url(#linked-queue-arrow)" />
+
+            <rect x="130" y="38" width="120" height="60" fill="#fff3d9" stroke="#d9822b" stroke-width="2" rx="6" ry="6" />
+            <line x1="190" y1="38" x2="190" y2="98" stroke="#d9822b" stroke-width="2" />
+            <text x="160" y="74" text-anchor="middle" font-family="Verdana, sans-serif" font-size="18" font-weight="700" fill="#0f264a">12</text>
+            <text x="220" y="74" text-anchor="middle" font-family="Verdana, sans-serif" font-size="13" fill="#0f264a">next</text>
+            <text x="160" y="122" text-anchor="middle" font-family="Verdana, sans-serif" font-size="14" fill="#0a3974">front</text>
+
+            <line x1="250" y1="68" x2="305" y2="68" stroke="#0a3974" stroke-width="2.5" marker-end="url(#linked-queue-arrow)" />
+            <rect x="310" y="38" width="120" height="60" fill="#ffffff" stroke="#0a3974" stroke-width="2" rx="6" ry="6" />
+            <line x1="370" y1="38" x2="370" y2="98" stroke="#0a3974" stroke-width="2" />
+            <text x="340" y="74" text-anchor="middle" font-family="Verdana, sans-serif" font-size="18" font-weight="700" fill="#0f264a">7</text>
+            <text x="400" y="74" text-anchor="middle" font-family="Verdana, sans-serif" font-size="13" fill="#0f264a">next</text>
+
+            <line x1="430" y1="68" x2="485" y2="68" stroke="#0a3974" stroke-width="2.5" marker-end="url(#linked-queue-arrow)" />
+            <rect x="490" y="38" width="120" height="60" fill="#ffffff" stroke="#0a3974" stroke-width="2" rx="6" ry="6" />
+            <line x1="550" y1="38" x2="550" y2="98" stroke="#0a3974" stroke-width="2" />
+            <text x="520" y="74" text-anchor="middle" font-family="Verdana, sans-serif" font-size="18" font-weight="700" fill="#0f264a">19</text>
+            <text x="580" y="74" text-anchor="middle" font-family="Verdana, sans-serif" font-size="13" fill="#0f264a">null</text>
+            <text x="520" y="122" text-anchor="middle" font-family="Verdana, sans-serif" font-size="14" fill="#0a3974">back</text>
+
+            <text x="675" y="30" font-family="Verdana, sans-serif" font-size="16" fill="#0f264a">tail</text>
+            <line x1="690" y1="36" x2="535" y2="37" stroke="#0a3974" stroke-width="2.5" marker-end="url(#linked-queue-arrow)" />
+          </svg>
+          <p>
+            Here <code>head</code> points to the front node, which stores <code>12</code>, and
+            <code>tail</code> points to the back node, which stores <code>19</code>. An
+            <code>enqueue</code> adds a new node after <code>19</code> and moves <code>tail</code>.
+            A <code>dequeue</code> removes <code>12</code> and moves <code>head</code> to the node storing
+            <code>7</code>.
+          </p>
+        </div>
+      </section>
+
+      <section id="implementation-linked-how-operations-work" section-title="How the Operations Work">
+        <h4>How the Operations Work</h4>
+        <p>
+          The implementation keeps references <code>head</code> and <code>tail</code>. We also maintain an
+          integer variable <code>count</code> so that <code>size()</code> can return the number of stored
+          items in constant time. A linked queue does not normally provide <code>isFull()</code>, because it
+          can create new nodes until memory is exhausted.
+        </p>
+
+        <h5>isEmpty</h5>
+        <p>
+          <code>isEmpty()</code> checks whether <code>head == null</code>. In a correct empty linked queue,
+          <code>tail</code> is also <code>null</code>.
+        </p>
+
+        <h5>Enqueue</h5>
+        <p>
+          <code>enqueue</code> creates a new node whose <code>next</code> reference is <code>null</code>.
+          If the queue is empty, the new node is both the front and the back, so both <code>head</code>
+          and <code>tail</code> point to it. Otherwise, the old <code>tail.next</code> is set to the new
+          node, and then <code>tail</code> is updated to the new node. The operation also increments
+          <code>count</code>.
+        </p>
+
+        <h5>Dequeue</h5>
+        <p>
+          <code>dequeue</code> first checks whether the queue is empty. If not, <code>head.value</code> is
+          the value to remove. The operation saves that value, updates <code>head</code> to
+          <code>head.next</code>, decrements <code>count</code>, and returns the saved value. If the removed
+          node was the only node, then <code>head</code> becomes <code>null</code>, so the implementation
+          must also set <code>tail = null</code>. Forgetting this step leaves <code>tail</code> pointing to
+          a node that is no longer in the queue.
+        </p>
+
+        <h5>Front</h5>
+        <p>
+          <code>front</code> checks whether the queue is empty. If the queue is nonempty, it returns
+          <code>head.value</code> without changing <code>head</code>, <code>tail</code>, or any links.
+        </p>
+
+        <h5>Size</h5>
+        <p>
+          If the implementation maintains <code>count</code>, then <code>size()</code> returns
+          <code>count</code>. Without such a variable, computing the size would require following links and
+          counting nodes, which would take \(O(n)\) time.
+        </p>
+      </section>
+
+      <section id="implementation-linked-pseudocode" section-title="Linked Queue Pseudocode">
+        <h4>Linked Queue Pseudocode</h4>
+        <p>
+          The following pseudocode assumes <code>head</code>, <code>tail</code>, and <code>count</code>.
+          An empty queue has <code>head == null</code>, <code>tail == null</code>, and <code>count == 0</code>.
+        </p>
+<pre><code>isEmpty():
+    return head == null
+
+enqueue(value):
+    node = new Node(value)
+    if isEmpty():
         head = node
         tail = node
     else:
         tail.next = node
         tail = node
-    size = size + 1
+    count = count + 1
 
 dequeue():
-    if head == null:
-        report underflow
+    if isEmpty():
+        report underflow and stop
     value = head.value
     head = head.next
+    count = count - 1
     if head == null:
         tail = null
-    size = size - 1
-    return value</code></pre>
-      <h4>Notes</h4>
+    return value
+
+front():
+    if isEmpty():
+        report underflow and stop
+    return head.value
+
+size():
+    return count</code></pre>
+      </section>
+
+      <section id="implementation-linked-analysis" section-title="Implementation Analysis">
+        <h4>Implementation Analysis</h4>
+        <p>
+          In the linked implementation, each core operation changes only a constant number of references. No
+          operation shifts values, scans the whole queue, or copies all stored items. As long as <code>count</code>
+          is maintained, each basic queue operation takes constant time.
+        </p>
+        <ul>
+          <li><strong><code>enqueue</code>:</strong> \(O(1)\). It creates one node, possibly sets <code>head</code>, updates <code>tail.next</code> and <code>tail</code>, and increments <code>count</code>.</li>
+          <li><strong><code>dequeue</code>:</strong> \(O(1)\). It checks for underflow, saves <code>head.value</code>, moves <code>head</code>, possibly clears <code>tail</code>, decrements <code>count</code>, and returns the saved value.</li>
+          <li><strong><code>front</code>:</strong> \(O(1)\). It checks for underflow and returns <code>head.value</code>.</li>
+          <li><strong><code>isEmpty</code>:</strong> \(O(1)\). It checks whether <code>head == null</code>.</li>
+          <li><strong><code>size</code>:</strong> \(O(1)\) if the implementation maintains <code>count</code>. Without <code>count</code>, computing the size takes \(O(n)\).</li>
+        </ul>
+        <h5>Storage used:</h5>
+        <p>
+          This implementation uses \(O(n)\) space for \(n\) stored items. Each item is stored in a node, and
+          each node stores at least one reference, <code>next</code>. In addition to the nodes, the queue uses
+          \(O(1)\) space for variables such as <code>head</code>, <code>tail</code>, and <code>count</code>.
+        </p>
+      </section>
+
+      <section id="implementation-linked-tradeoffs" section-title="Tradeoffs">
+        <h4>Tradeoffs</h4>
+        <ul>
+          <li>A linked queue grows one node at a time, so it does not need a fixed capacity.</li>
+          <li>The <code>tail</code> reference is essential for constant-time enqueue at the back.</li>
+          <li>Each stored value has node overhead, including at least one reference.</li>
+          <li>Nodes are not necessarily stored next to one another in memory, so linked queues are usually less cache-friendly than array queues.</li>
+          <li>The empty and one-element cases require care because both <code>head</code> and <code>tail</code> must remain consistent.</li>
+        </ul>
+      </section>
+    </section>
+
+    <section id="implementation-array" section-title="Implementation 2: Array Queue">
+      <h3>Implementation 2: Array Queue</h3>
+
+      <section id="implementation-array-basics" section-title="Basics">
+        <h4>Basics</h4>
+        <p>
+          The simplest array queue stores the front value at index <code>0</code>, the next value at index
+          <code>1</code>, and so on. It uses an array <code>A</code> and an integer <code>count</code> that
+          stores the number of values currently in the queue. The logical queue consists exactly of
+          <code>A[0]</code> through <code>A[count - 1]</code>.
+        </p>
+        <p>
+          In this representation, <code>enqueue</code> is simple: if there is room, store the new value in
+          <code>A[count]</code> and increment <code>count</code>. The front value is always <code>A[0]</code>.
+          The cost appears when the queue removes the front. After <code>dequeue</code> removes <code>A[0]</code>,
+          every remaining item must shift one position left so that the new front is again at index <code>0</code>.
+        </p>
+        <p>
+          This implementation is easy to understand and useful for comparison, but it is not the preferred array
+          implementation for a queue with many dequeues. The circular array implementation outlined later avoids
+          the shifting by moving an index instead of moving all values.
+        </p>
+
+        <div class="example-box">
+          <p><strong class="example-title">Visual Representation of an Ordinary Array Queue</strong></p>
+          <div class="queue-display">
+            <div class="array-queue-main">
+              <span class="queue-label">A =</span>
+              <table class="array-queue">
+                <tr>
+                  <td>12</td>
+                  <td>7</td>
+                  <td>19</td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                </tr>
+              </table>
+              <span class="queue-value">count = 3</span>
+            </div>
+            <div class="array-queue-indices">
+              <span></span>
+              <table class="array-indices">
+                <tr>
+                  <td>0</td>
+                  <td>1</td>
+                  <td>2</td>
+                  <td>3</td>
+                  <td>4</td>
+                  <td>5</td>
+                </tr>
+              </table>
+              <span></span>
+            </div>
+          </div>
+          <p>
+            Here the queue contains <code>[12, 7, 19]</code>, with <code>12</code> at the front and
+            <code>19</code> at the back. The next <code>enqueue</code> would store a value in index
+            <code>3</code>. A <code>dequeue</code> would remove <code>12</code>, shift <code>7</code>
+            into index <code>0</code>, shift <code>19</code> into index <code>1</code>, and update
+            <code>count</code> to <code>2</code>.
+          </p>
+        </div>
+      </section>
+
+      <section id="implementation-array-how-operations-work" section-title="How the Operations Work">
+        <h4>How the Operations Work</h4>
+        <p>
+          The implementation keeps queue entries in <code>A[0]</code> through <code>A[count - 1]</code>.
+          Positions from <code>count</code> through <code>A.length - 1</code> are unused capacity.
+        </p>
+
+        <h5>isEmpty</h5>
+        <p>
+          <code>isEmpty()</code> checks whether <code>count == 0</code>.
+        </p>
+
+        <h5>isFull</h5>
+        <p>
+          <code>isFull()</code> checks whether <code>count == A.length</code>. This operation is relevant
+          for a fixed-size array queue. A resizable array queue may not expose <code>isFull()</code>, since
+          it can grow the backing array when more space is needed.
+        </p>
+
+        <h5>Enqueue</h5>
+        <p>
+          If <code>count &lt; A.length</code>, <code>enqueue</code> stores the new value in
+          <code>A[count]</code>, increments <code>count</code>, and reports success. If
+          <code>count == A.length</code>, the fixed-size version shown here returns <code>false</code> to
+          report overflow.
+        </p>
+
+        <h5>Dequeue</h5>
+        <p>
+          <code>dequeue</code> first checks whether the queue is empty. If it is not empty, the value to
+          remove is <code>A[0]</code>. The operation saves that value, shifts each remaining item one
+          position left, decrements <code>count</code>, and returns the saved value. Clearing the old last
+          slot can help garbage collection in languages with references, but it is not part of the abstract
+          queue operation.
+        </p>
+
+        <h5>Front</h5>
+        <p>
+          <code>front</code> checks whether the queue is empty. If not, it returns <code>A[0]</code> without
+          shifting or changing <code>count</code>.
+        </p>
+
+        <h5>Size</h5>
+        <p>
+          <code>size()</code> returns <code>count</code>.
+        </p>
+      </section>
+
+      <section id="implementation-array-pseudocode" section-title="Array Queue Pseudocode">
+        <h4>Array Queue Pseudocode</h4>
+        <p>
+          The following pseudocode assumes a fixed-size array <code>A</code> and an integer <code>count</code>.
+          Since this version does not resize the array, <code>enqueue</code> returns <code>false</code> when
+          the queue is full.
+        </p>
+<pre><code>isEmpty():
+    return count == 0
+
+isFull():
+    return count == A.length
+
+enqueue(value):
+    if isFull():
+        return false
+    A[count] = value
+    count = count + 1
+    return true
+
+dequeue():
+    if isEmpty():
+        report underflow and stop
+    value = A[0]
+    for i = 1 to count - 1:
+        A[i - 1] = A[i]
+    count = count - 1
+    return value
+
+front():
+    if isEmpty():
+        report underflow and stop
+    return A[0]
+
+size():
+    return count</code></pre>
+      </section>
+
+      <section id="implementation-array-analysis" section-title="Implementation Analysis">
+        <h4>Implementation Analysis</h4>
+        <p>
+          In the ordinary array implementation, <code>enqueue</code>, <code>front</code>, <code>isEmpty</code>,
+          <code>isFull</code>, and <code>size</code> are constant-time operations. The costly operation is
+          <code>dequeue</code>, because it shifts all remaining values left.
+        </p>
+        <ul>
+          <li><strong><code>enqueue</code>:</strong> \(O(1)\). It checks whether the array is full, writes into <code>A[count]</code>, increments <code>count</code>, and returns a Boolean value.</li>
+          <li><strong><code>dequeue</code>:</strong> \(O(n)\) in the worst case for a queue with \(n\) items. It removes the front value and shifts the remaining \(n - 1\) values left.</li>
+          <li><strong><code>front</code>:</strong> \(O(1)\). It checks whether the queue is empty and returns <code>A[0]</code>.</li>
+          <li><strong><code>isEmpty</code>:</strong> \(O(1)\). It checks whether <code>count == 0</code>.</li>
+          <li><strong><code>isFull</code>:</strong> \(O(1)\). It checks whether <code>count == A.length</code>.</li>
+          <li><strong><code>size</code>:</strong> \(O(1)\). It returns <code>count</code>.</li>
+        </ul>
+        <h5>Storage used:</h5>
+        <p>
+          This implementation uses \(O(c)\) space, where \(c\) is the capacity of the backing array. If the
+          queue currently contains \(n\) items, then the array has \(c - n\) unused slots. In addition to the
+          array, the implementation uses \(O(1)\) space for variables such as <code>count</code> and loop indices.
+        </p>
+      </section>
+
+      <section id="implementation-array-tradeoffs" section-title="Tradeoffs">
+        <h4>Tradeoffs</h4>
+        <ul>
+          <li>The ordinary array queue is simple and keeps the logical queue starting at index <code>0</code>.</li>
+          <li><code>enqueue</code> and <code>front</code> are constant time.</li>
+          <li><code>dequeue</code> is expensive because it shifts all remaining elements.</li>
+          <li>A bounded version has predictable capacity but must report overflow when full.</li>
+          <li>A circular array queue keeps the array representation but avoids the shifting cost.</li>
+        </ul>
+      </section>
+    </section>
+
+    <section id="implementation-circular-array" section-title="Implementation 3: Circular Array Queue Outline">
+      <h3>Implementation 3: Circular Array Queue Outline</h3>
+      <p>
+        A circular array queue is the standard way to make an efficient array-backed queue. Instead of keeping
+        the front fixed at index <code>0</code>, the implementation stores a <code>frontIndex</code> and lets it
+        move as values are dequeued. When an index reaches the physical end of the array, it wraps back to
+        index <code>0</code> using modulo arithmetic.
+      </p>
+      <p>
+        One clean design stores three fields: the array <code>A</code>, the index <code>frontIndex</code>, and
+        the number of stored items <code>count</code>. If the capacity is <code>A.length</code>, then the next
+        enqueue position is <code>(frontIndex + count) % A.length</code>. Storing <code>count</code> avoids the
+        common ambiguity where the same index relationship can mean either empty or full.
+      </p>
+
+      <div class="example-box">
+        <p><strong class="example-title">Circular Array Snapshot</strong></p>
+        <div class="queue-display">
+          <div class="array-queue-main">
+            <span class="queue-label">A =</span>
+            <table class="array-queue">
+              <tr>
+                <td>31</td>
+                <td>44</td>
+                <td></td>
+                <td></td>
+                <td>12</td>
+                <td>7</td>
+              </tr>
+            </table>
+            <span class="queue-value">frontIndex = 4, count = 4</span>
+          </div>
+          <div class="array-queue-indices">
+            <span></span>
+            <table class="array-indices">
+              <tr>
+                <td>0</td>
+                <td>1</td>
+                <td>2</td>
+                <td>3</td>
+                <td>4</td>
+                <td>5</td>
+              </tr>
+            </table>
+            <span></span>
+          </div>
+        </div>
+        <p>
+          The logical queue is <code>[12, 7, 31, 44]</code>. The values wrap around the physical end of the
+          array. The next enqueue position is <code>(4 + 4) % 6 = 2</code>.
+        </p>
+      </div>
+
+      <h4>Operation Outline</h4>
+<pre><code>isEmpty():
+    return count == 0
+
+isFull():
+    return count == A.length
+
+enqueue(value):
+    if isFull():
+        report overflow or resize
+    backIndex = (frontIndex + count) % A.length
+    A[backIndex] = value
+    count = count + 1
+
+dequeue():
+    if isEmpty():
+        report underflow and stop
+    value = A[frontIndex]
+    frontIndex = (frontIndex + 1) % A.length
+    count = count - 1
+    return value
+
+front():
+    if isEmpty():
+        report underflow and stop
+    return A[frontIndex]
+
+size():
+    return count</code></pre>
+      <h4>Key Points</h4>
       <ul>
-        <li>Both ends are updated in constant time.</li>
-        <li>When the last element is dequeued, both head and tail must become <code>null</code>.</li>
-        <li>Each element requires a node and at least one reference.</li>
+        <li>Advancing an index uses <code>(index + 1) % capacity</code>.</li>
+        <li>No dequeue shifts values. It moves <code>frontIndex</code> instead.</li>
+        <li>The next enqueue position is computed from <code>frontIndex</code> and <code>count</code>.</li>
+        <li>A bounded circular array queue has \(O(1)\) <code>enqueue</code>, <code>dequeue</code>, <code>front</code>, <code>isEmpty</code>, <code>isFull</code>, and <code>size</code>.</li>
+        <li>A resizable circular array queue must copy the logical queue into a new array in front-to-back order when it grows.</li>
       </ul>
+    </section>
+
+    <section id="cost-summary" section-title="Implementation Cost Summary">
+      <h3>Implementation Cost Summary</h3>
+      <p>
+        The linked queue and circular array queue make the core queue operations constant time. The ordinary
+        array queue is simpler, but its <code>dequeue</code> operation is expensive because it shifts values.
+      </p>
+      <table class="example-table cost-summary-table">
+        <thead>
+          <tr>
+            <th>Operation</th>
+            <th>Linked Queue</th>
+            <th>Ordinary Array Queue</th>
+            <th>Circular Array Queue</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>enqueue</code></td>
+            <td>\(O(1)\)</td>
+            <td>\(O(1)\)</td>
+            <td>\(O(1)\), or amortized \(O(1)\) if resizable</td>
+            <td>Linked enqueue needs a tail pointer. Array versions need room or a resize policy.</td>
+          </tr>
+          <tr>
+            <td><code>dequeue</code></td>
+            <td>\(O(1)\)</td>
+            <td>\(O(n)\)</td>
+            <td>\(O(1)\)</td>
+            <td>The ordinary array version shifts. The other versions do not.</td>
+          </tr>
+          <tr>
+            <td><code>front</code></td>
+            <td>\(O(1)\)</td>
+            <td>\(O(1)\)</td>
+            <td>\(O(1)\)</td>
+            <td>All versions keep direct access to the front.</td>
+          </tr>
+          <tr>
+            <td><code>isEmpty</code></td>
+            <td>\(O(1)\)</td>
+            <td>\(O(1)\)</td>
+            <td>\(O(1)\)</td>
+            <td>Usually checks <code>head == null</code> or <code>count == 0</code>.</td>
+          </tr>
+          <tr>
+            <td><code>size</code></td>
+            <td>\(O(1)\)</td>
+            <td>\(O(1)\)</td>
+            <td>\(O(1)\)</td>
+            <td>These costs assume a maintained <code>count</code> field.</td>
+          </tr>
+          <tr>
+            <td><code>search</code></td>
+            <td>\(O(n)\)</td>
+            <td>\(O(n)\)</td>
+            <td>\(O(n)\)</td>
+            <td>Search is not a core queue operation.</td>
+          </tr>
+          <tr>
+            <td>Storage</td>
+            <td>\(O(n)\), one node per item</td>
+            <td>\(O(c)\), capacity \(c\)</td>
+            <td>\(O(c)\), capacity \(c\)</td>
+            <td>Array queues may have unused slots. Linked queues store extra references.</td>
+          </tr>
+        </tbody>
+      </table>
     </section>
 
     <section id="library-implementations" section-title="Library Implementations">
       <h3>Library Implementations</h3>
-      <ul>
-        <li><strong>Java:</strong> <code>ArrayDeque&lt;E&gt;</code> is a common queue implementation.</li>
-        <li><strong>C++:</strong> <code>std::queue</code> is a container adapter.</li>
-        <li><strong>Python:</strong> <code>collections.deque</code> supports efficient queue operations.</li>
-      </ul>
       <p>
-        Python lists can remove from the front, but doing so shifts the remaining values and is not efficient for a
-        true queue workload. A deque or circular buffer is the better match.
+        In everyday programming, it is usually better to use a standard library structure than to write a new
+        queue from scratch. Library implementations are tested, efficient, and familiar to other programmers.
+        In a data structures course, implementing queues by hand is still valuable because it clarifies the ADT,
+        boundary cases, and representation tradeoffs.
+      </p>
+      <table class="example-table left-align library-queue-table">
+        <thead>
+          <tr>
+            <th>Language</th>
+            <th>Common Queue Choice</th>
+            <th>Enqueue</th>
+            <th>Dequeue</th>
+            <th>Front</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Java</strong></td>
+            <td><code>ArrayDeque&lt;E&gt;</code></td>
+            <td><code>addLast(value)</code> or <code>offer(value)</code></td>
+            <td><code>removeFirst()</code> or <code>poll()</code></td>
+            <td><code>peekFirst()</code> or <code>peek()</code></td>
+            <td>Often the first choice for queue behavior. Method pairs differ in how they report failure.</td>
+          </tr>
+          <tr>
+            <td><strong>C++</strong></td>
+            <td><code>std::queue&lt;T&gt;</code></td>
+            <td><code>push(value)</code></td>
+            <td><code>pop()</code></td>
+            <td><code>front()</code></td>
+            <td>A container adapter that exposes FIFO operations. <code>pop()</code> removes but does not return the value.</td>
+          </tr>
+          <tr>
+            <td><strong>Python</strong></td>
+            <td><code>collections.deque</code></td>
+            <td><code>append(value)</code></td>
+            <td><code>popleft()</code></td>
+            <td><code>q[0]</code></td>
+            <td>Efficient at both ends. A Python list is inefficient for repeated removals from the front.</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        The main lesson is that the library type does not have to be named <code>Queue</code> to be used as a
+        queue. What matters is whether the program uses it through FIFO discipline: add at the back, remove
+        from the front, and avoid operations that break the queue abstraction.
       </p>
     </section>
   </section>
 
-  <section id="costs" section-title="Operation Costs">
-    <h2>Operation Costs</h2>
-    <table class="example-table">
-      <thead>
-        <tr>
-          <th>Operation</th>
-          <th>Circular Array Queue</th>
-          <th>Linked Queue</th>
-          <th>Notes</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>enqueue</td>
-          <td>\(O(1)\), or \(O(1)\) amortized if resizable</td>
-          <td>\(O(1)\)</td>
-          <td>Add at the back.</td>
-        </tr>
-        <tr>
-          <td>dequeue</td>
-          <td>\(O(1)\)</td>
-          <td>\(O(1)\)</td>
-          <td>Remove from the front.</td>
-        </tr>
-        <tr>
-          <td>front</td>
-          <td>\(O(1)\)</td>
-          <td>\(O(1)\)</td>
-          <td>Read the front without removing it.</td>
-        </tr>
-        <tr>
-          <td>search</td>
-          <td>\(O(n)\)</td>
-          <td>\(O(n)\)</td>
-          <td>Search is not a core queue operation.</td>
-        </tr>
-        <tr>
-          <td>extra space per element</td>
-          <td>low, plus possible unused capacity</td>
-          <td>one node/reference overhead per value</td>
-          <td>Circular arrays are usually more compact.</td>
-        </tr>
-      </tbody>
-    </table>
-    <p>
-      The point of a queue implementation is to avoid \(O(n)\) shifting on each dequeue. If an implementation shifts
-      all remaining values after every removal, a long sequence of queue operations can become unnecessarily slow.
-    </p>
-  </section>
-
   <section id="applications" section-title="Applications">
     <h2>Applications</h2>
+    <p>
+      Queues appear whenever older waiting items should be handled before newer waiting items. In each
+      application below, the important idea is that the structure preserves arrival order.
+    </p>
     <ul>
-      <li><strong>Breadth-first search:</strong> BFS uses a queue to process vertices in the order they are discovered. This is what makes the traversal expand layer by layer and compute shortest paths in unweighted graphs.</li>
-      <li><strong>Level-order tree traversal:</strong> A queue stores the next nodes to visit from left to right across each level. Children are enqueued after their parent is processed, so the traversal naturally moves downward one level at a time.</li>
-      <li><strong>Task scheduling:</strong> A FIFO queue is appropriate when tasks should be handled in arrival order. Print queues, simple job queues, and first-come-first-served simulations all use this model.</li>
-      <li><strong>Producer-consumer buffers:</strong> One part of a program can enqueue work while another dequeues it. Bounded queues are especially useful when the producer must slow down if the consumer falls behind.</li>
-      <li><strong>Service-line simulations:</strong> Queues model customers, packets, or requests waiting for service. Simulations can estimate waiting time, throughput, and the effect of changing the number of servers.</li>
-      <li><strong>Message passing:</strong> Programs often use queues to decouple senders from receivers. The sender can add a message and continue, while the receiver processes messages in order later.</li>
-      <li><strong>Rate-limited processing:</strong> When a system can process only a limited number of requests per time unit, a queue preserves fairness among waiting requests. Older requests are handled before newer ones unless priorities are introduced.</li>
-      <li><strong>Streaming windows:</strong> A queue can store the active items in a sliding window. As new items enter, old items leave from the front, keeping the window's contents current.</li>
+      <li><strong>Breadth-first search:</strong> A queue stores discovered but unprocessed vertices so that BFS explores a graph layer by layer.</li>
+      <li><strong>Level-order tree traversal:</strong> A queue stores the next tree nodes to visit from left to right across each level.</li>
+      <li><strong>Task scheduling:</strong> Print queues, job queues, and first-come-first-served schedulers use FIFO order when fairness by arrival time is desired.</li>
+      <li><strong>Producer-consumer buffers:</strong> One part of a program enqueues work while another dequeues it later.</li>
+      <li><strong>Service-line simulations:</strong> Queues model customers, packets, or requests waiting for service.</li>
+      <li><strong>Message passing:</strong> Programs use queues to decouple senders and receivers while preserving message order.</li>
+      <li><strong>Sliding windows:</strong> A queue can store the active items in a window where new values enter at the back and old values leave from the front.</li>
     </ul>
+
+    <div class="example-box wide-example">
+      <p><strong class="example-title">Example 1: Breadth-First Search</strong></p>
+      <p>
+        Breadth-first search uses a queue because vertices should be processed in the order they are discovered.
+        Starting from a source vertex, BFS enqueues newly discovered neighbors. When a vertex is dequeued, all
+        of its undiscovered neighbors are enqueued behind the vertices that were already waiting.
+      </p>
+<pre><code>BFS(start):
+    create an empty queue Q
+    mark start as discovered
+    Q.enqueue(start)
+
+    while not Q.isEmpty():
+        v = Q.dequeue()
+        process v
+        for each neighbor w of v:
+            if w is not discovered:
+                mark w as discovered
+                Q.enqueue(w)</code></pre>
+      <p>
+        The queue is what makes BFS expand outward one level at a time. If a stack were used instead, the
+        algorithm would behave more like depth-first search.
+      </p>
+    </div>
+
+    <div class="example-box wide-example">
+      <p><strong class="example-title">Example 2: Hot Potato</strong></p>
+      <p>
+        A simple elimination game illustrates rotation through a queue. Put the players in a queue. Repeatedly
+        dequeue the front player and enqueue that player at the back several times; then dequeue one player as
+        eliminated. The remaining players keep their relative order as the queue rotates.
+      </p>
+<pre><code>hotPotato(players, passes):
+    create queue Q containing players in order
+
+    while Q.size() &gt; 1:
+        repeat passes times:
+            Q.enqueue(Q.dequeue())
+        eliminated = Q.dequeue()
+        report eliminated
+
+    return Q.dequeue()</code></pre>
+    </div>
   </section>
 
-  <section id="comparison" section-title="Comparisons and Tradeoffs">
-    <h2>Comparisons and Tradeoffs</h2>
+  <section id="queue-comparisons" section-title="Connections and Comparisons">
+    <h2>Connections and Comparisons</h2>
+    <p>
+      A queue is intentionally limited. It does not provide arbitrary access to its contents, and it does not
+      allow removals from the middle or back. That smaller interface is useful when the problem naturally uses
+      arrival-order processing.
+    </p>
     <ul>
-      <li><strong>Queue vs. stack:</strong> A queue preserves arrival order, while a stack reverses it. This difference explains why BFS uses a queue and DFS often uses a stack.</li>
-      <li><strong>Circular array vs. shifting array:</strong> A circular array moves indices instead of moving all elements after each dequeue. This is the key implementation choice that keeps dequeue constant time.</li>
-      <li><strong>Circular array vs. linked queue:</strong> A circular array queue is compact and cache-friendly but must handle capacity and wrap-around. A linked queue grows one node at a time but pays node-allocation and reference overhead.</li>
-      <li><strong>Queue vs. priority queue:</strong> A FIFO queue removes the oldest item. A priority queue removes the item with highest priority, so it is a different ADT even though both support an insert-and-remove workflow.</li>
-      <li><strong>Queue vs. deque:</strong> A deque generalizes queues by allowing insertion and removal at both ends. If an algorithm only needs FIFO behavior, the smaller queue interface communicates intent more clearly.</li>
-      <li><strong>Bounded vs. unbounded queue:</strong> A bounded queue must define what happens when it fills: reject, block, overwrite, or resize. An unbounded queue is simpler conceptually but can still exhaust memory in real systems.</li>
+      <li><strong>Queue vs. stack:</strong> A queue removes the oldest item first, while a stack removes the newest item first.</li>
+      <li><strong>Queue vs. general list:</strong> A list may allow access, insertion, and deletion at many positions. A queue exposes only front/back FIFO operations.</li>
+      <li><strong>Queue vs. deque:</strong> A deque allows insertion and removal at both ends. A queue is a restricted deque with insertion at the back and removal from the front.</li>
+      <li><strong>Queue vs. priority queue:</strong> A FIFO queue removes by arrival order. A priority queue removes by priority, not by age.</li>
+      <li><strong>Linked queue vs. linked stack:</strong> A linked stack needs only a head reference because all work happens at one end. A linked queue needs both head and tail for efficient operations at both ends.</li>
+      <li><strong>Ordinary array queue vs. circular array queue:</strong> The ordinary version shifts after dequeue. The circular version moves indices and avoids shifting.</li>
+      <li><strong>Bounded vs. dynamically growing queue:</strong> A bounded queue has a fixed capacity and must define full-queue behavior. A growing queue can allocate more storage but still has practical memory limits.</li>
     </ul>
   </section>
 
   <section id="variations" section-title="Variations and Extensions">
     <h2>Variations and Extensions</h2>
+    <p>
+      Many structures keep the basic idea of waiting items but adjust the allowed operations or the removal rule.
+    </p>
     <ul>
-      <li><strong>Deque:</strong> A double-ended queue supports insertion and removal at both the front and back. Stacks and queues can both be viewed as restricted forms of a deque.</li>
-      <li><strong>Priority queue:</strong> A priority queue removes by priority instead of arrival order. It is usually implemented with a heap and is used in algorithms such as Dijkstra's and Prim's.</li>
-      <li><strong>Bounded queue:</strong> A bounded queue has fixed capacity. It is common in buffers, embedded systems, and producer-consumer settings where unlimited growth is not acceptable.</li>
-      <li><strong>Blocking queue:</strong> A blocking queue waits when a consumer tries to remove from an empty queue or a producer tries to add to a full one. This is common in threaded programs.</li>
-      <li><strong>Circular queue:</strong> A circular queue is an array-based implementation pattern where indices wrap around with modular arithmetic. It avoids the shifting cost of a naive array queue.</li>
-      <li><strong>Monotonic queue:</strong> A monotonic queue stores candidates in increasing or decreasing order. It is useful for sliding-window minimum and maximum problems.</li>
+      <li><strong>Bounded queue:</strong> A fixed-capacity queue used in buffers, embedded systems, and producer-consumer settings.</li>
+      <li><strong>Resizable queue:</strong> A queue that grows its backing storage when it becomes full.</li>
+      <li><strong>Circular queue:</strong> An array-based implementation pattern that wraps indices around the array.</li>
+      <li><strong>Deque:</strong> A double-ended queue that supports insertion and removal at both the front and the back.</li>
+      <li><strong>Priority queue:</strong> A structure that removes the highest-priority item rather than the oldest item.</li>
+      <li><strong>Blocking queue:</strong> A queue that waits when a consumer removes from an empty queue or a producer adds to a full queue.</li>
+      <li><strong>Monotonic queue:</strong> A queue-like structure that keeps candidates in increasing or decreasing order, often for sliding-window minimum or maximum problems.</li>
     </ul>
   </section>
 
   <section id="pitfalls" section-title="Common Pitfalls">
     <h2>Common Pitfalls</h2>
+    <p>
+      Most queue mistakes come from breaking FIFO behavior, mishandling boundary cases, or confusing the queue
+      ADT with the details of one implementation.
+    </p>
     <ul>
-      <li><strong>Ignoring underflow:</strong> <code>dequeue</code> and <code>front</code> need defined behavior on an empty queue. A clean implementation reports an error, returns a documented special value, or uses an exception.</li>
-      <li><strong>Shifting after dequeue:</strong> Moving every element left after each dequeue turns a normally constant-time operation into \(O(n)\). Efficient array queues move the front index instead.</li>
-      <li><strong>Off-by-one wrap-around errors:</strong> Circular queues are simple in concept but easy to get wrong at the physical end of the array. Every index advance should consistently use modulo capacity.</li>
-      <li><strong>Forgetting the empty linked-queue case:</strong> When the last node is dequeued, both head and tail must show that the queue is empty. Leaving tail pointing to the removed node creates stale state.</li>
-      <li><strong>Confusing back with next insertion:</strong> The current back element and the next enqueue position are different when the queue is nonempty. Mixing them up can overwrite the last real item.</li>
-      <li><strong>Ambiguous full and empty states:</strong> Some circular queue designs have <code>frontIndex == backIndex</code> in both empty and full states. A size field, one unused slot, or an explicit full flag resolves the ambiguity.</li>
-      <li><strong>Using FIFO when priority matters:</strong> A queue is fair by arrival order, not by importance. If urgent items should go first, the correct structure is usually a priority queue or a set of multiple queues.</li>
+      <li><strong>Ignoring underflow:</strong> <code>dequeue</code> and <code>front</code> need defined behavior on an empty queue.</li>
+      <li><strong>Ignoring overflow:</strong> A bounded queue needs defined behavior when <code>enqueue</code> is called on a full queue.</li>
+      <li><strong>Forgetting the tail pointer:</strong> A linked queue without a tail pointer usually has slow enqueue operations.</li>
+      <li><strong>Leaving a stale tail:</strong> When the final node is dequeued, both <code>head</code> and <code>tail</code> must become <code>null</code>.</li>
+      <li><strong>Shifting after every dequeue without noticing the cost:</strong> This turns an array queue into an inefficient implementation for many workloads.</li>
+      <li><strong>Off-by-one wrap-around errors:</strong> Circular queues require consistent modulo arithmetic whenever an index advances.</li>
+      <li><strong>Confusing the current back with the next insertion position:</strong> In a circular array, these are not the same unless the queue has exactly one slot or is handled carefully.</li>
+      <li><strong>Ambiguous empty and full states:</strong> Some circular queue designs make <code>frontIndex == backIndex</code> mean either empty or full. A <code>count</code> field avoids this ambiguity.</li>
+      <li><strong>Using FIFO when priority matters:</strong> If urgent items should go first, a priority queue or multiple queues may be more appropriate.</li>
     </ul>
   </section>
 
   <section id="summary" section-title="Summary">
     <h2>Summary</h2>
     <p>
-      A queue stores items in first-in, first-out order. Efficient implementations keep direct access to both the
-      front and the back, either with a circular array or with head and tail references in a linked list.
+      A queue stores items so that the first item added is the first item removed. This FIFO rule makes queues
+      useful for waiting lines, scheduling, buffering, breadth-first search, level-order traversal, and other
+      situations where arrival order matters.
     </p>
-  </section>
-
-  <section id="related-pages" section-title="Related Pages">
-    <h2>Related Pages</h2>
-    <ul>
-      <li><a href="?path=Data%20Structures%2FLinear%20Structures%2FArrays">Arrays</a>, used for circular-buffer queues.</li>
-      <li><a href="?path=Data%20Structures%2FLinear%20Structures%2FLinked%20Lists">Linked Lists</a>, used for linked queues.</li>
-      <li><a href="?path=Algorithms%2FExhaustive%20Search%2FBreadth-First%20Search">Breadth-First Search</a>, which naturally uses a queue.</li>
-    </ul>
+    <p>
+      The core queue operations are <code>enqueue</code>, <code>dequeue</code>, and <code>front</code>. Most
+      implementations also provide <code>isEmpty</code> and <code>size</code>. A bounded implementation may
+      also provide <code>isFull</code> or another way to detect overflow.
+    </p>
+    <p>
+      A linked queue stores values in nodes and uses both <code>head</code> and <code>tail</code> references.
+      The tail pointer is what makes enqueue constant time. An ordinary array queue is simple but shifts values
+      on dequeue, making dequeue \(O(n)\). A circular array queue keeps array storage but avoids shifting by
+      moving indices with modulo arithmetic.
+    </p>
   </section>
 
   <section id="links" section-title="Helpful Links and Resources">
     <h2>Helpful Links and Resources</h2>
     <ul>
-      <li><a href="https://opendsa.org/OpenDSA/Books/CS3/html/Queue.html" target="_blank">OpenDSA: Queues</a> Explains queue terminology, array-based queues, and the circular queue implementation issue.</li>
-      <li><a href="https://docs.python.org/3/library/collections.html#deque-objects" target="_blank">Python documentation: <code>collections.deque</code></a> Describes a production double-ended queue and its efficient operations at both ends.</li>
-      <li><a href="https://en.cppreference.com/w/cpp/container/queue" target="_blank">cppreference: <code>std::queue</code></a> Shows the C++ queue as a container adapter with FIFO behavior.</li>
-      <li><a href="https://runestone.academy/ns/books/published/pswadsup/basic-data-structures.html" target="_blank">Runestone: Basic Data Structures</a> Includes queue simulations such as hot potato and printer queues.</li>
+      <li><a href="https://opendsa.org/OpenDSA/Books/Everything/html/Queue.html" target="_blank">OpenDSA: Queues</a>: Explains queue terminology, array-based queues, and the circular queue implementation issue.</li>
+      <li><a href="https://runestone.academy/ns/books/published/pythonds/BasicDS/toctree.html" target="_blank">Runestone: Basic Data Structures</a>: Covers queues and queue-based simulations such as hot potato and printer queues.</li>
+      <li><a href="https://docs.oracle.com/javase/8/docs/api/java/util/ArrayDeque.html" target="_blank">Oracle Java Documentation: <code>ArrayDeque</code></a>: Documents Java's deque implementation, commonly used for queue behavior.</li>
+      <li><a href="https://en.cppreference.com/w/cpp/container/queue" target="_blank">cppreference: <code>std::queue</code></a>: Shows the C++ queue as a container adapter with FIFO behavior.</li>
+      <li><a href="https://docs.python.org/3/library/collections.html#deque-objects" target="_blank">Python Documentation: <code>collections.deque</code></a>: Describes Python's double-ended queue implementation.</li>
     </ul>
   </section>
 
   <section id="reading-questions" section-title="Reading Comprehension Questions">
     <h2>Reading Comprehension Questions</h2>
     <ol>
-      <li><strong>FIFO:</strong> If values 4, 7, and 9 are enqueued in that order, which value dequeues first?</li>
-      <li><strong>Circular Array:</strong> Why do circular queues use modulo arithmetic?</li>
-      <li><strong>Linked Queue:</strong> Why does a linked queue usually store both head and tail references?</li>
-      <li><strong>Dequeue Cost:</strong> Why is shifting every array element left after each dequeue a poor implementation choice?</li>
-      <li><strong>Empty vs. Full:</strong> Why can <code>frontIndex == backIndex</code> be ambiguous in some circular queue designs?</li>
-      <li><strong>Front:</strong> How is <code>front()</code> different from <code>dequeue()</code>?</li>
-      <li><strong>BFS:</strong> Why does breadth-first search use a queue instead of a stack?</li>
-      <li><strong>Priority Queue:</strong> Why is a priority queue not the same thing as a FIFO queue?</li>
-      <li><strong>Bounded Queue:</strong> Name two reasonable policies for what a bounded queue might do when it is full.</li>
+      <li><strong>FIFO:</strong> What does FIFO mean, and how does it determine which item is removed by <code>dequeue()</code>?</li>
+      <li><strong>Basic Trace:</strong> Start with an empty queue. Perform <code>enqueue(4)</code>, <code>enqueue(7)</code>, <code>enqueue(9)</code>, <code>dequeue()</code>, <code>enqueue(2)</code>, and <code>front()</code>. Write the queue after each operation, and give the return value of each <code>dequeue</code> or <code>front</code>.</li>
+      <li><strong>Bounded Queue Trace:</strong> Suppose a bounded queue can hold at most three values. Starting with an empty queue, perform <code>enqueue(6)</code>, <code>enqueue(1)</code>, <code>enqueue(8)</code>, <code>enqueue(3)</code>, <code>dequeue()</code>, and <code>enqueue(5)</code>. Assume <code>enqueue</code> returns <code>true</code> when it succeeds and <code>false</code> when the queue is full. Write the queue and return value after each operation.</li>
+      <li><strong>Linked Queue:</strong> Why does a linked queue need a <code>tail</code> reference in addition to a <code>head</code> reference?</li>
+      <li><strong>Last Node:</strong> In a linked queue, why must <code>tail</code> be set to <code>null</code> when the final node is dequeued?</li>
+      <li><strong>Ordinary Array Queue:</strong> Why is <code>dequeue()</code> \(O(n)\) in the ordinary array implementation described on this page?</li>
+      <li><strong>Circular Array Queue:</strong> If <code>frontIndex = 4</code>, <code>count = 4</code>, and <code>A.length = 6</code>, what index receives the next enqueued value?</li>
+      <li><strong>Queue and BFS:</strong> Why does breadth-first search use a queue rather than a stack?</li>
+      <li><strong>ADT Boundary:</strong> Why is removing an arbitrary middle value not usually considered a core queue operation?</li>
+      <li><strong>Comparison:</strong> Give one advantage of a linked queue and one advantage of a circular array queue.</li>
     </ol>
+
     <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
     <div id="answers" class="answer" hidden>
       <ol>
-        <li><strong>Answer:</strong> 4, because it arrived first.</li>
-        <li><strong>Answer:</strong> To wrap indices back to the beginning after reaching the physical end of the array.</li>
-        <li><strong>Answer:</strong> Head supports \(O(1)\) dequeue and tail supports \(O(1)\) enqueue.</li>
-        <li><strong>Answer:</strong> It makes each dequeue \(O(n)\); moving an index or relinking the head keeps dequeue \(O(1)\).</li>
-        <li><strong>Answer:</strong> Depending on the design, the same equality can occur when the queue has no items or when every slot is full.</li>
-        <li><strong>Answer:</strong> <code>front()</code> reads the next value to leave; <code>dequeue()</code> reads and removes it.</li>
-        <li><strong>Answer:</strong> BFS must process vertices in discovery order so it explores all distance-1 vertices before distance-2 vertices, and so on.</li>
-        <li><strong>Answer:</strong> A priority queue removes by priority, not by arrival order.</li>
-        <li><strong>Answer:</strong> It might reject the new item, block until space is available, overwrite the oldest item, or resize if the implementation allows growth.</li>
+        <li><strong>Answer:</strong> FIFO means first-in, first-out. The item that has been waiting the longest is the first item removed by <code>dequeue()</code>.</li>
+        <li><strong>Answer:</strong>
+          <table class="example-table">
+            <thead>
+              <tr>
+                <th>Operation</th>
+                <th>Queue Afterward</th>
+                <th>Return Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td><code>enqueue(4)</code></td><td><code>[4]</code></td><td>none</td></tr>
+              <tr><td><code>enqueue(7)</code></td><td><code>[4, 7]</code></td><td>none</td></tr>
+              <tr><td><code>enqueue(9)</code></td><td><code>[4, 7, 9]</code></td><td>none</td></tr>
+              <tr><td><code>dequeue()</code></td><td><code>[7, 9]</code></td><td><code>4</code></td></tr>
+              <tr><td><code>enqueue(2)</code></td><td><code>[7, 9, 2]</code></td><td>none</td></tr>
+              <tr><td><code>front()</code></td><td><code>[7, 9, 2]</code></td><td><code>7</code></td></tr>
+            </tbody>
+          </table>
+        </li>
+        <li><strong>Answer:</strong>
+          <table class="example-table">
+            <thead>
+              <tr>
+                <th>Operation</th>
+                <th>Queue Afterward</th>
+                <th>Return Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td><code>enqueue(6)</code></td><td><code>[6]</code></td><td><code>true</code></td></tr>
+              <tr><td><code>enqueue(1)</code></td><td><code>[6, 1]</code></td><td><code>true</code></td></tr>
+              <tr><td><code>enqueue(8)</code></td><td><code>[6, 1, 8]</code></td><td><code>true</code></td></tr>
+              <tr><td><code>enqueue(3)</code></td><td><code>[6, 1, 8]</code></td><td><code>false</code></td></tr>
+              <tr><td><code>dequeue()</code></td><td><code>[1, 8]</code></td><td><code>6</code></td></tr>
+              <tr><td><code>enqueue(5)</code></td><td><code>[1, 8, 5]</code></td><td><code>true</code></td></tr>
+            </tbody>
+          </table>
+        </li>
+        <li><strong>Answer:</strong> The <code>head</code> reference gives constant-time access to the front for <code>dequeue</code> and <code>front</code>. The <code>tail</code> reference gives constant-time access to the back for <code>enqueue</code>. Without <code>tail</code>, enqueue would usually require scanning to the last node.</li>
+        <li><strong>Answer:</strong> After the final node is removed, the queue is empty. Both <code>head</code> and <code>tail</code> must reflect that state. If <code>tail</code> still points to the removed node, later operations may use stale state.</li>
+        <li><strong>Answer:</strong> After removing <code>A[0]</code>, the implementation shifts the remaining \(n - 1\) values one position left so that the new front is again at index <code>0</code>. That shifting takes \(O(n)\) time.</li>
+        <li><strong>Answer:</strong> The next enqueue position is <code>(frontIndex + count) % A.length = (4 + 4) % 6 = 2</code>.</li>
+        <li><strong>Answer:</strong> BFS must process vertices in discovery order so that it explores all vertices at distance 1 before distance 2, and so on. A queue preserves that order.</li>
+        <li><strong>Answer:</strong> A queue ADT only promises access to the front for removal and the back for insertion. Removing a middle value breaks FIFO order and belongs to a more general list-like structure.</li>
+        <li><strong>Answer:</strong> A linked queue grows one node at a time and has no fixed capacity. A circular array queue is compact, usually cache-friendly, and supports constant-time enqueue and dequeue without per-node overhead.</li>
       </ol>
     </div>
   </section>
@@ -424,26 +1125,495 @@ dequeue():
   <section id="activities" section-title="In-Class Activities">
     <h2>In-Class Activities</h2>
     <ol>
-      <li><strong>Trace:</strong> Given a sequence of enqueues and dequeues, draw the queue after each operation.</li>
-      <li><strong>Wrap Around:</strong> Trace a circular array queue until the back wraps to index 0.</li>
-      <li><strong>BFS:</strong> Run breadth-first search on a small graph and record the queue at each step.</li>
-      <li><strong>Implementation Critique:</strong> Compare a shifting array queue with a circular array queue for a long sequence of operations.</li>
-      <li><strong>Empty/Full Design:</strong> Propose two different ways to distinguish an empty circular queue from a full one.</li>
-      <li><strong>Simulation:</strong> Model a small service line where arrivals enqueue and completed services dequeue.</li>
-      <li><strong>Deque Extension:</strong> Decide which additional operations are needed to turn a queue into a deque.</li>
+      <li>
+        <strong>Trace Basic Queue Operations:</strong>
+        Start with an empty queue and trace the following operations:
+<pre><code>enqueue(6), enqueue(2), enqueue(9), dequeue(), enqueue(4), front(), dequeue(), enqueue(8)</code></pre>
+        <p>
+          After each operation, write the queue contents with the front at the left and the back at the right.
+          Also record the return value for each <code>dequeue</code> and <code>front</code>.
+        </p>
+      </li>
+
+      <li>
+        <strong>Trace a Bounded Queue:</strong>
+        Work with a bounded queue that can hold at most four values. Trace the following operations:
+<pre><code>enqueue(3), enqueue(5), enqueue(1), enqueue(7), enqueue(9), dequeue(), enqueue(4), dequeue()</code></pre>
+        <p>
+          Assume <code>enqueue</code> returns <code>true</code> when it succeeds and <code>false</code> when
+          the queue is full. After each operation, write the queue contents and the return value, if there is one.
+        </p>
+      </li>
+
+      <li>
+        <strong>Implement a Linked Queue:</strong>
+        Implement a queue of nonnegative integers using linked nodes, with <code>head</code> referring to the
+        front and <code>tail</code> referring to the back. Complete the starter code below and run the tests.
+        <p>
+          Your implementation should satisfy the following requirements:
+        </p>
+        <ul>
+          <li>Each node should store a value and a <code>next</code> reference.</li>
+          <li>An empty queue should have <code>head == null</code> and <code>tail == null</code>.</li>
+          <li><code>enqueue</code> should create a new node and add it after the current tail.</li>
+          <li><code>dequeue</code> should remove the current head and return its value.</li>
+          <li>When the final node is dequeued, both <code>head</code> and <code>tail</code> should become <code>null</code>.</li>
+          <li><code>dequeue</code> and <code>front</code> should return <code>-1</code> if the queue is empty.</li>
+          <li>Maintain a <code>count</code> variable so that <code>size()</code> is \(O(1)\).</li>
+        </ul>
+
+        <div class="tab-group scrollable-code-tabs">
+          <div class="tabs" role="tablist">
+            <button id="tab-java-linked-queue-activity" class="tablink active" data-lang="java-linked-queue-activity" role="tab" aria-controls="java-linked-queue-activity" aria-selected="true">Java</button>
+            <button id="tab-cpp-linked-queue-activity" class="tablink" data-lang="cpp-linked-queue-activity" role="tab" aria-controls="cpp-linked-queue-activity" aria-selected="false">C++</button>
+            <button id="tab-python-linked-queue-activity" class="tablink" data-lang="python-linked-queue-activity" role="tab" aria-controls="python-linked-queue-activity" aria-selected="false">Python</button>
+          </div>
+
+          <div id="java-linked-queue-activity" class="code-container active copyable-code" role="tabpanel" aria-labelledby="tab-java-linked-queue-activity">
+            <pre><code class="language-java">public class LinkedQueueExercise {
+    static class IntQueue {
+        private static class Node {
+            int value;
+            Node next;
+
+            Node(int value) {
+                this.value = value;
+                this.next = null;
+            }
+        }
+
+        private Node head;
+        private Node tail;
+        private int count;
+
+        public IntQueue() {
+            head = null;
+            tail = null;
+            count = 0;
+        }
+
+        public boolean isEmpty() {
+            // TODO
+            return false;
+        }
+
+        public void enqueue(int value) {
+            // TODO
+        }
+
+        public int dequeue() {
+            // TODO
+            return -1;
+        }
+
+        public int front() {
+            // TODO
+            return -1;
+        }
+
+        public int size() {
+            // TODO
+            return -1;
+        }
+    }
+
+    static void check(int actual, int expected) {
+        if (actual == expected) {
+            System.out.println("pass");
+        } else {
+            System.out.println("fail: expected " + expected + " but got " + actual);
+        }
+    }
+
+    static void check(boolean actual, boolean expected) {
+        if (actual == expected) {
+            System.out.println("pass");
+        } else {
+            System.out.println("fail: expected " + expected + " but got " + actual);
+        }
+    }
+
+    static void testQueue() {
+        IntQueue queue = new IntQueue();
+
+        check(queue.isEmpty(), true);
+        check(queue.size(), 0);
+        check(queue.dequeue(), -1);
+        check(queue.front(), -1);
+
+        queue.enqueue(4);
+        check(queue.isEmpty(), false);
+        check(queue.size(), 1);
+        check(queue.front(), 4);
+
+        queue.enqueue(7);
+        queue.enqueue(9);
+        check(queue.size(), 3);
+        check(queue.front(), 4);
+
+        check(queue.dequeue(), 4);
+        check(queue.front(), 7);
+        check(queue.size(), 2);
+
+        queue.enqueue(2);
+        check(queue.dequeue(), 7);
+        check(queue.dequeue(), 9);
+        check(queue.dequeue(), 2);
+        check(queue.isEmpty(), true);
+        check(queue.size(), 0);
+
+        check(queue.dequeue(), -1);
+        check(queue.front(), -1);
+
+        queue.enqueue(6);
+        check(queue.isEmpty(), false);
+        check(queue.front(), 6);
+        check(queue.dequeue(), 6);
+        check(queue.isEmpty(), true);
+    }
+
+    public static void main(String[] args) {
+        testQueue();
+    }
+}</code></pre>
+          </div>
+
+          <div id="cpp-linked-queue-activity" class="code-container copyable-code" role="tabpanel" aria-labelledby="tab-cpp-linked-queue-activity">
+            <pre><code class="language-cpp">#include &lt;iostream&gt;
+using namespace std;
+
+class IntQueue {
+private:
+    struct Node {
+        int value;
+        Node* next;
+
+        Node(int v) {
+            value = v;
+            next = nullptr;
+        }
+    };
+
+    Node* head;
+    Node* tail;
+    int count;
+
+public:
+    IntQueue() {
+        head = nullptr;
+        tail = nullptr;
+        count = 0;
+    }
+
+    ~IntQueue() {
+        while (head != nullptr) {
+            Node* old = head;
+            head = head-&gt;next;
+            delete old;
+        }
+    }
+
+    bool isEmpty() {
+        // TODO
+        return false;
+    }
+
+    void enqueue(int value) {
+        // TODO
+    }
+
+    int dequeue() {
+        // TODO
+        return -1;
+    }
+
+    int front() {
+        // TODO
+        return -1;
+    }
+
+    int size() {
+        // TODO
+        return -1;
+    }
+};
+
+void check(int actual, int expected) {
+    if (actual == expected) {
+        cout &lt;&lt; "pass" &lt;&lt; endl;
+    } else {
+        cout &lt;&lt; "fail: expected " &lt;&lt; expected &lt;&lt; " but got " &lt;&lt; actual &lt;&lt; endl;
+    }
+}
+
+void check(bool actual, bool expected) {
+    if (actual == expected) {
+        cout &lt;&lt; "pass" &lt;&lt; endl;
+    } else {
+        cout &lt;&lt; "fail: expected " &lt;&lt; expected &lt;&lt; " but got " &lt;&lt; actual &lt;&lt; endl;
+    }
+}
+
+void testQueue() {
+    IntQueue queue;
+
+    check(queue.isEmpty(), true);
+    check(queue.size(), 0);
+    check(queue.dequeue(), -1);
+    check(queue.front(), -1);
+
+    queue.enqueue(4);
+    check(queue.isEmpty(), false);
+    check(queue.size(), 1);
+    check(queue.front(), 4);
+
+    queue.enqueue(7);
+    queue.enqueue(9);
+    check(queue.size(), 3);
+    check(queue.front(), 4);
+
+    check(queue.dequeue(), 4);
+    check(queue.front(), 7);
+    check(queue.size(), 2);
+
+    queue.enqueue(2);
+    check(queue.dequeue(), 7);
+    check(queue.dequeue(), 9);
+    check(queue.dequeue(), 2);
+    check(queue.isEmpty(), true);
+    check(queue.size(), 0);
+
+    check(queue.dequeue(), -1);
+    check(queue.front(), -1);
+
+    queue.enqueue(6);
+    check(queue.isEmpty(), false);
+    check(queue.front(), 6);
+    check(queue.dequeue(), 6);
+    check(queue.isEmpty(), true);
+}
+
+int main() {
+    testQueue();
+    return 0;
+}</code></pre>
+          </div>
+
+          <div id="python-linked-queue-activity" class="code-container copyable-code" role="tabpanel" aria-labelledby="tab-python-linked-queue-activity">
+            <pre><code class="language-python">class Node:
+    def __init__(self, value):
+        self.value = value
+        self.next = None
+
+
+class IntQueue:
+    def __init__(self):
+        self.head = None
+        self.tail = None
+        self.count = 0
+
+    def is_empty(self):
+        # TODO
+        return False
+
+    def enqueue(self, value):
+        # TODO
+        pass
+
+    def dequeue(self):
+        # TODO
+        return -1
+
+    def front(self):
+        # TODO
+        return -1
+
+    def size(self):
+        # TODO
+        return -1
+
+
+def check(actual, expected):
+    if actual == expected:
+        print("pass")
+    else:
+        print("fail: expected", expected, "but got", actual)
+
+
+def test_queue():
+    queue = IntQueue()
+
+    check(queue.is_empty(), True)
+    check(queue.size(), 0)
+    check(queue.dequeue(), -1)
+    check(queue.front(), -1)
+
+    queue.enqueue(4)
+    check(queue.is_empty(), False)
+    check(queue.size(), 1)
+    check(queue.front(), 4)
+
+    queue.enqueue(7)
+    queue.enqueue(9)
+    check(queue.size(), 3)
+    check(queue.front(), 4)
+
+    check(queue.dequeue(), 4)
+    check(queue.front(), 7)
+    check(queue.size(), 2)
+
+    queue.enqueue(2)
+    check(queue.dequeue(), 7)
+    check(queue.dequeue(), 9)
+    check(queue.dequeue(), 2)
+    check(queue.is_empty(), True)
+    check(queue.size(), 0)
+
+    check(queue.dequeue(), -1)
+    check(queue.front(), -1)
+
+    queue.enqueue(6)
+    check(queue.is_empty(), False)
+    check(queue.front(), 6)
+    check(queue.dequeue(), 6)
+    check(queue.is_empty(), True)
+
+
+test_queue()</code></pre>
+          </div>
+        </div>
+      </li>
+
+      <li>
+        <strong>Implement an Ordinary Array Queue:</strong>
+        Implement the fixed-size ordinary array queue described on this page. Use an array <code>A</code>
+        and a <code>count</code> field. The front value should always be stored at <code>A[0]</code>.
+        <p>
+          For this exercise, <code>enqueue</code> should return <code>true</code> if the value is added and
+          <code>false</code> if the queue is full. The methods <code>dequeue</code> and <code>front</code>
+          should return the front value, or <code>-1</code> if the queue is empty. Use nonnegative integers
+          so that <code>-1</code> can safely indicate underflow.
+        </p>
+        <p>
+          Your tests should include an empty dequeue, enough enqueues to fill the queue, one failed enqueue,
+          several dequeues that require shifting, and an enqueue after shifting has occurred.
+        </p>
+      </li>
+
+      <li>
+        <strong>Trace the Shifts:</strong>
+        Suppose an ordinary array queue has capacity 6, <code>A = [12, 7, 19, 44, empty, empty]</code>, and
+        <code>count = 4</code>. Trace <code>dequeue()</code>, <code>dequeue()</code>, <code>enqueue(30)</code>,
+        and <code>front()</code>. After each operation, write the array contents, <code>count</code>, and any
+        return value.
+      </li>
+
+      <li>
+        <strong>Trace a Circular Array Queue:</strong>
+        Use a circular array of capacity 5. Start with <code>frontIndex = 0</code> and <code>count = 0</code>.
+        Trace the operations
+<pre><code>enqueue(4), enqueue(7), enqueue(9), dequeue(), dequeue(), enqueue(2), enqueue(5), enqueue(8)</code></pre>
+        <p>
+          After each operation, write the physical array, <code>frontIndex</code>, <code>count</code>, and the
+          logical queue from front to back.
+        </p>
+      </li>
+
+      <li>
+        <strong>Run BFS by Hand:</strong>
+        Use a queue to run breadth-first search on the graph with vertices <code>A, B, C, D, E, F</code> and
+        edges <code>AB, AC, BD, BE, CF</code>. Start at <code>A</code> and process neighbors alphabetically.
+        Record the queue after each vertex is dequeued.
+      </li>
+
+      <li>
+        <strong>Linked Queue Invariant Check:</strong>
+        For each state below, decide whether it is a valid linked queue state. If it is invalid, explain which
+        invariant is broken: (a) <code>head == null</code>, <code>tail != null</code>, <code>count = 0</code>;
+        (b) <code>head</code> points to one node, <code>tail</code> points to the same node, <code>count = 1</code>;
+        (c) <code>head</code> points to two linked nodes, <code>tail</code> points to the first node, <code>count = 2</code>.
+      </li>
+
+      <li>
+        <strong>Compare the Three Implementations:</strong>
+        For a workload with 1000 enqueues followed by 1000 dequeues, compare the linked queue, ordinary array
+        queue, and circular array queue. Identify which implementation performs shifting, which uses node
+        allocations, and which is likely to have the best locality in memory.
+      </li>
     </ol>
   </section>
 
   <section id="problems" section-title="Homework Problems">
     <h2>Homework Problems</h2>
     <ol>
-      <li><strong>Circular Queue:</strong> Implement a bounded circular array queue.</li>
-      <li><strong>Resizable Queue:</strong> Extend the circular queue so it doubles when full.</li>
-      <li><strong>Hot Potato:</strong> Simulate a Josephus-style elimination game using a queue.</li>
-      <li><strong>Level Order:</strong> Write an algorithm for level-order traversal of a binary tree using a queue.</li>
-      <li><strong>Queue from Stacks:</strong> Implement a queue using two stacks and analyze amortized operation costs.</li>
-      <li><strong>Sliding Window:</strong> Use a monotonic queue to compute the maximum value in every window of size \(k\) in an array.</li>
-      <li><strong>Linked Queue:</strong> Implement a linked queue and carefully handle the case where the final item is dequeued.</li>
+      <li>
+        <strong>Linked Queue Implementation:</strong>
+        Implement a linked queue of nonnegative integers with <code>head</code>, <code>tail</code>, and
+        <code>count</code>. Include <code>enqueue</code>, <code>dequeue</code>, <code>front</code>,
+        <code>isEmpty</code>, and <code>size</code>. Use <code>-1</code> as the underflow return value for
+        <code>dequeue</code> and <code>front</code>. Write tests that cover the empty queue, the one-element
+        queue, and the case where the final element is dequeued.
+      </li>
+
+      <li>
+        <strong>Ordinary Array Queue Implementation:</strong>
+        Implement a bounded ordinary array queue where the front is always at index <code>0</code>. Include
+        <code>enqueue</code>, <code>dequeue</code>, <code>front</code>, <code>isEmpty</code>,
+        <code>isFull</code>, and <code>size</code>. Analyze the cost of each operation and explain why
+        <code>dequeue</code> is slower than in the linked implementation.
+      </li>
+
+      <li>
+        <strong>Circular Array Queue Implementation:</strong>
+        Implement a bounded circular array queue using <code>A</code>, <code>frontIndex</code>, and
+        <code>count</code>. Include <code>enqueue</code>, <code>dequeue</code>, <code>front</code>,
+        <code>isEmpty</code>, <code>isFull</code>, and <code>size</code>. Write tests that force both
+        <code>frontIndex</code> and the next enqueue position to wrap around.
+      </li>
+
+      <li>
+        <strong>Resizable Circular Array Queue:</strong>
+        Extend the circular array queue so that it doubles its capacity when full. When resizing, copy the
+        logical queue into the new array starting at index <code>0</code>, then set <code>frontIndex = 0</code>.
+        Write tests that trigger at least two resizes after wrap-around has occurred.
+      </li>
+
+      <li>
+        <strong>Hot Potato Simulation:</strong>
+        Implement the hot potato game described in the applications section. Given the players
+        <code>A, B, C, D, E, F</code> and <code>passes = 3</code>, show the order in which players are
+        eliminated and the final winner.
+      </li>
+
+      <li>
+        <strong>Level-Order Tree Traversal:</strong>
+        Write an algorithm that uses a queue to print a binary tree in level order. Trace your algorithm on
+        a tree with root <code>A</code>, children <code>B</code> and <code>C</code>, and grandchildren
+        <code>D, E, F</code> where <code>B</code> has children <code>D</code> and <code>E</code>, and
+        <code>C</code> has right child <code>F</code>.
+      </li>
+
+      <li>
+        <strong>Queue from Two Stacks:</strong>
+        Implement a FIFO queue using two stacks, an input stack and an output stack. Analyze the amortized cost
+        of <code>enqueue</code> and <code>dequeue</code>. Explain why an individual <code>dequeue</code> may
+        take \(O(n)\) time but a sequence of operations still has amortized \(O(1)\) time per operation.
+      </li>
+
+      <li>
+        <strong>Sliding Window Average:</strong>
+        Use a queue to maintain the most recent <code>k</code> values in a stream of numbers. After each new
+        value arrives, report the average of the current window. Your algorithm should update the sum in
+        constant time when an old value leaves the queue.
+      </li>
+
+      <li>
+        <strong>Queue Design Critique:</strong>
+        A student implements <code>dequeue</code> on an array queue by shifting all remaining values left. Another
+        student uses a circular array. For a sequence of \(m\) operations on a queue that may contain up to \(n\)
+        items, compare the worst-case total time of the two approaches and explain when the simpler shifting
+        implementation might still be acceptable.
+      </li>
     </ol>
   </section>
 </body>
