@@ -61,16 +61,43 @@
 .queue-label,
 .queue-value {
   font-family: 'Fira Code', 'Source Code Pro', Menlo, Consolas, monospace;
+}.library-queue-table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.library-queue-table th,
+.library-queue-table td {
+  padding-left: 0.5em;
+  padding-right: 0.5em;
+  vertical-align: top;
+}
+
+.library-queue-table th:nth-child(1),
+.library-queue-table td:nth-child(1) {
+  width: 90px;
+}
+
+.library-queue-table th:nth-child(2),
+.library-queue-table td:nth-child(2) {
+  width: 150px;
 }
 .library-queue-table th:nth-child(3),
-.library-queue-table th:nth-child(4),
-.library-queue-table th:nth-child(5),
 .library-queue-table td:nth-child(3),
-.library-queue-table td:nth-child(4),
-.library-queue-table td:nth-child(5) {
-  min-width: 5.5em;
-  white-space: nowrap;
+.library-queue-table th:nth-child(4),
+.library-queue-table td:nth-child(4) {
+  width: 135px;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
+.library-queue-table th:nth-child(5),
+.library-queue-table td:nth-child(5) {
+  width: 110px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+
 .cost-summary-table th:nth-child(1),
 .cost-summary-table td:nth-child(1),
 .cost-summary-table th:nth-child(5),
@@ -80,6 +107,9 @@
 .queue-trace-table th:nth-child(2),
 .queue-trace-table td:nth-child(2) {
   text-align: left;
+}
+.invisible-spacer {
+  visibility: hidden;
 }
   </style>
 </head>
@@ -342,18 +372,18 @@
 
         <div class="example-box">
           <p><strong class="example-title">Visual Representation of a Linked Queue</strong></p>
-          <svg viewBox="0 20 760 130" role="img" aria-labelledby="linkedQueueTitle linkedQueueDesc"
+          <svg viewBox="0 -10 760 150" role="img" aria-labelledby="linkedQueueTitle linkedQueueDesc"
                style="display:block; max-width:760px; width:100%; height:auto; margin:1em 0;">
             <title id="linkedQueueTitle">Linked queue representation</title>
-            <desc id="linkedQueueDesc">The head reference points to 12, then 7, then 19. The tail reference points to 19.</desc>
+            <desc id="linkedQueueDesc">The head reference points down to 12, then 7, then 19. The tail reference points down to 19, whose next reference points to null.</desc>
             <defs>
               <marker id="linked-queue-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
                 <path d="M 0 0 L 10 5 L 0 10 z" fill="#0a3974" />
               </marker>
             </defs>
 
-            <text x="32" y="73" font-family="Verdana, sans-serif" font-size="16" fill="#0f264a">head</text>
-            <line x1="78" y1="68" x2="125" y2="68" stroke="#0a3974" stroke-width="2.5" marker-end="url(#linked-queue-arrow)" />
+            <text x="160" y="5" text-anchor="middle" font-family="Verdana, sans-serif" font-size="16" fill="#0f264a">head</text>
+            <line x1="160" y1="8" x2="160" y2="38" stroke="#0a3974" stroke-width="2.5" marker-end="url(#linked-queue-arrow)" />
 
             <rect x="130" y="38" width="120" height="60" fill="#fff3d9" stroke="#d9822b" stroke-width="2" rx="6" ry="6" />
             <line x1="190" y1="38" x2="190" y2="98" stroke="#d9822b" stroke-width="2" />
@@ -371,11 +401,13 @@
             <rect x="490" y="38" width="120" height="60" fill="#ffffff" stroke="#0a3974" stroke-width="2" rx="6" ry="6" />
             <line x1="550" y1="38" x2="550" y2="98" stroke="#0a3974" stroke-width="2" />
             <text x="520" y="74" text-anchor="middle" font-family="Verdana, sans-serif" font-size="18" font-weight="700" fill="#0f264a">19</text>
-            <text x="580" y="74" text-anchor="middle" font-family="Verdana, sans-serif" font-size="13" fill="#0f264a">null</text>
+            <text x="580" y="74" text-anchor="middle" font-family="Verdana, sans-serif" font-size="13" fill="#0f264a">next</text>
             <text x="520" y="122" text-anchor="middle" font-family="Verdana, sans-serif" font-size="14" fill="#0a3974">back</text>
+            <line x1="610" y1="68" x2="655" y2="68" stroke="#0a3974" stroke-width="2.5" marker-end="url(#linked-queue-arrow)" />
+            <text x="685" y="74" text-anchor="middle" font-family="Verdana, sans-serif" font-size="13" fill="#0f264a">null</text>
 
-            <text x="675" y="30" font-family="Verdana, sans-serif" font-size="16" fill="#0f264a">tail</text>
-            <line x1="690" y1="36" x2="535" y2="37" stroke="#0a3974" stroke-width="2.5" marker-end="url(#linked-queue-arrow)" />
+            <text x="520" y="5" text-anchor="middle" font-family="Verdana, sans-serif" font-size="16" fill="#0f264a">tail</text>
+            <line x1="520" y1="8" x2="520" y2="38" stroke="#0a3974" stroke-width="2.5" marker-end="url(#linked-queue-arrow)" />
           </svg>
           <p>
             Here <code>head</code> points to the front node, which stores <code>12</code>, and
@@ -438,20 +470,20 @@
       <section id="implementation-linked-pseudocode" section-title="Linked Queue Pseudocode">
         <h4>Linked Queue Pseudocode</h4>
         <p>
-          The following pseudocode assumes <code>head</code>, <code>tail</code>, and <code>count</code>.
-          An empty queue has <code>head == null</code>, <code>tail == null</code>, and <code>count == 0</code>.
+          The following pseudocode assumes we have <code>head</code>, <code>tail</code>, and <code>count</code>
+          variables defined in the appropriate scope.
         </p>
 <pre><code>isEmpty():
     return head == null
 
 enqueue(value):
-    node = new Node(value)
+    newNode = new Node(value)
     if isEmpty():
-        head = node
-        tail = node
+        head = newNode
+        tail = newNode
     else:
-        tail.next = node
-        tail = node
+        tail.next = newNode
+        tail = newNode
     count = count + 1
 
 dequeue():
@@ -485,7 +517,7 @@ size():
           <li><strong><code>dequeue</code>:</strong> \(O(1)\). It checks for underflow, saves <code>head.value</code>, moves <code>head</code>, possibly clears <code>tail</code>, decrements <code>count</code>, and returns the saved value.</li>
           <li><strong><code>front</code>:</strong> \(O(1)\). It checks for underflow and returns <code>head.value</code>.</li>
           <li><strong><code>isEmpty</code>:</strong> \(O(1)\). It checks whether <code>head == null</code>.</li>
-          <li><strong><code>size</code>:</strong> \(O(1)\) if the implementation maintains <code>count</code>. Without <code>count</code>, computing the size takes \(O(n)\).</li>
+          <li><strong><code>size</code>:</strong> \(O(1)\) if the implementation maintains <code>count</code>. Without <code>count</code>, computing the size would take \(O(n)\).</li>
         </ul>
         <h5>Storage used:</h5>
         <p>
@@ -495,7 +527,7 @@ size():
         </p>
       </section>
 
-      <section id="implementation-linked-tradeoffs" section-title="Tradeoffs">
+      <section id="implementation-linked-tradeoffs" section-title="Tradeoffs and Comments">
         <h4>Tradeoffs</h4>
         <ul>
           <li>A linked queue grows one node at a time, so it does not need a fixed capacity.</li>
@@ -587,7 +619,7 @@ size():
         <h5>isFull</h5>
         <p>
           <code>isFull()</code> checks whether <code>count == A.length</code>. This operation is relevant
-          for a fixed-size array queue. A resizable array queue may not expose <code>isFull()</code>, since
+          for a fixed-size array queue (which is what we are discussing here). A resizable array queue may not expose <code>isFull()</code>, since
           it can grow the backing array when more space is needed.
         </p>
 
@@ -611,13 +643,15 @@ size():
         <h5>Front</h5>
         <p>
           <code>front</code> checks whether the queue is empty. If not, it returns <code>A[0]</code> without
-          shifting or changing <code>count</code>.
+          shifting or changing <code>count</code>. 
+          If the queue is empty, it reports underflow or uses some other defined policy.
         </p>
 
         <h5>Size</h5>
         <p>
-          <code>size()</code> returns <code>count</code>.
-        </p>
+          <code>size()</code> returns <code>count</code>, the number of stored items. 
+          This is not the same as the capacity of the queue, which is the length of the backing array.
+         </p>
       </section>
 
       <section id="implementation-array-pseudocode" section-title="Array Queue Pseudocode">
@@ -681,7 +715,7 @@ size():
         </p>
       </section>
 
-      <section id="implementation-array-tradeoffs" section-title="Tradeoffs">
+      <section id="implementation-array-tradeoffs" section-title="Tradeoffs and Comments">
         <h4>Tradeoffs</h4>
         <ul>
           <li>The ordinary array queue is simple and keeps the logical queue starting at index <code>0</code>.</li>
@@ -693,60 +727,153 @@ size():
       </section>
     </section>
 
-    <section id="implementation-circular-array" section-title="Implementation 3: Circular Array Queue Outline">
-      <h3>Implementation 3: Circular Array Queue Outline</h3>
-      <p>
-        A circular array queue is the standard way to make an efficient array-backed queue. Instead of keeping
-        the front fixed at index <code>0</code>, the implementation stores a <code>frontIndex</code> and lets it
-        move as values are dequeued. When an index reaches the physical end of the array, it wraps back to
-        index <code>0</code> using modulo arithmetic.
-      </p>
-      <p>
-        One clean design stores three fields: the array <code>A</code>, the index <code>frontIndex</code>, and
-        the number of stored items <code>count</code>. If the capacity is <code>A.length</code>, then the next
-        enqueue position is <code>(frontIndex + count) % A.length</code>. Storing <code>count</code> avoids the
-        common ambiguity where the same index relationship can mean either empty or full.
-      </p>
+<section id="implementation-circular-array" section-title="Implementation 3: Circular Array Queue">
+  <h3>Implementation 3: Circular Array Queue</h3>
 
-      <div class="example-box">
-        <p><strong class="example-title">Circular Array Snapshot</strong></p>
-        <div class="queue-display">
-          <div class="array-queue-main">
-            <span class="queue-label">A =</span>
-            <table class="array-queue">
-              <tr>
-                <td>31</td>
-                <td>44</td>
-                <td></td>
-                <td></td>
-                <td>12</td>
-                <td>7</td>
-              </tr>
-            </table>
-            <span class="queue-value">frontIndex = 4, count = 4</span>
-          </div>
-          <div class="array-queue-indices">
-            <span></span>
-            <table class="array-indices">
-              <tr>
-                <td>0</td>
-                <td>1</td>
-                <td>2</td>
-                <td>3</td>
-                <td>4</td>
-                <td>5</td>
-              </tr>
-            </table>
-            <span></span>
-          </div>
-        </div>
-        <p>
-          The logical queue is <code>[12, 7, 31, 44]</code>. The values wrap around the physical end of the
-          array. The next enqueue position is <code>(4 + 4) % 6 = 2</code>.
-        </p>
-      </div>
+  <section id="implementation-circular-array-basics" section-title="Basics">
+    <h4>Basics</h4>
 
-      <h4>Operation Outline</h4>
+    <p>
+      A circular array queue is the standard way to make an efficient array-backed queue.
+      The ordinary array version keeps the logical queue in positions <code>A[0]</code>
+      through <code>A[count - 1]</code>, so at least one operation must shift values.
+      The circular version stops insisting that the queue begin at index <code>0</code>.
+      Instead, it stores a <code>frontIndex</code> and a <code>count</code>.
+    </p>
+
+    <p>
+      The <code>frontIndex</code> tells where the current front value is stored, and
+      <code>count</code> tells how many values are currently in the queue. The next
+      enqueue position is computed as
+      <code>(frontIndex + count) % A.length</code>. When an index reaches the physical
+      end of the array, it wraps back to index <code>0</code> using modulo arithmetic.
+    </p>
+
+    <p>
+      Notice that <code>count</code> has a slightly different role than it had in the
+      ordinary array implementation. In the ordinary version, <code>count</code> also
+      identified the next open position because the queue always started at
+      <code>A[0]</code>. In the circular version, <code>count</code> still records the
+      number of stored values, but the next open position must be computed from both
+      <code>frontIndex</code> and <code>count</code>.
+    </p>
+
+<div class="example-box">
+  <p><strong class="example-title">Visual Representation of a Circular Array Queue</strong></p>
+  <div class="queue-display">
+    <div class="array-queue-main">
+      <span class="queue-label">A =</span>
+      <table class="array-queue">
+        <tr>
+          <td>28</td>
+          <td></td>
+          <td>9</td>
+          <td>14</td>
+          <td>22</td>
+          <td>31</td>
+        </tr>
+      </table>
+      <span class="queue-value">frontIndex = 2, count = 5</span>
+    </div>
+    <div class="array-queue-indices">
+      <span class="queue-label invisible-spacer">A =</span>
+      <table class="array-indices">
+        <tr>
+          <td>0</td>
+          <td>1</td>
+          <td>2</td>
+          <td>3</td>
+          <td>4</td>
+          <td>5</td>
+        </tr>
+      </table>
+      <span class="queue-value invisible-spacer">frontIndex = 2, count = 5</span>
+    </div>
+  </div>
+
+  <p>
+    Here <code>frontIndex = 2</code>, so the front value is <code>9</code>.
+    Since <code>count = 5</code>, the logical queue contains five values:
+    <code>[9, 14, 22, 31, 28]</code>. The order wraps around from index
+    <code>5</code> back to index <code>0</code>.
+  </p>
+
+  <p>
+    The next enqueue position is
+    <code>(frontIndex + count) % A.length = (2 + 5) % 6 = 1</code>, so the next
+    value would be stored at index <code>1</code>.
+  </p>
+</div>
+  </section>
+
+  <section id="implementation-circular-array-how-operations-work" section-title="How the Operations Work">
+    <h4>How the Operations Work</h4>
+
+    <p>
+      This outline uses a fixed-size backing array <code>A</code>, an integer
+      <code>frontIndex</code>, and an integer <code>count</code>. An empty queue has
+      <code>count == 0</code>. The value of <code>frontIndex</code> is meaningful when
+      the queue is nonempty; many implementations simply leave it at <code>0</code>
+      when the queue is empty.
+    </p>
+
+    <h5>isEmpty</h5>
+    <p>
+      <code>isEmpty()</code> checks whether <code>count == 0</code>. This is independent
+      of the value of <code>frontIndex</code>.
+    </p>
+
+    <h5>isFull</h5>
+    <p>
+      For a bounded circular array queue, <code>isFull()</code> checks whether
+      <code>count == A.length</code>. If the queue is full, every array slot is part of
+      the logical queue, even though the logical order may wrap around the physical end
+      of the array.
+    </p>
+
+    <h5>Enqueue</h5>
+    <p>
+      To enqueue a value, first check whether the queue is full. If it is not full,
+      compute the insertion position as <code>(frontIndex + count) % A.length</code>.
+      Store the new value in that position and then increment <code>count</code>.
+      No existing values are shifted.
+    </p>
+
+    <h5>Dequeue</h5>
+    <p>
+      To dequeue, first check whether the queue is empty. If it is not empty, save
+      <code>A[frontIndex]</code>, because that is the front value. Then advance
+      <code>frontIndex</code> to <code>(frontIndex + 1) % A.length</code>, decrement
+      <code>count</code>, and return the saved value. The old array slot may be cleared
+      or simply ignored.
+    </p>
+
+    <h5>Front</h5>
+    <p>
+      <code>front()</code> checks whether the queue is empty. If it is nonempty, it
+      returns <code>A[frontIndex]</code> without changing <code>frontIndex</code>,
+      <code>count</code>, or any array entries.
+    </p>
+
+    <h5>Size</h5>
+    <p>
+      <code>size()</code> returns <code>count</code>. 
+      As with the ordinary array implementation, this is the number of stored items, 
+      not the capacity of the queue.
+    </p>
+  </section>
+
+  <section id="implementation-circular-array-pseudocode" section-title="Circular Array Queue Pseudocode">
+    <h4>Circular Array Queue Pseudocode</h4>
+
+    <p>
+      The following pseudocode assumes a fixed-size array <code>A</code>, 
+      an integer <code>frontIndex</code>, and an integer <code>count</code>. 
+      The <code>enqueue</code> operation returns <code>false</code> if the queue is full.
+      The <code>dequeue</code> and <code>front</code> operations report underflow if the
+      queue is empty.
+    </p>
+
 <pre><code>isEmpty():
     return count == 0
 
@@ -755,15 +882,19 @@ isFull():
 
 enqueue(value):
     if isFull():
-        report overflow or resize
+        return false
+
     backIndex = (frontIndex + count) % A.length
     A[backIndex] = value
     count = count + 1
+    return true
 
 dequeue():
     if isEmpty():
         report underflow and stop
+
     value = A[frontIndex]
+    A[frontIndex] = empty // optional, for garbage collection
     frontIndex = (frontIndex + 1) % A.length
     count = count - 1
     return value
@@ -771,90 +902,258 @@ dequeue():
 front():
     if isEmpty():
         report underflow and stop
+
     return A[frontIndex]
 
 size():
     return count</code></pre>
-      <h4>Key Points</h4>
-      <ul>
-        <li>Advancing an index uses <code>(index + 1) % capacity</code>.</li>
-        <li>No dequeue shifts values. It moves <code>frontIndex</code> instead.</li>
-        <li>The next enqueue position is computed from <code>frontIndex</code> and <code>count</code>.</li>
-        <li>A bounded circular array queue has \(O(1)\) <code>enqueue</code>, <code>dequeue</code>, <code>front</code>, <code>isEmpty</code>, <code>isFull</code>, and <code>size</code>.</li>
-        <li>A resizable circular array queue must copy the logical queue into a new array in front-to-back order when it grows.</li>
-      </ul>
-    </section>
+  </section>
 
-    <section id="cost-summary" section-title="Implementation Cost Summary">
-      <h3>Implementation Cost Summary</h3>
-      <p>
-        The linked queue and circular array queue make the core queue operations constant time. The ordinary
-        array queue is simpler, but its <code>dequeue</code> operation is expensive because it shifts values.
-      </p>
-      <table class="example-table cost-summary-table">
-        <thead>
-          <tr>
-            <th>Operation</th>
-            <th>Linked Queue</th>
-            <th>Ordinary Array Queue</th>
-            <th>Circular Array Queue</th>
-            <th>Notes</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><code>enqueue</code></td>
-            <td>\(O(1)\)</td>
-            <td>\(O(1)\)</td>
-            <td>\(O(1)\), or amortized \(O(1)\) if resizable</td>
-            <td>Linked enqueue needs a tail pointer. Array versions need room or a resize policy.</td>
-          </tr>
-          <tr>
-            <td><code>dequeue</code></td>
-            <td>\(O(1)\)</td>
-            <td>\(O(n)\)</td>
-            <td>\(O(1)\)</td>
-            <td>The ordinary array version shifts. The other versions do not.</td>
-          </tr>
-          <tr>
-            <td><code>front</code></td>
-            <td>\(O(1)\)</td>
-            <td>\(O(1)\)</td>
-            <td>\(O(1)\)</td>
-            <td>All versions keep direct access to the front.</td>
-          </tr>
-          <tr>
-            <td><code>isEmpty</code></td>
-            <td>\(O(1)\)</td>
-            <td>\(O(1)\)</td>
-            <td>\(O(1)\)</td>
-            <td>Usually checks <code>head == null</code> or <code>count == 0</code>.</td>
-          </tr>
-          <tr>
-            <td><code>size</code></td>
-            <td>\(O(1)\)</td>
-            <td>\(O(1)\)</td>
-            <td>\(O(1)\)</td>
-            <td>These costs assume a maintained <code>count</code> field.</td>
-          </tr>
-          <tr>
-            <td><code>search</code></td>
-            <td>\(O(n)\)</td>
-            <td>\(O(n)\)</td>
-            <td>\(O(n)\)</td>
-            <td>Search is not a core queue operation.</td>
-          </tr>
-          <tr>
-            <td>Storage</td>
-            <td>\(O(n)\), one node per item</td>
-            <td>\(O(c)\), capacity \(c\)</td>
-            <td>\(O(c)\), capacity \(c\)</td>
-            <td>Array queues may have unused slots. Linked queues store extra references.</td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
+  <section id="implementation-circular-array-analysis" section-title="Implementation Analysis">
+    <h4>Implementation Analysis</h4>
 
+    <p>
+      In the bounded circular array implementation, every operation uses only a constant
+      number of arithmetic operations, comparisons, array accesses, and assignments. No
+      operation shifts the stored values.
+    </p>
+
+    <ul>
+      <li>
+        <strong><code>enqueue</code>:</strong> \(O(1)\). It checks whether the queue is
+        full, computes the next insertion position with modulo arithmetic, stores the
+        new value, and increments <code>count</code>.
+      </li>
+      <li>
+        <strong><code>dequeue</code>:</strong> \(O(1)\). It checks whether the queue is
+        empty, saves the front value, advances <code>frontIndex</code>, decrements
+        <code>count</code>, and returns the saved value.
+      </li>
+      <li>
+        <strong><code>front</code>:</strong> \(O(1)\). It checks whether the queue is
+        empty and then returns <code>A[frontIndex]</code>.
+      </li>
+      <li>
+        <strong><code>isEmpty</code>:</strong> \(O(1)\). It checks whether
+        <code>count == 0</code>.
+      </li>
+      <li>
+        <strong><code>isFull</code>:</strong> \(O(1)\). It checks whether
+        <code>count == A.length</code>.
+      </li>
+      <li>
+        <strong><code>size</code>:</strong> \(O(1)\). It returns <code>count</code>.
+      </li>
+    </ul>
+
+    <h5>Storage used:</h5>
+    <p>
+      The implementation uses \(O(c)\) space, where \(c\) is the capacity of the backing
+      array. If the queue currently contains \(n\) values, then \(n = count\), and the
+      array has \(c - n\) unused slots. In addition to the array, the implementation
+      uses only \(O(1)\) extra space for variables such as <code>frontIndex</code> and
+      <code>count</code>.
+    </p>
+  </section>
+
+  <section id="implementation-circular-array-tradeoffs" section-title="Tradeoffs and Variants">
+    <h4>Tradeoffs and Variants</h4>
+
+    <ul>
+      <li>
+        A circular array queue avoids the \(O(n)\) shifting cost of the ordinary array
+        queue, so both <code>enqueue</code> and <code>dequeue</code> take \(O(1)\) time.
+      </li>
+      <li>
+        The representation is compact and usually cache-friendly because the values are
+        stored in one array.
+      </li>
+      <li>
+        The implementation is more subtle than the ordinary array version because the
+        logical order of the queue may wrap around the physical end of the array.
+      </li>
+      <li>
+        A bounded circular array queue has a fixed capacity and must define what happens
+        when <code>enqueue</code> is called on a full queue.
+      </li>
+      <li>
+        A resizable circular array queue can grow when full, but resizing is more
+        complicated than in an ordinary array queue. The implementation usually copies
+        the logical queue into a new array starting at index <code>0</code>, then resets
+        <code>frontIndex</code> to <code>0</code>.
+      </li>
+      <li>
+        Some implementations store both <code>frontIndex</code> and a separate
+        <code>backIndex</code>. This can save a small calculation during
+        <code>enqueue</code>, but it is redundant when <code>frontIndex</code> and
+        <code>count</code> are already available. It also adds another field that must
+        be updated correctly.
+      </li>
+      <li>
+        Some two-index implementations do not store <code>count</code>. In that design,
+        <code>frontIndex == backIndex</code> can be ambiguous: it might mean the queue is
+        empty or full. One common fix is to leave one array slot unused. Then the queue
+        is full when advancing the back index would make it equal to the front index.
+        This removes the ambiguity, but an array of length \(c\) can store only
+        \(c - 1\) values.
+      </li>
+      <li>
+        Another alternative is to store a Boolean flag such as <code>isFull</code> along
+        with the two indices. This allows all array slots to be used, but the flag must
+        be updated carefully after every enqueue and dequeue.
+      </li>
+      <li>All of these variations of a circular array queue ensure that the queue operations 
+        maintain their time complexity guarantees, and no one of them is clearly superior to the others. 
+        When choosing one to implement, go with that makes the most sense to you so you can be sure
+        that you implement it correctly.</li>
+    </ul>
+  </section>
+</section>
+
+   <section id="cost-summary" section-title="Implementation Cost Summary">
+  <h3>Implementation Cost Summary</h3>
+  <p>
+    The three implementations differ mostly in how they handle the two ends of the queue.
+    A linked queue keeps direct references to both ends. An ordinary array queue keeps the
+    front fixed at index <code>0</code>, which makes <code>dequeue</code> expensive. A
+    circular array queue uses an array more cleverly to keep both ends accessible without shifting values. 
+    The following table summarizes the costs of the core queue operations for each implementation.
+  </p>
+
+  <table class="example-table cost-summary-table">
+    <thead>
+      <tr>
+        <th>Operation</th>
+        <th>Linked Queue</th>
+        <th>Ordinary Array Queue</th>
+        <th>Circular Array Queue</th>
+        <th>Notes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><b><code>enqueue</code></b></td>
+        <td>\(O(1)\)</td>
+        <td>\(O(1)\)</td>
+        <td>\(O(1)\)</td>
+        <td>
+          The linked version uses <code>tail</code>. The ordinary array version writes
+          to <code>A[count]</code>. The circular version computes the next open position.
+          A resizable array version may occasionally take \(O(n)\) for one resize, but
+          with doubling the amortized cost is \(O(1)\).
+        </td>
+      </tr>
+      <tr>
+        <td><b><code>dequeue</code></b></td>
+        <td>\(O(1)\)</td>
+        <td>\(O(n)\)</td>
+        <td>\(O(1)\)</td>
+        <td>
+          The ordinary array version shifts the remaining values left. The linked version
+          moves <code>head</code>, and the circular array version advances
+          <code>frontIndex</code>.
+        </td>
+      </tr>
+      <tr>
+        <td><b><code>front</code></b></td>
+        <td>\(O(1)\)</td>
+        <td>\(O(1)\)</td>
+        <td>\(O(1)\)</td>
+        <td>
+          All three implementations keep direct access to the current front value.
+        </td>
+      </tr>
+      <tr>
+        <td><code>isEmpty</code></td>
+        <td>\(O(1)\)</td>
+        <td>\(O(1)\)</td>
+        <td>\(O(1)\)</td>
+        <td>
+          The linked version can check <code>head == null</code>. The array versions
+          usually check <code>count == 0</code>.
+        </td>
+      </tr>
+      <tr>
+        <td><code>isFull</code></td>
+        <td>Usually not used</td>
+        <td>\(O(1)\)</td>
+        <td>\(O(1)\)</td>
+        <td>
+          Fixed-size array queues check whether <code>count == A.length</code>. A linked
+          queue normally grows until memory is exhausted, so it usually does not expose
+          <code>isFull()</code>.
+        </td>
+      </tr>
+      <tr>
+        <td><code>size</code></td>
+        <td>\(O(1)\)</td>
+        <td>\(O(1)\)</td>
+        <td>\(O(1)\)</td>
+        <td>
+          These costs assume the implementation maintains a <code>count</code> field.
+          Without <code>count</code>, a linked queue would need \(O(n)\) time to count
+          its nodes.
+        </td>
+      </tr>
+      <tr>
+        <td><code>search</code></td>
+        <td>\(O(n)\)</td>
+        <td>\(O(n)\)</td>
+        <td>\(O(n)\)</td>
+        <td>
+          Search is not a core queue operation. A queue ADT normally exposes only
+          front/back FIFO behavior.
+        </td>
+      </tr>
+      <tr>
+        <td>Storage</td>
+        <td>\(O(n)\)</td>
+        <td>\(O(c)\)</td>
+        <td>\(O(c)\)</td>
+        <td>
+          Here \(n\) is the number of stored values and \(c\) is the array capacity.
+          Linked queues allocate one node per value. Array queues may have unused array
+          slots.
+        </td>
+      </tr>
+      <tr>
+        <td>Practical strengths</td>
+        <td>Grows one node at a time</td>
+        <td>Simple</td>
+        <td>Compact and efficient</td>
+        <td>
+          The ordinary array version is easiest to understand but not usually the right
+          implementation for repeated queue operations.
+        </td>
+      </tr>
+      <tr>
+        <td>Practical weaknesses</td>
+        <td>Extra reference per node; weaker locality</td>
+        <td>Slow <code>dequeue</code></td>
+        <td>More index bookkeeping</td>
+        <td>
+          The circular array version is efficient, but wrap-around arithmetic and
+          full/empty cases must be handled carefully.
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>
+    For a queue implementation intended for regular use, both <code>enqueue</code> and
+    <code>dequeue</code> should be constant-time operations. The ordinary array queue
+    does not meet that goal because each <code>dequeue</code> may shift many values. It
+    is useful as a stepping stone because it shows why the circular array queue is needed.
+  </p>
+
+  <p>
+    Between the linked queue and the circular array queue, the better choice depends on
+    context. A linked queue grows naturally and avoids unused capacity, but each value
+    requires a node and an extra reference. A circular array queue is usually more compact
+    and cache-friendly, but a bounded version needs a full-queue policy, and a resizable
+    version needs careful copying when the array grows.
+  </p>
+</section>
     <section id="library-implementations" section-title="Library Implementations">
       <h3>Library Implementations</h3>
       <p>
@@ -878,9 +1177,9 @@ size():
           <tr>
             <td><strong>Java</strong></td>
             <td><code>ArrayDeque&lt;E&gt;</code></td>
-            <td><code>addLast(value)</code> or <code>offer(value)</code></td>
-            <td><code>removeFirst()</code> or <code>poll()</code></td>
-            <td><code>peekFirst()</code> or <code>peek()</code></td>
+            <td><code>addLast(value)</code> <br> or <br> <code>offer(value)</code></td>
+            <td><code>removeFirst()</code> <br> or <br> <code>poll()</code></td>
+            <td><code>peekFirst()</code> <br> or <br> <code>peek()</code></td>
             <td>Often the first choice for queue behavior. Method pairs differ in how they report failure.</td>
           </tr>
           <tr>
@@ -897,7 +1196,7 @@ size():
             <td><code>append(value)</code></td>
             <td><code>popleft()</code></td>
             <td><code>q[0]</code></td>
-            <td>Efficient at both ends. A Python list is inefficient for repeated removals from the front.</td>
+            <td>Efficient at both ends.</td>
           </tr>
         </tbody>
       </table>
@@ -905,6 +1204,10 @@ size():
         The main lesson is that the library type does not have to be named <code>Queue</code> to be used as a
         queue. What matters is whether the program uses it through FIFO discipline: add at the back, remove
         from the front, and avoid operations that break the queue abstraction.
+        In addition, not all library implementations are equally efficient for queue behavior. 
+        For example, like an array in other languages, a Python list is not a good choice for a queue because removing from the front is \(O(n)\). 
+        The Python <code>collections.deque</code> is designed for efficient operations at both ends, 
+        so it is a better choice for a queue in Python.
       </p>
     </section>
   </section>
@@ -1061,8 +1364,19 @@ size():
       <li><strong>Basic Trace:</strong> Start with an empty queue. Perform <code>enqueue(4)</code>, <code>enqueue(7)</code>, <code>enqueue(9)</code>, <code>dequeue()</code>, <code>enqueue(2)</code>, and <code>front()</code>. Write the queue after each operation, and give the return value of each <code>dequeue</code> or <code>front</code>.</li>
       <li><strong>Bounded Queue Trace:</strong> Suppose a bounded queue can hold at most three values. Starting with an empty queue, perform <code>enqueue(6)</code>, <code>enqueue(1)</code>, <code>enqueue(8)</code>, <code>enqueue(3)</code>, <code>dequeue()</code>, and <code>enqueue(5)</code>. Assume <code>enqueue</code> returns <code>true</code> when it succeeds and <code>false</code> when the queue is full. Write the queue and return value after each operation.</li>
       <li><strong>Linked Queue:</strong> Why does a linked queue need a <code>tail</code> reference in addition to a <code>head</code> reference?</li>
+      <li>
+        <strong>Linked Queue Direction:</strong> In a linked queue, why do we usually make
+        <code>head</code> the front of the queue and <code>tail</code> the back? What would
+        go wrong if we reversed them?
+      </li>
       <li><strong>Last Node:</strong> In a linked queue, why must <code>tail</code> be set to <code>null</code> when the final node is dequeued?</li>
       <li><strong>Ordinary Array Queue:</strong> Why is <code>dequeue()</code> \(O(n)\) in the ordinary array implementation described on this page?</li>
+      <li>
+        <strong>Array Queue Direction:</strong> In a simple array queue that keeps the queue
+        in positions <code>A[0]</code> through <code>A[size - 1]</code>, why does reversing
+        the roles of <code>A[0]</code> and <code>A[size - 1]</code> not make the queue
+        efficient? What is the proper way to make an efficient array queue?
+      </li>
       <li><strong>Circular Array Queue:</strong> If <code>frontIndex = 4</code>, <code>count = 4</code>, and <code>A.length = 6</code>, what index receives the next enqueued value?</li>
       <li><strong>Queue and BFS:</strong> Why does breadth-first search use a queue rather than a stack?</li>
       <li><strong>ADT Boundary:</strong> Why is removing an arbitrary middle value not usually considered a core queue operation?</li>
@@ -1112,8 +1426,36 @@ size():
           </table>
         </li>
         <li><strong>Answer:</strong> The <code>head</code> reference gives constant-time access to the front for <code>dequeue</code> and <code>front</code>. The <code>tail</code> reference gives constant-time access to the back for <code>enqueue</code>. Without <code>tail</code>, enqueue would usually require scanning to the last node.</li>
+        <li>
+          <strong>Answer:</strong> A queue removes from the front and adds at the back. If
+          <code>head</code> is the front, then <code>dequeue()</code> can remove the first node
+          in \(O(1)\) time by moving <code>head</code> to <code>head.next</code>. If
+          <code>tail</code> is the back, then <code>enqueue(value)</code> can add a new node in
+          \(O(1)\) time by setting <code>tail.next</code> to the new node and then moving
+          <code>tail</code> to that new node.
+          <br><br>
+          If we reversed the roles, then <code>head</code> would be the back and
+          <code>tail</code> would be the front. Adding at <code>head</code> could still be
+          \(O(1)\), but removing from <code>tail</code> would be a problem in a singly linked
+          list. To remove the tail node, we would need to find the node just before it so we
+          could update its <code>next</code> reference to <code>null</code>. That requires
+          scanning from <code>head</code>, making <code>dequeue()</code> take \(O(n)\) time.
+        </li>
         <li><strong>Answer:</strong> After the final node is removed, the queue is empty. Both <code>head</code> and <code>tail</code> must reflect that state. If <code>tail</code> still points to the removed node, later operations may use stale state.</li>
         <li><strong>Answer:</strong> After removing <code>A[0]</code>, the implementation shifts the remaining \(n - 1\) values one position left so that the new front is again at index <code>0</code>. That shifting takes \(O(n)\) time.</li>
+        <li>
+          <strong>Answer:</strong> Reversing the ends only changes which operation is expensive.
+          If the front is at <code>A[0]</code> and the back is at <code>A[size - 1]</code>, then
+          <code>enqueue</code> can add at the end in \(O(1)\) time, but <code>dequeue</code>
+          removes from the front and requires shifting the remaining values left, which takes
+          \(O(n)\) time.
+          <br><br>
+          If we reverse the roles so that the back is at <code>A[0]</code> and the front is at
+          <code>A[size - 1]</code>, then <code>dequeue</code> can remove from the end in
+          \(O(1)\) time, but <code>enqueue</code> must insert at the front and shift all existing
+          values right, which takes \(O(n)\) time. A circular array avoids this problem by moving
+          indices instead of shifting values.
+        </li>
         <li><strong>Answer:</strong> The next enqueue position is <code>(frontIndex + count) % A.length = (4 + 4) % 6 = 2</code>.</li>
         <li><strong>Answer:</strong> BFS must process vertices in discovery order so that it explores all vertices at distance 1 before distance 2, and so on. A queue preserves that order.</li>
         <li><strong>Answer:</strong> A queue ADT only promises access to the front for removal and the back for insertion. Removing a middle value breaks FIFO order and belongs to a more general list-like structure.</li>
