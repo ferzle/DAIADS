@@ -118,12 +118,12 @@ const DATA_STRUCTURES_ORDERS = {
     'Advanced Structures'
   ],
   'Data Structures/Linear Structures/': [
-    'Arrays',
-    'Dynamic Arrays and Array-Based Lists',
-    'Linked Lists',
-    'Stacks',
+    'Representing Linear Structures',
+    'Lists',
     'Queues',
-    'Deques'
+    'Stacks',
+    'Deques',
+    'Dynamic Arrays',
   ],
   'Data Structures/Trees/': [
     'Tree Terminology',

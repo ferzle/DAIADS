@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Representing Linear Structures</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <script src="/Algorithms/scripts/chapterScripts.js"></script>
+  <link rel="stylesheet" href="/Algorithms/css/style.css">
+  <link rel="stylesheet" href="/Algorithms/css/chapter.css">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-DQ5LVZVFDC');
+  </script>
+  <style>
+    .syntax-table th,
+.syntax-table td {
+  padding: 2px 5px;
+}
+  </style>
+</head>
+<body>
+  <h1>Representing Linear Structures</h1>
+
+  <section id="overview" section-title="Overview">
+  <h2>Overview</h2>
+  <p>
+    A <strong>linear structure</strong> stores items in a sequence. Each item has a position relative to the
+    others: before, after, first, last, next, and previous. Arrays and linked structures are two fundamental
+    ways to represent such sequences. They support many of the same abstract ideas, but they make different
+    tradeoffs in memory layout, access time, and update cost.
+  </p>
+  <p>
+    This page reviews arrays and introduces node-and-link representations. Later pages use these ideas to
+    build lists, stacks, queues, priority queues, and other data structures.
+  </p>
+  </section>
+
+    <section id="arrays" section-title="Arrays">
+  <h2>Arrays</h2>
+  <p>
+  Here we provide a very brief review of arrays since we expect you have already encountered 
+  them in your previous programming course(s). We focus on the basic syntax, the underlying
+  indexing idea, and the strengths and weaknesses that make arrays useful in some situations
+  but less convenient in others.
+</p>
+  <p>
+    An <strong>array</strong> stores items in a sequence of indexed positions. If an array has length \(n\),
+    its valid indices are \(0,1,\ldots,n-1\). The three languages we focus on use mostly the same syntax
+    for the most common array operations. In Java, C++, and Python, we use square brackets to access and
+    update entries: <code>a[2]</code> gets the entry at index <code>2</code>, and <code>a[2] = 19</code>
+    changes the entry at index <code>2</code> to <code>19</code>.
+  </p>
+  <p>In text, we typically use bracket notation to denote the values of an array. 
+    For instance, \(A = [12, 7, 19, 4, 15]\) is an array with five elements. </p>
+
+<div class="example-box">
+    <strong class="example-title">Visual Representation of an Array</strong>
+<p>The array \(A = [12, 7, 19, 4, 15]\) is represented visually below:</p>
+  <svg width="520" height="75" viewBox="0 0 520 75" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="arrayDrawingTitle arrayDrawingDesc">
+    <title id="arrayDrawingTitle">Array A indexed from 0 to 4</title>
+    <desc id="arrayDrawingDesc">Array A has five entries. The indices are 0, 1, 2, 3, and 4. The entries are 12, 7, 19, 4, and 15.</desc>
+
+    <g font-family="Verdana" text-anchor="middle">
+      <text x="115" y="20" font-size="15">0</text>
+      <text x="185" y="20" font-size="15">1</text>
+      <text x="255" y="20" font-size="15">2</text>
+      <text x="325" y="20" font-size="15">3</text>
+      <text x="395" y="20" font-size="15">4</text>
+
+      <text x="45" y="52" font-size="16" text-anchor="start">A =</text>
+
+      <rect x="80" y="30" width="70" height="40" fill="#f8fbff" stroke="#333"></rect>
+      <rect x="150" y="30" width="70" height="40" fill="#f8fbff" stroke="#333"></rect>
+      <rect x="220" y="30" width="70" height="40" fill="#f8fbff" stroke="#333"></rect>
+      <rect x="290" y="30" width="70" height="40" fill="#f8fbff" stroke="#333"></rect>
+      <rect x="360" y="30" width="70" height="40" fill="#f8fbff" stroke="#333"></rect>
+
+      <text x="115" y="55" font-size="18">12</text>
+      <text x="185" y="55" font-size="18">7</text>
+      <text x="255" y="55" font-size="18">19</text>
+      <text x="325" y="55" font-size="18">4</text>
+      <text x="395" y="55" font-size="18">15</text>
+    </g>
+  </svg>
+  <p>
+  In this example, <code>A[2]</code> is <code>19</code>. If we execute
+  <code>A[3] = 20</code>, then the entry at index <code>3</code> changes from
+  <code>4</code> to <code>20</code>. 
+  The length of the array is \(5\), and the valid indices are \(0\) through \(4\).
+</p>
+</div>
+
+
+  <h3>Array Syntax</h3>
+  <p>
+    Access and update syntax is nearly identical in Java, C++, and Python. Creation syntax and length syntax
+    differ more. 
+  </p>
+
+  <table class="example-table left-align syntax-table">
+    <thead>
+      <tr>
+        <th>Task</th>
+        <th>Java</th>
+        <th>C++</th>
+        <th>Python</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Create with values</strong></td>
+        <td><code>int[] a={12,7,19,4,15};</code></td>
+        <td><code>int a[]={12,7,19,4,15};</code></td>
+        <td><code>a=[12,7,19,4,15]</code></td>
+      </tr>
+      <tr>
+        <td><strong>Create with a constant length</strong></td>
+        <td><code>int[] a = new int[5];</code></td>
+        <td><code>int a[5];</code></td>
+        <td><code>a = [0] * 5</code></td>
+      </tr>
+      <tr>
+  <td><strong>Create with variable length \(n\)</strong></td>
+  <td><code>int[] a = new int[n];</code></td>
+  <td><code>int* a = new int[n];</code></td>
+  <td><code>a = [0] * n</code></td>
+</tr>
+      <tr>
+        <td><strong>Access entry at index 2</strong></td>
+        <td><code>x = a[2];</code></td>
+        <td><code>x = a[2];</code></td>
+        <td><code>x = a[2]</code></td>
+      </tr>
+      <tr>
+        <td><strong>Update entry at index 3</strong></td>
+        <td><code>a[3] = 20;</code></td>
+        <td><code>a[3] = 20;</code></td>
+        <td><code>a[3] = 20</code></td>
+      </tr>
+      <tr>
+        <td><strong>Get the length</strong></td>
+        <td><code>a.length</code></td>
+        <td>store in variable (e.g. <code>n</code>)</td>
+        <td><code>len(a)</code></td>
+      </tr>
+    </tbody>
+  </table>
+<p>
+    A few important notes:
+</p>
+    <ul>
+        <li>
+        Built-in C++ arrays do <strong>not</strong> store their own size, so C++ programs often
+        keep a separate variable such as <code>n</code> for the number of entries being stored.
+        </li>
+        <li>
+        In standard C++, the syntax "<code>int a[n];</code>" is not valid when <code>n</code> is a runtime variable.
+        For a runtime-sized array, we can allocate the array with <code>new int[n]</code>, 
+        but then we are responsible for later freeing it with <code>delete[] a</code>.
+        Since Java and Python handle memory management automatically, they do not have this issue.
+        </li>
+        <li>
+        Python's list is not exactly the same thing as a Java array or a built-in C++ array, but it is the usual
+        Python structure used when we want simple array-like indexing. For now, the main point is the shared
+        bracket notation: <code>a[i]</code> names the entry at index <code>i</code>.
+        </li>
+    </ul>
+
+ <h3>Array Tradeoffs</h3>
+<ul class="spaced">
+  <li>
+    <strong>Strength: Simple indexing.</strong> The expression <code>a[i]</code> refers to the entry at
+    index <code>i</code>, and <code>a[i] = value</code> updates that entry.
+  </li>
+  <li>
+    <strong>Strength: Fast access and update.</strong> Reading or changing <code>a[i]</code> takes
+    \(O(1)\) time.
+  </li>
+  <li>
+    <strong>Strength: Compact storage.</strong> Array entries are stored consecutively, so arrays have
+    little extra storage overhead beyond the entries themselves.
+  </li>
+  <li>
+    <strong>Strength: Good memory locality.</strong> Because neighboring entries are stored near each
+    other, arrays often work well with caches and are efficient to scan from left to right.
+  </li>
+  <li>
+    <strong>Weakness: Fixed index range.</strong> If an array has length \(n\), the valid indices are
+    <code>0</code> through <code>n - 1</code>. Accessing an index outside this range is an error.
+  </li>
+  <li>
+    <strong>Weakness: Size management.</strong> Simple arrays have a fixed length after creation, so the
+    programmer must choose a size ahead of time or create a new larger array and copy entries later.
+    (But recall that the Python list is a resizable array, 
+    so it handles this issue automatically behind the scenes.)
+  </li>
+  <li>
+    <strong>Weakness: Costly insertions and deletions.</strong> Inserting or deleting near the beginning
+    or middle usually requires shifting many entries to preserve order.
+  </li>
+  <li>
+    <strong>Weakness: Unused capacity or copying.</strong> If the array is larger than the number of
+    items currently stored, some space is unused. If it is too small, the data must be copied into a
+    larger array.
+  </li>
+</ul>
+
+<h3>Dynamic Arrays</h3>
+<p>
+  Many languages also provide a resizable or dynamic array structure. These structures preserve the
+  basic idea of array indexing, but they can grow as items are added. Internally, a dynamic array
+  usually stores items in an ordinary array; when that array runs out of capacity, the structure
+  allocates a larger array and copies the existing entries. We will not focus on those details here,
+  but these structures are worth recognizing because they are often what programmers use in practice.
+</p>
+
+<ul class="spaced">
+  <li>
+    <strong>Java:</strong> <code>ArrayList&lt;T&gt;</code> is the usual resizable array structure, where
+    <code>T</code> is the element type. For example, an <code>ArrayList&lt;String&gt;</code> stores strings.
+    To access an entry, use <code>a.get(i)</code> instead of <code>a[i]</code>. To update an entry, use
+    <code>a.set(i, value)</code> instead of <code>a[i] = value</code>.
+  </li>
+  <li>
+    <strong>C++:</strong> <code>vector&lt;T&gt;</code> is the usual resizable array structure, where
+    <code>T</code> is the element type. Unlike Java's <code>ArrayList</code>, a C++ <code>vector</code>
+    still supports bracket notation: <code>a[i]</code> accesses an entry and <code>a[i] = value</code>
+    updates an entry.
+  </li>
+  <li>
+    <strong>Python:</strong> <code>list</code> already behaves like a resizable array. It uses the same
+    bracket notation as the simple examples above: <code>a[i]</code> accesses an entry and
+    <code>a[i] = value</code> updates an entry.
+  </li>
+</ul>
+ <h2>Interactive Demo</h2>
+    <p>
+      Here is an interactive demo that shows various operations for a small array.
+      It includes several operations that we have not discussed yet, 
+      such as searching for a value, inserting/deleting an element, and appending a value at the end.
+      It also implements a dynamic array, so it also shows how the structure handles resizing when capacity is exceeded.
+    </p>
+    <div class="embeddedDemoContainer">
+      <iframe class="embeddedDemo"
+              src="../../../Content/Demos/Data Structures/Array/Array Operations Demo.html"
+              allow="fullscreen"
+              name="array-operations-demo">
+      </iframe>
+    </div>
+</section>
+
+  <section id="nodes-links" section-title="Nodes and Links">
+  <h2>Nodes and Links</h2>
+  <p>
+    A second way to represent a linear structure is to store each item in a small object called a
+    <strong>node</strong>. Each node stores a value and one or more <strong>links</strong> to other nodes.
+    For a singly linked structure, each node stores a link to the next node in the sequence.
+  </p>
+  <p>
+    Unlike an array, the nodes do not need to be stored next to each other in memory. The order is determined
+    by the links, not by physical position. This makes some insertions and deletions efficient once the
+    relevant node is known, but it means we lose direct indexed access.
+  </p>
+
+  <h3>A Single Node</h3>
+  <p>
+    A node for a singly linked structure has two fields:
+  </p>
+  <ul class="spaced">
+    <li><strong><code>data</code>:</strong> the item stored in the node.</li>
+    <li><strong><code>next</code>:</strong> a reference, pointer, or link to the next node.</li>
+  </ul>
+
+  <div class="example-box">
+    <strong class="example-title">Text picture:</strong>
+    <p><code>[12 | next] -> [7 | next] -> [19 | null]</code></p>
+  </div>
+
+  <h3>Node Definitions</h3>
+  <p>
+    The syntax differs by language, but the idea is the same: each node stores data and a link to another node.
+  </p>
+
+  <div class="tab-group">
+    <div class="tabs" role="tablist">
+      <button id="tab-java-node" class="tablink active" data-lang="java-node" role="tab" aria-controls="java-node" aria-selected="true">Java</button>
+      <button id="tab-cpp-node" class="tablink" data-lang="cpp-node" role="tab" aria-controls="cpp-node" aria-selected="false">C++</button>
+      <button id="tab-python-node" class="tablink" data-lang="python-node" role="tab" aria-controls="python-node" aria-selected="false">Python</button>
+    </div>
+    <div id="java-node" class="code-container active" role="tabpanel" aria-labelledby="tab-java-node">
+      <pre><code class="language-java">private static class Node {
+    int data;
+    Node next;
+
+    Node(int data, Node next) {
+        this.data = data;
+        this.next = next;
+    }
+}</code></pre>
+    </div>
+    <div id="cpp-node" class="code-container" role="tabpanel" aria-labelledby="tab-cpp-node">
+      <pre><code class="language-cpp">struct Node {
+    int data;
+    Node* next;
+
+    Node(int d, Node* n = nullptr) {
+        data = d;
+        next = n;
+    }
+};</code></pre>
+    </div>
+    <div id="python-node" class="code-container" role="tabpanel" aria-labelledby="tab-python-node">
+      <pre><code class="language-python">class Node:
+    def __init__(self, data, next=None):
+        self.data = data
+        self.next = next</code></pre>
+    </div>
+  </div>
+
+  <h3>Basic Linked Operations</h3>
+  <p>
+    This page is not yet a full linked list chapter. The goal is to understand the node-and-link mechanics
+    that later list, stack, and queue operations use. The operations below are enough to show the main idea.
+  </p>
+
+  <ol class="spaced">
+    <li>
+      <strong><code>insertAtHead(value)</code>:</strong> Create a new node, point it to the old head, and make
+      the new node the head.
+    </li>
+    <li>
+      <strong><code>deleteAtHead()</code>:</strong> Save the old head value if needed, move head to the second node,
+      and allow the old head to be removed.
+    </li>
+    <li>
+      <strong><code>insertAfter(node, value)</code>:</strong> Create a new node whose next link is
+      <code>node.next</code>, then set <code>node.next</code> to the new node.
+    </li>
+    <li>
+      <strong><code>deleteAfter(node)</code>:</strong> Bypass the node after <code>node</code> by changing
+      <code>node.next</code> to <code>node.next.next</code>, assuming such a node exists.
+    </li>
+    <li>
+      <strong><code>search(value)</code>:</strong> Start at the head and follow links until the value is found or
+      the end is reached.
+    </li>
+    <li>
+      <strong><code>traverse()</code>:</strong> Visit each node in order by repeatedly following <code>next</code> links.
+    </li>
+  </ol>
+
+  <h3>Linked Operation Code</h3>
+  <p>
+    These examples use a minimal wrapper class with a <code>head</code> reference. Later pages can expand this
+    into a complete linked list implementation.
+  </p>
+
+  <div class="tab-group">
+    <div class="tabs" role="tablist">
+      <button id="tab-java-linked" class="tablink active" data-lang="java-linked" role="tab" aria-controls="java-linked" aria-selected="true">Java</button>
+      <button id="tab-cpp-linked" class="tablink" data-lang="cpp-linked" role="tab" aria-controls="cpp-linked" aria-selected="false">C++</button>
+      <button id="tab-python-linked" class="tablink" data-lang="python-linked" role="tab" aria-controls="python-linked" aria-selected="false">Python</button>
+    </div>
+    <div id="java-linked" class="code-container active" role="tabpanel" aria-labelledby="tab-java-linked">
+      <pre><code class="language-java">public class LinkedSequence {
+    private static class Node {
+        int data;
+        Node next;
+
+        Node(int data, Node next) {
+            this.data = data;
+            this.next = next;
+        }
+    }
+
+    private Node head;
+
+    public void insertAtHead(int value) {
+        head = new Node(value, head);
+    }
+
+    public int deleteAtHead() {
+        if (head == null) {
+            throw new IllegalStateException("empty sequence");
+        }
+        int value = head.data;
+        head = head.next;
+        return value;
+    }
+
+    public void insertAfter(Node node, int value) {
+        if (node == null) {
+            throw new IllegalArgumentException("node is null");
+        }
+        node.next = new Node(value, node.next);
+    }
+
+    public int deleteAfter(Node node) {
+        if (node == null || node.next == null) {
+            throw new IllegalArgumentException("no node to delete");
+        }
+        int value = node.next.data;
+        node.next = node.next.next;
+        return value;
+    }
+
+    public Node search(int value) {
+        Node current = head;
+        while (current != null) {
+            if (current.data == value) {
+                return current;
+            }
+            current = current.next;
+        }
+        return null;
+    }
+}</code></pre>
+    </div>
+    <div id="cpp-linked" class="code-container" role="tabpanel" aria-labelledby="tab-cpp-linked">
+      <pre><code class="language-cpp">class LinkedSequence {
+private:
+    struct Node {
+        int data;
+        Node* next;
+
+        Node(int d, Node* n = nullptr) {
+            data = d;
+            next = n;
+        }
+    };
+
+    Node* head;
+
+public:
+    LinkedSequence() {
+        head = nullptr;
+    }
+
+    void insertAtHead(int value) {
+        head = new Node(value, head);
+    }
+
+    int deleteAtHead() {
+        if (head == nullptr) {
+            throw "empty sequence";
+        }
+        Node* oldHead = head;
+        int value = oldHead->data;
+        head = head->next;
+        delete oldHead;
+        return value;
+    }
+
+    void insertAfter(Node* node, int value) {
+        if (node == nullptr) {
+            throw "node is null";
+        }
+        node->next = new Node(value, node->next);
+    }
+
+    int deleteAfter(Node* node) {
+        if (node == nullptr || node->next == nullptr) {
+            throw "no node to delete";
+        }
+        Node* victim = node->next;
+        int value = victim->data;
+        node->next = victim->next;
+        delete victim;
+        return value;
+    }
+
+    Node* search(int value) {
+        Node* current = head;
+        while (current != nullptr) {
+            if (current->data == value) {
+                return current;
+            }
+            current = current->next;
+        }
+        return nullptr;
+    }
+};</code></pre>
+    </div>
+    <div id="python-linked" class="code-container" role="tabpanel" aria-labelledby="tab-python-linked">
+      <pre><code class="language-python">class Node:
+    def __init__(self, data, next=None):
+        self.data = data
+        self.next = next
+
+
+class LinkedSequence:
+    def __init__(self):
+        self.head = None
+
+    def insert_at_head(self, value):
+        self.head = Node(value, self.head)
+
+    def delete_at_head(self):
+        if self.head is None:
+            raise IndexError("empty sequence")
+        value = self.head.data
+        self.head = self.head.next
+        return value
+
+    def insert_after(self, node, value):
+        if node is None:
+            raise ValueError("node is None")
+        node.next = Node(value, node.next)
+
+    def delete_after(self, node):
+        if node is None or node.next is None:
+            raise ValueError("no node to delete")
+        value = node.next.data
+        node.next = node.next.next
+        return value
+
+    def search(self, value):
+        current = self.head
+        while current is not None:
+            if current.data == value:
+                return current
+            current = current.next
+        return None</code></pre>
+    </div>
+  </div>
+  </section>
+
+  <section id="comparison" section-title="Array vs. Linked Representation">
+  <h2>Array vs. Linked Representation</h2>
+  <p>
+    Arrays and linked structures are both useful. The choice depends on which operations must be fast and what
+    kind of memory layout is acceptable.
+  </p>
+
+  <table class="example-table left-align">
+    <thead>
+      <tr>
+        <th>Feature</th>
+        <th>Array Representation</th>
+        <th>Linked Representation</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Access item by index</td>
+        <td>Fast: \(O(1)\)</td>
+        <td>Slow: usually \(O(n)\)</td>
+      </tr>
+      <tr>
+        <td>Insert/delete at head</td>
+        <td>Usually \(O(n)\) because items shift</td>
+        <td>Usually \(O(1)\)</td>
+      </tr>
+      <tr>
+        <td>Insert/delete after known node</td>
+        <td>Usually \(O(n)\) because items shift</td>
+        <td>Usually \(O(1)\)</td>
+      </tr>
+      <tr>
+        <td>Search by value</td>
+        <td>Usually \(O(n)\) if unsorted</td>
+        <td>Usually \(O(n)\)</td>
+      </tr>
+      <tr>
+        <td>Memory overhead</td>
+        <td>Low per item</td>
+        <td>Extra link field in each node</td>
+      </tr>
+      <tr>
+        <td>Memory locality</td>
+        <td>Good</td>
+        <td>Often weaker because nodes may be scattered</td>
+      </tr>
+    </tbody>
+  </table>
+  </section>
+
+  <section id="analysis" section-title="Time/Space Analysis">
+  <h2>Time/Space Analysis</h2>
+  <p>
+    The table above summarizes the most important asymptotic costs. The main difference is that arrays support
+    direct index computation, while linked structures support local rewiring of links once the relevant node is
+    already known.
+  </p>
+  <p>
+    <strong>Array access:</strong> Accessing <code>a[i]</code> takes \(O(1)\) time because the position can be
+    computed directly from the base location and the index.
+  </p>
+  <p>
+    <strong>Array insertion/deletion:</strong> Inserting or deleting at position <code>pos</code> may require shifting
+    all items after <code>pos</code>. In the worst case this is \(O(n)\) time.
+  </p>
+  <p>
+    <strong>Linked insertion/deletion:</strong> Inserting or deleting at the head, or after a known node, takes
+    \(O(1)\) time because only a constant number of links change.
+  </p>
+  <p>
+    <strong>Linked searching:</strong> Searching a linked structure takes \(O(n)\) time in the worst case because
+    the algorithm may need to follow links through every node.
+  </p>
+  <p>
+    <strong>Extra space:</strong> An array representation usually has little per-item overhead, though resizable
+    arrays may reserve unused capacity. A linked representation stores at least one extra link per node, so it
+    uses \(O(n)\) extra link storage for \(n\) items.
+  </p>
+  </section>
+
+  <section id="links" section-title="Helpful Links and Resources">
+  <h2>Links to Resources</h2>
+  <ul>
+    <li><a href="https://en.wikipedia.org/wiki/Array_(data_structure)" target="_blank">Wikipedia: Array</a> Overview of arrays as a data structure.</li>
+    <li><a href="https://en.wikipedia.org/wiki/Linked_list" target="_blank">Wikipedia: Linked List</a> Overview of linked nodes and linked list variations.</li>
+    <li><a href="https://visualgo.net/en/list" target="_blank">VisuAlgo: Linked List</a> Interactive linked list visualization.</li>
+    <li><a href="https://www.geeksforgeeks.org/dsa/array-data-structure/" target="_blank">GeeksforGeeks: Array Data Structure</a> Additional array examples and terminology.</li>
+    <li><a href="https://www.geeksforgeeks.org/dsa/linked-list-data-structure/" target="_blank">GeeksforGeeks: Linked List Data Structure</a> Additional linked list examples and operations.</li>
+  </ul>
+  </section>
+
+  <section id="reading-questions" section-title="Reading Comprehension Questions">
+    <h2>Reading Comprehension Questions</h2>
+    <ol>
+      <li><strong>Linear Order:</strong> What does it mean for a structure to be linear?</li>
+      <li><strong>Array Indexing:</strong> Why can an array access item <code>i</code> in \(O(1)\) time?</li>
+      <li><strong>Array Shifting:</strong> Why can inserting near the front of an array take \(O(n)\) time?</li>
+      <li><strong>Node Fields:</strong> What two fields does a singly linked node usually store?</li>
+      <li><strong>Head Insertion:</strong> What links must change when inserting a new node at the head?</li>
+      <li><strong>Delete After:</strong> Why does <code>deleteAfter(node)</code> require access to the node before the one being deleted?</li>
+      <li><strong>Search:</strong> Why is searching by value usually \(O(n)\) for both arrays and linked structures?</li>
+      <li><strong>Tradeoff:</strong> Give one advantage of arrays and one advantage of linked structures.</li>
+    </ol>
+    <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
+    <div id="answers" class="answer" hidden>
+      <ol>
+        <li><strong>Answer:</strong> Its items are arranged in a sequence, so ideas such as first, last, before, after, and next make sense.</li>
+        <li><strong>Answer:</strong> The location of item <code>i</code> can be computed directly from the base location and the index.</li>
+        <li><strong>Answer:</strong> Items after the insertion point must be shifted to make room while preserving order.</li>
+        <li><strong>Answer:</strong> It stores the data item and a link, often called <code>next</code>, to the next node.</li>
+        <li><strong>Answer:</strong> The new node's <code>next</code> link points to the old head, and <code>head</code> is updated to point to the new node.</li>
+        <li><strong>Answer:</strong> To remove a node from a singly linked structure, the previous node's <code>next</code> link must be changed to bypass the removed node.</li>
+        <li><strong>Answer:</strong> Without extra ordering or indexing information, the algorithm may have to inspect every item before finding the value or concluding it is absent.</li>
+        <li><strong>Answer:</strong> Arrays provide fast indexed access. Linked structures can insert or delete at the head, or after a known node, by changing only a few links.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="activities" section-title="In-Class Activities">
+    <h2>In-Class Activities</h2>
+    <ol>
+      <li><strong>Array Shift Trace:</strong> Start with <code>[12, 7, 19, 4, 15]</code>. Insert <code>10</code> at index <code>1</code> by showing each shift.</li>
+      <li><strong>Node Cards:</strong> Give students index cards representing nodes. Each card stores a value and an arrow to the next card. Practice inserting a new head card.</li>
+      <li><strong>Delete After by Hand:</strong> Draw <code>12 -> 7 -> 19 -> 4</code>. Delete the node after <code>7</code> and show exactly which link changes.</li>
+      <li><strong>Search Race:</strong> Compare searching for <code>4</code> in an array diagram and in a linked diagram. Identify what information is available at each step.</li>
+      <li><strong>Representation Choice:</strong> For each scenario, decide whether an array or linked representation is more natural: frequent index lookup, frequent head insertion, compact storage, and unknown final size.</li>
+      <li><strong>Code Reading:</strong> Give students the <code>insertAfter</code> code and ask them to explain why the order of assignments matters.</li>
+      <li><strong>Broken Links:</strong> Present an incorrect linked insertion that loses part of the list. Students identify the lost reference and repair the code.</li>
+      <li><strong>Cost Sorting:</strong> Put operation cards into buckets labeled \(O(1)\), \(O(n)\), and "depends on representation." Discuss disagreements.</li>
+    </ol>
+  </section>
+
+  <section id="problems" section-title="Homework Problems">
+    <h2>Homework Problems</h2>
+    <ol>
+      <li><strong>Array Insertion Trace:</strong> An array has meaningful contents <code>[8, 3, 14, 6]</code> and capacity <code>7</code>. Trace the steps to insert <code>10</code> at index <code>2</code>.</li>
+      <li><strong>Array Deletion Trace:</strong> Starting with <code>[5, 11, 2, 9, 17]</code>, delete the item at index <code>1</code>. Show each shift and the final size.</li>
+      <li><strong>Build by Head Insertions:</strong> Starting with an empty linked structure, perform <code>insertAtHead(4)</code>, <code>insertAtHead(9)</code>, <code>insertAtHead(2)</code>. Draw the final structure.</li>
+      <li><strong>Insert After Trace:</strong> Given <code>3 -> 8 -> 12 -> null</code>, show the link changes needed to insert <code>6</code> after <code>8</code>.</li>
+      <li><strong>Delete After Trace:</strong> Given <code>3 -> 8 -> 12 -> 5 -> null</code>, show the link changes needed to delete the node after <code>8</code>.</li>
+      <li><strong>Search Cost:</strong> For the linked structure <code>6 -> 1 -> 14 -> 9 -> 3 -> null</code>, how many nodes are examined when searching for <code>9</code>? How many when searching for <code>7</code>?</li>
+      <li><strong>Code Modification:</strong> Add a <code>contains(value)</code> method that returns <code>true</code> or <code>false</code> instead of returning the node.</li>
+      <li><strong>Representation Decision:</strong> For a to-do list app that frequently adds new tasks at the front but rarely accesses tasks by index, explain whether an array or linked representation is a better first choice.</li>
+    </ol>
+  </section>
+
+</body>
+</html>
