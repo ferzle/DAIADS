@@ -115,6 +115,7 @@ function buildAndWrap() {
       "H1",
       "H2",
       "H3",
+      "H4",
       "TH",
       "CODE",
       "PRE",

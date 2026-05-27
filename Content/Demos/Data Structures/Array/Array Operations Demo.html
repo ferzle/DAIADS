@@ -23,6 +23,18 @@
     .array-demo-controls input {
       width: 70px;
     }
+    .array-step-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin: 8px 0;
+    }
+    #stepInfo {
+      color: #333;
+      font-size: 13px;
+      font-weight: bold;
+    }
     .array-stats {
       margin: 8px 0;
       font-weight: bold;
@@ -97,11 +109,12 @@
     <div class="array-demo-controls">
       <label>v=<input id="valueInput" type="number" value="22"></label>
       <label>i=<input id="indexInput" type="number" value="2" min="0"></label>
-      <button id="accessBtn">A[i]</button>
-      <button id="searchBtn">Search(v)</button>
-      <button id="insertBtn">InsertAt(i, v)</button>
-      <button id="deleteBtn">DeleteAt(i)</button>
-      <button id="appendBtn">Append(v)</button>
+      <button id="accessBtn" class="operation-btn">A[i]</button>
+      <button id="assignBtn" class="operation-btn">A[i]=v</button>
+      <button id="searchBtn" class="operation-btn">Search(v)</button>
+      <button id="insertBtn" class="operation-btn">InsertAt(i, v)</button>
+      <button id="deleteBtn" class="operation-btn">DeleteAt(i)</button>
+      <button id="appendBtn" class="operation-btn">Append(v)</button>
       <button id="resetBtn">Reset</button>
     </div>
 
@@ -110,7 +123,15 @@
       <span class="legend-box" style="background:#ffe16a;"></span>Accessed
       <span class="legend-box" style="background:#74b474;"></span>Found
       <span class="legend-box" style="background:#ffa088;"></span>Shifted
+      <span class="legend-box" style="background:#8ecae6;"></span>Inserted/written
       <span class="legend-box" style="background:#f6f6f6;"></span>Unused capacity
+    </div>
+
+    <div class="array-step-controls">
+      <button id="prevStepBtn" disabled>Previous Step</button>
+      <button id="nextStepBtn" disabled>Next Step</button>
+      <button id="finishStepBtn" disabled>Finish Operation</button>
+      <span id="stepInfo"></span>
     </div>
 
     <div class="array-stats" id="stats"></div>
@@ -122,11 +143,14 @@
     let values;
     let capacity;
     let highlights = {};
+    let activeSteps = [];
+    let stepIndex = -1;
 
     function resetState() {
       values = [14, 8, 31, 5, 20];
       capacity = 8;
       highlights = {};
+      clearStepRun();
       render('Initial dynamic array. Size is the number of stored values; capacity is the number of allocated slots.');
     }
 
@@ -177,7 +201,64 @@
       }
     }
 
+    function updateStepControls() {
+      const hasSteps = activeSteps.length > 0;
+      const atFinalStep = hasSteps && stepIndex === activeSteps.length - 1;
+
+      document.getElementById('prevStepBtn').disabled = !hasSteps || stepIndex <= 0;
+      document.getElementById('nextStepBtn').disabled = !hasSteps || atFinalStep;
+      document.getElementById('finishStepBtn').disabled = !hasSteps || atFinalStep;
+      document.getElementById('stepInfo').textContent = hasSteps ? `Step ${stepIndex + 1} of ${activeSteps.length}` : '';
+
+      document.querySelectorAll('.operation-btn').forEach((button) => {
+        button.disabled = hasSteps && !atFinalStep;
+      });
+    }
+
+    function clearStepRun(updateControls = true) {
+      activeSteps = [];
+      stepIndex = -1;
+      if (updateControls) {
+        updateStepControls();
+      }
+    }
+
+    function makeStep(message, stepValues, stepCapacity, stepHighlights = {}) {
+      return {
+        message,
+        values: stepValues.slice(),
+        capacity: stepCapacity,
+        highlights: { ...stepHighlights }
+      };
+    }
+
+    function showStep(nextIndex) {
+      stepIndex = nextIndex;
+      const step = activeSteps[stepIndex];
+      values = step.values.slice();
+      capacity = step.capacity;
+      highlights = { ...step.highlights };
+      render(step.message);
+      updateStepControls();
+    }
+
+    function startStepRun(steps) {
+      activeSteps = steps;
+      if (activeSteps.length === 0) {
+        clearStepRun();
+        return;
+      }
+      showStep(0);
+    }
+
+    function finishStepRun() {
+      if (activeSteps.length > 0) {
+        showStep(activeSteps.length - 1);
+      }
+    }
+
     function setMessage(message, newHighlights = {}) {
+      clearStepRun();
       highlights = newHighlights;
       render(message);
     }
@@ -191,14 +272,39 @@
       setMessage(`A[${i}] = ${values[i]}. Direct indexed access is O(1).`, { [i]: 'active' });
     });
 
-    document.getElementById('searchBtn').addEventListener('click', () => {
-      const target = getValue();
-      const index = values.indexOf(target);
-      if (index === -1) {
-        setMessage(`${target} is not present. Sequential search checks the array from left to right.`);
+    document.getElementById('assignBtn').addEventListener('click', () => {
+      const i = getIndex();
+      const value = getValue();
+      if (!Number.isInteger(i) || i < 0 || i >= values.length) {
+        setMessage(`Assignment index ${i} must be between 0 and ${values.length - 1}.`);
         return;
       }
-      setMessage(`${target} was found at index ${index}.`, { [index]: 'found' });
+      const oldValue = values[i];
+      values[i] = value;
+      setMessage(`A[${i}] changed from ${oldValue} to ${value}. Indexed assignment is O(1).`, { [i]: 'inserted' });
+    });
+
+    document.getElementById('searchBtn').addEventListener('click', () => {
+      const target = getValue();
+      const steps = [];
+
+      if (values.length === 0) {
+        setMessage(`The array is empty, so ${target} is not present.`);
+        return;
+      }
+
+      for (let j = 0; j < values.length; j++) {
+        if (values[j] === target) {
+          steps.push(makeStep(`Check A[${j}] = ${values[j]}. It matches ${target}, so search stops at index ${j}.`, values, capacity, { [j]: 'found' }));
+          startStepRun(steps);
+          return;
+        }
+
+        steps.push(makeStep(`Check A[${j}] = ${values[j]}. It does not match ${target}, so continue right.`, values, capacity, { [j]: 'active' }));
+      }
+
+      steps.push(makeStep(`Every array element has been checked. ${target} is not present.`, values, capacity));
+      startStepRun(steps);
     });
 
     document.getElementById('appendBtn').addEventListener('click', () => {
@@ -220,19 +326,41 @@
         setMessage(`Insertion index ${i} must be between 0 and ${values.length}.`);
         return;
       }
+
       const resized = ensureCapacity();
-      values.splice(i, 0, value);
-      const shifted = {};
-      for (let j = i + 1; j < values.length; j++) {
-        shifted[j] = 'shift';
+      const steps = [];
+      const working = values.slice();
+
+      if (i === values.length) {
+        values.push(value);
+        setMessage(
+          resized
+            ? `Capacity doubled first, then ${value} was inserted at the end.`
+            : `${value} was inserted at the end. No elements needed to shift.`,
+          { [values.length - 1]: 'inserted' }
+        );
+        return;
       }
-      shifted[i] = 'inserted';
-      setMessage(
+
+      const oldLastIndex = working.length - 1;
+      working.push(working[oldLastIndex]);
+      steps.push(makeStep(
         resized
-          ? `Capacity doubled, then elements from index ${i} onward shifted right.`
-          : `Elements from index ${i} onward shifted right to make room for ${value}.`,
-        shifted
-      );
+          ? `Capacity doubled. Shift A[${oldLastIndex}] = ${working[oldLastIndex]} right into index ${oldLastIndex + 1}.`
+          : `Shift A[${oldLastIndex}] = ${working[oldLastIndex]} right into index ${oldLastIndex + 1}.`,
+        working,
+        capacity,
+        { [oldLastIndex]: 'active', [oldLastIndex + 1]: 'shift' }
+      ));
+
+      for (let j = working.length - 3; j >= i; j--) {
+        working[j + 1] = working[j];
+        steps.push(makeStep(`Shift A[${j}] = ${working[j]} right into index ${j + 1}.`, working, capacity, { [j]: 'active', [j + 1]: 'shift' }));
+      }
+
+      working[i] = value;
+      steps.push(makeStep(`Write ${value} into A[${i}]. Insertion is complete.`, working, capacity, { [i]: 'inserted' }));
+      startStepRun(steps);
     });
 
     document.getElementById('deleteBtn').addEventListener('click', () => {
@@ -241,13 +369,38 @@
         setMessage(`Deletion index ${i} must be between 0 and ${values.length - 1}.`);
         return;
       }
-      const removed = values.splice(i, 1)[0];
-      const shifted = {};
-      for (let j = i; j < values.length; j++) {
-        shifted[j] = 'shift';
+
+      const removed = values[i];
+      if (i === values.length - 1) {
+        values.pop();
+        setMessage(`Removed ${removed} from the last index. No elements needed to shift.`, { [i]: 'shift' });
+        return;
       }
-      setMessage(`Removed ${removed}. Elements after index ${i} shifted left.`, shifted);
+
+      const steps = [];
+      const working = values.slice();
+      for (let j = i + 1; j < working.length; j++) {
+        working[j - 1] = working[j];
+        steps.push(makeStep(`Shift A[${j}] = ${working[j]} left into index ${j - 1}.`, working, capacity, { [j]: 'active', [j - 1]: 'shift' }));
+      }
+      working.pop();
+      steps.push(makeStep(`Removed ${removed}. The duplicate last slot is outside the logical array, so size decreases by one.`, working, capacity, { [Math.max(i, working.length - 1)]: 'shift' }));
+      startStepRun(steps);
     });
+
+    document.getElementById('prevStepBtn').addEventListener('click', () => {
+      if (stepIndex > 0) {
+        showStep(stepIndex - 1);
+      }
+    });
+
+    document.getElementById('nextStepBtn').addEventListener('click', () => {
+      if (stepIndex < activeSteps.length - 1) {
+        showStep(stepIndex + 1);
+      }
+    });
+
+    document.getElementById('finishStepBtn').addEventListener('click', finishStepRun);
 
     document.getElementById('resetBtn').addEventListener('click', resetState);
 
