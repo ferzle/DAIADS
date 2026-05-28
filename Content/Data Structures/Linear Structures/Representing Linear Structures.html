@@ -1058,7 +1058,7 @@
         keep a separate variable such as <code>n</code> for the number of entries being stored.
         </li>
         <li>
-        In standard C++, the syntax "<code>int a[n];</code>" is not valid when <code>n</code> is a runtime variable.
+        In standard C++, the syntax <code>int a[n];</code> is not valid when <code>n</code> is a runtime variable.
         For a runtime-sized array, we can allocate the array with <code>new int[n]</code>, 
         but then we are responsible for later freeing it with <code>delete[] a</code>.
         Since Java and Python handle memory management automatically, they do not have this issue.
@@ -1198,7 +1198,7 @@
 
 <p>
   Conceptually, the <code>next</code> field tells us which node comes next in the sequence.
-  IN an implementation, this is represented as a pointer or reference toanother node in memory.
+  In an implementation, this is represented as a pointer or reference toanother node in memory.
   The actual reference value is not important for our purposes, so in diagrams we simply draw
   an arrow to the next node. If there is no next node, we label the link as <code>null</code>,
   although the language-specific name for this special value varies:
@@ -1414,7 +1414,7 @@
   <h4>Linked List Operations</h4>
   <p>
     Here is a partial list of some of the most basic operations that we will want to support for a linked list.
-    Since linked lists are primarily used as a builinding block for other data structures, 
+    Since linked lists are primarily used as a building block for other data structures, 
     there is no official list of required operations, 
     but these are some of the most common ones that we will want to support in later sections.
     The main purpose here is to give you an idea of how to work with nodes to create a linear structure. 
@@ -1425,6 +1425,10 @@
     set the data field of the new node to the value being inserted,
     set its next link to the head (which points to the first node), 
     and make the head reference point to the new node.
+  </p>
+  <p>
+    This operation works even when the list is empty; in that case, the new node's
+    <code>next</code> field is set to <code>null</code>.
   </p>
 
   <div class="stack-operation-drawings" aria-label="Animated drawing for insertAtHead">
@@ -1516,6 +1520,10 @@
     Optionally, we can also reset the next link of the old head node to null, 
     and free the memory used for the node in languages that require it.
   </p>
+  <p>
+    This operation assumes that the list is nonempty. If <code>head</code> is <code>null</code>,
+    there is no first node to remove.
+  </p>
 
   <div class="stack-operation-drawings" aria-label="Animated drawing for deleteAtHead">
     <figure class="stack-operation-drawing wide-linked-drawing">
@@ -1578,6 +1586,10 @@
     set the next link of the new node to <code>n.next</code>, 
     then set <code>n.next</code> to the new node, 
     effectively inserting the new node between \(n\) and its old successor.
+  </p>
+  <p>
+    This operation assumes that <code>n</code> is a reference to an existing node in the list.
+    If <code>n</code> is <code>null</code>, there is no node after which to insert.
   </p>
 
   <div class="linked-list-operation-drawings" aria-label="Animated drawing for insertAfter">
@@ -1642,6 +1654,10 @@
       </svg>
     </figure>
   </div>
+  <p>
+    The order of these assignments matters. If we set <code>n.next</code> to the new node before saving
+    the old value of <code>n.next</code>, we will lose access to the rest of the list.
+  </p>
   
   <h4><code>deleteAfter(node)</code>:</h4> 
   <p>
@@ -1651,6 +1667,11 @@
     (which is <code>n.next.data</code>), 
     then redirect the next link of \(n\) to skip over the removed node and point to the following node 
     (using <code>n.next = n.next.next</code>).
+  </p>
+  <p>
+    This operation assumes that <code>n</code> is a reference to an existing node and that
+    <code>n.next</code> is not <code>null</code>. If <code>n.next</code> is <code>null</code>,
+    there is no node after <code>n</code> to delete.
   </p>
 
   <div class="linked-list-operation-drawings" aria-label="Animated drawing for deleteAfter">
@@ -1719,6 +1740,17 @@
   we cannot delete a node if we only have a reference to that node. 
   We would first need to find the node that comes before it in the list to redirect 
   its next link to skip over the deleted node.
+  </p>
+
+
+  <h4><code>insertAtTail(value)</code>:</h4> 
+    <p>
+    Many linked-list implementations also support inserting at the tail&mdash;that is, 
+    adding a new node at the end of the list. That operation is \(O(1)\) if the
+    structure stores a tail reference (which we have not discussed yet), 
+    but \(O(n)\) if it must first traverse from the head to the last node.
+    We will not go into the details of this operation here, 
+    but it is worth mentioning it as a common operation that is often supported by linked lists. 
   </p>
 
   <h4><code>search(value)</code>:</h4> 
@@ -1945,9 +1977,9 @@ public:
     </div>
     <div id="python-linked" class="code-container" role="tabpanel" aria-labelledby="tab-python-linked">
       <pre><code class="language-python">class Node:
-    def __init__(self, data
+    def __init__(self, data, next=None):
+        self.data = data
         self.next = next
-
 
 class LinkedSequence:
     def __init__(self):
@@ -1967,14 +1999,15 @@ class LinkedSequence:
     def insert_after(self, node, value):
         if node is None:
             raise ValueError("node is None")
-            new_node = Node(value, node.next)
-            node.next = new_node
+        new_node = Node(value, node.next)
+        node.next = new_node
 
     def delete_after(self, node):
         if node is None or node.next is None:
             raise ValueError("no node to delete")
-        value = node.next.data
-        node.next = node.next.next
+        victim = node.next
+        value = victim.data
+        node.next = victim.next
         return value
 
     def search(self, value):
@@ -1988,57 +2021,163 @@ class LinkedSequence:
   </div>
   </section>
   </section>
+  <section id="linked-representation-variations" section-title="Linked List Variations">
+  <h3>Linked List Variations</h3>
+  <p>
+    The singly linked structure above is only one linked representation. Later data structures may
+    adjust the fields stored in each node or the references stored by the wrapper object to make
+    certain operations faster or easier.
+  </p>
+  <ul class="spaced">
+    <li>
+      <strong>Doubly linked nodes:</strong> Each node stores both <code>next</code> and
+      <code>prev</code> links, making it possible to move in either direction.
+    </li>
+    <li>
+      <strong>Tail reference:</strong> In addition to <code>head</code>, the structure may store a
+      <code>tail</code> reference to the last node, which can make some end operations faster.
+    </li>
+    <li>
+      <strong>Circular links:</strong> The last node may link back to the first node instead of
+      storing <code>null</code>.
+    </li>
+    <li>
+      <strong>Sentinel nodes:</strong> Some implementations use a special dummy node to simplify
+      boundary cases such as inserting or deleting at the beginning.
+    </li>
+  </ul>
+</section>
   </section>
 
   <section id="comparison" section-title="Array vs. Linked Representation">
   <h2>Array vs. Linked Representation</h2>
   <p>
-    Arrays and linked structures are both useful. The choice depends on which operations must be fast and what
-    kind of memory layout is acceptable.
+    Arrays and linked structures both represent linear data, but they organize that data in very
+    different ways. An array stores entries in indexed positions, so it is good at jumping directly
+    to a known index. A linked structure stores entries in nodes connected by links, so it is good
+    at changing local connections once the relevant node is known.
+  </p>
+  <p>
+    The phrase <em>once the relevant node is known</em> is important. In a linked list, inserting or
+    deleting after a node can be fast, but finding that node may require a traversal from the head.
+    Therefore, the best representation depends not only on the operation, but also on what information
+    the algorithm already has.
+  </p>
+  <p>
+   Here is a comparison of the two representations for various tasks and features. The time complexities
+   are given in terms of \(n\), the number of entries in the structure, 
+   and the memory overhead is described in terms of how much extra information must be stored per entry. 
   </p>
 
-  <table class="example-table left-align">
+  <table class="example-table left-align syntax-table">
     <thead>
       <tr>
-        <th>Feature</th>
+        <th>Task or Feature</th>
         <th>Array Representation</th>
         <th>Linked Representation</th>
       </tr>
     </thead>
     <tbody>
       <tr>
-        <td>Access item by index</td>
-        <td>Fast: \(O(1)\)</td>
-        <td>Slow: usually \(O(n)\)</td>
+        <td><strong>Access by index</strong></td>
+        <td>
+          Fast: \(O(1)\). The position of <code>a[i]</code> can be computed directly.
+        </td>
+        <td>
+          Slow: \(O(i)\) (which is \(O(n)\) in the worst case). To reach index <code>i</code>, we usually start at <code>head</code>
+          and follow <code>i</code> links.
+        </td>
       </tr>
       <tr>
-        <td>Insert/delete at head</td>
-        <td>Usually \(O(n)\) because items shift</td>
-        <td>Usually \(O(1)\)</td>
+        <td><strong>Update by index</strong></td>
+        <td>
+          Fast: \(O(1)\), assuming the index is valid.
+        </td>
+        <td>
+          Usually \(O(i)\) (which is \(O(n)\) in the worst case), because we must first find the node at that position.
+        </td>
       </tr>
       <tr>
-        <td>Insert/delete after known node</td>
-        <td>Usually \(O(n)\) because items shift</td>
-        <td>Usually \(O(1)\)</td>
+        <td><strong>Insert at head</strong></td>
+        <td>
+          Usually \(O(n)\), because existing entries must shift right to preserve order.
+        </td>
+        <td>
+          \(O(1)\). Create a new node, point it to the old head, and update <code>head</code>.
+        </td>
       </tr>
       <tr>
-        <td>Search by value</td>
-        <td>Usually \(O(n)\) if unsorted</td>
-        <td>Usually \(O(n)\)</td>
+        <td><strong>Delete at head</strong></td>
+        <td>
+          Usually \(O(n)\), because remaining entries must shift left to preserve order.
+        </td>
+        <td>
+          \(O(1)\). Move <code>head</code> to the next node (or do nothing if the list is empty).
+        </td>
       </tr>
       <tr>
-        <td>Memory overhead</td>
-        <td>Low per item</td>
-        <td>Extra link field in each node</td>
+        <td><strong>Insert after a known location</strong></td>
+        <td>
+          Usually \(O(n)\), because later entries must shift right.
+        </td>
+        <td>
+          \(O(1)\), if we already have a reference to the node after which we are inserting.
+        </td>
       </tr>
       <tr>
-        <td>Memory locality</td>
-        <td>Good</td>
-        <td>Often weaker because nodes may be scattered</td>
+        <td><strong>Delete after a known node</strong></td>
+        <td>
+          Usually \(O(n)\), because later entries must shift left.
+        </td>
+        <td>
+          \(O(1)\), if we already have a reference to the previous node and that node has a successor.
+        </td>
+      </tr>
+      <tr>
+        <td><strong>Search by value</strong></td>
+        <td>
+          Usually \(O(n)\) if the entries are unordered.
+        </td>
+        <td>
+          Usually \(O(n)\), because we may need to follow links through every node.
+        </td>
+      </tr>
+      <tr>
+        <td><strong>Memory overhead</strong></td>
+        <td>
+          Low per entry. A simple array mainly stores the entries themselves.
+        </td>
+        <td>
+          Higher per entry. Each node stores data plus at least one link.
+        </td>
+      </tr>
+      <tr>
+        <td><strong>Memory locality</strong></td>
+        <td>
+          Usually good. Neighboring entries are stored near each other, which can make scanning efficient.
+        </td>
+        <td>
+          Often weaker. Nodes may be scattered in memory, so following links can be less cache-friendly.
+        </td>
+      </tr>
+      <tr>
+        <td><strong>Size flexibility</strong></td>
+        <td>
+          Simple arrays have fixed capacity. Dynamic arrays can grow, but resizing requires copying entries.
+        </td>
+        <td>
+          Naturally flexible. Nodes can be allocated one at a time as the structure grows.
+        </td>
       </tr>
     </tbody>
   </table>
-  </section>
+
+  <p>
+    A useful rule of thumb is this: use an array representation when fast indexed access and compact
+    storage are important. Use a linked representation when the algorithm frequently changes local
+    connections and already has references to the relevant nodes.
+  </p>
+</section>
 
   <section id="analysis" section-title="Time/Space Analysis">
   <h2>Time/Space Analysis</h2>
