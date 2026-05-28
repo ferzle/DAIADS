@@ -251,8 +251,11 @@
 .ll-delete-old-direct-link {
   animation: llFadeDeleteOldReference 8.4s ease-in-out infinite;
 }
-.ll-curved-link {
-  animation: llShowCurvedLink 7.8s ease-in-out infinite;
+.ll-curved-link-a {
+  animation: llShowCurvedLinkA 7.8s ease-in-out infinite;
+}
+.ll-curved-link-b {
+  animation: llShowCurvedLinkB 7.8s ease-in-out infinite;
 }
 .ll-straight-link-final,
 .ll-new-head-pointer,
@@ -342,7 +345,8 @@
 .ll-new-node-shell,
 .ll-new-head-pointer,
 .ll-new-tail-pointer,
-.ll-curved-link,
+.ll-curved-link-a,
+.ll-curved-link-b,
 .ll-straight-link-final,
 .ll-delete-count-new,
 .ll-delete-curved-link,
@@ -379,29 +383,40 @@
   }
 }
 @keyframes llFadeOldReference {
-  0%, 58% {
+  0%, 48% {
     opacity: 1;
   }
-  68%, 100% {
+  54%, 100% {
     opacity: 0;
   }
 }
 @keyframes llFadeDeleteOldReference {
-  0%, 66% {
+  0%, 46% {
     opacity: 1;
   }
-  76%, 100% {
+  56%, 100% {
     opacity: 0;
   }
 }
-@keyframes llShowCurvedLink {
+@keyframes llShowCurvedLinkA {
   0%, 40% {
     opacity: 0;
   }
   48%, 64% {
     opacity: 1;
   }
-  70%, 100% {
+  80%, 100% {
+    opacity: 0;
+  }
+}
+@keyframes llShowCurvedLinkB {
+  0%, 50% {
+    opacity: 0;
+  }
+  58%, 64% {
+    opacity: 1;
+  }
+  80%, 100% {
     opacity: 0;
   }
 }
@@ -446,10 +461,10 @@
   }
 }
 @keyframes linkedPushOldHead {
-  0%, 58% {
+  0%, 46% {
     opacity: 1;
   }
-  70%, 100% {
+  56%, 100% {
     opacity: 0;
   }
 }
@@ -458,10 +473,10 @@
   0%, 56% {
     opacity: 0;
   }
-  64%, 74% {
+  64%, 88% {
     opacity: 1;
   }
-  80%, 100% {
+  94%, 100% {
     opacity: 0;
   }
 }
@@ -479,10 +494,10 @@
   0%, 38% {
     opacity: 0;
   }
-  46%, 60% {
+  46%, 88% {
     opacity: 1;
   }
-  68%, 100% {
+  94%, 100% {
     opacity: 0;
   }
 }
@@ -509,7 +524,7 @@
     transform: translateY(0);
   }
   42%, 100% {
-    transform: translateY(-60px);
+    transform: translateY(-55px);
   }
 }
 @keyframes linkedPopCurveDraw {
@@ -840,7 +855,7 @@
   }
   .linked-pop-moving-value {
     opacity: 1;
-    transform: translateY(-60px);
+    transform: translateY(-55px);
   }
   .linked-list-op-svg * {
     animation: none !important;
@@ -1144,8 +1159,8 @@
 </section>
 </section> 
 
-  <section id="nodes-links" section-title="Nodes and Links">
-  <h2>Nodes and Links</h2>
+  <section id="nodes-links" section-title="Linked Representations">
+  <h2>Linked Representations</h2>
   <section id="nodes-links-overview" section-title="Overview">
   <h3>Overview</h3>
   <p>
@@ -1396,13 +1411,20 @@
   </section>
 
   <section id="linked-list-operations" section-title="Linked List Operations">
-  <h4>Basic Linked List Operations</h4>
+  <h4>Linked List Operations</h4>
   <p>
     Here is a partial list of some of the most basic operations that we will want to support for a linked list.
+    Since linked lists are primarily used as a builinding block for other data structures, 
+    there is no official list of required operations, 
+    but these are some of the most common ones that we will want to support in later sections.
+    The main purpose here is to give you an idea of how to work with nodes to create a linear structure. 
   </p>
   <h4><code>insertAtHead(value)</code>:</h4> 
-  <p>Create a new node, 
-  set its next link to the old head, and make the new node the head.
+  <p>
+    To insert a new value at the head of the list, we need to create a new node, 
+    set the data field of the new node to the value being inserted,
+    set its next link to the head (which points to the first node), 
+    and make the head reference point to the new node.
   </p>
 
   <div class="stack-operation-drawings" aria-label="Animated drawing for insertAtHead">
@@ -1454,7 +1476,7 @@
         <text x="464" y="110" class="stack-label">null</text>
         <line x1="434" y1="104" x2="456" y2="104" class="stack-link" marker-end="url(#linkedInsertHeadArrow)" />
 
-        <path d="M 65 104 C 78 76, 90 66, 106 66"
+        <line x1="65" y1="104" x2="106" y2="66"
               class="stack-pointer linked-push-new-head-curved"
               marker-end="url(#linkedInsertHeadCurvedArrow)" />
 
@@ -1462,7 +1484,7 @@
               class="stack-pointer linked-push-new-head-straight"
               marker-end="url(#linkedInsertHeadArrow)" />
 
-        <path d="M 196 66 C 208 88, 216 104, 232 104"
+        <line x1="196" y1="66" x2="232" y2="104"
               class="stack-link linked-push-next-curved"
               marker-end="url(#linkedInsertHeadNextCurvedArrow)" />
 
@@ -1486,10 +1508,13 @@
 
   <h4><code>deleteAtHead()</code>:</h4> 
   <p>
-    Save the old head value (if needed), 
-  move head to the second node, and return the old head value (if needed).
-  Optionally, we can also reset the next link of the old head node to null 
-  and free the memory used for the node in languages that require it.
+    This operation removes the first node from the list and
+    returns the value from the data field of the removed node.
+    To do so, we first save the value of the data field of the head node, 
+    then redirect the head reference to the next node (using <code>head = head.next</code>), 
+    effectively removing the old head from the list.
+    Optionally, we can also reset the next link of the old head node to null, 
+    and free the memory used for the node in languages that require it.
   </p>
 
   <div class="stack-operation-drawings" aria-label="Animated drawing for deleteAtHead">
@@ -1546,8 +1571,13 @@
   </div>
 
   <h4><code>insertAfter(node, value)</code>:</h4> 
-  <p>Create a new node whose next link is
-  <code>node.next</code>, then set <code>node.next</code> to the new node.
+  <p>Given a reference to a node \(n\) in a list and a value \(v\), 
+    this operation inserts a new node containing the data field \(v\) after the given node \(n\), 
+    continuing the rest of the list after the new node.
+    To do so, we first create a new node with the data set to \(v\), 
+    set the next link of the new node to <code>n.next</code>, 
+    then set <code>n.next</code> to the new node, 
+    effectively inserting the new node between \(n\) and its old successor.
   </p>
 
   <div class="linked-list-operation-drawings" aria-label="Animated drawing for insertAfter">
@@ -1564,7 +1594,7 @@
           </marker>
         </defs>
 
-        <text x="20" y="30" class="linked-list-code-label">insertAfter(node, 22)</text>
+        <text x="20" y="30" class="linked-list-code-label">insertAfter(n, 22)</text>
         <text x="22" y="109" class="linked-list-code-label">head</text>
         <line x1="66" y1="104" x2="106" y2="104" class="linked-list-pointer" marker-end="url(#llInsertAfterArrow)" />
 
@@ -1576,7 +1606,9 @@
         </g>
         <line x1="208" y1="104" x2="232" y2="104" class="linked-list-link" marker-end="url(#llInsertAfterArrow)" />
 
-        <text x="286" y="58" text-anchor="middle" class="linked-list-small-label">node</text>
+        <text x="275" y="38" text-anchor="middle" class="linked-list-code-label">n</text>
+        <line x1="275" y1="40" x2="275" y2="78" class="linked-list-link" marker-end="url(#llInsertAfterArrow)" />
+
         <g>
           <rect x="238" y="80" width="96" height="48" rx="6" ry="6" class="linked-list-node-active" />
           <line x1="290" y1="80" x2="290" y2="128" stroke="#d9822b" class="linked-list-divider" />
@@ -1585,7 +1617,7 @@
         </g>
 
         <line x1="334" y1="104" x2="484" y2="104" class="linked-list-link ll-old-direct-link" marker-end="url(#llInsertAfterArrow)" />
-        <path d="M 334 104 C 344 76, 346 50, 358 50" class="linked-list-link ll-curved-link" marker-end="url(#llInsertAfterArrow)" />
+        <line x1="334" y1="104" x2="358" y2="50" class="linked-list-link ll-curved-link-b" marker-end="url(#llInsertAfterArrow)" />
         <line x1="334" y1="104" x2="358" y2="104" class="linked-list-link ll-straight-link-final" marker-end="url(#llInsertAfterArrow)" />
 
         <g class="ll-new-node-drop">
@@ -1597,7 +1629,7 @@
           <text x="390" y="109" text-anchor="middle" class="linked-list-value">22</text>
         </g>
 
-        <path d="M 460 50 C 474 50, 478 86, 484 104" class="linked-list-link ll-curved-link" marker-end="url(#llInsertAfterArrow)" />
+        <line x1="460" y1="50" x2="484" y2="104" class="linked-list-link ll-curved-link-a" marker-end="url(#llInsertAfterArrow)" />
         <line x1="460" y1="104" x2="484" y2="104" class="linked-list-link ll-straight-link-final" marker-end="url(#llInsertAfterArrow)" />
         <g>
           <rect x="490" y="80" width="96" height="48" rx="6" ry="6" class="linked-list-node" />
@@ -1612,8 +1644,13 @@
   </div>
   
   <h4><code>deleteAfter(node)</code>:</h4> 
-  <p>Bypass the node after <code>node</code> by changing
-  <code>node.next</code> to <code>node.next.next</code>, which may be null.
+  <p>
+    This operation removes the node that comes after the given node \(n\) 
+    and returns the value from the data field of the removed node.
+    To do so, we first save the value of the data field of the node after \(n\) 
+    (which is <code>n.next.data</code>), 
+    then redirect the next link of \(n\) to skip over the removed node and point to the following node 
+    (using <code>n.next = n.next.next</code>).
   </p>
 
   <div class="linked-list-operation-drawings" aria-label="Animated drawing for deleteAfter">
@@ -1630,8 +1667,8 @@
           </marker>
         </defs>
 
-        <text x="20" y="30" class="linked-list-code-label">deleteAfter(node)</text>
-        <text x="372" y="28" text-anchor="middle" class="linked-list-label linked-list-return-label">return value</text>
+        <text x="20" y="30" class="linked-list-code-label">deleteAfter(n)</text>
+        <text x="460" y="48" text-anchor="middle" class="linked-list-label linked-list-return-label">return value</text>
         <text x="22" y="109" class="linked-list-code-label">head</text>
         <line x1="66" y1="104" x2="106" y2="104" class="linked-list-pointer" marker-end="url(#llDeleteAfterArrow)" />
 
@@ -1643,7 +1680,9 @@
         </g>
         <line x1="208" y1="104" x2="232" y2="104" class="linked-list-link" marker-end="url(#llDeleteAfterArrow)" />
 
-        <text x="286" y="58" text-anchor="middle" class="linked-list-small-label">node</text>
+        <text x="275" y="38" text-anchor="middle" class="linked-list-code-label">n</text>
+        <line x1="275" y1="40" x2="275" y2="78" class="linked-list-link" marker-end="url(#llInsertAfterArrow)" />
+
         <g>
           <rect x="238" y="80" width="96" height="48" rx="6" ry="6" class="linked-list-node-active" />
           <line x1="290" y1="80" x2="290" y2="128" stroke="#d9822b" class="linked-list-divider" />
@@ -1675,11 +1714,19 @@
       </svg>
     </figure>
   </div>
+  <p>It may seem odd to have a method <code>deleteAfter(n)</code> instead of 
+  <code>delete(n)</code>, but in a singly-linked list, 
+  we cannot delete a node if we only have a reference to that node. 
+  We would first need to find the node that comes before it in the list to redirect 
+  its next link to skip over the deleted node.
+  </p>
 
   <h4><code>search(value)</code>:</h4> 
-  <p>Start at the head and follow links until the value is found or
-  the end is reached. May either return a boolean indicating whether the value was found 
-  or a reference to the node containing the value or null if the value was not found.
+  <p>
+    This operation searches for a given value in the list and returns whether it is found or not,
+    or alternatively, a reference to the node containing the value or null if the value is not found.
+    To implement it, we can start at the head and follow next links until the value is found or
+    the end is reached. 
   </p>
 
   <div class="linked-list-operation-drawings" aria-label="Animated drawing for search">
@@ -1701,8 +1748,8 @@
         <line x1="66" y1="104" x2="106" y2="104" class="linked-list-pointer" marker-end="url(#llSearchArrow)" />
 
         <g class="ll-find-cur-cursor">
-          <text x="160" y="58" text-anchor="middle" class="linked-list-small-label">current</text>
-          <line x1="160" y1="63" x2="160" y2="80" class="linked-list-pointer" marker-end="url(#llSearchArrow)" />
+          <text x="160" y="40" text-anchor="middle" class="linked-list-code-label">current</text>
+          <line x1="160" y1="43" x2="160" y2="80" class="linked-list-pointer" marker-end="url(#llSearchArrow)" />
         </g>
 
         <g>
@@ -1750,13 +1797,20 @@
   This is a vague operation that can be used for many purposes, 
   such as printing the values of the nodes or performing some computation on the values.
   </p>
+  <p>
+  Sometimes traversing requires walking two references through the list at the same time so we have access
+  to the node of interest as well as its predecessor. 
+  This is particularly useful if you want to delete a node with a given property. 
+  Without a reference to the predecessor, we cannot redirect its next link to skip over the deleted node.
+  </p>
 </section>
 
 <section id="linked-list-code" section-title="Linked List Implementation">
   <h4>Linked List Implementation</h4>
   <p>
-    These examples use a minimal wrapper class with a <code>head</code> reference. Later pages can expand this
-    into a complete linked list implementation.
+    Here are partial implementations of a linked list in Java, C++, and Python 
+    to give you an idea of how the code looks in different languages, and so you can see
+    how working with linked lists compares to working with arrays.
   </p>
 
   <div class="tab-group">
@@ -1780,7 +1834,8 @@
     private Node head;
 
     public void insertAtHead(int value) {
-        head = new Node(value, head);
+        Node newNode = new Node(value, head);
+        head = newNode;
     }
 
     public int deleteAtHead() {
@@ -1796,7 +1851,8 @@
         if (node == null) {
             throw new IllegalArgumentException("node is null");
         }
-        node.next = new Node(value, node.next);
+        Node newNode = new Node(value, node.next);
+        node.next = newNode;
     }
 
     public int deleteAfter(Node node) {
@@ -1841,7 +1897,8 @@ public:
     }
 
     void insertAtHead(int value) {
-        head = new Node(value, head);
+        Node* newNode = new Node(value, head);
+        head = newNode;
     }
 
     int deleteAtHead() {
@@ -1859,7 +1916,8 @@ public:
         if (node == nullptr) {
             throw "node is null";
         }
-        node->next = new Node(value, node->next);
+        Node *newNode = new Node(value, node->next);
+        node->next = newNode;
     }
 
     int deleteAfter(Node* node) {
@@ -1887,4 +1945,196 @@ public:
     </div>
     <div id="python-linked" class="code-container" role="tabpanel" aria-labelledby="tab-python-linked">
       <pre><code class="language-python">class Node:
-    def __init__(self, da
+    def __init__(self, data
+        self.next = next
+
+
+class LinkedSequence:
+    def __init__(self):
+        self.head = None
+
+    def insert_at_head(self, value):
+        new_node = Node(value, self.head)
+        self.head = new_node
+
+    def delete_at_head(self):
+        if self.head is None:
+            raise IndexError("empty sequence")
+        value = self.head.data
+        self.head = self.head.next
+        return value
+
+    def insert_after(self, node, value):
+        if node is None:
+            raise ValueError("node is None")
+            new_node = Node(value, node.next)
+            node.next = new_node
+
+    def delete_after(self, node):
+        if node is None or node.next is None:
+            raise ValueError("no node to delete")
+        value = node.next.data
+        node.next = node.next.next
+        return value
+
+    def search(self, value):
+        current = self.head
+        while current is not None:
+            if current.data == value:
+                return current
+            current = current.next
+        return None</code></pre>
+    </div>
+  </div>
+  </section>
+  </section>
+  </section>
+
+  <section id="comparison" section-title="Array vs. Linked Representation">
+  <h2>Array vs. Linked Representation</h2>
+  <p>
+    Arrays and linked structures are both useful. The choice depends on which operations must be fast and what
+    kind of memory layout is acceptable.
+  </p>
+
+  <table class="example-table left-align">
+    <thead>
+      <tr>
+        <th>Feature</th>
+        <th>Array Representation</th>
+        <th>Linked Representation</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Access item by index</td>
+        <td>Fast: \(O(1)\)</td>
+        <td>Slow: usually \(O(n)\)</td>
+      </tr>
+      <tr>
+        <td>Insert/delete at head</td>
+        <td>Usually \(O(n)\) because items shift</td>
+        <td>Usually \(O(1)\)</td>
+      </tr>
+      <tr>
+        <td>Insert/delete after known node</td>
+        <td>Usually \(O(n)\) because items shift</td>
+        <td>Usually \(O(1)\)</td>
+      </tr>
+      <tr>
+        <td>Search by value</td>
+        <td>Usually \(O(n)\) if unsorted</td>
+        <td>Usually \(O(n)\)</td>
+      </tr>
+      <tr>
+        <td>Memory overhead</td>
+        <td>Low per item</td>
+        <td>Extra link field in each node</td>
+      </tr>
+      <tr>
+        <td>Memory locality</td>
+        <td>Good</td>
+        <td>Often weaker because nodes may be scattered</td>
+      </tr>
+    </tbody>
+  </table>
+  </section>
+
+  <section id="analysis" section-title="Time/Space Analysis">
+  <h2>Time/Space Analysis</h2>
+  <p>
+    The table above summarizes the most important asymptotic costs. The main difference is that arrays support
+    direct index computation, while linked structures support local rewiring of links once the relevant node is
+    already known.
+  </p>
+  <p>
+    <strong>Array access:</strong> Accessing <code>a[i]</code> takes \(O(1)\) time because the position can be
+    computed directly from the base location and the index.
+  </p>
+  <p>
+    <strong>Array insertion/deletion:</strong> Inserting or deleting at position <code>pos</code> may require shifting
+    all items after <code>pos</code>. In the worst case this is \(O(n)\) time.
+  </p>
+  <p>
+    <strong>Linked insertion/deletion:</strong> Inserting or deleting at the head, or after a known node, takes
+    \(O(1)\) time because only a constant number of links change.
+  </p>
+  <p>
+    <strong>Linked searching:</strong> Searching a linked structure takes \(O(n)\) time in the worst case because
+    the algorithm may need to follow links through every node.
+  </p>
+  <p>
+    <strong>Extra space:</strong> An array representation usually has little per-item overhead, though resizable
+    arrays may reserve unused capacity. A linked representation stores at least one extra link per node, so it
+    uses \(O(n)\) extra link storage for \(n\) items.
+  </p>
+  </section>
+
+  <section id="links" section-title="Helpful Links and Resources">
+  <h2>Links to Resources</h2>
+  <ul>
+    <li><a href="https://en.wikipedia.org/wiki/Array_(data_structure)" target="_blank">Wikipedia: Array</a> Overview of arrays as a data structure.</li>
+    <li><a href="https://en.wikipedia.org/wiki/Linked_list" target="_blank">Wikipedia: Linked List</a> Overview of linked nodes and linked list variations.</li>
+    <li><a href="https://visualgo.net/en/list" target="_blank">VisuAlgo: Linked List</a> Interactive linked list visualization.</li>
+    <li><a href="https://www.geeksforgeeks.org/dsa/array-data-structure/" target="_blank">GeeksforGeeks: Array Data Structure</a> Additional array examples and terminology.</li>
+    <li><a href="https://www.geeksforgeeks.org/dsa/linked-list-data-structure/" target="_blank">GeeksforGeeks: Linked List Data Structure</a> Additional linked list examples and operations.</li>
+  </ul>
+  </section>
+
+  <section id="reading-questions" section-title="Reading Comprehension Questions">
+    <h2>Reading Comprehension Questions</h2>
+    <ol>
+      <li><strong>Linear Order:</strong> What does it mean for a structure to be linear?</li>
+      <li><strong>Array Indexing:</strong> Why can an array access item <code>i</code> in \(O(1)\) time?</li>
+      <li><strong>Array Shifting:</strong> Why can inserting near the front of an array take \(O(n)\) time?</li>
+      <li><strong>Node Fields:</strong> What two fields does a singly linked node usually store?</li>
+      <li><strong>Head Insertion:</strong> What links must change when inserting a new node at the head?</li>
+      <li><strong>Delete After:</strong> Why does <code>deleteAfter(node)</code> require access to the node before the one being deleted?</li>
+      <li><strong>Search:</strong> Why is searching by value usually \(O(n)\) for both arrays and linked structures?</li>
+      <li><strong>Tradeoff:</strong> Give one advantage of arrays and one advantage of linked structures.</li>
+    </ol>
+    <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
+    <div id="answers" class="answer" hidden>
+      <ol>
+        <li><strong>Answer:</strong> Its items are arranged in a sequence, so ideas such as first, last, before, after, and next make sense.</li>
+        <li><strong>Answer:</strong> The location of item <code>i</code> can be computed directly from the base location and the index.</li>
+        <li><strong>Answer:</strong> Items after the insertion point must be shifted to make room while preserving order.</li>
+        <li><strong>Answer:</strong> It stores the data item and a link, often called <code>next</code>, to the next node.</li>
+        <li><strong>Answer:</strong> The new node's <code>next</code> link points to the old head, and <code>head</code> is updated to point to the new node.</li>
+        <li><strong>Answer:</strong> To remove a node from a singly linked structure, the previous node's <code>next</code> link must be changed to bypass the removed node.</li>
+        <li><strong>Answer:</strong> Without extra ordering or indexing information, the algorithm may have to inspect every item before finding the value or concluding it is absent.</li>
+        <li><strong>Answer:</strong> Arrays provide fast indexed access. Linked structures can insert or delete at the head, or after a known node, by changing only a few links.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="activities" section-title="In-Class Activities">
+    <h2>In-Class Activities</h2>
+    <ol>
+      <li><strong>Array Shift Trace:</strong> Start with <code>[12, 7, 19, 4, 15]</code>. Insert <code>10</code> at index <code>1</code> by showing each shift.</li>
+      <li><strong>Node Cards:</strong> Give students index cards representing nodes. Each card stores a value and an arrow to the next card. Practice inserting a new head card.</li>
+      <li><strong>Delete After by Hand:</strong> Draw <code>12 -> 7 -> 19 -> 4</code>. Delete the node after <code>7</code> and show exactly which link changes.</li>
+      <li><strong>Search Race:</strong> Compare searching for <code>4</code> in an array diagram and in a linked diagram. Identify what information is available at each step.</li>
+      <li><strong>Representation Choice:</strong> For each scenario, decide whether an array or linked representation is more natural: frequent index lookup, frequent head insertion, compact storage, and unknown final size.</li>
+      <li><strong>Code Reading:</strong> Give students the <code>insertAfter</code> code and ask them to explain why the order of assignments matters.</li>
+      <li><strong>Broken Links:</strong> Present an incorrect linked insertion that loses part of the list. Students identify the lost reference and repair the code.</li>
+      <li><strong>Cost Sorting:</strong> Put operation cards into buckets labeled \(O(1)\), \(O(n)\), and "depends on representation." Discuss disagreements.</li>
+    </ol>
+  </section>
+
+  <section id="problems" section-title="Homework Problems">
+    <h2>Homework Problems</h2>
+    <ol>
+      <li><strong>Array Insertion Trace:</strong> An array has meaningful contents <code>[8, 3, 14, 6]</code> and capacity <code>7</code>. Trace the steps to insert <code>10</code> at index <code>2</code>.</li>
+      <li><strong>Array Deletion Trace:</strong> Starting with <code>[5, 11, 2, 9, 17]</code>, delete the item at index <code>1</code>. Show each shift and the final size.</li>
+      <li><strong>Build by Head Insertions:</strong> Starting with an empty linked structure, perform <code>insertAtHead(4)</code>, <code>insertAtHead(9)</code>, <code>insertAtHead(2)</code>. Draw the final structure.</li>
+      <li><strong>Insert After Trace:</strong> Given <code>3 -> 8 -> 12 -> null</code>, show the link changes needed to insert <code>6</code> after <code>8</code>.</li>
+      <li><strong>Delete After Trace:</strong> Given <code>3 -> 8 -> 12 -> 5 -> null</code>, show the link changes needed to delete the node after <code>8</code>.</li>
+      <li><strong>Search Cost:</strong> For the linked structure <code>6 -> 1 -> 14 -> 9 -> 3 -> null</code>, how many nodes are examined when searching for <code>9</code>? How many when searching for <code>7</code>?</li>
+      <li><strong>Code Modification:</strong> Add a <code>contains(value)</code> method that returns <code>true</code> or <code>false</code> instead of returning the node.</li>
+      <li><strong>Representation Decision:</strong> For a to-do list app that frequently adds new tasks at the front but rarely accesses tasks by index, explain whether an array or linked representation is a better first choice.</li>
+    </ol>
+  </section>
+
+</body>
+</html>
