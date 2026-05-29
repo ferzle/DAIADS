@@ -119,9 +119,9 @@ const DATA_STRUCTURES_ORDERS = {
   ],
   'Data Structures/Linear Structures/': [
     'Representing Linear Structures',
-    'Lists',
-    'Queues',
     'Stacks',
+    'Queues',
+    'Lists',
     'Deques',
     'Dynamic Arrays',
   ],
