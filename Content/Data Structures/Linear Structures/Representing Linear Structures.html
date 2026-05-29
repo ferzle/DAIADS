@@ -6,9 +6,9 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
   <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-  <script src="/Algorithms/scripts/chapterScripts.js"></script>
-  <link rel="stylesheet" href="/Algorithms/css/style.css">
-  <link rel="stylesheet" href="/Algorithms/css/chapter.css">
+  <script src="../../../scripts/chapterScripts.js"></script>
+  <link rel="stylesheet" href="../../../css/style.css">
+  <link rel="stylesheet" href="../../../css/chapter.css">
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
   <script>
@@ -1198,7 +1198,7 @@
 
 <p>
   Conceptually, the <code>next</code> field tells us which node comes next in the sequence.
-  In an implementation, this is represented as a pointer or reference toanother node in memory.
+  In an implementation, this is represented as a pointer or reference to another node in memory.
   The actual reference value is not important for our purposes, so in diagrams we simply draw
   an arrow to the next node. If there is no next node, we label the link as <code>null</code>,
   although the language-specific name for this special value varies:
@@ -1408,6 +1408,11 @@
       We also show the head reference and the null reference to indicate the start and end of the list.
     </p>
   </div>
+  <p>
+    If we want to represent a list in text, we can use an arrow notation to indicate the links 
+    between nodes. For instance, the list shown above could be represented as:
+    <code>head -> 14 -> 8 -> 31 -> 5 -> null</code>.
+  </p>
   </section>
 
   <section id="linked-list-operations" section-title="Linked List Operations">
@@ -1702,7 +1707,7 @@
         <line x1="208" y1="104" x2="232" y2="104" class="linked-list-link" marker-end="url(#llDeleteAfterArrow)" />
 
         <text x="275" y="38" text-anchor="middle" class="linked-list-code-label">n</text>
-        <line x1="275" y1="40" x2="275" y2="78" class="linked-list-link" marker-end="url(#llInsertAfterArrow)" />
+        <line x1="275" y1="40" x2="275" y2="78" class="linked-list-link" marker-end="url(#llDeleteAfterArrow)" />
 
         <g>
           <rect x="238" y="80" width="96" height="48" rx="6" ry="6" class="linked-list-node-active" />
@@ -1938,8 +1943,8 @@ public:
             throw "empty sequence";
         }
         Node* oldHead = head;
-        int value = oldHead->data;
-        head = head->next;
+        int value = oldHead-&gt;data;
+        head = head-&gt;next;
         delete oldHead;
         return value;
     }
@@ -1948,17 +1953,17 @@ public:
         if (node == nullptr) {
             throw "node is null";
         }
-        Node *newNode = new Node(value, node->next);
-        node->next = newNode;
+        Node *newNode = new Node(value, node-&gt;next);
+        node-&gt;next = newNode;
     }
 
     int deleteAfter(Node* node) {
-        if (node == nullptr || node->next == nullptr) {
+        if (node == nullptr || node-&gt;next == nullptr) {
             throw "no node to delete";
         }
-        Node* victim = node->next;
-        int value = victim->data;
-        node->next = victim->next;
+        Node* victim = node-&gt;next;
+        int value = victim-&gt;data;
+        node-&gt;next = victim-&gt;next;
         delete victim;
         return value;
     }
@@ -1966,10 +1971,10 @@ public:
     Node* search(int value) {
         Node* current = head;
         while (current != nullptr) {
-            if (current->data == value) {
+            if (current-&gt;data == value) {
                 return current;
             }
-            current = current->next;
+            current = current-&gt;next;
         }
         return nullptr;
     }
@@ -2049,9 +2054,10 @@ class LinkedSequence:
 </section>
   </section>
 
-  <section id="comparison" section-title="Array vs. Linked Representation">
-  <h2>Array vs. Linked Representation</h2>
-  <p>
+  <section id="comparison-analysis" section-title="Comparison and Analysis">
+  <h2>Comparison and Analysis</h2>
+
+   <p>
     Arrays and linked structures both represent linear data, but they organize that data in very
     different ways. An array stores entries in indexed positions, so it is good at jumping directly
     to a known index. A linked structure stores entries in nodes connected by links, so it is good
@@ -2068,8 +2074,7 @@ class LinkedSequence:
    are given in terms of \(n\), the number of entries in the structure, 
    and the memory overhead is described in terms of how much extra information must be stored per entry. 
   </p>
-
-  <table class="example-table left-align syntax-table">
+<table class="example-table left-align syntax-table">
     <thead>
       <tr>
         <th>Task or Feature</th>
@@ -2112,13 +2117,14 @@ class LinkedSequence:
           Usually \(O(n)\), because remaining entries must shift left to preserve order.
         </td>
         <td>
-          \(O(1)\). Move <code>head</code> to the next node (or do nothing if the list is empty).
+          \(O(1)\). Move <code>head</code> to the next node (or throw an exception if the list is empty).
         </td>
       </tr>
       <tr>
         <td><strong>Insert after a known location</strong></td>
         <td>
-          Usually \(O(n)\), because later entries must shift right.
+          If the location is given by index \(i\), then
+          usually \(O(n-i)\), which is \(O(n)\) in the worst case, because later entries must shift right.
         </td>
         <td>
           \(O(1)\), if we already have a reference to the node after which we are inserting.
@@ -2127,7 +2133,8 @@ class LinkedSequence:
       <tr>
         <td><strong>Delete after a known node</strong></td>
         <td>
-          Usually \(O(n)\), because later entries must shift left.
+          If the location is given by index \(i\), then
+          usually \(O(n-i)\), which is \(O(n)\) in the worst case, because later entries must shift left.
         </td>
         <td>
           \(O(1)\), if we already have a reference to the previous node and that node has a successor.
@@ -2145,7 +2152,7 @@ class LinkedSequence:
       <tr>
         <td><strong>Memory overhead</strong></td>
         <td>
-          Low per entry. A simple array mainly stores the entries themselves.
+          Little extra per-entry overhead. A simple array mainly stores the entries themselves.
         </td>
         <td>
           Higher per entry. Each node stores data plus at least one link.
@@ -2166,114 +2173,1575 @@ class LinkedSequence:
           Simple arrays have fixed capacity. Dynamic arrays can grow, but resizing requires copying entries.
         </td>
         <td>
-          Naturally flexible. Nodes can be allocated one at a time as the structure grows.
+          Flexible. Nodes can be allocated one at a time as the structure grows.
         </td>
       </tr>
     </tbody>
   </table>
 
   <p>
-    A useful rule of thumb is this: use an array representation when fast indexed access and compact
-    storage are important. Use a linked representation when the algorithm frequently changes local
-    connections and already has references to the relevant nodes.
+    The main reason for these differences is that arrays make positions easy to compute, while linked
+    structures make local rewiring easy. In an array, the location of <code>a[i]</code> can be computed
+    directly from the start of the array and the index <code>i</code>. In a linked structure, there is
+    no comparable formula for the node at position <code>i</code>; we must follow links to get there.
   </p>
+  <p>
+    On the other hand, once we have the right node reference in a linked structure, inserting or deleting
+    nearby nodes usually requires changing only a constant number of links. In an array, preserving order
+    after an insertion or deletion usually requires shifting entries.
+  </p>
+  <p>
+    A useful rule of thumb is this: use an array representation when fast indexed access, compact storage,
+    and good memory locality are important. Use a linked representation when the algorithm frequently
+    changes local connections and already has references to the relevant nodes.
+  </p>
+  </section>
+  
+ <section id="pitfalls" section-title="Common Pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul class="spaced">
+    <li>
+      <strong>Confusing indices with values:</strong> In an array, <code>A[2]</code> means the entry
+      at index <code>2</code>, not the value <code>2</code>.
+    </li>
+    <li>
+      <strong>Forgetting that indices start at 0:</strong> An array of length \(n\) has valid indices
+      <code>0</code> through <code>n - 1</code>.
+    </li>
+    <li>
+      <strong>Confusing length with capacity:</strong> An array-based structure may have extra unused
+      space, especially when it is used to build a dynamic structure. So it is important to keep
+      in mind that the number of entries in the array and the capacity of the array are not necessarily the same.
+    </li>
+    <li>
+      <strong>Confusing a node with its data:</strong> A node is the whole object containing
+      <code>data</code> and <code>next</code>. The data value is only one field inside the node.
+    </li>
+    <li>
+      <strong>Losing part of a linked list:</strong> When inserting a node, save the old link before
+      overwriting it. Otherwise, the rest of the list may become unreachable.
+    </li>
+    <li>
+      <strong>Ignoring null cases:</strong> Operations such as <code>deleteAtHead</code> and
+      <code>deleteAfter</code> need to handle empty lists or missing successor nodes.
+    </li>
+    <li>
+      <strong>Overstating linked-list speed:</strong> Linked insertion or deletion is \(O(1)\) only
+      when the relevant node reference is already known.
+    </li>
+  </ul>
 </section>
 
-  <section id="analysis" section-title="Time/Space Analysis">
-  <h2>Time/Space Analysis</h2>
-  <p>
-    The table above summarizes the most important asymptotic costs. The main difference is that arrays support
-    direct index computation, while linked structures support local rewiring of links once the relevant node is
-    already known.
-  </p>
-  <p>
-    <strong>Array access:</strong> Accessing <code>a[i]</code> takes \(O(1)\) time because the position can be
-    computed directly from the base location and the index.
-  </p>
-  <p>
-    <strong>Array insertion/deletion:</strong> Inserting or deleting at position <code>pos</code> may require shifting
-    all items after <code>pos</code>. In the worst case this is \(O(n)\) time.
-  </p>
-  <p>
-    <strong>Linked insertion/deletion:</strong> Inserting or deleting at the head, or after a known node, takes
-    \(O(1)\) time because only a constant number of links change.
-  </p>
-  <p>
-    <strong>Linked searching:</strong> Searching a linked structure takes \(O(n)\) time in the worst case because
-    the algorithm may need to follow links through every node.
-  </p>
-  <p>
-    <strong>Extra space:</strong> An array representation usually has little per-item overhead, though resizable
-    arrays may reserve unused capacity. A linked representation stores at least one extra link per node, so it
-    uses \(O(n)\) extra link storage for \(n\) items.
-  </p>
-  </section>
-
-  <section id="links" section-title="Helpful Links and Resources">
-  <h2>Links to Resources</h2>
-  <ul>
-    <li><a href="https://en.wikipedia.org/wiki/Array_(data_structure)" target="_blank">Wikipedia: Array</a> Overview of arrays as a data structure.</li>
-    <li><a href="https://en.wikipedia.org/wiki/Linked_list" target="_blank">Wikipedia: Linked List</a> Overview of linked nodes and linked list variations.</li>
-    <li><a href="https://visualgo.net/en/list" target="_blank">VisuAlgo: Linked List</a> Interactive linked list visualization.</li>
-    <li><a href="https://www.geeksforgeeks.org/dsa/array-data-structure/" target="_blank">GeeksforGeeks: Array Data Structure</a> Additional array examples and terminology.</li>
-    <li><a href="https://www.geeksforgeeks.org/dsa/linked-list-data-structure/" target="_blank">GeeksforGeeks: Linked List Data Structure</a> Additional linked list examples and operations.</li>
+<section id="summary" section-title="Summary and Key Takeaways">
+  <h2>Summary and Key Takeaways</h2>
+  <ul class="spaced">
+    <li>
+      <strong>Linear structures store items in sequence.</strong> Arrays and linked structures are two
+      common ways to represent that sequence.
+    </li>
+    <li>
+      <strong>Arrays use indices.</strong> The expression <code>a[i]</code> refers directly to the entry
+      at index <code>i</code>, which makes access and update by index fast.
+    </li>
+    <li>
+      <strong>Arrays can require shifting.</strong> Inserting or deleting near the front or middle of an
+      array usually requires moving later entries to preserve order.
+    </li>
+    <li>
+      <strong>Linked structures use nodes and links.</strong> Each node stores data and a reference to
+      the next node, so the order is determined by links rather than by physical position in memory.
+    </li>
+    <li>
+      <strong>Linked structures support local rewiring.</strong> Once the relevant node is known,
+      inserting or deleting nearby nodes can usually be done by changing a constant number of links.
+    </li>
+    <li>
+      <strong>Linked structures do not provide direct indexed access.</strong> To reach index
+      <code>i</code>, we usually start at <code>head</code> and follow links one at a time.
+    </li>
+    <li>
+      <strong>The right representation depends on the operations.</strong> Arrays are often better for
+      fast indexed access and compact storage. Linked structures are often better when local insertions
+      and deletions are common and the relevant node references are already available.
+    </li>
   </ul>
-  </section>
+</section>
 
-  <section id="reading-questions" section-title="Reading Comprehension Questions">
-    <h2>Reading Comprehension Questions</h2>
+<section id="links" section-title="Helpful Links and Resources">
+  <h2>Helpful Links and Resources</h2>
+  <ul>
+    <li>
+      <a href="https://en.wikipedia.org/wiki/Array_(data_structure)" target="_blank">Wikipedia: Array</a>
+      Overview of arrays, including indexing, memory layout, locality, and basic efficiency.
+    </li>
+    <li>
+      <a href="https://en.wikipedia.org/wiki/Linked_list" target="_blank">Wikipedia: Linked List</a>
+      Overview of linked-list terminology, variants, operations, and tradeoffs.
+    </li>
+    <li>
+      <a href="https://visualgo.net/en/list" target="_blank">VisuAlgo: Linked List</a>
+      Interactive visualizations for singly linked lists, doubly linked lists, stacks, queues, and deques.
+    </li>
+    <li>
+      <a href="http://cslibrary.stanford.edu/103/" target="_blank">Stanford CS Education Library: Linked List Basics</a>
+      A longer linked-list tutorial with diagrams, C/C++ examples, exercises, and practice problems.
+    </li>
+    <li>
+      <a href="https://www.opendatastructures.org/ods-java/" target="_blank">Open Data Structures</a>
+      Free textbook covering array-based lists (chapter 2), linked lists (chapter 3), and other data structures with implementation and analysis.
+    </li>
+    <li>
+      <a href="https://www.geeksforgeeks.org/dsa/linked-list-data-structure/" target="_blank">GeeksforGeeks: Linked List Data Structure</a>
+      Supplemental linked-list overview with examples and common operations.
+    </li>
+  </ul>
+</section>
+<section id="reading-questions" section-title="Reading Comprehension Questions">
+  <h2>Reading Comprehension Questions</h2>
+  <ol>
+    <li><strong>Linear Structures:</strong> What does it mean for a data structure to be linear?</li>
+
+    <li><strong>Array Indices:</strong> If an array has length \(n\), what are its valid indices?</li>
+
+    <li><strong>Array Syntax:</strong> In Java, C++, and Python, what expression is used to access the entry at index <code>i</code>? What statement is used to update that entry?</li>
+
+    <li><strong>C++ Array Size:</strong> Why does a C++ program often store the size of a built-in array in a separate variable?</li>
+
+    <li><strong>Array Tradeoffs:</strong> Give one strength of arrays and one weakness of arrays.</li>
+
+    <li><strong>Dynamic Arrays:</strong> What is the main idea behind a dynamic array, and how does it differ from a simple fixed-size array?</li>
+
+    <li><strong>Node Fields:</strong> What two fields does a node in a singly linked structure usually store?</li>
+
+    <li><strong>Null Values:</strong> What does <code>null</code> mean in a linked-list diagram? What are the corresponding values called in modern C++ and Python?</li>
+
+    <li><strong>Head Insertion:</strong> Why does <code>insertAtHead(value)</code> work even when the list is empty?</li>
+
+    <li><strong>Assignment Order:</strong> In <code>insertAfter(n, value)</code>, why must the new node's <code>next</code> field be set before changing <code>n.next</code>?</li>
+
+    <li><strong>Delete After:</strong> Why does <code>deleteAfter(n)</code> require that <code>n.next</code> is not <code>null</code>?</li>
+
+    <li><strong>Known Node Caveat:</strong> Why is it misleading to say simply that linked-list insertion is always \(O(1)\)?</li>
+
+    <li><strong>Array vs. Linked Access:</strong> Why can arrays access index <code>i</code> in \(O(1)\) time, while linked structures usually require \(O(i)\) time?</li>
+
+    <li><strong>Representation Choice:</strong> When would an array representation usually be a better choice than a linked representation? When would a linked representation usually be a better choice?</li>
+  </ol>
+
+  <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
+  <div id="answers" class="answer" hidden>
     <ol>
-      <li><strong>Linear Order:</strong> What does it mean for a structure to be linear?</li>
-      <li><strong>Array Indexing:</strong> Why can an array access item <code>i</code> in \(O(1)\) time?</li>
-      <li><strong>Array Shifting:</strong> Why can inserting near the front of an array take \(O(n)\) time?</li>
-      <li><strong>Node Fields:</strong> What two fields does a singly linked node usually store?</li>
-      <li><strong>Head Insertion:</strong> What links must change when inserting a new node at the head?</li>
-      <li><strong>Delete After:</strong> Why does <code>deleteAfter(node)</code> require access to the node before the one being deleted?</li>
-      <li><strong>Search:</strong> Why is searching by value usually \(O(n)\) for both arrays and linked structures?</li>
-      <li><strong>Tradeoff:</strong> Give one advantage of arrays and one advantage of linked structures.</li>
+      <li>
+        <strong>Answer:</strong> Its items are arranged in a sequence, so ideas such as first, last,
+        before, after, next, and previous make sense.
+      </li>
+
+      <li>
+        <strong>Answer:</strong> The valid indices are \(0,1,\ldots,n-1\). In other words, the first
+        entry has index <code>0</code>, and the last entry has index <code>n - 1</code>.
+      </li>
+
+      <li>
+        <strong>Answer:</strong> The expression <code>a[i]</code> accesses the entry at index
+        <code>i</code>. The statement <code>a[i] = value</code> updates that entry.
+      </li>
+
+      <li>
+        <strong>Answer:</strong> A built-in C++ array does not store its own size, so the program often
+        keeps a separate variable, such as <code>n</code>, to remember how many entries are available or meaningful.
+      </li>
+
+      <li>
+        <strong>Answer:</strong> One strength is fast \(O(1)\) access and update by index. One weakness is
+        that inserting or deleting near the beginning or middle may require shifting many entries.
+      </li>
+
+      <li>
+        <strong>Answer:</strong> A dynamic array can grow as items are added. Internally, it usually stores
+        items in an ordinary array; when that array runs out of capacity, it allocates a larger array and
+        copies the existing entries.
+      </li>
+
+      <li>
+        <strong>Answer:</strong> A singly linked node usually stores a <code>data</code> field containing
+        the item and a <code>next</code> field containing a reference, pointer, or link to the next node.
+      </li>
+
+      <li>
+        <strong>Answer:</strong> In a linked-list diagram, <code>null</code> means that the link does not
+        point to another node. Modern C++ uses <code>nullptr</code>, and Python uses <code>None</code>.
+      </li>
+
+      <li>
+        <strong>Answer:</strong> If the list is empty, <code>head</code> is <code>null</code>. The new
+        node's <code>next</code> field can be set to that value, and then <code>head</code> is updated to
+        point to the new node.
+      </li>
+
+      <li>
+        <strong>Answer:</strong> The old value of <code>n.next</code> is the reference to the rest of the
+        list. If <code>n.next</code> is overwritten before that reference is saved in the new node, the rest
+        of the list may become unreachable.
+      </li>
+
+      <li>
+        <strong>Answer:</strong> If <code>n.next</code> is <code>null</code>, then there is no node after
+        <code>n</code> to delete. The operation needs an actual successor node to remove.
+      </li>
+
+      <li>
+        <strong>Answer:</strong> The link change itself can be \(O(1)\), but only once the relevant node is
+        already known. Finding that node may require traversing the list, which can take \(O(n)\) time.
+      </li>
+
+      <li>
+        <strong>Answer:</strong> An array can compute the location of <code>a[i]</code> directly from the
+        start of the array and the index. A linked structure has no comparable formula, so it must follow
+        links from <code>head</code> until it reaches the desired position.
+      </li>
+
+      <li>
+        <strong>Answer:</strong> Arrays are usually better when fast indexed access, compact storage, and
+        good memory locality are important. Linked structures are usually better when the algorithm often
+        changes local connections and already has references to the relevant nodes.
+      </li>
     </ol>
-    <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
-    <div id="answers" class="answer" hidden>
-      <ol>
-        <li><strong>Answer:</strong> Its items are arranged in a sequence, so ideas such as first, last, before, after, and next make sense.</li>
-        <li><strong>Answer:</strong> The location of item <code>i</code> can be computed directly from the base location and the index.</li>
-        <li><strong>Answer:</strong> Items after the insertion point must be shifted to make room while preserving order.</li>
-        <li><strong>Answer:</strong> It stores the data item and a link, often called <code>next</code>, to the next node.</li>
-        <li><strong>Answer:</strong> The new node's <code>next</code> link points to the old head, and <code>head</code> is updated to point to the new node.</li>
-        <li><strong>Answer:</strong> To remove a node from a singly linked structure, the previous node's <code>next</code> link must be changed to bypass the removed node.</li>
-        <li><strong>Answer:</strong> Without extra ordering or indexing information, the algorithm may have to inspect every item before finding the value or concluding it is absent.</li>
-        <li><strong>Answer:</strong> Arrays provide fast indexed access. Linked structures can insert or delete at the head, or after a known node, by changing only a few links.</li>
-      </ol>
+  </div>
+</section>
+
+ <section id="activities" section-title="In-Class Activities">
+  <h2>In-Class Activities</h2>
+  <ol>
+    <li>
+      <strong>Array Shift Trace:</strong>
+      Start with the array <code>[12, 7, 19, 4, 15, empty, empty]</code>. Insert <code>10</code>
+      at index <code>1</code> by showing each shift. Then delete the value at index
+      <code>3</code> from the resulting array and show each shift again.
+      <p>
+        For each operation, identify how many entries moved and explain why the cost is
+        \(O(n)\) in the worst case.
+      </p>
+    </li>
+
+   <li>
+  <strong>Node Cards with Addresses:</strong>
+  Give each student an index card representing a node. Before the activity starts, write
+  a unique address on each card, such as <code>0x100</code>, <code>0x140</code>,
+  <code>0x1A0</code>, or <code>0x210</code>. 
+  Tell them that the address represents the location of the node in memory, 
+  and that the value of a <code>next</code> field is the address of the next node.
+  The addresses should not be consecutive,
+  since linked nodes do not need to be stored next to each other in memory.
+  <p>
+    Each student chooses a value for the <code>data</code> field. The <code>next</code>
+    field starts blank. Then have all but 2 or 3 students arrange themselves in a line.
+    The first student in the line is the node referenced by <code>head</code>, so write that
+    student's address as the value of <code>head</code>.
+    The remaining students will be inserted into the linked list later. 
+  </p>
+  <p>
+    Now build the linked representation of the line. Each student writes the address of
+    the next student in their <code>next</code> field. The last student writes
+    <code>null</code>. At this point, the physical line gives the intended order, but
+    the actual linked list is represented by the <code>head</code> reference and the
+    <code>next</code> fields.
+  </p>
+  <p>
+    Then perform <code>insertAtHead(value)</code>, <code>insertAfter(node, value)</code>,
+    and <code>deleteAfter(node)</code>. For each operation, assign a new address if a
+    new node is created, update only the affected <code>next</code> fields and possibly
+    <code>head</code>, and identify exactly which references changed.
+  </p>
+</li>
+
+    <li>
+      <strong>Trace Linked Operations:</strong>
+      Start with the linked list
+      <code>12 -> 7 -> 19 -> 4 -> null</code>. Trace the following operations:
+      <p class="operation-sequence">
+        <code>insertAtHead(30)</code>, <code>search(19)</code>,
+        <code>insertAfter(19, 8)</code>, <code>deleteAtHead()</code>,
+        <code>deleteAfter(8)</code>, <code>search(25)</code>
+      </p>
+      <p>
+        After each operation, draw the list, record any return value, and state whether
+        the operation required traversal or only local rewiring. 
+        Also note how many nodes were visited and how many links were changed for each operation.
+      </p>
+    </li>
+
+    <li>
+      <strong>Assignment Order:</strong>
+      Which version of <code>insertAfter</code> below is correct?
+      Draw a three-node list and explain exactly what happens to the 
+      old successor in the incorrect version.
+<pre><code>insertAfter_A(n, value):
+    newNode = new Node(value)
+    newNode.next = n.next
+    n.next = newNode</code></pre>
+
+<pre><code>insertAfter_B(n, value):
+    newNode = new Node(value)
+    n.next = newNode
+    newNode.next = n.next</code></pre>
+    </li>
+
+    <li>
+      <strong>Broken Links:</strong>
+      Present an incorrect linked-list operation that loses part of the list or leaves
+      a deleted node reachable. Students should identify the broken reference, explain
+      what part of the structure becomes unreachable or incorrectly reachable, and repair
+      the code.
+      <p>
+        Good candidates are a faulty <code>insertAfter</code>, a faulty
+        <code>deleteAfter</code>, or a <code>deleteAtHead</code> that forgets to handle
+        the empty-list case.
+      </p>
+    </li>
+<li>
+  <strong>Implement a Singly Linked List:</strong>
+  Complete a simple singly linked list implementation using the operations discussed in this page:
+  <code>insertAtHead(value)</code>, <code>deleteAtHead()</code>,
+  <code>insertAfter(node, value)</code>, <code>deleteAfter(node)</code>,
+  <code>search(value)</code>, and <code>traverse()</code>.
+  <p>
+    The implementation stores a <code>head</code> reference. Your code should clearly handle
+    the invalid cases: deleting from an empty list, inserting after <code>null</code>, and
+    deleting after a node that has no successor.
+  </p>
+
+<div class="tab-group scrollable-code-tabs">
+  <div class="tabs" role="tablist">
+    <button id="tab-java-linked-list-activity" class="tablink active" data-lang="java-linked-list-activity" role="tab" aria-controls="java-linked-list-activity" aria-selected="true">Java</button>
+    <button id="tab-cpp-linked-list-activity" class="tablink" data-lang="cpp-linked-list-activity" role="tab" aria-controls="cpp-linked-list-activity" aria-selected="false">C++</button>
+    <button id="tab-python-linked-list-activity" class="tablink" data-lang="python-linked-list-activity" role="tab" aria-controls="python-linked-list-activity" aria-selected="false">Python</button>
+  </div>
+
+  <div id="java-linked-list-activity" class="code-container active copyable-code" role="tabpanel" aria-labelledby="tab-java-linked-list-activity">
+    <pre><code class="language-java">public class LinkedSequenceActivity {
+    public static class Node {
+        int data;
+        Node next;
+
+        Node(int data, Node next) {
+            this.data = data;
+            this.next = next;
+        }
+    }
+
+    private Node head;
+
+    public void insertAtHead(int value) {
+        // TODO: Create a new node whose next link is the old head.
+        // Then update head.
+    }
+
+    public int deleteAtHead() {
+        // TODO: If the list is empty, throw an IllegalStateException.
+        // Otherwise, save the head value, move head to head.next, and return the value.
+        return -999999; // temporary value so the starter code compiles
+    }
+
+    public void insertAfter(Node node, int value) {
+        // TODO: If node is null, throw an IllegalArgumentException.
+        // Otherwise, create a new node and insert it immediately after node.
+    }
+
+    public int deleteAfter(Node node) {
+        // TODO: If node is null or node.next is null, throw an IllegalArgumentException.
+        // Otherwise, remove node.next and return its value.
+        return -999999; // temporary value so the starter code compiles
+    }
+
+    public Node search(int value) {
+        // TODO: Return the first node containing value, or null if the value is not found.
+        return null;
+    }
+
+    public String traverse() {
+        // TODO: Return a string such as "2 -> 9 -> 4", or "" for an empty list.
+        return "";
+    }
+
+    private static void check(String actual, String expected) {
+        if (!actual.equals(expected)) {
+            throw new RuntimeException("Expected \"" + expected + "\" but got \"" + actual + "\"");
+        }
+    }
+
+    private static void check(int actual, int expected) {
+        if (actual != expected) {
+            throw new RuntimeException("Expected " + expected + " but got " + actual);
+        }
+    }
+
+    private static void check(boolean condition, String message) {
+        if (!condition) {
+            throw new RuntimeException(message);
+        }
+    }
+
+    private static void expectException(Runnable action) {
+        try {
+            action.run();
+            throw new RuntimeException("Expected an exception, but none was thrown");
+        } catch (IllegalStateException | IllegalArgumentException ex) {
+            // expected
+        }
+    }
+
+    public static void main(String[] args) {
+        LinkedSequenceActivity list = new LinkedSequenceActivity();
+
+        check(list.traverse(), "");
+
+        list.insertAtHead(4);
+        check(list.traverse(), "4");
+
+        list.insertAtHead(9);
+        check(list.traverse(), "9 -> 4");
+
+        list.insertAtHead(2);
+        check(list.traverse(), "2 -> 9 -> 4");
+
+        Node node9 = list.search(9);
+        check(node9 != null, "search(9) should find a node");
+        check(node9.data, 9);
+
+        list.insertAfter(node9, 7);
+        check(list.traverse(), "2 -> 9 -> 7 -> 4");
+
+        check(list.deleteAfter(node9), 7);
+        check(list.traverse(), "2 -> 9 -> 4");
+
+        check(list.deleteAtHead(), 2);
+        check(list.traverse(), "9 -> 4");
+
+        check(list.search(20) == null, "search(20) should return null");
+
+        Node node4 = list.search(4);
+        expectException(() -&gt; list.deleteAfter(node4));
+        expectException(() -&gt; list.insertAfter(null, 8));
+
+        check(list.deleteAtHead(), 9);
+        check(list.deleteAtHead(), 4);
+        check(list.traverse(), "");
+        expectException(() -&gt; list.deleteAtHead());
+
+        System.out.println("All tests passed.");
+    }
+}</code></pre>
     </div>
-  </section>
 
-  <section id="activities" section-title="In-Class Activities">
-    <h2>In-Class Activities</h2>
-    <ol>
-      <li><strong>Array Shift Trace:</strong> Start with <code>[12, 7, 19, 4, 15]</code>. Insert <code>10</code> at index <code>1</code> by showing each shift.</li>
-      <li><strong>Node Cards:</strong> Give students index cards representing nodes. Each card stores a value and an arrow to the next card. Practice inserting a new head card.</li>
-      <li><strong>Delete After by Hand:</strong> Draw <code>12 -> 7 -> 19 -> 4</code>. Delete the node after <code>7</code> and show exactly which link changes.</li>
-      <li><strong>Search Race:</strong> Compare searching for <code>4</code> in an array diagram and in a linked diagram. Identify what information is available at each step.</li>
-      <li><strong>Representation Choice:</strong> For each scenario, decide whether an array or linked representation is more natural: frequent index lookup, frequent head insertion, compact storage, and unknown final size.</li>
-      <li><strong>Code Reading:</strong> Give students the <code>insertAfter</code> code and ask them to explain why the order of assignments matters.</li>
-      <li><strong>Broken Links:</strong> Present an incorrect linked insertion that loses part of the list. Students identify the lost reference and repair the code.</li>
-      <li><strong>Cost Sorting:</strong> Put operation cards into buckets labeled \(O(1)\), \(O(n)\), and "depends on representation." Discuss disagreements.</li>
-    </ol>
-  </section>
+  <div id="cpp-linked-list-activity" class="code-container copyable-code" role="tabpanel" aria-labelledby="tab-cpp-linked-list-activity">
+    <pre><code class="language-cpp">#include &lt;iostream&gt;
+#include &lt;sstream&gt;
+#include &lt;stdexcept&gt;
+#include &lt;string&gt;
+using namespace std;
 
-  <section id="problems" section-title="Homework Problems">
-    <h2>Homework Problems</h2>
-    <ol>
-      <li><strong>Array Insertion Trace:</strong> An array has meaningful contents <code>[8, 3, 14, 6]</code> and capacity <code>7</code>. Trace the steps to insert <code>10</code> at index <code>2</code>.</li>
-      <li><strong>Array Deletion Trace:</strong> Starting with <code>[5, 11, 2, 9, 17]</code>, delete the item at index <code>1</code>. Show each shift and the final size.</li>
-      <li><strong>Build by Head Insertions:</strong> Starting with an empty linked structure, perform <code>insertAtHead(4)</code>, <code>insertAtHead(9)</code>, <code>insertAtHead(2)</code>. Draw the final structure.</li>
-      <li><strong>Insert After Trace:</strong> Given <code>3 -> 8 -> 12 -> null</code>, show the link changes needed to insert <code>6</code> after <code>8</code>.</li>
-      <li><strong>Delete After Trace:</strong> Given <code>3 -> 8 -> 12 -> 5 -> null</code>, show the link changes needed to delete the node after <code>8</code>.</li>
-      <li><strong>Search Cost:</strong> For the linked structure <code>6 -> 1 -> 14 -> 9 -> 3 -> null</code>, how many nodes are examined when searching for <code>9</code>? How many when searching for <code>7</code>?</li>
-      <li><strong>Code Modification:</strong> Add a <code>contains(value)</code> method that returns <code>true</code> or <code>false</code> instead of returning the node.</li>
-      <li><strong>Representation Decision:</strong> For a to-do list app that frequently adds new tasks at the front but rarely accesses tasks by index, explain whether an array or linked representation is a better first choice.</li>
-    </ol>
-  </section>
+class LinkedSequence {
+public:
+    struct Node {
+        int data;
+        Node* next;
+
+        Node(int d, Node* n = nullptr) {
+            data = d;
+            next = n;
+        }
+    };
+
+private:
+    Node* head;
+
+public:
+    LinkedSequence() {
+        head = nullptr;
+    }
+
+    ~LinkedSequence() {
+        while (head != nullptr) {
+            Node* oldHead = head;
+            head = head-&gt;next;
+            delete oldHead;
+        }
+    }
+
+    void insertAtHead(int value) {
+        // TODO: Create a new node whose next link is the old head.
+        // Then update head.
+    }
+
+    int deleteAtHead() {
+        // TODO: If the list is empty, throw runtime_error.
+        // Otherwise, save the head value, move head to head->next,
+        // delete the old head node, and return the value.
+        return -999999; // temporary value so the starter code compiles
+    }
+
+    void insertAfter(Node* node, int value) {
+        // TODO: If node is nullptr, throw runtime_error.
+        // Otherwise, create a new node and insert it immediately after node.
+    }
+
+    int deleteAfter(Node* node) {
+        // TODO: If node is nullptr or node->next is nullptr, throw runtime_error.
+        // Otherwise, remove node->next, delete it, and return its value.
+        return -999999; // temporary value so the starter code compiles
+    }
+
+    Node* search(int value) {
+        // TODO: Return the first node containing value, or nullptr if the value is not found.
+        return nullptr;
+    }
+
+    string traverse() const {
+        // TODO: Return a string such as "2 -> 9 -> 4", or "" for an empty list.
+        return "";
+    }
+};
+
+void check(const string& actual, const string& expected) {
+    if (actual != expected) {
+        throw runtime_error("Expected \"" + expected + "\" but got \"" + actual + "\"");
+    }
+}
+
+void check(int actual, int expected) {
+    if (actual != expected) {
+        throw runtime_error("Expected " + to_string(expected) + " but got " + to_string(actual));
+    }
+}
+
+void check(bool condition, const string& message) {
+    if (!condition) {
+        throw runtime_error(message);
+    }
+}
+
+void expectException(void (*action)()) {
+    try {
+        action();
+        throw runtime_error("Expected an exception, but none was thrown");
+    } catch (const runtime_error&) {
+        // expected
+    }
+}
+
+// These globals are only used to make simple exception tests possible.
+LinkedSequence* testList = nullptr;
+LinkedSequence::Node* testNode = nullptr;
+
+void deleteAtHeadOnEmpty() {
+    testList-&gt;deleteAtHead();
+}
+
+void insertAfterNull() {
+    testList-&gt;insertAfter(nullptr, 8);
+}
+
+void deleteAfterTail() {
+    testList-&gt;deleteAfter(testNode);
+}
+
+int main() {
+    LinkedSequence list;
+    testList = &list;
+
+    check(list.traverse(), "");
+
+    list.insertAtHead(4);
+    check(list.traverse(), "4");
+
+    list.insertAtHead(9);
+    check(list.traverse(), "9 -> 4");
+
+    list.insertAtHead(2);
+    check(list.traverse(), "2 -> 9 -> 4");
+
+    LinkedSequence::Node* node9 = list.search(9);
+    check(node9 != nullptr, "search(9) should find a node");
+    check(node9-&gt;data, 9);
+
+    list.insertAfter(node9, 7);
+    check(list.traverse(), "2 -> 9 -> 7 -> 4");
+
+    check(list.deleteAfter(node9), 7);
+    check(list.traverse(), "2 -> 9 -> 4");
+
+    check(list.deleteAtHead(), 2);
+    check(list.traverse(), "9 -> 4");
+
+    check(list.search(20) == nullptr, "search(20) should return nullptr");
+
+    testNode = list.search(4);
+    expectException(deleteAfterTail);
+    expectException(insertAfterNull);
+
+    check(list.deleteAtHead(), 9);
+    check(list.deleteAtHead(), 4);
+    check(list.traverse(), "");
+    expectException(deleteAtHeadOnEmpty);
+
+    cout &lt;&lt; "All tests passed." &lt;&lt; endl;
+    return 0;
+}</code></pre>
+    </div>
+
+  <div id="python-linked-list-activity" class="code-container copyable-code" role="tabpanel" aria-labelledby="tab-python-linked-list-activity">
+    <pre><code class="language-python">class Node:
+    def __init__(self, data, next=None):
+        self.data = data
+        self.next = next
+
+
+class LinkedSequence:
+    def __init__(self):
+        self.head = None
+
+    def insert_at_head(self, value):
+        # TODO: Create a new node whose next link is the old head.
+        # Then update self.head.
+        pass
+
+    def delete_at_head(self):
+        # TODO: If the list is empty, raise an IndexError.
+        # Otherwise, save the head value, move self.head to self.head.next,
+        # and return the value.
+        pass
+
+    def insert_after(self, node, value):
+        # TODO: If node is None, raise a ValueError.
+        # Otherwise, create a new node and insert it immediately after node.
+        pass
+
+    def delete_after(self, node):
+        # TODO: If node is None or node.next is None, raise a ValueError.
+        # Otherwise, remove node.next and return its value.
+        pass
+
+    def search(self, value):
+        # TODO: Return the first node containing value, or None if the value is not found.
+        pass
+
+    def traverse(self):
+        # TODO: Return a string such as "2 -> 9 -> 4", or "" for an empty list.
+        pass
+
+
+def check(actual, expected):
+    if actual != expected:
+        raise AssertionError(f"Expected {expected!r} but got {actual!r}")
+
+
+def expect_exception(action, exception_type):
+    try:
+        action()
+        raise AssertionError("Expected an exception, but none was raised")
+    except exception_type:
+        pass
+
+
+def test_linked_sequence():
+    lst = LinkedSequence()
+
+    check(lst.traverse(), "")
+
+    lst.insert_at_head(4)
+    check(lst.traverse(), "4")
+
+    lst.insert_at_head(9)
+    check(lst.traverse(), "9 -> 4")
+
+    lst.insert_at_head(2)
+    check(lst.traverse(), "2 -> 9 -> 4")
+
+    node9 = lst.search(9)
+    assert node9 is not None
+    check(node9.data, 9)
+
+    lst.insert_after(node9, 7)
+    check(lst.traverse(), "2 -> 9 -> 7 -> 4")
+
+    check(lst.delete_after(node9), 7)
+    check(lst.traverse(), "2 -> 9 -> 4")
+
+    check(lst.delete_at_head(), 2)
+    check(lst.traverse(), "9 -> 4")
+
+    check(lst.search(20), None)
+
+    node4 = lst.search(4)
+    expect_exception(lambda: lst.delete_after(node4), ValueError)
+    expect_exception(lambda: lst.insert_after(None, 8), ValueError)
+
+    check(lst.delete_at_head(), 9)
+    check(lst.delete_at_head(), 4)
+    check(lst.traverse(), "")
+    expect_exception(lambda: lst.delete_at_head(), IndexError)
+
+    print("All tests passed.")
+
+
+test_linked_sequence()</code></pre>
+    </div>
+  </div>
+</li>
+
+    <li>
+      <strong>Add a Tail Reference:</strong>
+      Starting from the singly linked list implementation from the previous activity, 
+      add a <code>tail</code> reference and an <code>insertAtTail(value)</code> method.
+      <p>
+        Make sure to update the other operations as needed so that <code>tail</code>
+        is always correct. In particular, check the empty-list and
+        one-node-list cases for <code>insertAtHead</code>, <code>deleteAtHead</code>,
+        <code>insertAfter</code>, and <code>deleteAfter</code>.
+      </p>
+      <p>Update the tests to ensure the new functionality works correctly, 
+        including adding tests for the <code>insertAtTail</code> method.</p>
+    </li>
+
+    <li>
+  <strong>Implement a Doubly Linked List:</strong>
+  Complete a simple doubly linked list implementation. In a doubly linked list, each node has
+  both a <code>next</code> reference and a <code>prev</code> reference. The list also stores
+  both <code>head</code> and <code>tail</code>.
+  <p>
+    The main rule is that every forward link should have a matching backward link. If
+    <code>a.next == b</code>, then usually <code>b.prev == a</code>. The first node has
+    <code>prev == null</code>, and the last node has <code>next == null</code>. When the list
+    is empty, both <code>head</code> and <code>tail</code> should be <code>null</code>.
+  </p>
+<p>
+  Some methods are implemented for you as examples. Complete the remaining required methods.
+  The provided tests check the required methods. Optional methods are marked in the starter code
+  for students who finish early. If you implement any optional methods, add tests for them as well,
+  including boundary cases involving <code>head</code>, <code>tail</code>, one-node and empty lists.
+</p>
+
+  <div class="tab-group scrollable-code-tabs">
+    <div class="tabs" role="tablist">
+      <button id="tab-java-doubly-list-activity" class="tablink active" data-lang="java-doubly-list-activity" role="tab" aria-controls="java-doubly-list-activity" aria-selected="true">Java</button>
+      <button id="tab-cpp-doubly-list-activity" class="tablink" data-lang="cpp-doubly-list-activity" role="tab" aria-controls="cpp-doubly-list-activity" aria-selected="false">C++</button>
+      <button id="tab-python-doubly-list-activity" class="tablink" data-lang="python-doubly-list-activity" role="tab" aria-controls="python-doubly-list-activity" aria-selected="false">Python</button>
+    </div>
+
+    <div id="java-doubly-list-activity" class="code-container active copyable-code" role="tabpanel" aria-labelledby="tab-java-doubly-list-activity">
+<pre><code class="language-java">public class DoublyLinkedListExercise {
+    static class IntDoublyList {
+        private static class Node {
+            int value;
+            Node next;
+            Node prev;
+
+            Node(int value) {
+                this.value = value;
+                this.next = null;
+                this.prev = null;
+            }
+        }
+
+        private Node head;
+        private Node tail;
+        private int count;
+
+        public IntDoublyList() {
+            head = null;
+            tail = null;
+            count = 0;
+        }
+
+        public boolean isEmpty() {
+            return count == 0;
+        }
+
+        public int size() {
+            return count;
+        }
+
+        public void insertAtHead(int value) {
+            Node newNode = new Node(value);
+
+            if (isEmpty()) {
+                head = newNode;
+                tail = newNode;
+            } else {
+                newNode.next = head;
+                head.prev = newNode;
+                head = newNode;
+            }
+
+            count++;
+        }
+
+        public void insertAtTail(int value) {
+            // TODO:
+            // Create a new node.
+            // If the list is empty, head and tail should both point to it.
+            // Otherwise:
+            //   old tail's next should point to the new node
+            //   new node's prev should point to the old tail
+            //   tail should move to the new node
+            // Do not forget to update count.
+        }
+
+        public int deleteFromHead() {
+            if (isEmpty()) {
+                return -1;
+            }
+
+            int value = head.value;
+
+            if (head == tail) {
+                head = null;
+                tail = null;
+            } else {
+                head = head.next;
+                head.prev = null;
+            }
+
+            count--;
+            return value;
+        }
+
+        public int deleteFromTail() {
+            // TODO:
+            // If the list is empty, return -1.
+            // Save tail.value.
+            // If there is one node, set both head and tail to null.
+            // Otherwise:
+            //   move tail to tail.prev
+            //   set tail.next to null
+            // Decrease count and return the saved value.
+            return -1;
+        }
+
+        public String traverseForward() {
+            // TODO:
+            // Return values from head to tail, such as "4 -> 7 -> 9".
+            // Return "" for an empty list.
+            return "";
+        }
+
+        public String traverseBackward() {
+            // TODO:
+            // Return values from tail to head, such as "9 -> 7 -> 4".
+            // Return "" for an empty list.
+            return "";
+        }
+
+        public Node searchForward(int value) {
+            // Optional -- time permitting.
+            // Return the first node containing value, or null if not found.
+            return null;
+        }
+
+        public void insertAfter(Node node, int value) {
+            // Optional -- time permitting.
+            // If node is null, do nothing.
+            // If node is tail, this should behave like insertAtTail(value).
+            // Otherwise, insert the new node between node and node.next.
+        }
+
+        public void insertBefore(Node node, int value) {
+            // Optional -- time permitting.
+            // If node is null, do nothing.
+            // If node is head, this should behave like insertAtHead(value).
+            // Otherwise, insert the new node between node.prev and node.
+        }
+
+        public int deleteNode(Node node) {
+            // Optional -- time permitting.
+            // If node is null, return -1.
+            // If node is head, use deleteFromHead().
+            // If node is tail, use deleteFromTail().
+            // Otherwise, unlink node from both directions and return its value.
+            return -1;
+        }
+    }
+
+    static void check(String actual, String expected) {
+        if (actual.equals(expected)) {
+            System.out.println("pass");
+        } else {
+            System.out.println("fail: expected \"" + expected + "\" but got \"" + actual + "\"");
+        }
+    }
+
+    static void check(int actual, int expected) {
+        if (actual == expected) {
+            System.out.println("pass");
+        } else {
+            System.out.println("fail: expected " + expected + " but got " + actual);
+        }
+    }
+
+    static void check(boolean actual, boolean expected) {
+        if (actual == expected) {
+            System.out.println("pass");
+        } else {
+            System.out.println("fail: expected " + expected + " but got " + actual);
+        }
+    }
+
+    static void testDoublyList() {
+        IntDoublyList list = new IntDoublyList();
+
+        check(list.isEmpty(), true);
+        check(list.size(), 0);
+        check(list.deleteFromHead(), -1);
+        check(list.deleteFromTail(), -1);
+        check(list.traverseForward(), "");
+        check(list.traverseBackward(), "");
+
+        list.insertAtHead(7);
+        check(list.traverseForward(), "7");
+        check(list.traverseBackward(), "7");
+        check(list.size(), 1);
+
+        list.insertAtHead(4);
+        check(list.traverseForward(), "4 -> 7");
+        check(list.traverseBackward(), "7 -> 4");
+
+        list.insertAtTail(9);
+        check(list.traverseForward(), "4 -> 7 -> 9");
+        check(list.traverseBackward(), "9 -> 7 -> 4");
+        check(list.size(), 3);
+
+        check(list.deleteFromHead(), 4);
+        check(list.traverseForward(), "7 -> 9");
+        check(list.traverseBackward(), "9 -> 7");
+
+        check(list.deleteFromTail(), 9);
+        check(list.traverseForward(), "7");
+        check(list.traverseBackward(), "7");
+
+        check(list.deleteFromTail(), 7);
+        check(list.traverseForward(), "");
+        check(list.traverseBackward(), "");
+        check(list.isEmpty(), true);
+        check(list.size(), 0);
+
+        list.insertAtTail(12);
+        check(list.traverseForward(), "12");
+        check(list.traverseBackward(), "12");
+        check(list.deleteFromHead(), 12);
+        check(list.isEmpty(), true);
+    }
+
+    public static void main(String[] args) {
+        testDoublyList();
+    }
+}</code></pre>
+    </div>
+        <div id="cpp-doubly-list-activity" class="code-container copyable-code" role="tabpanel" aria-labelledby="tab-cpp-doubly-list-activity">
+<pre><code class="language-cpp">#include &lt;iostream&gt;
+#include &lt;sstream&gt;
+#include &lt;string&gt;
+using namespace std;
+
+class IntDoublyList {
+private:
+    struct Node {
+        int value;
+        Node* next;
+        Node* prev;
+
+        Node(int v) {
+            value = v;
+            next = nullptr;
+            prev = nullptr;
+        }
+    };
+
+    Node* head;
+    Node* tail;
+    int count;
+
+public:
+    IntDoublyList() {
+        head = nullptr;
+        tail = nullptr;
+        count = 0;
+    }
+
+    ~IntDoublyList() {
+        while (head != nullptr) {
+            Node* old = head;
+            head = head-&gt;next;
+            delete old;
+        }
+    }
+
+    bool isEmpty() {
+        return count == 0;
+    }
+
+    int size() {
+        return count;
+    }
+
+    void insertAtHead(int value) {
+        Node* newNode = new Node(value);
+
+        if (isEmpty()) {
+            head = newNode;
+            tail = newNode;
+        } else {
+            newNode-&gt;next = head;
+            head-&gt;prev = newNode;
+            head = newNode;
+        }
+
+        count++;
+    }
+
+    void insertAtTail(int value) {
+        // TODO:
+        // Create a new node.
+        // If the list is empty, head and tail should both point to it.
+        // Otherwise:
+        //   old tail's next should point to the new node
+        //   new node's prev should point to the old tail
+        //   tail should move to the new node
+        // Do not forget to update count.
+    }
+
+    int deleteFromHead() {
+        if (isEmpty()) {
+            return -1;
+        }
+
+        int value = head-&gt;value;
+
+        if (head == tail) {
+            delete head;
+            head = nullptr;
+            tail = nullptr;
+        } else {
+            Node* oldHead = head;
+            head = head-&gt;next;
+            head-&gt;prev = nullptr;
+            delete oldHead;
+        }
+
+        count--;
+        return value;
+    }
+
+    int deleteFromTail() {
+        // TODO:
+        // If the list is empty, return -1.
+        // Save tail-&gt;value.
+        // If there is one node, delete it and set both head and tail to nullptr.
+        // Otherwise:
+        //   save the old tail
+        //   move tail to tail-&gt;prev
+        //   set tail-&gt;next to nullptr
+        //   delete the old tail
+        // Decrease count and return the saved value.
+        return -1;
+    }
+
+    string traverseForward() {
+        // TODO:
+        // Return values from head to tail, such as "4 -> 7 -> 9".
+        // Return "" for an empty list.
+        return "";
+    }
+
+    string traverseBackward() {
+        // TODO:
+        // Return values from tail to head, such as "9 -> 7 -> 4".
+        // Return "" for an empty list.
+        return "";
+    }
+
+    Node* searchForward(int value) {
+        // Optional -- time permitting.
+        // Return the first node containing value, or nullptr if not found.
+        return nullptr;
+    }
+
+    void insertAfter(Node* node, int value) {
+        // Optional -- time permitting.
+        // If node is nullptr, do nothing.
+        // If node is tail, this should behave like insertAtTail(value).
+        // Otherwise, insert the new node between node and node-&gt;next.
+    }
+
+    void insertBefore(Node* node, int value) {
+        // Optional -- time permitting.
+        // If node is nullptr, do nothing.
+        // If node is head, this should behave like insertAtHead(value).
+        // Otherwise, insert the new node between node-&gt;prev and node.
+    }
+
+    int deleteNode(Node* node) {
+        // Optional -- time permitting.
+        // If node is nullptr, return -1.
+        // If node is head, use deleteFromHead().
+        // If node is tail, use deleteFromTail().
+        // Otherwise, unlink node from both directions, delete it, and return its value.
+        return -1;
+    }
+};
+
+void check(const string& actual, const string& expected) {
+    if (actual == expected) {
+        cout &lt;&lt; "pass" &lt;&lt; endl;
+    } else {
+        cout &lt;&lt; "fail: expected \"" &lt;&lt; expected &lt;&lt; "\" but got \"" &lt;&lt; actual &lt;&lt; "\"" &lt;&lt; endl;
+    }
+}
+
+void check(int actual, int expected) {
+    if (actual == expected) {
+        cout &lt;&lt; "pass" &lt;&lt; endl;
+    } else {
+        cout &lt;&lt; "fail: expected " &lt;&lt; expected &lt;&lt; " but got " &lt;&lt; actual &lt;&lt; endl;
+    }
+}
+
+void check(bool actual, bool expected) {
+    if (actual == expected) {
+        cout &lt;&lt; "pass" &lt;&lt; endl;
+    } else {
+        cout &lt;&lt; "fail: expected " &lt;&lt; expected &lt;&lt; " but got " &lt;&lt; actual &lt;&lt; endl;
+    }
+}
+
+void testDoublyList() {
+    IntDoublyList list;
+
+    check(list.isEmpty(), true);
+    check(list.size(), 0);
+    check(list.deleteFromHead(), -1);
+    check(list.deleteFromTail(), -1);
+    check(list.traverseForward(), "");
+    check(list.traverseBackward(), "");
+
+    list.insertAtHead(7);
+    check(list.traverseForward(), "7");
+    check(list.traverseBackward(), "7");
+    check(list.size(), 1);
+
+    list.insertAtHead(4);
+    check(list.traverseForward(), "4 -> 7");
+    check(list.traverseBackward(), "7 -> 4");
+
+    list.insertAtTail(9);
+    check(list.traverseForward(), "4 -> 7 -> 9");
+    check(list.traverseBackward(), "9 -> 7 -> 4");
+    check(list.size(), 3);
+
+    check(list.deleteFromHead(), 4);
+    check(list.traverseForward(), "7 -> 9");
+    check(list.traverseBackward(), "9 -> 7");
+
+    check(list.deleteFromTail(), 9);
+    check(list.traverseForward(), "7");
+    check(list.traverseBackward(), "7");
+
+    check(list.deleteFromTail(), 7);
+    check(list.traverseForward(), "");
+    check(list.traverseBackward(), "");
+    check(list.isEmpty(), true);
+    check(list.size(), 0);
+
+    list.insertAtTail(12);
+    check(list.traverseForward(), "12");
+    check(list.traverseBackward(), "12");
+    check(list.deleteFromHead(), 12);
+    check(list.isEmpty(), true);
+}
+
+int main() {
+    testDoublyList();
+    return 0;
+}</code></pre>
+    </div>
+        <div id="python-doubly-list-activity" class="code-container copyable-code" role="tabpanel" aria-labelledby="tab-python-doubly-list-activity">
+<pre><code class="language-python">class Node:
+    def __init__(self, value):
+        self.value = value
+        self.next = None
+        self.prev = None
+
+
+class IntDoublyList:
+    def __init__(self):
+        self.head = None
+        self.tail = None
+        self.count = 0
+
+    def is_empty(self):
+        return self.count == 0
+
+    def size(self):
+        return self.count
+
+    def insert_at_head(self, value):
+        new_node = Node(value)
+
+        if self.is_empty():
+            self.head = new_node
+            self.tail = new_node
+        else:
+            new_node.next = self.head
+            self.head.prev = new_node
+            self.head = new_node
+
+        self.count += 1
+
+    def insert_at_tail(self, value):
+        # TODO:
+        # Create a new node.
+        # If the list is empty, head and tail should both point to it.
+        # Otherwise:
+        #   old tail's next should point to the new node
+        #   new node's prev should point to the old tail
+        #   tail should move to the new node
+        # Do not forget to update count.
+        pass
+
+    def delete_from_head(self):
+        if self.is_empty():
+            return -1
+
+        value = self.head.value
+
+        if self.head is self.tail:
+            self.head = None
+            self.tail = None
+        else:
+            self.head = self.head.next
+            self.head.prev = None
+
+        self.count -= 1
+        return value
+
+    def delete_from_tail(self):
+        # TODO:
+        # If the list is empty, return -1.
+        # Save self.tail.value.
+        # If there is one node, set both head and tail to None.
+        # Otherwise:
+        #   move tail to tail.prev
+        #   set tail.next to None
+        # Decrease count and return the saved value.
+        return -1
+
+    def traverse_forward(self):
+        # TODO:
+        # Return values from head to tail, such as "4 -> 7 -> 9".
+        # Return "" for an empty list.
+        return ""
+
+    def traverse_backward(self):
+        # TODO:
+        # Return values from tail to head, such as "9 -> 7 -> 4".
+        # Return "" for an empty list.
+        return ""
+
+    def search_forward(self, value):
+        # Optional -- time permitting.
+        # Return the first node containing value, or None if not found.
+        return None
+
+    def insert_after(self, node, value):
+        # Optional -- time permitting.
+        # If node is None, do nothing.
+        # If node is self.tail, this should behave like insert_at_tail(value).
+        # Otherwise, insert the new node between node and node.next.
+        pass
+
+    def insert_before(self, node, value):
+        # Optional -- time permitting.
+        # If node is None, do nothing.
+        # If node is self.head, this should behave like insert_at_head(value).
+        # Otherwise, insert the new node between node.prev and node.
+        pass
+
+    def delete_node(self, node):
+        # Optional -- time permitting.
+        # If node is None, return -1.
+        # If node is self.head, use delete_from_head().
+        # If node is self.tail, use delete_from_tail().
+        # Otherwise, unlink node from both directions and return its value.
+        return -1
+
+
+def check(actual, expected):
+    if actual == expected:
+        print("pass")
+    else:
+        print("fail: expected", repr(expected), "but got", repr(actual))
+
+
+def test_doubly_list():
+    lst = IntDoublyList()
+
+    check(lst.is_empty(), True)
+    check(lst.size(), 0)
+    check(lst.delete_from_head(), -1)
+    check(lst.delete_from_tail(), -1)
+    check(lst.traverse_forward(), "")
+    check(lst.traverse_backward(), "")
+
+    lst.insert_at_head(7)
+    check(lst.traverse_forward(), "7")
+    check(lst.traverse_backward(), "7")
+    check(lst.size(), 1)
+
+    lst.insert_at_head(4)
+    check(lst.traverse_forward(), "4 -> 7")
+    check(lst.traverse_backward(), "7 -> 4")
+
+    lst.insert_at_tail(9)
+    check(lst.traverse_forward(), "4 -> 7 -> 9")
+    check(lst.traverse_backward(), "9 -> 7 -> 4")
+    check(lst.size(), 3)
+
+    check(lst.delete_from_head(), 4)
+    check(lst.traverse_forward(), "7 -> 9")
+    check(lst.traverse_backward(), "9 -> 7")
+
+    check(lst.delete_from_tail(), 9)
+    check(lst.traverse_forward(), "7")
+    check(lst.traverse_backward(), "7")
+
+    check(lst.delete_from_tail(), 7)
+    check(lst.traverse_forward(), "")
+    check(lst.traverse_backward(), "")
+    check(lst.is_empty(), True)
+    check(lst.size(), 0)
+
+    lst.insert_at_tail(12)
+    check(lst.traverse_forward(), "12")
+    check(lst.traverse_backward(), "12")
+    check(lst.delete_from_head(), 12)
+    check(lst.is_empty(), True)
+
+
+test_doubly_list()</code></pre>
+    </div>
+  </div>
+</li>
+
+<li>
+  <strong>Delete from Tail Comparison:</strong>
+  Compare <code>deleteFromTail()</code> in a singly linked list and a doubly linked
+  list, assuming both implementations store a <code>tail</code> reference.
+  Do they have the same time complexity? If not, explain the difference, clearly explaining
+  how each implementation works and why the difference arises.
+<p>
+  Now reanswer the question assuming neither implementation stores a <code>tail</code> reference.
+</p>
+</li>
+
+<li>
+  <strong>Representation Choice:</strong>
+  For each scenario below, decide whether an array representation, a singly linked
+  representation, or a doubly linked representation is the best first choice.
+  Justify each answer using the costs from the comparison section.
+  <ol type="a">
+    <li>Frequent access by index.</li>
+    <li>Frequent insertion at the head.</li>
+    <li>Frequent insertion and deletion at both ends.</li>
+    <li>Frequent scanning from left to right with compact storage.</li>
+    <li>Frequent deletion of a known node when only a reference to that node is given.</li>
+    <li>The number of items is unknown ahead of time and may grow gradually.</li>
+    <li>The structure is usually small, but memory overhead should be as low as possible.</li>
+    <li>The program frequently appends new items at the end and rarely deletes from the middle.</li>
+    <li>The program needs to move both forward and backward through the sequence.</li>
+    <li>The program frequently inserts a new item before a known item.</li>
+    <li>The program frequently searches by value in an unordered sequence.</li>
+    <li>The program stores millions of items and repeatedly scans them in order.</li>
+  </ol>
+</li>
+  </ol>
+</section>
+
+<section id="problems" section-title="Homework Problems">
+  <h2>Homework Problems</h2>
+  <ol>
+    <li>
+      <strong>Array Insertion Trace:</strong>
+      An array has meaningful contents <code>[8, 3, 14, 6]</code>, size \(4\), and capacity \(7\).
+      Trace the steps to insert <code>10</code> at index <code>2</code>. Show the array after each
+      shift, give the final size, and state how many entries moved.
+    </li>
+
+    <li>
+      <strong>Array Deletion Trace:</strong>
+      Starting with <code>[5, 11, 2, 9, 17]</code>, delete the item at index <code>1</code>.
+      Show each shift, give the final logical contents, give the final size, and state how many
+      entries moved.
+    </li>
+
+    <li>
+      <strong>Build by Head Insertions:</strong>
+      Starting with an empty linked structure, perform
+      <code>insertAtHead(4)</code>, <code>insertAtHead(9)</code>, and
+      <code>insertAtHead(2)</code>. Draw the final structure, including the
+      <code>head</code> reference and the final <code>null</code> link.
+    </li>
+
+    <li>
+      <strong>Insert After Trace:</strong>
+      Given <code>3 -> 8 -> 12 -> null</code>, show the link changes needed to insert
+      <code>6</code> after <code>8</code>. Your answer should identify the old value of
+      <code>n.next</code>, the new node's <code>next</code> value, and the final value of
+      <code>n.next</code>.
+    </li>
+
+    <li>
+      <strong>Delete After Trace:</strong>
+      Given <code>3 -> 8 -> 12 -> 5 -> null</code>, show the link changes needed to delete
+      the node after <code>8</code>. State the returned value and draw the final list.
+    </li>
+
+    <li>
+      <strong>Search Cost:</strong>
+      For the linked structure <code>6 -> 1 -> 14 -> 9 -> 3 -> null</code>, how many nodes
+      are examined when searching for <code>9</code>? How many are examined when searching for
+      <code>7</code>? Explain why these are worst-case or non-worst-case searches.
+    </li>
+
+  <li>
+  <strong>Fix the Broken Deletion:</strong>
+  The following pseudocode is intended to delete the node after <code>n</code>, 
+  but it is not correct in every case.
+  Explain what case it fails to handle. Then rewrite the method so it works correctly in all cases.
+  <br>
+<pre><code>deleteAfter(n):
+    victim = n.next
+    n.next = victim.next
+    return victim.data</code></pre>
+  <p>
+    Test your explanation on two cases: when <code>n</code> refers to the node storing
+    <code>8</code> in <code>3 -> 8 -> 12 -> 5 -> null</code>, and when <code>n</code>
+    refers to the node storing <code>12</code> in <code>3 -> 8 -> 12 -> null</code>.
+  </p>
+</li>
+    <li>
+      <strong>Count Occurrences:</strong>
+      Add a <code>countOccurrences(value)</code> method to the linked-list code from the chapter.
+      The method should return the number of nodes whose data field equals <code>value</code>.
+      For example, on the list <code>4 -> 7 -> 4 -> 9 -> 4 -> null</code>,
+      <code>countOccurrences(4)</code> should return <code>3</code>.
+      Give the code and explain its worst-case running time.
+    </li>
+
+    <li>
+      <strong>Add a Tail Reference:</strong>
+      Suppose a singly linked list stores both <code>head</code> and <code>tail</code>.
+      Describe how <code>insertAtTail(value)</code> should work. 
+      Clearly explain what special case(s) must be handled.
+    </li>
+
+    <li>
+      <strong>Doubly Linked Update:</strong>
+      In a doubly linked list, suppose node <code>n</code> has successor <code>m</code>.
+      Write the reference updates needed to insert a new node storing <code>20</code> between
+      <code>n</code> and <code>m</code>. 
+    </li>
+        <li>
+      <strong>Remove All Occurrences:</strong>
+      Add a <code>removeAll(value)</code> method to a singly linked list. The method should
+      remove every node whose data field equals <code>value</code> and return the number of
+      nodes removed.
+      <p>
+        Your method must correctly handle removals at the head, removals in the middle,
+        removals at the end, consecutive matching nodes, and an empty list. Give the code
+        and explain its worst-case running time.
+      </p>
+    </li>
+
+    <li>
+      <strong>Reverse a Singly Linked List:</strong>
+      Write an iterative method <code>reverse()</code> that reverses a singly linked list
+      by changing links, not by copying values into an array.
+      <p>
+        For example, the list <code>4 -> 7 -> 9 -> 2 -> null</code> should become
+        <code>2 -> 9 -> 7 -> 4 -> null</code>. Your solution should use only \(O(1)\)
+        extra space. Give the code and explain its worst-case running time.
+      </p>
+    </li>
+
+    <li>
+      <strong>Tail Reference Invariants:</strong>
+      Suppose a singly linked list stores both <code>head</code> and <code>tail</code>.
+      For each operation below, explain how <code>tail</code> should be updated:
+      <ol type="a">
+        <li><code>insertAtHead(value)</code> on an empty list.</li>
+        <li><code>insertAtHead(value)</code> on a nonempty list.</li>
+        <li><code>deleteAtHead()</code> on a one-node list.</li>
+        <li><code>deleteAtHead()</code> on a list with at least two nodes.</li>
+        <li><code>deleteAfter(n)</code> when <code>n.next</code> is the tail node.</li>
+      </ol>
+    </li>
+
+    <li>
+  <strong>Repeated Head Insertions:</strong>
+  Suppose we use an array to represent a sequence, and the first item is always stored
+  at index <code>0</code>. To insert a new item at the beginning, every existing item must
+  shift one position to the right.
+  <p>
+    The table below shows the first few insertions when we insert the values
+    \(1,2,3,\ldots,n\) at the beginning, in that order.
+  </p>
+
+  <table class="example-table">
+    <thead>
+      <tr>
+        <th>Operation</th>
+        <th>Array After Insertion</th>
+        <th>Number of Shifts</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>insertAtHead(1)</code></td>
+        <td><code>[1]</code></td>
+        <td>\(0\)</td>
+      </tr>
+      <tr>
+        <td><code>insertAtHead(2)</code></td>
+        <td><code>[2, 1]</code></td>
+        <td>\(1\)</td>
+      </tr>
+      <tr>
+        <td><code>insertAtHead(3)</code></td>
+        <td><code>[3, 2, 1]</code></td>
+        <td>\(2\)</td>
+      </tr>
+      <tr>
+        <td><code>insertAtHead(4)</code></td>
+        <td><code>[4, 3, 2, 1]</code></td>
+        <td>\(3\)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>
+    Continue the pattern through <code>insertAtHead(6)</code>. Then answer the following:
+  </p>
+  <ol type="a">
+    <li>How many entries shift during <code>insertAtHead(k)</code>?</li>
+    <li>How many total shifts occur after inserting \(1,2,\ldots,n\) at the beginning?</li>
+    <li>What is the Big-O running time for all \(n\) array insertions?</li>
+    <li>
+      How does this compare with performing the same \(n\) insertions using
+      <code>insertAtHead</code> on a singly linked list?
+    </li>
+  </ol>
+</li>
+  </ol>
+</section>
 
 </body>
 </html>
