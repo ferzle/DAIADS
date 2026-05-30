@@ -106,6 +106,24 @@
 .core-operations-table td {
   padding: 2px 5px;
 }
+.cost-good {
+  background-color: #e8f5e9;
+  font-weight: 600;
+}
+
+.cost-slow {
+  background-color: #fff8e1;
+}
+
+.cost-note {
+  background-color: #eef4ff;
+}
+.legend-chip {
+  display: inline-block;
+  padding: 0.1em 0.35em;
+  border-radius: 0.25em;
+  margin-left: 0.25em;
+}
   </style>
 </head>
 <body>
@@ -1360,158 +1378,197 @@ delete(value):
   </section>
 
   <section id="implementation-linked-analysis" section-title="Implementation Analysis">
-    <h4>Implementation Analysis</h4>
-    <p>
-      The cost of a singly linked list with a tail reference depends on whether the operation works at a
-      known end of the list or must traverse nodes to find a position or value.
-    </p>
+  <h4>Implementation Analysis</h4>
+  <p>
+    The running times below come from two facts about the representation: the list has direct
+    references to the first and last nodes, but reaching a general position requires following
+    <code>next</code> references from <code>head</code>.
+  </p>
 
-<ul>
-  <li><strong><code>size</code>, <code>isEmpty</code>:</strong> \(O(1)\). Each checks or returns a stored variable.</li>
-  <li><strong><code>first</code>, <code>last</code>:</strong> \(O(1)\). The implementation stores direct references to both the first and last nodes.</li>
-  <li><strong><code>addFirst(value)</code>:</strong> \(O(1)\). It creates one node and changes a constant number of references.</li>
-  <li><strong><code>addLast(value)</code>:</strong> \(O(1)\). The <code>tail</code> reference lets the implementation attach a new node at the end without traversal.</li>
-  <li><strong><code>get(index)</code>, <code>set(index, value)</code>:</strong> \(O(n)\) in the worst case, because reaching index <code>index</code> may require following many links from <code>head</code>.</li>
-  <li><strong><code>insert(index, value)</code>:</strong> \(O(n)\) in the worst case. Inserting at the front or back is \(O(1)\), but inserting at a general index requires traversal to the predecessor.</li>
-  <li><strong><code>removeFirst()</code>:</strong> \(O(1)\). It moves <code>head</code> to the next node and possibly clears <code>tail</code>.</li>
-  <li><strong><code>removeLast()</code>:</strong> \(O(n)\). The implementation must find the node before <code>tail</code>, which requires traversal in a singly linked list.</li>
-  <li><strong><code>remove(index)</code>:</strong> \(O(n)\) in the worst case. Removing the first value is \(O(1)\), but removing at a general index requires traversal to the predecessor.</li>
-  <li><strong><code>indexOf(value)</code>, <code>contains(value)</code>:</strong> \(O(n)\) in the worst case, because the value may be absent or stored only at the last node.</li>
-  <li><strong><code>delete(value)</code>:</strong> \(O(n)\) in the worst case. It may have to search the whole list before deleting, or before determining that the value is absent.</li>
-  <li><strong><code>clear()</code>:</strong> \(O(1)\) if it only sets <code>head = null</code>, <code>tail = null</code>, and <code>size = 0</code>. In a language with manual memory management, freeing all nodes would take \(O(n)\).</li>
-</ul>
+  <ul>
+    <li><strong><code>size()</code>, <code>isEmpty()</code>:</strong> \(O(1)\). Each checks or returns a stored variable.</li>
+    <li><strong><code>first()</code>, <code>last()</code>:</strong> \(O(1)\). The implementation stores direct references to both the first and last nodes.</li>
+    <li><strong><code>addFirst(value)</code>:</strong> \(O(1)\). It creates one node and changes a constant number of references.</li>
+    <li><strong><code>addLast(value)</code>:</strong> \(O(1)\). The <code>tail</code> reference lets the implementation attach a new node at the end without traversal.</li>
+    <li><strong><code>get(index)</code>, <code>set(index, value)</code>:</strong> 
+      \(O(n)\) in the worst case, because reaching index <code>index</code> may require following many links 
+      from <code>head</code>.
+      More precisely, these operations are \(O(i)\) when <code>index == i</code>, 
+      so they are \(O(n)\) in the worst case when <code>index</code> is near the end of the list.
+    </li>
+    <li><strong><code>insert(index, value)</code>:</strong> 
+      \(O(n)\) in the worst case. 
+      Inserting at the front is \(O(1)\) by calling <code>addFirst(value)</code>, 
+      and inserting at the back is \(O(1)\) by calling <code>addLast(value)</code>. 
+      Inserting at a general index requires traversal to the predecessor.
+      As with the get and set operations, the time complexity is \(O(i)\) when <code>index == i</code>, 
+      so it is \(O(n)\) in the worst case when <code>index</code> is near the end of the list.
+    </li>
+    <li><strong><code>removeFirst()</code>:</strong> \(O(1)\). It moves <code>head</code> to the next node and possibly clears <code>tail</code>.</li>
+    <li><strong><code>removeLast()</code>:</strong> 
+      \(O(n)\). The implementation must find the node before <code>tail</code>, 
+      which requires traversing the entire list. 
+      This is one of the main disadvantages of a singly-linked list implementation.
+      This would improve to \(O(1)\) if we used a doubly-linked list.</li>
+    <li><strong><code>remove(index)</code>:</strong> 
+      \(O(n)\) in the worst case. 
+      Removing the first value is \(O(1)\), 
+      but removing at a general index requires traversal to the predecessor.
+    Again, the time complexity is more precisely \(O(i)\) when <code>index == i</code>, 
+    so it is \(O(n)\) in the worst case when <code>index</code> is near the end of the list.
+    </li>
+    <li><strong><code>indexOf(value)</code>, <code>contains(value)</code>:</strong> \(O(n)\) in the worst case, because the value may be absent or stored only at the last node.</li>
+    <li><strong><code>delete(value)</code>:</strong> \(O(n)\) in the worst case. It may have to search the whole list before deleting, or before determining that the value is absent.</li>
+    <li><strong><code>clear()</code>:</strong> \(O(1)\) if it only sets <code>head = null</code>, <code>tail = null</code>, and <code>size = 0</code>. In a language with manual memory management, freeing all nodes would take \(O(n)\).</li>
+  </ul>
 
-<h4>Storage Used</h4>
-<p>
-  A linked list uses \(O(n)\) space for \(n\) stored values. Each value is stored inside a node,
-  and each node also stores a <code>next</code> reference. The list itself stores \(O(1)\) extra
-  information: <code>head</code>, <code>tail</code>, and <code>size</code>.
-</p>
-
-  </section>
-
-  <section id="implementation-linked-tradeoffs" section-title="Tradeoffs and Comments">
-    <h4>Tradeoffs</h4>
-    <ul>
-      <li>The linked implementation does not need unused array capacity; it creates one node for each stored value.</li>
-      <li><code>addFirst</code>, <code>addLast</code>, <code>removeFirst</code>, <code>first</code>, and <code>last</code> are constant-time operations.</li>
-      <li><code>removeLast</code> is still linear time because a singly linked list cannot move backward 
-        from <code>tail</code> to the previous node. Using a doubly linked list would improve this at the cost of additional memory overhead
-        and slightly more complex implementation of most of the operations.</li>
-      <li>Indexed access is slow compared with an array-based list because the implementation must follow links to reach a position.</li>
-      <li>Insertion or removal at a known node can be efficient, but the List ADT operations are index-based, so finding the right node is often part of the cost.</li>
-      <li>Each node has reference overhead, so a linked list usually uses more memory per stored value than an array-based list.</li>
-      <li>Linked nodes may be scattered in memory, making traversal less cache-friendly than scanning an array.</li>
-      <li>This representation is most useful when a program performs frequent operations at the front or back and does not rely heavily on indexed access.</li>
-    </ul>
-  </section>
+  <h5>Storage Used</h5>
+  <p>
+    A linked list uses \(O(n)\) space for \(n\) stored values. 
+    Each value is stored inside a node which store both 
+    the value and a reference to the next node, 
+    so each stored value has \(O(1)\) overhead for the node structure.
+    The list itself stores \(O(1)\) extra
+    information: <code>head</code>, <code>tail</code>, and <code>size</code>.
+  </p>
 </section>
+<section id="implementation-linked-tradeoffs" section-title="Tradeoffs and Comments">
+  <h4>Tradeoffs</h4>
+  <ul>
+  <li>A linked list allocates storage one node at a time, so it does not reserve extra unused slots the way an array-based list often does.</li>
+  <li><code>addFirst()</code>, <code>addLast()</code>, <code>removeFirst()</code>, <code>first()</code>, and <code>last()</code> are constant-time operations.</li>
+    <li>
+      <code>removeLast()</code> is still linear time because a singly linked list cannot move backward
+      from <code>tail</code> to the previous node. A doubly linked list can make this operation
+      constant time, but it requires an additional reference in each node and slightly more complex
+      insertion and removal code.
+    </li>
+    <li>Indexed access is slow compared with an array-based list because the implementation must follow links to reach a position.</li>
+    <li>Insertion or removal at a known node can be efficient, but the List ADT operations are index-based, so finding the right node is often part of the cost.</li>
+    <li>Each node has reference overhead, so a linked list usually uses more memory per stored value than an array-based list.</li>
+    <li>Linked nodes may be scattered in memory, making traversal less cache-friendly than scanning an array.</li>
+    <li>This representation is most useful when a program frequently updates the front, adds or reads at the back, and does not rely heavily on indexed access.</li>
+  </ul>
+</section>
+  </section>
 
 <section id="cost-summary" section-title="Implementation Cost Summary">
   <h3>Implementation Cost Summary</h3>
   <p>
-    The two implementations represent the same List ADT, but they make different operations efficient.
-    The array-based list is strongest when the program needs indexed access, indexed updates, scanning,
-    or adding at the end. The singly linked list with tail is strongest for operations at the front and
-    for adding or reading at the back.
-  </p>
-
-  <table class="example-table left-top-align cost-summary-table">
-    <thead>
-      <tr>
-        <th>Operation</th>
-        <th>Array-Based List</th>
-        <th>Singly Linked List with Tail</th>
-        <th>Reason for Difference</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><code>size()</code>, <code>isEmpty()</code></td>
-        <td>\(O(1)\)</td>
-        <td>\(O(1)\)</td>
-        <td>Both implementations store the current size.</td>
-      </tr>
-      <tr>
-        <td><code>first()</code></td>
-        <td>\(O(1)\)</td>
-        <td>\(O(1)\)</td>
-        <td>The first value is stored at <code>A[0]</code> or at <code>head</code>.</td>
-      </tr>
-      <tr>
-        <td><code>last()</code></td>
-        <td>\(O(1)\)</td>
-        <td>\(O(1)\)</td>
-        <td>The last value is at <code>A[size - 1]</code> or at <code>tail</code>.</td>
-      </tr>
-      <tr>
-        <td><code>get(index)</code>, <code>set(index, value)</code></td>
-        <td>\(O(1)\)</td>
-        <td>\(O(n)\)</td>
-        <td>Arrays support direct indexing; singly linked lists must traverse from <code>head</code>.</td>
-      </tr>
-      <tr>
-        <td><code>addFirst(value)</code></td>
-        <td>\(O(n)\)</td>
-        <td>\(O(1)\)</td>
-        <td>The array shifts all values right; the linked list changes a few references.</td>
-      </tr>
-      <tr>
-        <td><code>addLast(value)</code></td>
-        <td>\(O(1)\) amortized</td>
-        <td>\(O(1)\)</td>
-        <td>The array may occasionally resize; the linked list uses <code>tail</code>.</td>
-      </tr>
-      <tr>
-        <td><code>insert(index, value)</code></td>
-        <td>\(O(n)\)</td>
-        <td>\(O(n)\)</td>
-        <td>The array may shift values; the linked list must traverse to the predecessor.</td>
-      </tr>
-      <tr>
-        <td><code>removeFirst()</code></td>
-        <td>\(O(n)\)</td>
-        <td>\(O(1)\)</td>
-        <td>The array shifts all remaining values left; the linked list moves <code>head</code>.</td>
-      </tr>
-      <tr>
-        <td><code>removeLast()</code></td>
-        <td>\(O(1)\)</td>
-        <td>\(O(n)\)</td>
-        <td>The array decrements <code>size</code>; the linked list must find the node before <code>tail</code>.</td>
-      </tr>
-      <tr>
-        <td><code>remove(index)</code></td>
-        <td>\(O(n)\)</td>
-        <td>\(O(n)\)</td>
-        <td>The array may shift values; the linked list must traverse to the predecessor.</td>
-      </tr>
-      <tr>
-        <td><code>contains(value)</code>, <code>indexOf(value)</code></td>
-        <td>\(O(n)\)</td>
-        <td>\(O(n)\)</td>
-        <td>Both may need to scan the whole list.</td>
-      </tr>
-      <tr>
-        <td><code>delete(value)</code></td>
-        <td>\(O(n)\)</td>
-        <td>\(O(n)\)</td>
-        <td>Both may need to search for the value; the array may also shift after deletion.</td>
-      </tr>
-      <tr>
-        <td><code>clear()</code></td>
-        <td>\(O(1)\) or \(O(n)\)</td>
-        <td>\(O(1)\) or \(O(n)\)</td>
-        <td>Constant time if references are simply discarded; linear time if old cells or nodes are explicitly cleared or freed.</td>
-      </tr>
-    </tbody>
-  </table>
+  The two implementations represent the same List ADT, but they make different operations efficient.
+  The fixed-size array-based list is strongest when the program needs indexed access, indexed updates,
+  or adding at the end when space is available. The singly linked list with tail is strongest for
+  operations at the front and for adding at or reading from the end.
+</p>
+<p>
+  Green cells mark clear constant-time strengths. 
+  Yellow cells mark operations where one implementation
+  is noticeably worse than the other for this operation.
+</p>
+<table class="example-table left-top-align cost-summary-table">
+  <thead>
+    <tr>
+      <th>Operation</th>
+      <th>Fixed-Size Array-Based List</th>
+      <th>Singly Linked List with Tail</th>
+      <th>Reason for Difference</th>
+    </tr>
+  </thead>
+  <tbody>
+  <tr>
+    <td><code>size()</code>, <code>isEmpty()</code></td>
+    <td class="cost-good">\(O(1)\)</td>
+    <td class="cost-good">\(O(1)\)</td>
+    <td>Both implementations store the current size.</td>
+  </tr>
+  <tr>
+    <td><code>first()</code></td>
+    <td class="cost-good">\(O(1)\)</td>
+    <td class="cost-good">\(O(1)\)</td>
+    <td>The first value is stored at <code>A[0]</code> or at <code>head</code>.</td>
+  </tr>
+  <tr>
+    <td><code>last()</code></td>
+    <td class="cost-good">\(O(1)\)</td>
+    <td class="cost-good">\(O(1)\)</td>
+    <td>The last value is at <code>A[size - 1]</code> or at <code>tail</code>.</td>
+  </tr>
+  <tr>
+    <td><code>get(index)</code>, <code>set(index, value)</code></td>
+    <td class="cost-good">\(O(1)\)</td>
+    <td class="cost-slow">\(O(n)\)</td>
+    <td>Arrays support direct indexing; singly linked lists must traverse from <code>head</code>.</td>
+  </tr>
+  <tr>
+    <td><code>addFirst(value)</code></td>
+    <td class="cost-slow">\(O(n)\)</td>
+    <td class="cost-good">\(O(1)\)</td>
+    <td>The array shifts all values right; the linked list changes a few references.</td>
+  </tr>
+  <tr>
+    <td><code>addLast(value)</code></td>
+    <td class="cost-good">\(O(1)\)</td>
+    <td class="cost-good">\(O(1)\)</td>
+    <td>The array writes at <code>A[size]</code>; the linked list uses <code>tail</code>.</td>
+  </tr>
+  <tr>
+    <td><code>insert(index, value)</code></td>
+    <td>\(O(n)\)</td>
+    <td>\(O(n)\)</td>
+    <td>The array may shift values; the linked list must traverse to the predecessor.</td>
+  </tr>
+  <tr>
+    <td><code>removeFirst()</code></td>
+    <td class="cost-slow">\(O(n)\)</td>
+    <td class="cost-good">\(O(1)\)</td>
+    <td>The array shifts all remaining values left; the linked list moves <code>head</code>.</td>
+  </tr>
+  <tr>
+    <td><code>removeLast()</code></td>
+    <td class="cost-good">\(O(1)\)</td>
+    <td class="cost-slow">\(O(n)\)</td>
+    <td>The array decrements <code>size</code>; the linked list must find the node before <code>tail</code>.</td>
+  </tr>
+  <tr>
+    <td><code>remove(index)</code></td>
+    <td>\(O(n)\)</td>
+    <td>\(O(n)\)</td>
+    <td>The array may shift values; the linked list must traverse to the predecessor.</td>
+  </tr>
+  <tr>
+    <td><code>contains(value)</code>, <code>indexOf(value)</code></td>
+    <td>\(O(n)\)</td>
+    <td>\(O(n)\)</td>
+    <td>Both may need to scan the whole list.</td>
+  </tr>
+  <tr>
+    <td><code>delete(value)</code></td>
+    <td>\(O(n)\)</td>
+    <td>\(O(n)\)</td>
+    <td>Both may need to search for the value; the array may also shift after deletion.</td>
+  </tr>
+  <tr>
+    <td><code>clear()</code></td>
+    <td>\(O(1)\) or \(O(n)\)</td>
+    <td>\(O(1)\) or \(O(n)\)</td>
+    <td>Constant time if references are simply discarded; linear time if old cells or nodes are explicitly cleared or freed.</td>
+  </tr>
+</tbody>
+</table>
 
   <p>
-    The table gives worst-case running times unless it explicitly says amortized. For example,
-    a single <code>addLast(value)</code> on an array-based list can take \(O(n)\) time if it triggers
-    a resize, but over a long sequence of additions at the end, the average cost per addition is
-    \(O(1)\) when capacity grows geometrically.
+    The table gives worst-case running times for the fixed-size array implementation and the singly linked
+    list implementation. For the fixed-size array, operations that add a value also require available
+    capacity; if the array is full, the operation reports overflow rather than resizing.
+  </p>
+
+  <p>
+    A dynamic array version changes the cost of operations that add values. A single
+    <code>addFirst(value)</code>, <code>addLast(value)</code>, or <code>insert(index, value)</code>
+    can take \(O(n)\) time if it triggers a resize. With geometric growth, a long sequence of
+    <code>addLast(value)</code> operations has amortized \(O(1)\) time per addition, but
+    <code>addFirst(value)</code> and general <code>insert(index, value)</code> remain \(O(n)\)
+    in the worst case because of shifting.
   </p>
 </section>
 
@@ -1519,7 +1576,7 @@ delete(value):
   <h3>Library Implementations</h3>
   <p>
     Most programming languages provide one or more built-in or standard-library list-like structures.
-    These libraries may use different names for the same basic operations, and they may choose different
+    These libraries may use different names for similar operations, and they may use different
     underlying representations.
   </p>
 
@@ -1528,7 +1585,7 @@ delete(value):
       <tr>
         <th>Language</th>
         <th>Common Structure</th>
-        <th>Likely Representation</th>
+        <th>Typical Representation</th>
         <th>Notes</th>
       </tr>
     </thead>
@@ -1573,20 +1630,20 @@ delete(value):
         <td>Python</td>
         <td><code>collections.deque</code></td>
         <td>Deque-oriented block structure</td>
-        <td>Better than <code>list</code> for frequent additions and removals at both ends.</td>
+        <td>Useful for frequent additions and removals at both ends, but not designed for fast indexed list operations.</td>
       </tr>
     </tbody>
   </table>
 
   <p>
     In practice, dynamic arrays are often the default choice for list-like data because they provide
-    fast indexing, compact storage, and good performance when scanning. Linked lists are still important
+    fast indexing, compact storage, and good locality when scanning. Linked lists are still important
     for understanding references and for workloads where positions are already known and local relinking
     is the main operation.
   </p>
 </section>
+</section>
 
-  </section>
 <section id="applications" section-title="Applications">
   <h2>Applications</h2>
   <p>
@@ -1640,20 +1697,18 @@ delete(value):
   </ul>
 
   <p>
-    In practice, array-based lists are often the default choice because they provide fast indexing,
-    compact storage, and efficient scanning. Linked lists are still important because they illustrate
-    reference-based storage and because they can be effective when local relinking, rather than indexed
-    access, is the central operation.
+    These applications do not all favor the same representation. Applications that rely heavily on
+    indexing usually favor array-based lists, while applications that work near known nodes or update the
+    front frequently may benefit from linked storage. Choosing a list implementation means matching the
+    representation to the operations the application performs most often.
   </p>
 </section>
-
-
- <section id="comparison" section-title="Comparisons and Tradeoffs">
+<section id="comparison" section-title="Comparisons and Tradeoffs">
   <h2>Comparisons and Tradeoffs</h2>
   <p>
     The List ADT describes what operations are available, but the implementation determines which
-    operations are efficient. The array-based list and the singly linked list with tail both store
-    the same kind of logical sequence, but they organize the data in very different ways.
+    operations are efficient. The fixed-size array-based list and the singly linked list with tail both
+    store the same kind of logical sequence, but they organize the data in very different ways.
   </p>
 
   <h3>Indexing vs. Traversal</h3>
@@ -1684,17 +1739,17 @@ delete(value):
   </p>
 
   <p>
-    In an array-based list, <code>last()</code>, <code>removeLast()</code>, and usually
-    <code>addLast(value)</code> are efficient. But <code>addFirst(value)</code> and
-    <code>removeFirst()</code> are expensive because they require shifting all existing values.
+    In an array-based list, <code>last()</code>, <code>removeLast()</code>, and
+    <code>addLast(value)</code> are efficient when there is available capacity. But
+    <code>addFirst(value)</code> and <code>removeFirst()</code> are expensive because they require
+    shifting existing values.
   </p>
 
   <h3>Memory Use</h3>
   <p>
-    An array-based list may allocate more cells than it currently needs. This unused capacity is intentional:
-    it allows several future calls to <code>addLast(value)</code> before another resize is needed. A linked
-    list does not keep unused array slots, but each node stores an extra <code>next</code> reference in
-    addition to the value.
+    A fixed-size array-based list reserves a fixed number of array cells. Some of those cells may be unused
+    if the logical list is smaller than the array capacity. A linked list does not reserve unused array
+    slots, but each node stores an extra <code>next</code> reference in addition to the value.
   </p>
 
   <h3>Practical Performance</h3>
@@ -1708,12 +1763,13 @@ delete(value):
   <h3>Choosing an Implementation</h3>
   <p>
     An array-based list is usually the better default when a program frequently uses indexing, scanning, or
-    adding at the end. A linked list is more appropriate when the program frequently updates the front of the
-    list or already has references to the nodes where insertions and deletions should occur. The important
-    lesson is not that one representation is always better, but that the right representation depends on the
-    operations the program performs most often.
+    adding at the end when capacity is available. A linked list is more appropriate when the program
+    frequently updates the front of the list or already has references to the nodes where insertions and
+    deletions should occur. The important lesson is not that one representation is always better, but that
+    the right representation depends on the operations the program performs most often.
   </p>
 </section>
+
 <section id="variations" section-title="Variations and Extensions">
   <h2>Variations and Extensions</h2>
   <p>
@@ -1723,20 +1779,20 @@ delete(value):
     behavior.
   </p>
 
-  <h3>Fixed-Size Array Lists</h3>
+  <h3>Dynamic Array Lists</h3>
   <p>
-    A fixed-size array list uses an array with a maximum capacity and does not resize. This makes the
-    implementation simpler and gives predictable memory use, but <code>addLast(value)</code> or
-    <code>insert(index, value)</code> can fail when the array is full. Fixed-size lists are useful when
-    the maximum number of values is known ahead of time or when resizing is not allowed.
+    The array-based implementation in this chapter uses a fixed-size backing array. A dynamic array
+    version can grow when it runs out of room. When the backing array is full, the implementation
+    allocates a larger array, copies the current values into it, and then continues the operation
+    that needed more space.
   </p>
 
-  <h3>Dynamic Arrays with Shrinking</h3>
   <p>
-    The array-based implementation in this chapter grows when the backing array is full. Some implementations
-    also shrink the backing array when the list becomes much smaller than its capacity. Shrinking can save
-    memory, but it must be done carefully. If the array shrinks too aggressively, a program that alternates
-    between adding and removing values may spend too much time repeatedly resizing.
+    Dynamic arrays usually grow geometrically, such as by doubling the capacity. This means that an
+    individual addition can occasionally take \(O(n)\) time because of copying, but a long sequence of
+    additions at the end has amortized \(O(1)\) time per addition. Some implementations also shrink the
+    backing array when the list becomes much smaller than its capacity. Shrinking can save memory, but it
+    must be done carefully so that repeated additions and removals do not cause repeated resizing.
   </p>
 
   <h3>Doubly Linked Lists</h3>
@@ -1798,13 +1854,12 @@ delete(value):
     are useful for different workloads.
   </p>
 </section>
-
 <section id="pitfalls" section-title="Common Pitfalls">
   <h2>Common Pitfalls</h2>
   <p>
     List implementations are conceptually simple, but many errors come from boundary cases and from confusing
     the abstract list with its underlying representation. The following pitfalls are especially common when
-    implementing array-based lists or singly linked lists.
+    implementing fixed-size array-based lists or singly linked lists with tail.
   </p>
 
   <h3>Confusing Size and Capacity</h3>
@@ -1832,11 +1887,12 @@ delete(value):
     Removing shifts values left, so that shift proceeds from left to right.
   </p>
 
-  <h3>Forgetting to Resize Before Inserting</h3>
+  <h3>Forgetting to Check Capacity Before Adding</h3>
   <p>
-    A dynamic array must make room before writing a new value into a full backing array. This matters for
-    both <code>addLast(value)</code> and <code>insert(index, value)</code>. If the implementation shifts
-    values or writes into <code>A[size]</code> before resizing, it may access a position outside the array.
+    A fixed-size array-based list must check that there is room before adding a new value. This matters for
+    <code>addFirst(value)</code>, <code>addLast(value)</code>, and <code>insert(index, value)</code>.
+    If the array is already full, the operation should report overflow or follow some other documented
+    full-list policy. Without this check, the implementation may try to write outside the bounds of the array.
   </p>
 
   <h3>Leaving Stale References in an Array</h3>
@@ -1875,7 +1931,13 @@ delete(value):
     In this chapter, <code>remove(index)</code> removes by position, while <code>delete(value)</code>
     removes the first matching value. Mixing these up can produce subtle errors, especially when the list
     stores integers. For example, <code>remove(3)</code> means remove the value at index <code>3</code>,
-    not remove the value <code>3</code>.
+    not remove the value <code>3</code>. 
+    What is worse is in that in languages that allow overloading, 
+    same method name can be used for both operations. 
+    For instance, in Java, <code>remove(int index)</code> removes by position, 
+    while <code>remove(Object value)</code> removes by value. 
+    So what does <code>remove(3)</code> do on an array of Integers? 
+    I will leave it as an exercise for the reader to find out.
   </p>
 
   <h3>Ignoring Empty-List Cases</h3>
@@ -1886,7 +1948,6 @@ delete(value):
     reading invalid array positions or dereferencing <code>null</code>.
   </p>
 </section>
-
 
 <section id="summary" section-title="Summary">
   <h2>Summary</h2>
@@ -1899,37 +1960,25 @@ delete(value):
   </p>
 
   <p>
-    The same List ADT can be implemented in different ways. An array-based list stores values in
-    consecutive positions of a backing array. This makes indexed access and update fast, but insertions
-    and removals near the front or middle may require shifting many values. A dynamic array can grow by
-    allocating a larger backing array and copying the current values into it.
+    The same List ADT can be implemented in different ways. A fixed-size array-based list stores values
+    in consecutive positions of a backing array. This makes indexed access and update fast, but insertions
+    and removals near the front or middle may require shifting many values. A singly linked list with a
+    tail reference stores values in nodes connected by <code>next</code> references. This makes several
+    end operations efficient, but indexed access requires traversal.
   </p>
 
-  <p>
-    A singly linked list with a tail reference stores values in nodes connected by <code>next</code>
-    references. The <code>head</code> reference gives access to the first node, and the
-    <code>tail</code> reference gives access to the last node. This makes several end operations efficient,
-    including <code>addFirst(value)</code>, <code>removeFirst()</code>, <code>first()</code>,
-    <code>addLast(value)</code>, and <code>last()</code>. However, indexed access requires traversal, and
-    <code>removeLast()</code> is still linear time because a singly linked list cannot move backward from
-    the tail.
-  </p>
-
-  <p>
-    The main tradeoff is between direct indexing and local relinking. Array-based lists are usually best
-    when a program frequently indexes, scans, or appends. Linked lists are useful when a program frequently
-    works near known nodes or updates the front of the structure. Neither representation is always better;
-    the right choice depends on the operations performed most often.
-  </p>
-
+  <h3>Key Takeaways</h3>
   <ul>
     <li>A list stores values in order and identifies them by position.</li>
-    <li><code>remove(index)</code> removes by position; <code>delete(value)</code> removes the first matching value.</li>
-    <li>Array-based lists provide \(O(1)\) indexed access and amortized \(O(1)\) addition at the end.</li>
+    <li><code>remove(index)</code> removes by position; 
+      <code>delete(value)</code> removes the first matching value. At least in our presentation.
+    Be careful to know which version is meant when you come across it in other contexts.</li>
+    <li>Fixed-size array-based lists provide \(O(1)\) indexed access and \(O(1)\) addition at the end when space is available.</li>
     <li>Array-based insertions and removals can take \(O(n)\) time because values may need to shift.</li>
     <li>Singly linked lists with a tail pointer support efficient front operations and efficient addition at the back.</li>
+    <li><code>removeLast()</code> is still \(O(n)\) for a singly linked list because the previous node must be found.</li>
     <li>Linked lists require traversal for indexed access, indexed update, search, and most middle operations.</li>
-    <li>Implementation details such as resizing, bounds checks, reference updates, and empty-list cases are essential for correctness.</li>
+    <li>Implementation details such as capacity checks, bounds checks, reference updates, and empty-list cases are essential for correctness.</li>
   </ul>
 </section>
 
@@ -1937,7 +1986,7 @@ delete(value):
   <h2>Helpful Links and Resources</h2>
   <p>
     The following resources give additional perspectives on list implementations, library containers,
-    and the tradeoffs between array-based and linked-based storage.
+    dynamic arrays, linked lists, and the tradeoffs between array-based and linked-based storage.
   </p>
 
   <ul class="resource-list">
@@ -1951,7 +2000,7 @@ delete(value):
     </li>
     <li>
       <a href="https://en.wikipedia.org/wiki/Linked_list" target="_blank">Wikipedia: Linked list</a>
-      Overview of linked-list representations and comparison with dynamic arrays.
+      Overview of linked-list representations and comparison with array-based storage.
     </li>
     <li>
       <a href="https://docs.oracle.com/javase/8/docs/api/java/util/ArrayList.html" target="_blank">Java 8 API: <code>ArrayList</code></a>
@@ -1992,14 +2041,160 @@ delete(value):
   </ul>
 </section>
 
-  <section id="reading-questions" section-title="Reading Comprehension Questions">
-    <h2>Reading Comprehension Questions</h2>
-    <p>Draft coming later.</p>
-    <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
-    <div id="answers" class="answer" hidden>
-      <p>Draft coming later.</p>
-    </div>
-  </section>
+<section id="reading-questions" section-title="Reading Comprehension Questions">
+  <h2>Reading Comprehension Questions</h2>
+  <ol>
+    <li>
+      <strong>List vs. Stack or Queue:</strong>
+      What is the difference between a list and a stack or queue?
+    </li>
+    <li>
+      <strong>Indexing Example:</strong>
+      In the list <code>[12, 4, 18, 7]</code>, what value is stored at index <code>2</code>?
+    </li>
+    <li>
+      <strong>Removal by Position vs. Value:</strong>
+      What is the difference between <code>remove(index)</code> and <code>delete(value)</code> in this chapter?
+    </li>
+    <li>
+      <strong>Size vs. Capacity:</strong>
+      In an array-based list, what is the difference between <code>size</code> and <code>capacity</code>?
+    </li>
+    <li>
+      <strong>Fast Indexed Access:</strong>
+      Why does an array-based list support <code>get(index)</code> in \(O(1)\) time?
+    </li>
+    <li>
+      <strong>Array Insertion Cost:</strong>
+      Why can <code>insert(index, value)</code> take \(O(n)\) time in an array-based list?
+    </li>
+    <li>
+      <strong>Shifting Direction:</strong>
+      When inserting into an array-based list, why must values be shifted from right to left?
+    </li>
+    <li>
+      <strong>Fixed-Size Overflow:</strong>
+      In a fixed-size array-based list, what happens if <code>addLast(value)</code> is called when the array is full?
+    </li>
+    <li>
+      <strong>Dynamic Array Change:</strong>
+      How does a dynamic array version differ from the fixed-size array version?
+    </li>
+    <li>
+      <strong>Purpose of Tail:</strong>
+      What does the <code>tail</code> reference allow a singly linked list to do efficiently?
+    </li>
+    <li>
+      <strong>Slow Remove Last:</strong>
+      Why is <code>removeLast()</code> still \(O(n)\) in a singly linked list with a tail reference?
+    </li>
+    <li>
+      <strong>Linked Traversal:</strong>
+      Why does a linked list require traversal for <code>get(index)</code> and <code>set(index, value)</code>?
+    </li>
+    <li>
+      <strong>Choosing an Array-Based List:</strong>
+      When would an array-based list usually be a better choice than a linked list?
+    </li>
+    <li>
+      <strong>Choosing a Linked List:</strong>
+      When might a linked list be a better choice than an array-based list?
+    </li>
+    <li>
+      <strong>Boundary Cases:</strong>
+      What boundary cases must be handled when adding or removing nodes in a singly linked list with a tail reference?
+    </li>
+    <li>
+      <strong>Library Implementations:</strong>
+      What is one example of a library list-like structure that is array-based, and one that is linked-based?
+    </li>
+  </ol>
+
+  <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
+  <div id="answers" class="answer" hidden>
+    <ol>
+      <li>
+        A list allows access by position, while a stack or queue restricts access to one or two ends.
+        A stack follows last-in, first-out behavior, and a queue follows first-in, first-out behavior.
+        A list can use operations such as <code>get(index)</code>, <code>set(index, value)</code>,
+        <code>insert(index, value)</code>, and <code>remove(index)</code>.
+      </li>
+      <li>
+        The value at index <code>2</code> is <code>18</code>. The indices are <code>0</code>,
+        <code>1</code>, <code>2</code>, and <code>3</code>, so the values are <code>12</code>,
+        <code>4</code>, <code>18</code>, and <code>7</code>.
+      </li>
+      <li>
+        <code>remove(index)</code> removes by position. For example, <code>remove(3)</code> removes
+        the value at index <code>3</code>. <code>delete(value)</code> removes the first matching
+        value. For example, <code>delete(3)</code> removes the first value equal to <code>3</code>,
+        if such a value exists.
+      </li>
+      <li>
+        <code>size</code> is the number of meaningful values currently stored in the list.
+        <code>capacity</code> is the number of available array slots. In a fixed-size array-based list,
+        unused cells count toward capacity but are not part of the logical list.
+      </li>
+      <li>
+        An array-based list stores the value at list index <code>i</code> directly in
+        <code>A[i]</code>. Once the index has been checked, the implementation can go directly to
+        the correct array cell.
+      </li>
+      <li>
+        To insert into the front or middle of an array-based list, later values must shift one
+        position to the right to make room for the new value. In the worst case, this requires moving
+        many or all of the existing values.
+      </li>
+      <li>
+        Values must shift from right to left so that old values are not overwritten before they are
+        copied. If the shift started at the insertion position and moved left to right, the first copied
+        value could overwrite the next value before that next value had been moved.
+      </li>
+      <li>
+        In the fixed-size implementation, the operation reports overflow and stops, or follows some
+        other documented full-list policy. It does not resize the array.
+      </li>
+      <li>
+        A dynamic array version allocates a larger backing array when the old array fills up, copies the
+        current values into the new array, and then continues the operation. This avoids a fixed capacity
+        limit in ordinary use, but resizing occasionally costs \(O(n)\) time.
+      </li>
+      <li>
+        The <code>tail</code> reference gives direct access to the last node. This makes
+        <code>last()</code> and <code>addLast(value)</code> constant-time operations.
+      </li>
+      <li>
+        Even though <code>tail</code> points to the last node, removing the last node also requires
+        access to the node before it. A singly linked list only has forward links, so the implementation
+        must traverse from <code>head</code> to find that predecessor.
+      </li>
+      <li>
+        A linked list cannot compute the memory location of index <code>i</code> directly. It must
+        start at <code>head</code> and follow <code>next</code> references until it reaches the node
+        at the desired position.
+      </li>
+      <li>
+        An array-based list is usually better when the program frequently uses indexed access,
+        indexed updates, scanning, or adding at the end when space is available.
+      </li>
+      <li>
+        A linked list may be better when the program frequently updates the front of the list or
+        already has references to the nodes where insertions and deletions should occur.
+      </li>
+      <li>
+        The implementation must handle empty lists, adding to an empty list, removing the only node,
+        inserting at the front, inserting at the end, removing the first node, and removing the last
+        node. These cases matter because <code>head</code> and <code>tail</code> must stay consistent.
+      </li>
+      <li>
+        Examples of array-based structures include Java's <code>ArrayList</code>, C++'s
+        <code>std::vector</code>, and Python's built-in <code>list</code>. Examples of linked-based
+        structures include Java's <code>LinkedList</code>, C++'s <code>std::list</code>, and C++'s
+        <code>std::forward_list</code>.
+      </li>
+    </ol>
+  </div>
+</section>
 
   <section id="activities" section-title="In-Class Activities">
     <h2>In-Class Activities</h2>
