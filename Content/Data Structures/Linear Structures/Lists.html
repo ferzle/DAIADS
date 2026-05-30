@@ -8,7 +8,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
   <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
   <script src="../../../scripts/chapterScripts.js"></script>
-  <link rel="stylesheet" href="../../../css/style.css">
+  <link rel="stylesheet" href="../../../css/style.css?a=4">
   <link rel="stylesheet" href="../../../css/chapter.css">
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
@@ -545,163 +545,239 @@
 
   <section id="implementations" section-title="Implementation Options">
     <h2>Implementation Options</h2>
-    <p>
-      Draft coming later. This page will develop an array-based list and a singly linked list with a tail pointer in
-      detail.
-    </p>
+  <p>
+    The List ADT describes the operations a list should support, but it does not specify how the values
+    must be stored. This section studies two common implementations: an array-based list and a singly
+    linked list with a tail reference. Both represent the same kind of ordered sequence, but they make
+    different operations efficient.
+  </p>
+  <p>
+    The array-based implementation stores the list in consecutive positions of a backing array, which
+    makes indexed access fast but can require shifting values during insertion and removal. The linked
+    implementation stores values in nodes connected by references, which makes some end operations efficient
+    but requires traversal to reach a general index. Comparing these two designs shows why choosing a data
+    structure depends on the operations a program performs most often.
+  </p>
 
    <section id="implementation-array" section-title="Implementation 1: Array-Based List">
   <h3>Implementation 1: Array-Based List</h3>
 
-  <section id="implementation-array-basics" section-title="Basics">
-    <h4>Basics</h4>
-    <p>
-      An <strong>array-based list</strong> stores the logical list in a backing array. The implementation
-      keeps two related quantities: <code>size</code>, the number of meaningful values currently in the
-      list, and <code>capacity</code>, the number of slots in the backing array. The list values occupy
-      positions <code>A[0]</code> through <code>A[size - 1]</code>. Positions from <code>A[size]</code>
-      through <code>A[capacity - 1]</code> are unused storage.
-    </p>
-
-<p>
-  For example, the logical list <code>[12, 4, 18, 7]</code> might be stored in an array of capacity
-  <code>6</code>. The first four cells store the list values. The remaining two cells are available for
-  future insertions or additions.
-</p>
-
-<div class="example-box">
-  <p><strong class="example-title">Visual Representation of an Array-Based List</strong></p>
-  <svg class="list-model-svg" viewBox="0 0 760 130" role="img" aria-labelledby="arrayBasedListTitle arrayBasedListDesc">
-    <title id="arrayBasedListTitle">Array-based list representation</title>
-    <desc id="arrayBasedListDesc">The logical list 12, 4, 18, 7 is stored in the first four cells of an array with capacity 6.</desc>
-
-    <text x="20" y="58" class="list-code-label">A =</text>
-
-    <rect x="70" y="35" width="58" height="44" class="list-cell-active" />
-    <rect x="128" y="35" width="58" height="44" class="list-cell" />
-    <rect x="186" y="35" width="58" height="44" class="list-cell" />
-    <rect x="244" y="35" width="58" height="44" class="list-cell" />
-    <rect x="302" y="35" width="58" height="44" class="list-cell-unused" />
-    <rect x="360" y="35" width="58" height="44" class="list-cell-unused" />
-
-    <text x="99" y="63" text-anchor="middle" class="list-value">12</text>
-    <text x="157" y="63" text-anchor="middle" class="list-value">4</text>
-    <text x="215" y="63" text-anchor="middle" class="list-value">18</text>
-    <text x="273" y="63" text-anchor="middle" class="list-value">7</text>
-
-    <text x="99" y="98" text-anchor="middle" class="list-index">0</text>
-    <text x="157" y="98" text-anchor="middle" class="list-index">1</text>
-    <text x="215" y="98" text-anchor="middle" class="list-index">2</text>
-    <text x="273" y="98" text-anchor="middle" class="list-index">3</text>
-    <text x="331" y="98" text-anchor="middle" class="list-index">4</text>
-    <text x="389" y="98" text-anchor="middle" class="list-index">5</text>
-
-    <text x="455" y="58" class="list-code-label">size = 4</text>
-    <text x="455" y="82" class="list-code-label">capacity = 6</text>
-  </svg>
+ <section id="implementation-array-basics" section-title="Basics">
+  <h4>Basics</h4>
+  <p>
+    An <strong>array-based list</strong> stores the logical list in a backing array. In the
+    fixed-size version presented here, the backing array has a maximum capacity that does not
+    change. The implementation keeps an integer <code>size</code>, which records the number of
+    meaningful values currently in the list. The list values occupy positions <code>A[0]</code>
+    through <code>A[size - 1]</code>. Positions from <code>A[size]</code> through
+    <code>A[A.length - 1]</code> are unused storage.
+  </p>
 
   <p>
-    The unused cells are part of the array, but they are not part of the logical list. A call to
-    <code>size()</code> returns <code>4</code>, not <code>6</code>. The extra capacity exists so that
-    some future additions can be performed without immediately allocating a larger array.
+    For example, the logical list <code>[12, 4, 18, 7]</code> might be stored in an array with
+    six total slots. The first four cells store the list values. The remaining two cells are
+    unused capacity. They are available for future additions or insertions, but they are not part
+    of the logical list.
   </p>
-</div>
 
-<p>
-  The central invariant is that the logical list is stored contiguously starting at index
-  <code>0</code>. This invariant makes indexed access simple: the value at list index <code>i</code>
-  is stored directly in <code>A[i]</code>. The cost is that insertions and removals in the middle must
-  shift values to keep the list contiguous.
-</p>
+  <div class="example-box">
+    <p><strong class="example-title">Visual Representation of an Array-Based List</strong></p>
+    <svg class="list-model-svg" viewBox="0 30 760 70" role="img" aria-labelledby="arrayBasedListTitle arrayBasedListDesc">
+      <title id="arrayBasedListTitle">Array-based list representation</title>
+      <desc id="arrayBasedListDesc">The logical list 12, 4, 18, 7 is stored in the first four cells of an array with capacity 6.</desc>
 
-<p>
-  The version described here is a <strong>dynamic array</strong>: when the backing array fills up, the
-  implementation allocates a larger array, copies the existing values into it, and then continues the
-  operation. A common resizing rule is to double the capacity when the array is full.
-</p>
+      <text x="20" y="58" class="list-code-label">A =</text>
 
-  </section>
+      <rect x="70" y="35" width="58" height="44" class="list-cell-active" />
+      <rect x="128" y="35" width="58" height="44" class="list-cell" />
+      <rect x="186" y="35" width="58" height="44" class="list-cell" />
+      <rect x="244" y="35" width="58" height="44" class="list-cell" />
+      <rect x="302" y="35" width="58" height="44" class="list-cell-unused" />
+      <rect x="360" y="35" width="58" height="44" class="list-cell-unused" />
+
+      <text x="99" y="63" text-anchor="middle" class="list-value">12</text>
+      <text x="157" y="63" text-anchor="middle" class="list-value">4</text>
+      <text x="215" y="63" text-anchor="middle" class="list-value">18</text>
+      <text x="273" y="63" text-anchor="middle" class="list-value">7</text>
+
+      <text x="99" y="98" text-anchor="middle" class="list-index">0</text>
+      <text x="157" y="98" text-anchor="middle" class="list-index">1</text>
+      <text x="215" y="98" text-anchor="middle" class="list-index">2</text>
+      <text x="273" y="98" text-anchor="middle" class="list-index">3</text>
+      <text x="331" y="98" text-anchor="middle" class="list-index">4</text>
+      <text x="389" y="98" text-anchor="middle" class="list-index">5</text>
+
+      <text x="455" y="50" class="list-code-label">size = 4</text>
+      <text x="455" y="80" class="list-code-label">capacity = 6</text>
+    </svg>
+
+    <p>
+      The unused cells are part of the array, but they are not part of the logical list. A call to
+      <code>size()</code> returns <code>4</code>, not <code>6</code>. Since this version uses a
+      fixed-size array, future additions or insertions can use the two unused cells, but an addition
+      to a full array must report overflow or use some other documented full-list policy.
+    </p>
+  </div>
+
+  <p>
+    The central invariant is that the logical list is stored contiguously starting at index
+    <code>0</code>. This invariant makes indexed access simple: the value at list index
+    <code>i</code> is stored directly in <code>A[i]</code>. The cost is that insertions and removals
+    in the front or middle must shift values to keep the list contiguous.
+  </p>
+
+  <p>
+    Many real array-based lists are <strong>dynamic arrays</strong> rather than fixed-size arrays.
+    We will briefly discuss how the operations differ for a dynamic array 
+    after we cover the fixed-size version.
+    </p>
+</section>
 
   <section id="implementation-array-how-operations-work" section-title="How the Operations Work">
     <h4>How the Operations Work</h4>
     <p>
-      The implementation stores an array <code>A</code>, an integer <code>size</code>, and the current
-      capacity <code>A.length</code>. It is often unnecessary to store <code>capacity</code> separately,
-      since the array length already records it.
+      An array-based list implementation must store the backing array <code>A</code>
+      and the current <code>size</code> of the logical list. 
+      It may also store the capacity of the array, 
+      if the given programming language does not provide the capacity as part of the array object.
     </p>
+    <p>Operations that have an index parameter 
+      (e.g., <code>get</code>, <code>set</code>, <code>insert</code>, <code>remove</code>), 
+      must first check that the index is valid 
+      (i.e., between 0 and <code>size - 1</code>). 
+      Other operations need to check that the list is not empty before they can proceed 
+      (e.g. <code>first</code>, <code>last</code>, <code>removeFirst</code>, <code>removeLast</code>).
+      Finally, operations that add values must check whether the backing array is full before they can proceed.
+      In these cases, the implementation should follow its documented policy for invalid input, 
+      such as throwing an exception, returning a special value, or reporting failure without changing the list.
+      The descriptions below assume that all preconditions are satisfied 
+      and describe the main steps of the operation without mentioning error handling or bounds checks.
+      </p>
 
-<h5>size, isEmpty, and clear</h5>
-<p>
-  <code>size()</code> returns the value of the <code>size</code> variable. <code>isEmpty()</code>
-  checks whether <code>size == 0</code>. <code>clear()</code> sets <code>size</code> to
-  <code>0</code>. In languages with reference types and garbage collection, <code>clear()</code> may
-  also set the formerly used array cells to <code>null</code> so that unused objects can be reclaimed.
-</p>
+<h4>size, isEmpty, and clear</h4>
+<ul>
+  <li><code>size()</code> returns the value of the <code>size</code> variable.</li>
+  <li><code>isEmpty()</code> checks whether <code>size == 0</code>.</li>
+  <li><code>clear()</code> sets <code>size</code> to
+  <code>0</code>, which logically empties the list. 
+  To be safe, some implementations also set the now-unused cells to a default value, 
+  such as <code>0</code> or <code>null</code>, to avoid leaving old values in the array.</li>
+</ul>
 
-<h5>first, last, get, and set</h5>
-<p>
-  These operations do not move values. <code>first()</code> returns <code>A[0]</code>, and
-  <code>last()</code> returns <code>A[size - 1]</code>, assuming the list is nonempty.
-  <code>get(index)</code> returns <code>A[index]</code>, and <code>set(index, value)</code> replaces
-  <code>A[index]</code> with <code>value</code>. The indexed operations must first check that
-  <code>index</code> is between <code>0</code> and <code>size - 1</code>.
-</p>
+<h4>first and last</h4>
+<ul>
+  <li><code>first()</code> returns <code>A[0]</code></li>
+  <li><code>last()</code> returns <code>A[size - 1]</code>.</li>
+  </ul> 
 
-<h5>addLast</h5>
-<p>
-  <code>addLast(value)</code> places the new value in the first unused position,
-  <code>A[size]</code>, and then increments <code>size</code>. If the array is already full, the
-  operation first resizes the backing array. When no resize is needed, <code>addLast</code> performs a
-  constant amount of work.
-</p>
+<h4>get and set</h4>
+<ul>
+  <li><code>get(index)</code> returns <code>A[index]</code></li>
+  <li><code>set(index, value)</code> replaces
+  <code>A[index]</code> with <code>value</code>. </li>
+</ul>
 
-<h5>addFirst and insert</h5>
-<p>
-  <code>addFirst(value)</code> is the same as <code>insert(0, value)</code>. More generally,
-  <code>insert(index, value)</code> first checks that <code>index</code> is between <code>0</code>
-  and <code>size</code>. If the backing array is full, it resizes. Then it shifts values at positions
+<h4>addLast</h4>
+<ul>
+  <li><code>addLast(value)</code> places the new value in the first unused position,
+  <code>A[size]</code>, and then increments <code>size</code>.</li>
+</ul>
+
+<h4>addFirst and insert</h4>
+<ul>
+  <li><code>insert(index, value)</code> shifts values at positions
   <code>index</code> through <code>size - 1</code> one position to the right, writes the new value into
-  <code>A[index]</code>, and increments <code>size</code>.
-</p>
+  <code>A[index]</code>, and increments <code>size</code>.</li>
+  <li><code>addFirst(value)</code> is the same as <code>insert(0, value)</code>.</li>
+</ul>
 
 <p>
-  The shifting must proceed from right to left. If the implementation shifted from left to right, it
-  would overwrite values before copying them to their new positions.
+  When inserting into an array-based list, values are shifted one position to the right
+  to make room for the new value. This shift must start at the last used position and
+  move backward toward the insertion position. For example, to insert at index
+  <code>2</code>, copy <code>A[size - 1]</code> to <code>A[size]</code>, then copy
+  <code>A[size - 2]</code> to <code>A[size - 1]</code>, and continue until
+  <code>A[2]</code> has been copied to <code>A[3]</code>. If the shift started at
+  index <code>2</code>, then <code>A[3]</code> would be overwritten before its old
+  value was moved.
 </p>
 
-<h5>removeFirst, removeLast, and remove</h5>
-<p>
-  <code>removeLast()</code> removes and returns <code>A[size - 1]</code>, then decrements
-  <code>size</code>. No shifting is needed. In contrast, <code>removeFirst()</code> is the same as
-  <code>remove(0)</code>, so every remaining value must shift one position left.
-</p>
-
-<p>
-  More generally, <code>remove(index)</code> first checks that <code>index</code> is between
-  <code>0</code> and <code>size - 1</code>. It saves the value at <code>A[index]</code>, shifts later
+<h4>removeFirst, removeLast, and remove</h4>
+<ul>
+  <li><code>removeLast()</code> removes and returns <code>A[size - 1]</code>, then decrements
+  <code>size</code>. No shifting is needed. </li>
+  <li><code>remove(index)</code> saves the value at <code>A[index]</code>, shifts later
   values one position left, decrements <code>size</code>, and returns the saved value.
+  </li>
+  <li><code>removeFirst()</code> is the same as <code>remove(0)</code>.</li>
+</ul>
+<p>Similar to the shifting operation for insertion, 
+  the removal operation must proceed from left to right when shifting elements to the left.
+  Note that this is the opposite direction from the shift for insertion, which must proceed from right to left.
 </p>
 
-<h5>contains, indexOf, and delete</h5>
+<h4>contains, indexOf, and delete</h4>
 <p>
-  Search operations scan the array from left to right through the logical portion of the list. The
-  operation <code>indexOf(value)</code> returns the first index whose value matches, or <code>-1</code>
-  if no match is found. <code>contains(value)</code> can be implemented by checking whether
-  <code>indexOf(value) != -1</code>. <code>delete(value)</code> can be implemented by finding the
-  first matching index and then removing that index.
-</p>
+  Search operations scan the array from left to right through the logical portion of the list. 
+  They maintain an index variable that starts at <code>0</code> and increments until a match 
+  is found or the end of the list is reached. 
+  At each step the implementation checks whether the current value matches the search value.
+  The main difference between the operations is what they do when a match is found.
+  </p>
+  <ul>
+    <li><code>indexOf(value)</code> returns the first index whose value matches, or <code>-1</code>
+    if no match is found.</li>
+    <li><code>contains(value)</code> can be implemented by checking whether
+    <code>indexOf(value) != -1</code>.</li>
+    <li><code>delete(value)</code> can be implemented by calling <code>indexOf(value)</code> to find
+    the index of the first match, then calling <code>remove(index)</code> to remove it if a match is found.
+    </li>
+  </ul>
 
+<h4>Dynamic Arrays</h4>
+<p>
+  If implemented as a dynamic array that resizes when full, the implementations of 
+  <code>addFirst(value)</code>, <code>addLast(value)</code>, and <code>insert(index, value)</code>
+  changes slightly to accommodate the possibility of a full backing array.
+  When the backing array is full, a larger backing array is allocated, the current values are copied into
+  it, and then the original operation is continued. This resizing step takes \(O(n)\) time, but if the
+  capacity grows geometrically, such as by doubling, a long sequence of calls to
+  these operations has amortized \(O(1)\) time per addition.
+</p>
   </section>
 
   <section id="implementation-array-pseudocode" section-title="Array-Based List Pseudocode">
     <h4>Array-Based List Pseudocode</h4>
-    <p>
-      The following pseudocode assumes a backing array <code>A</code> and an integer <code>size</code>.
-      The helper operation <code>resize()</code> creates a larger backing array and copies the current
-      logical values into it.
-    </p>
+    
+<p>
+  The descriptions above focused on the main idea of each operation and did not show every
+  error-handling detail. The pseudocode below is more explicit: it includes checks for invalid
+  indices, empty-list operations, and attempts to add to a full fixed-size array.
+</p>
 
-<pre><code>isEmpty():
+<p>
+  The pseudocode assumes a fixed-size backing array <code>A</code> and an integer
+  <code>size</code>. The array length <code>A.length</code> is the capacity of the list.
+  This notation is Java-like: in other languages, the capacity may be stored in a separate
+  variable.
+</p>
+
+<p>
+  Since this version does not resize the array, an operation that adds a value to a full
+  array reports overflow and stops. Other invalid operations also report an error and stop,
+  including invalid indices and attempts to access or remove from an empty list. Depending on
+  the language and design choices, a real implementation might throw an exception, return a
+  special value, or report failure without changing the list.
+</p>
+
+<p>
+  Search operations use a different convention because an unsuccessful search is not an error.
+  The operation <code>indexOf(value)</code> returns <code>-1</code> when the value is absent,
+  and <code>delete(value)</code> returns <code>false</code> when no value is deleted.
+</p>
+
+
+<pre><code class="language-cpp">isEmpty():
     return size == 0
 
 size():
@@ -732,7 +808,7 @@ set(index, value):
 
 addLast(value):
     if size == A.length:
-        resize()
+        report overflow and stop
     A[size] = value
     size = size + 1
 
@@ -743,7 +819,7 @@ insert(index, value):
     if index &lt; 0 or index &gt; size:
         report invalid index and stop
     if size == A.length:
-        resize()
+        report overflow and stop
     for j = size down to index + 1:
         A[j] = A[j - 1]
     A[index] = value
@@ -782,92 +858,95 @@ delete(value):
     if index == -1:
         return false
     remove(index)
-    return true
-
-resize():
-    newCapacity = max(1, 2 * A.length)
-    B = new array of length newCapacity
-    for i = 0 to size - 1:
-        B[i] = A[i]
-    A = B</code></pre>
+    return true</code></pre>
 
   </section>
-
-  <section id="implementation-array-analysis" section-title="Implementation Analysis">
-    <h4>Implementation Analysis</h4>
-    <p>
-      The cost of an array-based list depends on whether the operation can use direct indexing or whether it
-      must move or scan many values.
-    </p>
-
-<ul>
-  <li><strong><code>size</code>, <code>isEmpty</code>:</strong> \(O(1)\). Each checks or returns a stored variable.</li>
-  <li><strong><code>first</code>, <code>last</code>:</strong> \(O(1)\). Each reads one array cell after checking that the list is nonempty.</li>
-  <li><strong><code>get(index)</code>, <code>set(index, value)</code>:</strong> \(O(1)\). After a bounds check, the implementation accesses <code>A[index]</code> directly.</li>
-  <li><strong><code>addLast(value)</code>:</strong> \(O(1)\) if there is unused capacity. If the array is full, resizing takes \(O(n)\). With geometric resizing, a sequence of additions has amortized \(O(1)\) time per <code>addLast</code>.</li>
-  <li><strong><code>addFirst(value)</code>:</strong> \(O(n)\), because all existing values must shift one position right.</li>
-  <li><strong><code>insert(index, value)</code>:</strong> \(O(n)\) in the worst case. Inserting near the front shifts many values. Inserting at the end shifts none, although it may still trigger a resize.</li>
-  <li><strong><code>removeLast()</code>:</strong> \(O(1)\). It removes the final logical value without shifting.</li>
-  <li><strong><code>removeFirst()</code>:</strong> \(O(n)\), because all remaining values shift one position left.</li>
-  <li><strong><code>remove(index)</code>:</strong> \(O(n)\) in the worst case. Removing near the front shifts many later values.</li>
-  <li><strong><code>indexOf(value)</code>, <code>contains(value)</code>:</strong> \(O(n)\) in the worst case, because the value may be absent or appear only at the end.</li>
-  <li><strong><code>delete(value)</code>:</strong> \(O(n)\) in the worst case. It may scan the whole list and, if it finds the value, shift later values left.</li>
-  <li><strong><code>clear()</code>:</strong> \(O(1)\) if it only sets <code>size = 0</code>. It can be \(O(n)\) if the implementation also clears old references from the backing array.</li>
-</ul>
-
-<h5>Storage Used</h5>
+<section id="implementation-array-analysis" section-title="Implementation Analysis">
+  <h4>Implementation Analysis</h4>
 <p>
-  An array-based list uses \(O(c)\) space, where \(c\) is the current capacity of the backing array.
-  If the list stores \(n\) values, then \(c - n\) array cells are unused capacity. With the usual
-  doubling strategy, the capacity remains within a constant factor of the number of stored values after
-  the list has grown, so the storage is \(O(n)\) in terms of the logical list size. The implementation
-  also uses \(O(1)\) extra space for variables such as <code>size</code> and loop indices.
+  The running times below come from two facts about the representation: an array can access a known
+  index directly, but keeping the list contiguous may require shifting values after an insertion or
+  removal.
 </p>
 
-  </section>
+  <ul>
+    <li><strong><code>size()</code>, <code>isEmpty()</code>:</strong> \(O(1)\). Each checks or returns a stored variable.</li>
+    <li><strong><code>first()</code>, <code>last()</code>:</strong> \(O(1)\). Each reads one array cell after checking that the list is nonempty.</li>
+    <li><strong><code>get(index)</code>, <code>set(index, value)</code>:</strong> \(O(1)\). After a bounds check, the implementation accesses <code>A[index]</code> directly.</li>
+    <li><strong><code>addLast(value)</code>:</strong> \(O(1)\). It checks whether the array is full, writes the value into <code>A[size]</code>, and increments <code>size</code>.</li>
+    <li><strong><code>addFirst(value)</code>:</strong> \(O(n)\), because all existing values must shift one position right.</li>
+    <li><strong><code>insert(index, value)</code>:</strong> \(O(n)\) in the worst case. Inserting near the front shifts many values. Inserting at the end shifts none, but the operation must still check whether the fixed-size array has room.</li>
+    <li><strong><code>removeLast()</code>:</strong> \(O(1)\). It removes the final logical value without shifting.</li>
+    <li><strong><code>removeFirst()</code>:</strong> \(O(n)\), because all remaining values shift one position left.</li>
+    <li><strong><code>remove(index)</code>:</strong> \(O(n)\) in the worst case. Removing near the front shifts many later values.</li>
+    <li><strong><code>indexOf(value)</code>, <code>contains(value)</code>:</strong> \(O(n)\) in the worst case, because the value may be absent or appear only at the end.</li>
+    <li><strong><code>delete(value)</code>:</strong> \(O(n)\) in the worst case. It may scan the whole list and, if it finds the value, shift later values left.</li>
+    <li><strong><code>clear()</code>:</strong> \(O(1)\) if it only sets <code>size = 0</code>. It can be \(O(n)\) if the implementation also clears old references from the backing array.</li>
+  </ul>
 
-  <section id="implementation-array-tradeoffs" section-title="Tradeoffs and Comments">
-    <h4>Tradeoffs</h4>
-    <ul>
-      <li>Array-based lists provide fast indexed access. The value at index <code>i</code> is stored directly in <code>A[i]</code>.</li>
-      <li>Appending at the end is efficient in practice because resizing happens only occasionally when capacity grows geometrically.</li>
-      <li>Insertions and removals near the front or middle are expensive because values must shift to keep the list contiguous.</li>
-      <li>The backing array may contain unused capacity, so the implementation can use more space than the logical list size alone requires.</li>
-      <li>Array-based lists are usually cache-friendly because values are stored in adjacent array cells.</li>
-      <li>Resizing preserves the logical list but can invalidate low-level references or pointers to the old backing array in languages that expose such details.</li>
-      <li>This representation is a strong default when a program frequently uses indexing, scanning, or appending at the end.</li>
-    </ul>
-  </section>
+  <h5>Storage Used</h5>
+  <p>
+    A fixed-size array-based list uses \(O(c)\) space, where \(c\) is the capacity of the backing array.
+    If the list stores \(n\) values, then \(c - n\) array cells are unused capacity. In addition to the
+    array, the implementation uses \(O(1)\) extra space for variables such as <code>size</code> and loop
+    indices.
+  </p>
+
+  <h5>Dynamic Array Note</h5>
+  <p>
+  In a dynamic array implementation, <code>addFirst(value)</code>, <code>addLast(value)</code>, and
+  <code>insert(index, value)</code> can resize the backing array when it is full. A resize takes
+  \(O(n)\) time because the current values must be copied. If capacity grows geometrically, repeated
+  calls to <code>addLast(value)</code> have amortized \(O(1)\) time per addition. However,
+  <code>addFirst(value)</code> and general <code>insert(index, value)</code> are still \(O(n)\) in the
+  worst case because they may need to shift values.
+</p>
 </section>
+<section id="implementation-array-tradeoffs" section-title="Tradeoffs and Comments">
+  <h4>Tradeoffs</h4>
+  <ul>
+    <li>Array-based lists provide fast indexed access. The value at index <code>i</code> is stored directly in <code>A[i]</code>.</li>
+    <li>In a fixed-size array, the capacity is known in advance, so the implementation is simple and memory use is predictable.</li>
+    <li>A fixed-size array can overflow. If the array is full, operations such as <code>addFirst(value)</code>, <code>addLast(value)</code>, and <code>insert(index, value)</code> cannot add another value unless the implementation uses a different policy.</li>
+    <li>Insertions and removals near the front or middle are expensive because values must shift to keep the list contiguous.</li>
+    <li>The backing array may contain unused capacity, so the implementation can use more space than the logical list size alone requires.</li>
+    <li>Array-based lists are usually cache-friendly because values are stored in adjacent array cells.</li>
+    <li>A dynamic array version avoids the fixed capacity limit in ordinary use by allocating a larger array when needed, but resizing adds occasional \(O(n)\) copying work.</li>
+    <li>This representation is a strong default when a program frequently uses indexing, scanning, or adding at the end.</li>
+  </ul>
+</section>
+</section>
+
 <section id="implementation-linked" section-title="Implementation 2: Singly Linked List with Tail">
   <h3>Implementation 2: Singly Linked List with Tail</h3>
 
   <section id="implementation-linked-basics" section-title="Basics">
     <h4>Basics</h4>
-    <p>
+   <p>
       A <strong>singly linked list</strong> stores each value in a separate node. Each node stores
       a value and a <code>next</code> reference to the following node. The list itself stores a
       <code>head</code> reference to the first node. In this implementation, it also stores a
       <code>tail</code> reference to the last node and a <code>size</code> variable.
     </p>
 
-<p>
-  The <code>tail</code> reference is the important addition compared with a singly linked list
-  that stores only <code>head</code>. With <code>tail</code>, <code>addLast(value)</code> can
-  attach a new node directly after the current last node. Without <code>tail</code>, adding at
-  the end would require traversing the whole list to find the last node.
-</p>
+    <p>
+      The <code>tail</code> reference is what makes this version different from the simplest singly
+      linked list, which stores only <code>head</code>. With <code>tail</code>,
+      <code>addLast(value)</code> can attach a new node directly after the current last node.
+      Without <code>tail</code>, adding at the end would require traversing the whole list to find
+      the last node.
+    </p>
 
-<p>
-  For example, the logical list <code>[12, 4, 18, 7]</code> can be represented as a chain of
-  four nodes. The <code>head</code> reference points to the node storing <code>12</code>, and
-  the <code>tail</code> reference points to the node storing <code>7</code>. The final node's
-  <code>next</code> reference is <code>null</code>.
-</p>
+    <p>
+      In the logical list <code>[12, 4, 18, 7]</code>, the values can be represented as a chain of
+      four nodes. The <code>head</code> reference points to the node storing <code>12</code>, and
+      the <code>tail</code> reference points to the node storing <code>7</code>. The final node's
+      <code>next</code> reference is <code>null</code>.
+    </p>
 
 <div class="example-box">
   <p><strong class="example-title">Visual Representation of a Singly Linked List with Tail</strong></p>
-  <svg class="list-model-svg" viewBox="0 0 760 125" role="img" aria-labelledby="linkedListWithTailTitle linkedListWithTailDesc">
+  <svg class="list-model-svg" viewBox="0 0 760 100" role="img" aria-labelledby="linkedListWithTailTitle linkedListWithTailDesc">
     <title id="linkedListWithTailTitle">Singly linked list with head and tail references</title>
     <desc id="linkedListWithTailDesc">The list 12, 4, 18, 7 is stored as linked nodes. Head points to 12 and tail points to 7.</desc>
     <defs>
@@ -916,8 +995,8 @@ resize():
     <line x1="561" y1="63" x2="595" y2="63" class="list-link" marker-end="url(#linked-list-tail-arrow)" />
     <text x="605" y="68" class="list-code-label">null</text>
 
-    <text x="499" y="25" text-anchor="middle" class="list-code-label">tail</text>
-    <line x1="499" y1="29" x2="499" y2="38" class="list-pointer" marker-end="url(#linked-list-tail-arrow)" />
+    <text x="499" y="10" text-anchor="middle" class="list-code-label">tail</text>
+    <line x1="499" y1="14" x2="499" y2="38" class="list-pointer" marker-end="url(#linked-list-tail-arrow)" />
 
     <text x="665" y="68" class="list-code-label">size = 4</text>
   </svg>
@@ -937,112 +1016,203 @@ resize():
 </p>
   </section>
 
-  <section id="implementation-linked-how-operations-work" section-title="How the Operations Work">
-    <h4>How the Operations Work</h4>
-    <p>
-      The implementation stores references <code>head</code> and <code>tail</code>, along with an
-      integer <code>size</code>. The <code>head</code> reference supports efficient operations at
-      the front. The <code>tail</code> reference supports efficient access to the last value and
-      efficient addition at the end.
-    </p>
+<section id="implementation-linked-how-operations-work" section-title="How the Operations Work">
+  <h4>How the Operations Work</h4>
+  <p>
+    A singly linked list with tail stores references <code>head</code> and <code>tail</code>,
+    along with an integer <code>size</code>. The <code>head</code> reference gives direct access
+    to the first node. The <code>tail</code> reference gives direct access to the last node.
+  </p>
 
-<h5>size, isEmpty, and clear</h5>
+  <p>
+    Operations that have an index parameter
+    (e.g., <code>get</code>, <code>set</code>, <code>insert</code>, <code>remove</code>)
+    must first check that the index is valid. Other operations need to check that the list is
+    not empty before they can proceed
+    (e.g., <code>first</code>, <code>last</code>, <code>removeFirst</code>,
+    <code>removeLast</code>). In these cases, the implementation should follow its documented
+    policy for invalid input, such as throwing an exception, returning a special value, or
+    reporting failure without changing the list. The descriptions below assume that all
+    preconditions are satisfied and describe the main steps of the operation without mentioning
+    error handling or bounds checks.
+  </p>
+
+  <h4>size, isEmpty, and clear</h4>
+  <ul>
+    <li><code>size()</code> returns the value of the <code>size</code> variable.</li>
+    <li><code>isEmpty()</code> checks whether <code>size == 0</code>, or equivalently whether <code>head == null</code>.</li>
+    <li><code>clear()</code> sets <code>head</code> and <code>tail</code> to <code>null</code> and sets <code>size</code> to <code>0</code>.</li>
+  </ul>
+
+  <h4>first and last</h4>
+  <ul>
+    <li><code>first()</code> returns <code>head.value</code>.</li>
+    <li><code>last()</code> returns <code>tail.value</code>.</li>
+  </ul>
+
+  <h4>get and set</h4>
 <p>
-  <code>size()</code> returns the stored <code>size</code> variable. <code>isEmpty()</code>
-  checks whether <code>size == 0</code>, or equivalently whether <code>head == null</code>.
-  <code>clear()</code> sets <code>head</code> and <code>tail</code> to <code>null</code> and
-  sets <code>size</code> to <code>0</code>.
+  A singly linked list cannot jump directly to index <code>i</code>. To reach a position, the
+  implementation starts at <code>head</code> and repeatedly follows <code>next</code> references.
+  After following one <code>next</code> reference, it reaches index <code>1</code>; after following
+  two, it reaches index <code>2</code>; and so on. In general, reaching index <code>index</code>
+  requires following <code>next</code> references <code>index</code> times.
 </p>
+<ul>
+  <li><code>get(index)</code> traverses to the node at position <code>index</code> and returns that node's value.</li>
+  <li><code>set(index, value)</code> traverses to the node at position <code>index</code> and 
+    replaces that node's value with <code>value</code>.</li>
+</ul>
 
-<h5>first and last</h5>
-<p>
-  <code>first()</code> returns <code>head.value</code>, assuming the list is nonempty.
-  <code>last()</code> returns <code>tail.value</code>. Both are constant-time operations because
-  the implementation stores direct references to both ends of the list.
-</p>
+  <h4>addFirst</h4>
+  <ul>
+    <li><code>addFirst(value)</code> creates a new node whose <code>next</code> reference points to the old <code>head</code>.</li>
+    <li>Then <code>head</code> is updated to point to the new node.</li>
+    <li>If the list was empty, the new node is both the first and last node, so <code>tail</code> must also point to it.</li>
+    <li>Finally, <code>size</code> is incremented.</li>
+  </ul>
 
-<h5>addFirst</h5>
-<p>
-  <code>addFirst(value)</code> creates a new node whose <code>next</code> reference points to the
-  old <code>head</code>. Then <code>head</code> is updated to point to the new node. If the list
-  was empty before the operation, the new node is both the first and last node, so
-  <code>tail</code> must also point to it. Finally, <code>size</code> is incremented.
-</p>
+  <h4>addLast</h4>
+  <ul>
+    <li><code>addLast(value)</code> creates a new node whose <code>next</code> reference is <code>null</code>.</li>
+    <li>If the list is empty, both <code>head</code> and <code>tail</code> point to the new node.</li>
+    <li>Otherwise, attach the new node after the old tail by setting
+      <code>tail.next = newNode</code>, then update <code>tail</code> so it points to
+      <code>newNode</code>.
+    </li>
+    <li>Finally, <code>size</code> is incremented.</li>
+  </ul>
 
-<h5>addLast</h5>
-<p>
-  <code>addLast(value)</code> creates a new node whose <code>next</code> reference is
-  <code>null</code>. If the list is empty, both <code>head</code> and <code>tail</code> point to
-  the new node. Otherwise, the old <code>tail.next</code> is set to the new node, and then
-  <code>tail</code> is updated to the new node. This is the operation that most clearly benefits
-  from storing a tail reference.
-</p>
+  <p>
+    This is the operation that most clearly benefits from storing a <code>tail</code> reference.
+    Without <code>tail</code>, the implementation would have to traverse from <code>head</code>
+    to find the last node before adding the new one.
+  </p>
 
-<h5>get and set</h5>
-<p>
-  A singly linked list cannot jump directly to index <code>i</code>. To perform
-  <code>get(index)</code> or <code>set(index, value)</code>, the implementation checks that the
-  index is valid, starts at <code>head</code>, and follows <code>next</code> references until it
-  reaches the node at that position.
-</p>
+  <h4>insert</h4>
+<ul>
+  <li>
+    If <code>index == 0</code>, <code>insert(index, value)</code> calls
+    <code>addFirst(value)</code>. This handles the special case where the
+    <code>head</code> reference must move to the new node.
+  </li>
+  <li>
+    If <code>index == size</code>, <code>insert(index, value)</code> calls
+    <code>addLast(value)</code>. This handles the special case where the
+    <code>tail</code> reference must move to the new node.
+  </li>
+  <li>
+    Otherwise, the implementation traverses to the node at position
+    <code>index - 1</code>, which is the node before the insertion position.
+  </li>
+  <li>
+    It then creates a new node, makes the new node point to the old successor,
+    makes the previous node point to the new node, and increments <code>size</code>.
+  </li>
+</ul>
+  <p>
+    The order of reference updates matters. The new node should first point to the old successor.
+    Then the previous node can point to the new node. Reversing those steps can lose access to the
+    rest of the list.
+  </p>
+<h4>removeFirst</h4>
+<ul>
+  <li>
+    <code>removeFirst()</code> saves <code>head.value</code>, moves <code>head</code> to
+    <code>head.next</code>, decrements <code>size</code>, and returns the saved value.
+  </li>
+  <li>
+    If the removed node was the only node, the list becomes empty, so <code>tail</code>
+    must also be set to <code>null</code>.
+  </li>
+</ul>
 
-<h5>insert</h5>
-<p>
-  <code>insert(index, value)</code> first checks that <code>index</code> is between
-  <code>0</code> and <code>size</code>. If <code>index == 0</code>, the operation is
-  <code>addFirst(value)</code>. If <code>index == size</code>, the operation is
-  <code>addLast(value)</code>. Otherwise, the implementation traverses to the node at position
-  <code>index - 1</code>, inserts the new node after it, and increments <code>size</code>.
-</p>
-
-<p>
-  The order of reference updates matters. The new node should first point to the old successor.
-  Then the previous node can point to the new node. Reversing those steps can lose access to the
-  rest of the list.
-</p>
-
-<h5>removeFirst, removeLast, and remove</h5>
-<p>
-  <code>removeFirst()</code> saves <code>head.value</code>, moves <code>head</code> to
-  <code>head.next</code>, decrements <code>size</code>, and returns the saved value. If the
-  removed node was the only node, the list becomes empty, so <code>tail</code> must also be set
-  to <code>null</code>.
-</p>
-
+<h4>removeLast</h4>
 <p>
   <code>removeLast()</code> is more expensive in a singly linked list. Even though
-  <code>tail</code> points to the last node, the implementation also needs the node before the
-  tail so it can change that node's <code>next</code> reference to <code>null</code>. Since nodes
-  only point forward, the implementation must traverse from <code>head</code> to find the
-  predecessor of <code>tail</code>.
+  <code>tail</code> points to the last node, the implementation also needs the node before
+  <code>tail</code> so it can change that node's <code>next</code> reference to
+  <code>null</code>. Since nodes only point forward, the implementation must traverse from
+  <code>head</code> to find the predecessor of <code>tail</code>.
 </p>
+<ul>
+  <li>
+    If the list has only one node, <code>removeLast()</code> can call
+    <code>removeFirst()</code>.
+  </li>
+  <li>
+    Otherwise, it traverses to the node before <code>tail</code>, saves
+    <code>tail.value</code>, sets that predecessor's <code>next</code> reference to
+    <code>null</code>, updates <code>tail</code> to the predecessor, decrements
+    <code>size</code>, and returns the saved value.
+  </li>
+</ul>
 
+<h4>remove</h4>
+<ul>
+  <li>
+    If <code>index == 0</code>, <code>remove(index)</code> calls
+    <code>removeFirst()</code>. This handles the special case where the <code>head</code>
+    reference must move.
+  </li>
+  <li>
+    Otherwise, the implementation traverses to the node at position
+    <code>index - 1</code>, which is the node before the one being removed.
+  </li>
+  <li>
+    It then saves the removed value, bypasses the node after the predecessor, updates
+    <code>tail</code> if the removed node was the last node, decrements <code>size</code>,
+    and returns the removed value.
+  </li>
+</ul>
+
+  <h4>contains, indexOf, and delete</h4>
 <p>
-  More generally, <code>remove(index)</code> first checks that <code>index</code> is between
-  <code>0</code> and <code>size - 1</code>. If <code>index == 0</code>, the operation is
-  <code>removeFirst()</code>. Otherwise, the implementation traverses to the node at position
-  <code>index - 1</code>, bypasses the node after it, updates <code>tail</code> if the removed
-  node was the last node, decrements <code>size</code>, and returns the removed value.
+  Search operations traverse from <code>head</code> toward the end of the list. They maintain
+  a current node reference and, depending on the operation, may also maintain an index counter
+  or a previous node reference. At each step, the implementation checks whether the current node
+  stores the search value.
 </p>
-
-<h5>contains, indexOf, and delete</h5>
-<p>
-  Search operations traverse from <code>head</code> toward the end of the list. The operation
-  <code>indexOf(value)</code> returns the first index whose node stores <code>value</code>, or
-  <code>-1</code> if no match is found. <code>contains(value)</code> can be implemented by
-  checking whether <code>indexOf(value) != -1</code>. <code>delete(value)</code> searches for the
-  first node storing <code>value</code> and removes it if it exists.
-</p>
-
-  </section>
+<ul>
+  <li>
+    <code>indexOf(value)</code> returns the first index whose node stores <code>value</code>,
+    or <code>-1</code> if no match is found. This operation maintains an index counter while it
+    traverses the list.
+  </li>
+  <li>
+    <code>contains(value)</code> can be implemented by checking whether
+    <code>indexOf(value) != -1</code>.
+  </li>
+  <li>
+    <code>delete(value)</code> searches for the first node storing <code>value</code> and removes
+    it if it exists. This operation maintains references to both the current node and the previous
+    node, since the previous node's <code>next</code> reference must change when the current node
+    is removed. It must also handle the boundary cases where the node to delete is the first or
+    last node.
+  </li>
+</ul>
+</section>
 
   <section id="implementation-linked-pseudocode" section-title="Linked List Pseudocode">
     <h4>Linked List Pseudocode</h4>
-    <p>
-      The following pseudocode assumes a node type with fields <code>value</code> and
-      <code>next</code>. The list stores <code>head</code>, <code>tail</code>, and
-      <code>size</code>.
-    </p>
+   <p>
+  The following pseudocode assumes a node type with two fields: <code>value</code>, which stores
+  the node's data, and <code>next</code>, which refers to the following node. The list itself stores
+  three variables: <code>head</code>, <code>tail</code>, and <code>size</code>.
+</p>
+
+<p>
+  The implementation includes a helper operation <code>nodeAt(index)</code> 
+  that returns a reference to the node at a given index. It assumes that 
+  the index is valid, so the caller must check the index before calling <code>nodeAt(index)</code>.
+</p>
+<p>
+  Invalid operations report an error and stop. This includes invalid indices and attempts to access
+  or remove from an empty list. 
+  Search operations use the same convention as before: <code>indexOf(value)</code> returns
+  <code>-1</code> when the value is absent, and <code>delete(value)</code> returns
+  <code>false</code> when no value is deleted.
+</p>
 
 <pre><code>isEmpty():
     return size == 0
@@ -1181,7 +1351,12 @@ delete(value):
         prev = cur
         cur = cur.next
     return false</code></pre>
-
+<p>
+  The <code>clear()</code> operation above simply disconnects the list by setting
+  <code>head</code> and <code>tail</code> to <code>null</code>. In a language with garbage
+  collection, the unreachable nodes can be reclaimed automatically. In a language with manual
+  memory management, the implementation should first traverse the list and free each node.
+</p>
   </section>
 
   <section id="implementation-linked-analysis" section-title="Implementation Analysis">
@@ -1206,7 +1381,7 @@ delete(value):
   <li><strong><code>clear()</code>:</strong> \(O(1)\) if it only sets <code>head = null</code>, <code>tail = null</code>, and <code>size = 0</code>. In a language with manual memory management, freeing all nodes would take \(O(n)\).</li>
 </ul>
 
-<h5>Storage Used</h5>
+<h4>Storage Used</h4>
 <p>
   A linked list uses \(O(n)\) space for \(n\) stored values. Each value is stored inside a node,
   and each node also stores a <code>next</code> reference. The list itself stores \(O(1)\) extra
@@ -1220,7 +1395,9 @@ delete(value):
     <ul>
       <li>The linked implementation does not need unused array capacity; it creates one node for each stored value.</li>
       <li><code>addFirst</code>, <code>addLast</code>, <code>removeFirst</code>, <code>first</code>, and <code>last</code> are constant-time operations.</li>
-      <li><code>removeLast</code> is still linear time because a singly linked list cannot move backward from <code>tail</code> to the previous node.</li>
+      <li><code>removeLast</code> is still linear time because a singly linked list cannot move backward 
+        from <code>tail</code> to the previous node. Using a doubly linked list would improve this at the cost of additional memory overhead
+        and slightly more complex implementation of most of the operations.</li>
       <li>Indexed access is slow compared with an array-based list because the implementation must follow links to reach a position.</li>
       <li>Insertion or removal at a known node can be efficient, but the List ADT operations are index-based, so finding the right node is often part of the cost.</li>
       <li>Each node has reference overhead, so a linked list usually uses more memory per stored value than an array-based list.</li>
