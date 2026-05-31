@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>List Operations Demo</title>
+  <script src="../../../../scripts/demoScripts.js"></script>
+  <link rel="stylesheet" href="../../../../css/style.css">
+  <link rel="stylesheet" href="../../../../css/demo.css">
+  <style>
+    #demoContainer h2 {
+      padding-right: 120px;
+    }
+    .list-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .list-controls label {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .list-controls input,
+    .list-controls select {
+      min-height: 30px;
+      box-sizing: border-box;
+    }
+    .list-controls input {
+      width: 54px;
+    }
+    .list-controls select {
+      max-width: 230px;
+    }
+    .field-mount {
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+    .feedback-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(220px, 1fr);
+      gap: 12px;
+      max-width: 900px;
+      margin: 8px 0 12px;
+      align-items: stretch;
+    }
+    #status {
+      min-height: 0;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      line-height: 1.45;
+    }
+    .feedback-box {
+      margin: 0;
+      padding: 8px 10px;
+      border-left: 4px solid #4a768b;
+      background: #f7fbfd;
+      line-height: 1.45;
+    }
+    .feedback-box ol {
+      margin: 6px 0 0 1.4em;
+      padding: 0;
+    }
+    .feedback-box li {
+      margin: 3px 0;
+    }
+    .list-stage {
+      max-width: 900px;
+      overflow-x: auto;
+      padding: 14px;
+      border: 1px solid #ccc;
+      background: #fff;
+    }
+    .state-line {
+      display: grid;
+      grid-template-columns: 64px minmax(max-content, 1fr);
+      gap: 10px;
+      align-items: start;
+    }
+    .state-line + .state-line {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid #ddd;
+    }
+    .state-label {
+      min-height: 44px;
+      padding-top: 36px;
+      color: #555;
+      font-size: 12px;
+      font-weight: bold;
+      text-align: right;
+    }
+    .list-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      min-height: 96px;
+      min-width: max-content;
+    }
+    .list-row.previous .list-item {
+      background: #eef3f8;
+      color: #333;
+      border-color: #777;
+    }
+    .list-entry {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .op-label {
+      min-height: 18px;
+      max-width: 120px;
+      color: #7a3b00;
+      font-size: 12px;
+      font-weight: bold;
+      line-height: 1.25;
+      text-align: center;
+      overflow-wrap: anywhere;
+    }
+    .position-label {
+      min-height: 16px;
+      max-width: 120px;
+      color: #555;
+      font-size: 12px;
+      font-weight: bold;
+      line-height: 1.25;
+      text-align: center;
+      overflow-wrap: anywhere;
+    }
+    .role-line {
+      display: block;
+    }
+    .list-item {
+      display: flex;
+      min-width: 58px;
+      min-height: 44px;
+      max-width: 150px;
+      align-items: center;
+      justify-content: center;
+      padding: 0 10px;
+      border: 1px solid #333;
+      background: #cce3ff;
+      box-sizing: border-box;
+      font-weight: bold;
+      text-align: center;
+      overflow-wrap: anywhere;
+    }
+    .list-item.inserted,
+    .list-item.updated {
+      background: #8ecae6;
+      border-width: 2px;
+    }
+    .list-item.read,
+    .list-item.found {
+      background: #74b474;
+      border-width: 2px;
+    }
+    .list-item.checked {
+      background: #ffe16a;
+    }
+    .list-item.shifted {
+      background: #d7d0ff;
+      border-width: 2px;
+    }
+    .list-item.closed {
+      background: #d7d0ff;
+      border-width: 2px;
+    }
+    .list-index {
+      min-height: 16px;
+      color: #333;
+      font-size: 12px;
+    }
+    .empty-state {
+      border: 1px dashed #777;
+      color: #555;
+      background: #f6f6f6;
+      padding: 10px 12px;
+      font-style: italic;
+    }
+    .result-box {
+      display: grid;
+      gap: 8px;
+      margin: 0;
+      padding: 10px 12px;
+      border: 1px solid #777;
+      border-left: 4px solid #4a768b;
+      background: #f6f6f6;
+      line-height: 1.5;
+    }
+    .result-box.has-return {
+      border-left-color: #2e7d32;
+      background: #f4fbf4;
+    }
+    .result-box.has-error {
+      border-left-color: #b3261e;
+      background: #fff5f5;
+    }
+    .result-box.no-return {
+      border-left-color: #777;
+    }
+    .result-label {
+      color: #555;
+      font-size: 12px;
+      font-weight: bold;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+    .return-display {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+    .return-word {
+      font-weight: bold;
+    }
+    .return-value {
+      display: inline-flex;
+      min-width: 54px;
+      min-height: 38px;
+      max-width: 190px;
+      align-items: center;
+      justify-content: center;
+      padding: 0 12px;
+      border: 1px solid #333;
+      background: #74b474;
+      color: #111;
+      font-weight: bold;
+      box-sizing: border-box;
+      overflow-wrap: anywhere;
+      text-align: center;
+    }
+    .return-value.none {
+      border-style: dashed;
+      background: #fff;
+      color: #555;
+      font-weight: normal;
+    }
+    .return-value.error {
+      background: #ffa088;
+    }
+    @media (max-width: 760px) {
+      .feedback-layout {
+        grid-template-columns: 1fr;
+      }
+      .list-stage {
+        padding: 10px;
+      }
+      .state-line {
+        grid-template-columns: 54px minmax(max-content, 1fr);
+      }
+      .list-controls select {
+        max-width: 100%;
+      }
+    }
+  </style>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-DQ5LVZVFDC');
+  </script>
+</head>
+<body class="no-tooltips">
+  <div id="demoContainer">
+    <h2>List Operations Demo</h2>
+
+    <div class="list-controls">
+      <label>Type <select id="groupSelect"></select></label>
+      <label>Operation <select id="operationSelect"></select></label>
+      <span id="fieldMount" class="field-mount"></span>
+      <button id="applyBtn">Apply</button>
+      <button id="resetBtn">Reset</button>
+    </div>
+
+    <div class="feedback-layout">
+      <div id="feedbackBox" class="feedback-box">
+        <div id="status"></div>
+        <ol id="notesList"></ol>
+      </div>
+      <div id="resultBox" class="result-box"></div>
+    </div>
+
+    <div class="list-stage">
+      <div class="state-line">
+        <div class="state-label">Before</div>
+        <div id="previousListRow" class="list-row previous"></div>
+      </div>
+      <div class="state-line">
+        <div class="state-label">Current</div>
+        <div id="listRow" class="list-row current"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const INITIAL_ITEMS = ['12', '4', '18', '7'];
+
+    // UI customization point: change these field and operation definitions to
+    // replace the command-builder controls without changing the operation logic.
+    const FIELD_CONFIG = {
+      index: {
+        label: 'i=',
+        type: 'number',
+        defaultValue: '1',
+        min: '0'
+      },
+      value: {
+        label: 'v=',
+        type: 'text',
+        defaultValue: '9'
+      }
+    };
+
+    const OPERATION_GROUPS = [
+      {
+        id: 'ends',
+        label: 'Ends',
+        operations: ['addFirst', 'addLast', 'removeFirst', 'removeLast', 'first', 'last']
+      },
+      {
+        id: 'indexed',
+        label: 'Indexed',
+        operations: ['get', 'set', 'insert', 'remove']
+      },
+      {
+        id: 'search',
+        label: 'Search / Value',
+        operations: ['contains', 'indexOf', 'deleteValue']
+      },
+      {
+        id: 'status',
+        label: 'Status',
+        operations: ['size', 'isEmpty', 'clear']
+      }
+    ];
+
+    const OPERATIONS = {
+      addFirst: {
+        label: 'addFirst(v)',
+        fields: ['value'],
+        run: addFirst
+      },
+      addLast: {
+        label: 'addLast(v)',
+        fields: ['value'],
+        run: addLast
+      },
+      removeFirst: {
+        label: 'removeFirst()',
+        fields: [],
+        run: removeFirst
+      },
+      removeLast: {
+        label: 'removeLast()',
+        fields: [],
+        run: removeLast
+      },
+      first: {
+        label: 'first()',
+        fields: [],
+        run: first
+      },
+      last: {
+        label: 'last()',
+        fields: [],
+        run: last
+      },
+      get: {
+        label: 'get(i)',
+        fields: ['index'],
+        run: get
+      },
+      set: {
+        label: 'set(i, v)',
+        fields: ['index', 'value'],
+        run: set
+      },
+      insert: {
+        label: 'insert(i, v)',
+        fields: ['index', 'value'],
+        run: insert
+      },
+      remove: {
+        label: 'remove(i)',
+        fields: ['index'],
+        run: remove
+      },
+      contains: {
+        label: 'contains(v)',
+        fields: ['value'],
+        run: contains
+      },
+      indexOf: {
+        label: 'indexOf(v)',
+        fields: ['value'],
+        run: indexOf
+      },
+      deleteValue: {
+        label: 'delete(v)',
+        fields: ['value'],
+        run: deleteValue
+      },
+      size: {
+        label: 'size()',
+        fields: [],
+        run: size
+      },
+      isEmpty: {
+        label: 'isEmpty()',
+        fields: [],
+        run: isEmpty
+      },
+      clear: {
+        label: 'clear()',
+        fields: [],
+        run: clear
+      }
+    };
+
+    let items;
+    let previousItems;
+    let marks;
+    let result;
+    let notes;
+    let fieldValues;
+
+    function resetState() {
+      items = INITIAL_ITEMS.slice();
+      previousItems = items.slice();
+      marks = {};
+      result = {
+        word: 'returns',
+        value: 'none',
+        mode: 'none',
+        note: 'No operation has returned a value yet.'
+      };
+      notes = [
+        'The list order is part of the data.',
+        'Indices run from 0 through size - 1.',
+        'Operations describe what happens to the logical sequence.'
+      ];
+      render('Initial list. Each value has a position in the logical order.');
+    }
+
+    function initControls() {
+      fieldValues = {};
+      Object.keys(FIELD_CONFIG).forEach((name) => {
+        fieldValues[name] = FIELD_CONFIG[name].defaultValue;
+      });
+
+      const groupSelect = document.getElementById('groupSelect');
+      groupSelect.innerHTML = '';
+      OPERATION_GROUPS.forEach((group) => {
+        const option = document.createElement('option');
+        option.value = group.id;
+        option.textContent = group.label;
+        groupSelect.appendChild(option);
+      });
+
+      groupSelect.addEventListener('change', () => {
+        updateOperationSelect();
+        renderFields();
+      });
+      document.getElementById('operationSelect').addEventListener('change', renderFields);
+      document.getElementById('applyBtn').addEventListener('click', applyCurrentOperation);
+      document.getElementById('resetBtn').addEventListener('click', resetState);
+
+      updateOperationSelect();
+      renderFields();
+    }
+
+    function currentGroup() {
+      const groupId = document.getElementById('groupSelect').value;
+      return OPERATION_GROUPS.find((group) => group.id === groupId) || OPERATION_GROUPS[0];
+    }
+
+    function currentOperation() {
+      return OPERATIONS[document.getElementById('operationSelect').value];
+    }
+
+    function updateOperationSelect() {
+      const operationSelect = document.getElementById('operationSelect');
+      operationSelect.innerHTML = '';
+      currentGroup().operations.forEach((operationKey) => {
+        const operation = OPERATIONS[operationKey];
+        const option = document.createElement('option');
+        option.value = operationKey;
+        option.textContent = operation.label;
+        operationSelect.appendChild(option);
+      });
+    }
+
+    function renderFields() {
+      const mount = document.getElementById('fieldMount');
+      mount.innerHTML = '';
+
+      currentOperation().fields.forEach((fieldName) => {
+        const config = FIELD_CONFIG[fieldName];
+        const label = document.createElement('label');
+        label.textContent = `${config.label} `;
+
+        const input = document.createElement('input');
+        input.id = `field-${fieldName}`;
+        input.type = config.type;
+        input.value = fieldValues[fieldName] ?? config.defaultValue;
+        if (config.min !== undefined) {
+          input.min = config.min;
+        }
+        input.addEventListener('input', () => {
+          fieldValues[fieldName] = input.value;
+        });
+        input.addEventListener('keydown', (event) => {
+          if (event.key === 'Enter') {
+            document.getElementById('applyBtn').click();
+          }
+        });
+
+        label.appendChild(input);
+        mount.appendChild(label);
+      });
+    }
+
+    function applyCurrentOperation() {
+      const operation = currentOperation();
+      const values = {};
+      operation.fields.forEach((fieldName) => {
+        const input = document.getElementById(`field-${fieldName}`);
+        values[fieldName] = input ? input.value : '';
+      });
+      previousItems = items.slice();
+      operation.run(values);
+    }
+
+    function setResult(word, value, mode, note) {
+      result = { word, value, mode, note };
+    }
+
+    function setState(message, newMarks, newNotes) {
+      marks = newMarks || {};
+      notes = newNotes || [];
+      render(message);
+    }
+
+    function setNoReturn(note) {
+      setResult('returns', 'none', 'none', note);
+    }
+
+    function setError(errorName, note) {
+      setResult('throws', errorName, 'error', note);
+    }
+
+    function readValue(rawValue) {
+      return String(rawValue ?? '').trim();
+    }
+
+    function parseIndex(rawIndex) {
+      const index = Number(rawIndex);
+      return Number.isInteger(index) && String(rawIndex).trim() !== '' ? index : NaN;
+    }
+
+    function requireValue(rawValue, operationName) {
+      const value = readValue(rawValue);
+      if (value !== '') {
+        return { ok: true, value };
+      }
+
+      setNoReturn('The operation was not applied.');
+      setState(`Enter a value before calling ${operationName}.`, {}, [
+        'The list is unchanged.'
+      ]);
+      return { ok: false };
+    }
+
+    function requireIndex(rawIndex, minIndex, maxIndex, operationName) {
+      const index = parseIndex(rawIndex);
+      if (Number.isInteger(index) && index >= minIndex && index <= maxIndex) {
+        return { ok: true, index };
+      }
+
+      const range =
+        maxIndex < minIndex
+          ? 'there are no valid positions because the list is empty'
+          : `the valid range is ${minIndex} through ${maxIndex}`;
+      setError('IndexError', `${operationName} needs a valid index; ${range}.`);
+      setState(`${operationName} did not change the list.`, {}, [
+        'Bounds checks happen before the list state changes.'
+      ]);
+      return { ok: false };
+    }
+
+    function requireNonempty(operationName) {
+      if (items.length > 0) {
+        return true;
+      }
+
+      setError('EmptyListError', `${operationName} needs at least one value in the list.`);
+      setState(`${operationName} cannot be applied to an empty list.`, {}, [
+        'The list is unchanged.'
+      ]);
+      return false;
+    }
+
+    function markCheckedUntil(stopIndex) {
+      const newMarks = {};
+      for (let i = 0; i < stopIndex; i++) {
+        newMarks[i] = { state: 'checked', label: 'checked' };
+      }
+      return newMarks;
+    }
+
+    function markRange(startIndex, endIndex, state, label) {
+      const newMarks = {};
+      for (let i = startIndex; i <= endIndex; i++) {
+        newMarks[i] = { state, label };
+      }
+      return newMarks;
+    }
+
+    function addFirst(fields) {
+      const input = requireValue(fields.value, 'addFirst(value)');
+      if (!input.ok) {
+        return;
+      }
+
+      items.unshift(input.value);
+      const newMarks = markRange(1, items.length - 1, 'shifted', 'shifted');
+      newMarks[0] = { state: 'inserted', label: 'inserted' };
+      setNoReturn('The operation changes the list and does not return a stored value.');
+      setState(`addFirst(${input.value}) places ${input.value} at index 0.`, newMarks, [
+        `The new value becomes the first value.`,
+        'Every old value shifts one index to the right.',
+        `The size increases to ${items.length}.`
+      ]);
+    }
+
+    function addLast(fields) {
+      const input = requireValue(fields.value, 'addLast(value)');
+      if (!input.ok) {
+        return;
+      }
+
+      items.push(input.value);
+      setNoReturn('The operation changes the list and does not return a stored value.');
+      setState(`addLast(${input.value}) places ${input.value} after the old last value.`, {
+        [items.length - 1]: { state: 'inserted', label: 'new last' }
+      }, [
+        `The new value becomes index ${items.length - 1}.`,
+        'The existing values keep the same indices.',
+        `The size increases to ${items.length}.`
+      ]);
+    }
+
+    function removeFirst() {
+      if (!requireNonempty('removeFirst()')) {
+        return;
+      }
+
+      const removed = items.shift();
+      const newMarks = markRange(0, items.length - 1, 'shifted', 'shifted');
+
+      setResult('returns', removed, 'return', `${removed} was removed from index 0.`);
+      setState(`removeFirst() returns ${removed} and removes it from the front.`, newMarks, [
+        'The old first value leaves the list.',
+        'Every remaining value shifts one index to the left.',
+        `The size decreases to ${items.length}.`
+      ]);
+    }
+
+    function removeLast() {
+      if (!requireNonempty('removeLast()')) {
+        return;
+      }
+
+      const removed = items.pop();
+      const newMarks = {};
+      if (items.length > 0) {
+        newMarks[items.length - 1] = { state: 'closed', label: 'new last' };
+      }
+
+      setResult('returns', removed, 'return', `${removed} was removed from the last position.`);
+      setState(`removeLast() returns ${removed} and removes it from the back.`, newMarks, [
+        'No other value changes its relative order.',
+        `The size decreases to ${items.length}.`
+      ]);
+    }
+
+    function first() {
+      if (!requireNonempty('first()')) {
+        return;
+      }
+
+      setResult('returns', items[0], 'return', `${items[0]} stays in the list.`);
+      setState(`first() returns ${items[0]} without removing it.`, {
+        0: { state: 'read', label: 'read' }
+      }, [
+        'The list state is unchanged.'
+      ]);
+    }
+
+    function last() {
+      if (!requireNonempty('last()')) {
+        return;
+      }
+
+      const lastIndex = items.length - 1;
+      setResult('returns', items[lastIndex], 'return', `${items[lastIndex]} stays in the list.`);
+      setState(`last() returns ${items[lastIndex]} without removing it.`, {
+        [lastIndex]: { state: 'read', label: 'read' }
+      }, [
+        'The list state is unchanged.'
+      ]);
+    }
+
+    function get(fields) {
+      const indexInput = requireIndex(fields.index, 0, items.length - 1, 'get(index)');
+      if (!indexInput.ok) {
+        return;
+      }
+
+      const value = items[indexInput.index];
+      setResult('returns', value, 'return', `The value at index ${indexInput.index} stays in the list.`);
+      setState(`get(${indexInput.index}) returns ${value}.`, {
+        [indexInput.index]: { state: 'read', label: 'read' }
+      }, [
+        'Indexed access reads the value at the requested position.',
+        'The list state is unchanged.'
+      ]);
+    }
+
+    function set(fields) {
+      const indexInput = requireIndex(fields.index, 0, items.length - 1, 'set(index, value)');
+      if (!indexInput.ok) {
+        return;
+      }
+      const valueInput = requireValue(fields.value, 'set(index, value)');
+      if (!valueInput.ok) {
+        return;
+      }
+
+      const oldValue = items[indexInput.index];
+      items[indexInput.index] = valueInput.value;
+      setNoReturn('The operation updates one position and does not return the old value.');
+      setState(`set(${indexInput.index}, ${valueInput.value}) replaces ${oldValue}.`, {
+        [indexInput.index]: { state: 'updated', label: 'updated' }
+      }, [
+        `Index ${indexInput.index} remains in the same position.`,
+        `${oldValue} is replaced by ${valueInput.value}.`,
+        `The size stays ${items.length}.`
+      ]);
+    }
+
+    function insert(fields) {
+      const indexInput = requireIndex(fields.index, 0, items.length, 'insert(index, value)');
+      if (!indexInput.ok) {
+        return;
+      }
+      const valueInput = requireValue(fields.value, 'insert(index, value)');
+      if (!valueInput.ok) {
+        return;
+      }
+
+      const oldOccupant = indexInput.index < items.length ? items[indexInput.index] : null;
+      items.splice(indexInput.index, 0, valueInput.value);
+
+      const newMarks = markRange(indexInput.index + 1, items.length - 1, 'shifted', 'shifted');
+      newMarks[indexInput.index] = { state: 'inserted', label: 'inserted' };
+      if (oldOccupant !== null) {
+        newMarks[indexInput.index + 1] = { state: 'shifted', label: 'shifted' };
+      }
+
+      setNoReturn('The operation changes the list and does not return a stored value.');
+      setState(`insert(${indexInput.index}, ${valueInput.value}) puts ${valueInput.value} at index ${indexInput.index}.`, newMarks, [
+        `The new value occupies index ${indexInput.index}.`,
+        oldOccupant === null
+          ? 'Because the insertion index was size, this is the same logical effect as addLast.'
+          : `The old value at that position, ${oldOccupant}, and later values move one index later.`,
+        `The size increases to ${items.length}.`
+      ]);
+    }
+
+    function remove(fields) {
+      const indexInput = requireIndex(fields.index, 0, items.length - 1, 'remove(index)');
+      if (!indexInput.ok) {
+        return;
+      }
+
+      const removed = items.splice(indexInput.index, 1)[0];
+      const newMarks = markRange(indexInput.index, items.length - 1, 'shifted', 'shifted');
+
+      setResult('returns', removed, 'return', `${removed} was removed from index ${indexInput.index}.`);
+      setState(`remove(${indexInput.index}) returns ${removed} and removes that position.`, newMarks, [
+        'The selected value leaves the list.',
+        indexInput.index < items.length
+          ? 'Later values shift one index to the left to close the gap.'
+          : 'No later values needed to close a gap.',
+        `The size decreases to ${items.length}.`
+      ]);
+    }
+
+    function contains(fields) {
+      const input = requireValue(fields.value, 'contains(value)');
+      if (!input.ok) {
+        return;
+      }
+
+      const foundIndex = items.indexOf(input.value);
+      const newMarks = foundIndex === -1 ? markCheckedUntil(items.length) : markCheckedUntil(foundIndex);
+      if (foundIndex !== -1) {
+        newMarks[foundIndex] = { state: 'found', label: 'found' };
+      }
+
+      setResult('returns', foundIndex !== -1 ? 'true' : 'false', 'return', 'Search operations do not change the list.');
+      setState(`contains(${input.value}) returns ${foundIndex !== -1 ? 'true' : 'false'}.`, newMarks, [
+        foundIndex === -1
+          ? `The search reaches the end without finding ${input.value}.`
+          : `The first matching value is at index ${foundIndex}.`,
+        'The list state is unchanged.'
+      ]);
+    }
+
+    function indexOf(fields) {
+      const input = requireValue(fields.value, 'indexOf(value)');
+      if (!input.ok) {
+        return;
+      }
+
+      const foundIndex = items.indexOf(input.value);
+      const newMarks = foundIndex === -1 ? markCheckedUntil(items.length) : markCheckedUntil(foundIndex);
+      if (foundIndex !== -1) {
+        newMarks[foundIndex] = { state: 'found', label: 'found' };
+      }
+
+      setResult('returns', String(foundIndex), 'return', foundIndex === -1 ? 'No matching value is present.' : 'The first matching index is returned.');
+      setState(`indexOf(${input.value}) returns ${foundIndex}.`, newMarks, [
+        foundIndex === -1
+          ? `No position stores ${input.value}.`
+          : `The search stops at the first matching position, index ${foundIndex}.`,
+        'The list state is unchanged.'
+      ]);
+    }
+
+    function deleteValue(fields) {
+      const input = requireValue(fields.value, 'delete(value)');
+      if (!input.ok) {
+        return;
+      }
+
+      const foundIndex = items.indexOf(input.value);
+      if (foundIndex === -1) {
+        setResult('returns', 'false', 'return', 'No value was deleted.');
+        setState(`delete(${input.value}) returns false because no match is present.`, markCheckedUntil(items.length), [
+          `The search reaches the end without finding ${input.value}.`,
+          'The list is unchanged.'
+        ]);
+        return;
+      }
+
+      items.splice(foundIndex, 1);
+      const newMarks = markCheckedUntil(foundIndex);
+      if (foundIndex < items.length) {
+        for (let i = foundIndex; i < items.length; i++) {
+          newMarks[i] = { state: 'shifted', label: 'shifted' };
+        }
+      }
+
+      setResult('returns', 'true', 'return', `The first ${input.value} was deleted.`);
+      setState(`delete(${input.value}) removes the first matching value.`, newMarks, [
+        `The first matching value was at index ${foundIndex}.`,
+        foundIndex < items.length
+          ? 'Later values shift one index to the left to close the gap.'
+          : 'The deleted value was the last value, so no later value closes a gap.',
+        `The size decreases to ${items.length}.`
+      ]);
+    }
+
+    function size() {
+      setResult('returns', String(items.length), 'return', 'The list is not changed.');
+      setState(`size() returns ${items.length}.`, {}, [
+        'The size is the number of stored values.',
+        'The list state is unchanged.'
+      ]);
+    }
+
+    function isEmpty() {
+      const empty = items.length === 0;
+      setResult('returns', empty ? 'true' : 'false', 'return', 'The list is not changed.');
+      setState(`isEmpty() returns ${empty ? 'true' : 'false'}.`, {}, [
+        empty ? 'The list currently stores no values.' : 'The list currently stores at least one value.',
+        'The list state is unchanged.'
+      ]);
+    }
+
+    function clear() {
+      const oldSize = items.length;
+      items = [];
+      setNoReturn('The operation removes every stored value.');
+      setState('clear() leaves the list empty.', {}, [
+        `${oldSize} value${oldSize === 1 ? '' : 's'} were removed.`,
+        'After clear, size() would return 0 and isEmpty() would return true.'
+      ]);
+    }
+
+    function render(message) {
+      document.getElementById('status').textContent = message;
+
+      renderList();
+      renderResult();
+      renderNotes();
+    }
+
+    function renderList() {
+      renderListRow('previousListRow', previousItems, {}, true);
+      renderListRow('listRow', items, marks, false);
+    }
+
+    function renderListRow(rowId, values, rowMarks, isPrevious) {
+      const row = document.getElementById(rowId);
+      row.innerHTML = '';
+
+      if (values.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'empty-state';
+        empty.textContent = 'empty list';
+        row.appendChild(empty);
+        return;
+      }
+
+      values.forEach((value, index) => {
+        const entry = document.createElement('div');
+        entry.className = 'list-entry';
+
+        const operationLabel = document.createElement('div');
+        operationLabel.className = 'op-label';
+        operationLabels(rowMarks[index], isPrevious).forEach((line) => {
+          const roleLine = document.createElement('span');
+          roleLine.className = 'role-line';
+          roleLine.textContent = line;
+          operationLabel.appendChild(roleLine);
+        });
+
+        const item = document.createElement('div');
+        item.className = 'list-item';
+        if (rowMarks[index] && rowMarks[index].state) {
+          item.classList.add(rowMarks[index].state);
+        }
+        item.textContent = value;
+
+        const positionLabel = document.createElement('div');
+        positionLabel.className = 'position-label';
+        positionLabels(values, index).forEach((line) => {
+          const roleLine = document.createElement('span');
+          roleLine.className = 'role-line';
+          roleLine.textContent = line;
+          positionLabel.appendChild(roleLine);
+        });
+
+        const indexLabel = document.createElement('div');
+        indexLabel.className = 'list-index';
+        indexLabel.textContent = `index ${index}`;
+
+        entry.appendChild(operationLabel);
+        entry.appendChild(item);
+        entry.appendChild(positionLabel);
+        entry.appendChild(indexLabel);
+        row.appendChild(entry);
+      });
+    }
+
+    function positionLabels(values, index) {
+      const roles = [];
+      if (values.length === 1) {
+        roles.push('first');
+        roles.push('last');
+      } else if (index === 0) {
+        roles.push('first');
+      } else if (index === values.length - 1) {
+        roles.push('last');
+      }
+
+      return roles;
+    }
+
+    function operationLabels(mark, isPrevious) {
+      const roles = [];
+      if (!isPrevious && mark && mark.label) {
+        const structuralLabels = ['new first', 'old first', 'new last', 'old last', 'next value'];
+        if (!structuralLabels.includes(mark.label)) {
+          roles.push(mark.label);
+        }
+      }
+
+      return roles;
+    }
+
+    function renderResult() {
+      const resultBox = document.getElementById('resultBox');
+      resultBox.className =
+        result.mode === 'error'
+          ? 'result-box has-error'
+          : result.mode === 'return'
+            ? 'result-box has-return'
+            : 'result-box no-return';
+      resultBox.innerHTML = '';
+
+      const label = document.createElement('div');
+      label.className = 'result-label';
+      label.textContent = 'Result';
+      resultBox.appendChild(label);
+
+      const display = document.createElement('div');
+      display.className = 'return-display';
+
+      const word = document.createElement('span');
+      word.className = 'return-word';
+      word.textContent = result.word;
+      display.appendChild(word);
+
+      const value = document.createElement('span');
+      value.className = result.mode === 'error' ? 'return-value error' : result.mode === 'none' ? 'return-value none' : 'return-value';
+      value.textContent = result.value;
+      display.appendChild(value);
+
+      resultBox.appendChild(display);
+
+      const note = document.createElement('div');
+      note.textContent = result.note;
+      resultBox.appendChild(note);
+    }
+
+    function renderNotes() {
+      const list = document.getElementById('notesList');
+      list.innerHTML = '';
+      notes.forEach((note) => {
+        const item = document.createElement('li');
+        item.textContent = note;
+        list.appendChild(item);
+      });
+    }
+
+    initControls();
+    resetState();
+  </script>
+</body>
+</html>

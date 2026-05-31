@@ -8,7 +8,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
   <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
   <script src="../../../scripts/chapterScripts.js"></script>
-  <link rel="stylesheet" href="../../../css/style.css">
+  <link rel="stylesheet" href="../../../css/style.css?a=4">
   <link rel="stylesheet" href="../../../css/chapter.css">
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
@@ -18,6 +18,112 @@
     gtag('js', new Date());
     gtag('config', 'G-DQ5LVZVFDC');
   </script>
+  <style>
+.deque-model-svg {
+  display: block;
+  max-width: 780px;
+  width: 100%;
+  height: auto;
+  margin: 1.25rem 0;
+}
+.deque-model-svg text {
+  font-family: Verdana, sans-serif;
+}
+.deque-value {
+  fill: #0f264a;
+  font-size: 20px;
+  font-weight: 700;
+}
+.deque-index {
+  fill: #334e68;
+  font-size: 15px;
+}
+.deque-label {
+  fill: #0f264a;
+  font-size: 16px;
+}
+.deque-code-label {
+  fill: #0f264a;
+  font-family: 'Fira Code', 'Source Code Pro', Menlo, Consolas, monospace;
+  font-size: 15px;
+}
+.deque-cell {
+  fill: #ffffff;
+  stroke: #0a3974;
+  stroke-width: 2;
+}
+.deque-cell-active {
+  fill: #fff3d9;
+  stroke: #d9822b;
+  stroke-width: 2;
+}
+.deque-cell-unused {
+  fill: #f7fbff;
+  stroke: #9db2c7;
+  stroke-dasharray: 5 4;
+  stroke-width: 2;
+}
+.deque-pointer,
+.deque-link {
+  fill: none;
+  stroke: #0a3974;
+  stroke-width: 2.4;
+}
+.deque-node {
+  fill: #ffffff;
+  stroke: #0a3974;
+  stroke-width: 2;
+}
+.deque-node-active {
+  fill: #fff3d9;
+  stroke: #d9822b;
+  stroke-width: 2;
+}
+.deque-divider {
+  stroke-width: 2;
+}
+.cost-summary-table th:nth-child(1),
+.cost-summary-table td:nth-child(1),
+.cost-summary-table th:nth-child(4),
+.cost-summary-table td:nth-child(4) {
+  text-align: left;
+}
+.operation-sequence {
+  display: block;
+  line-height: 1.8;
+  margin: 0.75em 0;
+}
+.operation-sequence code {
+  white-space: nowrap;
+}
+.core-operations-table th:nth-child(1),
+.core-operations-table td:nth-child(1) {
+  min-width: 165px;
+  white-space: nowrap;
+}
+.core-operations-table th,
+.core-operations-table td {
+  padding: 2px 5px;
+}
+.cost-good {
+  background-color: #e8f5e9;
+  font-weight: 600;
+}
+.cost-slow {
+  background-color: #fff8e1;
+}
+.cost-note {
+  background-color: #eef4ff;
+}
+.left-top-align td {
+  text-align: left;
+  vertical-align: top;
+  padding: 3px 4px;
+}
+.left-top-align th {
+  text-align: left;
+}
+  </style>
 </head>
 <body>
   <h1>Deques</h1>
@@ -25,396 +131,1007 @@
   <section id="overview" section-title="Overview">
     <h2>Overview</h2>
     <p>
-      A <strong>deque</strong> is a <strong>double-ended queue</strong>: it supports insertion and removal at both
-      the front and the back. The word is usually pronounced like "deck." It is related to, but not the same word as,
-      <code>dequeue</code>, the operation that removes an item from a regular queue.
+      A <strong>deque</strong>, pronounced either "deck" or "D-Q", is a double-ended queue.
+      It stores values in a specific order and allows insertion, removal, and inspection at both
+      ends. The two ends are usually called the <strong>front</strong> and the <strong>back</strong>.
     </p>
     <p>
-      A deque generalizes both stacks and queues. If a program only uses one end, the deque behaves like a stack. If a
-      program inserts at the back and removes from the front, the deque behaves like a FIFO queue. The full deque ADT
-      allows both ends to be active.
-    </p>
-    <p>
-      Deques are useful when an algorithm needs to keep a sequence of candidates and discard from either end. They
-      appear in sliding-window algorithms, task scheduling, undo-like histories, palindrome checks, and library
-      implementations that want efficient front and back operations.
-    </p>
-  </section>
+    One way to understand a deque is as a restricted list. A list may allow access, insertion,
+    and removal at arbitrary positions, but a deque only allows these operations at the two ends.
+    Thus, if you already understand lists, a deque is conceptually simpler: it keeps the ordered
+    sequence idea but removes the indexed operations.
+  </p>
 
-  <section id="adt" section-title="Abstract Data Type and Operations">
-    <h2>Abstract Data Type and Operations</h2>
+<svg class="deque-model-svg" viewBox="80 40 900 110" role="img" aria-labelledby="dequeModelTitle dequeModelDesc">
+  <title id="dequeModelTitle">Deque model with front and back operations</title>
+  <desc id="dequeModelDesc">
+    A deque with four values 12, 4, 18, and 7. Values can be added and removed at both the front and the back.
+  </desc>
+
+  <defs>
+    <marker id="deque-model-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#0a3974" />
+    </marker>
+  </defs>
+
+  <!-- Deque cells: taller -->
+  <rect x="280" y="64" width="85" height="58" rx="6" ry="6" class="deque-cell-active" />
+  <rect x="365" y="64" width="85" height="58" rx="6" ry="6" class="deque-cell" />
+  <rect x="450" y="64" width="85" height="58" rx="6" ry="6" class="deque-cell" />
+  <rect x="535" y="64" width="85" height="58" rx="6" ry="6" class="deque-cell-active" />
+
+  <text x="322.5" y="101" text-anchor="middle" class="deque-value" style="font-size: 25px;">12</text>
+  <text x="407.5" y="101" text-anchor="middle" class="deque-value" style="font-size: 25px;">4</text>
+  <text x="492.5" y="101" text-anchor="middle" class="deque-value" style="font-size: 25px;">18</text>
+  <text x="577.5" y="101" text-anchor="middle" class="deque-value" style="font-size: 25px;">7</text>
+
+  <text x="322.5" y="146" text-anchor="middle" class="deque-index">front</text>
+  <text x="577.5" y="146" text-anchor="middle" class="deque-index">back</text>
+
+  <!-- Front operations -->
+  <text x="190" y="58" text-anchor="middle" class="deque-code-label">addFront(value)</text>
+  <line x1="105" y1="80" x2="270" y2="80" class="deque-pointer" marker-end="url(#deque-model-arrow)" />
+
+  <text x="190" y="132" text-anchor="middle" class="deque-code-label">removeFront()</text>
+  <line x1="270" y1="106" x2="105" y2="106" class="deque-pointer" marker-end="url(#deque-model-arrow)" />
+
+  <!-- Back operations -->
+  <text x="710" y="58" text-anchor="middle" class="deque-code-label">addBack(value)</text>
+  <line x1="795" y1="80" x2="630" y2="80" class="deque-pointer" marker-end="url(#deque-model-arrow)" />
+
+  <text x="710" y="132" text-anchor="middle" class="deque-code-label">removeBack()</text>
+  <line x1="630" y1="106" x2="795" y2="106" class="deque-pointer" marker-end="url(#deque-model-arrow)" />
+
+  <text x="820" y="101" class="deque-code-label">size = 4</text>
+</svg>
     <p>
-      A deque exposes two symmetric ends. Different languages use different method names, but the abstract operations
-      are the same.
+      A deque generalizes both stacks and queues. If a program only adds and removes at one end,
+      the deque behaves like a stack. If a program adds at one end and removes from the other, the
+      deque behaves like a queue. The extra flexibility is that both ends are available for both
+      insertion and removal.
+    </p>
+    <p>
+      A deque is an <em>abstract data type</em>. The abstraction describes what operations are
+      available, not how the values are stored. The essential operations are adding to either end,
+      removing from either end, looking at either end, checking whether the deque is empty, and
+      reporting its size.
+    </p>
+    <p>
+      There are four common implementation ideas for a deque. Each one supports the same logical
+      operations, but the implementation details, operation costs, and memory tradeoffs are different.
     </p>
     <ul>
-      <li><strong><code>addFirst(value)</code>:</strong> Insert <code>value</code> at the front.</li>
-      <li><strong><code>addLast(value)</code>:</strong> Insert <code>value</code> at the back.</li>
-      <li><strong><code>removeFirst()</code>:</strong> Remove and return the front value.</li>
-      <li><strong><code>removeLast()</code>:</strong> Remove and return the back value.</li>
-      <li><strong><code>peekFirst()</code>:</strong> Return the front value without removing it.</li>
-      <li><strong><code>peekLast()</code>:</strong> Return the back value without removing it.</li>
-      <li><strong><code>size()</code> and <code>isEmpty()</code>:</strong> Report the number of stored values or whether none are stored.</li>
+      <li>
+        <strong>Doubly linked list:</strong>
+        Stores each value in a node with both <code>next</code> and <code>prev</code> links.
+        The deque stores references to the <code>front</code> and <code>back</code> nodes.
+        This makes adding, removing, and peeking at either end straightforward \(O(1)\) operations.
+        The tradeoff is extra memory for two links per node.
+      </li>
+      <li>
+        <strong>Circular array:</strong>
+        Stores the deque in a fixed-size array. The logical front may appear anywhere in the array,
+        and values wrap around from the last physical cell back to the first physical cell. This
+        supports \(O(1)\) operations at both ends when the array has room, but the implementation
+        must carefully update indices using modular arithmetic.
+      </li>
+      <li>
+        <strong>Dynamic circular array:</strong>
+        Uses the same wraparound idea as a circular array, but allocates a larger array and copies
+        the values when the old array fills up. This removes the fixed-capacity limitation in ordinary
+        use. A single resizing step costs \(O(n)\), but with geometric growth, a long sequence of
+        additions has amortized \(O(1)\) cost per operation.
+      </li>
+      <li>
+        <strong>Block-based deque:</strong>
+        Stores values across several fixed-size blocks rather than in one large array or one node per
+        value. New blocks can be added near either end as the deque grows. This approach is more complex,
+        but it can avoid some large copying costs while retaining better locality than a fully linked
+        representation. Some library deques use this general idea.
+      </li>
     </ul>
-    <p>
-      Some libraries use names such as <code>push_front</code>, <code>push_back</code>, <code>pop_front</code>, and
-      <code>pop_back</code>. A stack-oriented interface may call the same actions <code>push</code> and
-      <code>pop</code>. The important rule is that both ends can be updated efficiently.
-    </p>
-  </section>
 
-  <section id="conceptual-model" section-title="Conceptual Model">
-    <h2>Conceptual Model</h2>
     <p>
-      Think of a deque as a line where people may enter or leave from either doorway:
-    </p>
-    <pre><code>front -> [14] [8] [31] [5] &lt;- back</code></pre>
-    <p>
-      Calling <code>addFirst(20)</code> produces:
-    </p>
-    <pre><code>front -> [20] [14] [8] [31] [5] &lt;- back</code></pre>
-    <p>
-      Calling <code>removeLast()</code> from that state returns <code>5</code> and leaves:
-    </p>
-    <pre><code>front -> [20] [14] [8] [31] &lt;- back</code></pre>
-    <p>
-      A deque does not promise fast access to the middle. Its purpose is efficient work at the two ends. If an
-      algorithm repeatedly needs arbitrary index access, a dynamic array list is usually a better fit.
-    </p>
-  </section>
-
-  <section id="worked-example" section-title="Worked Example">
-    <h2>Worked Example</h2>
-    <p>
-      Start with an empty deque and perform:
-      <code>addLast(4)</code>, <code>addLast(7)</code>, <code>addFirst(2)</code>, <code>removeLast()</code>,
-      <code>addFirst(9)</code>, <code>removeFirst()</code>.
-    </p>
-    <table class="example-table">
-      <thead>
-        <tr>
-          <th>Operation</th>
-          <th>Deque Afterward</th>
-          <th>Return Value</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><code>addLast(4)</code></td>
-          <td><code>[4]</code></td>
-          <td>none</td>
-        </tr>
-        <tr>
-          <td><code>addLast(7)</code></td>
-          <td><code>[4, 7]</code></td>
-          <td>none</td>
-        </tr>
-        <tr>
-          <td><code>addFirst(2)</code></td>
-          <td><code>[2, 4, 7]</code></td>
-          <td>none</td>
-        </tr>
-        <tr>
-          <td><code>removeLast()</code></td>
-          <td><code>[2, 4]</code></td>
-          <td><code>7</code></td>
-        </tr>
-        <tr>
-          <td><code>addFirst(9)</code></td>
-          <td><code>[9, 2, 4]</code></td>
-          <td>none</td>
-        </tr>
-        <tr>
-          <td><code>removeFirst()</code></td>
-          <td><code>[2, 4]</code></td>
-          <td><code>9</code></td>
-        </tr>
-      </tbody>
-    </table>
-    <p>
-      The final deque stores <code>[2, 4]</code>. The example shows that neither pure FIFO nor pure LIFO order fully
-      describes a deque. The caller chooses which end to use for each operation.
+      We will study the first two implementations in detail: the <strong>doubly linked list</strong>
+      and the <strong>circular array</strong>. The dynamic circular array and block-based deque are
+      included as important variations, but their full implementation details are beyond the scope of
+      this page.
     </p>
   </section>
 
   <section id="core-operations" section-title="Core Operations">
     <h2>Core Operations</h2>
-
-    <h3>Adding at Either End</h3>
     <p>
-      <code>addFirst</code> creates a new front value; <code>addLast</code> creates a new back value. An efficient
-      implementation must avoid shifting the entire sequence when adding at the front. This is the key difference
-      between a true deque and a naive dynamic-array list used as a deque.
+      A deque stores values in order, but unlike a general list, it does not normally support indexed
+      access as a core operation. The emphasis is on efficient access to the two ends. The following
+      table gives a compact set of core operations and common alternative names.
     </p>
 
-    <h3>Removing at Either End</h3>
-    <p>
-      <code>removeFirst</code> removes the front value, and <code>removeLast</code> removes the back value. Both
-      operations must define what happens when the deque is empty. Many libraries raise an exception or report an
-      underflow error.
-    </p>
-
-    <h3>Viewing the Ends</h3>
-    <p>
-      <code>peekFirst</code> and <code>peekLast</code> read values without removing them. These operations are useful
-      when an algorithm needs to compare a new value with a candidate at one end before deciding whether to remove it.
-    </p>
-
-    <h3>Using a Deque as a Stack or Queue</h3>
-    <p>
-      A deque can simulate a stack by adding and removing at the same end. It can simulate a queue by adding at one
-      end and removing at the other. Even so, using the smaller stack or queue ADT can make code clearer when the
-      extra deque operations are not needed.
-    </p>
-  </section>
-
-  <section id="implementations" section-title="Implementation Options">
-    <h2>Implementation Options</h2>
-
-    <section id="implementation-circular-array" section-title="Implementation 1: Circular Array Deque">
-      <h3>Implementation 1: Circular Array Deque</h3>
-      <p>
-        A circular array deque stores a backing array, a <code>frontIndex</code>, a <code>size</code>, and a
-        capacity. Logical positions wrap around the physical end of the array. If the capacity is <code>m</code>,
-        moving one step forward uses <code>(index + 1) mod m</code>, and moving one step backward uses
-        <code>(index - 1 + m) mod m</code>.
-      </p>
-      <p>
-        The main invariant is that the logical element at position <code>k</code> is stored at physical index
-        <code>(frontIndex + k) mod capacity</code> for <code>0 &lt;= k &lt; size</code>.
-      </p>
-      <h4>Operation Sketch</h4>
-      <pre><code>addFirst(value):
-    if size == capacity:
-        resize
-    frontIndex = (frontIndex - 1 + capacity) mod capacity
-    A[frontIndex] = value
-    size = size + 1
-
-addLast(value):
-    if size == capacity:
-        resize
-    backIndex = (frontIndex + size) mod capacity
-    A[backIndex] = value
-    size = size + 1
-
-removeFirst():
-    if size == 0:
-        report underflow
-    value = A[frontIndex]
-    A[frontIndex] = empty
-    frontIndex = (frontIndex + 1) mod capacity
-    size = size - 1
-    return value
-
-removeLast():
-    if size == 0:
-        report underflow
-    backIndex = (frontIndex + size - 1) mod capacity
-    value = A[backIndex]
-    A[backIndex] = empty
-    size = size - 1
-    return value</code></pre>
-      <div class="example-box">
-        <strong class="example-title">Implementation Exercise</strong>
-        <p>
-          Implement a circular array deque with the four update operations and two peek operations.
-        </p>
-        <ul>
-          <li>Use modulo arithmetic for both forward and backward movement.</li>
-          <li>Keep <code>size</code> so empty and full states are not confused.</li>
-          <li>When resizing, copy logical elements into positions <code>0</code> through <code>size - 1</code> in order.</li>
-          <li>Test wrap-around by forcing both <code>frontIndex</code> and the back position to cross the physical boundary.</li>
-        </ul>
-      </div>
-    </section>
-
-    <section id="implementation-doubly-linked" section-title="Implementation 2: Doubly Linked Deque">
-      <h3>Implementation 2: Doubly Linked Deque</h3>
-      <p>
-        A doubly linked deque stores references to the first and last nodes. Each node stores a value, a
-        <code>next</code> reference, and a <code>prev</code> reference. Adding or removing at either end changes only
-        a constant number of references.
-      </p>
-      <p>
-        Many linked deque implementations use sentinel nodes: dummy front and back nodes that do not store real data.
-        Sentinels reduce boundary cases because there is always a node before the first real item and a node after the
-        last real item.
-      </p>
-      <h4>Operation Sketch with Sentinels</h4>
-      <pre><code>addFirst(value):
-    insert a new node between frontSentinel and frontSentinel.next
-
-addLast(value):
-    insert a new node between backSentinel.prev and backSentinel
-
-removeFirst():
-    if size == 0:
-        report underflow
-    remove and return frontSentinel.next
-
-removeLast():
-    if size == 0:
-        report underflow
-    remove and return backSentinel.prev</code></pre>
-      <h4>Notes</h4>
-      <ul>
-        <li>Every insertion must set both <code>next</code> and <code>prev</code> links consistently.</li>
-        <li>Every removal must unlink the node in both directions.</li>
-        <li>There is no resizing cost, but each element requires node and reference overhead.</li>
-      </ul>
-    </section>
-
-    <section id="library-implementations" section-title="Library Implementations">
-      <h3>Library Implementations</h3>
-      <ul>
-        <li><strong>Java:</strong> <code>ArrayDeque&lt;E&gt;</code> is usually the preferred deque implementation; <code>LinkedList&lt;E&gt;</code> also implements <code>Deque&lt;E&gt;</code>.</li>
-        <li><strong>C++:</strong> <code>std::deque</code> supports efficient operations at both ends and indexed access, though it is not usually implemented as one simple circular array.</li>
-        <li><strong>Python:</strong> <code>collections.deque</code> supports efficient append and pop operations at both ends.</li>
-      </ul>
-      <p>
-        Library deques may use implementation strategies more sophisticated than the teaching versions on this page.
-        The ADT expectation remains the same: updates at both ends should be efficient.
-      </p>
-    </section>
-  </section>
-
-  <section id="costs" section-title="Operation Costs">
-    <h2>Operation Costs</h2>
-    <table class="example-table">
+    <table class="example-table left-top-align core-operations-table">
       <thead>
         <tr>
           <th>Operation</th>
-          <th>Circular Array Deque</th>
-          <th>Doubly Linked Deque</th>
-          <th>Notes</th>
+          <th>Description</th>
+          <th>Common Alternative Names</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td><code>addFirst</code>, <code>addLast</code></td>
-          <td>\(O(1)\) amortized if resizable</td>
-          <td>\(O(1)\)</td>
-          <td>Array deque may occasionally resize.</td>
+          <td><b><code>addFront(value)</code></b></td>
+          <td>Add <code>value</code> so it becomes the front value in the deque.</td>
+          <td><code>pushFront</code>, <code>offerFirst</code>, <code>addFirst</code>, <code>prepend</code></td>
         </tr>
         <tr>
-          <td><code>removeFirst</code>, <code>removeLast</code></td>
-          <td>\(O(1)\)</td>
-          <td>\(O(1)\)</td>
-          <td>No shifting is required.</td>
+          <td><b><code>addBack(value)</code></b></td>
+          <td>Add <code>value</code> so it becomes the back value in the deque.</td>
+          <td><code>pushBack</code>, <code>offerLast</code>, <code>addLast</code>, <code>append</code></td>
         </tr>
         <tr>
-          <td><code>peekFirst</code>, <code>peekLast</code></td>
-          <td>\(O(1)\)</td>
-          <td>\(O(1)\)</td>
-          <td>Both ends are tracked directly.</td>
+          <td><b><code>removeFront()</code></b></td>
+          <td>Remove and return the front value.</td>
+          <td><code>popFront</code>, <code>pollFirst</code>, <code>removeFirst</code></td>
         </tr>
         <tr>
-          <td>Access middle by index</td>
-          <td>\(O(1)\) in a simple circular array</td>
-          <td>\(O(n)\)</td>
-          <td>Indexing is not a core deque operation.</td>
+          <td><b><code>removeBack()</code></b></td>
+          <td>Remove and return the back value.</td>
+          <td><code>popBack</code>, <code>pollLast</code>, <code>removeLast</code></td>
         </tr>
         <tr>
-          <td>Search by value</td>
-          <td>\(O(n)\)</td>
-          <td>\(O(n)\)</td>
-          <td>A deque does not organize values for search.</td>
+          <td><b><code>peekFront()</code></b></td>
+          <td>Return the front value without removing it.</td>
+          <td><code>front</code>, <code>first</code>, <code>getFirst</code>, <code>peekFirst</code></td>
         </tr>
         <tr>
-          <td>extra space</td>
-          <td>unused capacity</td>
-          <td>node and two-link overhead</td>
-          <td>Array deques are often more compact.</td>
+          <td><b><code>peekBack()</code></b></td>
+          <td>Return the back value without removing it.</td>
+          <td><code>back</code>, <code>last</code>, <code>getLast</code>, <code>peekLast</code></td>
+        </tr>
+        <tr>
+          <td><b><code>size()</code></b></td>
+          <td>Return the number of values currently stored in the deque.</td>
+          <td><code>length</code>, <code>count</code></td>
+        </tr>
+        <tr>
+          <td><b><code>isEmpty()</code></b></td>
+          <td>Report whether the deque currently stores no values.</td>
+          <td><code>empty</code>, <code>is_empty</code></td>
+        </tr>
+        <tr>
+          <td><b><code>clear()</code></b></td>
+          <td>Remove all values from the deque.</td>
+          <td><code>makeEmpty</code>, <code>removeAll</code>, <code>reset</code></td>
         </tr>
       </tbody>
     </table>
+
+    <h3>General Policies</h3>
+    <p>
+      The operations <code>peekFront()</code>, <code>peekBack()</code>,
+      <code>removeFront()</code>, and <code>removeBack()</code> require the deque to be nonempty.
+      If the deque is empty, a real implementation should follow a documented policy, such as
+      throwing an exception, returning a special value, or reporting failure without changing the deque.
+    </p>
+    <p>
+      Operations that add values may also require a capacity check. A linked implementation can usually
+      grow until memory is exhausted. A fixed-size circular array has a fixed capacity, so
+      <code>addFront(value)</code> and <code>addBack(value)</code> must report overflow or use another
+      documented policy when the array is full. A dynamic circular array resizes instead of reporting
+      overflow in ordinary use.
+    </p>
+
+    <div class="example-box">
+      <strong class="example-title">Example Trace of Deque Operations</strong>
+      <p>
+        Start with an empty deque and perform the following operations:
+        <span class="operation-sequence">
+          <code>addBack(12)</code>, <code>addBack(4)</code>, <code>addFront(18)</code>,
+          <code>addBack(7)</code>, <code>peekFront()</code>, <code>removeBack()</code>,
+          <code>addFront(5)</code>, <code>removeFront()</code>, <code>peekBack()</code>.
+        </span>
+      </p>
+
+      <table class="example-table">
+        <thead>
+          <tr>
+            <th>Operation</th>
+            <th>Deque Afterward</th>
+            <th>Return Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>addBack(12)</code></td><td><code>[12]</code></td><td>none</td></tr>
+          <tr><td><code>addBack(4)</code></td><td><code>[12, 4]</code></td><td>none</td></tr>
+          <tr><td><code>addFront(18)</code></td><td><code>[18, 12, 4]</code></td><td>none</td></tr>
+          <tr><td><code>addBack(7)</code></td><td><code>[18, 12, 4, 7]</code></td><td>none</td></tr>
+          <tr><td><code>peekFront()</code></td><td><code>[18, 12, 4, 7]</code></td><td><code>18</code></td></tr>
+          <tr><td><code>removeBack()</code></td><td><code>[18, 12, 4]</code></td><td><code>7</code></td></tr>
+          <tr><td><code>addFront(5)</code></td><td><code>[5, 18, 12, 4]</code></td><td>none</td></tr>
+          <tr><td><code>removeFront()</code></td><td><code>[18, 12, 4]</code></td><td><code>5</code></td></tr>
+          <tr><td><code>peekBack()</code></td><td><code>[18, 12, 4]</code></td><td><code>4</code></td></tr>
+        </tbody>
+      </table>
+      <p>
+        Notice that peek operations return values without changing the deque. Remove operations return
+        values and change the deque.
+      </p>
+    </div>
+  </section>
+
+  <section id="demo" section-title="Interactive Demo">
+    <h2>Interactive Demo</h2>
+    <p>
+      This demo shows how front and back operations affect the logical deque, independent of the
+      underlying implementation.
+    </p>
+    <div class="embeddedDemoContainer">
+      <iframe class="embeddedDemo"
+              src="../../../Content/Demos/Data Structures/Deque/Deque Operations Demo.html"
+              allow="fullscreen"
+              name="deque-operations-demo">
+      </iframe>
+    </div>
+  </section>
+
+  <section id="implementations" section-title="Implementation Options">
+    <h2>Implementation Options</h2>
+    <p>
+      The Deque ADT describes the operations a deque should support, but it does not specify how the
+      values must be stored. This section studies two primary implementations: a doubly linked list
+      and a circular array. It then discusses dynamic circular arrays and block-based deques as practical
+      variations.
+    </p>
+
+    <section id="implementation-linked" section-title="Implementation 1: Doubly Linked List">
+      <h3>Implementation 1: Doubly Linked List</h3>
+
+      <section id="implementation-linked-basics" section-title="Basics">
+        <h4>Basics</h4>
+        <p>
+          A <strong>doubly linked list deque</strong> stores each value in a node. Each node stores a
+          value, a <code>next</code> reference to the following node, and a <code>prev</code> reference
+          to the previous node. The deque stores references <code>front</code> and <code>back</code>,
+          along with a <code>size</code> variable.
+        </p>
+        <p>
+          This representation fits the deque abstraction directly. The front reference gives direct
+          access to the front end, the back reference gives direct access to the back end, and the two-way
+          links make it possible to remove from either end without traversing the whole structure.
+        </p>
+
+        <div class="example-box">
+          <p><strong class="example-title">Visual Representation of a Doubly Linked Deque</strong></p>
+          <svg class="deque-model-svg" viewBox="0 0 780 160" role="img" aria-labelledby="dllDequeTitle dllDequeDesc">
+            <title id="dllDequeTitle">Doubly linked deque representation</title>
+            <desc id="dllDequeDesc">A doubly linked deque storing 12, 4, 18, and 7 with front and back references.</desc>
+            <defs>
+              <marker id="dll-deque-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="#0a3974" />
+              </marker>
+            </defs>
+
+            <text x="20" y="18" class="deque-label">Doubly linked deque</text>
+            <text x="155" y="46" text-anchor="middle" class="deque-code-label">front</text>
+            <line x1="155" y1="50" x2="155" y2="78" class="deque-pointer" marker-end="url(#dll-deque-arrow)" />
+            <text x="603" y="46" text-anchor="middle" class="deque-code-label">back</text>
+            <line x1="603" y1="50" x2="603" y2="78" class="deque-pointer" marker-end="url(#dll-deque-arrow)" />
+
+            <g transform="translate(110,80)">
+              <rect x="0" y="0" width="114" height="54" rx="6" ry="6" class="deque-node-active" />
+              <line x1="30" y1="0" x2="30" y2="54" stroke="#d9822b" class="deque-divider" />
+              <line x1="76" y1="0" x2="76" y2="54" stroke="#d9822b" class="deque-divider" />
+              <text x="15" y="33" text-anchor="middle" class="deque-index">null</text>
+              <text x="53" y="33" text-anchor="middle" class="deque-value">12</text>
+              <text x="95" y="33" text-anchor="middle" class="deque-index">next</text>
+            </g>
+
+            <g transform="translate(256,80)">
+              <rect x="0" y="0" width="114" height="54" rx="6" ry="6" class="deque-node" />
+              <line x1="30" y1="0" x2="30" y2="54" stroke="#0a3974" class="deque-divider" />
+              <line x1="76" y1="0" x2="76" y2="54" stroke="#0a3974" class="deque-divider" />
+              <text x="15" y="33" text-anchor="middle" class="deque-index">prev</text>
+              <text x="53" y="33" text-anchor="middle" class="deque-value">4</text>
+              <text x="95" y="33" text-anchor="middle" class="deque-index">next</text>
+            </g>
+
+            <g transform="translate(402,80)">
+              <rect x="0" y="0" width="114" height="54" rx="6" ry="6" class="deque-node" />
+              <line x1="30" y1="0" x2="30" y2="54" stroke="#0a3974" class="deque-divider" />
+              <line x1="76" y1="0" x2="76" y2="54" stroke="#0a3974" class="deque-divider" />
+              <text x="15" y="33" text-anchor="middle" class="deque-index">prev</text>
+              <text x="53" y="33" text-anchor="middle" class="deque-value">18</text>
+              <text x="95" y="33" text-anchor="middle" class="deque-index">next</text>
+            </g>
+
+            <g transform="translate(548,80)">
+              <rect x="0" y="0" width="114" height="54" rx="6" ry="6" class="deque-node-active" />
+              <line x1="30" y1="0" x2="30" y2="54" stroke="#d9822b" class="deque-divider" />
+              <line x1="76" y1="0" x2="76" y2="54" stroke="#d9822b" class="deque-divider" />
+              <text x="15" y="33" text-anchor="middle" class="deque-index">prev</text>
+              <text x="53" y="33" text-anchor="middle" class="deque-value">7</text>
+              <text x="95" y="33" text-anchor="middle" class="deque-index">null</text>
+            </g>
+
+            <line x1="224" y1="96" x2="256" y2="96" class="deque-link" marker-end="url(#dll-deque-arrow)" />
+            <line x1="370" y1="96" x2="402" y2="96" class="deque-link" marker-end="url(#dll-deque-arrow)" />
+            <line x1="516" y1="96" x2="548" y2="96" class="deque-link" marker-end="url(#dll-deque-arrow)" />
+            <line x1="256" y1="120" x2="224" y2="120" class="deque-link" marker-end="url(#dll-deque-arrow)" />
+            <line x1="402" y1="120" x2="370" y2="120" class="deque-link" marker-end="url(#dll-deque-arrow)" />
+            <line x1="548" y1="120" x2="516" y2="120" class="deque-link" marker-end="url(#dll-deque-arrow)" />
+            <text x="700" y="112" class="deque-code-label">size = 4</text>
+          </svg>
+        </div>
+
+        <p>
+          The main invariant is that <code>front</code> points to the first node, <code>back</code>
+          points to the last node, and adjacent nodes agree through their <code>next</code> and
+          <code>prev</code> references. If the deque is empty, then both <code>front</code> and
+          <code>back</code> should be <code>null</code>, and <code>size</code> should be <code>0</code>.
+        </p>
+      </section>
+
+      <section id="implementation-linked-how-operations-work" section-title="How the Operations Work">
+        <h4>How the Operations Work</h4>
+        <p>
+          The implementation changes only a constant number of references for each end operation.
+          The descriptions below assume that all preconditions have already been checked.
+        </p>
+
+        <h4>size, isEmpty, and clear</h4>
+        <ul>
+          <li><code>size()</code> returns the value of the <code>size</code> variable.</li>
+          <li><code>isEmpty()</code> checks whether <code>size == 0</code>.</li>
+          <li><code>clear()</code> sets <code>front</code> and <code>back</code> to <code>null</code> and sets <code>size</code> to <code>0</code>.</li>
+        </ul>
+
+        <h4>peekFront and peekBack</h4>
+        <ul>
+          <li><code>peekFront()</code> returns <code>front.value</code>.</li>
+          <li><code>peekBack()</code> returns <code>back.value</code>.</li>
+        </ul>
+
+        <h4>addFront</h4>
+        <ul>
+          <li>Create a new node storing the value.</li>
+          <li>Set the new node's <code>next</code> reference to the old <code>front</code>.</li>
+          <li>If the deque was nonempty, set the old front node's <code>prev</code> reference to the new node.</li>
+          <li>Update <code>front</code> so it points to the new node.</li>
+          <li>If the deque was empty, also update <code>back</code> so it points to the new node.</li>
+          <li>Increment <code>size</code>.</li>
+        </ul>
+
+        <h4>addBack</h4>
+        <ul>
+          <li>Create a new node storing the value.</li>
+          <li>Set the new node's <code>prev</code> reference to the old <code>back</code>.</li>
+          <li>If the deque was nonempty, set the old back node's <code>next</code> reference to the new node.</li>
+          <li>Update <code>back</code> so it points to the new node.</li>
+          <li>If the deque was empty, also update <code>front</code> so it points to the new node.</li>
+          <li>Increment <code>size</code>.</li>
+        </ul>
+
+        <h4>removeFront</h4>
+        <ul>
+          <li>Save <code>front.value</code>.</li>
+          <li>Move <code>front</code> to <code>front.next</code>.</li>
+          <li>If the deque is now empty, set <code>back</code> to <code>null</code>.</li>
+          <li>Otherwise, set the new front node's <code>prev</code> reference to <code>null</code>.</li>
+          <li>Decrement <code>size</code> and return the saved value.</li>
+        </ul>
+
+        <h4>removeBack</h4>
+        <ul>
+          <li>Save <code>back.value</code>.</li>
+          <li>Move <code>back</code> to <code>back.prev</code>.</li>
+          <li>If the deque is now empty, set <code>front</code> to <code>null</code>.</li>
+          <li>Otherwise, set the new back node's <code>next</code> reference to <code>null</code>.</li>
+          <li>Decrement <code>size</code> and return the saved value.</li>
+        </ul>
+      </section>
+
+      <section id="implementation-linked-pseudocode" section-title="Doubly Linked Deque Pseudocode">
+        <h4>Doubly Linked Deque Pseudocode</h4>
+        <p>
+          The pseudocode assumes a node type with fields <code>value</code>, <code>next</code>, and
+          <code>prev</code>. Empty-deque operations report an error and stop.
+        </p>
+
+<pre><code>isEmpty():
+    return size == 0
+
+size():
+    return size
+
+clear():
+    front = null
+    back = null
+    size = 0
+
+peekFront():
+    if isEmpty():
+        report empty-deque error and stop
+    return front.value
+
+peekBack():
+    if isEmpty():
+        report empty-deque error and stop
+    return back.value
+
+addFront(value):
+    newNode = new Node(value)
+    newNode.next = front
+    newNode.prev = null
+    if isEmpty():
+        back = newNode
+    else:
+        front.prev = newNode
+    front = newNode
+    size = size + 1
+
+addBack(value):
+    newNode = new Node(value)
+    newNode.prev = back
+    newNode.next = null
+    if isEmpty():
+        front = newNode
+    else:
+        back.next = newNode
+    back = newNode
+    size = size + 1
+
+removeFront():
+    if isEmpty():
+        report empty-deque error and stop
+    value = front.value
+    front = front.next
+    size = size - 1
+    if front == null:
+        back = null
+    else:
+        front.prev = null
+    return value
+
+removeBack():
+    if isEmpty():
+        report empty-deque error and stop
+    value = back.value
+    back = back.prev
+    size = size - 1
+    if back == null:
+        front = null
+    else:
+        back.next = null
+    return value</code></pre>
+      </section>
+
+      <section id="implementation-linked-analysis" section-title="Implementation Analysis">
+        <h4>Implementation Analysis</h4>
+        <ul>
+          <li><strong><code>size()</code>, <code>isEmpty()</code>:</strong> \(O(1)\). Each checks or returns a stored variable.</li>
+          <li><strong><code>peekFront()</code>, <code>peekBack()</code>:</strong> \(O(1)\). The implementation stores direct references to both ends.</li>
+          <li><strong><code>addFront(value)</code>, <code>addBack(value)</code>:</strong> \(O(1)\). Each creates one node and changes a constant number of references.</li>
+          <li><strong><code>removeFront()</code>, <code>removeBack()</code>:</strong> \(O(1)\). The <code>next</code> and <code>prev</code> references give direct access to the new end node.</li>
+          <li><strong><code>clear()</code>:</strong> \(O(1)\) if it only drops the references. In a language with manual memory management, freeing all nodes takes \(O(n)\).</li>
+        </ul>
+        <h5>Storage Used</h5>
+        <p>
+          A doubly linked deque uses \(O(n)\) space for \(n\) stored values. Each node has constant
+          overhead for two references, <code>next</code> and <code>prev</code>. The deque object itself
+          uses \(O(1)\) extra space for <code>front</code>, <code>back</code>, and <code>size</code>.
+        </p>
+      </section>
+    </section>
+
+    <section id="implementation-circular-array" section-title="Implementation 2: Circular Array">
+      <h3>Implementation 2: Circular Array</h3>
+
+      <section id="implementation-circular-array-basics" section-title="Basics">
+        <h4>Basics</h4>
+        <p>
+          A <strong>circular array deque</strong> stores the deque in a fixed-size backing array. The
+          implementation keeps an integer <code>front</code>, which is the array index of the logical
+          front value, and an integer <code>size</code>, which is the number of values stored. The back
+          value is not necessarily stored at <code>A[size - 1]</code>, because the logical order can wrap
+          around the end of the physical array.
+        </p>
+        <p>
+          If the array has capacity <code>c</code>, then the logical value at deque position
+          <code>i</code> is stored at array index <code>(front + i) % c</code>. In particular, the back
+          value is stored at <code>(front + size - 1) % c</code> when the deque is nonempty.
+        </p>
+
+        <div class="example-box">
+          <p><strong class="example-title">Visual Representation of a Circular Array Deque</strong></p>
+          <svg class="deque-model-svg" viewBox="0 10 780 120" role="img" aria-labelledby="circularDequeTitle circularDequeDesc">
+            <title id="circularDequeTitle">Circular array deque representation</title>
+            <desc id="circularDequeDesc">The logical deque 12, 4, 18, 7 is stored in wrapped order in an array of capacity 7.</desc>
+            <defs>
+              <marker id="circ-deque-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="#0a3974" />
+              </marker>
+            </defs>
+            <text x="20" y="28" class="deque-label">Circular array representation</text>
+            <text x="20" y="78" class="deque-code-label">A =</text>
+
+            <rect x="70" y="50" width="58" height="44" class="deque-cell" />
+            <rect x="128" y="50" width="58" height="44" class="deque-cell-active" />
+            <rect x="186" y="50" width="58" height="44" class="deque-cell-unused" />
+            <rect x="244" y="50" width="58" height="44" class="deque-cell-unused" />
+            <rect x="302" y="50" width="58" height="44" class="deque-cell-unused" />
+            <rect x="360" y="50" width="58" height="44" class="deque-cell-active" />
+            <rect x="418" y="50" width="58" height="44" class="deque-cell" />
+
+            <text x="99" y="78" text-anchor="middle" class="deque-value">18</text>
+            <text x="157" y="78" text-anchor="middle" class="deque-value">7</text>
+            <text x="389" y="78" text-anchor="middle" class="deque-value">12</text>
+            <text x="447" y="78" text-anchor="middle" class="deque-value">4</text>
+
+            <text x="99" y="113" text-anchor="middle" class="deque-index">0</text>
+            <text x="157" y="113" text-anchor="middle" class="deque-index">1</text>
+            <text x="215" y="113" text-anchor="middle" class="deque-index">2</text>
+            <text x="273" y="113" text-anchor="middle" class="deque-index">3</text>
+            <text x="331" y="113" text-anchor="middle" class="deque-index">4</text>
+            <text x="389" y="113" text-anchor="middle" class="deque-index">5</text>
+            <text x="447" y="113" text-anchor="middle" class="deque-index">6</text>
+
+            <line x1="389" y1="42" x2="389" y2="50" class="deque-pointer" marker-end="url(#circ-deque-arrow)" />
+            <text x="389" y="37" text-anchor="middle" class="deque-code-label">front</text>
+
+            <line x1="157" y1="42" x2="157" y2="50" class="deque-pointer" marker-end="url(#circ-deque-arrow)" />
+            <text x="157" y="37" text-anchor="middle" class="deque-code-label">back</text>
+
+            <text x="520" y="60" class="deque-code-label">front = 5</text>
+            <text x="520" y="85" class="deque-code-label">size = 4</text>
+            <text x="520" y="110" class="deque-code-label">capacity = 7</text>
+          </svg>
+          <p>
+            The logical deque is <code>[12, 4, 18, 7]</code>, even though the array positions used are
+            <code>5, 6, 0, 1</code>. The logical order wraps around the physical end of the array.
+          </p>
+        </div>
+
+        <p>
+          The central invariant is that the deque values occupy <code>size</code> consecutive positions
+          in circular order, starting at <code>front</code>. Positions not in this circular segment are
+          unused capacity.
+        </p>
+      </section>
+
+      <section id="implementation-circular-array-how-operations-work" section-title="How the Operations Work">
+        <h4>How the Operations Work</h4>
+        <p>
+          A circular array implementation stores a backing array <code>A</code>, a <code>front</code>
+          index, and a <code>size</code>. The capacity is <code>A.length</code>. The descriptions below
+          assume that all preconditions are satisfied and that the fixed-size array has room before an
+          add operation.
+        </p>
+
+        <h4>Index Computations</h4>
+        <ul>
+          <li>The front value is stored at <code>A[front]</code>.</li>
+          <li>The back value is stored at <code>A[(front + size - 1) % A.length]</code>.</li>
+          <li>The first unused slot after the back is <code>A[(front + size) % A.length]</code>.</li>
+          <li>The slot before the front is <code>A[(front - 1 + A.length) % A.length]</code>.</li>
+        </ul>
+
+        <h4>size, isEmpty, and clear</h4>
+        <ul>
+          <li><code>size()</code> returns the value of the <code>size</code> variable.</li>
+          <li><code>isEmpty()</code> checks whether <code>size == 0</code>.</li>
+          <li><code>clear()</code> sets <code>front = 0</code> and <code>size = 0</code>. Some implementations also clear old references from the array.</li>
+        </ul>
+
+        <h4>peekFront and peekBack</h4>
+        <ul>
+          <li><code>peekFront()</code> returns <code>A[front]</code>.</li>
+          <li><code>peekBack()</code> computes <code>backIndex = (front + size - 1) % A.length</code> and returns <code>A[backIndex]</code>.</li>
+        </ul>
+
+        <h4>addFront and addBack</h4>
+        <ul>
+          <li><code>addFront(value)</code> moves <code>front</code> one step backward in circular order, stores <code>value</code> there, and increments <code>size</code>.</li>
+          <li><code>addBack(value)</code> stores <code>value</code> in the first unused slot after the current back and increments <code>size</code>.</li>
+        </ul>
+
+        <h4>removeFront and removeBack</h4>
+        <ul>
+          <li><code>removeFront()</code> saves <code>A[front]</code>, moves <code>front</code> one step forward in circular order, decrements <code>size</code>, and returns the saved value.</li>
+          <li><code>removeBack()</code> computes the current back index, saves that value, decrements <code>size</code>, and returns the saved value.</li>
+        </ul>
+      </section>
+
+      <section id="implementation-circular-array-pseudocode" section-title="Circular Array Deque Pseudocode">
+        <h4>Circular Array Deque Pseudocode</h4>
+        <p>
+          The pseudocode assumes a fixed-size backing array <code>A</code>, an integer
+          <code>front</code>, and an integer <code>size</code>. Add operations report overflow and stop
+          if the array is full.
+        </p>
+
+<pre><code>isEmpty():
+    return size == 0
+
+isFull():
+    return size == A.length
+
+size():
+    return size
+
+clear():
+    front = 0
+    size = 0
+
+backIndex():
+    return (front + size - 1) % A.length
+
+peekFront():
+    if isEmpty():
+        report empty-deque error and stop
+    return A[front]
+
+peekBack():
+    if isEmpty():
+        report empty-deque error and stop
+    return A[backIndex()]
+
+addFront(value):
+    if isFull():
+        report overflow and stop
+    front = (front - 1 + A.length) % A.length
+    A[front] = value
+    size = size + 1
+
+addBack(value):
+    if isFull():
+        report overflow and stop
+    index = (front + size) % A.length
+    A[index] = value
+    size = size + 1
+
+removeFront():
+    if isEmpty():
+        report empty-deque error and stop
+    value = A[front]
+    front = (front + 1) % A.length
+    size = size - 1
+    return value
+
+removeBack():
+    if isEmpty():
+        report empty-deque error and stop
+    index = backIndex()
+    value = A[index]
+    size = size - 1
+    return value</code></pre>
+      </section>
+
+      <section id="implementation-circular-array-analysis" section-title="Implementation Analysis">
+        <h4>Implementation Analysis</h4>
+        <ul>
+          <li><strong><code>size()</code>, <code>isEmpty()</code>:</strong> \(O(1)\). Each checks or returns a stored variable.</li>
+          <li><strong><code>peekFront()</code>, <code>peekBack()</code>:</strong> \(O(1)\). Each performs a constant amount of index arithmetic and reads one array cell.</li>
+          <li><strong><code>addFront(value)</code>, <code>addBack(value)</code>:</strong> \(O(1)\) when the fixed-size array has room. Each writes one array cell and changes a constant number of variables.</li>
+          <li><strong><code>removeFront()</code>, <code>removeBack()</code>:</strong> \(O(1)\). Each reads one cell and updates a constant number of variables.</li>
+          <li><strong><code>clear()</code>:</strong> \(O(1)\) if it only resets <code>front</code> and <code>size</code>. It can be \(O(n)\) if old references are explicitly cleared.</li>
+        </ul>
+        <h5>Storage Used</h5>
+        <p>
+          A fixed-size circular array deque uses \(O(c)\) space, where \(c\) is the capacity of the
+          backing array. If the deque currently stores \(n\) values, then \(c - n\) cells are unused
+          capacity. The implementation uses \(O(1)\) extra space for variables such as
+          <code>front</code> and <code>size</code>.
+        </p>
+      </section>
+    </section>
+
+    <section id="cost-summary" section-title="Implementation Cost Summary">
+      <h3>Implementation Cost Summary</h3>
+      <p>
+        Both primary implementations make all core deque operations constant time. The main differences
+        are memory overhead, locality, resizing behavior, and implementation complexity.
+      </p>
+
+      <table class="example-table left-top-align cost-summary-table">
+        <thead>
+          <tr>
+            <th>Operation</th>
+            <th>Doubly Linked List</th>
+            <th>Fixed Circular Array</th>
+            <th>Reason</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>size()</code>, <code>isEmpty()</code></td>
+            <td class="cost-good">\(O(1)\)</td>
+            <td class="cost-good">\(O(1)\)</td>
+            <td>Both implementations store the current size or equivalent state.</td>
+          </tr>
+          <tr>
+            <td><code>peekFront()</code>, <code>peekBack()</code></td>
+            <td class="cost-good">\(O(1)\)</td>
+            <td class="cost-good">\(O(1)\)</td>
+            <td>The linked version stores end references; the array version computes end indices directly.</td>
+          </tr>
+          <tr>
+            <td><code>addFront(value)</code>, <code>addBack(value)</code></td>
+            <td class="cost-good">\(O(1)\)</td>
+            <td class="cost-good">\(O(1)\)</td>
+            <td>The linked version relinks a constant number of references; the array version writes one circular position if space is available.</td>
+          </tr>
+          <tr>
+            <td><code>removeFront()</code>, <code>removeBack()</code></td>
+            <td class="cost-good">\(O(1)\)</td>
+            <td class="cost-good">\(O(1)\)</td>
+            <td>Both remove from a known end without shifting or traversal.</td>
+          </tr>
+          <tr>
+            <td><code>clear()</code></td>
+            <td>\(O(1)\) or \(O(n)\)</td>
+            <td>\(O(1)\) or \(O(n)\)</td>
+            <td>Constant time if references are discarded; linear time if nodes or cells are explicitly cleared.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>
+        A fixed circular array has a fixed capacity. An attempted addition to a full fixed-size array
+        must fail or follow another documented policy. A dynamic circular array avoids this fixed limit
+        by resizing, but an individual resize costs \(O(n)\), so additions are amortized \(O(1)\) rather
+        than worst-case \(O(1)\).
+      </p>
+    </section>
   </section>
 
   <section id="applications" section-title="Applications">
     <h2>Applications</h2>
+    <p>
+      Deques are useful when a program needs ordered storage but both ends are active. They often appear
+      in algorithms and systems where data can arrive or be consumed from either direction.
+    </p>
     <ul>
-      <li><strong>Stacks and queues:</strong> A deque can serve as either structure by restricting which operations are used.</li>
-      <li><strong>Sliding-window maximum or minimum:</strong> A monotonic deque stores candidate values and removes obsolete or dominated candidates from the ends.</li>
-      <li><strong>Palindrome checking:</strong> Compare and remove the front and back characters until the sequence is empty or a mismatch appears.</li>
-      <li><strong>Undo and redo histories:</strong> Some history structures keep recent actions near one end and discard old actions from the other when capacity is bounded.</li>
-      <li><strong>Round-based simulations:</strong> A deque can move an item from the front to the back, add urgent work to the front, or retire completed work from either end.</li>
-      <li><strong>Work scheduling:</strong> Some task schedulers use deque-like structures when local and stolen work should be taken from different ends.</li>
+      <li><strong>Queue and stack replacement:</strong> A deque can implement stack-like or queue-like behavior by restricting which operations are used.</li>
+      <li><strong>Breadth-first search variants:</strong> Some graph algorithms, such as 0-1 BFS, use a deque to add vertices to the front or back depending on edge cost.</li>
+      <li><strong>Sliding-window algorithms:</strong> A monotonic deque can maintain useful candidates for window minimums or maximums.</li>
+      <li><strong>Undo and redo buffers:</strong> A deque can store a bounded history where old states are dropped from one end while new states are added at the other.</li>
+      <li><strong>Task scheduling:</strong> Work queues sometimes add urgent tasks to the front and ordinary tasks to the back.</li>
+      <li><strong>Palindrome checking:</strong> Repeatedly compare and remove the front and back characters.</li>
     </ul>
   </section>
 
   <section id="comparison" section-title="Comparisons and Tradeoffs">
     <h2>Comparisons and Tradeoffs</h2>
-    <ul>
-      <li><strong>Deque vs. queue:</strong> A queue allows insertion at the back and removal from the front. A deque allows insertion and removal at both ends.</li>
-      <li><strong>Deque vs. stack:</strong> A stack exposes one active end. A deque exposes both active ends.</li>
-      <li><strong>Deque vs. dynamic array list:</strong> A normal dynamic array list can append and remove at the end efficiently, but front operations require shifting unless it is implemented as a circular buffer.</li>
-      <li><strong>Circular array vs. linked deque:</strong> Circular arrays are compact and cache-friendly but must handle capacity and wrap-around. Linked deques avoid resizing but use more memory per item.</li>
-      <li><strong>Expressiveness vs. intent:</strong> A deque is more general than a stack or queue. If only FIFO behavior is allowed by the algorithm, a queue interface communicates that rule more clearly.</li>
-    </ul>
+    <p>
+      The Deque ADT is narrower than the List ADT. A list emphasizes access by position and supports
+      operations such as <code>get(index)</code>, <code>set(index, value)</code>, and
+      <code>insert(index, value)</code>. A deque emphasizes efficient operations at the two ends.
+    </p>
+
+    <h3>Doubly Linked List vs. Circular Array</h3>
+    <p>
+      A doubly linked list grows one node at a time and does not need unused array capacity. It handles
+      both ends symmetrically and avoids resizing. Its disadvantages are two references per node, scattered
+      memory locations, and more pointer updates.
+    </p>
+    <p>
+      A circular array stores values in array cells, so it usually has better locality and lower per-value
+      overhead. Its disadvantages are fixed capacity in the simplest version and more subtle index arithmetic.
+      A dynamic circular array removes the fixed-capacity limitation but introduces occasional resizing.
+    </p>
+
+    <h3>Why Not a Singly Linked List?</h3>
+    <p>
+      A singly linked list with a tail pointer is not a good full deque implementation because
+      <code>removeBack()</code> requires finding the node before the back node. With only forward links,
+      that search takes \(O(n)\) time. Adding <code>prev</code> references gives the constant-time back
+      removal needed for a deque.
+    </p>
+
+    <h3>Choosing an Implementation</h3>
+    <p>
+      Use a doubly linked list when capacity should grow naturally one node at a time, when worst-case
+      constant-time end operations are important, or when node references will be useful elsewhere. Use a
+      circular array when compact storage and cache-friendly access matter. Use a dynamic circular array
+      when the deque size changes significantly and a fixed capacity is inconvenient. Use a block-based
+      deque when a library needs growth at both ends without repeatedly copying one large array.
+    </p>
+  </section>
+
+  <section id="variations" section-title="Variations and Extensions">
+    <h2>Variations and Extensions</h2>
+
+    <h3>Dynamic Circular Array Deques</h3>
+    <p>
+      A dynamic circular array deque grows when the backing array becomes full. When resizing, the
+      implementation allocates a larger array and copies the logical deque values into the new array in
+      clean order, usually starting at index <code>0</code>. Then it resets <code>front = 0</code> and
+      continues the operation.
+    </p>
+    <p>
+      If the capacity grows geometrically, such as by doubling, then a long sequence of additions has
+      amortized \(O(1)\) time per addition. Individual additions can still take \(O(n)\) when they trigger
+      resizing.
+    </p>
+
+    <h3>Block-Based Deques</h3>
+    <p>
+      A block-based deque stores values in several fixed-size blocks rather than in one large array. The
+      implementation keeps enough information to find the current front and back blocks and positions. It
+      can grow by adding a block near either end, which avoids copying all stored values every time more
+      room is needed.
+    </p>
+    <p>
+      This approach is more complex than a simple circular array or doubly linked list, but it combines
+      some advantages of both: better locality than one-node-per-value linked storage and less large-scale
+      copying than a single dynamic array. Some library deque implementations use this general idea.
+    </p>
+
+    <h3>Bounded Deques</h3>
+    <p>
+      A bounded deque has a maximum capacity. It is often implemented using a fixed circular array. When
+      the deque is full, an addition may fail, overwrite an old value, or remove a value from the opposite
+      end, depending on the application.
+    </p>
+
+    <h3>Monotonic Deques</h3>
+    <p>
+      A monotonic deque is an algorithmic use of a deque in which the stored values are kept in increasing
+      or decreasing order. This is useful in sliding-window minimum and maximum algorithms. It is not a new
+      implementation, but a disciplined way to use the deque operations.
+    </p>
   </section>
 
   <section id="pitfalls" section-title="Common Pitfalls">
     <h2>Common Pitfalls</h2>
-    <ul>
-      <li><strong>Confusing <code>deque</code> and <code>dequeue</code>:</strong> A deque is a data type. Dequeue is a queue removal operation.</li>
-      <li><strong>Shifting on front operations:</strong> A deque implemented by shifting a whole array on every <code>addFirst</code> or <code>removeFirst</code> does not achieve the expected constant-time behavior.</li>
-      <li><strong>Negative modulo mistakes:</strong> In many languages, <code>(frontIndex - 1) % capacity</code> may be negative. Use <code>(frontIndex - 1 + capacity) % capacity</code>.</li>
-      <li><strong>Forgetting empty cases:</strong> Remove and peek operations need defined behavior when the deque has no elements.</li>
-      <li><strong>Not resetting after resize:</strong> When a circular array deque resizes, copying logical elements to the front of the new array and setting <code>frontIndex = 0</code> simplifies later operations.</li>
-      <li><strong>Broken backward links:</strong> In a doubly linked deque, every update must preserve both <code>next</code> and <code>prev</code> relationships.</li>
-    </ul>
+    <p>
+      Deque implementations are short, but the boundary cases are easy to mishandle.
+    </p>
+
+    <h3>Forgetting the Empty-to-One Transition</h3>
+    <p>
+      When adding to an empty doubly linked deque, both <code>front</code> and <code>back</code> must
+      point to the new node. Updating only one end leaves the deque in an inconsistent state.
+    </p>
+
+    <h3>Forgetting the One-to-Empty Transition</h3>
+    <p>
+      When removing the only value from a doubly linked deque, both <code>front</code> and
+      <code>back</code> must become <code>null</code>. Updating only the removed end leaves a stale
+      reference at the other end.
+    </p>
+
+    <h3>Using Negative Remainders Incorrectly</h3>
+    <p>
+      In a circular array, moving one step before index <code>0</code> should wrap to
+      <code>A.length - 1</code>. The expression <code>(front - 1) % A.length</code> may be negative in
+      some programming languages. The safer expression is <code>(front - 1 + A.length) % A.length</code>.
+    </p>
+
+    <h3>Confusing Size and Capacity</h3>
+    <p>
+      In a circular array deque, <code>size</code> is the number of meaningful values, while capacity is
+      the number of array cells. Empty and full states should be checked using <code>size</code>, not by
+      comparing front and back indices alone.
+    </p>
+
+    <h3>Clearing the Wrong Slot</h3>
+    <p>
+      If removed values are references, an implementation may set the vacated array slot to
+      <code>null</code> so that old objects are not kept alive unnecessarily. The slot to clear is the
+      old front position for <code>removeFront()</code> and the old back position for
+      <code>removeBack()</code>.
+    </p>
+
+    <h3>Accidentally Adding Indexed List Operations</h3>
+    <p>
+      Some libraries allow limited indexing into a deque, but indexed access is not part of the core deque
+      abstraction. Adding general indexed operations changes the data structure being studied and may make
+      the performance story much less clear.
+    </p>
   </section>
 
   <section id="summary" section-title="Summary">
     <h2>Summary</h2>
     <p>
-      A deque is a double-ended queue. It supports adding, removing, and peeking at both the front and the back.
-      Efficient implementations use a circular array or a doubly linked list so end operations do not require shifting
-      the whole sequence.
+      A deque is a double-ended queue. It supports insertion, removal, and inspection at both the front
+      and the back. The core operations are <code>addFront(value)</code>, <code>addBack(value)</code>,
+      <code>removeFront()</code>, <code>removeBack()</code>, <code>peekFront()</code>,
+      <code>peekBack()</code>, <code>size()</code>, and <code>isEmpty()</code>.
     </p>
-  </section>
+    <p>
+      The two most important implementations are a doubly linked list and a circular array. A doubly
+      linked list gives symmetric constant-time operations at both ends using front and back references
+      plus two links per node. A circular array gives constant-time operations at both ends using wraparound
+      index arithmetic. Dynamic circular arrays and block-based deques are practical extensions used when
+      fixed capacity is too restrictive.
+    </p>
 
-  <section id="related-pages" section-title="Related Pages">
-    <h2>Related Pages</h2>
+    <h3>Key Takeaways</h3>
     <ul>
-      <li><a href="?path=Data%20Structures%2FLinear%20Structures%2FStacks">Stacks</a>, a restricted one-ended use of a deque.</li>
-      <li><a href="?path=Data%20Structures%2FLinear%20Structures%2FQueues">Queues</a>, a restricted two-ended use with FIFO behavior.</li>
-      <li><a href="?path=Data%20Structures%2FLinear%20Structures%2FLinked%20Lists">Linked Lists</a>, the basis for linked deque implementations.</li>
-      <li><a href="?path=Data%20Structures%2FLinear%20Structures%2FDynamic%20Arrays%20and%20Array-Based%20Lists">Dynamic Arrays and Array-Based Lists</a>, the storage idea behind circular array deques.</li>
+      <li>A deque is an ordered collection with efficient access at both ends.</li>
+      <li>A deque can act like a stack, a queue, or a more flexible two-ended structure.</li>
+      <li>The core deque operations do not include general indexed access.</li>
+      <li>A doubly linked list implementation stores <code>front</code>, <code>back</code>, and bidirectional node links.</li>
+      <li>A circular array implementation stores <code>front</code>, <code>size</code>, and values in wrapped array positions.</li>
+      <li>Both primary implementations support the core deque operations in \(O(1)\) time.</li>
+      <li>Dynamic circular arrays provide amortized \(O(1)\) additions by resizing when full.</li>
+      <li>Correct implementations must carefully handle empty deques, single-item deques, full arrays, and wraparound arithmetic.</li>
     </ul>
   </section>
 
   <section id="links" section-title="Helpful Links and Resources">
     <h2>Helpful Links and Resources</h2>
-    <ul>
-      <li><a href="https://docs.python.org/3/library/collections.html#deque-objects" target="_blank">Python documentation: <code>collections.deque</code></a> Describes a standard double-ended queue implementation.</li>
-      <li><a href="https://docs.oracle.com/javase/8/docs/api/java/util/ArrayDeque.html" target="_blank">Java <code>ArrayDeque</code> documentation</a> Shows Java's resizable-array deque interface.</li>
-      <li><a href="https://en.cppreference.com/w/cpp/container/deque" target="_blank">cppreference: <code>std::deque</code></a> Documents the C++ deque container and its operation costs.</li>
+    <p>
+      The following resources give additional perspectives on deques, library containers, and common
+      implementations.
+    </p>
+    <ul class="resource-list">
+      <li>
+        <a href="https://en.wikipedia.org/wiki/Double-ended_queue" target="_blank">Wikipedia: Double-ended queue</a>
+        Overview of the deque abstract data type and common implementations.
+      </li>
+      <li>
+        <a href="https://docs.oracle.com/javase/8/docs/api/java/util/Deque.html" target="_blank">Java 8 API: <code>Deque</code></a>
+        Official Java interface for double-ended queues.
+      </li>
+      <li>
+        <a href="https://docs.oracle.com/javase/8/docs/api/java/util/ArrayDeque.html" target="_blank">Java 8 API: <code>ArrayDeque</code></a>
+        Official documentation for Java's resizable-array deque implementation.
+      </li>
+      <li>
+        <a href="https://docs.oracle.com/javase/8/docs/api/java/util/LinkedList.html" target="_blank">Java 8 API: <code>LinkedList</code></a>
+        Java's linked list, which also implements the deque interface.
+      </li>
+      <li>
+        <a href="https://en.cppreference.com/w/cpp/container/deque" target="_blank">cppreference: <code>std::deque</code></a>
+        Reference for C++'s standard deque container.
+      </li>
+      <li>
+        <a href="https://docs.python.org/3/library/collections.html#collections.deque" target="_blank">Python Documentation: <code>collections.deque</code></a>
+        Official documentation for Python's deque type.
+      </li>
+      <li>
+        <a href="https://www.geeksforgeeks.org/deque-set-1-introduction-applications/" target="_blank">GeeksforGeeks: Deque Introduction and Applications</a>
+        Introductory explanation of deque operations and applications.
+      </li>
+      <li>
+        <a href="https://www.geeksforgeeks.org/implementation-deque-using-circular-array/" target="_blank">GeeksforGeeks: Deque Using Circular Array</a>
+        Example implementation of a deque using a circular array.
+      </li>
     </ul>
   </section>
 
   <section id="reading-questions" section-title="Reading Comprehension Questions">
     <h2>Reading Comprehension Questions</h2>
     <ol>
-      <li><strong>Definition:</strong> What does the word deque stand for?</li>
-      <li><strong>Queue Relationship:</strong> Which deque operations would you use to simulate a FIFO queue?</li>
-      <li><strong>Stack Relationship:</strong> Which deque operations would you use to simulate a stack?</li>
-      <li><strong>Circular Array:</strong> Why does a circular array deque use modulo arithmetic?</li>
-      <li><strong>Front Insert:</strong> Why is shifting every element right on <code>addFirst</code> a poor implementation choice?</li>
-      <li><strong>Linked Deque:</strong> Why is a doubly linked list a natural linked implementation for a deque?</li>
-      <li><strong>Underflow:</strong> What should happen when <code>removeFirst</code> is called on an empty deque?</li>
+      <li><strong>Deque Meaning:</strong> What does it mean for a deque to be double-ended?</li>
+      <li><strong>Deque vs. List:</strong> Why are indexed operations not part of the core deque interface on this page?</li>
+      <li><strong>Stack Behavior:</strong> How can a deque be used as a stack?</li>
+      <li><strong>Queue Behavior:</strong> How can a deque be used as a queue?</li>
+      <li><strong>Peek vs. Remove:</strong> What is the difference between <code>peekFront()</code> and <code>removeFront()</code>?</li>
+      <li><strong>Doubly Linked Fields:</strong> What references are stored by the deque object in a doubly linked implementation?</li>
+      <li><strong>Why Doubly Linked:</strong> Why is a singly linked list with tail not enough for efficient deque operations?</li>
+      <li><strong>Circular Indexing:</strong> In a circular array deque, why is modular arithmetic needed?</li>
+      <li><strong>Back Index:</strong> If the capacity is <code>c</code>, what formula gives the back index when the deque is nonempty?</li>
+      <li><strong>Dynamic Resizing:</strong> Why are additions in a dynamic circular array described as amortized \(O(1)\)?</li>
+      <li><strong>Implementation Choice:</strong> Name one reason to prefer a circular array and one reason to prefer a doubly linked list.</li>
+      <li><strong>Boundary Cases:</strong> What must happen when the only value in a deque is removed?</li>
     </ol>
+
     <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
     <div id="answers" class="answer" hidden>
       <ol>
-        <li><strong>Answer:</strong> Double-ended queue.</li>
-        <li><strong>Answer:</strong> Add at the back with <code>addLast</code> and remove from the front with <code>removeFirst</code>.</li>
-        <li><strong>Answer:</strong> Add and remove at the same end, such as <code>addLast</code> and <code>removeLast</code>.</li>
-        <li><strong>Answer:</strong> To wrap indices from the physical end of the backing array back to the beginning.</li>
-        <li><strong>Answer:</strong> It makes front insertion \(O(n)\) instead of the expected \(O(1)\) end update.</li>
-        <li><strong>Answer:</strong> It keeps direct access to both ends and can relink nodes at either end in constant time.</li>
-        <li><strong>Answer:</strong> The implementation should report underflow, throw an exception, or otherwise use a clearly documented empty-deque policy.</li>
+        <li>A deque is double-ended because it allows insertion, removal, and inspection at both the front and the back.</li>
+        <li>Indexed operations are not part of the core deque interface because a deque focuses on efficient end operations, not arbitrary positions.</li>
+        <li>Use only one end: for example, call <code>addBack(value)</code> to push and <code>removeBack()</code> to pop.</li>
+        <li>Use opposite ends: for example, call <code>addBack(value)</code> to enqueue and <code>removeFront()</code> to dequeue.</li>
+        <li><code>peekFront()</code> returns the front value without changing the deque. <code>removeFront()</code> returns the front value and removes it.</li>
+        <li>The deque object stores <code>front</code>, <code>back</code>, and <code>size</code>.</li>
+        <li>A singly linked list with tail cannot remove from the back in constant time because it cannot move backward from the tail to the previous node.</li>
+        <li>Modular arithmetic lets array indices wrap around from the end of the physical array back to the beginning.</li>
+        <li>The back index is <code>(front + size - 1) % c</code>.</li>
+        <li>A single resize takes \(O(n)\), but if the array grows geometrically, the total resizing cost spread over many additions gives amortized \(O(1)\) time per addition.</li>
+        <li>A circular array has compact storage and good locality. A doubly linked list grows one node at a time and gives worst-case constant-time end operations without resizing.</li>
+        <li>Both end references must become empty: in a linked implementation, <code>front</code> and <code>back</code> become <code>null</code>; in an array implementation, <code>size</code> becomes <code>0</code>.</li>
       </ol>
     </div>
   </section>
@@ -422,23 +1139,199 @@ removeLast():
   <section id="activities" section-title="In-Class Activities">
     <h2>In-Class Activities</h2>
     <ol>
-      <li><strong>Operation Trace:</strong> Trace a mixed sequence of <code>addFirst</code>, <code>addLast</code>, <code>removeFirst</code>, and <code>removeLast</code>.</li>
-      <li><strong>Wrap-Around Diagram:</strong> Draw a circular array deque after enough operations to make the front index wrap backward.</li>
-      <li><strong>Stack or Queue:</strong> Given several algorithms, decide whether a stack, queue, or deque interface best describes the needed behavior.</li>
-      <li><strong>Sentinel Links:</strong> Draw the reference changes for <code>addFirst</code> and <code>removeLast</code> in a sentinel-based doubly linked deque.</li>
-      <li><strong>Bug Hunt:</strong> Find the off-by-one error in a circular deque implementation that computes the back index incorrectly.</li>
+      <li>
+        <strong>Operation Trace by Hand:</strong>
+        Start with the empty deque and trace the following operations:
+        <span class="operation-sequence">
+          <code>addBack(8)</code>, <code>addFront(3)</code>, <code>addBack(10)</code>,
+          <code>removeFront()</code>, <code>addFront(6)</code>, <code>peekBack()</code>,
+          <code>removeBack()</code>, <code>peekFront()</code>.
+        </span>
+        After each operation, write the current deque and any return value.
+      </li>
+      <li>
+        <strong>Doubly Linked Pointer Updates:</strong>
+        Draw a doubly linked deque storing <code>[4, 11, 6]</code>. Then perform
+        <code>addFront(9)</code>, <code>addBack(2)</code>, <code>removeFront()</code>, and
+        <code>removeBack()</code>. After each operation, draw the nodes and show where
+        <code>front</code> and <code>back</code> point.
+      </li>
+      <li>
+        <strong>Circular Array Wraparound:</strong>
+        Use an array of capacity <code>6</code> with <code>front = 4</code> and logical deque
+        <code>[12, 5, 8]</code>. Show the physical array. Then trace
+        <code>addBack(3)</code>, <code>addFront(7)</code>, <code>removeBack()</code>, and
+        <code>addFront(9)</code>.
+      </li>
+      <li>
+        <strong>Boundary Case Exploration:</strong>
+        For each implementation, explain what changes when <code>addFront(value)</code> is called on
+        an empty deque, and what changes when <code>removeBack()</code> is called on a one-item deque.
+      </li>
+      <li>
+        <strong>Cost Table Reconstruction:</strong>
+        Without looking at the cost-summary table, reconstruct the running times for all core operations
+        for a doubly linked list and for a fixed circular array. Then compare with the table.
+      </li>
+      <li>
+        <strong>Choose the Representation:</strong>
+        For each workload, decide whether a doubly linked list, fixed circular array, dynamic circular
+        array, or block-based deque is most appropriate.
+        <ol type="a">
+          <li>A bounded history stores at most 20 recent events.</li>
+          <li>A task scheduler grows and shrinks unpredictably.</li>
+          <li>A library container must support growth at both ends without copying one large array too often.</li>
+          <li>An embedded program needs predictable storage and no dynamic allocation.</li>
+        </ol>
+      </li>
+      <li>
+        <strong>Find the Bug:</strong>
+        Explain what is wrong with the circular-array update <code>front = (front - 1) % capacity</code>
+        in languages where the remainder of a negative number can be negative. Fix the expression.
+      </li>
+      <li>
+        <strong>Stack and Queue Restrictions:</strong>
+        Using only deque operations, write the allowed operations for a stack and for a queue. Explain
+        which deque operations should not be used in each restricted version.
+      </li>
     </ol>
   </section>
 
   <section id="problems" section-title="Homework Problems">
     <h2>Homework Problems</h2>
     <ol>
-      <li><strong>Circular Array Deque:</strong> Implement a bounded circular array deque and test wrap-around in both directions.</li>
-      <li><strong>Resizable Deque:</strong> Extend the circular array deque so it doubles when full and preserves logical order after copying.</li>
-      <li><strong>Doubly Linked Deque:</strong> Implement a deque using sentinel nodes and analyze each operation.</li>
-      <li><strong>Palindrome:</strong> Use a deque to test whether a string is a palindrome after ignoring spaces and capitalization.</li>
-      <li><strong>Sliding Window:</strong> Use a monotonic deque to compute the maximum value in every window of size \(k\) in an array.</li>
-      <li><strong>Deque Adapter:</strong> Build stack and queue adapters on top of a deque and list exactly which deque methods each adapter uses.</li>
+      <li>
+        <strong>Trace Two Representations:</strong>
+        Start with the logical deque <code>[6, 2, 9, 4]</code>. Apply the operations below in order,
+        showing the logical deque after each operation. Also show the changes in a doubly linked
+        representation and a circular array representation of capacity <code>7</code> with initial
+        <code>front = 2</code>.
+        <span class="operation-sequence">
+          <code>addFront(8)</code>, <code>removeBack()</code>, <code>addBack(5)</code>,
+          <code>removeFront()</code>, <code>addFront(3)</code>, <code>peekBack()</code>.
+        </span>
+      </li>
+
+      <li>
+        <strong>Boundary Case Test Suite:</strong>
+        Complete the table below to create a boundary-case test suite for a deque implementation.
+        For each unfinished row, fill in the expected return value, the expected deque afterward, and
+        one common implementation bug that the test might catch.
+        <p>
+          Use the convention that invalid value-returning operations return <code>-1</code> and failed
+          Boolean operations return <code>false</code>. Failed operations leave the deque unchanged.
+        </p>
+        <table class="example-table left-top-align">
+          <thead>
+            <tr>
+              <th>Case</th>
+              <th>Starting Deque</th>
+              <th>Operation</th>
+              <th>Expected Result and Bug Caught</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Empty access</td>
+              <td><code>[]</code></td>
+              <td><code>peekFront()</code></td>
+              <td>Returns <code>-1</code>; deque remains <code>[]</code>. Catches implementations that read from an empty structure.</td>
+            </tr>
+            <tr><td>Empty removal</td><td><code>[]</code></td><td><code>removeBack()</code></td><td></td></tr>
+            <tr>
+              <td>Remove only value</td>
+              <td><code>[8]</code></td>
+              <td><code>removeFront()</code></td>
+              <td>Returns <code>8</code>; deque becomes <code>[]</code>. Catches linked implementations that forget to clear both end references.</td>
+            </tr>
+            <tr><td>Add front to empty</td><td><code>[]</code></td><td><code>addFront(5)</code></td><td></td></tr>
+            <tr><td>Add back to empty</td><td><code>[]</code></td><td><code>addBack(5)</code></td><td></td></tr>
+            <tr><td>Remove back from two values</td><td><code>[3, 8]</code></td><td><code>removeBack()</code></td><td></td></tr>
+            <tr><td>Remove front from two values</td><td><code>[3, 8]</code></td><td><code>removeFront()</code></td><td></td></tr>
+            <tr><td>Full fixed array</td><td><code>[1, 2, 3]</code> with capacity <code>3</code></td><td><code>addBack(4)</code></td><td></td></tr>
+            <tr><td>Wrap left</td><td><code>[2, 3]</code> with <code>front = 0</code></td><td><code>addFront(1)</code></td><td></td></tr>
+            <tr><td>Wrap right</td><td><code>[2, 3]</code> ending at the final array cell</td><td><code>addBack(4)</code></td><td></td></tr>
+          </tbody>
+        </table>
+      </li>
+
+      <li>
+        <strong>Circular Index Formulas:</strong>
+        Suppose a circular array deque has capacity <code>c</code>, front index <code>f</code>, and
+        size <code>n</code>.
+        <ol type="a">
+          <li>Give a formula for the array index of logical deque position <code>i</code>.</li>
+          <li>Give a formula for the back index.</li>
+          <li>Give a formula for the next slot used by <code>addBack(value)</code>.</li>
+          <li>Give a safe formula for the new front index used by <code>addFront(value)</code>.</li>
+        </ol>
+      </li>
+
+      <li>
+        <strong>Find and Explain the Bug:</strong>
+        A student writes the following pseudocode for <code>removeBack()</code> in a doubly linked deque.
+        Explain what boundary case is handled incorrectly, give a specific example where the deque becomes
+        inconsistent, and rewrite the pseudocode correctly.
+<pre><code>removeBack():
+    if isEmpty():
+        return -1
+    value = back.value
+    back = back.prev
+    size = size - 1
+    back.next = null
+    return value</code></pre>
+      </li>
+
+      <li>
+        <strong>Palindrome Checker:</strong>
+        A string is a palindrome if it reads the same forward and backward, ignoring spaces and case.
+        <ol type="a">
+          <li>Describe how to put the relevant characters into a deque.</li>
+          <li>Write pseudocode that repeatedly compares <code>removeFront()</code> and <code>removeBack()</code>.</li>
+          <li>Trace your algorithm on <code>racecar</code> and on <code>algorithm</code>.</li>
+          <li>Analyze the running time and extra space.</li>
+        </ol>
+      </li>
+
+      <li>
+        <strong>Bounded Recent History:</strong>
+        A program stores at most <code>k</code> recent actions in a deque. When a new action arrives,
+        it is added at the back. If the deque already stores <code>k</code> actions, the oldest action
+        should be removed from the front first.
+        <ol type="a">
+          <li>Write pseudocode for <code>record(action)</code>.</li>
+          <li>Trace your algorithm for <code>k = 3</code> and actions <code>A, B, C, D, E</code>.</li>
+          <li>Which implementation is a natural fit for this fixed-capacity problem?</li>
+          <li>Analyze the running time of each call to <code>record(action)</code>.</li>
+        </ol>
+      </li>
+
+      <li>
+        <strong>0-1 BFS Motivation:</strong>
+        In a graph where every edge has weight <code>0</code> or <code>1</code>, one shortest-path
+        algorithm uses a deque. When a distance improves through a weight <code>0</code> edge, the
+        vertex is added to the front. When a distance improves through a weight <code>1</code> edge, the
+        vertex is added to the back.
+        <ol type="a">
+          <li>Explain why this algorithm needs both <code>addFront</code> and <code>addBack</code>.</li>
+          <li>Explain why an ordinary queue would not express the same priority between weight <code>0</code> and weight <code>1</code> edges.</li>
+          <li>For a small graph with vertices <code>A, B, C, D</code> and edges <code>A-B</code> weight <code>0</code>, <code>A-C</code> weight <code>1</code>, <code>B-D</code> weight <code>1</code>, and <code>C-D</code> weight <code>0</code>, trace the deque operations starting at <code>A</code>.</li>
+        </ol>
+      </li>
+
+      <li>
+        <strong>Design Choice Case Study:</strong>
+        For each application below, choose one representation: doubly linked list, fixed circular array,
+        dynamic circular array, or block-based deque. Justify each choice using operation costs and memory
+        considerations.
+        <ol type="a">
+          <li>A microcontroller stores the last 32 sensor readings.</li>
+          <li>A programming language standard library wants a general-purpose deque.</li>
+          <li>A graph algorithm maintains a deque whose size can grow to the number of vertices.</li>
+          <li>A real-time system wants worst-case constant-time operations and no resizing pauses.</li>
+          <li>A text-processing program frequently adds and removes characters from both ends of a large buffer.</li>
+        </ol>
+      </li>
     </ol>
   </section>
 </body>
