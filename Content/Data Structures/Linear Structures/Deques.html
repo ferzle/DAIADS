@@ -1305,102 +1305,2114 @@ removeBack():
   </ul>
 </section>
 
-  <section id="reading-questions" section-title="Reading Comprehension Questions">
-    <h2>Reading Comprehension Questions</h2>
-    <ol>
-      <li><strong>Deque Meaning:</strong> What does it mean for a deque to be double-ended?</li>
-      <li><strong>Deque vs. List:</strong> Why are indexed operations not part of the core deque interface on this page?</li>
-      <li><strong>Stack Behavior:</strong> How can a deque be used as a stack?</li>
-      <li><strong>Queue Behavior:</strong> How can a deque be used as a queue?</li>
-      <li><strong>Peek vs. Remove:</strong> What is the difference between <code>peekFront()</code> and <code>removeFront()</code>?</li>
-      <li><strong>Doubly Linked Fields:</strong> What references are stored by the deque object in a doubly linked implementation?</li>
-      <li><strong>Why Doubly Linked:</strong> Why is a singly linked list with tail not enough for efficient deque operations?</li>
-      <li><strong>Circular Indexing:</strong> In a circular array deque, why is modular arithmetic needed?</li>
-      <li><strong>Back Index:</strong> If the capacity is <code>c</code>, what formula gives the back index when the deque is nonempty?</li>
-      <li><strong>Dynamic Resizing:</strong> Why are additions in a dynamic circular array described as amortized \(O(1)\)?</li>
-      <li><strong>Implementation Choice:</strong> Name one reason to prefer a circular array and one reason to prefer a doubly linked list.</li>
-      <li><strong>Boundary Cases:</strong> What must happen when the only value in a deque is removed?</li>
-    </ol>
-
-    <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
-    <div id="answers" class="answer" hidden>
-      <ol>
-        <li>A deque is double-ended because it allows insertion, removal, and inspection at both the front and the back.</li>
-        <li>Indexed operations are not part of the core deque interface because a deque focuses on efficient end operations, not arbitrary positions.</li>
-        <li>Use only one end: for example, call <code>addBack(value)</code> to push and <code>removeBack()</code> to pop.</li>
-        <li>Use opposite ends: for example, call <code>addBack(value)</code> to enqueue and <code>removeFront()</code> to dequeue.</li>
-        <li><code>peekFront()</code> returns the front value without changing the deque. <code>removeFront()</code> returns the front value and removes it.</li>
-        <li>The deque object stores <code>front</code>, <code>back</code>, and <code>size</code>.</li>
-        <li>A singly linked list with tail cannot remove from the back in constant time because it cannot move backward from the tail to the previous node.</li>
-        <li>Modular arithmetic lets array indices wrap around from the end of the physical array back to the beginning.</li>
-        <li>The back index is <code>(front + size - 1) % c</code>.</li>
-        <li>A single resize takes \(O(n)\), but if the array grows geometrically, the total resizing cost spread over many additions gives amortized \(O(1)\) time per addition.</li>
-        <li>A circular array has compact storage and good locality. A doubly linked list grows one node at a time and gives worst-case constant-time end operations without resizing.</li>
-        <li>Both end references must become empty: in a linked implementation, <code>front</code> and <code>back</code> become <code>null</code>; in an array implementation, <code>size</code> becomes <code>0</code>.</li>
-      </ol>
-    </div>
-  </section>
-
-  <section id="activities" section-title="In-Class Activities">
-    <h2>In-Class Activities</h2>
-    <ol>
-      <li>
-        <strong>Operation Trace by Hand:</strong>
-        Start with the empty deque and trace the following operations:
+<section id="reading-questions" section-title="Reading Comprehension Questions">
+  <h2>Reading Comprehension Questions</h2>
+  <ol>
+    <li><strong>Deque Meaning:</strong> What operations make a deque "double-ended"?</li>
+    <li><strong>Deque vs. List:</strong> How is the deque abstraction narrower than the list abstraction?</li>
+    <li><strong>Stack and Queue Behavior:</strong> How can a deque be restricted to behave like a stack? How can it be restricted to behave like a queue?</li>
+    <li><strong>Peek vs. Remove:</strong> What is the difference between <code>peekFront()</code> and <code>removeFront()</code>?</li>
+    <li><strong>Operation Trace:</strong> Starting with an empty deque, what is in the deque after each of the following operations
+      performed in order?
         <span class="operation-sequence">
-          <code>addBack(8)</code>, <code>addFront(3)</code>, <code>addBack(10)</code>,
-          <code>removeFront()</code>, <code>addFront(6)</code>, <code>peekBack()</code>,
-          <code>removeBack()</code>, <code>peekFront()</code>.
+          <code>addBack(6)</code>, <code>addFront(2)</code>, <code>addBack(9)</code>,
+          <code>removeFront()</code>, <code>addFront(4)</code>, <code>removeBack()</code>
         </span>
-        After each operation, write the current deque and any return value.
+        Also give the return values of the remove operations.
+      </li>
+    <li><strong>Doubly Linked Representation:</strong> What information is stored in the deque object, and what information is stored in each node?</li>
+    <li><strong>Why Doubly Linked:</strong> Why is a singly linked list with a tail pointer not enough for an efficient full deque implementation?</li>
+    <li><strong>Circular Array Invariant:</strong> In a circular array deque, what does it mean to say that the values occupy <code>size</code> positions in circular order starting at <code>front</code>?</li>
+    <li><strong>Index Formulas:</strong> If a circular array deque has capacity <code>c</code>, front index <code>front</code>, and size <code>size</code>, what formulas give the back index and the first unused slot after the back?</li>
+    <li><strong>Implementation Tradeoff:</strong> Give one advantage and one disadvantage of a doubly linked deque compared with a circular array deque.</li>
+    <li><strong>Boundary Cases:</strong> Name two boundary cases that a deque implementation must handle carefully.</li>
+  </ol>
+
+  <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
+  <div id="answers" class="answer" hidden>
+    <ol>
+      <li>
+        A deque is double-ended because it allows insertion, removal, and inspection at both the
+        front and the back.
       </li>
       <li>
-        <strong>Doubly Linked Pointer Updates:</strong>
-        Draw a doubly linked deque storing <code>[4, 11, 6]</code>. Then perform
-        <code>addFront(9)</code>, <code>addBack(2)</code>, <code>removeFront()</code>, and
-        <code>removeBack()</code>. After each operation, draw the nodes and show where
-        <code>front</code> and <code>back</code> point.
+        A list may allow access, insertion, and removal at arbitrary positions. A deque keeps the
+        ordered-sequence idea but restricts the main operations to the two ends.
       </li>
       <li>
-        <strong>Circular Array Wraparound:</strong>
-        Use an array of capacity <code>6</code> with <code>front = 4</code> and logical deque
-        <code>[12, 5, 8]</code>. Show the physical array. Then trace
-        <code>addBack(3)</code>, <code>addFront(7)</code>, <code>removeBack()</code>, and
-        <code>addFront(9)</code>.
+        To use a deque as a stack, use one end only; for example, <code>addBack(value)</code> to push
+        and <code>removeBack()</code> to pop. To use a deque as a queue, add at one end and remove
+        from the other; for example, <code>addBack(value)</code> to enqueue and
+        <code>removeFront()</code> to dequeue.
       </li>
       <li>
-        <strong>Boundary Case Exploration:</strong>
-        For each implementation, explain what changes when <code>addFront(value)</code> is called on
-        an empty deque, and what changes when <code>removeBack()</code> is called on a one-item deque.
+        <code>peekFront()</code> returns the front value without changing the deque.
+        <code>removeFront()</code> returns the front value and removes it from the deque.
       </li>
       <li>
-        <strong>Cost Table Reconstruction:</strong>
-        Without looking at the cost-summary table, reconstruct the running times for all core operations
-        for a doubly linked list and for a fixed circular array. Then compare with the table.
+        The deque changes as follows:
+        <code>[]</code>,
+        <code>[6]</code>,
+        <code>[2, 6]</code>,
+        <code>[2, 6, 9]</code>,
+        <code>[6, 9]</code> with return value <code>2</code>,
+        <code>[4, 6, 9]</code>,
+        <code>[4, 6]</code> with return value <code>9</code>.
+        The final deque is <code>[4, 6]</code>.
       </li>
       <li>
-        <strong>Choose the Representation:</strong>
-        For each workload, decide whether a doubly linked list, fixed circular array, dynamic circular
-        array, or block-based deque is most appropriate.
-        <ol type="a">
-          <li>A bounded history stores at most 20 recent events.</li>
-          <li>A task scheduler grows and shrinks unpredictably.</li>
-          <li>A library container must support growth at both ends without copying one large array too often.</li>
-          <li>An embedded program needs predictable storage and no dynamic allocation.</li>
-        </ol>
+        The deque object stores <code>front</code>, <code>back</code>, and <code>size</code>. Each node
+        stores a value, a <code>next</code> reference, and a <code>prev</code> reference.
       </li>
       <li>
-        <strong>Find the Bug:</strong>
-        Explain what is wrong with the circular-array update <code>front = (front - 1) % capacity</code>
-        in languages where the remainder of a negative number can be negative. Fix the expression.
+        A singly linked list with a tail pointer can find the back node, but it cannot move backward
+        from the tail to the previous node. Therefore, <code>removeBack()</code> requires a traversal
+        from the front and takes \(O(n)\) time.
       </li>
       <li>
-        <strong>Stack and Queue Restrictions:</strong>
-        Using only deque operations, write the allowed operations for a stack and for a queue. Explain
-        which deque operations should not be used in each restricted version.
+        Starting at <code>front</code>, the logical deque values are found by moving right through the
+        array for <code>size</code> cells, wrapping back to index <code>0</code> after the last physical
+        array cell when needed. Other array cells are unused capacity.
+      </li>
+      <li>
+        The back index is <code>(front + size - 1) % c</code>, assuming the deque is not empty. The
+        first unused slot after the back is <code>(front + size) % c</code>, assuming the array is not
+        full.
+      </li>
+      <li>
+        A doubly linked deque grows one node at a time and gives worst-case \(O(1)\) operations at both
+        ends without resizing. Its disadvantages include extra references per node and less locality
+        than an array-based representation. A circular array is more compact and cache-friendly, but it
+        requires capacity management and careful wraparound arithmetic.
+      </li>
+      <li>
+        Examples include adding to an empty deque, removing the only value from a deque, adding to a
+        full fixed-size circular array, computing the back index correctly, wrapping before index
+        <code>0</code>, and clearing the correct removed slot.
       </li>
     </ol>
-  </section>
+  </div>
+</section>
+
+<section id="activities" section-title="In-Class Activities">
+  <h2>In-Class Activities</h2>
+  <ol>
+    <li>
+      <strong>Operation Trace by Hand:</strong>
+      Start with the empty deque and trace the following operations:
+      <span class="operation-sequence">
+        <code>addBack(8)</code>, <code>addFront(3)</code>, <code>addBack(10)</code>,
+        <code>removeFront()</code>, <code>addFront(6)</code>, <code>peekBack()</code>,
+        <code>removeBack()</code>, <code>peekFront()</code>.
+      </span>
+      After each operation, write the current deque and any return value.
+    </li>
+
+    <li>
+      <strong>Doubly Linked Pointer Updates:</strong>
+      Draw a doubly linked deque storing <code>[4, 11, 6]</code>. Then perform
+      <code>addFront(9)</code>, <code>addBack(2)</code>, <code>removeFront()</code>, and
+      <code>removeBack()</code>. After each operation, draw the nodes, show where
+      <code>front</code> and <code>back</code> point, and mark any references that must be changed.
+    </li>
+
+    <li>
+      <strong>Circular Array Wraparound:</strong>
+      Use an array of capacity <code>6</code> with <code>front = 4</code> and logical deque
+      <code>[12, 5, 8]</code>. Show the physical array. Then trace
+      <code>addBack(3)</code>, <code>addFront(7)</code>, <code>removeBack()</code>, and
+      <code>addFront(9)</code>. For each step, record <code>front</code>, <code>size</code>,
+      and the physical array contents.
+    </li>
+
+    <li>
+      <strong>Boundary Case Clinic:</strong>
+      Work in pairs to study the two state transitions that most often cause deque bugs:
+      going from empty to one value, and going from one value back to empty. One person traces
+      <code>addFront(value)</code> on an empty deque and the other traces <code>removeBack()</code>
+      on a one-item deque. Do this once for a doubly linked implementation and once for a circular
+      array implementation. Then discuss which variables or references must be updated in each case.
+    </li>
+
+    <li>
+      <strong>Back Index Check:</strong>
+      For each circular array state below, compute the back index and the first unused slot after
+      the back.
+      <ol type="a">
+        <li><code>capacity = 8</code>, <code>front = 2</code>, <code>size = 4</code></li>
+        <li><code>capacity = 8</code>, <code>front = 6</code>, <code>size = 3</code></li>
+        <li><code>capacity = 5</code>, <code>front = 0</code>, <code>size = 1</code></li>
+        <li><code>capacity = 5</code>, <code>front = 4</code>, <code>size = 5</code></li>
+      </ol>
+      Discuss which formulas are safe only when the deque is nonempty or the array is not full.
+    </li>
+
+    <li>
+      <strong>Cost Table Reconstruction:</strong>
+      Without looking at the cost-summary table, reconstruct the running times for all core operations
+      for a doubly linked list and for a fixed circular array. For each \(O(1)\) operation, write one
+      sentence explaining why it does not require traversal or shifting.
+    </li>
+
+    <li>
+      <strong>Choose the Representation:</strong>
+      For each workload, decide whether a doubly linked list, fixed circular array, dynamic circular
+      array, or block-based deque is most appropriate. Give one reason for each choice.
+      <ol type="a">
+        <li>A bounded history stores at most 20 recent events.</li>
+        <li>A task scheduler grows and shrinks unpredictably.</li>
+        <li>A library container must support growth at both ends without copying one large array too often.</li>
+        <li>An embedded program needs predictable storage and no dynamic allocation.</li>
+      </ol>
+    </li>
+
+ <li>
+  <strong>Find the Bug:</strong>
+  For each flawed update below, explain the bug and correct it.
+  <ol type="a">
+    <li>
+      In <code>addFront(value)</code> for a circular array deque, a student writes
+      <code>front = (front - 1) % capacity</code> to move the front one step left.
+    </li>
+    <li>
+      In a circular array deque, a student writes
+      <code>backIndex = (front + size) % capacity</code> to find the current back value.
+    </li>
+    <li>
+      In <code>addBack(value)</code> for a circular array deque, a student stores the value at
+      <code>A[(front + size - 1) % capacity]</code>.
+    </li>
+    <li>
+      In <code>removeFront()</code> for a circular array deque, a student moves
+      <code>front</code> forward but forgets to decrement <code>size</code>.
+    </li>
+    <li>
+      In <code>removeBack()</code> for a circular array deque, a student decrements
+      <code>size</code> first and then clears <code>A[backIndex()]</code>.
+    </li>
+    <li>
+      In a circular array deque, a student checks whether the deque is empty by testing
+      <code>front == backIndex()</code>.
+    </li>
+    <li>
+      In <code>addFront(value)</code> for a doubly linked deque that is initially empty, a student
+      updates <code>front</code> but not <code>back</code>.
+    </li>
+    <li>
+      In <code>removeBack()</code> for a doubly linked deque with one node, a student sets only
+      <code>front</code> to <code>null</code>.
+    </li>
+  </ol>
+</li>
+
+ <li>
+  <strong>Stack and Queue Behavior:</strong>
+  A deque can imitate a stack or a queue if we restrict which operations are used. For each pair
+  of operations below, decide whether it gives stack behavior, queue behavior, or neither. Briefly
+  explain your answer.
+  <ol type="a">
+    <li>
+      Add with <code>addBack(value)</code> and remove with <code>removeBack()</code>.
+    </li>
+    <li>
+      Add with <code>addBack(value)</code> and remove with <code>removeFront()</code>.
+    </li>
+    <li>
+      Add with <code>addFront(value)</code> and remove with <code>removeBack()</code>.
+    </li>
+    <li>
+      Add with <code>addFront(value)</code> and remove with <code>removeFront()</code>.
+    </li>
+  </ol>
+</li>
+<li>
+  <strong>Implement a Fixed-Size Circular Array Deque:</strong>
+  Implement a deque of nonnegative integers using a primitive fixed-size circular array.
+  Complete the starter code below and run the tests.
+  <p>
+    Your implementation should satisfy the following requirements:
+  </p>
+  <ul>
+    <li>The deque should store values in circular order starting at <code>front</code>.</li>
+    <li>The number of logical values is stored in <code>count</code>.</li>
+    <li>Unused cells are capacity, not part of the logical deque.</li>
+    <li><code>isEmpty()</code> should report whether the deque has no values.</li>
+    <li><code>size()</code> should return <code>count</code> in \(O(1)\) time.</li>
+    <li><code>peekFront()</code>, <code>peekBack()</code>, <code>removeFront()</code>, and <code>removeBack()</code> should return <code>-1</code> if the operation is invalid.</li>
+    <li><code>addFront(value)</code> and <code>addBack(value)</code> should return <code>false</code> if the array is full.</li>
+    <li>Failed operations should leave the deque unchanged.</li>
+    <li><code>addFront(value)</code> should move <code>front</code> one position left in circular order before storing the value.</li>
+    <li><code>addBack(value)</code> should store the value in the first unused slot after the current back.</li>
+    <li><code>removeFront()</code> should remove and return the value at <code>front</code>, then move <code>front</code> one position right in circular order.</li>
+    <li><code>removeBack()</code> should remove and return the current back value.</li>
+    <li>The back index should be computed as <code>(front + count - 1) % capacity</code> when the deque is nonempty.</li>
+    <li><code>clear()</code> should make the deque empty.</li>
+  </ul>
+
+  <div class="tab-group scrollable-code-tabs">
+    <div class="tabs" role="tablist">
+      <button id="tab-java-fixed-array-deque-activity" class="tablink active" data-lang="java-fixed-array-deque-activity" role="tab" aria-controls="java-fixed-array-deque-activity" aria-selected="true">Java</button>
+      <button id="tab-cpp-fixed-array-deque-activity" class="tablink" data-lang="cpp-fixed-array-deque-activity" role="tab" aria-controls="cpp-fixed-array-deque-activity" aria-selected="false">C++</button>
+      <button id="tab-python-fixed-array-deque-activity" class="tablink" data-lang="python-fixed-array-deque-activity" role="tab" aria-controls="python-fixed-array-deque-activity" aria-selected="false">Python</button>
+    </div>
+
+<div id="java-fixed-array-deque-activity" class="code-container active copyable-code" role="tabpanel" aria-labelledby="tab-java-fixed-array-deque-activity">
+  <pre><code class="language-java">public class FixedArrayDequeExercise {
+static class IntDeque {
+    private int[] A;
+    private int front;
+    private int count;
+
+    public IntDeque(int capacity) {
+        A = new int[capacity];
+        front = 0;
+        count = 0;
+    }
+
+    public boolean isEmpty() {
+        // TODO
+        return false;
+    }
+
+    public boolean isFull() {
+        // TODO
+        return false;
+    }
+
+    public int size() {
+        // TODO
+        return -1;
+    }
+
+    public void clear() {
+        // TODO
+    }
+
+    private int backIndex() {
+        // TODO
+        return -1;
+    }
+
+    public int peekFront() {
+        // TODO
+        return -1;
+    }
+
+    public int peekBack() {
+        // TODO
+        return -1;
+    }
+
+    public boolean addFront(int value) {
+        // TODO
+        return false;
+    }
+
+    public boolean addBack(int value) {
+        // TODO
+        return false;
+    }
+
+    public int removeFront() {
+        // TODO
+        return -1;
+    }
+
+    public int removeBack() {
+        // TODO
+        return -1;
+    }
+}
+
+static void check(int actual, int expected) {
+    if (actual == expected) {
+        System.out.println("pass");
+    } else {
+        System.out.println("fail: expected " + expected + " but got " + actual);
+    }
+}
+
+static void check(boolean actual, boolean expected) {
+    if (actual == expected) {
+        System.out.println("pass");
+    } else {
+        System.out.println("fail: expected " + expected + " but got " + actual);
+    }
+}
+
+static void testDeque() {
+    IntDeque deque = new IntDeque(5);
+
+    check(deque.isEmpty(), true);
+    check(deque.isFull(), false);
+    check(deque.size(), 0);
+    check(deque.peekFront(), -1);
+    check(deque.peekBack(), -1);
+    check(deque.removeFront(), -1);
+    check(deque.removeBack(), -1);
+
+    check(deque.addBack(4), true);       // [4]
+    check(deque.peekFront(), 4);
+    check(deque.peekBack(), 4);
+    check(deque.size(), 1);
+
+    check(deque.addBack(7), true);       // [4, 7]
+    check(deque.addFront(2), true);      // [2, 4, 7]
+    check(deque.addBack(9), true);       // [2, 4, 7, 9]
+
+    check(deque.size(), 4);
+    check(deque.isEmpty(), false);
+    check(deque.peekFront(), 2);
+    check(deque.peekBack(), 9);
+
+    check(deque.removeFront(), 2);       // [4, 7, 9]
+    check(deque.peekFront(), 4);
+    check(deque.removeBack(), 9);        // [4, 7]
+    check(deque.peekBack(), 7);
+    check(deque.size(), 2);
+
+    check(deque.addFront(1), true);      // [1, 4, 7]
+    check(deque.addFront(0), true);      // [0, 1, 4, 7]
+    check(deque.addBack(11), true);      // [0, 1, 4, 7, 11]
+    check(deque.isFull(), true);
+    check(deque.size(), 5);
+    check(deque.peekFront(), 0);
+    check(deque.peekBack(), 11);
+
+    check(deque.addBack(13), false);     // full
+    check(deque.addFront(13), false);    // full
+    check(deque.size(), 5);
+    check(deque.peekFront(), 0);
+    check(deque.peekBack(), 11);
+
+    check(deque.removeFront(), 0);       // [1, 4, 7, 11]
+    check(deque.removeFront(), 1);       // [4, 7, 11]
+    check(deque.addBack(13), true);      // [4, 7, 11, 13]
+    check(deque.addBack(15), true);      // [4, 7, 11, 13, 15]
+    check(deque.isFull(), true);
+    check(deque.peekFront(), 4);
+    check(deque.peekBack(), 15);
+
+    check(deque.removeBack(), 15);       // [4, 7, 11, 13]
+    check(deque.removeBack(), 13);       // [4, 7, 11]
+    check(deque.addFront(3), true);      // [3, 4, 7, 11]
+    check(deque.addFront(2), true);      // [2, 3, 4, 7, 11]
+    check(deque.peekFront(), 2);
+    check(deque.peekBack(), 11);
+
+    check(deque.removeFront(), 2);       // [3, 4, 7, 11]
+    check(deque.removeBack(), 11);       // [3, 4, 7]
+    check(deque.removeFront(), 3);       // [4, 7]
+    check(deque.removeBack(), 7);        // [4]
+    check(deque.removeBack(), 4);        // []
+
+    check(deque.isEmpty(), true);
+    check(deque.size(), 0);
+    check(deque.peekFront(), -1);
+    check(deque.peekBack(), -1);
+    check(deque.removeFront(), -1);
+    check(deque.removeBack(), -1);
+
+    check(deque.addFront(6), true);      // [6]
+    check(deque.addBack(8), true);       // [6, 8]
+    deque.clear();                       // []
+    check(deque.isEmpty(), true);
+    check(deque.size(), 0);
+    check(deque.peekFront(), -1);
+}
+
+public static void main(String[] args) {
+    testDeque();
+}
+
+}</code></pre>
+</div>
+
+<div id="cpp-fixed-array-deque-activity" class="code-container copyable-code" role="tabpanel" aria-labelledby="tab-cpp-fixed-array-deque-activity">
+  <pre><code class="language-cpp">#include &lt;iostream&gt;
+
+using namespace std;
+
+class IntDeque {
+private:
+int* A;
+int capacity;
+int front;
+int count;
+
+int backIndex() {
+    // TODO
+    return -1;
+}
+
+public:
+IntDeque(int cap) {
+    capacity = cap;
+    A = new int[capacity];
+    front = 0;
+    count = 0;
+}
+
+~IntDeque() {
+    delete[] A;
+}
+
+bool isEmpty() {
+    // TODO
+    return false;
+}
+
+bool isFull() {
+    // TODO
+    return false;
+}
+
+int size() {
+    // TODO
+    return -1;
+}
+
+void clear() {
+    // TODO
+}
+
+int peekFront() {
+    // TODO
+    return -1;
+}
+
+int peekBack() {
+    // TODO
+    return -1;
+}
+
+bool addFront(int value) {
+    // TODO
+    return false;
+}
+
+bool addBack(int value) {
+    // TODO
+    return false;
+}
+
+int removeFront() {
+    // TODO
+    return -1;
+}
+
+int removeBack() {
+    // TODO
+    return -1;
+}
+
+};
+
+void check(int actual, int expected) {
+    if (actual == expected) {
+        cout << "pass" << endl;
+    } else {
+        cout << "fail: expected " << expected << " but got " << actual << endl;
+    }
+}
+
+void check(bool actual, bool expected) {
+    if (actual == expected) {
+        cout << "pass" << endl;
+    } else {
+        cout << "fail: expected " << expected << " but got " << actual << endl;
+    }
+}
+
+void testDeque() {
+IntDeque deque(5);
+
+check(deque.isEmpty(), true);
+check(deque.isFull(), false);
+check(deque.size(), 0);
+check(deque.peekFront(), -1);
+check(deque.peekBack(), -1);
+check(deque.removeFront(), -1);
+check(deque.removeBack(), -1);
+
+check(deque.addBack(4), true);       // [4]
+check(deque.peekFront(), 4);
+check(deque.peekBack(), 4);
+check(deque.size(), 1);
+
+check(deque.addBack(7), true);       // [4, 7]
+check(deque.addFront(2), true);      // [2, 4, 7]
+check(deque.addBack(9), true);       // [2, 4, 7, 9]
+
+check(deque.size(), 4);
+check(deque.isEmpty(), false);
+check(deque.peekFront(), 2);
+check(deque.peekBack(), 9);
+
+check(deque.removeFront(), 2);       // [4, 7, 9]
+check(deque.peekFront(), 4);
+check(deque.removeBack(), 9);        // [4, 7]
+check(deque.peekBack(), 7);
+check(deque.size(), 2);
+
+check(deque.addFront(1), true);      // [1, 4, 7]
+check(deque.addFront(0), true);      // [0, 1, 4, 7]
+check(deque.addBack(11), true);      // [0, 1, 4, 7, 11]
+check(deque.isFull(), true);
+check(deque.size(), 5);
+check(deque.peekFront(), 0);
+check(deque.peekBack(), 11);
+
+check(deque.addBack(13), false);     // full
+check(deque.addFront(13), false);    // full
+check(deque.size(), 5);
+check(deque.peekFront(), 0);
+check(deque.peekBack(), 11);
+
+check(deque.removeFront(), 0);       // [1, 4, 7, 11]
+check(deque.removeFront(), 1);       // [4, 7, 11]
+check(deque.addBack(13), true);      // [4, 7, 11, 13]
+check(deque.addBack(15), true);      // [4, 7, 11, 13, 15]
+check(deque.isFull(), true);
+check(deque.peekFront(), 4);
+check(deque.peekBack(), 15);
+
+check(deque.removeBack(), 15);       // [4, 7, 11, 13]
+check(deque.removeBack(), 13);       // [4, 7, 11]
+check(deque.addFront(3), true);      // [3, 4, 7, 11]
+check(deque.addFront(2), true);      // [2, 3, 4, 7, 11]
+check(deque.peekFront(), 2);
+check(deque.peekBack(), 11);
+
+check(deque.removeFront(), 2);       // [3, 4, 7, 11]
+check(deque.removeBack(), 11);       // [3, 4, 7]
+check(deque.removeFront(), 3);       // [4, 7]
+check(deque.removeBack(), 7);        // [4]
+check(deque.removeBack(), 4);        // []
+
+check(deque.isEmpty(), true);
+check(deque.size(), 0);
+check(deque.peekFront(), -1);
+check(deque.peekBack(), -1);
+check(deque.removeFront(), -1);
+check(deque.removeBack(), -1);
+
+check(deque.addFront(6), true);      // [6]
+check(deque.addBack(8), true);       // [6, 8]
+deque.clear();                       // []
+check(deque.isEmpty(), true);
+check(deque.size(), 0);
+check(deque.peekFront(), -1);
+
+}
+
+int main() {
+  testDeque();
+  return 0;
+}</code></pre>
+</div>
+
+<div id="python-fixed-array-deque-activity" class="code-container copyable-code" role="tabpanel" aria-labelledby="tab-python-fixed-array-deque-activity">
+  <pre><code class="language-python">class IntDeque:
+    def __init__(self, capacity):
+        self.A = [0] * capacity
+        self.front = 0
+        self.count = 0
+
+    def is_empty(self):
+        # TODO
+        return False
+
+    def is_full(self):
+        # TODO
+        return False
+
+    def size(self):
+        # TODO
+        return -1
+
+    def clear(self):
+        # TODO
+        pass
+
+    def back_index(self):
+        # TODO
+        return -1
+
+    def peek_front(self):
+        # TODO
+        return -1
+
+    def peek_back(self):
+        # TODO
+        return -1
+
+    def add_front(self, value):
+        # TODO
+        return False
+
+    def add_back(self, value):
+        # TODO
+        return False
+
+    def remove_front(self):
+        # TODO
+        return -1
+
+    def remove_back(self):
+        # TODO
+        return -1
+
+
+def check(actual, expected):
+    if actual == expected:
+        print("pass")
+    else:
+        print("fail: expected", expected, "but got", actual)
+
+
+def test_deque():
+    deque = IntDeque(5)
+
+    check(deque.is_empty(), True)
+    check(deque.is_full(), False)
+    check(deque.size(), 0)
+    check(deque.peek_front(), -1)
+    check(deque.peek_back(), -1)
+    check(deque.remove_front(), -1)
+    check(deque.remove_back(), -1)
+
+    check(deque.add_back(4), True)       # [4]
+    check(deque.peek_front(), 4)
+    check(deque.peek_back(), 4)
+    check(deque.size(), 1)
+
+    check(deque.add_back(7), True)       # [4, 7]
+    check(deque.add_front(2), True)      # [2, 4, 7]
+    check(deque.add_back(9), True)       # [2, 4, 7, 9]
+
+    check(deque.size(), 4)
+    check(deque.is_empty(), False)
+    check(deque.peek_front(), 2)
+    check(deque.peek_back(), 9)
+
+    check(deque.remove_front(), 2)       # [4, 7, 9]
+    check(deque.peek_front(), 4)
+    check(deque.remove_back(), 9)        # [4, 7]
+    check(deque.peek_back(), 7)
+    check(deque.size(), 2)
+
+    check(deque.add_front(1), True)      # [1, 4, 7]
+    check(deque.add_front(0), True)      # [0, 1, 4, 7]
+    check(deque.add_back(11), True)      # [0, 1, 4, 7, 11]
+    check(deque.is_full(), True)
+    check(deque.size(), 5)
+    check(deque.peek_front(), 0)
+    check(deque.peek_back(), 11)
+
+    check(deque.add_back(13), False)     # full
+    check(deque.add_front(13), False)    # full
+    check(deque.size(), 5)
+    check(deque.peek_front(), 0)
+    check(deque.peek_back(), 11)
+
+    check(deque.remove_front(), 0)       # [1, 4, 7, 11]
+    check(deque.remove_front(), 1)       # [4, 7, 11]
+    check(deque.add_back(13), True)      # [4, 7, 11, 13]
+    check(deque.add_back(15), True)      # [4, 7, 11, 13, 15]
+    check(deque.is_full(), True)
+    check(deque.peek_front(), 4)
+    check(deque.peek_back(), 15)
+
+    check(deque.remove_back(), 15)       # [4, 7, 11, 13]
+    check(deque.remove_back(), 13)       # [4, 7, 11]
+    check(deque.add_front(3), True)      # [3, 4, 7, 11]
+    check(deque.add_front(2), True)      # [2, 3, 4, 7, 11]
+    check(deque.peek_front(), 2)
+    check(deque.peek_back(), 11)
+
+    check(deque.remove_front(), 2)       # [3, 4, 7, 11]
+    check(deque.remove_back(), 11)       # [3, 4, 7]
+    check(deque.remove_front(), 3)       # [4, 7]
+    check(deque.remove_back(), 7)        # [4]
+    check(deque.remove_back(), 4)        # []
+
+    check(deque.is_empty(), True)
+    check(deque.size(), 0)
+    check(deque.peek_front(), -1)
+    check(deque.peek_back(), -1)
+    check(deque.remove_front(), -1)
+    check(deque.remove_back(), -1)
+
+    check(deque.add_front(6), True)      # [6]
+    check(deque.add_back(8), True)       # [6, 8]
+    deque.clear()                        # []
+    check(deque.is_empty(), True)
+    check(deque.size(), 0)
+    check(deque.peek_front(), -1)
+
+
+test_deque()</code></pre>
+</div>
+
+  </div>
+</li>
+<li>
+  <strong>Upgrade to a Dynamic Circular Array Deque:</strong>
+  Start with your fixed-size circular array deque implementation from the in-class activity. Modify it
+  so that the backing array grows automatically instead of reporting overflow when it is full. The
+  capacity passed to the constructor should now be treated as the initial capacity, not as a permanent
+  maximum.
+  <p>
+    Your updated implementation should satisfy the following requirements:
+  </p>
+  <ul>
+    <li>The logical deque operations should have the same behavior as before.</li>
+    <li><code>addFront(value)</code> and <code>addBack(value)</code> should no longer fail just because the current array is full.</li>
+    <li>When the array is full, allocate a new array with twice the capacity.</li>
+    <li>Copy the existing deque values into the new array in logical order, starting at index <code>0</code>.</li>
+    <li>After copying, set <code>front = 0</code> and keep <code>count</code> unchanged.</li>
+    <li>After resizing, finish the original add operation.</li>
+    <li>All values should still appear in the correct logical order after resizing.</li>
+  </ul>
+
+  <p>
+    At minimum, the following methods must change:
+  </p>
+  <ul>
+    <li>
+      <code>addFront(value)</code>: instead of returning <code>false</code> when the array is full,
+      it should resize the array and then add the new value at the front.
+    </li>
+    <li>
+      <code>addBack(value)</code>: instead of returning <code>false</code> when the array is full,
+      it should resize the array and then add the new value at the back.
+    </li>
+    <li>
+      <code>isFull()</code>: this method may still be useful as a helper, but it should no longer
+      represent a permanent failure condition for add operations.
+    </li>
+  </ul>
+
+  <p>
+    You will probably want to add one or more helper methods:
+  </p>
+  <ul>
+    <li>
+      <code>resize()</code>: allocate a larger array, copy the current values into the new array in
+      logical order, replace the old array with the new one, and reset <code>front</code> to
+      <code>0</code>.
+    </li>
+    <li>
+      <code>physicalIndex(i)</code>: return the array index that stores the logical deque position
+      <code>i</code>, namely <code>(front + i) % A.length</code>. This helper can make the copying
+      loop easier to write.
+    </li>
+  </ul>
+
+  <p>
+    Add tests that force resizing in both directions, and that do so when the queue is wrapped around the end of the array. 
+    For example, you could start with a small capacity of <code>2</code>, 
+    add three values to trigger a resize, then remove two values and add two more to trigger another resize 
+    when the front is not at index <code>0</code>. Include sligltly more complex tests as well, 
+    such as adding and removing values in a loop to trigger multiple resizes in both directions and with large datasets.
+  </p>
+</li>
+<li>
+  <strong>Implement a Doubly Linked Deque:</strong>
+  Implement a deque of nonnegative integers using doubly linked nodes. Complete the starter code below and run the tests.
+  <p>
+    Your implementation should satisfy the following requirements:
+  </p>
+  <ul>
+    <li>Each node should store a value, a <code>next</code> reference, and a <code>prev</code> reference.</li>
+    <li>The deque should store <code>front</code>, <code>back</code>, and <code>count</code>.</li>
+    <li>An empty deque should have <code>front == null</code>, <code>back == null</code>, and <code>count == 0</code>.</li>
+    <li><code>isEmpty()</code> should report whether the deque has no values.</li>
+    <li><code>size()</code> should return <code>count</code> in \(O(1)\) time.</li>
+    <li><code>peekFront()</code>, <code>peekBack()</code>, <code>removeFront()</code>, and <code>removeBack()</code> should return <code>-1</code> if the operation is invalid.</li>
+    <li><code>addFront(value)</code> should update <code>front</code>, and should also update <code>back</code> if the deque was empty.</li>
+    <li><code>addBack(value)</code> should update <code>back</code>, and should also update <code>front</code> if the deque was empty.</li>
+    <li><code>removeFront()</code> should update <code>front</code>, and should set <code>back</code> to <code>null</code> if the final node is removed.</li>
+    <li><code>removeBack()</code> should update <code>back</code>, and should set <code>front</code> to <code>null</code> if the final node is removed.</li>
+    <li><code>clear()</code> should make the deque empty.</li>
+  </ul>
+
+  <div class="tab-group scrollable-code-tabs">
+    <div class="tabs" role="tablist">
+      <button id="tab-java-doubly-linked-deque-activity" class="tablink active" data-lang="java-doubly-linked-deque-activity" role="tab" aria-controls="java-doubly-linked-deque-activity" aria-selected="true">Java</button>
+      <button id="tab-cpp-doubly-linked-deque-activity" class="tablink" data-lang="cpp-doubly-linked-deque-activity" role="tab" aria-controls="cpp-doubly-linked-deque-activity" aria-selected="false">C++</button>
+      <button id="tab-python-doubly-linked-deque-activity" class="tablink" data-lang="python-doubly-linked-deque-activity" role="tab" aria-controls="python-doubly-linked-deque-activity" aria-selected="false">Python</button>
+    </div>
+
+<div id="java-doubly-linked-deque-activity" class="code-container active copyable-code" role="tabpanel" aria-labelledby="tab-java-doubly-linked-deque-activity">
+  <pre><code class="language-java">public class DoublyLinkedDequeExercise {
+static class IntDeque {
+    private static class Node {
+        int value;
+        Node next;
+        Node prev;
+
+        Node(int value) {
+            this.value = value;
+            this.next = null;
+            this.prev = null;
+        }
+    }
+
+    private Node front;
+    private Node back;
+    private int count;
+
+    public IntDeque() {
+        front = null;
+        back = null;
+        count = 0;
+    }
+
+    public boolean isEmpty() {
+        // TODO
+        return false;
+    }
+
+    public int size() {
+        // TODO
+        return -1;
+    }
+
+    public void clear() {
+        // TODO
+    }
+
+    public int peekFront() {
+        // TODO
+        return -1;
+    }
+
+    public int peekBack() {
+        // TODO
+        return -1;
+    }
+
+    public boolean addFront(int value) {
+        // TODO
+        return false;
+    }
+
+    public boolean addBack(int value) {
+        // TODO
+        return false;
+    }
+
+    public int removeFront() {
+        // TODO
+        return -1;
+    }
+
+    public int removeBack() {
+        // TODO
+        return -1;
+    }
+}
+
+static void check(int actual, int expected) {
+    if (actual == expected) {
+        System.out.println("pass");
+    } else {
+        System.out.println("fail: expected " + expected + " but got " + actual);
+    }
+}
+
+static void check(boolean actual, boolean expected) {
+    if (actual == expected) {
+        System.out.println("pass");
+    } else {
+        System.out.println("fail: expected " + expected + " but got " + actual);
+    }
+}
+
+static void testDeque() {
+    IntDeque deque = new IntDeque();
+
+    check(deque.isEmpty(), true);
+    check(deque.size(), 0);
+    check(deque.peekFront(), -1);
+    check(deque.peekBack(), -1);
+    check(deque.removeFront(), -1);
+    check(deque.removeBack(), -1);
+
+    check(deque.addBack(4), true);       // [4]
+    check(deque.peekFront(), 4);
+    check(deque.peekBack(), 4);
+    check(deque.size(), 1);
+    check(deque.isEmpty(), false);
+
+    check(deque.addBack(7), true);       // [4, 7]
+    check(deque.addFront(2), true);      // [2, 4, 7]
+    check(deque.addBack(9), true);       // [2, 4, 7, 9]
+
+    check(deque.size(), 4);
+    check(deque.peekFront(), 2);
+    check(deque.peekBack(), 9);
+
+    check(deque.removeFront(), 2);       // [4, 7, 9]
+    check(deque.peekFront(), 4);
+    check(deque.peekBack(), 9);
+    check(deque.size(), 3);
+
+    check(deque.removeBack(), 9);        // [4, 7]
+    check(deque.peekFront(), 4);
+    check(deque.peekBack(), 7);
+    check(deque.size(), 2);
+
+    check(deque.addFront(1), true);      // [1, 4, 7]
+    check(deque.addBack(11), true);      // [1, 4, 7, 11]
+    check(deque.addFront(0), true);      // [0, 1, 4, 7, 11]
+
+    check(deque.size(), 5);
+    check(deque.peekFront(), 0);
+    check(deque.peekBack(), 11);
+
+    check(deque.removeBack(), 11);       // [0, 1, 4, 7]
+    check(deque.removeFront(), 0);       // [1, 4, 7]
+    check(deque.removeBack(), 7);        // [1, 4]
+    check(deque.removeFront(), 1);       // [4]
+
+    check(deque.size(), 1);
+    check(deque.peekFront(), 4);
+    check(deque.peekBack(), 4);
+
+    check(deque.removeBack(), 4);        // []
+    check(deque.isEmpty(), true);
+    check(deque.size(), 0);
+    check(deque.peekFront(), -1);
+    check(deque.peekBack(), -1);
+    check(deque.removeFront(), -1);
+    check(deque.removeBack(), -1);
+
+    check(deque.addFront(6), true);      // [6]
+    check(deque.peekFront(), 6);
+    check(deque.peekBack(), 6);
+
+    check(deque.addBack(8), true);       // [6, 8]
+    check(deque.peekFront(), 6);
+    check(deque.peekBack(), 8);
+
+    deque.clear();                       // []
+    check(deque.isEmpty(), true);
+    check(deque.size(), 0);
+    check(deque.peekFront(), -1);
+    check(deque.peekBack(), -1);
+
+    check(deque.addBack(10), true);      // [10]
+    check(deque.removeFront(), 10);      // []
+    check(deque.isEmpty(), true);
+    check(deque.size(), 0);
+}
+
+public static void main(String[] args) {
+    testDeque();
+}
+}</code></pre>
+</div>
+
+<div id="cpp-doubly-linked-deque-activity" class="code-container copyable-code" role="tabpanel" aria-labelledby="tab-cpp-doubly-linked-deque-activity">
+  <pre><code class="language-cpp">#include &lt;iostream&gt;
+using namespace std;
+
+class IntDeque {
+private:
+struct Node {
+    int value;
+    Node* next;
+    Node* prev;
+
+    Node(int v) {
+        value = v;
+        next = nullptr;
+        prev = nullptr;
+    }
+};
+
+Node* frontNode;
+Node* backNode;
+int count;
+
+public:
+IntDeque() {
+    frontNode = nullptr;
+    backNode = nullptr;
+    count = 0;
+}
+
+~IntDeque() {
+    clear();
+}
+
+bool isEmpty() {
+    // TODO
+    return false;
+}
+
+int size() {
+    // TODO
+    return -1;
+}
+
+void clear() {
+    // TODO
+}
+
+int peekFront() {
+    // TODO
+    return -1;
+}
+
+int peekBack() {
+    // TODO
+    return -1;
+}
+
+bool addFront(int value) {
+    // TODO
+    return false;
+}
+
+bool addBack(int value) {
+    // TODO
+    return false;
+}
+
+int removeFront() {
+    // TODO
+    return -1;
+}
+
+int removeBack() {
+    // TODO
+    return -1;
+}
+
+};
+
+void check(int actual, int expected) {
+    if (actual == expected) {
+        cout << "pass" << endl;
+    } else {
+        cout << "fail: expected " << expected << " but got " << actual << endl;
+    }
+}
+
+void check(bool actual, bool expected) {
+    if (actual == expected) {
+        cout << "pass" << endl;
+    } else {
+        cout << "fail: expected " << expected << " but got " << actual << endl;
+    }
+}
+
+void testDeque() {
+IntDeque deque;
+
+check(deque.isEmpty(), true);
+check(deque.size(), 0);
+check(deque.peekFront(), -1);
+check(deque.peekBack(), -1);
+check(deque.removeFront(), -1);
+check(deque.removeBack(), -1);
+
+check(deque.addBack(4), true);       // [4]
+check(deque.peekFront(), 4);
+check(deque.peekBack(), 4);
+check(deque.size(), 1);
+check(deque.isEmpty(), false);
+
+check(deque.addBack(7), true);       // [4, 7]
+check(deque.addFront(2), true);      // [2, 4, 7]
+check(deque.addBack(9), true);       // [2, 4, 7, 9]
+
+check(deque.size(), 4);
+check(deque.peekFront(), 2);
+check(deque.peekBack(), 9);
+
+check(deque.removeFront(), 2);       // [4, 7, 9]
+check(deque.peekFront(), 4);
+check(deque.peekBack(), 9);
+check(deque.size(), 3);
+
+check(deque.removeBack(), 9);        // [4, 7]
+check(deque.peekFront(), 4);
+check(deque.peekBack(), 7);
+check(deque.size(), 2);
+
+check(deque.addFront(1), true);      // [1, 4, 7]
+check(deque.addBack(11), true);      // [1, 4, 7, 11]
+check(deque.addFront(0), true);      // [0, 1, 4, 7, 11]
+
+check(deque.size(), 5);
+check(deque.peekFront(), 0);
+check(deque.peekBack(), 11);
+
+check(deque.removeBack(), 11);       // [0, 1, 4, 7]
+check(deque.removeFront(), 0);       // [1, 4, 7]
+check(deque.removeBack(), 7);        // [1, 4]
+check(deque.removeFront(), 1);       // [4]
+
+check(deque.size(), 1);
+check(deque.peekFront(), 4);
+check(deque.peekBack(), 4);
+
+check(deque.removeBack(), 4);        // []
+check(deque.isEmpty(), true);
+check(deque.size(), 0);
+check(deque.peekFront(), -1);
+check(deque.peekBack(), -1);
+check(deque.removeFront(), -1);
+check(deque.removeBack(), -1);
+
+check(deque.addFront(6), true);      // [6]
+check(deque.peekFront(), 6);
+check(deque.peekBack(), 6);
+
+check(deque.addBack(8), true);       // [6, 8]
+check(deque.peekFront(), 6);
+check(deque.peekBack(), 8);
+
+deque.clear();                       // []
+check(deque.isEmpty(), true);
+check(deque.size(), 0);
+check(deque.peekFront(), -1);
+check(deque.peekBack(), -1);
+
+check(deque.addBack(10), true);      // [10]
+check(deque.removeFront(), 10);      // []
+check(deque.isEmpty(), true);
+check(deque.size(), 0);
+}
+
+int main() {
+  testDeque();
+  return 0;
+}</code></pre>
+</div>
+
+<div id="python-doubly-linked-deque-activity" class="code-container copyable-code" role="tabpanel" aria-labelledby="tab-python-doubly-linked-deque-activity">
+  <pre><code class="language-python">class Node:
+    def __init__(self, value):
+        self.value = value
+        self.next = None
+        self.prev = None
+
+
+class IntDeque:
+    def __init__(self):
+        self.front = None
+        self.back = None
+        self.count = 0
+
+    def is_empty(self):
+        # TODO
+        return False
+
+    def size(self):
+        # TODO
+        return -1
+
+    def clear(self):
+        # TODO
+        pass
+
+    def peek_front(self):
+        # TODO
+        return -1
+
+    def peek_back(self):
+        # TODO
+        return -1
+
+    def add_front(self, value):
+        # TODO
+        return False
+
+    def add_back(self, value):
+        # TODO
+        return False
+
+    def remove_front(self):
+        # TODO
+        return -1
+
+    def remove_back(self):
+        # TODO
+        return -1
+
+
+def check(actual, expected):
+    if actual == expected:
+        print("pass")
+    else:
+        print("fail: expected", expected, "but got", actual)
+
+
+def test_deque():
+    deque = IntDeque()
+
+    check(deque.is_empty(), True)
+    check(deque.size(), 0)
+    check(deque.peek_front(), -1)
+    check(deque.peek_back(), -1)
+    check(deque.remove_front(), -1)
+    check(deque.remove_back(), -1)
+
+    check(deque.add_back(4), True)       # [4]
+    check(deque.peek_front(), 4)
+    check(deque.peek_back(), 4)
+    check(deque.size(), 1)
+    check(deque.is_empty(), False)
+
+    check(deque.add_back(7), True)       # [4, 7]
+    check(deque.add_front(2), True)      # [2, 4, 7]
+    check(deque.add_back(9), True)       # [2, 4, 7, 9]
+
+    check(deque.size(), 4)
+    check(deque.peek_front(), 2)
+    check(deque.peek_back(), 9)
+
+    check(deque.remove_front(), 2)       # [4, 7, 9]
+    check(deque.peek_front(), 4)
+    check(deque.peek_back(), 9)
+    check(deque.size(), 3)
+
+    check(deque.remove_back(), 9)        # [4, 7]
+    check(deque.peek_front(), 4)
+    check(deque.peek_back(), 7)
+    check(deque.size(), 2)
+
+    check(deque.add_front(1), True)      # [1, 4, 7]
+    check(deque.add_back(11), True)      # [1, 4, 7, 11]
+    check(deque.add_front(0), True)      # [0, 1, 4, 7, 11]
+
+    check(deque.size(), 5)
+    check(deque.peek_front(), 0)
+    check(deque.peek_back(), 11)
+
+    check(deque.remove_back(), 11)       # [0, 1, 4, 7]
+    check(deque.remove_front(), 0)       # [1, 4, 7]
+    check(deque.remove_back(), 7)        # [1, 4]
+    check(deque.remove_front(), 1)       # [4]
+
+    check(deque.size(), 1)
+    check(deque.peek_front(), 4)
+    check(deque.peek_back(), 4)
+
+    check(deque.remove_back(), 4)        # []
+    check(deque.is_empty(), True)
+    check(deque.size(), 0)
+    check(deque.peek_front(), -1)
+    check(deque.peek_back(), -1)
+    check(deque.remove_front(), -1)
+    check(deque.remove_back(), -1)
+
+    check(deque.add_front(6), True)      # [6]
+    check(deque.peek_front(), 6)
+    check(deque.peek_back(), 6)
+
+    check(deque.add_back(8), True)       # [6, 8]
+    check(deque.peek_front(), 6)
+    check(deque.peek_back(), 8)
+
+    deque.clear()                        # []
+    check(deque.is_empty(), True)
+    check(deque.size(), 0)
+    check(deque.peek_front(), -1)
+    check(deque.peek_back(), -1)
+
+    check(deque.add_back(10), True)      # [10]
+    check(deque.remove_front(), 10)      # []
+    check(deque.is_empty(), True)
+    check(deque.size(), 0)
+
+
+test_deque()</code></pre>
+</div>
+  </div>
+</li>
+  </ol>
+</section>
+
+<section id="problems" section-title="Homework Problems">
+  <h2>Homework Problems</h2>
+  <ol>
+    <li>
+      <strong>Trace Two Representations:</strong>
+      Start with the logical deque <code>[6, 2, 9, 4]</code>. Apply the operations below in order,
+      showing the logical deque after each operation. Also show the changes in a doubly linked
+      representation and a circular array representation of capacity <code>7</code> with initial
+      <code>front = 2</code>, so the values <code>6, 2, 9, 4</code> are initially stored at
+      indices <code>2, 3, 4, 5</code>.
+      <span class="operation-sequence">
+        <code>addFront(8)</code>, <code>removeBack()</code>, <code>addBack(5)</code>,
+        <code>removeFront()</code>, <code>addFront(3)</code>, <code>peekBack()</code>.
+      </span>
+    </li>
+
+    <li>
+      <strong>Boundary Case Test Suite:</strong>
+      Complete the table below to create a boundary-case test suite for a deque implementation.
+      For each unfinished row, fill in the expected return value, the expected deque afterward, and
+      one common implementation bug that the test might catch.
+      <p>
+        Use the convention that invalid value-returning operations return <code>-1</code> and failed
+        Boolean operations return <code>false</code>. Failed operations leave the deque unchanged.
+      </p>
+      <table class="example-table left-top-align">
+        <thead>
+          <tr>
+            <th>Case</th>
+            <th>Starting Deque</th>
+            <th>Operation</th>
+            <th>Expected Result and Bug Caught</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Empty access</td>
+            <td><code>[]</code></td>
+            <td><code>peekFront()</code></td>
+            <td>Returns <code>-1</code>; deque remains <code>[]</code>. Catches implementations that read from an empty structure.</td>
+          </tr>
+          <tr>
+            <td>Empty removal</td>
+            <td><code>[]</code></td>
+            <td><code>removeBack()</code></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>Remove only value</td>
+            <td><code>[8]</code></td>
+            <td><code>removeFront()</code></td>
+            <td>Returns <code>8</code>; deque becomes <code>[]</code>. Catches linked implementations that forget to clear both end references.</td>
+          </tr>
+          <tr>
+            <td>Add front to empty</td>
+            <td><code>[]</code></td>
+            <td><code>addFront(5)</code></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>Add back to empty</td>
+            <td><code>[]</code></td>
+            <td><code>addBack(5)</code></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>Remove back from two values</td>
+            <td><code>[3, 8]</code></td>
+            <td><code>removeBack()</code></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>Remove front from two values</td>
+            <td><code>[3, 8]</code></td>
+            <td><code>removeFront()</code></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>Full fixed array</td>
+            <td><code>[1, 2, 3]</code> with capacity <code>3</code></td>
+            <td><code>addBack(4)</code></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>Wrap left</td>
+            <td><code>[2, 3]</code> in capacity <code>4</code> with <code>front = 0</code></td>
+            <td><code>addFront(1)</code></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td>Wrap right</td>
+            <td><code>[2, 3]</code> in capacity <code>4</code> with <code>front = 2</code></td>
+            <td><code>addBack(4)</code></td>
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
+    </li>
+
+    <li>
+      <strong>Circular Index Formulas:</strong>
+      Suppose a circular array deque has capacity <code>c</code>, front index <code>f</code>, and
+      size <code>n</code>.
+      <ol type="a">
+        <li>Give a formula for the array index of logical deque position <code>i</code>.</li>
+        <li>Give a formula for the back index.</li>
+        <li>Give a formula for the next slot used by <code>addBack(value)</code>.</li>
+        <li>Give a safe formula for the new front index used by <code>addFront(value)</code>.</li>
+        <li>For which of the formulas above must the deque be nonempty or the array not be full?</li>
+      </ol>
+    </li>
+
+    <li>
+      <strong>Find and Explain the Bug:</strong>
+      A student writes the following pseudocode for <code>removeBack()</code> in a doubly linked deque.
+      Explain what boundary case is handled incorrectly, give a specific example where the deque becomes
+      inconsistent, and rewrite the pseudocode so it correctly handles both the one-node case and the
+      multi-node case.
+<pre><code>removeBack():
+    if isEmpty():
+        return -1
+    value = back.value
+    back = back.prev
+    size = size - 1
+    back.next = null
+    return value</code></pre>
+    </li>
+
+    <li>
+      <strong>Palindrome Checker:</strong>
+      A string is a palindrome if it reads the same forward and backward, ignoring spaces and case.
+      For this problem, do not ignore punctuation unless you choose to say so explicitly.
+      <ol type="a">
+        <li>Describe how to put the relevant characters into a deque.</li>
+        <li>Write pseudocode that repeatedly compares <code>removeFront()</code> and <code>removeBack()</code>.</li>
+        <li>Trace your algorithm on <code>racecar</code> and on <code>algorithm</code>.</li>
+        <li>Analyze the running time and extra space.</li>
+      </ol>
+    </li>
+
+    <li>
+      <strong>Bounded Recent History:</strong>
+      A program stores at most <code>k</code> recent actions in a deque. Assume the oldest action is
+      stored at the front and the newest action is stored at the back. When a new action arrives, it is
+      added at the back. If the deque already stores <code>k</code> actions, the oldest action should
+      be removed from the front first.
+      <ol type="a">
+        <li>Write pseudocode for <code>record(action)</code>.</li>
+        <li>Trace your algorithm for <code>k = 3</code> and actions <code>A, B, C, D, E</code>.</li>
+        <li>Which implementation is a natural fit for this fixed-capacity problem?</li>
+        <li>Analyze the running time of each call to <code>record(action)</code>.</li>
+      </ol>
+    </li>
+
+    <li>
+      <strong>0-1 BFS Motivation:</strong>
+      In a graph where every edge has weight <code>0</code> or <code>1</code>, one shortest-path
+      algorithm uses a deque. When a distance improves through a weight <code>0</code> edge, the
+      vertex is added to the front. When a distance improves through a weight <code>1</code> edge, the
+      vertex is added to the back.
+      <ol type="a">
+        <li>Explain why this algorithm needs both <code>addFront</code> and <code>addBack</code>.</li>
+        <li>Explain why an ordinary queue would not express the same priority between weight <code>0</code> and weight <code>1</code> edges.</li>
+        <li>
+          Starting at <code>A</code>, suppose the algorithm first discovers <code>B</code> through a
+          weight <code>0</code> edge and <code>C</code> through a weight <code>1</code> edge. Which
+          one is added to the front, which one is added to the back, and why?
+        </li>
+        <li>
+          Now suppose the next vertex removed from the deque discovers <code>D</code> through a
+          weight <code>1</code> edge. Should <code>D</code> be added to the front or the back?
+          Explain.
+        </li>
+      </ol>
+    </li>
+
+    <li>
+      <strong>Design Choice Case Study:</strong>
+      For each application below, choose one representation: doubly linked list, fixed circular array,
+      dynamic circular array, or block-based deque. Justify each choice using operation costs and memory
+      considerations. Some cases may have more than one defensible answer. Your justification matters
+      more than choosing one exact representation.
+      <ol type="a">
+        <li>A microcontroller stores the last 32 sensor readings.</li>
+        <li>A programming language standard library wants a general-purpose deque.</li>
+        <li>A graph algorithm maintains a deque whose size can grow to the number of vertices.</li>
+        <li>A real-time system wants worst-case constant-time operations and no resizing pauses.</li>
+        <li>A text-processing program frequently adds and removes characters from both ends of a large buffer.</li>
+      </ol>
+    </li>
+    <strong>Implement a Block-Based Deque:</strong>
+  Implement a deque of nonnegative integers using several fixed-size blocks. This problem extends the
+  block-based idea from the chapter, but uses a simplified implementation: when more room is needed,
+  the implementation creates a new set of blocks and copies the logical deque values into clean order.
+  <p>
+    Your implementation should satisfy the following requirements:
+  </p>
+  <ul>
+    <li>Each block should store a fixed number of values.</li>
+    <li>The deque should store the logical values across several blocks.</li>
+    <li>The constructor should take an initial number of blocks and a block size.</li>
+    <li><code>isEmpty()</code> should report whether the deque has no values.</li>
+    <li><code>size()</code> should return the number of stored values in \(O(1)\) time.</li>
+    <li><code>peekFront()</code>, <code>peekBack()</code>, <code>removeFront()</code>, and <code>removeBack()</code> should return <code>-1</code> if the operation is invalid.</li>
+    <li><code>addFront(value)</code> and <code>addBack(value)</code> should add values at the appropriate logical end.</li>
+    <li>If all block slots are full, the deque should grow by allocating more blocks.</li>
+    <li>After growing, the existing values may be copied into clean order starting at logical position <code>0</code>.</li>
+    <li><code>clear()</code> should make the deque empty without changing the block size.</li>
+  </ul>
+
+  <p>
+    You will probably want the following helper methods:
+  </p>
+  <ul>
+    <li>
+      <code>capacity()</code>: return the total number of available cells across all blocks.
+    </li>
+    <li>
+      <code>physicalIndex(logicalIndex)</code>: convert a logical deque position into a physical
+      position within the block structure.
+    </li>
+    <li>
+      <code>blockOf(physicalIndex)</code>: return which block contains a physical position.
+    </li>
+    <li>
+      <code>offsetOf(physicalIndex)</code>: return the offset within that block.
+    </li>
+    <li>
+      <code>grow()</code>: allocate more blocks, copy the current values into clean order, and reset
+      the front position.
+    </li>
+  </ul>
+
+  <p>
+    Add tests that force growth at both ends. For example, start with two blocks of size three,
+    fill all six available positions, then call <code>addBack(value)</code>. In a separate test, fill
+    the deque and then call <code>addFront(value)</code>. In both cases, verify the final logical order
+    using repeated calls to <code>removeFront()</code>.
+  </p>
+
+  <div class="tab-group scrollable-code-tabs">
+    <div class="tabs" role="tablist">
+      <button id="tab-java-block-deque-problem" class="tablink active" data-lang="java-block-deque-problem" role="tab" aria-controls="java-block-deque-problem" aria-selected="true">Java</button>
+      <button id="tab-cpp-block-deque-problem" class="tablink" data-lang="cpp-block-deque-problem" role="tab" aria-controls="cpp-block-deque-problem" aria-selected="false">C++</button>
+      <button id="tab-python-block-deque-problem" class="tablink" data-lang="python-block-deque-problem" role="tab" aria-controls="python-block-deque-problem" aria-selected="false">Python</button>
+    </div>
+
+<div id="java-block-deque-problem" class="code-container active copyable-code" role="tabpanel" aria-labelledby="tab-java-block-deque-problem">
+  <pre><code class="language-java">public class BlockDequeExercise {
+static class IntDeque {
+    private int[][] blocks;
+    private int blockSize;
+    private int front;
+    private int count;
+
+    public IntDeque(int initialBlocks, int blockSize) {
+        this.blockSize = blockSize;
+        blocks = new int[initialBlocks][blockSize];
+        front = 0;
+        count = 0;
+    }
+
+    private int capacity() {
+        // TODO
+        return -1;
+    }
+
+    private int physicalIndex(int logicalIndex) {
+        // TODO
+        return -1;
+    }
+
+    private int blockOf(int physicalIndex) {
+        // TODO
+        return -1;
+    }
+
+    private int offsetOf(int physicalIndex) {
+        // TODO
+        return -1;
+    }
+
+    private int getAtPhysicalIndex(int physicalIndex) {
+        // TODO
+        return -1;
+    }
+
+    private void setAtPhysicalIndex(int physicalIndex, int value) {
+        // TODO
+    }
+
+    private void grow() {
+        // TODO
+        // Allocate more blocks, copy current values in logical order,
+        // replace the old block array, and reset front to 0.
+    }
+
+    public boolean isEmpty() {
+        // TODO
+        return false;
+    }
+
+    public int size() {
+        // TODO
+        return -1;
+    }
+
+    public void clear() {
+        // TODO
+    }
+
+    public int peekFront() {
+        // TODO
+        return -1;
+    }
+
+    public int peekBack() {
+        // TODO
+        return -1;
+    }
+
+    public boolean addFront(int value) {
+        // TODO
+        return false;
+    }
+
+    public boolean addBack(int value) {
+        // TODO
+        return false;
+    }
+
+    public int removeFront() {
+        // TODO
+        return -1;
+    }
+
+    public int removeBack() {
+        // TODO
+        return -1;
+    }
+}
+
+static void check(int actual, int expected) {
+    if (actual == expected) {
+        System.out.println("pass");
+    } else {
+        System.out.println("fail: expected " + expected + " but got " + actual);
+    }
+}
+
+static void check(boolean actual, boolean expected) {
+    if (actual == expected) {
+        System.out.println("pass");
+    } else {
+        System.out.println("fail: expected " + expected + " but got " + actual);
+    }
+}
+
+static void testDeque() {
+    IntDeque deque = new IntDeque(2, 3);  // capacity 6
+
+    check(deque.isEmpty(), true);
+    check(deque.size(), 0);
+    check(deque.peekFront(), -1);
+    check(deque.peekBack(), -1);
+    check(deque.removeFront(), -1);
+    check(deque.removeBack(), -1);
+
+    check(deque.addBack(4), true);       // [4]
+    check(deque.addBack(7), true);       // [4, 7]
+    check(deque.addFront(2), true);      // [2, 4, 7]
+    check(deque.addBack(9), true);       // [2, 4, 7, 9]
+    check(deque.addFront(1), true);      // [1, 2, 4, 7, 9]
+    check(deque.addBack(11), true);      // [1, 2, 4, 7, 9, 11]
+
+    check(deque.size(), 6);
+    check(deque.peekFront(), 1);
+    check(deque.peekBack(), 11);
+
+    check(deque.addBack(13), true);      // grow, [1, 2, 4, 7, 9, 11, 13]
+    check(deque.size(), 7);
+    check(deque.peekFront(), 1);
+    check(deque.peekBack(), 13);
+
+    check(deque.removeFront(), 1);       // [2, 4, 7, 9, 11, 13]
+    check(deque.removeBack(), 13);       // [2, 4, 7, 9, 11]
+    check(deque.peekFront(), 2);
+    check(deque.peekBack(), 11);
+
+    check(deque.addFront(0), true);      // [0, 2, 4, 7, 9, 11]
+    check(deque.addFront(-1), true);     // [-1, 0, 2, 4, 7, 9, 11]
+    check(deque.peekFront(), -1);
+    check(deque.peekBack(), 11);
+
+    check(deque.removeFront(), -1);
+    check(deque.removeFront(), 0);
+    check(deque.removeFront(), 2);
+    check(deque.removeFront(), 4);
+    check(deque.removeFront(), 7);
+    check(deque.removeFront(), 9);
+    check(deque.removeFront(), 11);
+
+    check(deque.isEmpty(), true);
+    check(deque.size(), 0);
+    check(deque.removeFront(), -1);
+
+    check(deque.addBack(5), true);
+    check(deque.addFront(3), true);
+    check(deque.peekFront(), 3);
+    check(deque.peekBack(), 5);
+
+    deque.clear();
+    check(deque.isEmpty(), true);
+    check(deque.size(), 0);
+    check(deque.peekFront(), -1);
+}
+
+public static void main(String[] args) {
+    testDeque();
+}
+}</code></pre>
+</div>
+
+<div id="cpp-block-deque-problem" class="code-container copyable-code" role="tabpanel" aria-labelledby="tab-cpp-block-deque-problem">
+  <pre><code class="language-cpp">#include &lt;iostream&gt;
+using namespace std;
+
+class IntDeque {
+private:
+int** blocks;
+int numBlocks;
+int blockSize;
+int front;
+int count;
+
+int capacity() {
+    // TODO
+    return -1;
+}
+
+int physicalIndex(int logicalIndex) {
+    // TODO
+    return -1;
+}
+
+int blockOf(int physicalIndex) {
+    // TODO
+    return -1;
+}
+
+int offsetOf(int physicalIndex) {
+    // TODO
+    return -1;
+}
+
+int getAtPhysicalIndex(int physicalIndex) {
+    // TODO
+    return -1;
+}
+
+void setAtPhysicalIndex(int physicalIndex, int value) {
+    // TODO
+}
+
+void grow() {
+    // TODO
+    // Allocate more blocks, copy current values in logical order,
+    // delete old blocks, replace them, and reset front to 0.
+}
+
+public:
+IntDeque(int initialBlocks, int blockSizeValue) {
+    numBlocks = initialBlocks;
+    blockSize = blockSizeValue;
+    front = 0;
+    count = 0;
+
+    blocks = new int*[numBlocks];
+    for (int i = 0; i &lt; numBlocks; i++) {
+        blocks[i] = new int[blockSize];
+    }
+}
+
+~IntDeque() {
+    for (int i = 0; i &lt; numBlocks; i++) {
+        delete[] blocks[i];
+    }
+    delete[] blocks;
+}
+
+bool isEmpty() {
+    // TODO
+    return false;
+}
+
+int size() {
+    // TODO
+    return -1;
+}
+
+void clear() {
+    // TODO
+}
+
+int peekFront() {
+    // TODO
+    return -1;
+}
+
+int peekBack() {
+    // TODO
+    return -1;
+}
+
+bool addFront(int value) {
+    // TODO
+    return false;
+}
+
+bool addBack(int value) {
+    // TODO
+    return false;
+}
+
+int removeFront() {
+    // TODO
+    return -1;
+}
+
+int removeBack() {
+    // TODO
+    return -1;
+}
+
+};
+
+void check(int actual, int expected) {
+    if (actual == expected) {
+        cout &lt;&lt; "pass" &lt;&lt; endl;
+    } else {
+        cout &lt;&lt; "fail: expected " &lt;&lt; expected &lt;&lt; " but got " &lt;&lt; actual &lt;&lt; endl;
+    }
+}
+
+void check(bool actual, bool expected) {
+    if (actual == expected) {
+        cout &lt;&lt; "pass" &lt;&lt; endl;
+    } else {
+        cout &lt;&lt; "fail: expected " &lt;&lt; expected &lt;&lt; " but got " &lt;&lt; actual &lt;&lt; endl;
+    }
+}
+
+void testDeque() {
+IntDeque deque(2, 3);  // capacity 6
+
+check(deque.isEmpty(), true);
+check(deque.size(), 0);
+check(deque.peekFront(), -1);
+check(deque.peekBack(), -1);
+check(deque.removeFront(), -1);
+check(deque.removeBack(), -1);
+
+check(deque.addBack(4), true);       // [4]
+check(deque.addBack(7), true);       // [4, 7]
+check(deque.addFront(2), true);      // [2, 4, 7]
+check(deque.addBack(9), true);       // [2, 4, 7, 9]
+check(deque.addFront(1), true);      // [1, 2, 4, 7, 9]
+check(deque.addBack(11), true);      // [1, 2, 4, 7, 9, 11]
+
+check(deque.size(), 6);
+check(deque.peekFront(), 1);
+check(deque.peekBack(), 11);
+
+check(deque.addBack(13), true);      // grow, [1, 2, 4, 7, 9, 11, 13]
+check(deque.size(), 7);
+check(deque.peekFront(), 1);
+check(deque.peekBack(), 13);
+
+check(deque.removeFront(), 1);       // [2, 4, 7, 9, 11, 13]
+check(deque.removeBack(), 13);       // [2, 4, 7, 9, 11]
+check(deque.peekFront(), 2);
+check(deque.peekBack(), 11);
+
+check(deque.addFront(0), true);      // [0, 2, 4, 7, 9, 11]
+check(deque.addFront(-1), true);     // [-1, 0, 2, 4, 7, 9, 11]
+check(deque.peekFront(), -1);
+check(deque.peekBack(), 11);
+
+check(deque.removeFront(), -1);
+check(deque.removeFront(), 0);
+check(deque.removeFront(), 2);
+check(deque.removeFront(), 4);
+check(deque.removeFront(), 7);
+check(deque.removeFront(), 9);
+check(deque.removeFront(), 11);
+
+check(deque.isEmpty(), true);
+check(deque.size(), 0);
+check(deque.removeFront(), -1);
+
+check(deque.addBack(5), true);
+check(deque.addFront(3), true);
+check(deque.peekFront(), 3);
+check(deque.peekBack(), 5);
+
+deque.clear();
+check(deque.isEmpty(), true);
+check(deque.size(), 0);
+check(deque.peekFront(), -1);
+}
+
+int main() {
+    testDeque();
+    return 0;
+}</code></pre>
+</div>
+
+<div id="python-block-deque-problem" class="code-container copyable-code" role="tabpanel" aria-labelledby="tab-python-block-deque-problem">
+  <pre><code class="language-python">class IntDeque:
+    def __init__(self, initial_blocks, block_size):
+        self.block_size = block_size
+        self.blocks = [[0] * block_size for _ in range(initial_blocks)]
+        self.front = 0
+        self.count = 0
+
+    def capacity(self):
+        # TODO
+        return -1
+
+    def physical_index(self, logical_index):
+        # TODO
+        return -1
+
+    def block_of(self, physical_index):
+        # TODO
+        return -1
+
+    def offset_of(self, physical_index):
+        # TODO
+        return -1
+
+    def get_at_physical_index(self, physical_index):
+        # TODO
+        return -1
+
+    def set_at_physical_index(self, physical_index, value):
+        # TODO
+        pass
+
+    def grow(self):
+        # TODO
+        # Allocate more blocks, copy current values in logical order,
+        # replace the old block list, and reset front to 0.
+        pass
+
+    def is_empty(self):
+        # TODO
+        return False
+
+    def size(self):
+        # TODO
+        return -1
+
+    def clear(self):
+        # TODO
+        pass
+
+    def peek_front(self):
+        # TODO
+        return -1
+
+    def peek_back(self):
+        # TODO
+        return -1
+
+    def add_front(self, value):
+        # TODO
+        return False
+
+    def add_back(self, value):
+        # TODO
+        return False
+
+    def remove_front(self):
+        # TODO
+        return -1
+
+    def remove_back(self):
+        # TODO
+        return -1
+
+
+def check(actual, expected):
+    if actual == expected:
+        print("pass")
+    else:
+        print("fail: expected", expected, "but got", actual)
+
+
+def test_deque():
+    deque = IntDeque(2, 3)  # capacity 6
+
+    check(deque.is_empty(), True)
+    check(deque.size(), 0)
+    check(deque.peek_front(), -1)
+    check(deque.peek_back(), -1)
+    check(deque.remove_front(), -1)
+    check(deque.remove_back(), -1)
+
+    check(deque.add_back(4), True)       # [4]
+    check(deque.add_back(7), True)       # [4, 7]
+    check(deque.add_front(2), True)      # [2, 4, 7]
+    check(deque.add_back(9), True)       # [2, 4, 7, 9]
+    check(deque.add_front(1), True)      # [1, 2, 4, 7, 9]
+    check(deque.add_back(11), True)      # [1, 2, 4, 7, 9, 11]
+
+    check(deque.size(), 6)
+    check(deque.peek_front(), 1)
+    check(deque.peek_back(), 11)
+
+    check(deque.add_back(13), True)      # grow, [1, 2, 4, 7, 9, 11, 13]
+    check(deque.size(), 7)
+    check(deque.peek_front(), 1)
+    check(deque.peek_back(), 13)
+
+    check(deque.remove_front(), 1)       # [2, 4, 7, 9, 11, 13]
+    check(deque.remove_back(), 13)       # [2, 4, 7, 9, 11]
+    check(deque.peek_front(), 2)
+    check(deque.peek_back(), 11)
+
+    check(deque.add_front(0), True)      # [0, 2, 4, 7, 9, 11]
+    check(deque.add_front(-1), True)     # [-1, 0, 2, 4, 7, 9, 11]
+    check(deque.peek_front(), -1)
+    check(deque.peek_back(), 11)
+
+    check(deque.remove_front(), -1)
+    check(deque.remove_front(), 0)
+    check(deque.remove_front(), 2)
+    check(deque.remove_front(), 4)
+    check(deque.remove_front(), 7)
+    check(deque.remove_front(), 9)
+    check(deque.remove_front(), 11)
+
+    check(deque.is_empty(), True)
+    check(deque.size(), 0)
+    check(deque.remove_front(), -1)
+
+    check(deque.add_back(5), True)
+    check(deque.add_front(3), True)
+    check(deque.peek_front(), 3)
+    check(deque.peek_back(), 5)
+
+    deque.clear()
+    check(deque.is_empty(), True)
+    check(deque.size(), 0)
+    check(deque.peek_front(), -1)
+
+
+test_deque()</code></pre>
+</div>
+
+  </div>
+
+  <p>
+    After implementing the deque, analyze the running time of each operation. Which operations are
+    always \(O(1)\), and which operations may take \(O(n)\) when the block structure grows? Explain
+    how this simplified implementation differs from a production block-based deque that can add new
+    blocks at the ends without copying all values.
+  </p>
+</li>
+  </ol>
+</section>
+
 
   <section id="problems" section-title="Homework Problems">
     <h2>Homework Problems</h2>
@@ -1537,6 +3549,8 @@ removeBack():
           <li>A text-processing program frequently adds and removes characters from both ends of a large buffer.</li>
         </ol>
       </li>
+      <li>
+  
     </ol>
   </section>
 </body>
