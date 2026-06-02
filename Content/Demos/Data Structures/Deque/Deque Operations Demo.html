@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Deque Operations Demo</title>
+  <script src="../../../../scripts/demoScripts.js"></script>
+  <link rel="stylesheet" href="../../../../css/style.css">
+  <link rel="stylesheet" href="../../../../css/demo.css">
+  <style>
+    #demoContainer h2 {
+      padding-right: 120px;
+    }
+    .deque-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .deque-controls label {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .deque-controls input,
+    .deque-controls select {
+      min-height: 30px;
+      box-sizing: border-box;
+    }
+    .deque-controls input {
+      width: 54px;
+    }
+    .deque-controls select {
+      max-width: 230px;
+    }
+    .field-mount {
+      display: inline-flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+    .feedback-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 3fr) minmax(220px, 2fr);
+      gap: 12px;
+      max-width: 900px;
+      margin: 8px 0 12px;
+      align-items: stretch;
+    }
+    #status {
+      min-height: 0;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      line-height: 1.45;
+    }
+    .feedback-box {
+      margin: 0;
+      padding: 8px 10px;
+      border-left: 4px solid #4a768b;
+      background: #f7fbfd;
+      line-height: 1.45;
+    }
+    .feedback-box ol {
+      margin: 6px 0 0 1.4em;
+      padding: 0;
+    }
+    .feedback-box li {
+      margin: 3px 0;
+    }
+    .deque-stage {
+      max-width: 900px;
+      overflow-x: auto;
+      padding: 14px;
+      border: 1px solid #ccc;
+      background: #fff;
+    }
+    .state-line {
+      display: grid;
+      grid-template-columns: 64px minmax(max-content, 1fr);
+      gap: 10px;
+      align-items: start;
+    }
+    .state-line + .state-line {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid #ddd;
+    }
+    .state-label {
+      min-height: 44px;
+      padding-top: 36px;
+      color: #555;
+      font-size: 12px;
+      font-weight: bold;
+      text-align: right;
+    }
+    .deque-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      min-height: 96px;
+      min-width: max-content;
+    }
+    .deque-row.previous .deque-item {
+      background: #eef3f8;
+      color: #333;
+      border-color: #777;
+    }
+    .deque-entry {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .op-label {
+      min-height: 18px;
+      max-width: 120px;
+      color: #7a3b00;
+      font-size: 12px;
+      font-weight: bold;
+      line-height: 1.25;
+      text-align: center;
+      overflow-wrap: anywhere;
+    }
+    .position-label {
+      min-height: 16px;
+      max-width: 120px;
+      color: #555;
+      font-size: 12px;
+      font-weight: bold;
+      line-height: 1.25;
+      text-align: center;
+      overflow-wrap: anywhere;
+    }
+    .role-line {
+      display: block;
+    }
+    .deque-item {
+      display: flex;
+      min-width: 58px;
+      min-height: 44px;
+      max-width: 150px;
+      align-items: center;
+      justify-content: center;
+      padding: 0 10px;
+      border: 1px solid #333;
+      background: #cce3ff;
+      box-sizing: border-box;
+      font-weight: bold;
+      text-align: center;
+      overflow-wrap: anywhere;
+    }
+    .deque-item.inserted {
+      background: #8ecae6;
+      border-width: 2px;
+    }
+    .deque-item.read {
+      background: #74b474;
+      border-width: 2px;
+    }
+    .deque-item.new-end {
+      background: #d7d0ff;
+      border-width: 2px;
+    }
+    .empty-state {
+      border: 1px dashed #777;
+      color: #555;
+      background: #f6f6f6;
+      padding: 10px 12px;
+      font-style: italic;
+    }
+    .result-box {
+      display: grid;
+      gap: 8px;
+      margin: 0;
+      padding: 10px 12px;
+      border: 1px solid #777;
+      border-left: 4px solid #4a768b;
+      background: #f6f6f6;
+      line-height: 1.5;
+    }
+    .result-box.has-return {
+      border-left-color: #2e7d32;
+      background: #f4fbf4;
+    }
+    .result-box.has-error {
+      border-left-color: #b3261e;
+      background: #fff5f5;
+    }
+    .result-box.no-return {
+      border-left-color: #777;
+    }
+    .result-label {
+      color: #555;
+      font-size: 12px;
+      font-weight: bold;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+    .return-display {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+    .return-word {
+      font-weight: bold;
+    }
+    .return-value {
+      display: inline-flex;
+      min-width: 54px;
+      min-height: 38px;
+      max-width: 190px;
+      align-items: center;
+      justify-content: center;
+      padding: 0 12px;
+      border: 1px solid #333;
+      background: #74b474;
+      color: #111;
+      font-weight: bold;
+      box-sizing: border-box;
+      overflow-wrap: anywhere;
+      text-align: center;
+    }
+    .return-value.none {
+      border-style: dashed;
+      background: #fff;
+      color: #555;
+      font-weight: normal;
+    }
+    .return-value.error {
+      background: #ffa088;
+    }
+    @media (max-width: 600px) {
+      .feedback-layout {
+        grid-template-columns: 1fr;
+      }
+      .deque-stage {
+        padding: 10px;
+      }
+      .state-line {
+        grid-template-columns: 54px minmax(max-content, 1fr);
+      }
+      .deque-controls select {
+        max-width: 100%;
+      }
+    }
+  </style>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-DQ5LVZVFDC');
+  </script>
+</head>
+<body class="no-tooltips">
+  <div id="demoContainer">
+    <h2>Deque Operations Demo</h2>
+
+    <div class="deque-controls">
+      <label>Type <select id="groupSelect"></select></label>
+      <label>Operation <select id="operationSelect"></select></label>
+      <span id="fieldMount" class="field-mount"></span>
+      <button id="applyBtn">Apply</button>
+      <button id="resetBtn">Reset</button>
+    </div>
+
+    <div class="feedback-layout">
+      <div id="feedbackBox" class="feedback-box">
+        <div id="status"></div>
+        <ol id="notesList"></ol>
+      </div>
+      <div id="resultBox" class="result-box"></div>
+    </div>
+
+    <div class="deque-stage">
+      <div class="state-line">
+        <div class="state-label">Before</div>
+        <div id="previousDequeRow" class="deque-row previous"></div>
+      </div>
+      <div class="state-line">
+        <div class="state-label">Current</div>
+        <div id="dequeRow" class="deque-row current"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const INITIAL_ITEMS = ['12', '4', '18', '7'];
+
+    // UI customization point: change these field and operation definitions to
+    // replace the command-builder controls without changing the operation logic.
+    const FIELD_CONFIG = {
+      value: {
+        label: 'v=',
+        type: 'text',
+        defaultValue: '9'
+      }
+    };
+
+    const OPERATION_GROUPS = [
+      {
+        id: 'ends',
+        label: 'Ends',
+        operations: ['addFront', 'addBack', 'removeFront', 'removeBack', 'peekFront', 'peekBack']
+      },
+      {
+        id: 'status',
+        label: 'Status',
+        operations: ['size', 'isEmpty', 'clear']
+      }
+    ];
+
+    const OPERATIONS = {
+      addFront: {
+        label: 'addFront(v)',
+        fields: ['value'],
+        run: addFront
+      },
+      addBack: {
+        label: 'addBack(v)',
+        fields: ['value'],
+        run: addBack
+      },
+      removeFront: {
+        label: 'removeFront()',
+        fields: [],
+        run: removeFront
+      },
+      removeBack: {
+        label: 'removeBack()',
+        fields: [],
+        run: removeBack
+      },
+      peekFront: {
+        label: 'peekFront()',
+        fields: [],
+        run: peekFront
+      },
+      peekBack: {
+        label: 'peekBack()',
+        fields: [],
+        run: peekBack
+      },
+      size: {
+        label: 'size()',
+        fields: [],
+        run: size
+      },
+      isEmpty: {
+        label: 'isEmpty()',
+        fields: [],
+        run: isEmpty
+      },
+      clear: {
+        label: 'clear()',
+        fields: [],
+        run: clear
+      }
+    };
+
+    let items;
+    let previousItems;
+    let marks;
+    let result;
+    let notes;
+    let fieldValues;
+
+    function resetState() {
+      items = INITIAL_ITEMS.slice();
+      previousItems = items.slice();
+      marks = {};
+      result = {
+        word: 'returns',
+        value: 'none',
+        mode: 'none',
+        note: 'No operation has returned a value yet.'
+      };
+      notes = [
+        'A deque stores a front-to-back sequence.',
+        'The front and back are the only positions used by core deque operations.',
+        'The drawing shows the logical sequence, independent of the underlying implementation.'
+      ];
+      render('Initial deque. Values can be added, removed, or inspected at either end.');
+    }
+
+    function initControls() {
+      fieldValues = {};
+      Object.keys(FIELD_CONFIG).forEach((name) => {
+        fieldValues[name] = FIELD_CONFIG[name].defaultValue;
+      });
+
+      const groupSelect = document.getElementById('groupSelect');
+      groupSelect.innerHTML = '';
+      OPERATION_GROUPS.forEach((group) => {
+        const option = document.createElement('option');
+        option.value = group.id;
+        option.textContent = group.label;
+        groupSelect.appendChild(option);
+      });
+
+      groupSelect.addEventListener('change', () => {
+        updateOperationSelect();
+        renderFields();
+      });
+      document.getElementById('operationSelect').addEventListener('change', renderFields);
+      document.getElementById('applyBtn').addEventListener('click', applyCurrentOperation);
+      document.getElementById('resetBtn').addEventListener('click', resetState);
+
+      updateOperationSelect();
+      renderFields();
+    }
+
+    function currentGroup() {
+      const groupId = document.getElementById('groupSelect').value;
+      return OPERATION_GROUPS.find((group) => group.id === groupId) || OPERATION_GROUPS[0];
+    }
+
+    function currentOperation() {
+      return OPERATIONS[document.getElementById('operationSelect').value];
+    }
+
+    function updateOperationSelect() {
+      const operationSelect = document.getElementById('operationSelect');
+      operationSelect.innerHTML = '';
+      currentGroup().operations.forEach((operationKey) => {
+        const operation = OPERATIONS[operationKey];
+        const option = document.createElement('option');
+        option.value = operationKey;
+        option.textContent = operation.label;
+        operationSelect.appendChild(option);
+      });
+    }
+
+    function renderFields() {
+      const mount = document.getElementById('fieldMount');
+      mount.innerHTML = '';
+
+      currentOperation().fields.forEach((fieldName) => {
+        const config = FIELD_CONFIG[fieldName];
+        const label = document.createElement('label');
+        label.textContent = `${config.label} `;
+
+        const input = document.createElement('input');
+        input.id = `field-${fieldName}`;
+        input.type = config.type;
+        input.value = fieldValues[fieldName] ?? config.defaultValue;
+        if (config.min !== undefined) {
+          input.min = config.min;
+        }
+        input.addEventListener('input', () => {
+          fieldValues[fieldName] = input.value;
+        });
+        input.addEventListener('keydown', (event) => {
+          if (event.key === 'Enter') {
+            document.getElementById('applyBtn').click();
+          }
+        });
+
+        label.appendChild(input);
+        mount.appendChild(label);
+      });
+    }
+
+    function applyCurrentOperation() {
+      const operation = currentOperation();
+      const values = {};
+      operation.fields.forEach((fieldName) => {
+        const input = document.getElementById(`field-${fieldName}`);
+        values[fieldName] = input ? input.value : '';
+      });
+      previousItems = items.slice();
+      operation.run(values);
+    }
+
+    function setResult(word, value, mode, note) {
+      result = { word, value, mode, note };
+    }
+
+    function setState(message, newMarks, newNotes) {
+      marks = newMarks || {};
+      notes = newNotes || [];
+      render(message);
+    }
+
+    function setNoReturn(note) {
+      setResult('returns', 'none', 'none', note);
+    }
+
+    function setError(errorName, note) {
+      setResult('throws', errorName, 'error', note);
+    }
+
+    function readValue(rawValue) {
+      return String(rawValue ?? '').trim();
+    }
+
+    function requireValue(rawValue, operationName) {
+      const value = readValue(rawValue);
+      if (value !== '') {
+        return { ok: true, value };
+      }
+
+      setNoReturn('The operation was not applied.');
+      setState(`Enter a value before calling ${operationName}.`, {}, [
+        'The deque is unchanged.'
+      ]);
+      return { ok: false };
+    }
+
+    function requireNonempty(operationName) {
+      if (items.length > 0) {
+        return true;
+      }
+
+      setError('EmptyDequeError', `${operationName} needs at least one value in the deque.`);
+      setState(`${operationName} cannot be applied to an empty deque.`, {}, [
+        'The deque is unchanged.'
+      ]);
+      return false;
+    }
+
+    function addFront(fields) {
+      const input = requireValue(fields.value, 'addFront(value)');
+      if (!input.ok) {
+        return;
+      }
+
+      const wasEmpty = items.length === 0;
+      items.unshift(input.value);
+      setNoReturn('The operation changes the deque and does not return a stored value.');
+      setState(
+        wasEmpty
+          ? `addFront(${input.value}) inserts ${input.value} into the empty deque.`
+          : `addFront(${input.value}) places ${input.value} at the front.`,
+        {
+          0: { state: 'inserted', label: 'inserted' }
+        },
+        [
+          wasEmpty ? 'The new value is both the front and the back.' : 'The new value becomes the front value.',
+          wasEmpty ? 'There were no previous values.' : 'The previous values keep the same relative order.',
+          `The size increases to ${items.length}.`
+        ]
+      );
+    }
+
+    function addBack(fields) {
+      const input = requireValue(fields.value, 'addBack(value)');
+      if (!input.ok) {
+        return;
+      }
+
+      const wasEmpty = items.length === 0;
+      items.push(input.value);
+      setNoReturn('The operation changes the deque and does not return a stored value.');
+      setState(
+        wasEmpty
+          ? `addBack(${input.value}) inserts ${input.value} into the empty deque.`
+          : `addBack(${input.value}) places ${input.value} after the old back value.`,
+        {
+          [items.length - 1]: { state: 'inserted', label: 'inserted' }
+        },
+        [
+          wasEmpty ? 'The new value is both the front and the back.' : 'The new value becomes the back value.',
+          wasEmpty ? 'There were no previous values.' : 'The existing values keep the same relative order.',
+          `The size increases to ${items.length}.`
+        ]
+      );
+    }
+
+    function removeFront() {
+      if (!requireNonempty('removeFront()')) {
+        return;
+      }
+
+      const removed = items.shift();
+      const newMarks = {};
+      if (items.length > 0) {
+        newMarks[0] = { state: 'new-end', label: 'new front' };
+      }
+
+      setResult('returns', removed, 'return', `${removed} was removed from the front.`);
+      setState(`removeFront() returns ${removed} and removes it from the front.`, newMarks, [
+        'The old front value leaves the deque.',
+        items.length > 0 ? 'The next value becomes the new front.' : 'The deque is now empty.',
+        items.length > 1 ? 'The remaining values keep the same relative order.' : 'No other values remain after the removal.',
+        `The size decreases to ${items.length}.`
+      ]);
+    }
+
+    function removeBack() {
+      if (!requireNonempty('removeBack()')) {
+        return;
+      }
+
+      const removed = items.pop();
+      const newMarks = {};
+      if (items.length > 0) {
+        newMarks[items.length - 1] = { state: 'new-end', label: 'new back' };
+      }
+
+      setResult('returns', removed, 'return', `${removed} was removed from the back.`);
+      setState(`removeBack() returns ${removed} and removes it from the back.`, newMarks, [
+        items.length > 0 ? 'The previous value becomes the new back.' : 'The deque is now empty.',
+        items.length > 1 ? 'The remaining values keep the same relative order.' : 'No other values remain after the removal.',
+        `The size decreases to ${items.length}.`
+      ]);
+    }
+
+    function peekFront() {
+      if (!requireNonempty('peekFront()')) {
+        return;
+      }
+
+      setResult('returns', items[0], 'return', `${items[0]} stays in the deque.`);
+      setState(`peekFront() returns ${items[0]} without removing it.`, {
+        0: { state: 'read', label: 'read' }
+      }, [
+        'The deque state is unchanged.'
+      ]);
+    }
+
+    function peekBack() {
+      if (!requireNonempty('peekBack()')) {
+        return;
+      }
+
+      const lastIndex = items.length - 1;
+      setResult('returns', items[lastIndex], 'return', `${items[lastIndex]} stays in the deque.`);
+      setState(`peekBack() returns ${items[lastIndex]} without removing it.`, {
+        [lastIndex]: { state: 'read', label: 'read' }
+      }, [
+        'The deque state is unchanged.'
+      ]);
+    }
+
+    function size() {
+      setResult('returns', String(items.length), 'return', 'The deque is not changed.');
+      setState(`size() returns ${items.length}.`, {}, [
+        'The size is the number of stored values.',
+        'The deque state is unchanged.'
+      ]);
+    }
+
+    function isEmpty() {
+      const empty = items.length === 0;
+      setResult('returns', empty ? 'true' : 'false', 'return', 'The deque is not changed.');
+      setState(`isEmpty() returns ${empty ? 'true' : 'false'}.`, {}, [
+        empty ? 'The deque currently stores no values.' : 'The deque currently stores at least one value.',
+        'The deque state is unchanged.'
+      ]);
+    }
+
+    function clear() {
+      const oldSize = items.length;
+      items = [];
+      setNoReturn('The operation removes every stored value.');
+      setState('clear() leaves the deque empty.', {}, [
+        `${oldSize} value${oldSize === 1 ? '' : 's'} were removed.`,
+        'After clear, size() would return 0 and isEmpty() would return true.'
+      ]);
+    }
+
+    function render(message) {
+      document.getElementById('status').textContent = message;
+
+      renderDeque();
+      renderResult();
+      renderNotes();
+    }
+
+    function renderDeque() {
+      renderDequeRow('previousDequeRow', previousItems, {}, true);
+      renderDequeRow('dequeRow', items, marks, false);
+    }
+
+    function renderDequeRow(rowId, values, rowMarks, isPrevious) {
+      const row = document.getElementById(rowId);
+      row.innerHTML = '';
+
+      if (values.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'empty-state';
+        empty.textContent = 'empty deque';
+        row.appendChild(empty);
+        return;
+      }
+
+      values.forEach((value, index) => {
+        const entry = document.createElement('div');
+        entry.className = 'deque-entry';
+
+        const operationLabel = document.createElement('div');
+        operationLabel.className = 'op-label';
+        operationLabels(rowMarks[index], isPrevious).forEach((line) => {
+          const roleLine = document.createElement('span');
+          roleLine.className = 'role-line';
+          roleLine.textContent = line;
+          operationLabel.appendChild(roleLine);
+        });
+
+        const item = document.createElement('div');
+        item.className = 'deque-item';
+        if (rowMarks[index] && rowMarks[index].state) {
+          item.classList.add(rowMarks[index].state);
+        }
+        item.textContent = value;
+
+        const positionLabel = document.createElement('div');
+        positionLabel.className = 'position-label';
+        positionLabels(values, index).forEach((line) => {
+          const roleLine = document.createElement('span');
+          roleLine.className = 'role-line';
+          roleLine.textContent = line;
+          positionLabel.appendChild(roleLine);
+        });
+
+        entry.appendChild(operationLabel);
+        entry.appendChild(item);
+        entry.appendChild(positionLabel);
+        row.appendChild(entry);
+      });
+    }
+
+    function positionLabels(values, index) {
+      const roles = [];
+      if (values.length === 1) {
+        roles.push('front');
+        roles.push('back');
+      } else if (index === 0) {
+        roles.push('front');
+      } else if (index === values.length - 1) {
+        roles.push('back');
+      }
+
+      return roles;
+    }
+
+    function operationLabels(mark, isPrevious) {
+      const roles = [];
+      if (!isPrevious && mark && mark.label) {
+        const structuralLabels = ['new front', 'old front', 'new back', 'old back', 'next value'];
+        if (!structuralLabels.includes(mark.label)) {
+          roles.push(mark.label);
+        }
+      }
+
+      return roles;
+    }
+
+    function renderResult() {
+      const resultBox = document.getElementById('resultBox');
+      resultBox.className =
+        result.mode === 'error'
+          ? 'result-box has-error'
+          : result.mode === 'return'
+            ? 'result-box has-return'
+            : 'result-box no-return';
+      resultBox.innerHTML = '';
+
+      const label = document.createElement('div');
+      label.className = 'result-label';
+      label.textContent = 'Result';
+      resultBox.appendChild(label);
+
+      const display = document.createElement('div');
+      display.className = 'return-display';
+
+      const word = document.createElement('span');
+      word.className = 'return-word';
+      word.textContent = result.word;
+      display.appendChild(word);
+
+      const value = document.createElement('span');
+      value.className = result.mode === 'error' ? 'return-value error' : result.mode === 'none' ? 'return-value none' : 'return-value';
+      value.textContent = result.value;
+      display.appendChild(value);
+
+      resultBox.appendChild(display);
+
+      const note = document.createElement('div');
+      note.textContent = result.note;
+      resultBox.appendChild(note);
+    }
+
+    function renderNotes() {
+      const list = document.getElementById('notesList');
+      list.innerHTML = '';
+      notes.forEach((note) => {
+        const item = document.createElement('li');
+        item.textContent = note;
+        list.appendChild(item);
+      });
+    }
+
+    initControls();
+    resetState();
+  </script>
+</body>
+</html>
