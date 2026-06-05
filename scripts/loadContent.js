@@ -17,8 +17,9 @@ window.addEventListener('blur', () => aKeyDown = false);
 
 // ─── Ordering Constants ───────────────────────────────────────────────────────
 const TOP_LEVEL_ORDER = [
-  'Home',
+  'Start Here',
   'Foundations',
+  'Analysis',
   'Data Structures',
   'Techniques',
   'Algorithms',
@@ -28,15 +29,17 @@ const TOP_LEVEL_ORDER = [
 ];
 const TOP_LEVEL_NUMBER_LABELS = {
   'Foundations': '1',
-  'Data Structures': '2',
-  'Techniques': '3',
-  'Algorithms': '4',
+  'Analysis': '2',
+  'Data Structures': '3',
+  'Techniques': '4',
+  'Algorithms': '5',
   'Problems': 'A',
   'Demos': 'B',
   'More': 'C'
 };
 const NUMBERED_CHILD_SECTIONS = new Set([
   'Foundations',
+  'Analysis',
   'Data Structures',
   'Techniques',
   'Algorithms'
@@ -74,15 +77,10 @@ const DECREASE_AND_CONQUER_ORDER = [
 const FOUNDATIONS_ORDERS = {
   'Foundations/': [
     'Introduction',
+	'ADTs',
+	'Structure Diagrams',
     'Recursion',
-    'Measuring Efficiency',
-    'Recurrences',
-    'Amortized Analysis'
-  ],
-  'Foundations/Introduction/': [
-    'What Is an Algorithm',
-    'What Is a Data Structure',
-    'Abstract Data Types and Implementations'
+	'Basic Analysis'
   ],
   'Foundations/Recursion/': [
     'Recursion and the Call Stack',
@@ -95,8 +93,11 @@ const FOUNDATIONS_ORDERS = {
     'Counting Work in Iterative Algorithms',
     'Asymptotic Notation',
     'Common Growth Rates'
-  ],
-  'Foundations/Recurrences/': [
+  ]
+};
+
+const ANALYSIS_ORDERS = {
+  'Analysis/Recurrences/': [
     'From Recursive Code to Recurrences',
     'Iteration Method',
     'Substitution Method',
@@ -217,6 +218,7 @@ const getOrderListForPath = (pathPrefix) => {
   if (pathPrefix === 'Algorithms/') return ALGORITHMS_ORDER;
   if (pathPrefix === 'Demos/') return DEMOS_ORDER;
   if (FOUNDATIONS_ORDERS[pathPrefix]) return FOUNDATIONS_ORDERS[pathPrefix];
+  if (ANALYSIS_ORDERS[pathPrefix]) return ANALYSIS_ORDERS[pathPrefix];
   if (DATA_STRUCTURES_ORDERS[pathPrefix]) return DATA_STRUCTURES_ORDERS[pathPrefix];
   return [];
 };
