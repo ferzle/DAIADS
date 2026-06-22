@@ -191,7 +191,7 @@ let menuNumbering = {
 const getCurrentPath = () =>
   history.state?.path ||
   new URLSearchParams(window.location.search).get('path') ||
-  'Home/About';
+  'Start Here/About';
 
 // Ensure each segment of a path is properly URI‐encoded (but not double‐encoded)
 const normalizePath = (path) =>
@@ -430,7 +430,7 @@ const navigateTo = (rawPath) => {
 };
 
 const loadFromURLParams = () => {
-  const rawPath = new URLSearchParams(window.location.search).get('path') || 'Home/About';
+  const rawPath = new URLSearchParams(window.location.search).get('path') || 'Start Here/About';
   highlightActiveLink(rawPath);
   loadContent(`${normalizePath(rawPath)}.html`);
 };
@@ -1167,7 +1167,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // Load initial content from URL and ensure the initial history state is set
       loadFromURLParams();
       try {
-        const initialPath = new URLSearchParams(window.location.search).get('path') || 'Home/About';
+        const initialPath = new URLSearchParams(window.location.search).get('path') || 'Start Here/About';
         const currentState = history.state || {};
         if (currentState.path !== initialPath) {
           // Preserve the current URL (including any hash) while setting state
@@ -1214,7 +1214,7 @@ window.addEventListener('popstate', (event) => {
   pendingScrollRestore = typeof state.scrollY === 'number' ? state.scrollY : 0;
   // Prefer URL as source of truth for the popped entry; fallback to state
   const urlPath = new URLSearchParams(window.location.search).get('path');
-  const rawPath = urlPath || state.path || 'Home/About';
+  const rawPath = urlPath || state.path || 'Start Here/About';
   highlightActiveLink(rawPath);
   loadContent(`${normalizePath(rawPath)}.html`);
 });
