@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Recursion</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <script src="../../scripts/chapterScripts.js"></script>
+  <link rel="stylesheet" href="../../css/style.css" />
+  <link rel="stylesheet" href="../../css/chapter.css" />
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-DQ5LVZVFDC');
+  </script>
+</head>
+<body>
+  <h1>Recursion</h1>
+
+    <section id="overview" section-title="Overview">
+    <h2>Overview</h2>
+    <p>
+    A <a href="?path=Foundations/Recursion">recursive</a> algorithm solves a problem by applying
+    the same algorithm to smaller versions of that problem. Instead of trying to solve the whole
+    problem at once, the algorithm handles one layer of the task and leaves the rest to one or more
+    recursive calls.
+    </p>
+
+    <p>
+      For example, to compute the sum of the first <code>n</code> positive integers, we can
+      first compute the sum of the first <code>n - 1</code> positive integers and then add
+      <code>n</code>. To search a sorted array, we can compare against the middle item and then
+      recursively search only the left half or the right half. In both cases, the recursive
+      call solves a smaller version of the original problem.
+    </p>
+    <p>
+      Recursion is closely related to mathematical induction. A base case handles a smallest
+      instance directly, and the recursive case explains how to solve a larger instance using
+      smaller ones. This same pattern will appear throughout the course in divide-and-conquer
+      algorithms, tree processing, backtracking, recurrence relations, and dynamic programming.
+    </p>
+  </section>
+
+  <section id="requirements" section-title="The Three Requirements">
+  <h2>The Three Requirements</h2>
+  <p>
+    Every recursive algorithm needs three pieces: a base case, a recursive case, and
+    progress toward the base case. These pieces work together to make sure the algorithm
+    eventually stops and produces the correct answer.
+  </p>
+  <ul>
+    <li>
+      <strong>Base case:</strong> One or more small inputs that can be solved directly,
+      without making another recursive call.
+    </li>
+    <li>
+      <strong>Recursive case:</strong> A rule that solves the current problem using one
+      or more smaller instances of the same problem.
+    </li>
+    <li>
+      <strong>Progress:</strong> A guarantee that each recursive call moves closer to a
+      base case.
+    </li>
+  </ul>
+
+  <p>
+    The base case tells the algorithm when to stop. The recursive case tells it how to
+    reduce the problem. The progress condition connects the two: it ensures that repeated
+    reductions will eventually reach a base case.
+  </p>
+  
+<p>
+  If any of the three are missing, the recursive algorithm is likely to fail. If there is
+  no base case, the recursive calls will never end. If there is no recursive case,
+  the algorithm is not really using recursion to reduce the problem. If there is no progress,
+  the function may keep calling itself on inputs that never reach a base case.
+</p>
+
+</section>
+
+<section id="factorial" section-title="Example: Factorial">
+  <h2>Example: Factorial</h2>
+  <p>
+    The factorial function gives a simple first example because its definition is already
+    recursive. For a nonnegative integer \(n\), \(n!\), read "n factorial", means the product
+    of all positive integers from \(1\) through \(n\). For example,
+    \(4! = 4 \cdot 3 \cdot 2 \cdot 1 = 24\). The values of \(0!\) and \(1!\) are both
+    \(1\). For any integer \(n > 1\), the value of \(n!\) is \(n \cdot (n - 1)!\).
+    This naturally leads to the following recursive method:
+  </p>
+  <pre><code class="language-java">int factorial(int n) {
+    if (n &lt;= 1) {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}</code></pre>
+  <p>
+    In this method, the base case is <code>n &lt;= 1</code>, which returns <code>1</code>
+    without another recursive call. The recursive case is the final line, which computes
+    <code>n * factorial(n - 1)</code>. The method makes progress because each recursive
+    call decreases <code>n</code> by <code>1</code>, so an input larger than <code>1</code>
+    eventually reaches the base case.
+  </p>
+  <p>
+    For example, evaluating <code>factorial(4)</code> produces the chain of calls
+    <code>factorial(4)</code>, <code>factorial(3)</code>, <code>factorial(2)</code>,
+    and <code>factorial(1)</code>. The last call reaches the base case and returns
+    <code>1</code>. After that, the earlier calls finish in reverse order, multiplying
+    by <code>2</code>, then <code>3</code>, and finally <code>4</code> to obtain
+    <code>24</code>.
+  </p>
+  <p>
+    This version assumes that the input is nonnegative. A full implementation might check
+    for negative inputs and report them as invalid.
+  </p>
+</section>
+
+
+  <section id="call-stack" section-title="The Call Stack">
+  <h2>The Call Stack</h2>
+  <p>
+    When one method calls another method, the first method does not disappear. It pauses
+    and waits for the called method to finish. The computer keeps track of these paused
+    and active method calls using the <strong>call stack</strong>.
+  </p>
+  <p>
+    Each active method call has its own <strong>stack frame</strong>. A stack frame stores
+    the information needed for that call, including its parameter values, local variables,
+    and the place where execution should continue after another method returns.
+  </p>
+  <p>
+    Recursive calls use the call stack in the same way as any other method calls. The
+    only unusual feature is that several calls to the same method can be active at the
+    same time, each with its own parameter values.
+  </p>
+   <p>
+    The table below traces the call stack while evaluating <code>factorial(4)</code>.
+    In the stack column, the most recent active call is listed first because it is the
+    top of the stack. Older waiting calls appear below it. During the first few steps,
+    new recursive calls are added; after the base case returns, calls are removed as
+    they finish.
+    </p>
+  <table class="example-table left-top-align">
+  <thead>
+    <tr>
+      <th>Moment</th>
+      <th>Call stack, top first</th>
+      <th>What happens next</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td><code>factorial(4)</code></td>
+      <td><code>factorial(4)</code> needs the value of <code>factorial(3)</code>.</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>
+        <code>factorial(3)</code><br>
+        <code>factorial(4)</code>
+      </td>
+      <td><code>factorial(3)</code> needs the value of <code>factorial(2)</code>.</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>
+        <code>factorial(2)</code><br>
+        <code>factorial(3)</code><br>
+        <code>factorial(4)</code>
+      </td>
+      <td><code>factorial(2)</code> needs the value of <code>factorial(1)</code>.</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>
+        <code>factorial(1)</code><br>
+        <code>factorial(2)</code><br>
+        <code>factorial(3)</code><br>
+        <code>factorial(4)</code>
+      </td>
+      <td><code>factorial(1)</code> reaches the base case and returns <code>1</code>.</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>
+        <code>factorial(2)</code><br>
+        <code>factorial(3)</code><br>
+        <code>factorial(4)</code>
+      </td>
+      <td><code>factorial(2)</code> resumes and returns <code>2 * 1 = 2</code>.</td>
+    </tr>
+    <tr>
+      <td>6</td>
+      <td>
+        <code>factorial(3)</code><br>
+        <code>factorial(4)</code>
+      </td>
+      <td><code>factorial(3)</code> resumes and returns <code>3 * 2 = 6</code>.</td>
+    </tr>
+    <tr>
+      <td>7</td>
+      <td><code>factorial(4)</code></td>
+      <td><code>factorial(4)</code> resumes and returns <code>4 * 6 = 24</code>.</td>
+    </tr>
+  </tbody>
+</table>
+
+
+  <p>
+    The stack grows as recursive calls are made. After the base case returns, the stack
+    <strong>unwinds</strong>: the most recent call finishes first, then the call that was
+    waiting for it, and so on back to the original call.
+  </p>
+<p>
+  The maximum number of active stack frames is the <strong>recursion depth</strong>.
+  For this factorial method, the recursion depth grows in direct proportion to
+  <code>n</code>, so larger inputs create longer chains of waiting calls. This is one
+  reason recursion is not always better than iteration: a loop can compute the same
+  factorial values without building up a chain of stack frames.
+</p>
+</section>
+
+<section id="tracing" section-title="Tracing Recursive Code">
+  <h2>Tracing Recursive Code</h2>
+  <p>
+    Tracing recursive code means recording the calls the program makes and the values
+    those calls return. A written trace does not need to show every detail stored in a
+    stack frame, but it should keep the calls separate and show the order in which they
+    are created and finished.
+  </p>
+  <p>
+    A reliable hand trace follows these steps.
+  </p>
+  <ol class="spaced">
+    <li><strong>Write the current call:</strong> Record the function name and argument values.</li>
+    <li><strong>Check the base case:</strong> If it applies, record the return value or output.</li>
+    <li><strong>Record the recursive call:</strong> If the function recurses, write the new call underneath the current one.</li>
+    <li><strong>Keep calls separate:</strong> Treat each call as having its own parameters and local variables.</li>
+    <li><strong>Unwind in reverse order:</strong> After the base case returns, finish the waiting calls from newest to oldest.</li>
+  </ol>
+  <p>
+    The demo below shows this kind of trace for recursive factorial. Indented lines
+    represent deeper recursive calls. Return lines show the values being passed back as
+    those calls finish.
+  </p>
+  <div class="embeddedDemoContainer">
+    <iframe class="embeddedDemo"
+            src="../../Content/Demos/Decrease-and-Conquer/Factorial Demo.html"
+            allow="fullscreen"
+            name="factorial-trace-demo">
+    </iframe>
+  </div>
+</section>
+
+  <section id="work-before-after" section-title="Work Before and After the Recursive Call">
+  <h2>Work Before and After the Recursive Call</h2>
+  <p>
+    The position of the recursive call affects when work happens. If the method does work
+    before the recursive call, that work happens as the stack is growing. If the method does
+    work after the recursive call, that work happens as the stack is unwinding.
+  </p>
+
+  <p>
+    In this first example, the method prints before making the recursive call.
+  </p>
+  <pre><code class="language-java">void countdown(int n) {
+    if (n &gt; 0) {
+        print(n);
+        countdown(n - 1);
+    }
+}</code></pre>
+  <p>
+    The call <code>countdown(4)</code> prints <code>4 3 2 1</code>. Each value is printed
+    before the next recursive call is made.
+  </p>
+
+  <p>
+    In the next example, the same two lines appear in the opposite order.
+  </p>
+  <pre><code class="language-java">void countup(int n) {
+    if (n &gt; 0) {
+        countup(n - 1);
+        print(n);
+    }
+}</code></pre>
+  <p>
+    The call <code>countup(4)</code> prints <code>1 2 3 4</code>. The recursive calls happen
+    first, so the print statements wait until the calls return.
+  </p>
+
+    <p>
+    This is a common source of mistakes when writing or tracing recursion. Work before the
+    recursive call happens on the way down; work after the recursive call happens on the way
+    back up.
+    </p>
+</section>
+
+
+ <section id="return-values" section-title="Tracing Return Values">
+  <h2>Tracing Return Values</h2>
+  <p>
+    Some recursive methods print output, but many recursive methods return a value. When tracing
+    return values, record what each call is waiting for. A call cannot finish its computation
+    until the recursive call it depends on has returned.
+  </p>
+    <p>
+    For instance, the method below returns the sum of the first <code>n</code> positive
+    integers. The base case returns <code>0</code>, and each recursive call waits for the
+    smaller sum before adding <code>n</code>.
+    </p>
+
+  <pre><code class="language-java">int sumFirst(int n) {
+    if (n &lt;= 0) {
+        return 0;
+    }
+    return n + sumFirst(n - 1);
+}</code></pre>
+
+  <p>
+  The method <code>sumFirst(n)</code> returns the sum <code>1 + 2 + ... + n</code>.
+  To trace a concrete example, we will use <code>sumFirst(4)</code>, whose final answer
+  should be <code>1 + 2 + 3 + 4 = 10</code>. The original call cannot return immediately;
+  it must wait for smaller calls to return first.
+</p>
+
+<p>
+  The trace has two phases. First, the calls go down toward the base case. During this
+  phase, each call waits for a smaller call to return.
+</p>
+
+<table class="example-table left-top-align">
+  <thead>
+    <tr>
+      <th>Step</th>
+      <th>Call</th>
+      <th>What it is waiting for</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td><code>sumFirst(4)</code></td>
+      <td>Needs <code>sumFirst(3)</code> before it can return <code>4 + sumFirst(3)</code>.</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td><code>sumFirst(3)</code></td>
+      <td>Needs <code>sumFirst(2)</code> before it can return <code>3 + sumFirst(2)</code>.</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td><code>sumFirst(2)</code></td>
+      <td>Needs <code>sumFirst(1)</code> before it can return <code>2 + sumFirst(1)</code>.</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td><code>sumFirst(1)</code></td>
+      <td>Needs <code>sumFirst(0)</code> before it can return <code>1 + sumFirst(0)</code>.</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td><code>sumFirst(0)</code></td>
+      <td>Base case. Returns <code>0</code>.</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>
+  Once the base case returns, the calls finish in reverse order. Each return value is
+  passed back to the call that was waiting for it.
+</p>
+
+<table class="example-table left-top-align">
+  <thead>
+    <tr>
+      <th>Step</th>
+      <th>Returning call</th>
+      <th>Value from smaller call</th>
+      <th>Value returned</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>6</td>
+      <td><code>sumFirst(1)</code></td>
+      <td><code>sumFirst(0)</code> returned <code>0</code></td>
+      <td><code>1 + 0 = 1</code></td>
+    </tr>
+    <tr>
+      <td>7</td>
+      <td><code>sumFirst(2)</code></td>
+      <td><code>sumFirst(1)</code> returned <code>1</code></td>
+      <td><code>2 + 1 = 3</code></td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td><code>sumFirst(3)</code></td>
+      <td><code>sumFirst(2)</code> returned <code>3</code></td>
+      <td><code>3 + 3 = 6</code></td>
+    </tr>
+    <tr>
+      <td>9</td>
+      <td><code>sumFirst(4)</code></td>
+      <td><code>sumFirst(3)</code> returned <code>6</code></td>
+      <td><code>4 + 6 = 10</code></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>
+  The original call, <code>sumFirst(4)</code>, returns last because it depends on all of
+  the smaller calls. Its final return value is <code>10</code>.
+</p>
+<p>
+  Of course, summing the first <code>n</code> positive integers is usually better solved
+  with a loop or even with a formula. The recursive version is useful here because it gives
+  a simple example of how return values move back through a chain of recursive calls.
+</p>
+</section>
+
+
+<font size="15" color='red'>I AM HERE!</font>
+  <section id="branching-recursion" section-title="Branching Recursion">
+    <h2>Branching Recursion</h2>
+    <p>
+      Introduce the idea that some recursive methods make more than one recursive call.
+      Use naive Fibonacci only as a small warning example, not as the main focus.
+    </p>
+    <pre><code class="language-java">int fib(int n) {
+    if (n &lt;= 1) {
+        return n;
+    }
+    return fib(n - 1) + fib(n - 2);
+}</code></pre>
+    <p>
+      Show that the calls form a tree rather than a single chain, and note that repeated
+      subproblems can make a recursive algorithm much slower than expected.
+    </p>
+  </section>
+
+  <section id="designing" section-title="Designing Recursive Solutions">
+    <h2>Designing Recursive Solutions</h2>
+    <p>
+      Present recursive design as deciding what one call means, then trusting the
+      recursive call to solve a smaller instance.
+    </p>
+    <ol class="spaced">
+      <li><strong>State the meaning of the function:</strong> Be precise about what one call computes or does.</li>
+      <li><strong>Choose the base case:</strong> Identify the smallest input that can be answered immediately.</li>
+      <li><strong>Choose the smaller problem:</strong> Decide which smaller instance the recursive call should solve.</li>
+      <li><strong>Combine the answer:</strong> Use the smaller answer to finish the current call.</li>
+      <li><strong>Check progress:</strong> Make sure every recursive path eventually reaches a base case.</li>
+    </ol>
+    <p>
+      Include one compact design example, probably recursive binary search or a
+      palindrome test. Avoid making this section too long; later pages will give many
+      algorithm-specific examples.
+    </p>
+  </section>
+
+  <section id="recursion-versus-iteration" section-title="Recursion Versus Iteration">
+    <h2>Recursion Versus Iteration</h2>
+    <p>
+      Explain that some recursive algorithms are naturally recursive, while others are
+      mostly loops in disguise. Factorial and simple summation are often clearer and
+      more space-efficient as loops, while trees, divide-and-conquer, and backtracking
+      are often clearer recursively.
+    </p>
+  </section>
+
+  <section id="common-mistakes" section-title="Common Mistakes">
+    <h2>Common Mistakes</h2>
+    <ul class="spaced">
+      <li><strong>No base case:</strong> The function always calls itself again.</li>
+      <li><strong>Base case too narrow:</strong> The code handles one stopping case but misses another possible small input.</li>
+      <li><strong>No progress:</strong> The recursive call uses the same arguments or moves away from the base case.</li>
+      <li><strong>Wrong combination:</strong> The recursive call is correct, but the current call uses its answer incorrectly.</li>
+      <li><strong>Unexpected stack growth:</strong> The code works for small inputs but fails or wastes space on large inputs.</li>
+      <li><strong>Repeated subproblems:</strong> The same recursive calls are recomputed many times.</li>
+    </ul>
+  </section>
+
+  <section id="efficiency" section-title="Efficiency Warnings">
+    <h2>Efficiency Warnings</h2>
+    <p>
+      Keep this section brief. The full analysis of recursive algorithms belongs in the
+      later analysis chapters. Here, students only need to notice basic call shapes.
+    </p>
+    <table class="example-table left-align">
+      <thead>
+        <tr>
+          <th>Call shape</th>
+          <th>What it looks like</th>
+          <th>What to watch for</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Single chain</td>
+          <td>One recursive call per non-base case</td>
+          <td>Maximum recursion depth and stack space.</td>
+        </tr>
+        <tr>
+          <td>Branching tree</td>
+          <td>Two or more recursive calls per non-base case</td>
+          <td>Possible rapid growth in the number of calls.</td>
+        </tr>
+        <tr>
+          <td>Repeated subproblems</td>
+          <td>The same arguments appear many times</td>
+          <td>Possible need for memoization or dynamic programming later.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="reading-questions" section-title="Reading Comprehension Questions">
+    <h2>Reading Comprehension Questions</h2>
+    <ol>
+      <li><strong>Recursive Structure:</strong> What does it mean for an algorithm to solve a problem recursively?</li>
+      <li><strong>Base Case:</strong> Why does a recursive algorithm need at least one base case?</li>
+      <li><strong>Progress:</strong> What can go wrong if the recursive call does not make progress toward a base case?</li>
+      <li><strong>Call Stack:</strong> Why can several calls to the same recursive method be active at the same time?</li>
+      <li><strong>Output Order:</strong> Why does printing before the recursive call produce a different order than printing after the recursive call?</li>
+      <li><strong>Repeated Work:</strong> What does the naive Fibonacci example reveal about branching recursion?</li>
+    </ol>
+    <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
+    <div id="answers" class="answer" hidden>
+      <ol>
+        <li><strong>Answer:</strong> It solves the original problem by solving one or more smaller instances of the same problem.</li>
+        <li><strong>Answer:</strong> Without a base case, the recursive calls would not have a direct stopping point.</li>
+        <li><strong>Answer:</strong> The calls may continue forever or until the program runs out of stack space.</li>
+        <li><strong>Answer:</strong> Each call receives its own stack frame, so a new call can run while earlier calls wait for its result.</li>
+        <li><strong>Answer:</strong> Work before the recursive call happens as the stack grows, while work after the recursive call happens as the stack unwinds.</li>
+        <li><strong>Answer:</strong> It shows that branching recursion can recompute the same subproblems many times.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="activities" section-title="In-Class Activities">
+    <h2>In-Class Activities</h2>
+    <ol>
+      <li><strong>Identify the Pieces:</strong> Given a recursive method that prints numbers from <code>n</code> down to <code>1</code>, identify the base case, recursive case, and progress measure.</li>
+      <li><strong>Draw the Stack:</strong> Draw the stack frames created by <code>factorial(4)</code>. Include the value of <code>n</code> in each frame.</li>
+      <li><strong>Trace Output Order:</strong> Trace <code>countdown(5)</code> and <code>countup(5)</code>. Explain why the outputs differ.</li>
+      <li><strong>Trace Return Values:</strong> Complete a trace table for <code>sumFirst(5)</code>, including each waiting expression and return value.</li>
+      <li><strong>Find Repeated Work:</strong> Draw the call tree for <code>fib(5)</code> and circle repeated calls.</li>
+      <li><strong>Design One Call:</strong> For a recursive method that counts a target value in an array, state the meaning of one call and identify the smaller problem.</li>
+    </ol>
+  </section>
+
+  <section id="problems" section-title="Homework Problems">
+    <h2>Homework Problems</h2>
+    <ol>
+      <li><strong>Recursive Product:</strong> Write pseudocode for <code>product(n)</code>, which returns <code>1 * 2 * ... * n</code> for <code>n &gt;= 1</code>. Identify the base case and recursive case.</li>
+      <li><strong>Stack Depth:</strong> Suppose <code>mystery(n)</code> calls only <code>mystery(n - 2)</code> until <code>n &lt;= 0</code>. What is the maximum recursion depth as a function of <code>n</code>?</li>
+      <li><strong>Trace a String Method:</strong> Write a recursive method that prints a string backward. Trace it on <code>"cat"</code>.</li>
+      <li><strong>Compare Recursive and Iterative Sum:</strong> Write both versions of a method that computes the sum of the first <code>n</code> positive integers. Compare time and extra space use.</li>
+      <li><strong>Recursive Maximum:</strong> Write pseudocode for a method that returns the maximum value in <code>a[0..n-1]</code>. State the meaning of the method and explain why the recursive case is correct.</li>
+      <li><strong>Repeated Work:</strong> Draw the call tree for <code>fib(6)</code>. Count how many times <code>fib(2)</code> appears.</li>
+    </ol>
+  </section>
+</body>
+</html>
