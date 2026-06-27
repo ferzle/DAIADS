@@ -424,147 +424,874 @@
 </p>
 </section>
 
-
-<font size="15" color='red'>I AM HERE!</font>
   <section id="branching-recursion" section-title="Branching Recursion">
-    <h2>Branching Recursion</h2>
-    <p>
-      Introduce the idea that some recursive methods make more than one recursive call.
-      Use naive Fibonacci only as a small warning example, not as the main focus.
-    </p>
-    <pre><code class="language-java">int fib(int n) {
+  <h2>Branching Recursion</h2>
+  <p>
+  The examples so far have made one recursive call at a time. These calls form a single
+  chain: each call waits for one smaller call, which waits for one even smaller call, and
+  so on. Some recursive methods make more than one recursive call from the same method call.
+  This is called <strong>branching recursion</strong>.
+</p>
+<p>
+  A simple example is the Fibonacci sequence:
+  \(0, 1, 1, 2, 3, 5, 8, 13, \ldots\). Each number after the first two is the sum of the
+  two numbers before it. That is, \(F_0 = 0\), \(F_1 = 1\), and for \(n > 1\),
+  \(F_n = F_{n-1} + F_{n-2}\). Fibonacci numbers appear in many places in mathematics
+  and computer science, partly because they are a simple example of a sequence defined
+  in terms of earlier values.
+</p>
+<p>
+  This definition leads directly to a recursive method: if <code>n == 0</code> or <code>n == 1</code>, return 
+<code>n</code>; otherwise recursively compute the two previous Fibonacci values, add
+  them and return the result. Here is a simple implementation of the idea:
+</p>
+
+  <pre><code class="language-java">int fib(int n) {
     if (n &lt;= 1) {
         return n;
     }
     return fib(n - 1) + fib(n - 2);
 }</code></pre>
-    <p>
-      Show that the calls form a tree rather than a single chain, and note that repeated
-      subproblems can make a recursive algorithm much slower than expected.
-    </p>
-  </section>
+<p>
+  Note that in this implementation, we are assuming that <code>n</code> is a non-negative integer.
+</p>
+  <p>
+    For example, <code>fib(5)</code> calls both <code>fib(4)</code> and
+    <code>fib(3)</code>. Then <code>fib(4)</code> calls <code>fib(3)</code> and
+    <code>fib(2)</code>. Instead of forming a single chain of calls, the computation forms
+    a <strong>call tree</strong>.
+  </p>
+  <p>
+    The demo below shows a trace of <code>fib(5)</code>. Each call is shown as a circle in the
+    tree. The circles are drawn in the order they are created, and the return values are
+    shown as the circles finish.
+  </p>
+    
+  <div class="embeddedDemoContainer">
+    <iframe class="embeddedDemo"
+            src="../../Content/Demos/Brute Force/Fibonacci 5 Naive Demo.html"
+            allow="fullscreen"
+            name="fibonacci-trace-demo">
+    </iframe>
+  </div>
+  <p>If you want to step through this more slowly, and/or see the execution for other values 
+    of <code>n</code>, you can use the
+     <a href="?path=Demos/Brute Force/Fibonacci Naive Demo">Fibonacci Naive Demo</a>.
+  </p>
+ <p>
+  Although this is a valid and natural way to compute Fibonacci numbers from the definition,
+  it is not an efficient solution to the problem. The trace reveals repeated work:
+  <code>fib(3)</code> appears more than once, and so does <code>fib(2)</code>. The recursive
+  method is correct, but it recomputes the same values many times. Later, when we study
+  dynamic programming, we will see how to keep the recursive structure while avoiding this
+  repeated work. For now, it is useful because it shows that recursive calls can branch
+  into a tree rather than forming a single chain.
+</p>
+<p>
+  In the next section, we will see a better example of branching recursion: one where
+  the recursive calls solve different parts of the problem instead of repeating the same work.
+</p>
+</section>
 
-  <section id="designing" section-title="Designing Recursive Solutions">
-    <h2>Designing Recursive Solutions</h2>
-    <p>
-      Present recursive design as deciding what one call means, then trusting the
-      recursive call to solve a smaller instance.
-    </p>
-    <ol class="spaced">
-      <li><strong>State the meaning of the function:</strong> Be precise about what one call computes or does.</li>
-      <li><strong>Choose the base case:</strong> Identify the smallest input that can be answered immediately.</li>
-      <li><strong>Choose the smaller problem:</strong> Decide which smaller instance the recursive call should solve.</li>
-      <li><strong>Combine the answer:</strong> Use the smaller answer to finish the current call.</li>
-      <li><strong>Check progress:</strong> Make sure every recursive path eventually reaches a base case.</li>
-    </ol>
-    <p>
-      Include one compact design example, probably recursive binary search or a
-      palindrome test. Avoid making this section too long; later pages will give many
-      algorithm-specific examples.
-    </p>
-  </section>
+<section id="designing" section-title="Designing Recursive Solutions">
+  <h2>Designing Recursive Solutions</h2>
+  <p>
+    Designing a recursive solution usually starts by deciding what one function call means.
+    Once that meaning is precise, you can treat the recursive call as a helper that already
+    solves a smaller version of the same problem. The current call only has to reduce the
+    problem and use the smaller answer correctly.
+  </p>
 
-  <section id="recursion-versus-iteration" section-title="Recursion Versus Iteration">
-    <h2>Recursion Versus Iteration</h2>
-    <p>
-      Explain that some recursive algorithms are naturally recursive, while others are
-      mostly loops in disguise. Factorial and simple summation are often clearer and
-      more space-efficient as loops, while trees, divide-and-conquer, and backtracking
-      are often clearer recursively.
-    </p>
-  </section>
+  <p>
+    A useful design process is:
+  </p>
+  <ol>
+    <li><strong>State the meaning of the function:</strong> Be precise about what one call computes or does.</li>
+    <li><strong>Choose the base case:</strong> Identify an input that can be answered immediately.</li>
+    <li><strong>Choose the smaller problem:</strong> Decide what smaller instance the recursive call should solve.</li>
+    <li><strong>Combine the answer:</strong> Use the smaller answer or answers to finish the current call.</li>
+    <li><strong>Check progress:</strong> Make sure every recursive path eventually reaches a base case.</li>
+  </ol>
+<div class="example-box">
+  <strong class="example-title">Example 1: Palindrome Test</strong>
 
-  <section id="common-mistakes" section-title="Common Mistakes">
-    <h2>Common Mistakes</h2>
-    <ul class="spaced">
-      <li><strong>No base case:</strong> The function always calls itself again.</li>
-      <li><strong>Base case too narrow:</strong> The code handles one stopping case but misses another possible small input.</li>
-      <li><strong>No progress:</strong> The recursive call uses the same arguments or moves away from the base case.</li>
-      <li><strong>Wrong combination:</strong> The recursive call is correct, but the current call uses its answer incorrectly.</li>
-      <li><strong>Unexpected stack growth:</strong> The code works for small inputs but fails or wastes space on large inputs.</li>
-      <li><strong>Repeated subproblems:</strong> The same recursive calls are recomputed many times.</li>
-    </ul>
-  </section>
+<p>
+  A string is a <strong>palindrome</strong> if it reads the same forward and backward.
+  For example, <code>"racecar"</code> and <code>"level"</code> are palindromes. A recursive
+  way to check this is to compare the first and last characters. If they do not match,
+  the string is not a palindrome. If they do match, the only remaining question is whether
+  the substring between them is also a palindrome, and we can check that recursively.
+</p>
 
-  <section id="efficiency" section-title="Efficiency Warnings">
-    <h2>Efficiency Warnings</h2>
+  <p>
+    Let <code>isPalindrome(s, left, right)</code> mean: return <code>true</code> if the
+    part of <code>s</code> from index <code>left</code> through index <code>right</code>
+    is a palindrome.
+  </p>
+
+  <ul class="spaced">
+    <li>
+      <strong>Base case:</strong> If <code>left &gt;= right</code>, there are zero or one
+      characters left to check, so return <code>true</code>.
+    </li>
+    <li>
+      <strong>Immediate failure:</strong> If <code>s.charAt(left)</code> and
+      <code>s.charAt(right)</code> are different, return <code>false</code>.
+    </li>
+    <li>
+      <strong>Smaller problem:</strong> If the outside characters match, recursively check
+      the inside substring from <code>left + 1</code> through <code>right - 1</code>.
+    </li>
+    <li>
+      <strong>Progress:</strong> Each recursive call moves the two indices closer together.
+    </li>
+  </ul>
+
+  <p>Here is the implementation:</p>
+  <pre><code class="language-java">boolean isPalindrome(String s, int left, int right) {
+    if (left &gt;= right) {
+        return true;
+    }
+
+    if (s.charAt(left) != s.charAt(right)) {
+        return false;
+    }
+
+    return isPalindrome(s, left + 1, right - 1);
+}</code></pre>
+
+
+<p>
+  For example, checking <code>"racecar"</code> moves inward one pair of characters at a time:
+</p>
+<ul>
+  <li>
+    <code>"racecar"</code>: Compare <code>'r'</code> with <code>'r'</code>. Since they match,
+    recursively check the inside substring <code>"aceca"</code>.
+  </li>
+  <li>
+    <code>"aceca"</code>: Compare <code>'a'</code> with <code>'a'</code>. Since they match,
+    recursively check the inside substring <code>"cec"</code>.
+  </li>
+  <li>
+    <code>"cec"</code>: Compare <code>'c'</code> with <code>'c'</code>. Since they match,
+    recursively check the inside substring <code>"e"</code>.
+  </li>
+  <li>
+    <code>"e"</code>: There is only one character left, so the base case returns <code>true</code>.
+  </li>
+</ul>
+<p>
+  That <code>true</code> value is passed back through the earlier recursive calls, so the
+  original call also returns <code>true</code>.
+</p>
+<p>
+  A non-palindrome can stop much earlier. For example, checking <code>"robot"</code> first
+  compares <code>'r'</code> with <code>'t'</code>. Since they do not match, the method returns
+  <code>false</code> immediately without checking the inside substring.
+</p>
+
+  <p>
+    This is single-chain recursion. Each recursive call has at most one smaller recursive
+    call to wait for.
+  </p>
+</div>
+
+<div class="example-box">
+  <strong class="example-title">Example 2: Generating Binary Strings</strong>
+
+  <p>
+    A <strong>binary string</strong> is a string made only from the characters
+    <code>0</code> and <code>1</code>. For example, the binary strings of length
+    <code>2</code> are <code>"00"</code>, <code>"01"</code>, <code>"10"</code>, and
+    <code>"11"</code>.
+  </p>
+
+  <p>
+    For any length greater than <code>0</code>, every binary string starts with either
+    <code>0</code> or <code>1</code>. After choosing that first character, the rest of the
+    string is a shorter binary string. This makes the problem naturally branching: one
+    branch handles strings whose next character is <code>0</code>, and the other branch
+    handles strings whose next character is <code>1</code>.
+  </p>
+
+  <p>
+    Let <code>printBinary(prefix, remaining)</code> mean: print every binary string that
+    begins with <code>prefix</code> and has <code>remaining</code> more characters after
+    that prefix. For example, <code>printBinary("10", 2)</code> should print
+    <code>"1000"</code>, <code>"1001"</code>, <code>"1010"</code>, and <code>"1011"</code>.
+    To print all binary strings of length <code>n</code>, we start with an empty prefix by
+    calling <code>printBinary("", n)</code>.
+  </p>
+
+  <p>
+    This meaning leads directly to the recursive structure:
+  </p>
+
+  <ul>
+    <li>
+      <strong>Base case:</strong> If <code>remaining == 0</code>, the prefix is a complete
+      binary string, so print it.
+    </li>
+    <li>
+      <strong>First branch:</strong> Add <code>0</code> to the prefix and recursively fill
+      the remaining positions.
+    </li>
+    <li>
+      <strong>Second branch:</strong> Add <code>1</code> to the prefix and recursively fill
+      the remaining positions.
+    </li>
+    <li>
+      <strong>Progress:</strong> Each recursive call decreases <code>remaining</code> by
+      <code>1</code>.
+    </li>
+  </ul>
+
+  <p>
+    This gives the following implementation:
+  </p>
+
+  <pre><code class="language-java">void printBinary(String prefix, int remaining) {
+    if (remaining == 0) {
+        print(prefix);
+        return;
+    }
+
+    printBinary(prefix + "0", remaining - 1);
+    printBinary(prefix + "1", remaining - 1);
+}</code></pre>
+
+  <p>
+    To print all binary strings of length <code>3</code>, we would call:
+  </p>
+
+  <pre><code class="language-java">printBinary("", 3);</code></pre>
+
+<p>
+  The trace below shows the calls made by <code>printBinary("", 3)</code>. Indentation
+  shows recursive depth: deeper lines are calls made by the line above them. When the next
+  line is farther left than the previous line, one or more recursive calls have finished,
+  and the computation has returned to an earlier call.
+</p>
+
+  <pre><code>printBinary("", 3)
+  printBinary("0", 2)
+    printBinary("00", 1)
+      printBinary("000", 0) prints 000
+      printBinary("001", 0) prints 001
+    printBinary("01", 1)
+      printBinary("010", 0) prints 010
+      printBinary("011", 0) prints 011
+  printBinary("1", 2)
+    printBinary("10", 1)
+      printBinary("100", 0) prints 100
+      printBinary("101", 0) prints 101
+    printBinary("11", 1)
+      printBinary("110", 0) prints 110
+      printBinary("111", 0) prints 111</code></pre>
+
+  <p>
+    This is branching recursion because each non-base case makes two recursive calls.
+    Unlike the naive Fibonacci method, the two branches do different work: one branch
+    extends the current prefix with <code>0</code>, and the other extends it with
+    <code>1</code>. Together, the branches generate every binary string of the requested
+    length exactly once.
+  </p>
+</div>
+</section>
+
+<section id="recursion-versus-iteration" section-title="Recursion Versus Iteration">
+  <h2>Recursion Versus Iteration</h2>
+
+<p>
+  It is useful to separate the <strong>recursive idea</strong> from the
+  <strong>recursive implementation</strong>. A problem may have a recursive structure
+  because it can be described in terms of smaller versions of itself. That does not always
+  mean the final code should use recursive method calls.
+</p>
+
+<p>
+  Many problems can be solved either recursively or iteratively. Recursion is often helpful
+  when the problem naturally contains smaller versions of itself. Iteration is often better
+  when the recursive version is only repeating a simple loop, or when the loop is just as
+  clear.
+</p>
+
+<p>
+  Recursive calls also have some overhead. Each call creates a new stack frame, and a long
+  chain of recursive calls can use more memory than a loop. For that reason, if the recursive
+  and iterative versions are equally clear, the iterative version is usually preferred.
+</p>
+
+  <div class="example-box">
+    <strong class="example-title">Example: When Iteration Is Better</strong>
+
+  <p>
+  Summing the first <code>n</code> positive integers can be written recursively because
+  <code>sumFirst(n)</code> is equal to <code>n + sumFirst(n - 1)</code>. That is a valid
+  recursive description: solve the smaller problem of summing the first <code>n - 1</code>
+  positive integers, then add <code>n</code>. However, the recursive version is mostly a
+  loop in disguise because it processes the numbers one at a time in a simple sequence.
+</p>
+
+    <pre><code class="language-java">int sumFirstRecursive(int n) {
+    if (n &lt;= 0) {
+        return 0;
+    }
+    return n + sumFirstRecursive(n - 1);
+}</code></pre>
+
     <p>
-      Keep this section brief. The full analysis of recursive algorithms belongs in the
-      later analysis chapters. Here, students only need to notice basic call shapes.
+      A loop expresses the same idea without building up a chain of waiting calls.
     </p>
-    <table class="example-table left-align">
-      <thead>
-        <tr>
-          <th>Call shape</th>
-          <th>What it looks like</th>
-          <th>What to watch for</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>Single chain</td>
-          <td>One recursive call per non-base case</td>
-          <td>Maximum recursion depth and stack space.</td>
-        </tr>
-        <tr>
-          <td>Branching tree</td>
-          <td>Two or more recursive calls per non-base case</td>
-          <td>Possible rapid growth in the number of calls.</td>
-        </tr>
-        <tr>
-          <td>Repeated subproblems</td>
-          <td>The same arguments appear many times</td>
-          <td>Possible need for memoization or dynamic programming later.</td>
-        </tr>
-      </tbody>
-    </table>
-  </section>
+
+    <pre><code class="language-java">int sumFirstIterative(int n) {
+    int total = 0;
+    for (int i = 1; i &lt;= n; i++) {
+        total += i;
+    }
+    return total;
+}</code></pre>
+
+  <p>
+    In this case, the iterative version is the better practical implementation. It is simpler,
+    avoids extra stack frames, and uses less memory. The recursive version is valid, but it
+    adds implementation overhead for a task that a loop handles directly.
+  </p>
+  </div>
+
+  <div class="example-box">
+  <strong class="example-title">Example: A Recursive Idea with an Iterative Implementation</strong>
+
+  <p>
+    The palindrome test from the previous section has a natural recursive idea. Once the
+    first and last characters match, the remaining question is whether the substring between
+    them is a palindrome. That is the same problem on a smaller piece of the string.
+  </p>
+
+  <p>
+    The final implementation does not have to be recursive, though. The same idea can be
+    implemented with a loop that moves two indices inward:
+  </p>
+
+  <pre><code class="language-java">boolean isPalindromeIterative(String s) {
+    int left = 0;
+    int right = s.length() - 1;
+
+    while (left &lt; right) {
+        if (s.charAt(left) != s.charAt(right)) {
+            return false;
+        }
+        left++;
+        right--;
+    }
+
+    return true;
+}</code></pre>
+
+  <p>
+    This iterative version is probably the better practical implementation: it avoids
+    recursive calls and uses only a few variables. Still, the recursive way of thinking
+    helped identify the structure of the solution: compare the outside characters, then
+    move inward to the smaller remaining problem.
+  </p>
+</div>
+
+<div class="example-box full-width">
+  <strong class="example-title">Example: Recursion Fits Branching Choices</strong>
+
+  <p>
+    We saw a recursive solution for generating binary strings. This is a case where both
+    the recursive idea and the recursive implementation are natural. At each step, there
+    are two choices for the next character: <code>0</code> or <code>1</code>. The recursive
+    method turns those two choices into two recursive calls.
+  </p>
+
+  <p>
+    An iterative solution is possible, but it needs extra machinery to keep track of the
+    unfinished choices. The version below uses a <strong>stack</strong>, which is a structure
+    for storing items and removing the most recently added item first. We will study stacks
+    later; for now, the important point is that the iterative version has to manage the
+    partially built strings itself.
+  </p>
+
+  <pre><code class="language-java">void printBinaryIterative(int n) {
+    Stack prefixes = new Stack();
+    prefixes.push("");
+
+    while (!prefixes.isEmpty()) {
+        String prefix = prefixes.pop();
+
+        if (prefix.length() == n) {
+            print(prefix);
+        } else {
+            prefixes.push(prefix + "1");
+            prefixes.push(prefix + "0");
+        }
+    }
+}</code></pre>
+
+  <p>
+    This code still follows the same branching idea: each unfinished prefix creates two
+    longer prefixes, one ending in <code>0</code> and one ending in <code>1</code>. However,
+    the iterative version must explicitly store and retrieve the unfinished prefixes. In the
+    recursive version, that bookkeeping is handled by the call stack, so the code more directly
+    reflects the branching structure of the problem.
+  </p>
+</div>
+
+<p>
+  Recursion is most useful when the problem naturally breaks into smaller subproblems or
+  branching choices. Even then, a recursive idea does not always require a recursive
+  implementation. If the same idea can be implemented with a simple loop, the iterative
+  version is often preferred because it avoids the overhead of recursive calls. Recursive
+  implementations are strongest when they make the structure of the problem clearer than
+  the equivalent iterative code.
+</p>
+</section>
+
+<section id="common-mistakes" section-title="Common Mistakes">
+  <h2>Common Mistakes</h2>
+
+  <p>
+    Recursive code can be short, but small mistakes can change its behavior dramatically.
+    When a recursive method fails, it is usually because one of the basic requirements is
+    missing or because the recursive answer is used incorrectly.
+  </p>
+
+  <ul>
+    <li>
+      <strong>No base case:</strong> The method always calls itself again. Since no call ever
+      returns directly, the recursion continues until the program runs out of stack space.
+    </li>
+    <li>
+      <strong>Base case too narrow:</strong> The code handles one stopping case but misses
+      another possible small input. For example, a method that stops only when
+      <code>n == 0</code> may fail if a recursive call skips past <code>0</code> or if the
+      original input is negative.
+    </li>
+    <li>
+      <strong>No progress:</strong> The recursive call uses the same arguments or moves away
+      from the base case. For example, <code>factorial(n)</code> should call
+      <code>factorial(n - 1)</code>, not <code>factorial(n)</code> again.
+    </li>
+    <li>
+      <strong>Progress in the wrong direction:</strong> The recursive call changes the input,
+      but not toward the base case. For example, if the base case is
+      <code>n &lt;= 0</code>, then calling the method with <code>n + 1</code> moves in the
+      wrong direction for positive inputs.
+    </li>
+
+    <li>
+      <strong>Wrong combination:</strong> The recursive call may correctly solve the smaller
+      problem, but the current call uses that answer incorrectly. For example,
+      <code>sumFirst(n)</code> should return <code>n + sumFirst(n - 1)</code>, not just
+      <code>sumFirst(n - 1)</code>.
+    </li>
+    <li>
+      <strong>Forgetting to return the recursive answer:</strong> A method may make the right
+      recursive call but fail to return its result. This is common in methods that compute a
+      value instead of printing output.
+    </li>
+    <li>
+      <strong>Confusing work before and after the recursive call:</strong> Code before the
+      recursive call happens while the stack is growing. Code after the recursive call happens
+      while the stack is unwinding. Reversing these can produce output in the opposite order.
+    </li>
+    <li>
+      <strong>Unexpected stack growth:</strong> The code may work for small inputs but fail
+      or waste space on large inputs because each unfinished call uses a stack frame. A loop
+      may be a better choice when the recursive version is only a simple chain of calls.
+    </li>
+    <li>
+      <strong>Repeated subproblems:</strong> Some recursive methods recompute the same values
+      many times. The naive Fibonacci method is a typical example: the same smaller Fibonacci
+      values are computed again and again.
+    </li>
+  </ul>
+</section>
 
   <section id="reading-questions" section-title="Reading Comprehension Questions">
-    <h2>Reading Comprehension Questions</h2>
+  <h2>Reading Comprehension Questions</h2>
+  <ol>
+    <li>
+      <strong>Recursive Structure:</strong> What does it mean for an algorithm to solve a
+      problem recursively?
+    </li>
+    <li>
+      <strong>Three Requirements:</strong> What are the three basic pieces every recursive
+      algorithm needs?
+    </li>
+    <li>
+      <strong>Base Case:</strong> Why does a recursive algorithm need at least one base case?
+    </li>
+    <li>
+      <strong>Progress:</strong> What can go wrong if the recursive call does not make progress
+      toward a base case?
+    </li>
+    <li>
+      <strong>Call Stack:</strong> Why can several calls to the same recursive method be active
+      at the same time?
+    </li>
+    <li>
+      <strong>Unwinding:</strong> What does it mean for the call stack to unwind?
+    </li>
+    <li>
+      <strong>Output Order:</strong> Why does printing before the recursive call produce a
+      different order than printing after the recursive call?
+    </li>
+    <li>
+      <strong>Branching Recursion:</strong> What makes binary string generation an example of
+      branching recursion?
+    </li>
+    <li>
+      <strong>Repeated Work:</strong> What does the naive Fibonacci example reveal about some
+      branching recursive algorithms?
+    </li>
+    <li>
+      <strong>Recursive Idea vs. Implementation:</strong> Why might a problem have a recursive
+      idea but still be implemented iteratively?
+    </li>
+  </ol>
+
+<button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
+
+  <div id="answers" class="answer" hidden>
     <ol>
-      <li><strong>Recursive Structure:</strong> What does it mean for an algorithm to solve a problem recursively?</li>
-      <li><strong>Base Case:</strong> Why does a recursive algorithm need at least one base case?</li>
-      <li><strong>Progress:</strong> What can go wrong if the recursive call does not make progress toward a base case?</li>
-      <li><strong>Call Stack:</strong> Why can several calls to the same recursive method be active at the same time?</li>
-      <li><strong>Output Order:</strong> Why does printing before the recursive call produce a different order than printing after the recursive call?</li>
-      <li><strong>Repeated Work:</strong> What does the naive Fibonacci example reveal about branching recursion?</li>
+      <li>
+        <strong>Answer:</strong> It means the algorithm solves the original problem by solving
+        one or more smaller instances of the same problem.
+      </li>
+      <li>
+        <strong>Answer:</strong> A recursive algorithm needs a base case, a recursive case, and
+        progress toward the base case.
+      </li>
+      <li>
+        <strong>Answer:</strong> The base case gives the recursion a stopping point. Without
+        one, the method would keep calling itself until the program runs out of stack space.
+      </li>
+      <li>
+        <strong>Answer:</strong> The calls may never reach a base case. The method may keep
+        calling itself forever, or until the program runs out of stack space.
+      </li>
+      <li>
+        <strong>Answer:</strong> Each call gets its own stack frame, with its own parameters
+        and local variables. Earlier calls can wait on the stack while later calls run.
+      </li>
+      <li>
+        <strong>Answer:</strong> Unwinding means that recursive calls are finishing and returning
+        values back to the calls that were waiting for them.
+      </li>
+      <li>
+        <strong>Answer:</strong> Work before the recursive call happens as the stack grows, while
+        work after the recursive call happens as the stack unwinds.
+      </li>
+      <li>
+        <strong>Answer:</strong> Each unfinished prefix creates two recursive calls: one that
+        adds <code>0</code> next and one that adds <code>1</code> next.
+      </li>
+      <li>
+        <strong>Answer:</strong> It shows that branching recursion can recompute the same
+        subproblems many times, making the recursive algorithm inefficient.
+      </li>
+      <li>
+        <strong>Answer:</strong> A recursive idea may describe the problem well, but recursive
+        method calls may add overhead. If a loop is simpler or more memory efficient, the
+        iterative implementation may be better in practice.
+      </li>
     </ol>
-    <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
-    <div id="answers" class="answer" hidden>
-      <ol>
-        <li><strong>Answer:</strong> It solves the original problem by solving one or more smaller instances of the same problem.</li>
-        <li><strong>Answer:</strong> Without a base case, the recursive calls would not have a direct stopping point.</li>
-        <li><strong>Answer:</strong> The calls may continue forever or until the program runs out of stack space.</li>
-        <li><strong>Answer:</strong> Each call receives its own stack frame, so a new call can run while earlier calls wait for its result.</li>
-        <li><strong>Answer:</strong> Work before the recursive call happens as the stack grows, while work after the recursive call happens as the stack unwinds.</li>
-        <li><strong>Answer:</strong> It shows that branching recursion can recompute the same subproblems many times.</li>
+  </div>
+</section>
+
+<section id="activities" section-title="In-Class Activities">
+  <h2>In-Class Activities</h2>
+  <ol>
+   <li>
+      <strong>Repair Broken Recursion:</strong> Examine the following method 
+      that is supposed to compute the sum of integers from <code>1</code> to <code>n</code>, and identify two
+      problems with it. Then rewrite the method so that it correctly returns
+      <code>1 + 2 + ... + n</code> for <code>n &gt;= 1</code>.
+      <br>
+      <pre><code class="language-java">int badSum(int n) {
+        if (n == 1) {
+            return 1;
+        }
+        return badSum(n);
+    }</code></pre>
+    </li>
+    <li>
+      <strong>Draw the Call Stack:</strong> Draw the stack frames created by
+      <code>factorial(4)</code>. Include the value of <code>n</code> in each frame. Then show
+      which frame returns first and how the stack unwinds.
+    </li>
+    <li>
+      <strong>Trace Work Before and After:</strong> Trace <code>countdown(5)</code> and
+      <code>countup(5)</code>. For each method, mark which work happens while the stack is
+      growing and which work happens while the stack is unwinding. Explain why the outputs
+      are in opposite orders.
+    </li>
+    <li>
+      <strong>Complete a Return-Value Trace:</strong> Complete a trace table for
+      <code>sumFirst(5)</code>. Include each waiting expression, the value returned by the
+      smaller call, and the value returned by the current call.
+    </li>
+    <li>
+      <strong>Find Repeated Work:</strong> Draw the call tree for <code>fib(6)</code>. 
+      Count the number of times 
+      <code>fib(5)</code>, <code>fib(4)</code>, <code>fib(3)</code>, 
+      <code>fib(2)</code>, <code>fib(1)</code>, and <code>fib(0)</code> appear. 
+      Then explain why the method is correct but inefficient.
+    </li>
+    <li>
+      <strong>Design a Recursive Array Count:</strong> Design a recursive method
+      <code>count(a, n, target)</code> that returns the number of times <code>target</code>
+      appears in the first <code>n</code> positions of array <code>a</code>. State the meaning
+      of one call, identify the base case, identify the smaller problem, and explain how the
+      current call combines its answer with the smaller answer.
+    </li>
+    <li>
+      <strong>Design a Recursive String Reversal:</strong> Design a recursive method that
+      prints the characters of a string backward. First decide what one call means. Then write
+      the recursive structure and trace the method on <code>"cat"</code>. Identify which work
+      happens before the recursive call and which work happens after it.
+    </li>
+    <li>
+      <strong>Compare Recursive and Iterative Maximum:</strong> Design a recursive method that
+      returns the maximum value in <code>a[0..n-1]</code>. Then sketch an iterative version
+      using a loop. Compare the two implementations: which is easier to understand, which uses
+      less extra memory, and which would you usually choose in practice?
+    </li>
+    <li>
+      <strong>Generate Binary Strings by Hand:</strong> Use the recursive binary-string
+      algorithm to list all binary strings of length <code>4</code>. Draw the branching call
+      tree and label each leaf with the string it prints. Then explain why each string is
+      printed exactly once.
+    </li>
+    <li>
+      <strong>Sum an Array Two Ways:</strong> Design two methods that return the sum of the
+      values in an array <code>a</code>. First write an iterative version using a loop. Then
+      write a recursive version that splits the array into two halves, recursively sums each
+      half, and adds the two answers together. Compare the two approaches: which one is simpler
+      code, which one has a more interesting recursive structure, and which one would you usually
+      use in practice?
+    </li>
+    <li>
+      <strong>Count Ways to Climb Stairs:</strong> Suppose a person can climb either
+      <code>1</code> stair or <code>2</code> stairs at a time. We want a method
+      <code>ways(n)</code> that returns the number of different ways to climb
+      <code>n</code> stairs.
+      <ol type="a">
+        <li>
+          Compute <code>ways(0)</code>, <code>ways(1)</code>, <code>ways(2)</code>, and
+          <code>ways(3)</code> by hand. Explain what <code>ways(0)</code> should mean.
+        </li>
+        <li>
+          Explain why every way to climb <code>n</code> stairs must start with either a
+          <code>1</code>-stair move or a <code>2</code>-stair move.
+        </li>
+        <li>
+          Use that observation to write a recursive formula for <code>ways(n)</code> in
+          terms of smaller values.
+        </li>
+        <li>
+          Write recursive pseudocode or Java-style code for <code>ways(n)</code>. Be clear
+          about the base cases.
+        </li>
+        <li>
+          Draw the call tree for <code>ways(5)</code> and circle any repeated subproblems.
+        </li>
+        <li>
+          Based on the call tree, explain why this recursive method is correct but may be
+          inefficient for larger values of <code>n</code>.
+        </li>
+         <li>
+          <strong>Challenge:</strong> Design a more efficient algorithm for computing
+          <code>ways(n)</code>. You may use a loop, an array of previously computed values,
+          or another approach. Explain how your version avoids recomputing the same values.
+        </li>
       </ol>
-    </div>
-  </section>
+    </li>
+    <li>
+      <strong>Generate All Subsets:</strong> Design a recursive method that prints every subset
+      of a given set of items. At each step, the method should decide whether to include or
+      exclude the next item.
+      <ol type="a">
+        <li>
+          State what one recursive call means. What information does the call need to keep track
+          of the choices made so far?
+        </li>
+        <li>
+          Identify the base case. When has the method finished making include/exclude decisions?
+        </li>
+        <li>
+          Identify the two recursive branches made at each non-base case.
+        </li>
+        <li>
+          Trace your method on the set <code>{A, B, C}</code>. Draw the branching recursion tree
+          and label each leaf with the subset it prints.
+        </li>
+        <li>
+          Explain why this is similar to generating binary strings.
+          For an added challenge, find a connection between binary strings and subsets that
+          explains why the two algorithms have such similar structure.
+        </li>
+      </ol>
+    </li>
+    <li>
+      <strong>Recursive Idea or Recursive Implementation?</strong> For each task below, decide
+      whether the recursive idea is natural and whether the final implementation should
+      probably be recursive or iterative:
+      <ol type="a">
+        <li>Summing the first <code>n</code> positive integers.</li>
+        <li>Checking whether a string is a palindrome.</li>
+        <li>Generating all binary strings of length <code>n</code>.</li>
+        <li>Finding the maximum value in an array.</li>
+        <li>Computing <code>n!</code> for a nonnegative integer <code>n</code>.</li>
+        <li>Printing the characters of a string backward.</li>
+        <li>Searching for a value in a sorted array by repeatedly checking the middle item.</li>
+        <li>Listing all ways to choose exactly <code>k</code> items from a set of <code>n</code> items.</li>
+      </ol>
+      Give one sentence of justification for each choice.
+    </li>
+  </ol>
+</section>
 
-  <section id="activities" section-title="In-Class Activities">
-    <h2>In-Class Activities</h2>
-    <ol>
-      <li><strong>Identify the Pieces:</strong> Given a recursive method that prints numbers from <code>n</code> down to <code>1</code>, identify the base case, recursive case, and progress measure.</li>
-      <li><strong>Draw the Stack:</strong> Draw the stack frames created by <code>factorial(4)</code>. Include the value of <code>n</code> in each frame.</li>
-      <li><strong>Trace Output Order:</strong> Trace <code>countdown(5)</code> and <code>countup(5)</code>. Explain why the outputs differ.</li>
-      <li><strong>Trace Return Values:</strong> Complete a trace table for <code>sumFirst(5)</code>, including each waiting expression and return value.</li>
-      <li><strong>Find Repeated Work:</strong> Draw the call tree for <code>fib(5)</code> and circle repeated calls.</li>
-      <li><strong>Design One Call:</strong> For a recursive method that counts a target value in an array, state the meaning of one call and identify the smaller problem.</li>
-    </ol>
-  </section>
 
-  <section id="problems" section-title="Homework Problems">
-    <h2>Homework Problems</h2>
-    <ol>
-      <li><strong>Recursive Product:</strong> Write pseudocode for <code>product(n)</code>, which returns <code>1 * 2 * ... * n</code> for <code>n &gt;= 1</code>. Identify the base case and recursive case.</li>
-      <li><strong>Stack Depth:</strong> Suppose <code>mystery(n)</code> calls only <code>mystery(n - 2)</code> until <code>n &lt;= 0</code>. What is the maximum recursion depth as a function of <code>n</code>?</li>
-      <li><strong>Trace a String Method:</strong> Write a recursive method that prints a string backward. Trace it on <code>"cat"</code>.</li>
-      <li><strong>Compare Recursive and Iterative Sum:</strong> Write both versions of a method that computes the sum of the first <code>n</code> positive integers. Compare time and extra space use.</li>
-      <li><strong>Recursive Maximum:</strong> Write pseudocode for a method that returns the maximum value in <code>a[0..n-1]</code>. State the meaning of the method and explain why the recursive case is correct.</li>
-      <li><strong>Repeated Work:</strong> Draw the call tree for <code>fib(6)</code>. Count how many times <code>fib(2)</code> appears.</li>
-    </ol>
-  </section>
+ <section id="problems" section-title="Homework Problems">
+  <h2>Homework Problems</h2>
+  <ol>
+    <li>
+      <strong>Recursive Product:</strong> Write a recursive method
+      <code>product(n)</code> that returns <code>1 * 2 * ... * n</code> for
+      <code>n &gt;= 1</code>.
+      <ol type="a">
+        <li>Give the code/pseudocode for the method.</li>
+        <li>State the base case.</li>
+        <li>State the recursive case.</li>
+        <li>Explain why each recursive call makes progress toward the base case.</li>
+        <li>Trace <code>product(6)</code>, showing both the calls and the returned values.</li>
+      </ol>
+    </li>
+    <li>
+      <strong>Repair a Broken Recursive Method:</strong> The following method is supposed to
+      return the number of times character <code>target</code> appears in string <code>s</code>
+      from index <code>i</code> through the end of the string, but it contains mistakes.
+      <br>
+      <pre><code class="language-java">int countChar(String s, int i, char target) {
+        if (i == s.length()) {
+            return 0;
+        }
+
+        if (s.charAt(i) == target) {
+            return 1;
+        }
+
+        return countChar(s, i, target);
+    }</code></pre>
+      <ol type="a">
+        <li>Identify at least two mistakes in the method.</li>
+        <li>Rewrite the method so that it works correctly.</li>
+        <li>Trace your corrected method on <code>countChar("abracadabra", 3, 'a')</code>.</li>
+      </ol>
+    </li>
+      <li>
+        <strong>Trace and Interpret a Recursive Method:</strong>
+        Consider the <code>mystery(n)</code> code:<br>
+        <pre><code class="language-java">int mystery(int n) {
+          if (n &lt;= 0) {
+              return 0;
+          }
+
+          return n + mystery(n - 2);
+      }</code></pre>
+        <ol type="a">
+          <li>
+            What is/are the base case(s)? Does the base case handle all positive
+            starting values of <code>n</code>, or is another base case needed?
+          </li>
+          <li>List the calls made by <code>mystery(7)</code>.</li>
+          <li>Trace the return values and determine the value returned by <code>mystery(7)</code>.</li>
+          <li>What is the maximum number of active calls on the stack during <code>mystery(7)</code>?</li>
+          <li>Repeat the analysis for <code>mystery(8)</code>.</li>
+          <li>In terms of <code>n</code>, approximately how does the maximum recursion depth grow?</li>
+          <li>What does <code>mystery(n)</code> compute when <code>n</code> is positive?</li>
+        </ol>
+      </li>
+      <li>
+        <strong>Print a String Backward:</strong> Write a recursive method
+        <code>printBackward(s, i)</code> that prints the characters of string <code>s</code>
+        backward, starting from index <code>i</code>.
+        <ol type="a">
+          <li>State what one call to <code>printBackward(s, i)</code> means.</li>
+          <li>Write the method.</li>
+          <li>Trace <code>printBackward("catacombs", 2)</code>.</li>
+          <li>Identify which work happens before the recursive call and which work happens after it.</li>
+        </ol>
+      </li>
+      <li>
+        <strong>Recursive Maximum:</strong> Write a recursive method
+        <code>max(a, n)</code> that returns the maximum value among the first <code>n</code>
+        values in array <code>a</code>. You may assume <code>n &gt;= 1</code>.
+        <ol type="a">
+          <li>State what one call to <code>max(a, n)</code> means.</li>
+          <li>Identify the base case.</li>
+          <li>Write the recursive case.</li>
+          <li>Explain why the recursive case correctly combines the smaller answer with the current value.</li>
+          <li>Would you usually implement this method recursively or iteratively? If iterative is better,
+              give an iterative version of the method. Otherwise, explain why the recursive approach is preferred.</li>
+        </ol>
+      </li>
+      <li>
+        <strong>Count a Target in an Array:</strong> Write a recursive method
+        <code>count(a, n, target)</code> that returns the number of times <code>target</code>
+        appears among the first <code>n</code> positions of array <code>a</code>.
+        <ol type="a">
+          <li>State the meaning of one call.</li>
+          <li>Write the method.</li>
+          <li>Trace your method on array <code>[4, 2, 4, 7, 4]</code> with
+          <code>target = 4</code>.</li>
+          <li>Explain how the current call combines its answer with the answer from the smaller call.</li>
+        </ol>
+      </li>
+      <li>
+        <strong>Split-and-Sum an Array:</strong> Write a recursive method that returns the sum
+        of the values in <code>a[left..right]</code> by splitting the range into two halves.
+        <ol type="a">
+          <li>What is the base case and what does it need to do?</li>
+          <li>Write the recursive method.</li>
+          <li>Trace your method on the array <code>[3, 8, 2, 5, 9, 11, 6, 1]</code>.</li>
+          <li>Give an iterative version of the method that uses a loop instead of recursion.</li>
+          <li>Which implementation would you usually choose in practice, and why?</li>
+        </ol>
+      </li>
+      <li>
+        <strong>Repeated Work in Fibonacci:</strong> 
+        <ol type="a">
+          <li>Draw the call tree for
+        <code>fib(6)</code> using the naive recursive Fibonacci method from the chapter.</li>
+          <li>Count how many times <code>fib(5)</code>, <code>fib(4)</code>, <code>fib(3)</code>,
+          <code>fib(2)</code>, <code>fib(1)</code>, and <code>fib(0)</code> appear.</li>
+          <li>Explain why the method is correct even though it repeats work.</li>
+          <li>Describe one way the repeated work could be avoided. You do not need to write full code.</li>
+        </ol>
+      </li>
+      <li>
+        <strong>Climbing Stairs:</strong> Suppose a person can climb either <code>1</code> stair
+        or <code>2</code> stairs at a time. Let <code>ways(n)</code> be the number of different
+        ways to climb <code>n</code> stairs.
+        <ol type="a">
+          <li>Compute <code>ways(0)</code>, <code>ways(1)</code>, <code>ways(2)</code>,
+          <code>ways(3)</code>, and <code>ways(4)</code> by hand.</li>
+          <li>Explain why <code>ways(n)</code> depends on <code>ways(n - 1)</code> and
+          <code>ways(n - 2)</code>.</li>
+          <li>Write recursive code for <code>ways(n)</code>.</li>
+          <li>Draw the call tree for <code>ways(5)</code> and circle repeated subproblems.</li>
+          <li>Design a more efficient version using either a loop or an array of saved values.
+          Explain how it avoids repeated work.</li>
+        </ol>
+      </li>
+  </ol>
+</section>
+
 </body>
 </html>
