@@ -128,12 +128,23 @@ ol.code-list > li > pre {
       </tr>
     </tbody>
   </table>
-  <p>
-  In this page, input size usually means the number of items being processed, such as
+  <p> 
+  On this page, input size usually means the number of items being processed, such as
   the number of array elements, characters, records, vertices, or edges. In more advanced
   settings, input size may instead mean the number of symbols or bits needed to write the
   input. For now, we will use the more concrete interpretation unless stated otherwise.
 </p>
+
+<p>
+  Running-time bounds should be written in terms of the input size, not in terms of a
+  temporary loop variable such as \(i\) or \(j\). For example, if a loop
+  processes an array of length \(n\), the running time should be described in terms of
+  \(n\), even if the loop variable is named \(i\). Also, a constant number of
+  extra primitive inputs usually does not affect the size measure. For instance, searching
+  an array of length \(n\) for one target value is usually analyzed in terms of \(n\), not
+  \(n+1\).
+</p>
+
 </section>
 
  <section id="big-o-informal" section-title="Informal Big-O Notation">
@@ -256,6 +267,13 @@ ol.code-list > li > pre {
       </tr>
     </tbody>
   </table>
+
+  <p>
+    Another useful way to read the table is to imagine doubling the input size. Constant
+    work stays about the same. Logarithmic work grows by only a small additive amount.
+    Linear work roughly doubles, quadratic work roughly quadruples, and exponential or
+    factorial work grows so quickly that even moderate input sizes can become impractical.
+  </p>
 
   <p>
     The difference between these categories becomes more important as \(n\) grows. For
@@ -573,6 +591,44 @@ for (int i = 1; i &lt; a.length; i++) {
     of \(n\) and does not create a new data structure.
   </p>
   </div>
+
+  <div class="example-box">
+  <strong class="example-title">Example 5: Nested Loop with a Constant Inner Bound</strong>
+  <p>
+    Do not memorize "nested loops mean \(O(n^2)\)." Read the loop bounds. This code has a
+    nested loop, but the inner loop always runs exactly 6 times:
+  </p>
+<pre><code class="language-java">for (int i = 0; i &lt; n; i++) {
+    for (int j = 0; j &lt; 6; j++) {
+        process(a[i]);
+    }
+}</code></pre>
+  <p>
+    For each of the \(n\) values of <code>i</code>, the inner loop runs 6 times. The inner
+    statement therefore runs \(6n\) times. Since Big-O notation ignores constant factors,
+    the running time is \(O(n)\), not \(O(n^2)\).
+  </p>
+  </div>
+
+  <div class="example-box">
+  <strong class="example-title">Example 6: Function Calls with Hidden Costs</strong>
+  <p>
+    A method call is constant time only if the method itself does a constant amount of work.
+    If the method contains a loop, recursion, or a data structure operation whose cost
+    depends on input size, that cost must be included in the analysis.
+  </p>
+<pre><code class="language-java">for (int i = 0; i &lt; a.length; i++) {
+    if (contains(b, a[i])) {
+        matches++;
+    }
+}</code></pre>
+  <p>
+    If <code>contains(b, a[i])</code> scans an array <code>b</code> of length \(m\), then
+    each call may take \(O(m)\) time. The outer loop makes up to \(n\) calls, so the total
+    running time may be \(O(nm)\). If <code>b</code> is a data structure with constant-time
+    lookup, the same outer loop may be \(O(n)\).
+  </p>
+  </div>
 </section>
 
 <section id="tradeoffs" section-title="Efficiency Tradeoffs">
@@ -592,6 +648,49 @@ for (int i = 1; i &lt; a.length; i++) {
     the vocabulary to describe these choices and decide which tradeoffs are reasonable for
     a particular problem.
   </p>
+</section>
+<section id="common-mistakes" section-title="Common Mistakes">
+  <h2>Common Mistakes</h2>
+  <ul class="spaced">
+    <li>
+      <strong>Using the smallest input as the best case:</strong> Best case, worst case,
+      and average case compare inputs of the same size \(n\). The best case is not found
+      by shrinking the input.
+    </li>
+    <li>
+      <strong>Using loop variables in the final answer:</strong> Complexity should be
+      expressed using input-size variables such as \(n\), \(m\), \(r\), \(c\), \(v\), or
+      \(e\), not loop indexes such as <code>i</code> or <code>j</code>.
+    </li>
+    <li>
+      <strong>Treating every method call as \(O(1)\):</strong> A helper method or data
+      structure operation may have its own running time. Include that cost when it depends
+      on the input size.
+    </li>
+    <li>
+      <strong>Assuming every loop runs \(n\) times:</strong> A loop does not automatically
+      contribute \(O(n)\) work. Its cost depends on its bounds and updates. A loop that runs
+      \(m\) times, 100 times, or about \(\log n\) times should be analyzed differently.
+    </li>
+    <li>
+      <strong>Assuming every nested loop is quadratic:</strong> Nested loops often multiply,
+      but the actual bound depends on how many times each loop runs.
+    </li>
+    <li>
+      <strong>Saying "average case" without assumptions:</strong> Average-case analysis
+      needs a clear statement about which inputs are possible and how likely they are.
+    </li>
+    <li>
+      <strong>Counting the input as extra space:</strong> When analyzing extra space, do
+      not count the memory already used by the input. Count additional arrays, tables,
+      stacks, queues, or other structures created by the algorithm.
+    </li>
+    <li>
+      <strong>Overinterpreting Big-O for small inputs:</strong> Big-O notation describes
+      growth for large inputs. A simpler algorithm with a worse Big-O bound may still be
+      faster or easier to use for small inputs.
+    </li>
+  </ul>
 </section>
 
  <section id="summary" section-title="Summary">
