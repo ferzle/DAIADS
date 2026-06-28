@@ -78,14 +78,8 @@ const FOUNDATIONS_ORDERS = {
   'Foundations/': [
     'Introduction',
 	'ADTs',
-	'Structure Diagrams',
     'Recursion',
 	'Basic Analysis'
-  ],
-  'Foundations/Recursion/': [
-    'Recursion and the Call Stack',
-    'Tracing Recursive Code',
-    'Designing Recursive Solutions'
   ],
   'Foundations/Measuring Efficiency/': [
     'Cost Models and Input Size',

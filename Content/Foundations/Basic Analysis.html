@@ -1,0 +1,1292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Basic Algorithm Analysis</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <script src="/DAIADS/scripts/chapterScripts.js"></script>
+  <link rel="stylesheet" href="/DAIADS/css/style.css">
+  <link rel="stylesheet" href="/DAIADS/css/chapter.css">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-DQ5LVZVFDC');
+  </script>
+  <style>
+  ol.code-list > li {
+  margin-bottom: 0.75em;
+}
+
+ol.code-list > li > pre {
+  margin-top: 0;
+  margin-bottom: 0;
+  vertical-align: top;
+}
+</style>
+</head>
+<body>
+  <h1>Basic Algorithm Analysis</h1>
+
+ <section id="overview" section-title="Why Analyze Algorithms?">
+  <h2>Why Analyze Algorithms?</h2>
+  <p>
+    When we study an algorithm, we usually care about two broad questions: does it solve
+    the problem correctly, and how efficiently does it use resources? This page focuses on
+    the second question. Two algorithms can both solve the same problem correctly but behave
+    very differently as the input gets larger. One algorithm might work well for a list of
+    20 items but become unusable for a list of 20 million items. Another might take more
+    effort to understand or implement, but scale much better.
+  </p>
+  <p>
+    Algorithm analysis gives us a way to estimate an algorithm's resource use without
+    depending too much on a particular computer, programming language, or implementation.
+    Instead of asking only "How many seconds did this program take?", we ask questions like
+    "How many basic operations does this algorithm perform?" and "How does that number grow
+    as the input size grows?"
+  </p>
+  <p>
+    In this chapter, we will focus mostly on running time, but the same ideas also apply
+    to memory use. The goal is not to predict exact timings. The goal is to recognize broad
+    patterns of growth so we can compare algorithms, choose appropriate data structures,
+    and make reasonable decisions about efficiency.
+  </p>
+</section>
+
+ <section id="wall-clock-vs-work" section-title="Wall Clock Time vs. Amount of Work">
+  <h2>Wall Clock Time vs. Amount of Work</h2>
+  <p>
+    One way to compare algorithms is to implement them and measure how many seconds each
+    program takes to run. This can be useful, but it does not tell the whole story. The
+    running time of a program depends on the computer, programming language, compiler or
+    interpreter, operating system, current system load, and many implementation details.
+    The same algorithm may run in different amounts of time in different environments.
+  </p>
+  <p>
+    Algorithm analysis tries to separate the main idea of the algorithm from those machine
+    and implementation details. Instead of measuring wall-clock time, we estimate the
+    <strong>amount of work</strong> the algorithm performs. For example, we might count how
+    many comparisons are made, how many times a loop runs, how many array positions are
+    examined, how many assignments are performed, or how many function calls occur.
+  </p>
+  <p>
+    The exact operation we count depends on the algorithm and the question we are asking.
+    When searching an array, counting comparisons with the target value is natural. When
+    sorting, comparisons or swaps might be useful to count. When processing a data structure,
+    we might count operations such as pushes, pops, insertions, deletions, or searches. The
+    goal is to choose a reasonable basic operation and then estimate how the number of those
+    operations grows as the input size grows.
+  </p>
+</section>
+
+  <section id="input-size" section-title="Input Size">
+  <h2>Input Size</h2>
+  <p>
+    When we analyze an algorithm, we describe its work in terms of the size of the input.
+    We often use \(n\) for input size, but \(n\) does not always mean the same thing.
+    For an array problem, \(n\) might be the number of array elements. For a string problem,
+    \(n\) might be the number of characters. For a graph problem, one number may not be enough:
+    we may need both the number of vertices and the number of edges.
+  </p>
+  <p>
+    Choosing the input size carefully matters because the running time should be measured
+    against the part of the input that can grow. If an algorithm processes every item in an
+    array, its work depends on the number of items. If it processes every edge in a graph,
+    its work depends on the number of edges. The table below gives several common examples.
+  </p>
+  <table class="example-table left-align">
+    <thead>
+      <tr>
+        <th>Problem or Data</th>
+        <th>Possible Input Size</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Searching an array</td>
+        <td>Number of array elements, \(n\)</td>
+      </tr>
+      <tr>
+        <td>Processing a string</td>
+        <td>Number of characters, \(n\)</td>
+      </tr>
+      <tr>
+        <td>Sorting a list</td>
+        <td>Number of values being sorted, \(n\)</td>
+      </tr>
+      <tr>
+        <td>Processing a two-dimensional table</td>
+        <td>Number of rows and columns, often \(r\) and \(c\)</td>
+      </tr>
+      <tr>
+        <td>Graph problem</td>
+        <td>Number of vertices \(n\), number of edges \(m\), or both</td>
+      </tr>
+    </tbody>
+  </table>
+  <p>
+  In this page, input size usually means the number of items being processed, such as
+  the number of array elements, characters, records, vertices, or edges. In more advanced
+  settings, input size may instead mean the number of symbols or bits needed to write the
+  input. For now, we will use the more concrete interpretation unless stated otherwise.
+</p>
+</section>
+
+ <section id="big-o-informal" section-title="Informal Big-O Notation">
+  <h2>Informal Big-O Notation</h2>
+  <p>
+    Big-O notation is a way to describe how the amount of work grows as the input size
+    grows. It does not usually describe the exact number of operations. Instead, it gives
+    a broad category of growth. For example, saying that an algorithm is \(O(n)\) means
+    that its work grows roughly in proportion to the input size. If the input is twice as
+    large, we expect the work to be about twice as large, ignoring lower-level details.
+  </p>
+
+  <p>
+    Big-O notation usually ignores constant factors and lower-order terms. For example,
+    an algorithm that performs about \(5n + 20\) operations is described as \(O(n)\).
+    The dominant term is \(n\), and the constant multiplier 5 and extra 20 operations
+    do not change the overall growth pattern. Similarly, an algorithm that performs about
+    \(3n^2 + 10n + 50\) operations is described as \(O(n^2)\), because the \(n^2\) term
+    dominates the expression for large values of \(n\).
+  </p>
+
+  <p>
+    This simplification is useful because it lets us compare algorithms at a high level.
+    An \(O(n)\) algorithm generally scales better than an \(O(n^2)\) algorithm, even if
+    the \(O(n)\) algorithm has a larger constant factor. However, constants and
+    implementation details can still matter in practice, especially for small inputs.
+    Big-O notation is a tool for understanding long-term growth, not a replacement for
+    careful implementation or testing.
+  </p>
+</section>
+
+<section id="growth-rates" section-title="Common Growth Rates">
+  <h2>Common Growth Rates</h2>
+
+  <p>
+    Some growth rates occur often enough that they are worth recognizing by sight.
+    The table below lists several common categories, ordered from slower growth to
+    faster growth. The <em>Typical Pattern</em> column describes code or design patterns
+    that often lead to that growth rate, and the <em>Example Algorithms or Operations</em>
+    column lists specific algorithms or operations that we will see later. These are useful
+    guides, but they are not automatic rules. We still need to analyze the actual code or
+    algorithm in context.
+  </p>
+
+  <p>
+    Keep in mind as you look at the table that we are using Big-O notation to describe 
+    how the <strong>amount of work</strong>
+    grows as the input size grows. When comparing algorithms for the same problem,
+    a slower-growing Big-O expression usually means better scaling. This is the key
+    point: we want the work to grow slowly, not quickly. For example, an \(O(n)\)
+    algorithm is usually more efficient than an \(O(n^2)\) algorithm for large enough
+    \(n\), because the amount of work grows more slowly as the input grows.
+  </p>
+
+  <p>
+    This can feel backwards at first: a "larger" Big-O expression usually means more work,
+    so it usually means a <em>slower</em> algorithm on large inputs. We are not trying to
+    make the formula grow quickly; we are trying to keep the amount of work from growing
+    too quickly. Constant, logarithmic, and linear growth are generally much more manageable
+    than quadratic, exponential, or factorial growth.
+  </p>
+
+  <table class="example-table left-top-align">
+    <thead>
+      <tr>
+        <th>Big-O</th>
+        <th>Name</th>
+        <th>Typical Pattern</th>
+        <th>Example Algorithms or Operations</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>\(O(1)\)</td>
+        <td>Constant</td>
+        <td>Work does not grow with the input size</td>
+        <td>Accessing one array element; checking whether a stack is empty; pushing onto a stack</td>
+      </tr>
+      <tr>
+        <td>\(O(\log n)\)</td>
+        <td>Logarithmic</td>
+        <td>Repeatedly cutting the problem size in half</td>
+        <td>Binary search; searching in a balanced binary search tree</td>
+      </tr>
+      <tr>
+        <td>\(O(n)\)</td>
+        <td>Linear</td>
+        <td>Scanning all items once</td>
+        <td>Sequential search; finding the maximum value in an array</td>
+      </tr>
+      <tr>
+        <td>\(O(n \log n)\)</td>
+        <td>Linearithmic</td>
+        <td>Dividing work into pieces and doing linear work at each level</td>
+        <td>Merge sort; heapsort; average-case quicksort</td>
+      </tr>
+      <tr>
+        <td>\(O(n^2)\)</td>
+        <td>Quadratic</td>
+        <td>Comparing many pairs of items; some nested loops</td>
+        <td>Selection sort; insertion sort worst case; bubble sort; checking all pairs</td>
+      </tr>
+      <tr>
+        <td>\(O(n^3)\)</td>
+        <td>Cubic</td>
+        <td>Some triple nested loops; some basic matrix algorithms</td>
+        <td>Basic matrix multiplication; Floyd-Warshall shortest paths</td>
+      </tr>
+      <tr>
+        <td>\(O(2^n)\)</td>
+        <td>Exponential</td>
+        <td>Trying every subset of \(n\) items</td>
+        <td>Brute-force subset sum; some backtracking algorithms in the worst case</td>
+      </tr>
+      <tr>
+        <td>\(O(n!)\)</td>
+        <td>Factorial</td>
+        <td>Trying every ordering of \(n\) items</td>
+        <td>Brute-force traveling salesperson search; generating all permutations</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>
+    The difference between these categories becomes more important as \(n\) grows. For
+    small inputs, a simple algorithm with a worse growth rate may still be acceptable.
+    For large inputs, the growth rate often determines whether an approach is practical
+    at all. In general, when comparing algorithms for the same problem, the one with the
+    slower-growing running time is the one that scales better.
+    <em>Remember: faster growth in the work usually means slower performance on large inputs.</em>
+    When designing algorithms, one important goal is to find an approach whose work grows
+    slowly as the input size grows.
+  </p>
+</section>
+<section id="simple-rules" section-title="Simple Rules for Estimating Running Time">
+  <h2>Simple Rules for Estimating Running Time</h2>
+  <p>
+    We can often estimate running time by looking at the structure of the code. The goal
+    is not to count every small operation exactly. Instead, we look for the parts of the
+    code that control how the amount of work grows as the input size grows.
+  </p>
+
+  <ol class="spaced">
+    <li>
+      <strong>Constant-time statements:</strong>
+      A statement that does a fixed amount of work is usually \(O(1)\). Assigning a value,
+      comparing two values, doing one arithmetic operation, or accessing one array position
+      are usually treated as constant-time operations.
+    </li>
+
+    <li>
+      <strong>Single loops:</strong>
+      A loop with \(n\) iterations and constant work per iteration is usually \(O(n)\).
+      For example, a loop that scans every item in an array once has linear running time.
+    </li>
+
+    <li>
+      <strong>Consecutive loops:</strong>
+      Consecutive pieces of code have their costs added. For example, two separate loops
+      that each run \(n\) times do about \(2n\) total iterations, which is still \(O(n)\).
+      After adding costs, we keep the dominant term.
+    </li>
+
+    <li>
+      <strong>Nested loops:</strong>
+      Nested loops often multiply. If an outer loop runs \(n\) times and an inner loop
+      runs \(n\) times for each outer iteration, the total number of inner-loop iterations
+      is \(n^2\), giving \(O(n^2)\) time. However, nested loops should still be checked
+      carefully because the inner-loop bounds may change.
+    </li>
+
+    <li>
+      <strong>Halving or doubling:</strong>
+      A loop that repeatedly halves a value, doubles a value, or cuts the remaining problem
+      size by a fixed fraction often has logarithmic behavior. For example, repeatedly
+      dividing \(n\) by 2 until it reaches 1 takes about \(\log_2 n\) steps, giving
+      \(O(\log n)\) time.
+    </li>
+  </ol>
+
+  <p>
+    These rules are starting points, not substitutes for analysis. They work well for many
+    simple examples, but more complicated algorithms may require more careful counting,
+    summations, or recurrence relations.
+  </p>
+</section>
+<section id="best-worst-average" section-title="Best, Worst, and Average Cases">
+  <h2>Best, Worst, and Average Cases</h2>
+  <p>
+    Some algorithms do the same amount of work for every input of a given size. Other
+    algorithms do different amounts of work depending on the particular input. For example,
+    sequential search might find the target immediately, or it might have to inspect every
+    item. To describe these differences, we often discuss best-case, worst-case, and
+    average-case running time.
+  </p>
+
+  <p>
+  When we do these analyses, we usually choose a generic input size \(n\) and ask how
+  much work the algorithm does on inputs of that size. Best case, worst case, and
+  average case are all measured for that same value of \(n\). In particular, the best
+  case does not mean choosing \(n = 1\) or some other small input size. It means asking,
+  among all inputs of size \(n\), which input makes the algorithm do the least work.
+</p>
+<p>
+  For example, if \(n = 1000\), the best case for sequential search is not a smaller
+  array. It is an array of length 1000 where the target is found immediately. The worst
+  case is an array of length 1000 where the target is last or missing. Both cases use the
+  same input size; what changes is the arrangement of the input and where the target
+  appears.
+</p>
+<p>
+  More formally, the best, worst, and average cases are defined as follows:
+</p>
+<ul class="spaced">
+  <li>
+    <strong>Best case:</strong> The least work the algorithm does on any input of size
+    \(n\). Best-case analysis can be useful, especially for algorithms that may stop early,
+    but it may describe unusually favorable inputs. By itself, it does not give a guarantee
+    about how the algorithm will behave on typical or difficult inputs.
+  </li>
+  <li>
+    <strong>Worst case:</strong> The largest amount of work the algorithm does on any input
+    of size \(n\). Worst-case analysis is often useful because it gives a guarantee: the
+    algorithm will not do more than this much work for inputs of that size. We often care
+    most about worst-case analysis because it gives an upper bound on the work and is often
+    easier to analyze than average case.
+  </li>
+  <li>
+    <strong>Average case:</strong> The expected amount of work over inputs of size \(n\),
+    based on some assumption about which inputs are likely. Average-case analysis can be
+    useful, but it can be tricky because we must define what "average input" means. In
+    informal discussions, people sometimes say "average case" when they really mean
+    "typical case" or "what usually happens in practice." That kind of informal reasoning
+    can be useful, but a formal average-case analysis requires a clear assumption about the
+    distribution of inputs.
+  </li>
+</ul>
+<p>
+  On this page, we will often focus on worst-case analysis, but best-case and average-case
+  analysis are also important in practice, and we will include them when they are useful.
+  For some algorithms, the average and worst cases are significantly different, so it is
+  important to understand both and to consider when and how often each case occurs in practice.
+</p>
+</section>
+
+<section id="space-complexity" section-title="Space Complexity">
+  <h2>Space Complexity</h2>
+  <p>
+    Time is not the only resource an algorithm uses. Algorithms also use memory. 
+    <strong>Space complexity</strong> describes how the amount of memory used by an
+    algorithm grows as the input size grows.
+  </p>
+  <p>
+    When analyzing space, we often focus on <strong>extra space</strong>: memory used
+    in addition to the input itself. For example, if an algorithm is given an array of
+    \(n\) values, we usually do not count the input array as extra space. We count new
+    variables, arrays, tables, stacks, queues, or other structures that the algorithm
+    creates while it runs.
+  </p>
+  <p>
+    As with running time, we usually describe space use with Big-O notation. A few
+    variables use \(O(1)\) extra space. A new array with one entry for each input item
+    uses \(O(n)\) extra space. A table with \(n\) rows and \(n\) columns uses
+    \(O(n^2)\) extra space.
+  </p>
+
+  <table class="example-table left-align">
+    <thead>
+      <tr>
+        <th>Memory Used</th>
+        <th>Extra Space</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>A few integer variables</td>
+        <td>\(O(1)\)</td>
+      </tr>
+      <tr>
+        <td>A new array of length \(n\)</td>
+        <td>\(O(n)\)</td>
+      </tr>
+      <tr>
+        <td>A stack that may hold up to \(n\) items</td>
+        <td>\(O(n)\)</td>
+      </tr>
+      <tr>
+        <td>A table with \(n\) rows and \(n\) columns</td>
+        <td>\(O(n^2)\)</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+ <section id="sample-analyses" section-title="Sample Analyses">
+  <h2>Sample Analyses</h2>
+
+  <p>
+    The following examples show how the basic rules above can be applied to short pieces
+    of code. In each example, let \(n\) be the number of values in the array unless another
+    input size is specified.
+  </p>
+
+    <div class="example-box">
+  <strong  class="example-title">Example 1: Find the Maximum</strong>
+  <p>
+    This code scans an array to find its largest value. It assumes the array is nonempty.
+  </p>
+  <pre><code class="language-java">int max = a[0];
+for (int i = 1; i &lt; a.length; i++) {
+    if (a[i] &gt; max) {
+        max = a[i];
+    }
+}</code></pre>
+  <p>
+    The assignment <code>max = a[0]</code> takes constant time. The loop starts at index 1
+    and continues through the end of the array, so it runs \(n-1\) times. Each iteration
+    does a constant amount of work: it compares <code>a[i]</code> with <code>max</code>,
+    and sometimes updates <code>max</code>. Therefore, the running time is \(O(n)\).
+    The code uses only a few variables besides the input array, so the extra space is \(O(1)\).
+  </p>
+  </div>
+
+  <div class="example-box">
+  <strong class="example-title">Example 2: Sequential Search</strong>
+  <p>
+    This method searches an array from left to right. It returns the index where
+    <code>target</code> is found, or <code>-1</code> if the target does not appear.
+  </p>
+  <pre><code class="language-java">int search(int[] a, int target) {
+    for (int i = 0; i &lt; a.length; i++) {
+        if (a[i] == target) {
+            return i;
+        }
+    }
+    return -1;
+}</code></pre>
+  <p>
+    The amount of work depends on where the target appears. In the best case, the target
+    is at index 0, so the method finds it after one comparison. The best-case time is
+    \(O(1)\). In the worst case, the target is at the last position or does not appear at all,
+    so the loop examines all \(n\) items. The worst-case time is \(O(n)\). If the target is
+    equally likely to appear at any position, the method examines about half the array on
+    average, which is still \(O(n)\). The extra space is \(O(1)\).
+  </p>
+  </div>
+
+  <div class="example-box">
+  <strong class="example-title">Example 3: Compare All Pairs</strong>
+<p>
+  This method checks whether an array contains duplicate values by comparing each value
+  with all values that come after it.
+</p>
+<pre><code class="language-java">boolean hasDuplicate(int[] a) {
+    for (int i = 0; i &lt; a.length; i++) {
+        for (int j = i + 1; j &lt; a.length; j++) {
+            if (a[i] == a[j]) {
+                return true;
+            }
+        }
+    }
+    return false;
+}</code></pre>
+<p>
+  The worst case occurs when there are no duplicates. In that case, the method cannot
+  return early, so it must compare every pair of positions before returning
+  <code>false</code>.
+</p>
+<p>
+  Let \(n\) be the length of the array. When <code>i</code> is 0, the inner loop compares
+  <code>a[0]</code> with the other \(n-1\) values. When <code>i</code> is 1, the inner
+  loop compares <code>a[1]</code> with the remaining \(n-2\) values. Then it makes
+  \(n-3\) comparisons, then \(n-4\), and so on, down to 1 comparison near the end.
+</p>
+<p>
+  So the total number of comparisons is
+  \[
+    (n-1) + (n-2) + (n-3) + \cdots + 2 + 1.
+  \]
+  This is a familiar pattern. To find its value, write the same sum twice, once forward
+  and once backward:
+  \[
+  \begin{aligned}
+    S &= 1 + 2 + 3 + \cdots + (n-2) + (n-1) \\
+    S &= (n-1) + (n-2) + (n-3) + \cdots + 2 + 1
+  \end{aligned}
+  \]
+  If we add the two lines column by column, each column adds to \(n\), and there are
+  \(n-1\) columns. Therefore,
+  \[
+    2S = n(n-1),
+  \]
+  so
+  \[
+    S = \frac{n(n-1)}{2}.
+  \]
+</p>
+<p>
+  The exact number of comparisons is \(\frac{n(n-1)}{2}\), which is
+  \(\frac{1}{2}n^2 - \frac{1}{2}n\). Since Big-O notation keeps the dominant term and
+  ignores constant factors, the worst-case running time is \(O(n^2)\). The method uses
+  only a few variables besides the input array, so the extra space is \(O(1)\).
+</p>
+</div>
+
+  <div class="example-box">
+  <strong class="example-title">Example 4: Repeated Halving</strong>
+  <p>
+    This loop repeatedly divides \(n\) by 2 until \(n\) reaches 1.
+  </p>
+  <pre><code class="language-java">while (n &gt; 1) {
+    n = n / 2;
+}</code></pre>
+    <p>
+    This loop does not run \(n\) times. Each iteration cuts the value of <code>n</code>
+    approximately in half. After one iteration, the value is about \(n/2\). After two
+    iterations, it is about \(n/4\). After three iterations, it is about \(n/8\). After
+    \(k\) iterations, it is about \(n/2^k\).
+  </p>
+  <p>
+    The loop stops when repeated halving has reduced the value to about 1. To estimate
+    the number of iterations, we ask when
+    \[
+      \frac{n}{2^k} = 1.
+    \]
+    Multiplying both sides by \(2^k\) gives
+    \[
+      n = 2^k.
+    \]
+    The value of \(k\) that makes \(2^k = n\) is \(\log_2 n\). So after about
+    \(\log_2 n\) iterations, the value has been reduced to 1.
+  </p>
+  <p>
+    Therefore, the running time is \(O(\log n)\). The base of the logarithm does not
+    matter for Big-O notation, so we usually write \(O(\log n)\) instead of
+    \(O(\log_2 n)\). The extra space is \(O(1)\), since the loop only changes the value
+    of \(n\) and does not create a new data structure.
+  </p>
+  </div>
+</section>
+
+<section id="tradeoffs" section-title="Efficiency Tradeoffs">
+  <h2>Efficiency Tradeoffs</h2>
+  <p>
+    Algorithm analysis helps us compare choices, but it does not always identify one
+    universally best approach. An algorithm with better running time may require more
+    memory, stronger assumptions, or more complicated code. A simpler algorithm may be
+    easier to implement and perfectly acceptable for small inputs, even if it scales worse
+    for large inputs.
+  </p>
+  <p>
+    These tradeoffs appear throughout the study of algorithms and data structures. Sorting
+    data before searching may cost extra time up front, but it can make repeated searches
+    faster. A hash table may use extra memory to support fast lookup. A data structure may
+    make one operation efficient while making another operation slower. Analysis gives us
+    the vocabulary to describe these choices and decide which tradeoffs are reasonable for
+    a particular problem.
+  </p>
+</section>
+
+ <section id="summary" section-title="Summary">
+  <h2>Summary</h2>
+  <p>
+    Algorithm analysis helps us estimate how much time and memory (space) an algorithm uses as
+    the input size grows. Instead of relying only on wall-clock time, we count basic
+    operations and describe how the amount of work grows with the input size.
+  </p>
+  <p>
+    Big-O notation gives a high-level way to describe that growth. It usually ignores
+    constant factors and lower-order terms so we can focus on the dominant pattern.
+    Common growth rates include constant, logarithmic, linear, linearithmic, quadratic,
+    exponential, and factorial growth. In general, slower-growing running times scale
+    better to large inputs.
+  </p>
+  <p>
+    We also considered best-case, worst-case, and average-case analysis, along with
+    space complexity. Worst-case analysis gives a useful guarantee, while average-case
+    analysis can describe expected behavior when we have a clear assumption about which
+    inputs are likely. Space complexity describes how memory use grows, often focusing
+    on extra memory beyond the input itself.
+  </p>
+  <p>
+    This page introduced these ideas informally. Later, the <strong>Analysis</strong> section
+    develops them more carefully, including formal asymptotic notation, more detailed
+    analysis of iterative algorithms, summations, recurrence relations, and recursive
+    algorithm analysis. Depending on the course or context, you may read that section
+    later. You are also welcome to read it sooner if you want a deeper treatment of
+    these topics.
+  </p>
+</section>
+<section id="reading-questions" section-title="Reading Comprehension Questions">
+  <h2>Reading Comprehension Questions</h2>
+  <ol>
+    <li>
+      <strong>Wall-clock time:</strong> Why is wall-clock time not always the best way
+      to compare two algorithms?
+    </li>
+    <li>
+      <strong>Amount of work:</strong> What are two examples of basic operations we might
+      count when analyzing an algorithm?
+    </li>
+    <li>
+      <strong>Input size:</strong> What might \(n\) represent when analyzing an algorithm
+      that searches an array? What might we need to count when analyzing a graph algorithm?
+    </li>
+    <li>
+      <strong>Big-O meaning:</strong> What does it mean, informally, to say that an
+      algorithm is \(O(n)\)?
+    </li>
+    <li>
+      <strong>Ignoring details:</strong> Why do we usually ignore constant factors and
+      lower-order terms in Big-O notation?
+    </li>
+   <li>
+    <strong>Growth rates:</strong> Which usually scales better for large inputs:
+    an \(O(n)\) algorithm or an \(O(n^2)\) algorithm? Explain why. If both algorithms
+    solve the same problem correctly, which one would usually be preferred for large
+    inputs, and why?
+    </li>
+    <li>
+      <strong>Loop rules:</strong> Why are two consecutive loops that each run \(n\)
+      times usually \(O(n)\), while two nested loops that each run \(n\) times are usually
+      \(O(n^2)\)?
+    </li>
+    <li>
+      <strong>Cases:</strong> Why is the best case for sequential search not the same
+      as choosing \(n = 1\)?
+    </li>
+    <li>
+      <strong>Average case:</strong> Why can average-case analysis be more difficult
+      to define precisely than worst-case analysis?
+    </li>
+    <li>
+      <strong>Space complexity:</strong> What does extra space mean, and why is an
+      algorithm that uses only a few variables usually \(O(1)\) extra space?
+    </li>
+  </ol>
+
+  <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
+  <div id="answers" class="answer" hidden>
+    <ol>
+      <li>
+        <strong>Answer:</strong> Wall-clock time depends on the computer, programming
+        language, compiler or interpreter, operating system, current system load, and
+        implementation details. Algorithm analysis tries to estimate the amount of work
+        in a way that is less tied to one particular environment.
+      </li>
+      <li>
+        <strong>Answer:</strong> Examples include comparisons, loop iterations, array
+        accesses, assignments, arithmetic operations, function calls, pushes, pops,
+        insertions, deletions, or searches. The best operation to count depends on the
+        algorithm and the question being asked.
+      </li>
+      <li>
+        <strong>Answer:</strong> For searching an array, \(n\) usually represents the
+        number of array elements. For a graph algorithm, we may need to count the number
+        of vertices, the number of edges, or both.
+      </li>
+      <li>
+        <strong>Answer:</strong> Informally, saying an algorithm is \(O(n)\) means that
+        the amount of work grows roughly in proportion to the input size. If the input
+        doubles, we expect the amount of work to roughly double, ignoring lower-level
+        details.
+      </li>
+      <li>
+        <strong>Answer:</strong> We ignore constant factors and lower-order terms because
+        Big-O notation is meant to describe the dominant growth pattern for large inputs.
+        For example, \(3n^2 + 10n + 50\) is described as \(O(n^2)\) because the \(n^2\)
+        term dominates as \(n\) grows.
+      </li>
+      <li>
+        <strong>Answer:</strong> An \(O(n)\) algorithm usually scales better for large
+        inputs than an \(O(n^2)\) algorithm because its amount of work grows more slowly.
+        If both algorithms solve the same problem correctly, the \(O(n)\) algorithm would
+        usually be preferred for large inputs. However, for small inputs, the \(O(n^2)\)
+        algorithm might still be acceptable if it is simpler or has smaller constant factors.
+        </li>
+      <li>
+        <strong>Answer:</strong> Consecutive loops have their costs added. Two loops that
+        each run \(n\) times do about \(2n\) total iterations, which is \(O(n)\). Nested
+        loops multiply because the inner loop runs for each iteration of the outer loop,
+        giving about \(n \cdot n = n^2\) iterations.
+      </li>
+      <li>
+        <strong>Answer:</strong> Best case, worst case, and average case compare inputs
+        of the same size \(n\). For sequential search with \(n = 1000\), the best case is
+        an array of length 1000 where the target is found immediately, not an array of
+        length 1.
+      </li>
+      <li>
+        <strong>Answer:</strong> Average-case analysis requires an assumption about which
+        inputs are likely. Without defining what an "average input" means, the average
+        amount of work is not precise. Worst-case analysis is often easier because it asks
+        for the maximum work over all inputs of size \(n\).
+      </li>
+      <li>
+        <strong>Answer:</strong> Extra space is memory used in addition to the input itself.
+        An algorithm that uses only a few variables usually uses \(O(1)\) extra space
+        because the number of extra variables does not grow with the input size.
+      </li>
+    </ol>
+  </div>
+</section>
+
+ <section id="activities" section-title="In-Class Activities">
+  <h2>In-Class Activities</h2>
+  <ol>
+    <li>
+      <strong>What Are We Counting?</strong> For each code fragment below, decide what
+      operation would be natural to count and what the input size is.
+      <ol type="a">
+        <li>Searching an array for a target value.</li>
+        <li>Finding the maximum value in an array.</li>
+        <li>Checking whether any two array values are equal.</li>
+        <li>Repeatedly dividing an integer by 2 until it reaches 1.</li>
+      </ol>
+    </li>
+
+    <li>
+      <strong>Fixed \(n\), Different Inputs:</strong> Suppose sequential search is run on
+      arrays of length \(n = 8\). For each case, give an example array and target value:
+      <ol type="a">
+        <li>A best-case input.</li>
+        <li>A worst-case input where the target appears.</li>
+        <li>A worst-case input where the target does not appear.</li>
+      </ol>
+      Explain why this activity is about different inputs of the same size, not about
+      choosing a smaller value of \(n\).
+    </li>
+
+    <li>
+      <strong>Sort the Growth Rates:</strong> Put the following growth rates in order from
+      slowest growing to fastest growing:
+      \[
+        O(n^2),\quad O(1),\quad O(n \log n),\quad O(2^n),\quad O(n),\quad O(\log n).
+      \]
+      Then explain which end of the list usually corresponds to algorithms that scale
+      better for large inputs.
+    </li>
+    <li>
+    <strong>Practice Simplifying Big-O:</strong> For each expression, identify the dominant
+    term. Then write the simplified Big-O expression.
+    <ol type="a">
+        <li>\(12n + 40\)</li>
+        <li>\(3n^2 + 100n + 8\)</li>
+        <li>\(6n \log n + 25n\)</li>
+        <li>\(9n^3 + 4n^2 + 17n + 200\)</li>
+        <li>\(5mn + 12m + 30n\)</li>
+        <li>\(4n^2 + 7n \log n + 18n\)</li>
+        <li>\(3 \cdot 2^n + 100n^3\)</li>
+        <li>\(5n! + 2^n + n^4\)</li>
+    </ol>
+    </li>
+    <li>
+      <strong>Loop Count Cards:</strong> For each loop below, estimate how many times the
+      body runs and give a Big-O running time.
+      <ol type="a" class="code-list">
+      <li><pre><code class="language-java">for (int i = 0; i &lt; n; i++) {
+    // constant work
+}</code></pre></li>
+      <li><pre><code class="language-java">for (int i = 0; i &lt; n; i += 2) {
+    // constant work
+}</code></pre></li>
+      <li><pre><code class="language-java">for (int i = 1; i &lt; n; i *= 2) {
+    // constant work
+}</code></pre></li>
+</ol>
+    </li>
+
+    <li>
+      <strong>Consecutive or Nested?</strong> Compare the following two fragments. For each
+      one, estimate the running time and explain whether the loop costs should be added or
+      multiplied.<br>
+      <pre><code class="language-java">for (int i = 0; i &lt; n; i++) {
+    // constant work
+}
+for (int j = 0; j &lt; n; j++) {
+    // constant work
+}</code></pre><br>
+      <pre><code class="language-java">for (int i = 0; i &lt; n; i++) {
+    for (int j = 0; j &lt; n; j++) {
+        // constant work
+    }
+}</code></pre>
+    </li>
+
+    <li>
+  <strong>All-Pairs Count:</strong> The duplicate-checking algorithm compares each value
+  with the values that come after it and returns as soon as it finds a duplicate.
+  For arrays of length \(n = 6\):
+  <ol type="a">
+    <li>
+      Give an example array that produces the best case. How many comparisons are made?
+    </li>
+    <li>
+      Give an example array that produces the worst case. How many comparisons are made
+      for each value of \(i\)?
+    </li>
+    <li>
+      Add the worst-case counts. Does it match the pattern
+      \((n-1) + (n-2) + \cdots + 2 + 1\)?
+    </li>
+    <li>
+      Explain why the best and worst cases both use arrays of the same length, even though
+      the number of comparisons is very different.
+    </li>
+  </ol>
+</li>
+
+    <li>
+      <strong>Space Check:</strong> For each algorithm idea below, estimate the extra space:
+      \(O(1)\), \(O(n)\), or \(O(n^2)\).
+      <ol type="a">
+        <li>Find the maximum value using one variable called <code>max</code>.</li>
+        <li>Copy an array of length \(n\) into a new array before processing it.</li>
+        <li>Use a stack that may hold all \(n\) input items.</li>
+        <li>Build a table with \(n\) rows and \(n\) columns.</li>
+      </ol>
+    </li>
+
+    <li>
+  <strong>Repeated Searches:</strong> Suppose a collection has \(n\) items and you need
+  to perform \(m\) searches.
+  <ol type="a">
+    <li>
+      If the data is kept unsorted and each search uses sequential search, each search
+      costs \(O(n)\). What is the total cost of \(m\) searches?
+    </li>
+    <li>
+      Suppose instead that sorting the data once costs \(O(n \log n)\), and each later
+      binary search costs \(O(\log n)\). What is the total cost of sorting once and then
+      performing \(m\) binary searches?
+    </li>
+    <li>
+      For small \(m\), which approach might be preferable? For large \(m\), which approach
+      might be preferable? Explain why.
+    </li>
+  </ol>
+</li>
+<li>
+  <strong>Best and Worst Cases from Code:</strong> For each code fragment below, assume
+  <code>A</code> has length \(n\), <code>B</code> has length \(m\), and each line inside
+  the loop body takes constant time. You do not need to know what useful problem each
+  fragment solves. For each one, identify the best-case and worst-case running time.
+  Also state briefly what kind of input causes each case.
+
+  <table class="example-table left-top-align">
+    <thead>
+      <tr>
+        <th></th>
+        <th>Fragment</th>
+        <th>Best Case</th>
+        <th>Worst Case</th>
+        <th>What causes the difference?</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>a.</td>
+        <td>
+<pre><code class="language-java">for (int i = 0; i &lt; n; i++) {
+    process(A[i]);
+}</code></pre>
+        </td>
+        <td></td>
+        <td></td>
+        <td></td>
+      </tr>
+
+      <tr>
+        <td>b.</td>
+        <td>
+<pre><code class="language-java">for (int i = 0; i &lt; n; i++) {
+    if (A[i] == target) {
+        return true;
+    }
+}
+return false;</code></pre>
+        </td>
+        <td></td>
+        <td></td>
+        <td></td>
+      </tr>
+
+      <tr>
+        <td>c.</td>
+        <td>
+<pre><code class="language-java">for (int i = 0; i &lt; n; i++) {
+    if (A[i] &lt; 0) {
+        return false;
+    }
+}
+return true;</code></pre>
+        </td>
+        <td></td>
+        <td></td>
+        <td></td>
+      </tr>
+
+      <tr>
+        <td>d.</td>
+        <td>
+<pre><code class="language-java">for (int i = 0; i &lt; n; i++) {
+    for (int j = 0; j &lt; n; j++) {
+        process(A[i], A[j]);
+    }
+}</code></pre>
+        </td>
+        <td></td>
+        <td></td>
+        <td></td>
+      </tr>
+
+      <tr>
+        <td>e.</td>
+        <td>
+<pre><code class="language-java">for (int i = 0; i &lt; n; i++) {
+    for (int j = i + 1; j &lt; n; j++) {
+        if (A[i] == A[j]) {
+            return true;
+        }
+    }
+}
+return false;</code></pre>
+        </td>
+        <td></td>
+        <td></td>
+        <td></td>
+      </tr>
+
+      <tr>
+        <td>f.</td>
+        <td>
+<pre><code class="language-java">for (int i = 0; i &lt; n; i++) {
+    for (int j = 0; j &lt; m; j++) {
+        process(A[i], B[j]);
+    }
+}</code></pre>
+        </td>
+        <td></td>
+        <td></td>
+        <td></td>
+      </tr>
+
+      <tr>
+        <td>g.</td>
+        <td>
+<pre><code class="language-java">for (int i = 0; i &lt; n; i++) {
+    if (A[i] == 0) {
+        for (int j = 0; j &lt; n; j++) {
+            process(A[j]);
+        }
+    }
+}</code></pre>
+        </td>
+        <td></td>
+        <td></td>
+        <td></td>
+      </tr>
+
+      <tr>
+        <td>h.</td>
+        <td>
+<pre><code class="language-java">for (int i = 0; i &lt; n; i++) {
+    for (int j = 0; j &lt; i; j++) {
+        process(A[i], A[j]);
+    }
+}</code></pre>
+        </td>
+        <td></td>
+        <td></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+</li>
+  </ol>
+</section>
+
+ <section id="problems" section-title="Homework Problems">
+  <h2>Homework Problems</h2>
+  <ol>
+   <li>
+  <strong>Describing Input Size:</strong> For each situation, decide what quantity or
+  quantities should be used to describe the input size. Then write one sentence explaining
+  your choice.
+  <ol type="a">
+    <li>A method prints every character in a string.</li>
+    <li>A method compares every value in one array with every value in a second array.</li>
+    <li>A method processes every cell in a rectangular grid with \(r\) rows and \(c\) columns.</li>
+    <li>A method checks every edge in a graph with \(v\) vertices and \(e\) edges.</li>
+    <li>A method searches a list of student records by ID number.</li>
+  </ol>
+</li>
+    <li>
+    <strong>Simplifying Big-O:</strong> For each expression, identify the dominant
+    term. Then write the simplified Big-O expression.
+      <ol type="a">
+        <li>\(7n + 30\)</li>
+        <li>\(4n^2 + 12n + 9\)</li>
+        <li>\(100n \log n + 3n\)</li>
+        <li>\(2n^3 + 500n^2 + 1000\)</li>
+        <li>\(8m n + 20m + 20n\)</li>
+        <li>\(12n \log n + 4n^2 + 90n\)</li>
+        <li>\(7n! + 3 \cdot 2^n + 20n^4\)</li>
+      </ol>
+    </li>
+
+    <li>
+    <strong>Ordering Growth Functions:</strong> Put the following functions in order from
+    slowest growing to fastest growing. If two or more functions have the same growth rate,
+    group them together. 
+    \[
+        5,\quad
+        3\log n,\quad
+        20n,\quad
+        n + 100,\quad
+        4n \log n,\quad
+        n^2,\quad
+        6n^2 + 10n,\quad
+        2^n,\quad
+        3 \cdot 2^n + n^3,\quad
+        n!
+    \]
+    </li>
+
+    <li>
+        <strong>Analyze These Code Fragments:</strong> For each code fragment, assume
+        <code>A</code> has length \(n\), <code>B</code> has length \(m\), and each call to
+        <code>process</code> takes constant time. Give the best-case and worst-case Big-O
+        running times, and briefly describe what kind of input causes each case. For some
+        fragments, the best-case and worst-case running times may be the same.
+      <table class="example-table left-top-align analysis-fragment-table">
+        <thead>
+          <tr>
+            <th>Part</th>
+            <th>Fragment</th>
+            <th>Best-Case</th>
+            <th>Worst-Case</th>
+            <th>Justification</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>a.</td>
+            <td>
+<pre><code class="language-java">for (int i = 0; i &lt; n; i++) {
+    process(A[i]);
+}
+for (int j = 0; j &lt; m; j++) {
+    process(B[j]);
+}</code></pre>
+            </td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+
+          <tr>
+            <td>b.</td>
+            <td>
+<pre><code class="language-java">for (int i = 0; i &lt; n; i++) {
+    for (int j = 0; j &lt; m; j++) {
+        process(A[i], B[j]);
+    }
+}</code></pre>
+            </td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+
+          <tr>
+            <td>c.</td>
+            <td>
+<pre><code class="language-java">for (int i = 0; i &lt; n; i++) {
+    for (int j = 0; j &lt; 100; j++) {
+        process(A[i]);
+    }
+}</code></pre>
+            </td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+
+          <tr>
+            <td>d.</td>
+            <td>
+<pre><code class="language-java">for (int i = 0; i &lt; n; i++) {
+    process(A[i]);
+}
+for (int i = 0; i &lt; n; i++) {
+    for (int j = 0; j &lt; n; j++) {
+        process(A[i], A[j]);
+    }
+}</code></pre>
+            </td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+
+          <tr>
+            <td>e.</td>
+            <td>
+<pre><code class="language-java">for (int i = 0; i &lt; m; i++) {
+    for (int j = 0; j &lt; n; j++) {
+        process(B[i], A[j]);
+    }
+}
+for (int k = 0; k &lt; n; k++) {
+    process(A[k]);
+}</code></pre>
+            </td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+
+          <tr>
+            <td>f.</td>
+            <td>
+<pre><code class="language-java">for (int i = 0; i &lt; n; i++) {
+    if (A[i] == target) {
+        return true;
+    }
+}
+return false;</code></pre>
+            </td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+
+          <tr>
+            <td>g.</td>
+            <td>
+<pre><code class="language-java">for (int i = 0; i &lt; n; i++) {
+    if (A[i] &gt; 0) {
+        process(A[i]);
+    }
+}</code></pre>
+            </td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+
+          <tr>
+            <td>h.</td>
+            <td>
+<pre><code class="language-java">for (int i = 0; i &lt; n; i++) {
+    for (int j = i + 1; j &lt; n; j++) {
+        process(A[i], A[j]);
+    }
+}
+for (int k = 0; k &lt; n; k++) {
+    process(A[k]);
+}</code></pre>
+            </td>
+            <td></td>
+            <td></td>
+            <td></td>
+          </tr>
+        </tbody>
+      </table>
+    </li>
+
+    <li>
+      <strong>Best and Worst Case for Search:</strong> 
+      Recall that sequential search compares each value in the array with the target value until it 
+      finds a match or reaches the end of the array. 
+      For each of the following, give an example array of length 10 and target value, 
+      and state how many comparisons with the target are made.
+      <ol type="a">
+        <li>A best-case input.</li>
+        <li>A worst-case input where the target appears.</li>
+        <li>A worst-case input where the target does not appear.</li>
+      </ol>
+    </li>
+
+    <li>
+      <strong>Best and Worst Case for Duplicate Checking:</strong> Consider the
+      duplicate-checking algorithm from the sample analyses.
+      <ol type="a">
+        <li>Give an array of length 6 that produces the best case.</li>
+        <li>Give an array of length 6 that produces the worst case.</li>
+        <li>How many comparisons are made in your best-case example?</li>
+        <li>How many comparisons are made in your worst-case example?</li>
+      </ol>
+    </li>
+
+   <li>
+  <strong>Space Complexity:</strong> For each algorithm description, give the extra
+  space complexity and briefly justify your answer. Focus on extra space, not the
+  space already used by the input.
+  <ol type="a">
+    <li>
+      An algorithm scans an array and keeps only two variables:
+      <code>count</code> and <code>maxSoFar</code>.
+    </li>
+    <li>
+      An algorithm creates three new arrays, each of length \(n\).
+    </li>
+    <li>
+      An algorithm creates a table with \(n\) rows and \(m\) columns.
+    </li>
+    <li>
+      An algorithm creates a new array containing only the positive values from the
+      input array. In the worst case, all \(n\) input values are positive.
+    </li>
+    <li>
+      An algorithm uses a stack while processing an array. At most 10 items are ever
+      on the stack at one time.
+    </li>
+    <li>
+      An algorithm uses a stack while processing an array. In the worst case, all
+      \(n\) input values may be on the stack at the same time.
+    </li>
+    <li>
+      An algorithm changes the values in the input array directly and uses only a few
+      integer variables besides the input array.
+    </li>
+  </ol>
+</li>
+    <li>
+    <strong>Preprocessing a Grid:</strong> Suppose you have an \(n\)-row by \(m\)-column
+    grid of numbers. You need to answer several questions of the form, "What is the sum
+    of row \(r\)?"
+    <ol type="a">
+        <li>
+        If you do not store any extra information, answering one row-sum question takes
+        \(O(m)\) time because you must scan across that row. What is the total time to
+        answer \(q\) row-sum questions this way?
+        </li>
+        <li>
+        Suppose instead that you first compute and store the sum of every row. This
+        preprocessing step takes \(O(nm)\) time. After that, each row-sum question takes
+        \(O(1)\) time. What is the total time to preprocess the grid once and then answer
+        \(q\) row-sum questions?
+        </li>
+        <li>
+        What extra space is required to store one sum for each row?
+        </li>
+        <li>
+        For small \(q\), which approach might be preferable? For large \(q\), which approach
+        might be preferable? Explain why.
+        </li>
+    </ol>
+    </li>
+  </ol>
+</section>
+
+</body>
+</html>
