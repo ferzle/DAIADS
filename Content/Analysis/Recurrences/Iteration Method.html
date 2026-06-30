@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Iteration Method</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <script src="../../../scripts/chapterScripts.js"></script>
+  <script src="../latex-translation.js"></script>
+  <link rel="stylesheet" href="../../../css/style.css">
+  <link rel="stylesheet" href="../../../css/chapter.css">
+  <link rel="stylesheet" href="../latex-translation.css">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-DQ5LVZVFDC');
+  </script>
+</head>
+<body class="latex-translation">
+  <h1>Iteration Method</h1>
+
+<section id="iteration-method" section-title="Iteration Method">
+<h2>Iteration Method</h2>
+<p>With the iteration method (sometimes called <em>backward substitution</em>, we expand the recurrence and express it as a summation dependent only on \(n\) and initial conditions. Then we evaluate the summation. Sometimes the closed form of the sum is obvious as we are iterating (so no actual summation appears in our work), while at other times it is not (in which case we <em>do</em> end up with an actual summation).</p>
+<p>Our first example perhaps has too many steps of algebra, but it never hurts to be extra careful when doing so much algebra. We also don't provide a whole lot of justification or explanation for the steps.  We will do that in the next example.  It is easier to see the overall idea of the iteration method if we don't interrupt it with comments.  If this example does not make sense, come back to it after reading the next example.</p>
+<div class="example-box">
+<p class="box-title"><strong>Example</strong></p>
+<p>Solve the recurrence</p>
+<div class="display-math">\[
+R(n) = \left\{
+\begin{array}{ll}
+1&amp;\mbox{when n = 1}\\
+2 R(n/2) + n/2 &amp; \mbox{otherwise}
+\end{array}
+\right.
+\]</div>
+<div class="proof-block">
+<p class="box-title"><strong>Proof</strong></p>
+<p>We have</p>
+<div class="display-math">\[
+\begin{aligned}
+R(n)&amp;=2 R(n/2) + n/2\\
+&amp;=2(2 R(n/4) + n/4 ) + n/2\\
+&amp;=2^2R(n/4) + n/2+n/2\\
+&amp;= 2^2R(n/4) + n\\
+&amp;=2^2(2 R(n/8) + n/8 ) + n\\
+&amp;=  2^3R(n/8) + n/2+n\\
+&amp;=  2^3R(n/8) + 3n/2\\
+&amp;=2^3(2 R(n/16) + n/16 ) + 3n/2\\
+&amp;=2^4R(n/16) + n/2 + 3n/2\\
+&amp;=2^4R(n/16) + 2n\\
+&amp;\vdots\\
+&amp;=2^k R(n/(2^k)) + k n/2\\
+&amp;=2^{\log_2 n} R(n/(2^{\log_2 n})) + (\log_2 n) n/2\\
+&amp;=n R(n/n) + (\log_2 n) n/2\\
+&amp;=n R(1) + (\log_2 n) n/2\\
+&amp;=n + (\log_2 n) n/2
+\end{aligned}
+\]</div>
+</div>
+</div>
+<p>Using this method requires a little abstract thinking and pattern recognition. It also requires good algebra skills. Care must be taken when doing algebra, especially with the non-recursive terms. Sometimes you should add/multiply  (depending on context) them all together, and other times you should leave them as is.  The problem is that it takes experience (i.e. practice) to determine which one is better in a given situation. The key is flexibility.  If you try doing it one way and don't see a pattern, try another way.</p>
+<p>Here is my suggestion for using this method</p>
+<ol class="spaced">
+<li>Iterate enough times so you are certain of what the pattern is.  Typically this means at least 3 or 4 iterations.</li>
+<li>As you iterate, make adjustments to your algebra as necessary so you can see the pattern. For instance, whether you write \(2^3\) or \(8\) can make a difference in seeing the pattern.</li>
+<li>Once you see the pattern, generalize it, writing what it should look like after \(k\) iterations.</li>
+<li>Determine the value of \(k\) that will get you to the base case, and then plug it in.</li>
+<li>Simplify.</li>
+</ol>
+<div class="question-box">
+<p class="box-title"><strong>Question</strong></p>
+<p>The <em>iteration method</em> is probably not a good choice to solve the following recurrence relation. Explain why.</p>
+<div class="display-math">\[
+T(n)=T(n-1)+3T(n-2)+n*T(n/3)+n^2,\, \, \,  T(1)=17
+\]</div>
+<p><span class="answer-space"></span></p>
+<button type="button" class="show-answer latex-answer-toggle" data-answer-target="recurrence-answer-5" aria-expanded="false">Show Answer</button>
+<div id="recurrence-answer-5" class="answer latex-answer" hidden>
+<p>It contains 3 very different looking recursive terms so it is very unlikely we will be able to find any sort of meaningful pattern by iteration.</p>
+</div>
+</div>
+<p>Here is an example that contains more of an explanation of the technique.</p>
+<div class="example-box">
+<p class="box-title"><strong>Example</strong></p>
+<p>Solve the recurrence relation \(T(n)=2T(n/2)+ n^3\), \(T(1)=1\).</p>
+<div class="solution-block">
+<p class="box-title"><strong>Solution</strong></p>
+<p>We start by backward substitution:</p>
+<div class="display-math">\[
+\begin{aligned}
+T(n)&amp;=2T(n/2)+n^3\\
+&amp;=2[2T(n/4)+(n/2)^3]+n^3\\
+&amp;=2[2T(n/4)+n^3/8)]+n^3\\
+&amp;=2^2T(n/4)+n^3/4+n^3
+\end{aligned}
+\]</div>
+<p>Notice that in the second line we have \((n/2)^3\) and not \(n^3\). This may be more clear if rewrite the formula using \(k\): \(T(k)=2T(k/2)+k^3\). When applying the formula to \(T(n/2)\), we have \(k=n/2\), so we get</p>
+<div class="display-math">\[
+T(n/2)=2T((n/2)/2)+(n/2)^3=2T(n/4)+n^3/8.
+\]</div>
+<p>Back to the second line, also notice that the \(2\) is multiplied by both the \(2T(n/4)\) and the \((n/2)^3\) terms. A common error is to lose one of the \(2\)s on the \(T(n/4)\) term or miss it on the \((n/2)^3\) term when simplifying. Also, \((n/2)^3=n^3/8\), not \(n^3/2\).  This is another common mistake. Continuing,</p>
+<div class="display-math">\[
+\begin{aligned}
+T(n)&amp;=\ldots\\
+&amp;=2^2T(n/4)+n^3/4+n^3\\
+&amp;=2^2[2T(n/8)+(n/4)^3]+n^3/4+n^3\\
+&amp;=2^2[2T(n/8)+n^3/4^3]+n^3/4+n^3\\
+&amp;=2^3T(n/8)+n^3/4^2+n^3/4+n^3.
+\end{aligned}
+\]</div>
+<p>By now you should have noticed that I use 2 or more steps for every iteration--I do one substitution and then simplify it before moving on to the next substitution.  This helps to ensure I don't make algebra mistakes and that I can write it out in a way that helps me see a pattern.</p>
+<p>Next, notice that we can write the last line as</p>
+<div class="display-math">\[
+2^3T(n/2^3)+n^3/4^2+n^3/4^1+n^3/4^0,
+\]</div>
+<p>so it appears that we can generalize this to</p>
+<div class="display-math">\[
+2^kT(n/2^k)+\sum_{i=0}^{k-1} n^3/4^i.
+\]</div>
+<p>The sum starts at \(i=0\) (not \(1\)) and goes to \(k-1\) (not \(k\)). It is easy to get either (or both) of these wrong if you aren't careful. We should be careful to make sure we have seen the correct pattern. Too often I have seen students make a pattern out of 2 iterations. Not only is this not enough iterations to be sure of anything, the pattern they usually come up with only holds for the last iteration they did. The pattern has to match <em>every</em> iteration. To be safe, go one more iteration after you identify the pattern to verify that it is correct.</p>
+<p>Continuing (with a few more steps shown to make all of the algebra as clear as possible), we get</p>
+<div class="display-math">\[
+\begin{aligned}
+T(n)&amp;=\ldots\\
+&amp;=2^3T(n/2^3)+n^3/4^2+n^3/4^1+n^3/4^0\\
+&amp;=2^3[2T(n/2^4)+(n/2^3)^3]+n^3/4^2+n^3/4^1+n^3/4^0\\
+&amp;=2^3[2T(n/2^4)+n^3/2^9]+n^3/4^2+n^3/4^1+n^3/4^0\\
+&amp;=2^4T(n/2^4)+n^3/2^6+n^3/4^2+n^3/4^1+n^3/4^0\\
+&amp;=2^4T(n/2^4)+n^3/4^3+n^3/4^2+n^3/4^1+n^3/4^0\\
+&amp;=\ldots\\
+&amp;=2^kT(n/2^k)+\sum_{i=0}^{k-1} n^3/4^i.
+\end{aligned}
+\]</div>
+<p>Notice that this <em>does</em> seem to match the pattern we saw above. We can evaluate the sum to simplify it a little more:</p>
+<div class="display-math">\[
+\begin{aligned}
+T(n)&amp;=\ldots\\
+&amp;=2^kT(n/2^k)+\sum_{i=0}^{k-1} n^3/4^i\\
+&amp;=2^kT(n/2^k)+n^3\sum_{i=0}^{k-1} 1/4^i\\
+&amp;=2^kT(n/2^k)+n^3\sum_{i=0}^{k-1} (1/4)^i\\
+&amp;=2^kT(n/2^k)+n^3\left(\frac{1-(1/4)^k}{1-1/4}\right)\\
+&amp;=2^kT(n/2^k)+n^3(4/3)(1-(1/4)^k)\\
+\end{aligned}
+\]</div>
+<p>We are almost done.  We just need to find a \(k\) that allows us to get rid of the recursion. Thus, we need to determine what value of \(k\) makes \(T(n/2^k)=T(1)=1\).  In other words, we need \(k\) such that</p>
+<div class="display-math">\[
+n/2^k=1.
+\]</div>
+<p>This is equivalent to</p>
+<div class="display-math">\[
+n=2^k.
+\]</div>
+<p>Taking log (base 2) of both sides, we obtain</p>
+<div class="display-math">\[
+\log_2 n=\log_2(2^k)=k\log_{2} 2=k.
+\]</div>
+<p>So \(k=\log_2 n\). We plug in \(k\) and use the fact that \(2^{\log_2 n}=n\) along with the exponent rules to obtain</p>
+<div class="display-math">\[
+\begin{aligned}
+T(n)&amp;=\ldots\\
+&amp;=2^kT(n/2^k)+n^3(4/3)(1-(1/4)^k)\\
+&amp;=2^{\log_2 n}T(n/2^{\log_2 n})+n^3(4/3)(1-(1/4)^{\log_2 n})\\
+&amp;=nT(1)+n^3(4/3)\left(1-\frac{1}{(2^2)^{\log_2 n}}\right)\\
+&amp;=n\cdot 1+n^3(4/3)\left(1-\frac{1}{(2^{\log_2 n})^2}\right)\\
+&amp;=n+n^3(4/3)\left(1-\frac{1}{n^2}\right)\\
+&amp;=n+\frac{4}{3}n^3-\frac{4}{3}n\\
+&amp;=\frac{4}{3}n^3-\frac{1}{3}n.
+\end{aligned}
+\]</div>
+<p>So we have that \(T(n)=\frac{4}{3}n^3-\frac{1}{3}n\).</p>
+</div>
+</div>
+<div class="exercise-box">
+<p class="box-title"><strong>Exercise</strong></p>
+<p>Use iteration to solve the recurrence</p>
+<div class="display-math">\[
+H(n) = \left\{
+\begin{array}{ll}
+1&amp;\mbox{when n = 1}\\
+2 H(n-1) + 1 &amp; \mbox{otherwise}
+\end{array}
+\right.
+\]</div>
+<button type="button" class="show-answer latex-answer-toggle" data-answer-target="recurrence-answer-6" aria-expanded="false">Show Answer</button>
+<div id="recurrence-answer-6" class="answer latex-answer" hidden>
+<div class="display-math">\[
+\begin{aligned}
+H(n)&amp;=2 H(n-1) + 1\\
+&amp;=2(2 H(n-2) + 1) + 1\\
+&amp;= 2^2 H(n-2) + 2 + 1\\
+&amp;=2^2(2 H(n-3) + 1) + 2 + 1\\
+&amp;= 2^3 H(n-3) + 2^2 + 2 + 1\\
+&amp;\vdots\\
+&amp;=2^{n-1}H(1) + 2^{n-2} + 2^{n-3}+\cdots + 2 + 1\\
+&amp;=2^{n-1} + 2^{n-2} + 2^{n-3}+\cdots + 2 + 1\\
+&amp;=2^n-1
+\end{aligned}
+\]</div>
+<p>Thus, \(H(n)=2^n-1\). Luckily, this matches our answer from Example 26.</p>
+</div>
+</div>
+<div class="example-box">
+<p class="box-title"><strong>Example</strong></p>
+<p>Give a tight bound for the recurrence \(T(n)=T(\sqrt{n})+1\), where \(T(2)=1\).</p>
+<div class="solution-block">
+<p class="box-title"><strong>Solution</strong></p>
+<p>We can see that</p>
+<div class="display-math">\[
+\begin{aligned}
+T(n)&amp;=T(n^{1/2})+1\\
+&amp;=T(n^{1/4})+1+1\\
+&amp;=T(n^{1/8})+1+1+1\\
+&amp;=T(n^{1/2^k})+k\\
+\end{aligned}
+\]</div>
+<p>If we can determine when \(n^{1/2^k}=2\), we can obtain a solution. Taking logs (base 2) on both sides, we get</p>
+<div class="display-math">\[
+\log_2(n^{1/2^k})=\log_2 2.
+\]</div>
+<p>We apply the power-inside-a-log rule and the fact that \(\log_2 2=1\) to get</p>
+<div class="display-math">\[
+(1/2^k)\log_2 n=1.
+\]</div>
+<p>Multiplying both sides by \(2^k\) and flipping it around, we get</p>
+<div class="display-math">\[
+2^k= \log_2 n.
+\]</div>
+<p>Again taking logs, we get</p>
+<div class="display-math">\[
+k=\log_2\log_2 n.
+\]</div>
+<p>Therefore,</p>
+<div class="display-math">\[
+\begin{aligned}
+T(n)&amp;=T(n^{1/2^{\log_2\log_2 n}})+\log_2\log_2 n\\
+&amp;=T(2)+\log_2\log_2 n\, \, \, \mbox{(since n^{1/2^{\log_2\log_2 n}}=2 by the way we chose k)}\\
+&amp;=1+\log_2\log_2 n.\\
+\end{aligned}
+\]</div>
+<p>Therefore, \(T(n)=1+\log_2\log_2 n\).</p>
+</div>
+</div>
+<div class="exercise-box">
+<p class="box-title"><strong>Exercise</strong></p>
+<p>Use iteration to solve the recurrence relation that we developed in Example 24 for the complexity of <code>binarySearch</code>:</p>
+<div class="display-math">\[
+T(n)=T(n/2)+1, T(1)=1.
+\]</div>
+<button type="button" class="show-answer latex-answer-toggle" data-answer-target="recurrence-answer-7" aria-expanded="false">Show Answer</button>
+<div id="recurrence-answer-7" class="answer latex-answer" hidden>
+<p>Iterating a few steps, we discover:</p>
+<div class="display-math">\[
+\begin{aligned}
+T(n)&amp;=T(n/2)+1\\
+&amp;=T(n/4)+1+1\\
+&amp;=T(n/2^2)+2\, \, \, \, \mbox{(I think I see a pattern!)}\\
+&amp;=T(n/2^3)+1+2\\
+&amp;=T(n/2^3)+3\, \, \, \, \mbox{(I do see a pattern!)}\\
+&amp;\vdots\\
+&amp;=T(n/2^k)+k\\
+\end{aligned}
+\]</div>
+<p>We need to find \(k\) such that \(n/2^k=1\). We already saw in Example 29 that \(k=\log_2 n\) is the solution. Therefore, we have</p>
+<div class="display-math">\[
+\begin{aligned}
+T(n)&amp;=T(n/2^k)+k\\
+&amp;=T(n/2^{\log_2 n})+\log_2 n\\
+&amp;=T(1)+\log_2 n\\
+&amp;=1+\log_2 n\\
+\end{aligned}
+\]</div>
+<p>Therefore, \(T(n)=1+\log_2 n\).</p>
+</div>
+</div>
+<p>If you can do the following exercise correctly, then you have a firm grasp of the iteration method and your algebra skills are superb.  If you have difficulty, keep working at it and/or get some assistance. I strongly recommend that you do your best to solve this one on your own.</p>
+<div class="exercise-box">
+<p class="box-title"><strong>Exercise</strong></p>
+<p>Solve the recurrence relation \(T(n)=2T(n-1)+n\), \(T(1)=1\). (Hint:  You will need the result from Exercise 4.)</p>
+<button type="button" class="show-answer latex-answer-toggle" data-answer-target="recurrence-answer-8" aria-expanded="false">Show Answer</button>
+<div id="recurrence-answer-8" class="answer latex-answer" hidden>
+<p>The final answer is \(T(n)=2^{n+1}-n-2\) or \(T(n)=4\cdot2^{n-1}-n-2\). It is important that you can work this out yourself, so try your best to get this answer without looking further.  But if you get stuck or have a different answer, you can refer to the following skeleton of steps&mdash;we have omitted many of the steps because we want you to work them out.  It does provide a few reference points along the way, however.</p>
+<div class="display-math">\[
+\begin{aligned}
+T(n)&amp;=2T(n-1)+n\\
+&amp;=2(2T(n-2)+(n-1))+n\, \, \, \mbox{(having n instead of (n-1) is a common error)}\\
+&amp;=2^2T(n-2)+3n-2\, \, \, \mbox{(it is unclear yet if I should have 3n-2 or some other form)}\\
+&amp;\vdots \, \, \, \, \, \, \mbox{(many skipped steps)}\\
+&amp;=2^kT(n-k)+(2^k-1)n-\displaystyle\sum_{i=1}^{k-1}i2^i\, \, \, \, \mbox{(the all-important pattern revealed)}\\
+&amp;\vdots \, \, \, \, \, \, \mbox{(plug in appropriate value of k and simplify)}\\
+&amp;=2^{n+1}-n-2.
+\end{aligned}
+\]</div>
+</div>
+</div>
+</section>
+</body>
+</html>

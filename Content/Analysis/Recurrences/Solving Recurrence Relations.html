@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Solving Recurrence Relations</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <script src="../../../scripts/chapterScripts.js"></script>
+  <script src="../latex-translation.js"></script>
+  <link rel="stylesheet" href="../../../css/style.css">
+  <link rel="stylesheet" href="../../../css/chapter.css">
+  <link rel="stylesheet" href="../latex-translation.css">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-DQ5LVZVFDC');
+  </script>
+</head>
+<body class="latex-translation">
+  <h1>Solving Recurrence Relations</h1>
+
+<section id="solving-recurrence-relations" section-title="Solving Recurrence Relations">
+<h2>Solving Recurrence Relations</h2>
+<p>Recall that a <em>recurrence relation</em> is simply a sequence that is recursively defined. More formally, a recurrence relation is a formula that defines \(a_n\) in terms of \(a_i\), for one or more values of \(i&lt;n\).<span class="translation-footnote">Footnote: You might also see recurrence relations written using function notation, like \(a(n)\). Although there are technical differences between these notations, you can think of them as being essentially equivalent in this context.</span></p>
+<div class="example-box">
+<p class="box-title"><strong>Example</strong></p>
+<p>We previously saw that we can define \(n!\) by \(0!=1\), and if \(n&gt;0\), \(n!=n\cdot(n-1)!\). This is a recurrence relation for the sequence \(n!\).</p>
+<p>Similarly, we have seen the Fibonacci sequence several times. Recall that \(n\)-th Fibonacci number is given by \(f_0=f_1=1\) and for \(n&gt;1\), \(f_n=f_{n-1}+f_{n-2}\).  This is recurrence relation for the sequence of Fibonacci numbers.</p>
+</div>
+<div class="example-box">
+<p class="box-title"><strong>Example</strong></p>
+<p>Each of the following are recurrence relations.</p>
+<div class="display-math">\[
+\begin{aligned}
+t_n &amp;= n\cdot t_{n-1} + 4\cdot t_{n-3}\\
+r_n &amp;= r_{n/2}+1\\
+a_n &amp;= a_{n-1}+2\cdot a_{n-2}+3\cdot a_{n-3}+4\cdot a_{n-4}\\
+p_n &amp;= p_{n-1}\cdot p_{n-2}\\
+s_n &amp;= s_{n-3} + n^2 - 4 n + 32
+\end{aligned}
+\]</div>
+<p>We have not given any initial conditions for these recurrence relations. Without initial conditions, we cannot compute particular values. We also cannot solve the recurrence relation uniquely.</p>
+</div>
+<p>Recurrence relations have 2 types of terms: <em>recursive</em> term(s) and the <em>non-recursive</em> terms.</p>
+<p>In the previous example, the recursive term of \(s_n\) is \(s_{n-3}\) and the non-recursive term is  \(n^2 - 4 n + 32\).</p>
+<div class="question-box">
+<p class="box-title"><strong>Question</strong></p>
+<p>Consider the recurrence relations \(r_n\) and \(a_n\) from Example 21.</p>
+<ol class="spaced">
+<li><p>What are the <em>recursive</em> terms of \(r_n\)?</p>
+<p><span class="answer-space"></span></p></li>
+<li><p>What are the <em>non-recursive</em> terms of \(r_n\)?</p>
+<p><span class="answer-space"></span></p></li>
+<li><p>What are the <em>recursive</em> terms of \(a_n\)?</p>
+<p><span class="answer-space"></span></p></li>
+<li><p>What are the <em>non-recursive</em> terms of \(a_n\)?</p>
+<p><span class="answer-space"></span></p></li>
+</ol>
+<button type="button" class="show-answer latex-answer-toggle" data-answer-target="recurrence-answer-1" aria-expanded="false">Show Answer</button>
+<div id="recurrence-answer-1" class="answer latex-answer" hidden>
+<p>(a) \(r_{n/2}\). (b) \(1\). (c) \(a_{n-1}+2\cdot a_{n-2}+3\cdot a_{n-3}+4\cdot a_{n-4}\). (d) There are none.</p>
+</div>
+</div>
+<p>In computer science, the most common place we use recurrence relations is to analyze recursive algorithms. We won't get too technical yet, but let's see a simple example.</p>
+<div class="example-box">
+<p class="box-title"><strong>Example</strong></p>
+<p>How many multiplications are required to compute \(n!\) using the <code>factorial</code> algorithm given in Example 11 (repeated below)?</p>
+<pre><code class="language-java">int factorial(int n) {
+if(n&lt;=0) {
+return 1;
+} else {
+return n*factorial(n-1);
+}
+}</code></pre>
+<div class="solution-block">
+<p class="box-title"><strong>Solution</strong></p>
+<p>Let \(M_n\) be the number of multiplications needed to compute \(n!\) using the <code>factorial</code> algorithm from Example 11. From the code, it is obvious that \(M_0=0\).  If \(n&gt;0\), the algorithm uses one multiplication and then makes a recursive call to <code>factorial(n-1)</code>. By the way we defined \(M_n\), <code>factorial(n-1)</code> does \(M_{n-1}\) multiplications. Therefore, \(M_n=M_{n-1}+1\).</p>
+<p>So the recurrence relation for the number of multiplications is</p>
+<div class="display-math">\[
+M_n=\left\{
+\begin{array}{ll}
+0&amp;\mbox{ if n=0}\\
+M_{n-1}+1&amp;\mbox{ if }n&gt;0.\\
+\end{array}
+\right.
+\]</div>
+</div>
+</div>
+<p>Given a recurrence relation for \(a_n\), you can't just plug in \(n\) and get an answer.  For instance, if \(a_n=n\cdot a_{n-1}\), and \(a_1=1\), what is \(a_{100}\)?  The only obvious way to compute it is to compute \(a_2, a_3,\ldots, a_{99}\), and then finally \(a_{100}\).  That is the reason why <em>solving</em> recurrence relations is so important.  As mentioned previously, solving a recurrence relation simply means finding a <em>closed form expression</em> for it.</p>
+<div class="example-box">
+<p class="box-title"><strong>Example</strong></p>
+<p>It is not too difficult to see that the recurrence from Example 22 has the solution \(M_n=n\).  To prove it, notice that with this assumption, \(M_{n-1}+1= (n-1)+1 = n=M_{n}\), so the solution is consistent with the recurrence relation.</p>
+<p>We can also prove it with induction: We know that \(M_0=0\), so the base case of \(k=0\) is true. Assume \(M_k=k\) for \(k\ge 0\).  Then we have</p>
+<div class="display-math">\[
+M_{k+1} = M_{k} + 1 = k + 1,
+\]</div>
+<p>so the formula is correct for \(k+1\).  Thus, by PMI, the formula is correct for all \(k\geq 0\).</p>
+</div>
+<p>The last example demonstrates an important fact about recurrence relations used to analyze algorithms. The recursive terms come from when a recursive function calls itself. The non-recursive terms come from the other work that is done by the function, including any splitting or combining of data that must be done.</p>
+<div class="example-box">
+<p class="box-title"><strong>Example</strong></p>
+<p>Consider the recursive <em>binary search</em> algorithm we saw in Example 15:</p>
+<pre><code class="language-java">int binarySearch(int[] a, int left, int right, int val) {
+if(right&gt;=left) {
+int middle = (left+right)/2;
+if(val==a[middle])
+return middle;
+else if(val&lt;a[middle])
+return binarySearch(a,left,middle-1,val);
+else
+return binarySearch(a,middle+1,right,val);
+} else {
+return -1;
+}
+}</code></pre>
+<p>Find a recurrence relation for the worst-case complexity of <code>binarySearch</code>.</p>
+<div class="solution-block">
+<p class="box-title"><strong>Solution</strong></p>
+<p>Let \(T_n\) be the complexity of <code>binarySearch</code> for an array of size \(n\). Notice that the only things done in the algorithm are to find the middle element, make a few comparisons, perhaps make a recursive call, and return a value.  Aside from the recursive call, the amount of work done is constant, which we will just call \(1\) operation. Notice that at most one recursive call is made, and that the array passed in is half the size. Therefore  \(T_n=T_{n/2}+1\).<span class="translation-footnote">Footnote: Technically, the recurrence relation is  \(T_n=T_{\lfloor n/2\rfloor}+1\) since \(n/2\) might not be an integer. It turns out that most of the time we can ignore the floors/ceilings and still obtain the correct answer.</span> If we want a base case, we can use \(T_0=1\) since the algorithm will simply return \(-1\) for an empty array, and that clearly takes constant time. We'll see how to solve this recurrence shortly.</p>
+</div>
+</div>
+<p>We will discuss using recurrence relations to analyze recursive algorithms in more detail in section Analyzing Recursive Algorithms.  But first we will discuss how to solve recurrence relations. There is no general method to solve recurrences. There are many strategies, however.  In the next few sections we will discuss four common techniques: the <em>substitution method</em>, the <em>iteration method</em>, the <em>Master Theorem</em> (or <em>Master Method</em>), and the <em>characteristic equation method</em> for linear recurrences.</p>
+<div class="question-box">
+<p class="box-title"><strong>Question</strong></p>
+<p>Let's see if you have been paying attention. What does it mean to solve a recurrence relation?</p>
+<p><span class="answer-space"></span></p>
+<button type="button" class="show-answer latex-answer-toggle" data-answer-target="recurrence-answer-2" aria-expanded="false">Show Answer</button>
+<div id="recurrence-answer-2" class="answer latex-answer" hidden>
+<p>It means to find a closed-form expression for it.  In other words, one that does not define the sequence recursively.</p>
+</div>
+</div>
+<p>As we continue our discussion of recurrence relations, you will notice that we will begin to sometimes use the function notation (e.g. \(T(n)\) instead of \(T_n\)). We do this for several reasons.  The first is so that you are comfortable with either notation. The second is that in algorithm analysis, this notation seems to be more common, at least in my experience.</p>
+</section>
+</body>
+</html>
