@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="../../../scripts/demoScripts.js"></script>
+  <link rel="stylesheet" href="../../../css/style.css">
+  <link rel="stylesheet" href="../../../css/demo.css">
+  <title>Growth Rates Explorer</title>
+  <style>
+    :root {
+      --border: #cbd5e1;
+      --soft: #f8fafc;
+      --ink: #1f2937;
+      --muted: #64748b;
+    }
+
+    body.no-tooltips {
+      margin: 0;
+      color: var(--ink);
+      background: #ffffff;
+    }
+
+    h1 {
+      margin: 0 0 0.75rem;
+      font-size: 1.35rem;
+    }
+
+    .explorer {
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    .top-controls,
+    .function-panel,
+    .comment {
+      border: 1px solid var(--border);
+      background: var(--soft);
+      border-radius: 6px;
+      padding: 0.65rem;
+    }
+
+    .top-controls {
+      display: grid;
+      grid-template-columns: minmax(12rem, 16rem) 8.5rem repeat(2, minmax(11rem, 13rem));
+      gap: 0.6rem;
+      align-items: end;
+      justify-content: start;
+    }
+
+    label {
+      display: grid;
+      gap: 0.25rem;
+      font-size: 0.88rem;
+      font-weight: 600;
+    }
+
+    .explorer input,
+    .explorer select {
+      font: inherit;
+      min-width: 0;
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0.35rem;
+    }
+
+    .explorer input[type="checkbox"],
+    .explorer input[type="range"] {
+      padding: 0;
+    }
+
+    .explorer input[type="number"] {
+      width: 4.75rem;
+    }
+
+    .range-row {
+      display: grid;
+      grid-template-columns: minmax(6rem, 1fr) 4.75rem;
+      gap: 0.35rem;
+      align-items: center;
+    }
+
+    .comment {
+      line-height: 1.4;
+      background: #fff7ed;
+      border-color: #fed7aa;
+    }
+
+    .chart-wrap {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: #ffffff;
+      overflow: hidden;
+    }
+
+    #chart {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 900 / 430;
+    }
+
+    .function-panel {
+      overflow-x: visible;
+    }
+
+    .parser-note {
+      margin: 0 0 0.55rem;
+      color: #475569;
+      font-size: 0.84rem;
+      line-height: 1.35;
+    }
+
+    .function-editor-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(19rem, 1fr));
+      gap: 0.45rem 0.75rem;
+    }
+
+    .function-row {
+      display: grid;
+      grid-template-columns: 1.35rem 0.9rem minmax(7rem, 1fr) auto;
+      gap: 0.35rem;
+      align-items: center;
+      min-width: 0;
+    }
+
+    .function-row {
+      padding: 0.4rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      background: #ffffff;
+    }
+
+    .function-row.invalid .row-expression {
+      border-color: #dc2626;
+      background: #fff1f2;
+    }
+
+    .swatch {
+      width: 0.85rem;
+      height: 0.85rem;
+      border-radius: 999px;
+      border: 1px solid rgba(0,0,0,0.18);
+      display: inline-block;
+      flex: 0 0 auto;
+    }
+
+    .row-expression {
+      width: 100%;
+      padding: 0.3rem;
+    }
+
+    .row-values {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.25rem;
+      justify-content: flex-end;
+      min-width: 8.4rem;
+    }
+
+    .value-chip {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 0.25rem;
+      white-space: nowrap;
+      border: 1px solid #e2e8f0;
+      border-radius: 999px;
+      background: #f8fafc;
+      padding: 0.16rem 0.42rem;
+      font-size: 0.78rem;
+    }
+
+    .value-label {
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .value-number {
+      color: var(--ink);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .row-error {
+      display: none;
+      grid-column: 3 / -1;
+      color: #b91c1c;
+      font-size: 0.78rem;
+      line-height: 1.15;
+    }
+
+    .function-row.invalid .row-error {
+      display: block;
+    }
+
+    .legend-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem 0.9rem;
+      margin: 0.4rem 0 0;
+      font-size: 0.86rem;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      white-space: nowrap;
+    }
+
+    .legend-item.invalid {
+      color: #b91c1c;
+    }
+
+    .axis-label {
+      fill: #475569;
+      font-size: 12px;
+    }
+
+    .tick-label {
+      fill: #64748b;
+      font-size: 11px;
+    }
+
+    .grid-line {
+      stroke: #e2e8f0;
+      stroke-width: 1;
+    }
+
+    .axis-line {
+      stroke: #334155;
+      stroke-width: 1.5;
+    }
+
+    .series-path {
+      fill: none;
+      stroke-width: 2.4;
+      stroke-linejoin: round;
+      stroke-linecap: round;
+    }
+
+    .marker-line {
+      stroke: #334155;
+      stroke-width: 1;
+      stroke-dasharray: 4 4;
+    }
+
+    @media (max-width: 680px) {
+      body.no-tooltips {
+        padding: 4px;
+      }
+
+      h1 {
+        font-size: 1.15rem;
+      }
+
+      .top-controls,
+      .function-panel,
+      .comment {
+        padding: 0.5rem;
+      }
+
+      .top-controls,
+      .function-editor-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .function-row {
+        grid-template-columns: 1.35rem 0.9rem minmax(8rem, 1fr);
+      }
+
+      .row-values,
+      .row-error {
+        grid-column: 3 / -1;
+        justify-content: flex-start;
+      }
+    }
+  </style>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-DQ5LVZVFDC');
+  </script>
+</head>
+<body class="no-tooltips">
+  <h1>Growth Rates Explorer</h1>
+
+  <main class="explorer">
+    <div class="top-controls">
+      <label>
+        Preset
+        <select id="preset"></select>
+      </label>
+
+      <label>
+        y-axis
+        <select id="scale">
+          <option value="linear">Linear</option>
+          <option value="log">Logarithmic</option>
+        </select>
+      </label>
+
+      <label>
+        Maximum n
+        <span class="range-row">
+          <input id="maxNRange" type="range" min="5" max="200" value="40">
+          <input id="maxN" type="number" min="5" max="200" value="40">
+        </span>
+      </label>
+
+      <label>
+        Selected n
+        <span class="range-row">
+          <input id="focusNRange" type="range" min="1" max="40" value="40">
+          <input id="focusN" type="number" min="1" max="40" value="40">
+        </span>
+      </label>
+    </div>
+
+    <div class="chart-wrap">
+      <svg id="chart" viewBox="0 0 900 430" role="img" aria-labelledby="chartTitle chartDesc">
+        <title id="chartTitle">Growth-rate plot</title>
+        <desc id="chartDesc">A line chart comparing selected growth-rate functions.</desc>
+      </svg>
+    </div>
+
+    <div id="comment" class="comment"></div>
+
+    <div id="legend" class="legend-list"></div>
+
+    <div class="function-panel">
+      <p class="parser-note">
+        Supported forms include <code>n</code>, <code>n^2</code>, <code>300000n^2 + 300n</code>,
+        <code>2^n</code>, <code>log_2 n</code>, <code>log_3 n</code>, <code>n log_2 n</code>, and <code>log log n</code>.
+        Use <code>n</code> or <code>x</code> for the input; plain <code>log</code> means base 2.
+      </p>
+      <div id="functionRows" class="function-editor-grid"></div>
+    </div>
+  </main>
+
+  <script>
+    const COLORS = ['#2563eb', '#dc2626', '#059669', '#7c3aed', '#ea580c', '#0891b2'];
+
+    const emptyRow = (i) => ({
+      enabled: false,
+      expr: '',
+      color: COLORS[i]
+    });
+
+    const presets = [
+      {
+        name: 'Slow functions',
+        maxN: 40,
+        focusN: 40,
+        scale: 'linear',
+        comment: 'Start with log_2 n, n, n log_2 n, and n^2. Drag Maximum n toward 100 to see the gaps widen. Then edit a function, such as changing n^2 to 10n^2, to test how constants affect the picture.',
+        rows: ['log_2 n', 'n', 'n log_2 n', 'n^2']
+      },
+      {
+        name: 'Polynomial powers',
+        maxN: 40,
+        focusN: 40,
+        scale: 'linear',
+        comment: 'These are all polynomials, but the exponent changes the curve quickly. Move Selected n to compare exact values at the same input, or replace n^4 with n^5 to make the separation sharper.',
+        rows: ['n', 'n^2', 'n^3', 'n^4']
+      },
+      {
+        name: 'Short window can mislead',
+        maxN: 10,
+        focusN: 10,
+        scale: 'linear',
+        comment: 'This short window is deliberately misleading: n^4 appears larger than 2^n through n = 10. Switch to the wider-window preset, or raise Maximum n yourself, before drawing an asymptotic conclusion.',
+        rows: ['n', 'n^3', 'n^4', '2^n']
+      },
+      {
+        name: 'Wider window corrects it',
+        maxN: 20,
+        focusN: 20,
+        scale: 'linear',
+        comment: 'The same functions tell a different story by n = 20. Try dragging Maximum n past 20, then switch the y-axis to logarithmic so the smaller curves remain visible.',
+        rows: ['n', 'n^3', 'n^4', '2^n']
+      },
+      {
+        name: 'Large constants',
+        maxN: 55,
+        focusN: 55,
+        scale: 'log',
+        comment: 'Large constants can dominate for a while. Try changing 1000000n to 100n, or change 300000n^2 + 300n to n^2, and watch where the curves cross.',
+        rows: ['1000000n', '300000n^2 + 300n', '2^n']
+      },
+      {
+        name: 'Lower-order terms',
+        maxN: 80,
+        focusN: 80,
+        scale: 'log',
+        comment: 'Lower-order terms matter most near the beginning. Move Selected n from small to large values, then edit n^2 + 99 to n^2 + 9999 to see how long the constant term stays noticeable.',
+        rows: ['n^2', 'n^2 - n', 'n^2 + 99', 'n^3', 'n^3 + 234']
+      }
+    ];
+
+    let rows = [];
+
+    const presetEl = document.getElementById('preset');
+    const scaleEl = document.getElementById('scale');
+    const maxNEl = document.getElementById('maxN');
+    const maxNRangeEl = document.getElementById('maxNRange');
+    const focusNEl = document.getElementById('focusN');
+    const focusNRangeEl = document.getElementById('focusNRange');
+    const functionRowsEl = document.getElementById('functionRows');
+    const chartEl = document.getElementById('chart');
+    const commentEl = document.getElementById('comment');
+    const legendEl = document.getElementById('legend');
+
+    function cloneRows(presetRows) {
+      const next = Array.from({ length: 6 }, (_, i) => emptyRow(i));
+      presetRows.forEach((expr, i) => {
+        next[i] = {
+          ...next[i],
+          enabled: true,
+          expr,
+          color: COLORS[i]
+        };
+      });
+      return next;
+    }
+
+    function clampNumber(value, min, max, fallback) {
+      const num = Number(value);
+      if (!Number.isFinite(num)) return fallback;
+      return Math.max(min, Math.min(max, num));
+    }
+
+    function setMaxN(value) {
+      const maxN = Math.round(clampNumber(value, 5, 200, 40));
+      maxNEl.value = maxN;
+      maxNRangeEl.value = maxN;
+      focusNEl.max = maxN;
+      focusNRangeEl.max = maxN;
+      if (Number(focusNEl.value) > maxN) {
+        focusNEl.value = maxN;
+        focusNRangeEl.value = maxN;
+      }
+    }
+
+    function setFocusN(value) {
+      const maxN = Number(maxNEl.value);
+      const focusN = Math.round(clampNumber(value, 1, maxN, maxN));
+      focusNEl.value = focusN;
+      focusNRangeEl.value = focusN;
+    }
+
+    function applyPreset(index) {
+      const preset = presets[index];
+      rows = cloneRows(preset.rows);
+      presetEl.value = String(index);
+      scaleEl.value = preset.scale;
+      setMaxN(preset.maxN);
+      setFocusN(preset.focusN);
+      commentEl.textContent = preset.comment;
+      renderRows();
+      render();
+    }
+
+    function renderRows() {
+      functionRowsEl.innerHTML = rows.map((row, i) => `
+        <div class="function-row" data-row="${i}">
+          <input class="row-enabled" type="checkbox" aria-label="Show function ${i + 1}" ${row.enabled ? 'checked' : ''}>
+          <span class="swatch" style="background:${row.color}"></span>
+          <input class="row-expression" type="text" value="${escapeHtml(row.expr)}" aria-label="Function ${i + 1} expression">
+          <span class="row-values" aria-label="Function ${i + 1} values">
+            <span class="value-chip">
+              <span class="value-label" data-focus-label="${i}">n</span>
+              <span class="value-number" data-focus-value="${i}">-</span>
+            </span>
+            <span class="value-chip">
+              <span class="value-label" data-max-label="${i}">max</span>
+              <span class="value-number" data-max-value="${i}">-</span>
+            </span>
+          </span>
+          <span class="row-error" data-error-for="${i}" aria-live="polite"></span>
+        </div>
+      `).join('');
+    }
+
+    function syncRowFromInput(target) {
+      const rowEl = target.closest('.function-row');
+      if (!rowEl) return;
+      const i = Number(rowEl.dataset.row);
+      rows[i] = {
+        ...rows[i],
+        enabled: rowEl.querySelector('.row-enabled').checked,
+        expr: rowEl.querySelector('.row-expression').value
+      };
+      render();
+    }
+
+    function parseRows() {
+      return rows.map(row => ({
+        row,
+        parsed: parseExpression(row.expr)
+      }));
+    }
+
+    function activeParsedRows(parsedRows) {
+      return parsedRows.filter(item => item.row.enabled && item.parsed.ok);
+    }
+
+    function render() {
+      const maxN = Number(maxNEl.value);
+      const focusN = Number(focusNEl.value);
+      const scale = scaleEl.value;
+      const parsedRows = parseRows();
+      updateRowErrors(parsedRows);
+      renderChart(maxN, focusN, scale, parsedRows);
+      renderLegend(parsedRows);
+      updateRowValues(maxN, focusN, parsedRows);
+    }
+
+    function updateRowErrors(parsedRows) {
+      parsedRows.forEach((item, i) => {
+        const rowEl = functionRowsEl.querySelector(`[data-row="${i}"]`);
+        const errorEl = functionRowsEl.querySelector(`[data-error-for="${i}"]`);
+        if (!rowEl || !errorEl) return;
+
+        rowEl.classList.toggle('invalid', item.row.enabled && !item.parsed.ok);
+        errorEl.textContent = item.row.enabled && !item.parsed.ok ? item.parsed.error : '';
+      });
+    }
+
+    function updateRowValues(maxN, focusN, parsedRows) {
+      parsedRows.forEach((item, i) => {
+        const focusLabelEl = functionRowsEl.querySelector(`[data-focus-label="${i}"]`);
+        const maxLabelEl = functionRowsEl.querySelector(`[data-max-label="${i}"]`);
+        const focusValueEl = functionRowsEl.querySelector(`[data-focus-value="${i}"]`);
+        const maxValueEl = functionRowsEl.querySelector(`[data-max-value="${i}"]`);
+        if (!focusLabelEl || !maxLabelEl || !focusValueEl || !maxValueEl) return;
+
+        focusLabelEl.textContent = `n=${focusN}`;
+        maxLabelEl.textContent = 'max';
+
+        if (!item.row.enabled) {
+          focusValueEl.textContent = 'off';
+          maxValueEl.textContent = 'off';
+          return;
+        }
+
+        if (!item.parsed.ok) {
+          focusValueEl.textContent = '-';
+          maxValueEl.textContent = '-';
+          return;
+        }
+
+        focusValueEl.textContent = formatValue(valueFor(item, focusN));
+        maxValueEl.textContent = formatValue(valueFor(item, maxN));
+      });
+    }
+
+    function renderChart(maxN, focusN, scale, parsedRows) {
+      const margin = { left: 78, right: 26, top: 22, bottom: 48 };
+      const width = 900;
+      const height = 430;
+      const plotW = width - margin.left - margin.right;
+      const plotH = height - margin.top - margin.bottom;
+      const active = activeParsedRows(parsedRows);
+      const values = [];
+
+      active.forEach(item => {
+        for (let n = 1; n <= maxN; n += 1) {
+          const value = valueFor(item, n);
+          if (Number.isFinite(value)) values.push(value);
+        }
+      });
+
+      let yMin = 0;
+      let yMax = values.length ? Math.max(...values) : 1;
+      if (scale === 'linear') {
+        const finiteMin = values.length ? Math.min(...values) : 0;
+        yMin = Math.min(0, finiteMin);
+        if (yMax <= yMin) yMax = yMin + 1;
+        const pad = (yMax - yMin) * 0.08;
+        yMax += pad;
+      } else {
+        const positive = values.filter(v => v > 0);
+        const minPositive = positive.length ? Math.min(...positive) : 1;
+        const maxPositive = positive.length ? Math.max(...positive) : 10;
+        yMin = Math.floor(Math.log10(minPositive));
+        yMax = Math.ceil(Math.log10(maxPositive));
+        if (yMax <= yMin) yMax = yMin + 1;
+      }
+
+      const xFor = n => margin.left + ((n - 1) / Math.max(1, maxN - 1)) * plotW;
+      const yFor = value => {
+        if (scale === 'log') {
+          if (value <= 0) return NaN;
+          return margin.top + (1 - ((Math.log10(value) - yMin) / (yMax - yMin))) * plotH;
+        }
+        return margin.top + (1 - ((value - yMin) / (yMax - yMin))) * plotH;
+      };
+
+      const pieces = [];
+      pieces.push(`<rect x="0" y="0" width="${width}" height="${height}" fill="#fff"/>`);
+      pieces.push(`<rect x="${margin.left}" y="${margin.top}" width="${plotW}" height="${plotH}" fill="#ffffff"/>`);
+
+      const xTicks = makeTicks(1, maxN, 5).map(Math.round);
+      const yTicks = scale === 'log'
+        ? makeTicks(yMin, yMax, Math.min(6, yMax - yMin + 1)).map(v => Math.round(v))
+        : makeTicks(yMin, yMax, 6);
+
+      xTicks.forEach(tick => {
+        const x = xFor(tick);
+        pieces.push(`<line class="grid-line" x1="${x}" y1="${margin.top}" x2="${x}" y2="${margin.top + plotH}"/>`);
+        pieces.push(`<text class="tick-label" x="${x}" y="${height - 24}" text-anchor="middle">${tick}</text>`);
+      });
+
+      yTicks.forEach(tick => {
+        const raw = scale === 'log' ? Math.pow(10, tick) : tick;
+        const y = scale === 'log'
+          ? margin.top + (1 - ((tick - yMin) / (yMax - yMin))) * plotH
+          : yFor(tick);
+        pieces.push(`<line class="grid-line" x1="${margin.left}" y1="${y}" x2="${margin.left + plotW}" y2="${y}"/>`);
+        pieces.push(`<text class="tick-label" x="${margin.left - 8}" y="${y + 4}" text-anchor="end">${formatValue(raw)}</text>`);
+      });
+
+      pieces.push(`<line class="axis-line" x1="${margin.left}" y1="${margin.top + plotH}" x2="${margin.left + plotW}" y2="${margin.top + plotH}"/>`);
+      pieces.push(`<line class="axis-line" x1="${margin.left}" y1="${margin.top}" x2="${margin.left}" y2="${margin.top + plotH}"/>`);
+      pieces.push(`<text class="axis-label" x="${margin.left + plotW / 2}" y="${height - 6}" text-anchor="middle">n</text>`);
+      pieces.push(`<text class="axis-label" x="16" y="${margin.top + plotH / 2}" transform="rotate(-90 16 ${margin.top + plotH / 2})" text-anchor="middle">value</text>`);
+
+      active.forEach(item => {
+        const path = buildPath(item, maxN, xFor, yFor);
+        if (path) {
+          pieces.push(`<path class="series-path" d="${path}" stroke="${item.row.color}"/>`);
+        }
+      });
+
+      const markerX = xFor(focusN);
+      pieces.push(`<line class="marker-line" x1="${markerX}" y1="${margin.top}" x2="${markerX}" y2="${margin.top + plotH}"/>`);
+      active.forEach(item => {
+        const value = valueFor(item, focusN);
+        const y = yFor(value);
+        if (Number.isFinite(y)) {
+          pieces.push(`<circle cx="${markerX}" cy="${y}" r="4" fill="${item.row.color}" stroke="#fff" stroke-width="1.5"/>`);
+        }
+      });
+
+      chartEl.innerHTML = pieces.join('');
+    }
+
+    function makeTicks(min, max, count) {
+      if (count <= 1) return [min];
+      const ticks = [];
+      const step = (max - min) / (count - 1);
+      for (let i = 0; i < count; i += 1) ticks.push(min + i * step);
+      return ticks;
+    }
+
+    function buildPath(item, maxN, xFor, yFor) {
+      let d = '';
+      let open = false;
+      for (let n = 1; n <= maxN; n += 1) {
+        const value = valueFor(item, n);
+        const y = yFor(value);
+        if (!Number.isFinite(value) || !Number.isFinite(y)) {
+          open = false;
+          continue;
+        }
+        const x = xFor(n);
+        d += `${open ? 'L' : 'M'} ${x.toFixed(2)} ${y.toFixed(2)} `;
+        open = true;
+      }
+      return d.trim();
+    }
+
+    function renderLegend(parsedRows) {
+      const enabled = parsedRows.filter(item => item.row.enabled);
+      legendEl.innerHTML = enabled.map(item => `
+        <span class="legend-item ${item.parsed.ok ? '' : 'invalid'}">
+          <span class="swatch" style="background:${item.row.color}"></span>
+          <span>${escapeHtml(item.row.expr || 'blank')}${item.parsed.ok ? '' : ' (not plotted)'}</span>
+        </span>
+      `).join('');
+    }
+
+    function valueFor(item, n) {
+      const value = item.parsed.fn(n);
+      return Number.isFinite(value) ? value : NaN;
+    }
+
+    function formatValue(value) {
+      if (!Number.isFinite(value)) return '-';
+      if (Math.abs(value) < 1e-10) return '0';
+      const abs = Math.abs(value);
+      if (abs >= 1e7 || abs < 0.001) return value.toExponential(2);
+      if (abs >= 1000) return Math.round(value).toLocaleString();
+      if (abs >= 100) return value.toFixed(1);
+      if (abs >= 10) return value.toFixed(2);
+      return value.toFixed(3);
+    }
+
+    function parseExpression(source) {
+      const expr = String(source || '').trim();
+      if (!expr) {
+        return { ok: false, error: 'Enter a function.' };
+      }
+
+      try {
+        const tokens = tokenize(expr);
+        const parser = new Parser(tokens);
+        const ast = parser.parse();
+        return {
+          ok: true,
+          fn: n => evaluateAst(ast, n)
+        };
+      } catch (error) {
+        return {
+          ok: false,
+          error: error.message || 'Could not parse function.'
+        };
+      }
+    }
+
+    function tokenize(source) {
+      const text = source
+        .toLowerCase()
+        .replaceAll(',', '')
+        .replaceAll('x', 'n')
+        .replaceAll('\u00d7', '*')
+        .replaceAll('\u2212', '-')
+        .replaceAll('\u2013', '-')
+        .replaceAll('\u2014', '-');
+      const tokens = [];
+      let i = 0;
+
+      while (i < text.length) {
+        const char = text[i];
+
+        if (/\s/.test(char)) {
+          i += 1;
+          continue;
+        }
+
+        const numberMatch = text.slice(i).match(/^(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?/);
+        if (numberMatch) {
+          tokens.push({ type: 'number', value: Number(numberMatch[0]) });
+          i += numberMatch[0].length;
+          continue;
+        }
+
+        if ('+-*/^()'.includes(char)) {
+          tokens.push({ type: 'operator', value: char });
+          i += 1;
+          continue;
+        }
+
+        if (char === 'n') {
+          tokens.push({ type: 'variable' });
+          i += 1;
+          continue;
+        }
+
+        if (text.startsWith('ln', i)) {
+          tokens.push({ type: 'func', name: 'ln' });
+          i += 2;
+          continue;
+        }
+
+        if (text.startsWith('lg', i)) {
+          tokens.push({ type: 'func', name: 'lg' });
+          i += 2;
+          continue;
+        }
+
+        if (text.startsWith('log', i)) {
+          let j = i + 3;
+          if (text[j] === '_') j += 1;
+          const baseMatch = text.slice(j).match(/^(?:\d+\.?\d*|\.\d+)/);
+          const base = baseMatch ? Number(baseMatch[0]) : null;
+          if (baseMatch) j += baseMatch[0].length;
+          tokens.push({ type: 'func', name: 'log', base });
+          i = j;
+          continue;
+        }
+
+        throw new Error(`Could not parse near "${escapeHtml(source.slice(i, i + 8))}".`);
+      }
+
+      return tokens;
+    }
+
+    class Parser {
+      constructor(tokens) {
+        this.tokens = tokens;
+        this.pos = 0;
+      }
+
+      parse() {
+        const expr = this.parseSum();
+        if (!this.isDone()) {
+          throw new Error('Unexpected text after the function.');
+        }
+        return expr;
+      }
+
+      parseSum() {
+        let left = this.parseProduct();
+        while (this.matchOperator('+') || this.matchOperator('-')) {
+          const op = this.previous().value;
+          const right = this.parseProduct();
+          left = { type: 'binary', op, left, right };
+        }
+        return left;
+      }
+
+      parseProduct() {
+        let left = this.parsePower();
+        while (!this.isDone()) {
+          if (this.matchOperator('*') || this.matchOperator('/')) {
+            const op = this.previous().value;
+            const right = this.parsePower();
+            left = { type: 'binary', op, left, right };
+            continue;
+          }
+
+          if (this.beginsImplicitProduct(this.peek())) {
+            const right = this.parsePower();
+            left = { type: 'binary', op: '*', left, right };
+            continue;
+          }
+
+          break;
+        }
+        return left;
+      }
+
+      parsePower() {
+        let left = this.parseUnary();
+        if (this.matchOperator('^')) {
+          const right = this.parsePower();
+          left = { type: 'binary', op: '^', left, right };
+        }
+        return left;
+      }
+
+      parseUnary() {
+        if (this.matchOperator('+')) return this.parseUnary();
+        if (this.matchOperator('-')) return { type: 'negate', expr: this.parseUnary() };
+        return this.parsePrimary();
+      }
+
+      parsePrimary() {
+        const token = this.advance();
+        if (!token) throw new Error('Missing part of the function.');
+
+        if (token.type === 'number') {
+          return { type: 'number', value: token.value };
+        }
+
+        if (token.type === 'variable') {
+          return { type: 'variable' };
+        }
+
+        if (token.type === 'func') {
+          return {
+            type: 'func',
+            name: token.name,
+            base: token.base,
+            arg: this.parseFunctionArgument()
+          };
+        }
+
+        if (token.type === 'operator' && token.value === '(') {
+          const expr = this.parseSum();
+          if (!this.matchOperator(')')) {
+            throw new Error('Missing closing parenthesis.');
+          }
+          return expr;
+        }
+
+        throw new Error('Expected a number, n, x, log, or parentheses.');
+      }
+
+      parseFunctionArgument() {
+        if (this.isDone()) {
+          throw new Error('A log function needs an argument.');
+        }
+        return this.parsePower();
+      }
+
+      beginsImplicitProduct(token) {
+        if (!token) return false;
+        return token.type === 'number'
+          || token.type === 'variable'
+          || token.type === 'func'
+          || (token.type === 'operator' && token.value === '(');
+      }
+
+      matchOperator(value) {
+        const token = this.peek();
+        if (token && token.type === 'operator' && token.value === value) {
+          this.pos += 1;
+          return true;
+        }
+        return false;
+      }
+
+      advance() {
+        if (this.isDone()) return null;
+        const token = this.tokens[this.pos];
+        this.pos += 1;
+        return token;
+      }
+
+      previous() {
+        return this.tokens[this.pos - 1];
+      }
+
+      peek() {
+        return this.tokens[this.pos] || null;
+      }
+
+      isDone() {
+        return this.pos >= this.tokens.length;
+      }
+    }
+
+    function evaluateAst(node, n) {
+      if (node.type === 'number') return node.value;
+      if (node.type === 'variable') return n;
+      if (node.type === 'negate') return -evaluateAst(node.expr, n);
+
+      if (node.type === 'binary') {
+        const left = evaluateAst(node.left, n);
+        const right = evaluateAst(node.right, n);
+        if (node.op === '+') return left + right;
+        if (node.op === '-') return left - right;
+        if (node.op === '*') return left * right;
+        if (node.op === '/') return right === 0 ? NaN : left / right;
+        if (node.op === '^') return Math.pow(left, right);
+      }
+
+      if (node.type === 'func') {
+        const value = evaluateAst(node.arg, n);
+        const base = logBaseFor(node);
+        if (value <= 0 || base <= 0 || base === 1) return NaN;
+        return Math.log(value) / Math.log(base);
+      }
+
+      return NaN;
+    }
+
+    function logBaseFor(node) {
+      if (node.name === 'ln') return Math.E;
+      if (node.name === 'lg') return 2;
+      return node.base || 2;
+    }
+
+    function escapeHtml(text) {
+      return String(text)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;');
+    }
+
+    presetEl.innerHTML = presets.map((preset, i) =>
+      `<option value="${i}">${preset.name}</option>`
+    ).join('');
+
+    presetEl.addEventListener('change', () => applyPreset(Number(presetEl.value)));
+    scaleEl.addEventListener('change', render);
+    maxNEl.addEventListener('input', () => { setMaxN(maxNEl.value); render(); });
+    maxNRangeEl.addEventListener('input', () => { setMaxN(maxNRangeEl.value); render(); });
+    focusNEl.addEventListener('input', () => { setFocusN(focusNEl.value); render(); });
+    focusNRangeEl.addEventListener('input', () => { setFocusN(focusNRangeEl.value); render(); });
+    functionRowsEl.addEventListener('input', (event) => syncRowFromInput(event.target));
+    functionRowsEl.addEventListener('change', (event) => syncRowFromInput(event.target));
+
+    applyPreset(0);
+  </script>
+</body>
+</html>
