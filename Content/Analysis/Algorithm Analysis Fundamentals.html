@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Algorithm Analysis Fundamentals</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <script src="../../scripts/chapterScripts.js"></script>
+  <script src="latex-translation.js"></script>
+  <link rel="stylesheet" href="../../css/style.css">
+  <link rel="stylesheet" href="../../css/chapter.css">
+  <link rel="stylesheet" href="latex-translation.css">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-DQ5LVZVFDC');
+  </script>
+</head>
+<body class="latex-translation">
+  <h1>Algorithm Analysis Fundamentals</h1>
+<section id="algorithm-analysis" section-title="Algorithm Analysis">
+<h2>Algorithm Analysis</h2>
+<p>The overall goal of this chapter is to deal with a seemingly simple question: <em>Given an algorithm, how good is it?</em> I say "seemingly" simple because unless we define what we mean by "good", we cannot answer the question. Do we mean how elegant it is?  How easy it is to understand? How easy it is to update if/when necessary?  Whether or not it can be generalized?</p>
+<p>Although all of these may be important questions, in algorithm analysis we are usually more interested in the following two questions: <em>How long does the algorithm take to run, and how much space (memory) does the algorithm require.</em> In fact, we follow the tradition of most books and focus our discussion on the first question. This is usually reasonable since the amount of memory used by most algorithms is not large enough to matter.  There are times, however, when analyzing the space required by an algorithm is important.  For instance, when the data is really large (e.g. the graph that represents friendships on Facebook) or when you are implementing a <em>space-time-tradeoff</em> algorithm.</p>
+<p>Although we have simplified the question, we still need to be more specific. What do we mean by "time"? Do we mean how long it takes in real time (often called <em>wall-clock time</em>)?  Or the actual amount of time our processor used (called <em>CPU time</em>)?  Or the exact <em>number of instructions</em> (or <em>number of operations</em>) executed?</p>
+<div class="question-box">
+<p class="box-title"><strong>Question</strong></p>
+<p>Why aren't wall-clock time and CPU time the same?</p>
+<p><span class="answer-space"></span></p>
+<button type="button" class="show-answer latex-answer-toggle" data-answer-target="latex-answer-38" aria-expanded="false">Show Answer</button>
+<div id="latex-answer-38" class="answer latex-answer" hidden>
+<p>Modern computers use multitasking to perform several tasks (seemingly) at the same time. Therefore, if an algorithm takes 1 minute of real time (wall-clock time), it might be that 58 seconds of that time was spent running the algorithm, but it could also be the case that only 30 seconds of that time were spent on that algorithm, and the other 30 seconds spent on other processes.  In this case, the CPU time would be 30 seconds, but the wall-clock time 60 seconds.</p>
+<p>Further complicating matters is increasing availability of machines with multiple processors.  If an algorithm runs on 4 processors rather than one, it might take 1/4th the time in terms of wall-clock time, but it will probably take the same amount of CPU time (or close to it).</p>
+</div>
+</div>
+<p>Because the running time of an algorithm is greatly affected by the characteristics of the computer system (e.g. processor speed, number of processors, amount of memory, file-system type, etc.), the running time does not necessarily provide a comparable measure, regardless of whether you use CPU time or wall-clock time. The next question asks you to think about why.</p>
+<div class="question-box">
+<p class="box-title"><strong>Question</strong></p>
+<p>Sue and Stu were competing to write the fastest algorithm to solve a problem. After a week, Sue informs Stu that her program took 1 hour to run. Stu declared himself victorious since his program took only 3 minutes. But the real question is this:  Whose algorithm was more efficient? Can we be certain Stu's algorithm was better than Sue's?  Explain. (Hint:  Make sure you don't jump to any conclusion too quickly.  Think about all of the possibilities.)</p>
+<p><span class="answer-space"></span></p>
+<button type="button" class="show-answer latex-answer-toggle" data-answer-target="latex-answer-39" aria-expanded="false">Show Answer</button>
+<div id="latex-answer-39" class="answer latex-answer" hidden>
+<p>We cannot be certain whose algorithm is better with the given information. Maybe Sue used a <em>TRS-80 Model IV</em> from the 1980s to run her program and Stu used <em>Tianhe-2</em> (The fastest computer in the world from about 2013-2014). In this case, it is possible that if Sue ran her program on <em>Tianhe-2</em> it would have only taken 2 minutes, making her the real winner.</p>
+</div>
+</div>
+<p>The answer to the previous question should make it clear that you cannot compare the running times of algorithms if they were run on different machines. Even if two algorithms are run on the same computer, the wall-clock times may not be comparable.</p>
+<div class="question-box">
+<p class="box-title"><strong>Question</strong></p>
+<p>Why isn't the <em>wall-clock time</em> of two algorithms that are run on the same computer always a reliable indicator of their relative performances?</p>
+<p><span class="answer-space"></span></p>
+<button type="button" class="show-answer latex-answer-toggle" data-answer-target="latex-answer-40" aria-expanded="false">Show Answer</button>
+<div id="latex-answer-40" class="answer latex-answer" hidden>
+<p>As has already been mentioned, other processes on the machine can have a significant influence on the wall-clock time.  For instance, if I run two CPU-intensive programs at once, the wall-clock time of each might be about twice what it would be if I ran them one at a time. If they are run on a machine with multiple cores the wall-clock time might be closer to the CPU-time.  But other processes that are running can still throw off the numbers.</p>
+</div>
+</div>
+<p>In fact, if you run the same algorithm on the same machine multiple times, it will not always take the same amount of time. Sometimes the differences between trial runs can be significant.</p>
+<div class="question-box">
+<p class="box-title"><strong>Question</strong></p>
+<p>If two algorithms are run on the same machine, can we reliably compare the <em>CPU-times</em>?</p>
+<p><span class="answer-space"></span></p>
+<button type="button" class="show-answer latex-answer-toggle" data-answer-target="latex-answer-41" aria-expanded="false">Show Answer</button>
+<div id="latex-answer-41" class="answer latex-answer" hidden>
+<p>For the most part, yes.  This is especially true if the running times of the algorithms are not too close to each other (in other words, if one of the algorithms is significantly faster than the other). However, the number of other processes running on the machine can have an influence on CPU-time.  For instance, if there are more processes running, there are more context switches, and depending on how the CPU-time is counted, these context switches can influence the runtime.  So although comparing the CPU-time of two algorithms that are run on the same computer gives a pretty good indication of which is better, it is still not perfect.</p>
+</div>
+</div>
+<p>So the CPU-time turns out to be a pretty good measure of algorithm performance. Unfortunately, it does not really allow one to compare two <em>algorithms</em>.  It only allows us to compare specific <em>implementations of the algorithms</em>. It also requires us to implement the algorithm in an actual programming language before we even know how good the algorithm is (that is, before we know if we should even spend the time to implement it).</p>
+<p>But we can analyze and compare algorithms before they are implemented if we use the <em>number of instructions</em> as our measure of performance. There is still a problem with this measure. What is meant by an "instruction"? When you write a program in a language such as Java or C++, it is not executed exactly as you wrote it.  It is compiled into some sort of machine language. The process of compiling does not generally involve a one-to-one mapping of instructions, so counting Java instructions versus C++ instructions wouldn't necessarily be fair. On the other hand, we certainly do not want to look at the machine code in order to count instructions&mdash;machine code is ugly. Further, when analyzing an algorithm, should we even take into account the exact implementation in a particular language, or should we analyze the algorithm apart from implementation?</p>
+<p>O.K., that's enough of the complications.  Let's get to the bottom line.  When analyzing algorithms, we generally want to ignore what sort of machine it will run on and what language it will be implemented in. We also generally do not want to know <em>exactly</em> how many instructions it will take. Instead, we want to know the <em>rate of growth</em> of the number of instructions. This is sometimes called the <em>asymptotic running time</em> of an algorithm. In other words, as the size of the input increases, how does that affect the number of instructions executed? We will typically use the notation from Section Asymptotic Notation to specify the running time of an algorithm. We will call this the <em>time complexity</em> (or often just <em>complexity</em>) of the algorithm.</p>
+</section>
+<section id="analyzing-algorithms" section-title="Analyzing Algorithms">
+<h2>Analyzing Algorithms</h2>
+<p>Given an algorithm, the <em>size of the input</em> is exactly what it sounds like&mdash;the amount of space required to specify the input.  For instance, if an algorithm operates on an array of size \(n\), we generally say the input is of size \(n\). For a graph, it is usually the number of vertices or the number of vertices and edges. When the input is a single number, things get more complicated for reasons I do not want to get into right now.  We usually don't need to worry about this, though.</p>
+<p>Algorithm analysis involves determining the size of the input, \(n\),  and then finding a function based on \(n\) that tells us how long the algorithm will take if the input is of size \(n\).  By "how long" we of course mean how many operations.</p>
+<div class="example-box">
+<p class="box-title"><strong>Example: Sequential Search</strong></p>
+<p>Given an array of \(n\) elements, often one needs to determine if a given number \(val\) is in the array. One way to do this is with the <em>sequential search</em> algorithm that simply looks through all of the elements in the array until it finds it or reaches the end.  The most common version of this algorithm returns the index of the element, or \(-1\) if the element is not in the array. Here is one implementation.</p>
+<pre><code class="language-java">    int sequentialSearch(int a[],int n, int val) {
+        for(int i=0;i&lt;a.size();i++) {
+            if(a[i]==val) {
+                return i;
+            }
+        }
+        return -1;
+    }</code></pre>
+<p>What is the size of the input to this algorithm?</p>
+<div class="solution-block">
+<p class="box-title"><strong>Solution</strong></p>
+<p>There are a few possible answers to this question.  The input technically consists of an array of \(n\) elements, the numbers \(n\), and the value we are searching for.  So we could consider the size of the input to be \(n+2\).  However, typically we ignore constants with input sizes. So we will say the size of the input is \(n\).</p>
+</div>
+</div>
+<p>In general, if an algorithm takes as input an array of size \(n\) and some constant number of other numeric parameters, we will consider the size of the input to be \(n\).</p>
+<div class="exercise-box">
+<p class="box-title"><strong>Exercise</strong></p>
+<p>Consider an algorithm that takes as input an \(n\) by \(m\) matrix, an integer \(v\), and a real number \(r\).  What is the size of the input?</p>
+<p><span class="answer-space"></span></p>
+<button type="button" class="show-answer latex-answer-toggle" data-answer-target="latex-answer-42" aria-expanded="false">Show Answer</button>
+<div id="latex-answer-42" class="answer latex-answer" hidden>
+<p>This one is a little more tricky. The answer is \(n\cdot m\) since this is how many entries are in the matrix. Sometimes we need to use two numbers to specify the input size. As suggested previously, we will ignore the size of the two other pieces of data.</p>
+</div>
+</div>
+<div class="example-box">
+<p class="box-title"><strong>Example</strong></p>
+<p>How many operations does <code>sequentialSearch</code> take on an array of size \(n\)?</p>
+<div class="solution-block">
+<p class="box-title"><strong>Solution</strong></p>
+<p>As mentioned above, we consider \(n\) as the size of the input. Assigning \(i=0\) takes one instruction. Each iteration through the <code>for</code> loop increments \(i\), compares \(i\) with \(a.size()\), and compares \(a[i]\) with \(val\). Don't forget that accessing \(a[i]\) and calling <code>a.size()</code> each take (at least) one instruction. Finally, it takes an instruction to return the value. If the \(val\) is in the array at position \(k\), the algorithm will take \(2+5k=\Theta(k)\) operations, the \(2\) coming from the assignment <code>i=0</code> and the return statement. If  \(val\) is not in the array, the algorithm takes \(2+5n=\Theta(n)\) instructions.</p>
+</div>
+</div>
+<p>This last example should bring up a few questions.  Did we miss any instructions? Did we miss any possible outcomes that would give us a different answer?  How exactly should we specify our analysis?</p>
+<p>Let's deal with the possible outcomes question first.  Generally speaking, when we analyze an algorithm we want to know what happens in one of three cases: The  best case, the average case, or the worst case. When thinking about these cases, we always consider them for a given value of \(n\) (the input size). We will see in a moment why this matters.</p>
+<p>As the name suggests, when performing a <em>best case</em> analysis, we are trying to determine the smallest possible number of instructions an algorithm will take. Typically, this is the least useful type of analysis. If you have experienced a situation when someone said something like "it will only take an hour (or a day) to fix your cell phone," and it actually took 3 hours (or days), you will understand why.</p>
+<p>When determining the best-case performance of an algorithm, remember that we need to determine the best-case performance for a given input size \(n\).  This is important since otherwise every algorithm would take a constant amount of time in the best case simply by giving it an input of the smallest possible size (typically \(0\) or \(1\)).  That sort of analysis is not very informative.</p>
+<div class="remark-box">
+<p class="box-title"><strong>Remark</strong></p>
+<p>When you are asked to do a best-case analysis of an algorithm, remember that it is implied that what is being asked is the best-case analysis <strong>for an input of size \(n\)</strong>. This actually applies to average and worst-case analysis as well, but it is easier to make this mistake when doing a best-case analysis.</p>
+</div>
+<p><em>Worst case</em> analysis considers what is the largest number of instructions that will execute (again, for a given input size \(n\)). This is probably the most common analysis, and typically the most useful. When you pay Amazon for guaranteed 2-day delivery, you are paying for them to guarantee a worst-case delivery time. However, this analogy is imperfect. When you do a worst-case analysis, you know the algorithm will <em>never</em> take longer than what your analysis specified, but occasionally an Amazon delivery is lost or delayed. When you perform a worst-case analysis of an algorithm, you always consider what can happen that will make an algorithm take as long as possible, so it will never take longer than the worst-case analysis implies.</p>
+<p>The <em>average case</em> is a little more complicated, both to define and to compute. The first problem is determining what "average" means for a particular input and/or algorithm. For instance, what does an "average" array of values look like? The second problem is that even with a good definition, computing the average case complexity is usually much more difficult than the other two. It also must be used appropriately. If you know what the average number of instructions for an algorithm is, you need to remember that sometimes it might take less time and sometimes it might take more time--possibly significantly more time.</p>
+<p>I sometimes use the term <em>expected running time</em> instead of one of these three. This is almost synonymous with <em>average case</em>, but when I use this term I am being less formal. Thus, I will not necessarily do a complete average case analysis to determine what I call the expected running time. Think of it as being how long an algorithm will <em>usually</em> take.  It will typically coincide with either the average- or worst-case complexity.</p>
+<div class="example-box">
+<p class="box-title"><strong>Example</strong></p>
+<p>Continuing the  <code>sequentialSearch</code> example, notice that our analysis above reveals that the best-case performance is \(7=\Theta(1)\) operations (if the element sought is the first one in the array) and the worst-case performance is \(2+5n=\Theta(n)\) operations (if the element is not in the array). If we assume that the element we are searching for is equally likely to be anywhere in the array or not in the array, then the average-case performance should be about \(2+5(n/2)=\Theta(n)\) operations. We will do a more thorough average-case analysis of this algorithm shortly.</p>
+</div>
+<p>Notice that in the previous example, the average- and worst-case complexities are the same.  This makes sense. We estimate that the average case takes about half as long as the worst case.  But no matter how large \(n\) gets, it is still just half as long. That is, the <em>rate of growth</em> of the average and worst-case running times are the same. Also note the logic we used to obtain the best-case complexity of \(\Theta(1)\). We did not say the best case was \(\Theta(1)\) because the best-case input was an array of size one.  Instead it is \(\Theta(1)\) because in the best case the element we are searching for is the first element of the array, no matter how large the array is.</p>
+<p>Here is another important question: How do we know we counted all of the operations? As it turns out, we don't actually care. This is good because determining the exact number is very difficult, if not impossible. Recall that we said we wanted to know the rate of growth of an algorithm, not the exact number of instructions. As long as we count all of the "important" ones, we will get the correct rate of growth. But what are the "important" ones? The term <em>abstract operation</em> is sometimes used to describe the operations that we will count. Typically you choose one type of operation or a set of operations that you know will be performed the most often and consider those as the abstract operation(s).</p>
+<div class="example-box">
+<p class="box-title"><strong>Example</strong></p>
+<p>The analysis of <code>sequentialSearch</code> can be done more easily than in the previous example. We repeat the algorithm here for convenience.</p>
+<pre><code class="language-java">    int sequentialSearch(int a[],int n, int val) {
+        for(int i=0;i&lt;a.size();i++) {
+            if(a[i]==val) {
+                return i;
+            }
+        }
+        return -1;
+    }</code></pre>
+<p>Notice that the comparison (<code>a[i]==val</code>) is executed as often as any other instruction. Therefore if we count the number of times that instruction executes, we can use that to determine the rate of growth of the running time.</p>
+<p>In the best case the comparison is executed once (if the element being searched for is the first one in the array), so the best-case complexity is \(\Theta(1)\).</p>
+<p>In the worst case the comparison is executed \(n=\Theta(n)\) times (if the element being searched for is either at the end or not present in the array).</p>
+<p>As before, we expect the average case to be about \(n/2=\Theta(n)\), although in the next example we will do a more complete analysis.</p>
+<p>Notice that we obtained the same answers here as we did above when we tried to take into account every operation.</p>
+</div>
+<div class="example-box">
+<p class="box-title"><strong>Example</strong></p>
+<p>Let's determine the average-case complexity of <code>sequentialSearch</code>. If we assume that the element is equally likely to be anywhere in the array, then there is a \(1/n\) chance that it will be in any given spot.  If it is in the first spot, the comparison executes once.  If it is in the second spot, it executes twice. In general it takes \(k\) comparisons if it is in the \(k\)th spot. Since each possibility has a \(1/n\) chance, the average expected search time is \[\sum_{k=1}^{n}\frac{k}{n}=\frac{1}{n}\sum_{k=1}^{n}k=\frac{1}{n}\frac{n(n+1)}{2} =\frac{n+1}{2}=\Theta(n).\]</p>
+<p>Our analysis simplified things a bit&mdash;we didn't take into account the possibility that the element was not in the array.  To do so, let's assume the element searched for is equally likely to be anywhere in the array or not in the array. That is, there is now a \(1/(n+1)\) chance that it will be in any of the \(n\) spots in the array and a \(1/(n+1)\) chance that it is not in the array. (We divide by \(n+1\) because there are now \(n+1\) possibilities, each equally likely.)  If it is not in the array, the number of comparisons is \(n\). In this case the expected time would be \[\sum_{k=1}^{n}\left(\frac{k}{n+1}\right) + \frac{n}{n+1} =\frac{1}{n+1}\left(\sum_{k=1}^{n}k + n\right) =\frac{1}{n+1}\left(\frac{n(n+1)}{2}+ n\right) =\frac{n^2+3n}{2(n+1)} =\Theta(n).\] We'll leave it to you to prove that \(\frac{n^2+3n}{2(n+1)} =\Theta(n)\). (Use Theorem 8 and a little algebra).</p>
+</div>
+<p>The previous example demonstrates how performing an average-case analysis is typically much more difficult than the other two, even with a relatively simple algorithm. In fact, did we even do it correctly? Is it a valid assumption that there is a \(1/(n+1)\) chance that the element searched for is not in the array?  If we are searching for a lot of values in a small array, perhaps it is the case that most of the values we are searching for are <em>not</em> in the array. Maybe it is more realistic to assume there is a \(50%\) chance it is in the array and \(50%\) chance that it is not in the array. I could propose several other reasonable assumptions, too.  As stated before, it can be difficult to define "average." In this case it actually doesn't matter a whole lot because under any reasonable assumptions the average-case analysis will always come out as \(\Theta(n)\).</p>
+<p>As you might be able to imagine, things get much more complicated as the algorithms get more complex.  This is one of the reasons that in some cases we will skip or gloss over the details of the average-case analysis of an algorithm.</p>
+<p>It is important to make sure that you choose the operation(s) you will count carefully so your analysis is correct. In addition, you need to look at every instruction in the algorithm to determine whether or not it can be accomplished in constant time.  If some step takes longer than constant time, that needs to be properly taken into consideration. In particular, consider function/method calls and operations on data structures very carefully.  For instance, if you see a method call like <code>insert(x)</code> or <code>get(x)</code>, you cannot just assume they take constant time.  You need to determine how much time they actually take.</p>
+<div class="remark-box">
+<p class="box-title"><strong>Remark</strong></p>
+<p>When you are asked for the <em>complexity</em> of an algorithm, you should do the following three things:</p>
+<ol class="spaced">
+<li>
+<p>Give the best, average, and worst-case complexities unless otherwise specified. Sometimes the average case is quite complicated and can be skipped.</p>
+<li>
+<p>Give answers  in the form of \(\Theta(f(n))\) for some function \(f(n)\), or \(O(f(n))\) if a tight bound is not possible.  The function \(f(n)\) you choose should be as simple as possible.  For instance, instead of \(\Theta(3n^2+2n+89)\), you should use \(\Theta(n^2)\) since the constants and lower order terms don't matter.</p>
+<li>
+<p>Clearly justify your answers by explaining how you arrived at them in sufficient detail.</p>
+</ol>
+</div>
+<div class="example-box">
+<p class="box-title"><strong>Example</strong></p>
+<p>What is the complexity of <code>max(x,y)</code>?  Justify your answers.</p>
+<pre><code class="language-java">	int max(int x, int y) {
+	    if(x &gt;= y) {
+	        return x;
+	    } else {
+	        return y;
+	    }
+	}</code></pre>
+<div class="solution-block">
+<p class="box-title"><strong>Solution</strong></p>
+<p>No matter what, the algorithm does a single comparison followed by a return statement.  Therefore, in the best, average, and worst case, <code>max</code> takes about \(2\) operations. Therefore, the complexity is always \(\Theta(1)\) (otherwise known as <em>constant</em>).</p>
+</div>
+</div>
+<div class="exercise-box">
+<p class="box-title"><strong>Exercise</strong></p>
+<p>Analyze the following algorithm that finds the maximum value in an array. Start by deciding which operation(s) should be counted. Don't forget to give the best, worst, and average-case complexities.</p>
+<pre><code class="language-java">    int maximum(int a[],int n) {
+        int max = int.MIN_VAL; 
+        for (int i=0; i&lt;n; i++)
+            max = max(max, a[i]);
+        return max; 
+    } </code></pre>
+<button type="button" class="show-answer latex-answer-toggle" data-answer-target="latex-answer-43" aria-expanded="false">Show Answer</button>
+<div id="latex-answer-43" class="answer latex-answer" hidden>
+<p>We focus on the assignment (=) inside the loop and ignore the other instructions. This should be fine since assignment occurs at least as often as any other instruction. In addition, it is important to note that <code>max</code> takes constant time (did you remember to explicitly say this?), as do all of the other operations, so we aren't under-counting. It isn't too difficult to see that the assignment will occur \(n\) times for an array of size \(n\) since the code goes through a loop with \(i=0,\ldots, n-1\). Thus, the complexity of <code>maximum</code> is always \(\Theta(n)\).  That is, \(\Theta(n)\) is the best, average, and worst-case complexity of <code>maximum</code>.</p>
+</div>
+</div>
+<p>When an algorithm has no conditional statements (like the <code>maximum</code> algorithm from the previous exercise), or at least none that can cause the algorithm to end earlier, the best, average, and worst-case complexities will usually be the same.  I say usually because there is always the possibility of a weird algorithm that I haven't thought of that could be an exception.</p>
+<div class="example-box">
+<p class="box-title"><strong>Example</strong></p>
+<p>Give the complexity of the following code.</p>
+<pre><code class="language-java">     int q=0;
+     for (int i=1; i&lt;=n; i++) { 
+         q=q+i*i;
+     }
+     for (int j=1; j&lt;=n; j++) {
+         q=q*j;
+     }</code></pre>
+<div class="solution-block">
+<p class="box-title"><strong>Solution</strong></p>
+<p>This algorithm has two independent loops, each of which do slightly different things. Thus, we cannot pick a single operation to count. Instead we will pick the assignment statements that involve \(q\). That is, we will use both <code>q=q+i*i</code> and <code>q=q*j</code>. The first assignment executes \(n\) times since the first loop executes for every value of \(i\) from \(1\) to \(n\).  The second loop also executes its assignment \(n\) times for the same reason.  Since the loops happen one after another, we add the number of operations, so the total is \(n+n=2n\) assignment statements. Since there are no conditional statements, this is the best, worst, and average-case number of assignment statements.  Thus, the complexity for all three cases is \(\Theta(n)\).</p>
+</div>
+</div>
+<div class="example-box">
+<p class="box-title"><strong>Example</strong></p>
+<p>Give the complexity of the following code.</p>
+<pre><code class="language-java">    double V = 0;
+     for (int i=1; i&lt;=n; i++) { 
+         for (int j=1; j&lt;=n; j++) { 
+             V=V+A[i]*A[j];
+         }
+     }</code></pre>
+<div class="solution-block">
+<p class="box-title"><strong>Solution</strong></p>
+<p>Clearly the assignment (<code>V=A[i]*A[j])</code> occurs the most often. The inner loop<span class="translation-footnote">Footnote: <em>Always</em> analyze from the inside out.  The more practice you get, the more it will be obvious that this is the only way that will consistently work.</span> always executes \(n\) times, each time doing one assignment. The outer loop executes \(n\) times, and each time it executes, it executes the inner loop. Therefore the total time is \(n\cdot n=\Theta(n^2)\).  This is the best, worst, and average case complexity since nothing about the input can change what the algorithm does.</p>
+<p>Here is another way to think about it. The inner loop executes the assignment statement \(n\) times every time it executes. The first time through the outer loop, the whole inner loop executes an calls the assignment \(n\) times. The second time through the outer loop, the whole inner loop executes an calls the assignment \(n\) times. This happens all the way until the \(n\)th time through the outer loop during which the whole inner loop executes an calls the assignment \(n\) times. Thus, the total number of times the assignment is called is \(n+n+\cdots+n\) times (where there are \(n\) terms in the sum), which is just \(n\cdot n\).  Thus the complexity is \(\Theta(n^2)\).</p>
+</div>
+</div>
+<p>Sometimes people mistakenly think the algorithm Example 43 takes \(\Theta(n^2)\) operations.  id But it is not executing one loop inside another loop. It is executing one loop \(n\) times followed by another loop \(n\) times. On the other hand, the algorithm in Example 44 does <em>not</em> take \(n+n\) operations. It is not executing one loop \(n\) times followed by another loop \(n\) times. It is executing one loop \(n\) times, and each of those \(n\) times it is executing another loop that takes \(n\) time.</p>
+<p>Here is an analogy.  If you climb a flight of \(10\) stairs followed by another flight of \(10\) stairs, you climbed a total of \(10+10=20\) stairs. Now assume you go into a building that has \(10\) floors.  There are \(10\) steps between floors (so it takes \(10\) steps to get from floor 1 to 2, etc.)  If you climb to the top of the building, how many stairs did you climb? It is \(10+10+\cdots+10\) (where there are \(10\) terms in the sum), which is \(100=10^2\).  How does this relate to the previous examples? Simple.  In the first case, you executed:</p>
+<pre><code class="language-java">    for(stair 1 through 10)
+        climb stair
+    for(stair 1 through 10)
+        climb stair</code></pre>
+<p>and in the second case you executed:</p>
+<pre><code class="language-java">    for(floors 1 through 10)
+        for(stair 1 through 10)
+            climb stair</code></pre>
+<p>Do you see the resemblance to the code from Examples 43 and 44? And do you see how we are really performing the same analysis?</p>
+<p>It is important to be careful not to jump to conclusions when analyzing algorithms. For instance, a double-nested for-loop should always take \(\Theta(n^2)\) to execute, right?</p>
+<div class="exercise-box">
+<p class="box-title"><strong>Exercise</strong></p>
+<p>What is the worst-case complexity of the following algorithm?</p>
+<pre><code class="language-java">    int k=50;
+    for (i = 0; i &lt; n; i ++) {
+        for (j = 0; j &lt; k; j ++) {
+            a[i][j] = b[i][j] * x;
+        }
+    }</code></pre>
+<button type="button" class="show-answer latex-answer-toggle" data-answer-target="latex-answer-44" aria-expanded="false">Show Answer</button>
+<div id="latex-answer-44" class="answer latex-answer" hidden>
+<p>The line in the inner for loop takes constant time (let's call it \(c\)). The inner loop executes \(k=50\) times, each time doing \(c\) operations. Thus the inner loop does \(50\cdot c\) operations, which is still just a constant. The outer loop executes \(n\) times, each time executing the inner loop, which takes \(50\cdot c\) operations. Thus, the whole algorithm takes \(50\cdot c\cdot n=\Theta(n)\) time.</p>
+</div>
+</div>
+<p>If you read the solution to the previous exercise (which you definitely should have&mdash;<em>always</em> read the solutions!), you will see that you need to be careful not to jump to conclusions too quickly. A double-nested loop does not always mean an algorithm takes \(\Theta(n^2)\) time. But does it guarantee it will take \(O(n^2)\) (in other words, no more than quadratic time)?</p>
+<div class="exercise-box">
+<p class="box-title"><strong>Exercise</strong></p>
+<p>What is the worst-case complexity of the following algorithm?</p>
+<pre><code class="language-java">    for (i = 0; i &lt; n; i ++) {
+        for (j = 0; j &lt; n*n; j ++) {
+            a[i][j] = b[i][j] * x;
+        }
+    }</code></pre>
+<button type="button" class="show-answer latex-answer-toggle" data-answer-target="latex-answer-45" aria-expanded="false">Show Answer</button>
+<div id="latex-answer-45" class="answer latex-answer" hidden>
+<p>The line in the inner for loop takes constant time (let's call it \(c\)). The inner loop executes \(n^2\) times since \(j\) is going from \(0\) to \(n^2-1\), so each time the inner loop executes, it does \(cn^2\) operations. The outer loop executes \(n\) times, each time executing the inner loop. Thus, the total time is \(n\times cn^2=\Theta(n^3)\).</p>
+<p>This is an example of an algorithm with a double-nested loop that is <em>worse than</em> \(\Theta(n^2)\).  The point of this exercise is to make it clear that you should never jump to conclusions too quickly when analyzing algorithms.  Read the limits on loops very carefully!</p>
+</div>
+</div>
+</section>
+<section id="common-time-complexities" section-title="Common Time Complexities">
+<h2>Common Time Complexities</h2>
+<p>We have already discussed the relative growth rates of functions. In this section we apply that understanding to the analysis of algorithms. That is, we will discuss common time complexities that are encountered when analyzing algorithms. Let \(n\) be the size of the input and \(k\) a constant. We will briefly discuss each of the following complexity classes, which are listed (mostly) in order of rate of growth.</p>
+<ul class="spaced">
+<li>Constant: \(\Theta(k)\), for example \(\Theta(1)\)
+<li>Logarithmic: \(\Theta(\log_{k}n)\)
+<li>Linear: \(\Theta(n)\)
+<li>\(n\log n\): \(\Theta(n \log_{k}n)\)
+<li>Quadratic: \(\Theta(n^{2})\)
+<li>Polynomial: \(\Theta(n^k)\)
+<li>Exponential: \(\Theta(k^{n})\)
+</ul>
+<div class="definition-box">
+<p class="box-title"><strong>Definition: Constant</strong></p>
+<p>An algorithm with running time \(\Theta(1)\) (or \(\Theta(k)\) for some constant \(k\)) is said to have <strong>constant</strong> complexity. Note that this does not necessarily mean that the algorithm takes exactly the same amount of time for all inputs, but it <strong>does</strong> mean that there is some number \(K\) such that it always takes no more than \(K\) operations.</p>
+</div>
+<div class="example-box">
+<p class="box-title"><strong>Example</strong></p>
+<p>The following algorithms have constant complexity.</p>
+<pre><code class="language-java">int FifthElement(int A[],int n) 
+{
+    return A[4];
+}</code></pre>
+<pre><code class="language-java">    int PartialSum(int A[],int n) {
+        int sum=0;
+        for(int i=0;i&lt;42;i++) 
+           sum=sum+A[i];
+        return sum;
+    }</code></pre>
+<p>The algorithm <code>FifthElement</code> just indexes into an array and returns that value. Since array indexing takes constant time, as does returning a single value, this algorithm clearly takes just constant time, no matter how large \(n\) is.</p>
+<p>The algorithm <code>PartialSum</code> might seem to take \(O(n)\) time since it contains a loop.  But don't jump to conclusions too quickly.  Notice that the loop executes \(42\) times, regardless of how large \(n\) might be.  All of the other operations (both in and out of the loop) takes constant time.  Thus, the overall complexity is something like \(c_1+42*c_2\), where \(c_1\) is the time it takes to do the operations outside the loop, and \(c_2\) is the time it takes to execute the code in the loop each time it executes, including the comparison and increment in the for loop itself. Since both \(c_1\) and \(c_2\) are constant, so is \(c_1+42*c_2\).  Thus, the algorithm takes constant time.</p>
+</div>
+<div class="exercise-box">
+<p class="box-title"><strong>Exercise</strong></p>
+<p>Which of the following algorithms have constant complexity? Briefly justify your answers.</p>
+<ol class="spaced">
+<li>
+<p>The <code>AreaTrapezoid</code> algorithm from Example [exa:areaTrap].</p>
+<p><span class="answer-space"></span></p>
+<li>
+<p>The <code>factorial</code> algorithm from Example [exa:factorial].</p>
+<p><span class="answer-space"></span></p>
+<li>
+<p>The <code>absoluteValue</code> algorithm from Problem [pro:ab1].</p>
+<p><span class="answer-space"></span></p>
+</ol>
+<button type="button" class="show-answer latex-answer-toggle" data-answer-target="latex-answer-46" aria-expanded="false">Show Answer</button>
+<div id="latex-answer-46" class="answer latex-answer" hidden>
+<p>(a) <code>AreaTrapezoid</code> is constant. (b) <code>factorial</code>is not constant. It should be easy to see that it has a complexity of \(\Theta(n)\). (c)  <code>absoluteValue</code> is constant if we assume <code>sqrt</code> takes constant time.</p>
+</div>
+</div>
+<div class="definition-box">
+<p class="box-title"><strong>Definition: Logarithmic</strong></p>
+<p>Algorithms with running time \(\Theta(\log n)\) are said to have <strong>logarithmic</strong> complexity. As the input size \(n\) increases, so does the running time, but very slowly. Logarithmic algorithms are typically found when the algorithm can systematically ignore fractions of the input.</p>
+</div>
+<div class="example-box">
+<p class="box-title"><strong>Example</strong></p>
+<p>In Example 62 we will see that <em>binary search</em> has complexity \(\Theta(\log n)\).</p>
+</div>
+<div class="definition-box">
+<p class="box-title"><strong>Definition: Linear</strong></p>
+<p>Algorithms with running time \(\Theta(n)\) are said to have <strong>linear</strong> complexity. As \(n\) increases, the run time increases in proportion with \(n\). Linear algorithms access each of their \(n\) inputs at most some constant number of times.</p>
+</div>
+<div class="example-box">
+<p class="box-title"><strong>Example</strong></p>
+<p>The following are linear algorithms.</p>
+<pre><code class="language-java">  void sumFirstN(int n) {
+      int sum=0; 
+      for (int i=1;i&lt;=n;i++)
+      sum = sum + i;  
+  }</code></pre>
+<pre><code class="language-java">  void mSumFirstN(int n) {
+      int sum=0;
+      for(int i=1;i&lt;=n;i++)
+          for(int k=1;k&lt;7;k++)
+              sum = sum + i;
+  }</code></pre>
+<p>It is pretty easy to see that <code>sumFirstN</code> takes linear time since it contains a single for loop that executes \(n\) times and does a constant amount of work each time.</p>
+<p>At first glance it may seem that <code>mSumFirstN</code> takes \(\Theta(n^2)\) time since it has a double nested loop.  You will think about why it is actually \(\Theta(n)\) in the next question.</p>
+</div>
+<div class="question-box">
+<p class="box-title"><strong>Question</strong></p>
+<p>Why is the complexity of <code>mSumFirstN</code> from the previous example \(\Theta(n)\) and not \(\Theta(n^2)\)?</p>
+<p><span class="answer-space"></span></p>
+<button type="button" class="show-answer latex-answer-toggle" data-answer-target="latex-answer-47" aria-expanded="false">Show Answer</button>
+<div id="latex-answer-47" class="answer latex-answer" hidden>
+<p>Although it has a nested loop, the inside loop always executes \(6\) times, which is a constant.  So the algorithm takes about \(6\cdot c\cdot n=\Theta(n)\) operations, not \(\Theta(n^2)\).</p>
+</div>
+</div>
+<div class="definition-box">
+<p class="box-title"><strong>Definition: \(n \log n\)</strong></p>
+<p>Many divide-and-conquer algorithms have complexity \(\Theta(n\log n)\). These algorithms break the input into a constant number of subproblems of the same type, solve them independently, and then combine the solutions together.  Not all divide-and-conquer algorithms have this complexity, however.</p>
+</div>
+<div class="example-box">
+<p class="box-title"><strong>Example</strong></p>
+<p>Two of the most well known sorting algorithms, <em>Quicksort</em> and <em>merge sort</em>, have an average case complexity of \(\Theta(n\log n)\). We will do a complete analysis of both algorithms in Chapter [ch:recurrences].</p>
+</div>
+<div class="definition-box">
+<p class="box-title"><strong>Definition: Quadratic</strong></p>
+<p>Algorithms with a running time of \(\Theta(n^2)\) are said to have <strong>quadratic</strong> complexity. As \(n\) doubles, the running time quadruples.</p>
+</div>
+<div class="example-box">
+<p class="box-title"><strong>Example</strong></p>
+<p>The following algorithm is quadratic.</p>
+<pre><code class="language-java">    int compute_sums(int A[], int n) {
+        int M[n][n];
+        for (int i=0;i&lt;n;i++) 
+            for (int j=0;j&lt;n;j++)
+                M[i][j]=A[i]+A[j];
+        return M;
+    }</code></pre>
+<p>This one is pretty easy to see since it has double nested loops that each execute \(n\) times, and the amount of work done in the inner loop is constant.</p>
+</div>
+<div class="exercise-box">
+<p class="box-title"><strong>Exercise</strong></p>
+<p>Which of the following algorithms have quadratic complexity? Briefly justify your answers.</p>
+<ol class="spaced">
+<li>
+<p>The <code>factorial</code> algorithm from Example [exa:factorial].</p>
+<p><span class="answer-space"></span></p>
+<li>
+<p>An algorithm that tries to find the smallest element in an array of size \(n\times n\) by searching through the entire array.</p>
+<p><span class="answer-space"></span></p>
+</ol>
+<button type="button" class="show-answer latex-answer-toggle" data-answer-target="latex-answer-48" aria-expanded="false">Show Answer</button>
+<div id="latex-answer-48" class="answer latex-answer" hidden>
+<p>(a) Since <code>factorial</code> has a complexity of \(\Theta(n)\), it is not quadratic. (b) Since there are \(n^2\) entries it to consider, the algorithm takes \(\Theta(n^2)\) time, so it would be quadratic.<span class="translation-footnote">Footnote: Technically this is linear with respect to the <em>size</em> of the input since the size of the input is \(n^2\).  But it is quadratic in \(n\).  In either case, it is \(\Theta(n^2)\).</span></p>
+</div>
+</div>
+<div class="question-box">
+<p class="box-title"><strong>Question</strong></p>
+<p>In a previous course you may have encountered several quadratic sorting algorithms.  Name them. (Note: We will analyze two of them soon.)</p>
+<p><span class="answer-space"></span></p>
+<button type="button" class="show-answer latex-answer-toggle" data-answer-target="latex-answer-49" aria-expanded="false">Show Answer</button>
+<div id="latex-answer-49" class="answer latex-answer" hidden>
+<p>Bubble sort, selection sort, and insertion sort are three of them that you may have seen before.</p>
+</div>
+</div>
+<div class="definition-box">
+<p class="box-title"><strong>Definition: Polynomial</strong></p>
+<p>Algorithms with running time \(\Theta(n^k)\) for some constant \(k\) are said to have <strong>polynomial</strong> complexity.  We call them <strong>polynomial-time algorithms</strong>. Note that linear and quadratic are special cases of polynomial. When we say an <strong>efficient</strong> algorithm exists to solve a problem, we typically mean a polynomial-time algorithm.</p>
+</div>
+<div class="example-box">
+<p class="box-title"><strong>Example</strong></p>
+<p>As we will see in Example 57, <code>MatrixMultiply</code> takes \(\Theta(n^3)\) time. Since \(3\) is a constant, that is a polynomial-time algorithm. We will also mention Strassen's algorithm that has a complexity of about \(\Theta(n^{2.8})\). That is also a polynomial-time algorithm.  It's actual complexity is \(\Theta(n^{\log_2 7})\).</p>
+</div>
+<div class="definition-box">
+<p class="box-title"><strong>Definition: Exponential</strong></p>
+<p>Algorithms with running time \(\Theta(k^n)\) for some constant \(k\) are said to have <strong>exponential</strong> complexity. Since exponential algorithms can only be run for small values of \(n\), they are not considered to be efficient. Brute-force algorithms are often exponential.</p>
+</div>
+<div class="example-box">
+<p class="box-title"><strong>Example</strong></p>
+<p>Since there are \(2^n\) binary numbers of length \(n\), an algorithm that lists all binary numbers of length \(n\) would take \(\Theta(2^n)\) time, which is exponential.</p>
+</div>
+<div class="remark-box">
+<p class="box-title"><strong>Remark</strong></p>
+<p>As we have already seen, exponentials with different bases do not grow at the same rate. Thus, two exponential algorithms do not belong to the same complexity class unless the base of the exponent is the same. In other words, \(a^n\neq\Theta(b^n)\) unless \(a=b\).</p>
+</div>
+<p>Let me end on a very important note regarding analysis of algorithms and asymptotic growth of functions. If algorithm \(A\) is faster than algorithm \(B\), then the running time of \(A\) is less than the running time of \(B\). On the other hand, if \(A\)'s running time is asymptotically faster than the running time of \(B\), that means \(B\) is a faster algorithm! In other words, the words fast/slow need to be reversed when discussing algorithm speeds versus the growth of the functions. Put simply: <em>A faster growing complexity means a slower algorithm, and vice-versa</em>.</p>
+</section>
+</body>
+</html>

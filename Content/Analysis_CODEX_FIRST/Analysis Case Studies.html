@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analysis Case Studies</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <script src="../../scripts/chapterScripts.js"></script>
+  <script src="analysis-draft.js"></script>
+  <link rel="stylesheet" href="../../css/style.css">
+  <link rel="stylesheet" href="../../css/chapter.css">
+  <link rel="stylesheet" href="analysis-draft.css">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-DQ5LVZVFDC');
+  </script>
+</head>
+<body>
+  <h1>Analysis Case Studies</h1>
+
+  <section id="overview" section-title="Overview">
+    <h2>Overview</h2>
+    <p>
+      The best way to learn algorithm analysis is to analyze real code shapes. This page
+      collects the longer examples from the LaTeX chapter: sequential and nested loops,
+      sorting algorithms, data-structure-dependent method calls, algebraic improvements, and
+      binary search.
+    </p>
+  </section>
+
+  <section id="loops" section-title="Loop Shapes">
+    <h2>Loop Shapes</h2>
+    <p>
+      Consecutive loops are added. Nested loops are multiplied only after you understand how
+      many times the inner loop runs for each outer-loop value.
+    </p>
+
+    <div class="two-column-code">
+      <div class="example-box">
+        <strong class="example-title">Consecutive Loops</strong>
+        <pre><code class="language-java">int q = 0;
+for (int i = 1; i &lt;= n; i++) {
+    q = q + i * i;
+}
+for (int j = 1; j &lt;= n; j++) {
+    q = q * j;
+}</code></pre>
+        <p>
+          Each loop runs \(n\) times, but one happens after the other. The total is
+          \(n+n=2n=\Theta(n)\).
+        </p>
+      </div>
+
+      <div class="example-box">
+        <strong class="example-title">Nested Loops</strong>
+        <pre><code class="language-java">double v = 0;
+for (int i = 1; i &lt;= n; i++) {
+    for (int j = 1; j &lt;= n; j++) {
+        v = v + a[i] * a[j];
+    }
+}</code></pre>
+        <p>
+          The inner assignment runs \(n\) times for each of \(n\) outer iterations. The total
+          is \(n\cdot n=\Theta(n^2)\).
+        </p>
+      </div>
+    </div>
+
+    <div class="check-card">
+      <p>
+        <strong>Quick check:</strong> What is the worst-case complexity of this code?
+      </p>
+      <pre><code class="language-java">for (int i = 0; i &lt; n; i++) {
+    for (int j = 0; j &lt; 50; j++) {
+        a[i][j] = b[i][j] * x;
+    }
+}</code></pre>
+      <button class="answer-toggle show-answer" data-answer-target="constant-inner-answer">Show Answer</button>
+      <div id="constant-inner-answer" class="answer answer-panel" hidden>
+        <p>
+          The inner loop runs 50 times, a constant. The outer loop runs \(n\) times, so the
+          total running time is \(\Theta(n)\), not \(\Theta(n^2)\).
+        </p>
+      </div>
+    </div>
+
+    <p>
+      If an inner loop limit depends on an outer-loop variable, a summation is often the
+      clearest analysis. For example, if the inner loop runs \(i\) times while \(i\) moves
+      from 1 to \(n-1\), the total is
+      \[
+        \sum_{i=1}^{n-1} i = \frac{(n-1)n}{2}=\Theta(n^2).
+      \]
+    </p>
+  </section>
+
+  <section id="sorting" section-title="Sorting Examples">
+    <h2>Sorting Examples</h2>
+    <p>
+      Simple sorting algorithms are useful analysis examples because the inner-loop bounds
+      often change during the algorithm.
+    </p>
+
+    <div class="example-box">
+      <strong class="example-title">Bubble Sort</strong>
+      <pre><code class="language-java">void bubbleSort(int[] a) {
+    for (int i = a.length - 1; i &gt; 0; i--) {
+        for (int j = 0; j &lt; i; j++) {
+            if (a[j] &gt; a[j + 1]) {
+                swap(a, j, j + 1);
+            }
+        }
+    }
+}</code></pre>
+      <p>
+        The inner loop runs \(n-1\), then \(n-2\), then \(n-3\), and so on down to 1.
+        Therefore the number of comparisons is
+        \[
+          (n-1)+(n-2)+\cdots+1=\frac{(n-1)n}{2}=\Theta(n^2).
+        \]
+        Even if the array is already sorted and the swap never happens, the comparisons still
+        follow this quadratic pattern in this version.
+      </p>
+    </div>
+
+    <div class="example-box">
+      <strong class="example-title">Insertion Sort</strong>
+      <pre><code class="language-java">void insertionSort(int[] a) {
+    for (int i = 1; i &lt; a.length; i++) {
+        int v = a[i];
+        int j = i - 1;
+        while (j &gt;= 0 &amp;&amp; a[j] &gt; v) {
+            a[j + 1] = a[j];
+            j--;
+        }
+        a[j + 1] = v;
+    }
+}</code></pre>
+      <p>
+        In the worst case, the while loop moves through almost all of the sorted prefix on
+        each iteration, giving
+        \[
+          \sum_{i=1}^{n-1} i=\Theta(n^2).
+        \]
+        In the best case, the array is already sorted, the while condition fails quickly, and
+        the algorithm runs in \(\Theta(n)\) time.
+      </p>
+    </div>
+  </section>
+
+  <section id="data-structures" section-title="Data Structure Costs">
+    <h2>Data Structure Costs</h2>
+    <p>
+      The same high-level algorithm can have different complexity depending on the data
+      structure. Insertion sort over an array-backed list has constant-time <code>get</code>
+      and <code>set</code>, so it behaves like the array version. If the same code is used
+      on a linked list where <code>get(i)</code> and <code>set(i,x)</code> require traversal,
+      those calls are no longer constant.
+    </p>
+    <p>
+      In the linked-list version, each inner-loop iteration may cost \(\Theta(j)\) rather
+      than \(\Theta(1)\). Summing those costs can push the overall worst-case running time
+      from \(\Theta(n^2)\) to \(\Theta(n^3)\). The important lesson is not that linked lists
+      are bad; it is that an algorithm must fit the operations its data structure supports well.
+    </p>
+
+    <table class="example-table left-align">
+      <thead>
+        <tr>
+          <th>Operation family</th>
+          <th>Typical array-backed cost</th>
+          <th>Typical linked cost</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Indexed <code>get(i)</code> or <code>set(i,x)</code></td>
+          <td>\(\Theta(1)\)</td>
+          <td>\(\Theta(i)\), or \(\Theta(n)\) in a coarse worst-case bound</td>
+        </tr>
+        <tr>
+          <td>Stack push/pop at the active end</td>
+          <td>\(\Theta(1)\) amortized or worst case depending on implementation</td>
+          <td>\(\Theta(1)\)</td>
+        </tr>
+        <tr>
+          <td>Hash table search/insert/delete</td>
+          <td>Not the usual representation</td>
+          <td>Average \(\Theta(1)\), worst case \(\Theta(n)\)</td>
+        </tr>
+        <tr>
+          <td>Balanced search tree search/insert/delete</td>
+          <td>Not the usual representation</td>
+          <td>\(\Theta(\log n)\)</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="helper-costs" section-title="Helper Calls">
+    <h2>Helper Calls</h2>
+    <p>
+      A loop containing a method call must include the cost of that method call. In Java,
+      a method such as <code>retainAll</code> repeatedly asks whether another collection
+      contains an element. The cost depends on the other collection.
+    </p>
+    <pre><code class="language-java">for (int r = 0; r &lt; size; r++) {
+    if (c.contains(elementData[r])) {
+        elementData[w++] = elementData[r];
+    }
+}</code></pre>
+    <p>
+      If the current ArrayList has \(n\) elements and <code>c</code> has \(m\) elements, then:
+    </p>
+    <ul class="spaced">
+      <li>If <code>c</code> is an ArrayList or LinkedList, <code>contains</code> is \(\Theta(m)\), so the loop is \(\Theta(nm)\).</li>
+      <li>If <code>c</code> is a TreeSet, <code>contains</code> is \(\Theta(\log m)\), so the loop is \(\Theta(n\log m)\).</li>
+      <li>If <code>c</code> is a HashSet, <code>contains</code> is average-case \(\Theta(1)\), so the loop is average-case \(\Theta(n)\).</li>
+    </ul>
+    <p>
+      The outer loop did not change. The helper operation changed.
+    </p>
+  </section>
+
+  <section id="algebraic-improvement" section-title="Algebraic Improvements">
+    <h2>Algebraic Improvements</h2>
+    <p>
+      Sometimes a better algorithm comes from recognizing a mathematical formula instead of
+      looping through the definition.
+    </p>
+    <div class="example-box">
+      <strong class="example-title">Summing from \(m\) to \(n\)</strong>
+      <pre><code class="language-java">int sumFromMToN(int m, int n) {
+    int sum = 0;
+    for (int i = m; i &lt;= n; i++) {
+        sum += i;
+    }
+    return sum;
+}</code></pre>
+      <p>
+        This direct version takes \(\Theta(n-m+1)\) time. Using the formula
+        \[
+          \sum_{k=m}^{n} k = \frac{n(n+1)}{2}-\frac{(m-1)m}{2}
+        \]
+        gives a constant-time version:
+      </p>
+      <pre><code class="language-java">int sumFromMToN(int m, int n) {
+    return n * (n + 1) / 2 - (m - 1) * m / 2;
+}</code></pre>
+    </div>
+
+    <div class="example-box">
+      <strong class="example-title">Avoiding Repeated Powers</strong>
+      <p>
+        If <code>power(a, i)</code> takes \(\Theta(i)\) time, then computing
+        \(a^0+a^1+\cdots+a^{n-1}\) by calling <code>power(a, i)</code> inside a loop costs
+        \[
+          \sum_{i=0}^{n-1} i=\Theta(n^2).
+        \]
+        A loop that carries the previous power forward computes the same sum in \(\Theta(n)\)
+        time.
+      </p>
+    </div>
+  </section>
+
+  <section id="binary-search" section-title="Binary Search">
+    <h2>Binary Search</h2>
+    <p>
+      Binary search works on a sorted array. It compares the target with the middle element
+      and discards half of the remaining search interval.
+    </p>
+    <pre><code class="language-java">int binarySearch(int[] a, int val) {
+    int left = 0;
+    int right = a.length - 1;
+    while (right - left &gt;= 0) {
+        int middle = (left + right) / 2;
+        if (val == a[middle]) {
+            return middle;
+        } else if (val &lt; a[middle]) {
+            right = middle - 1;
+        } else {
+            left = middle + 1;
+        }
+    }
+    return -1;
+}</code></pre>
+    <figure class="placeholder-figure">
+      <svg viewBox="0 0 720 220" role="img" aria-labelledby="binarySearchPlaceholderTitle binarySearchPlaceholderDesc">
+        <title id="binarySearchPlaceholderTitle">Binary search interval placeholder</title>
+        <desc id="binarySearchPlaceholderDesc">A placeholder showing a sorted array interval being halved over several steps.</desc>
+        <rect x="0" y="0" width="720" height="220" fill="#f8fafc"></rect>
+        <rect x="70" y="45" width="580" height="30" fill="#dbeafe" stroke="#2563eb"></rect>
+        <rect x="70" y="98" width="280" height="30" fill="#dcfce7" stroke="#16a34a"></rect>
+        <rect x="70" y="151" width="135" height="30" fill="#fee2e2" stroke="#dc2626"></rect>
+        <text x="360" y="65" text-anchor="middle" font-size="15" fill="#1e3a8a">n candidates</text>
+        <text x="210" y="118" text-anchor="middle" font-size="15" fill="#14532d">about n/2 candidates</text>
+        <text x="137" y="171" text-anchor="middle" font-size="15" fill="#7f1d1d">about n/4</text>
+        <text x="360" y="205" text-anchor="middle" font-size="16" fill="#64748b">placeholder for binary-search halving diagram</text>
+      </svg>
+      <figcaption>Figure placeholder: each unsuccessful comparison removes about half of the active range.</figcaption>
+    </figure>
+    <p>
+      The body of the loop does constant work. The worst case occurs when the target is not
+      found and the search interval is halved until it becomes empty. After \(k\) iterations,
+      the active interval has size about \(n/2^k\). The loop stops when this reaches 1 or less,
+      so \(2^k\) is about \(n\), which means \(k=\Theta(\log n)\).
+    </p>
+    <p>
+      Therefore iterative binary search has worst-case complexity \(\Theta(\log n)\). The
+      best case is \(\Theta(1)\), when the target is already at the middle.
+    </p>
+  </section>
+
+  <section id="summary" section-title="Summary">
+    <h2>Summary</h2>
+    <ul class="spaced">
+      <li>Analyze loops from the inside out.</li>
+      <li>Add consecutive work; multiply nested work only after checking actual loop counts.</li>
+      <li>Use summations when inner-loop bounds change.</li>
+      <li>Include helper-method and data-structure operation costs.</li>
+      <li>Look for mathematical identities that avoid unnecessary loops.</li>
+      <li>For binary search, repeated halving leads to logarithmic time.</li>
+    </ul>
+  </section>
+
+  <section id="reading-questions" section-title="Reading Comprehension Questions">
+    <h2>Reading Comprehension Questions</h2>
+    <ol>
+      <li>Why do consecutive loops that each run \(n\) times give \(\Theta(n)\), while nested loops can give \(\Theta(n^2)\)?</li>
+      <li>Why does bubble sort's comparison count involve the sum \(1+2+\cdots+(n-1)\)?</li>
+      <li>Why can insertion sort have different best-case and worst-case complexities?</li>
+      <li>Why does using a linked list with indexed <code>get</code> and <code>set</code> calls change the analysis?</li>
+      <li>Why is binary search logarithmic?</li>
+    </ol>
+    <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
+    <div id="answers" class="answer" hidden>
+      <ol>
+        <li><strong>Answer:</strong> Consecutive loops are added: \(n+n=2n\). Nested loops run the inner loop for each outer iteration, so if both loops run \(n\) times the total is \(n\cdot n\).</li>
+        <li><strong>Answer:</strong> The inner loop runs \(n-1\) times on the first pass, then \(n-2\), and so on down to 1.</li>
+        <li><strong>Answer:</strong> In an already sorted array, the while loop stops immediately each time. In reverse order, each new value moves through the whole sorted prefix.</li>
+        <li><strong>Answer:</strong> Indexed access in a linked list requires traversal, so calls that were constant time in an array-backed list may become linear in the index.</li>
+        <li><strong>Answer:</strong> Each iteration discards about half of the remaining interval. The number of halvings needed to reduce \(n\) items to one item is \(\Theta(\log n)\).</li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="activities" section-title="In-Class Activities">
+    <h2>In-Class Activities</h2>
+    <ol>
+      <li><strong>Loop audit:</strong> For several nested loops, write the exact summation before simplifying to a \(\Theta\)-bound.</li>
+      <li><strong>Sorting traces:</strong> Trace bubble sort and insertion sort on a sorted array and on a reverse-sorted array. Count comparisons or shifts.</li>
+      <li><strong>Data structure swap:</strong> Take a loop that calls <code>contains</code>. Analyze it when the collection is an ArrayList, TreeSet, and HashSet.</li>
+      <li><strong>Binary search intervals:</strong> Starting with \(n=64\), write the active interval size after each unsuccessful binary-search iteration.</li>
+    </ol>
+  </section>
+
+  <section id="problems" section-title="Homework Problems">
+    <h2>Homework Problems</h2>
+    <ol>
+      <li>Analyze selection sort. Give best-case and worst-case complexities and justify the bound.</li>
+      <li>Analyze standard \(n\) by \(n\) matrix multiplication and explain why it is \(\Theta(n^3)\).</li>
+      <li>Suppose <code>power(a, i)</code> takes \(\Theta(i)\). Analyze a loop that calls it for every \(i\) from 0 to \(n-1\).</li>
+      <li>For <code>retainAll</code>, analyze the cost when the tested collection has \(m\) items and is implemented as a linked list, balanced tree, and hash table.</li>
+      <li>Prove that binary search makes at most \(\lfloor \log_2 n\rfloor+1\) loop iterations in the worst case.</li>
+    </ol>
+  </section>
+</body>
+</html>

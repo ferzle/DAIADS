@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Asymptotic Notation</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <script src="/DAIADS/scripts/chapterScripts.js"></script>
+  <script src="latex-translation.js"></script>
+  <link rel="stylesheet" href="/DAIADS/css/style.css">
+  <link rel="stylesheet" href="/DAIADS/css/chapter.css?a=b">
+  <link rel="stylesheet" href="latex-translation.css?a=b">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-DQ5LVZVFDC');
+  </script>
+</head>
+<body class="latex-translation">
+  <h1>Asymptotic Notation</h1>
+<section id="overview" section-title="Overview">
+<h2>Asymptotic Notation</h2>
+<p><em>Asymptotic notation</em> is used to express and compare the growth rate of functions. 
+  In our case, the functions will typically represent the running time of algorithms.
+   We will define the asymptotic notations in terms of nonnegative functions. 
+   You will find more general definitions of these notations in other books, 
+   but they are more complicated, more difficult to understand, and harder to work with. 
+   These added difficulties are a result of the possibility of the functions involved being negative. 
+   But the main reason for our use of the notations is to express the running time of algorithms.  
+   Since the running time of an algorithm is always nonnegative, there is really no good reason to use 
+   the more cumbersome definitions. 
+   We will focus on the notations most commonly used in the analysis of algorithms, \(O\), \(\Omega\), \(\Theta\), and \(o\).</p>
+<p>Asymptotic notation allows us to express the behavior of a function as the input approaches infinity.  In other words, it is concerned about what happens to \(f(n)\) as \(n\) gets larger, and is not concerned about the value of \(f(n)\) for small values of \(n\).</p>
+<p>
+  We will define four of the most commonly used asymptotic notations:
+  <em>Big-O</em> (\(O\)), <em>Big-Omega</em> (\(\Omega\)),
+  <em>Big-Theta</em> (\(\Theta\)), and <em>Little-O</em> (\(o\)).
+  For each notation, we will give the definition, work through examples,
+  and discuss how it relates to the others. We will also briefly mention
+  <em>Little-Omega</em> (\(\omega\)).
+</p>
+</section>
+<section id="big-o" section-title="Big-O">
+  <h2>Big-O</h2>
+<div class="definition-box">
+<p class="box-title"><strong>Definition: Big-O</strong></p>
+<p>Let \(f\) be a nonnegative function.</p>
+<p>We say that \(f(n)\) is <strong>Big-O</strong> of \(g(n)\), written as \(f(n) = O(g(n))\), 
+  iff there are constants \(c>0\) and \(n_0\geq 0\) such that 
+  \[f(n)\leq c\,g(n)\mbox{ for all }n \ge n_{0}.\] If \(f(n)=O(g(n))\), \(f(n)\) grows no faster than \(g(n)\). In other words, \(g(n)\) is an <strong>asymptotic upper bound</strong> (or just <strong>upper bound</strong>) on \(f(n)\).</p>
+
+<figure>
+  <svg viewBox="0 0 560 300" role="img" aria-label="Graph illustrating Big-O upper bound">
+    <!-- background -->
+    <rect x="0" y="0" width="560" height="300" fill="#f8fafc"></rect>
+
+    <!-- plotting area -->
+    <rect x="60" y="28" width="440" height="220" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"></rect>
+
+    <!-- shaded region after n0 -->
+    <rect x="226" y="28" width="295" height="220" fill="#e0f2fe" opacity="0.25"></rect>
+
+    <!-- axes -->
+    <line x1="60" y1="248" x2="515" y2="248" stroke="#334155" stroke-width="2"></line>
+    <line x1="60" y1="248" x2="60" y2="20" stroke="#334155" stroke-width="2"></line>
+
+    <!-- arrowheads -->
+    <polygon points="515,248 505,243 505,253" fill="#334155"></polygon>
+    <polygon points="60,20 55,30 65,30" fill="#334155"></polygon>
+
+    <!-- axis labels -->
+    <text x="522" y="253" font-size="15" fill="#334155">n</text>
+    <text x="35" y="23" font-size="15" fill="#334155">cost</text>
+
+    <!-- n0 marker -->
+    <line x1="226" y1="248" x2="226" y2="35" stroke="#64748b" stroke-width="2" stroke-dasharray="6 5"></line>
+    <text x="225" y="272" font-size="15" fill="#334155">n0</text>
+
+    <!-- c g(n), upper curve -->
+    <path d="M70 232 C130 205, 180 166, 235 130 C295 91, 360 64, 490 40"
+          fill="none" stroke="#0366d6" stroke-width="4"></path>
+
+    <!-- f(n), eventually below c g(n) -->
+    <path d="M70 238 C115 166, 150 110, 190 124 C235 140, 285 155, 345 126 C405 98, 450 92, 490 78"
+          fill="none" stroke="#b45309" stroke-width="4"></path>
+
+    <!-- curve labels, no background boxes -->
+    <text x="462" y="60" font-size="15" fill="#0366d6">c g(n)</text>
+    <text x="462" y="110" font-size="15" fill="#b45309">f(n)</text>
+
+    <!-- inequality note -->
+    <text x="240" y="214" text-anchor="left" font-size="15" fill="#334155">f(n) &lt;= c g(n) for all n &gt;= n0</text>
+  </svg>
+  <figcaption>
+    After some point \(n_0\), the function \(f(n)\) stays below a constant multiple of
+    \(g(n)\). Thus \(g(n)\) is an asymptotic upper bound for \(f(n)\).
+  </figcaption>
+</figure>
+
+</div>
+
+<div class="remark-box">
+<p class="box-title"><strong>Remark</strong></p>
+<p>The "=" in the statement "\(f(n)=O(g(n))\)" should be read and thought of as "is", not "equals." You can think of it as a one-way equals.  So saying \(f(n)=O(g(n))\) is <em>not</em> the same thing as saying \(O(g(n))=f(n)\), for instance (with the latter statement not really making sense).</p>
+<p>An alternative notation is to write \(f(n)\in O(g(n))\)  instead of \(f(n)=O(g(n))\). It turns out that \(O(g(n))\) is actually the set of all functions that grow no faster than \(g(n)\), so the set notation is actually in some sense more correct. The "=" notation is used because it comes in handy when doing algebra. You can essentially think of these as being two different notations (\(=\) and \(\in\)) for the same thing. Similar statements are true for the other asymptotic notations.</p>
+</div>
+<div class="example-box">
+<p class="box-title"><strong>Example 1</strong></p>
+<p>Prove that \(n^2+n=O(n^3)\).</p>
+<div class="solution-block">
+<p class="box-title"><strong>Solution</strong></p>
+<p>Here, we have \(f(n) = n^2+n\), and \(g(n) = n^{3}\). Notice that if \(n\geq 1\), \(n\leq n^3\) and \(n^2\leq n^3\). Therefore, \[n^2+n\leq n^3+n^3=2 n^3\] Thus, \[n^2+n\leq 2 n^3 \mbox{ for all } n\geq 1.\] Thus, we have shown that \(n^2+n=O(n^3)\) by definition of Big-O, with \(n_0=1\), and \(c=2\).</p>
+</div>
+</div>
+<p>The following fact is a generalization of what was used in the previous example. It is used often in proofs involving asymptotic notation.</p>
+<div class="theorem">
+<p class="box-title"><strong>Theorem 1</strong></p>
+<p>If \(a\) and \(b\) are real numbers with \(a\leq b\), then \(n^a\leq n^b\) whenever \(n\geq 1\).</p>
+<div class="proof-block">
+<p class="box-title"><strong>Proof</strong></p>
+<p>We will not provide a proof, but it should be fairly clear intuitively that this is true. If you cannot see why this is true, you should work out a few examples to convince yourself.</p>
+</div>
+</div>
+<p>Sometimes the easiest way to prove that \(f(n)=O(g(n))\) is to take \(c\) to be the sum of the <em>positive</em> coefficients of \(f(n)\), although this trick doesn't always work. We can usually easily eliminate the lower order terms with negative coefficients if we make the appropriate assumption.  Let's see how to do this in the next few examples.</p>
+<div class="example-box">
+<p class="box-title"><strong>Example 2</strong></p>
+<p>Prove that \(3n^{3}- 2n^2 + 13 n -15=O(n^3)\).</p>
+<div class="solution-block">
+<p class="box-title"><strong>Solution</strong></p>
+<p>First, notice that if \(n\geq 0\), then \(-2n^2-15\leq 0\), so \[3n^{3}- 2n^2 + 13 n -15\leq 3n^{3}+13n.\] Next, if \(n\geq 1\), then \(13n\leq 13n^3\). Therefore if \(n\geq 1\), \[3n^{3}+13n\leq 3n^3+13n^3=16n^3.\] Also notice that if \(n\geq 1\), then \(n\geq 0\). Thus, our first step is still valid if we assume \(n\geq 1\) since \(n\geq 1\) is a stronger condition than \(n\geq 0\). Putting this all together, if we assume \(n\geq 1\), then</p>
+<div class="display-math">\[
+\begin{aligned}
+3n^{3}- 2n^2 + 13 n -15 &amp;\leq 3n^{3} +13 n \\
+&amp;\leq 3n^{3}+ 13 n^3 \\
+&amp;= 16n^3.
+\end{aligned}
+\]</div>
+<p>Since we have shown that \(3n^{3}- 2n^2 + 13 n -15\leq 16n^3\) for all \(n\geq 1\), we have proven that \(3n^{3}- 2n^2 + 13 n -15=O(n^3)\).</p>
+<p>We used \(n_0=1\) and \(c=16\) in our proof.  It is not necessary to explicitly point this out in our proof, though.  We only do so to help you see the connection between the proof and the definition of Big-O.</p>
+</div>
+</div>
+<div class="example-box">
+<p class="box-title"><strong>Example 3</strong></p>
+<p>Prove that \(5n^{2}- 3n +20=O(n^2)\).</p>
+<div class="solution-block">
+<p class="box-title"><strong>Solution</strong></p>
+<p>If \(n\geq 1\),</p>
+<div class="display-math">\[
+\begin{aligned}
+5n^{2} - 3n + 20 &amp;\leq 5n^{2} + 20 \\ 
+&amp;\leq 5n^2+20n^2\\ 
+&amp;= 25n^2.
+\end{aligned}
+\]</div>
+<p>Since \(5n^{2} - 3n + 20 \leq 25n^2\) for all \(n\geq 1\), \(5n^{2} - 3n +20=O(n^2)\).</p>
+<p>In this proof we used \(c=25\) and \(n_0=1\).</p>
+</div>
+</div>
+
+<div class="question-box">
+<p class="box-title"><strong>Question 1</strong></p>
+<p>Answer the following questions related to Example 3.</p>
+<ol type="a">
+<li>What allowed us to eliminate the \(-3n\) term in the first step?</li>
+<li>What is the justification for the second inequality?</li>
+</ol>
+<button type="button" class="show-answer latex-answer-toggle" data-answer-target="latex-answer-1" aria-expanded="false">Show Answer</button>
+<div id="latex-answer-1" class="answer latex-answer" hidden>
+<p>(a) Since we assumed that \(n\geq 1\), \(-3n\) is certainly negative.  
+  In other words, \(-3n\leq 0\).  That's why in the first step we could say that \(5n^2-3n+20\leq 5n^2+20\). 
+  <br>(b) We used the fact that \(20\leq 20n^2\) whenever \(n\geq 1\). If either of these solutions is not clear to you, you need to brush up on your algebra.</p>
+</div>
+</div>
+
+<div class="remark-box">
+<p class="box-title"><strong>Remark</strong></p>
+<p>The values of the constants used in the proofs do not need to be the best possible. For instance, if you can show that \(f(n)\leq 345\, g(n)\) for all \(n\geq 712\), then \(f(n)=O(g(n))\). It doesn't matter whether or not it is actually true that \(f(n)\leq 3\, g(n)\) for all \(n\geq 5\).</p>
+</div>
+
+<div class="question-box">
+<p class="box-title"><strong>Question 2</strong></p>
+<p>Answer each of the following questions related to Example 3. Include a brief justification.</p>
+<ol type="a">
+<li>Could we have used \(c=50\) in the proof?</li>
+<li>Could we have used \(c=2\) in the proof?</li>
+<li>Could we have used \(n_0=100\) in the proof?</li>
+<li>Could we have used \(n_0=0\) in the proof?</li>
+</ol>
+<button type="button" class="show-answer latex-answer-toggle" data-answer-target="latex-answer-3" aria-expanded="false">Show Answer</button>
+<div id="latex-answer-3" class="answer latex-answer" hidden>
+<p>(a) Sure.  Add the final step of \(25n^2\leq 50n^2\) to the algebra in the proof. 
+  In fact, any number above \(25\) can easily be used. 
+  Some values under 25 can also be used, but they would require a modification of the algebra used in the proof. 
+  The bottom line is that there is generally no 'right' value to use for \(c\).  
+  If you find a value that works, then it's fine. 
+  <br>(b)  Clearly not.  For this to work, we would need \(5n^2-3n+20&lt;2n^2\) to hold as \(n\) increases towards \(\infty\). 
+  But this would imply that \(3n^2-3n+20&lt;0\). But when \(n\geq 1\), \(3n^2\) is positive and larger than \(3n\), 
+  so \(3n^2-3n+20&gt;0\). 
+  <br>(c) Sure.  The proof used the fact that the inequality is true when \(n\geq 1\), 
+  so it is clearly also true if \(n\geq 100\).  
+  And the definition of Big-O does not require that we use the smallest possible value for \(n_0\). 
+  <br>(d) No.  We would need a constant \(c\) such that \(5\cdot 0^2-3\cdot 0 + 20 = 20\leq 0= c\cdot 0^2\), which is clearly impossible.</p>
+</div>
+</div>
+
+
+<div class="evaluate-box">
+<p class="box-title"><strong>Evaluate 1</strong></p>
+<p>A student was asked to prove that \(4n^{2}- 12n +10=O(n^2)\). Below is their solution:</p>
+<div class="student-solution">
+<p class="box-title"><strong>Student Solution</strong></p>
+<p>If \(n\geq 1\), \(4 n^{2} - 12n + 10 \leq 4 n^{2} - 12n^2 + 10n^2 =2n^2.\) Therefore,  \(4n^{2} - 12n +10=O(n^2)\).</p>
+</div>
+<p>Is their solution correct? If not, explain the error.</p>
+<button type="button" class="show-answer latex-answer-toggle" data-answer-target="latex-answer-2" aria-expanded="false">Show Answer</button>
+<div id="latex-answer-2" class="answer latex-answer" hidden>
+  <p>This is incorrect. It is <em>not true</em> that \(-12n\leq -12n^2\) when \(n\geq 1\). 
+    For instance, if \(n=2\), then \(-12n=-24\) and \(-12n^2=-48\). Clearly, \(-24\not\leq -48\).
+    In fact, that error led to the statement \(4 n^{2} - 12n + 10\leq 2n^2\) which cannot possibly be true as \(n\) 
+    gets larger since it would require that \(2n^2-12n+10\leq 0\). This is not true as \(n\) gets larger. 
+    In fact, when \(n=10\), for instance, it is clearly not true. But it <em>is true</em> that \(-12n&leq;0\) 
+    when \(n\geq 0\), so instead of replacing it with \(-12n^2\), it should be replaced with \(0\) as in previous examples.</p>
+</div>
+</div>
+
+<div class="exercise-box">
+<p class="box-title"><strong>Exercise 1</strong></p>
+<p>Prove that \(5n^{5} -4n^4 + 3n^3 - 2n^2 +n=O(n^5)\). (Hint: Use the same techniques you saw in Example 3.)</p>
+<button type="button" class="show-answer latex-answer-toggle" data-answer-target="latex-answer-4" aria-expanded="false">Show Answer</button>
+<div id="latex-answer-4" class="answer latex-answer" hidden>
+<p>If \(n\geq 1\),</p>
+<div class="display-math">\[
+\begin{aligned}
+5n^{5} -4n^4 + 3n^3 - 2n^2 +n
+&amp;\leq 5n^{5} + 3n^3 +n\\
+&amp;\leq 5n^{5} + 3n^5 +n^5\\
+&amp;= 9n^5.
+\end{aligned}
+\]</div>
+<p>Therefore, \(5n^{5} -4n^4 + 3n^3 - 2n^2 +n=O(n^5)\).</p>
+</div>
+</div>
+<div class="question-box">
+<p class="box-title"><strong>Question 3</strong></p>
+<p>What values did you use for \(n_0\) and \(c\) in your solution to Exercise 1?</p>
+<p>\(n_0=\underline{\hspace{2.5cm}},\, \, \,  c=\underline{\hspace{2.5cm}}\)</p>
+<button type="button" class="show-answer latex-answer-toggle" data-answer-target="latex-answer-5" aria-expanded="false">Show Answer</button>
+<div id="latex-answer-5" class="answer latex-answer" hidden>
+<p>We used \(n_0=1\) and \(c=9\). Your values for \(n_0\) and \(c\) may differ. This is O.K. if you have the correct algebra to back it up.</p>
+</div>
+</div>
+<p>Things are not always so easy.  How would you show that \((\sqrt{2})^{\log n}+\log^2 n + n^4=O(2^n)\)? Or that \(n^2=O(n^2-13n+23)\)? In general, we simply (or in some cases with much effort) find values \(c\) and \(n_0\) that work. This gets easier with practice.</p>
+<p>Big-O is a notation to express the idea that one function is an upper bound for another function.  The next notation allows us to express the opposite idea&mdash;that one function is a <em>lower bound</em> for another function.</p>
+</section>
+
+
+<section id="big-omega" section-title="Big-Omega">
+  <h2>Big-Omega</h2>
+<div class="definition-box">
+<p class="box-title"><strong>Definition: Big-Omega</strong></p>
+<p>Let \(f\) and \(g\) be nonnegative functions.</p>
+<p>We say that \(f(n)\) is <strong>Big-Omega</strong> of \(g(n)\), written as \(f(n) = \Omega(g(n))\), 
+  iff there are constants \(c>0\) and \(n_0\geq 0\) such that  
+  \[c\,g(n) \leq f(n) \mbox{ for all } n \geq n_0.\] When we say \(f(n)=\Omega(g(n))\), it means that \(f(n)\) grows no slower than \(g(n)\). In other words, \(g(n)\) is an <strong>asymptotic lower bound</strong> (or just <strong>lower bound</strong>) on \(f(n)\).</p>
+<figure>
+  <svg viewBox="0 0 560 300" role="img" aria-label="Graph illustrating Big-Omega lower bound">
+    <!-- background -->
+    <rect x="0" y="0" width="560" height="300" fill="#f8fafc"></rect>
+
+    <!-- plotting area -->
+    <rect x="60" y="28" width="440" height="220" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"></rect>
+
+    <!-- shaded region after n0 -->
+    <rect x="226" y="28" width="274" height="220" fill="#ede9fe" opacity="0.28"></rect>
+
+    <!-- axes -->
+    <line x1="60" y1="248" x2="515" y2="248" stroke="#334155" stroke-width="2"></line>
+    <line x1="60" y1="248" x2="60" y2="20" stroke="#334155" stroke-width="2"></line>
+
+    <!-- arrowheads -->
+    <polygon points="515,248 505,243 505,253" fill="#334155"></polygon>
+    <polygon points="60,20 55,30 65,30" fill="#334155"></polygon>
+
+    <!-- axis labels -->
+    <text x="522" y="253" font-size="15" fill="#334155">n</text>
+    <text x="35" y="23" font-size="15" fill="#334155">cost</text>
+
+    <!-- n0 marker -->
+    <line x1="226" y1="248" x2="226" y2="35" stroke="#64748b" stroke-width="2" stroke-dasharray="6 5"></line>
+    <text x="219" y="272" font-size="15" fill="#334155">n0</text>
+
+    <!-- c g(n), lower curve -->
+    <path d="M70 236
+             C120 220, 170 190, 226 150
+             C290 123, 370 98, 490 76"
+          fill="none" stroke="#7c3aed" stroke-width="4"></path>
+
+    <!-- f(n), crosses at n0 and stays above afterward -->
+    <path d="M70 244
+             C120 228, 170 205, 226 150
+             C290 118, 365 78, 490 44"
+          fill="none" stroke="#b45309" stroke-width="4"></path>
+
+    <!-- crossover point -->
+    <circle cx="226" cy="150" r="4" fill="#334155"></circle>
+
+    <!-- labels -->
+    <text x="454" y="40" font-size="15" fill="#b45309">f(n)</text>
+    <text x="440" y="100" font-size="15" fill="#7c3aed">c g(n)</text>
+
+    <!-- inequality note -->
+    <text x="245" y="214" font-size="15" fill="#334155">c g(n) &lt;= f(n) for all n &gt;= n0</text>
+  </svg>
+  <figcaption>
+    Here \(n_0\) is shown as the first point after which \(f(n)\) stays above
+    \(c g(n)\). Thus \(g(n)\) is an asymptotic lower bound for \(f(n)\).
+  </figcaption>
+</figure>
+</div>
+
+<div class="example-box">
+<p class="box-title"><strong>Example 4</strong></p>
+<p>Prove that \(n^3+4\,n^2=\Omega(n^2)\).</p>
+<div class="proof-block">
+<p class="box-title"><strong>Proof</strong></p>
+<p>Here, we have \(f(n) = n^3+4\,n^2\), and \(g(n) = n^2\). It is not too hard to see that if \(n\geq 1\), \[n^2\leq n^3\leq n^3+4\,n^2.\] 
+  Therefore, \[1\,n^2\leq n^3+4\,n^2 \mbox{ for all } n\geq 1\] so \(n^3+4\,n^2=\Omega(n^2)\) by definition of \(\Omega\), with \(n_0=1\), and \(c=1\).</p>
+</div>
+</div>
+<div class="exercise-box">
+<p class="box-title"><strong>Exercise 2</strong></p>
+<p>Prove that \(4n^2+n+1=\Omega(n^2)\). (This one should be really easy&mdash;follow the technique from the previous example and don't over think it.)</p>
+<button type="button" class="show-answer latex-answer-toggle" data-answer-target="latex-answer-6" aria-expanded="false">Show Answer</button>
+<div id="latex-answer-6" class="answer latex-answer" hidden>
+<p>Since \(4n^2\leq 4n^2+n+1\) for \(n\geq 0\), \(4n^2+n+1=\Omega(n^2)\).</p>
+</div>
+</div>
+<div class="question-box">
+<p class="box-title"><strong>Question 4</strong></p>
+<p>What values did you use for \(n_0\) and \(c\) in your solution to Exercise 2?</p>
+<p>\(n_0=\underline{\hspace{2.5cm}},\, \, \,  c=\underline{\hspace{2.5cm}}\)</p>
+<button type="button" class="show-answer latex-answer-toggle" data-answer-target="latex-answer-7" aria-expanded="false">Show Answer</button>
+<div id="latex-answer-7" class="answer latex-answer" hidden>
+<p>We used \(c=4\) and \(n_0=0\).  You might have used \(n_0=1\) or some other positive value. 
+  As long as you chose a nonnegative value for \(n_0\), it works just fine.  
+  You could have also used any value for \(c\) larger than \(0\) and at most \(4\).</p>
+</div>
+</div>
+<p>Proving that \(f(n)=\Omega(g(n))\) often requires more thought than proving that \(f(n)=O(g(n))\). Although the lower-order terms with positive coefficients can be easily dealt with, those with negative coefficients make things a bit more complicated. Often, we have to pick \(c&lt;1\). A good strategy is to pick a value of \(c\) that you think will work, and determine which value of \(n_0\) is needed. Being able to do some algebra helps. As it turns out, we won't have to worry a whole lot about this, though.  We will see a different technique to prove bounds shortly that, when it works, makes things much easier.</p>
+</section>
+
+<section id="big-theta" section-title="Big-Theta">
+  <h2>Big-Theta</h2>
+<p>Our third notation allows us to express the idea that two functions grow at the same rate.</p>
+<div class="definition-box">
+<p class="box-title"><strong>Definition: Big-Theta</strong></p>
+<p>Let \(f\) and \(g\) be nonnegative functions.</p>
+<p>We say that \(f(n)\) is <strong>Big-Theta</strong> of \(g(n)\), written as \(f(n) = \Theta(g(n))\), 
+  iff there are constants \(c_1>0\), \(c_2>0\),  and \(n_0\geq 0\) such that 
+  \[c_1\,g(n)\leq f(n)\leq c_2\,g(n)\mbox{ for all }n \ge n_{0}.\] If \(f(n)=\Theta(g(n))\), \(f(n)\) grows at the same rate as \(g(n)\). In other words, \(g(n)\) is an <strong>asymptotically tight bound</strong> (or just <strong>tight bound</strong>) on \(f(n)\).</p>
+<figure>
+  <svg viewBox="0 0 560 300" role="img" aria-label="Graph illustrating Big-Theta tight bound">
+    <!-- background -->
+    <rect x="0" y="0" width="560" height="300" fill="#f8fafc"></rect>
+
+    <!-- plotting area -->
+    <rect x="60" y="28" width="440" height="220" fill="#ffffff" stroke="#cbd5e1" stroke-width="1"></rect>
+
+    <!-- shaded region after n0 -->
+    <rect x="226" y="28" width="274" height="220" fill="#ecfeff" opacity="0.30"></rect>
+
+    <!-- axes -->
+    <line x1="60" y1="248" x2="515" y2="248" stroke="#334155" stroke-width="2"></line>
+    <line x1="60" y1="248" x2="60" y2="20" stroke="#334155" stroke-width="2"></line>
+
+    <!-- arrowheads -->
+    <polygon points="515,248 505,243 505,253" fill="#334155"></polygon>
+    <polygon points="60,20 55,30 65,30" fill="#334155"></polygon>
+
+    <!-- axis labels -->
+    <text x="522" y="253" font-size="15" fill="#334155">n</text>
+    <text x="35" y="23" font-size="15" fill="#334155">cost</text>
+
+    <!-- n0 marker -->
+    <line x1="226" y1="248" x2="226" y2="35" stroke="#64748b" stroke-width="2" stroke-dasharray="6 5"></line>
+    <text x="219" y="272" font-size="15" fill="#334155">n0</text>
+
+    <!-- upper bound c2 g(n) -->
+    <path d="M70 232
+             C120 208, 170 180, 226 145
+             C290 110, 365 78, 490 44"
+          fill="none" stroke="#0366d6" stroke-width="4"></path>
+
+    <!-- lower bound c1 g(n) -->
+    <path d="M70 240
+             C120 228, 170 205, 226 175
+             C290 150, 365 125, 490 92"
+          fill="none" stroke="#7c3aed" stroke-width="4"></path>
+
+    <!-- f(n), between them after n0 -->
+    <path d="M70 244
+             C120 218, 170 150, 226 160
+             C290 134, 365 103, 490 67"
+          fill="none" stroke="#b45309" stroke-width="4"></path>
+
+    <!-- labels -->
+    <text x="430" y="45" font-size="15" fill="#0366d6">c2 g(n)</text>
+    <text x="447" y="70" font-size="15" fill="#b45309">f(n)</text>
+    <text x="440" y="120" font-size="15" fill="#7c3aed">c1 g(n)</text>
+
+    <!-- inequality note -->
+    <text x="240" y="214" font-size="15" fill="#334155">c1 g(n) &lt;= f(n) &lt;= c2 g(n) for all n &gt;= n0</text>
+  </svg>
+  <figcaption>
+    After some point \(n_0\), the function \(f(n)\) stays between two constant
+    multiples of \(g(n)\). Thus \(g(n)\) is an asymptotically tight bound for \(f(n)\).
+  </figcaption>
+</figure>
+</div>
+
+<div class="example-box">
+<p class="box-title"><strong>Example 5</strong></p>
+<p>Prove that \(n^2+5n+7=\Theta(n^2)\)</p>
+<div class="proof-block">
+<p class="box-title"><strong>Proof</strong></p>
+<p>When \(n\geq 1\), \(n^2+5\,n+7\leq n^2+5\,n^2+7n^2\leq 13n^2.\)</p>
+<p>When \(n\geq 0\),  \(n^2\leq n^2+5\,n+7\).</p>
+<p>Combining these, we can see that when \(n\geq 1\), \[n^2\leq n^2+5\,n+7\leq 13\,n^2,\] so \(n^2{+}5\,n{+}7=\Theta(n^2)\) by definition of \(\Theta\), with \(n_0{=}1\), \(c_1{=}1\), and \(c_2{=}13\).</p>
+</div>
+</div>
+<div class="question-box">
+<p class="box-title"><strong>Question 5</strong></p>
+<p>In the previous example, we combined two inequalities.  One of them assumed \(n\geq 0\), the other assumed that \(n\geq 1\).  In the combined inequality, we said it held if \(n\geq 1\). Is that really O.K., or did we make a subtle error?</p>
+<p></p>
+<button type="button" class="show-answer latex-answer-toggle" data-answer-target="latex-answer-8" aria-expanded="false">Show Answer</button>
+<div id="latex-answer-8" class="answer latex-answer" hidden>
+<p>It is O.K.  Since the second inequality holds when \(n\geq 0\), it also holds when \(n\geq 1\).</p>
+<p>In general, when you want to combine inequalities that contain two different assumptions, you simply make the more restrictive assumption.  In this case, \(n\geq 1\) is more restrictive than \(n\geq 0\).  In general, if you have assumptions \(n\geq a\) and \(n\geq b\), then to combine the results with these assumptions, you assume \(n\geq max(a,b)\).</p>
+</div>
+</div>
+<p>Using the definition of \(\Theta\) can be inconvenient since it involves a double inequality.  Luckily, the following theorem provides us with an easier approach.</p>
+<div class="theorem">
+<p class="box-title"><strong>Theorem 2</strong></p>
+<p>If \(f\) and \(g\) are nonnegative functions, then \(f(n) = \Theta(g(n))\) if and only if \(f(n) = O(g(n))\) and \(f(n) = \Omega(g(n))\).</p>
+<div class="proof-block">
+<p class="box-title"><strong>Proof</strong></p>
+<p>The result follows almost immediately from the definitions.  We leave the details to the reader.</p>
+</div>
+</div>
+<p>This theorem implies that no new strategies are necessary for \(\Theta\) proofs since they can be split into two proofs&mdash;a Big-O proof and a \(\Omega\) proof. Let's see an example of this approach.</p>
+<div class="example-box">
+<p class="box-title"><strong>Example 6</strong></p>
+<p>Show that \(\frac{1}{2} n^{2} + 3\,n=\Theta(n^{2})\)</p>
+<div class="proof-block">
+<p class="box-title"><strong>Proof</strong></p>
+<p>Notice that if \(n\geq 1\), \[\frac{1}{2} n^{2}+3\,n\leq \frac{1}{2}n^{2}+3\,n^{2}=\frac{7}{ 2}n^2,\] so  \({\displaystyle \frac{1}{2}n^2 +3\,n=O(n^2)}\). Also, when \(n\geq 0\), \[ \frac{1}{2}n^2 \leq \frac{1}{2}n^2 +3n,\] so \({\displaystyle \frac{1}{2}n^2 +3\,n=\Omega(n^2)}\). Since \(\frac{1}{2}n^2 +3\,n=O(n^2)\) and \(\frac{1}{2}n^2 +3\,n=\Omega(n^2)\), then by Theorem 2, \({\displaystyle \frac{1}{2}n^2 +3\,n=\Theta(n^2)}\)</p>
+</div>
+</div>
+</section>
+
+<section id="little-o" section-title="Little-o">
+  <h2>Little-o</h2>
+<p>How do you use asymptotic notation to express that \(f(n)\) grows slower than \(g(n)\)? 
+  Saying \(f(n)=O(g(n))\) doesn't work, because that only tells us that \(f(n)\) 
+  grows <em>no faster than</em> \(g(n)\). 
+  It might grow slower, but it also might grow at the same rate. 
+  With the notation we have, the best way to express this idea is to say that 
+  \(f(n)=O(g(n))\) and \(f(n)\neq \Theta(g(n))\). But that is awkward.  
+  Let's learn a new notation for this instead. 
+  For technical reasons that we won't get into, this notation has to be defined somewhat differently 
+  than the others.</p>
+<p>
+  The definition below uses limits, which you may or may not be familiar with.
+  If you have had a calculus class, you have probably studied limits before.
+  Otherwise, the main idea of the notation \(\displaystyle \lim_{n\rightarrow\infty} h(n)=L\)
+  is that the values of \(h(n)\) get closer and closer to \(L\) as \(n\) gets
+  larger and larger.
+</p>
+
+<div class="definition-box">
+<p class="box-title"><strong>Definition: Little-O</strong></p>
+<p>Let \(f\) and \(g\) be nonnegative functions, with \(g\) being eventually non-zero. We say that \(f(n)\) is <strong>little-o</strong> of \(g(n)\), written \(f(n)=o(g(n))\), iff \[\lim_{n\rightarrow \infty}\dfrac{f(n)}{g(n)}=0.\] If \(f(n)=o(g(n))\), then \(f(n)\) grows <strong>asymptotically slower</strong> than \(g(n)\).</p>
+</div>
+
+<p>
+  In this definition, the function \(h(n)\) from the general limit notation is
+  the ratio \(f(n)/g(n)\), and the limit value is \(0\). Thus,
+  \(\lim_{n\rightarrow\infty} f(n)/g(n)=0\) means that the ratio \(f(n)/g(n)\)
+  gets closer and closer to \(0\) as \(n\) gets larger. In practical terms,
+  \(g(n)\) grows so much faster than \(f(n)\) that \(f(n)\) becomes negligible
+  in comparison. The function \(f(n)\) may still be getting large, but it becomes
+  a smaller and smaller fraction of \(g(n)\). That is why \(f(n)=o(g(n))\)
+  means that \(f(n)\) grows asymptotically slower than \(g(n)\).
+</p>
+
+<div class="example-box">
+<p class="box-title"><strong>Example 7</strong></p>
+<p>You should be able to convince yourself that \(3n+2=o(n^2)\), but \(3n+2\neq o(n)\). Similarly, \(n^2+n + 4=o(n^3)\) and \(n^2+n + 4=o(n^4)\), but \(n^2+n + 4\neq o(n^2)\) and \(n^2+n + 4\neq o(n)\).</p>
+<p>If you are not comfortable with limits you can still convince yourself of these statements by thinking of the informal definition. For instance, \(n^2+n + 4\) grows slower than \(n^3\) so \(n^2+n + 4=o(n^3)\). On the other hand, \(n^2+n + 4\) grows at the same rate (so <em>not</em> slower than) \(n^2\), so \(n^2+n + 4\neq o(n^2)\).</p>
+</div>
+<div class="question-box">
+<p class="box-title"><strong>Question 6</strong></p>
+<p>Why do we require that \(g(n)\) be eventually non-zero in the definition of little-o?</p>
+<p></p>
+<button type="button" class="show-answer latex-answer-toggle" data-answer-target="latex-answer-9" aria-expanded="false">Show Answer</button>
+<div id="latex-answer-9" class="answer latex-answer" hidden>
+<p>\(g(n)\) appears in the denominator of a fraction.  If at some point it does not become (and remain) non-zero, the limit in the definition will be undefined. If you never took a calculus course and are not that familiar with limits, do not worry a whole lot about this subtle point.</p>
+</div>
+</div>
+
+<p>
+  Little-omega (\(\omega\)) is the corresponding notation for growing
+  asymptotically faster. It can be defined similarly to little-o, but the value
+  of the limit is \(\infty\) instead of \(0\): if
+  \[
+    \lim_{n\rightarrow\infty}\frac{f(n)}{g(n)}=\infty,
+  \]
+  then \(f(n)=\omega(g(n))\). In other words, \(f(n)\) grows so much faster than
+  \(g(n)\) that \(g(n)\) becomes negligible in comparison. Little-omega is useful,
+  but it does not come up as often as \(O\), \(\Omega\), \(\Theta\), and \(o\) in
+  our analysis examples.
+</p>
+
+<div class="question-box">
+<p class="box-title"><strong>Question 7</strong></p>
+<p>
+  Big-O notation is analogous to \(\leq\) in certain ways. What are the similar
+  analogies for \(\Omega\), \(\Theta\), \(o\), and \(\omega\)?
+</p>
+<button type="button" class="show-answer latex-answer-toggle" data-answer-target="latex-answer-10" aria-expanded="false">Show Answer</button>
+<div id="latex-answer-10" class="answer latex-answer" hidden>
+<p>
+  \(O\) is like \(\leq\), \(\Omega\) is like \(\geq\), \(\Theta\) is like \(=\),
+  \(o\) is like \(&lt;\), and \(\omega\) is like \(&gt;\). These analogies are useful
+  for intuition, but they should not be treated as formal definitions.
+</p>
+</div>
+</div>
+</section>
+
+<section id="using-asymptotic-notation" section-title="Using Asymptotic Notation">
+  <h2>Using Asymptotic Notation</h2>
+  <p>
+  Now that we have introduced the main asymptotic notations, it is useful to pause
+  and compare what each one tells us. Some notations give only one-sided bounds,
+  while others describe a more precise relationship between two functions. The
+  following examples and questions focus on these distinctions.
+</p>
+
+<div class="remark-box">
+<p class="box-title"><strong>Remark</strong></p>
+<ul class="spaced">
+<li>It is important to remember that an \(O\)-bound is only an <strong>upper bound</strong>, 
+  and that it may or may not be a tight bound. So if \(f(n)=O(n^{2})\), it is possible that 
+  \(f(n)=3n^2+4\), \(f(n)=\log n\), or any other function that grows no faster than \(n^2\).  
+  But we also know that \(f(n)\neq n^3\) or any other function that grows faster than \(n^2\).
+</li>
+<li>
+Conversely, a \(\Omega\)-bound is only a <strong>lower bound</strong>. 
+Thus, if \(f(n)=\Omega(n\log n)\), it might be the case that \(f(n)=2^n\), 
+but we know that \(f(n)\neq 3n\), for instance.</li>
+<li>
+  <p>
+    Unlike the others, \(\Theta\)-bounds are precise. So, if
+    \(f(n)=\Theta(n^2)\), then \(f\) has quadratic growth: it is bounded above
+    and below by constant multiples of \(n^2\) for sufficiently large \(n\).
+    It might be that \(f(n)=3n^2\), \(2n^2-43n-4\), or even
+    \(n^2+n\log n\).
+  </p>
+</li>
+<li>
+Unlike \(O\), little-o describes a <strong>strictly slower</strong> growth rate.
+So, if \(f(n)=o(n^2)\), then \(f\) grows slower than \(n^2\), not merely no faster
+than \(n^2\). For example, \(n\log n=o(n^2)\) and \(n=o(n^2)\), but
+\(3n^2+7\neq o(n^2)\), since it grows at the same rate as \(n^2\), not slower.
+</li>
+</ul>
+</div>
+
+<p>Now let's test your understanding so far:</p>
+<div class="question-box">
+<p class="box-title"><strong>Question 8</strong></p>
+<p>Answer the following questions about the asymptotic notations.</p>
+<ol type="a">
+<li>If \(f(n)=\Theta(g(n))\), is it possible that \(f(n)=o(g(n))\)?  Explain.</li>
+<li>If \(f(n)=O(g(n))\), is it possible that \(f(n)=o(g(n))\)?  Explain.</li>
+<li>If \(f(n)=O(g(n))\), is it <em>certain</em> that \(f(n)=o(g(n))\)?  Explain.</li>
+<li>If \(f(n)=o(g(n))\), is it possible that \(f(n)=O(g(n))\)?  Explain.</li>
+</ol>
+<button type="button" class="show-answer latex-answer-toggle" data-answer-target="latex-answer-11" aria-expanded="false">Show Answer</button>
+<div id="latex-answer-11" class="answer latex-answer" hidden>
+<p>(a) No.  If \(f(n)=\Theta(g(n))\), \(f\) and \(g\) grow at the same rate.  
+  But \(f(n)=o(g(n))\) expresses the idea that \(f\) grows slower than \(g\). 
+  It is impossible for \(f\) to grow at the same rate as \(g\) and slower than \(g\). 
+  <br>(b) Yes!  If \(f\) grows no faster than \(g\), then it is possible that it grows slower. 
+  For instance, \(n=O(n^2)\) and \(n=o(n^2)\) are both true. 
+  <br>(c) No.  If \(f\) and \(g\) grow at the same rate, then \(f(n)=O(g(n))\), 
+  but \(f(n)\neq o(g(n))\). For instance, \(3n=O(n)\), but \(3n\neq o(n)\). 
+  <br>(d) Yes.  In fact, it is guaranteed!  If \(f\) grows slower than \(g\), 
+  then \(f\) grows no faster than \(g\).</p>
+</div>
+</div>
+
+<div class="evaluate-box">
+<p class="box-title"><strong>Evaluate 2</strong></p>
+<p>Students were asked to prove the following:</p>
+<p>Let \(a_0,\ldots, a_k\in \mathbb{R}\), where \(a_k&gt;0\). 
+  Prove that \(a_kn^k+a_{k-1}n^{k-1}+\cdots+a_1n+a_0=O(n^k)\).</p>
+<p>Evaluate how each student did. If they are incorrect, explain what they did wrong.</p>
+<ol type='a' class="spaced student-solution-list">
+<li>We can first eliminate all of the constants since they become irrelevant as \(n\) grows large enough. 
+  This leaves us with \(n^k+n^{k-1}+\cdots+n=O(n^k)\).  Next we can eliminate all terms growing slower than \(n^k\), 
+  since they also become irrelevant as \(n\) grows. This leaves us with \(n^k=O(n^k)\), and since they are the same, 
+  they are effectively theta of each other, and by definition, anything that is theta of something is also omega and \(O\), 
+  so we can correctly say that \(n^k=O(n^k)\), thus proving that \(a_kn^k+a_{k-1}n^{k-1}+\cdots+a_1n+a_0=O(n^k)\).</li>
+<li>Let \(c=\displaystyle\sum_{i=0}^k |a_i|\). Then if \(n\geq 1\),
+<div class="display-math">\[
+\begin{aligned}
+a_kn^k+a_{k-1}n^{k-1}+\cdots+a_1n+a_0&amp;\leq |a_k|n^k+|a_{k-1}|n^{k-1}+\cdots+|a_1|n+|a_0|\\
+&amp;\leq |a_k|n^k+|a_{k-1}|n^k+\cdots+|a_1|n^k+|a_0|n^k\\
+&amp;\leq \displaystyle\sum_{i=0}^k |a_i|n^k=cn^k.
+\end{aligned}
+\]</div>
+Therefore, \(a_kn^k+a_{k-1}n^{k-1}+\cdots+a_1n+a_0=O(n^k)\).</li>
+</ol>
+<button type="button" class="show-answer latex-answer-toggle" data-answer-target="latex-answer-12" aria-expanded="false">Show Answer</button>
+<div id="latex-answer-12" class="answer latex-answer" hidden>
+<ol type="a" class="spaced student-solution-list">
+<li>
+<p>Although this proof sounds somewhat reasonable, it is way too informal and convoluted.  Here are some of the problems.</p>
+    <ol class="spaced">
+    <li>This student misunderstands the concept behind 'ignoring the constants.' We can ignore the constants <em>after 
+      we know that \(f(n)=O(g(n))\)</em>.  We can't ignore them in order to prove it.</li>
+    <li>The phrase 'become irrelevant' (used twice) is not precise. We have developed mathematical notation for a 
+      reason&mdash;it allows us to make statements like these precise. It's kind of like saying that a certain car 
+      costs 'a lot'.  What is 'a lot'? Although &#36;30,000 might be a lot for most of us, people with a lot more 
+      money than I have might not think that &#36;500,000 is a lot.</li>
+    <li>The phrase 'This leaves us with \(n^k+n^{k-1}+\cdots+n=O(n^k)\)' is odd.  What precisely do they mean? 
+      That this is true or that this is what we need to prove now?  In either case, it is incorrect. 
+      Similarly for the second time they use the phrase 'This leaves us with'.</li>
+    <li>The second half of the proof is unnecessarily convoluted.  They essentially are claiming that their 
+      proof has boiled down to showing that \(n^k=O(n^k)\). To prove this, they use an incredibly drawn out, yet vague, 
+      explanation that is in a single unnecessarily long sentence.  Why are they even bringing \(\Theta\) and \(\Omega\) 
+      into this proof? Why don't they just say something like 'since \(n^k\leq 1n^k\) for all \(n\geq 1\), \(n^k=O(n^k)\)'? 
+      I believe the answer is obvious:  they don't really understand what they are doing here. They clearly have a vague 
+      understanding of the notation, but they don't understand the formal definition.</li>
+    </ol>
+<p>The bottom line is that this student understands that the statement they needed to prove is correct, 
+  and they have a vague sense of <em>why</em> it is true, but they did not have a clear understanding of how to 
+  use the definition of Big-O to prove it. The most important thing to take away from this example is this: 
+  <em>Be precise, use the notation and definitions you have learned, and if your proofs look a lot different 
+    than those in the book, you might question whether or not you are on the right track.</em></p>
+</li>
+<li>This proof is correct.</li>
+</ol>
+</div>
+</div>
+<div class="exercise-box">
+<p class="box-title"><strong>Exercise 3</strong></p>
+<p>Assume that \(f(n)=O(n^2)\) and \(g(n)=O(n^3)\). What can you say about the relative growth rates of \(f(n)\) and \(g(n)\)? In particular, does \(g(n)\) grow faster than \(f(n)\)?</p>
+<p></p>
+<button type="button" class="show-answer latex-answer-toggle" data-answer-target="latex-answer-13" aria-expanded="false">Show Answer</button>
+<div id="latex-answer-13" class="answer latex-answer" hidden>
+<p>We cannot say anything about the relative growth rates of \(f(n)\) and \(g(n)\) because we are only given upper bounds for each. It is possible that \(f(n)=n^2\) and \(g(n)=n\), so that \(f(n)\) grows faster, or vice-versa.  They could also both be \(n\).</p>
+</div>
+</div>
+<p>Keep in mind that asymptotic notation only allows you to compare the asymptotic behavior of functions. Except for \(\Theta\)-notation, it only provides a bound on the growth rate.  For instance, knowing that \(f(n)=O(g(n))\) only tells you that \(f(n)\) grows no faster than \(g(n)\). It is possible that \(f(n)\) grows a lot slower than \(g(n)\).</p>
+
+<div class="exercise-box">
+<p class="box-title"><strong>Exercise 4</strong></p>
+<p>Let's test your understanding of the material so far. Answer each of the following true/false questions, giving a very brief justification/counterexample. Justifications can appeal to a definition and/or theorem. For counterexamples, use simple functions. For instance, \(f(n)=n\) and \(g(n)=n^2\).</p>
+<ol type="a" class="spaced">
+<li>If \(f(n)=O(g(n))\), then \(f(n)\) grows faster than \(g(n)\)</li>
+<li>If \(f(n)=\Theta(g(n))\), then \(f(n)\) grows faster than \(g(n)\)</li>
+<li>If \(f(n)=O(g(n))\), then \(f(n)\) grows at the same rate as \(g(n)\)</li>
+<li>If \(f(n)=\Omega (g(n))\), then \(f(n)\) grows faster than \(g(n)\)</li>
+<li>If \(f(n)=O(g(n))\), then \(f(n)=\Omega(g(n))\)</li>
+<li>If \(f(n)=\Theta(g(n))\),  then \(f(n)=O(g(n))\)</li>
+<li>If \(f(n)=O(g(n))\),  then \(f(n)=\Theta(g(n))\)</li>
+<li>If \(f(n)=O(g(n))\),  then \(g(n) = O(f(n))\)</li>
+</ol>
+<button type="button" class="show-answer latex-answer-toggle" data-answer-target="latex-answer-14" aria-expanded="false">Show Answer</button>
+<div id="latex-answer-14" class="answer latex-answer" hidden>
+<ol type="a">
+  <li>
+    F. This is saying that \(f(n)\) grows <em>no</em> faster than \(g(n)\).
+  </li>
+  <li>
+    F. They grow at the same rate.
+  </li>
+  <li>
+    F. \(f(n)\) might grow slower than \(g(n)\). For instance, \(f(n)=n\) and \(g(n)=n^2\).
+  </li>
+  <li>
+    F. They might grow at the same rate. For instance, \(f(n)=g(n)=n\).
+  </li>
+  <li>
+    F. If \(f(n)=n\) and \(g(n)=n^2\), \(f(n)=O(g(n))\), but \(f(n)\neq \Omega(g(n))\).
+  </li>
+  <li>
+    T. By Theorem 2.
+  </li>
+  <li>
+    F. If \(f(n)=n\) and \(g(n)=n^2\), \(f(n)=O(g(n))\), but \(f(n)\neq \Theta(g(n))\).
+  </li>
+  <li>
+    F. If \(f(n)=n\) and \(g(n)=n^2\), \(f(n)=O(g(n))\), but \(g(n)\neq O(f(n))\).
+  </li>
+</ol>
+</div>
+</div>
+</section>
+
+<section id="common-growth-rates" section-title="Common Growth Rates">
+  <h2>Common Growth Rates</h2>
+
+  <p>
+    To use asymptotic notation well, we also need to compare common growth rates.
+    We will study this idea more carefully later, but the following ordering is
+    useful for the examples and exercises on this page.
+  </p>
+
+  <p>
+  We will write \(f(n)\prec g(n)\) to mean that \(f(n)=o(g(n))\). In other
+  words, \(f(n)\prec g(n)\) means that \(f(n)\) grows asymptotically slower
+  than \(g(n)\).
+</p>
+
+<p>
+  Using this notation, a useful ordering of common growth rates is:
+</p>
+
+<div class="display-math">\[
+  1 \prec \log n \prec n \prec n\log n
+  \prec n^2 \prec n^3 \prec 2^n \prec 3^n \prec n!.
+\]</div>
+
+  <p>
+    This ordering is asymptotic. It does not mean that the functions are ordered
+    this way for every small value of \(n\). It means that, eventually, each
+    function in the list grows slower than every function to its right.
+  </p>
+
+  <p>
+    Constant factors and lower-order terms do not change the asymptotic growth
+    rate. For example, \(100n\), \(3n+20\), and \(n/5\) are all \(\Theta(n)\).
+    Similarly, \(4n^2+7n+9\) is \(\Theta(n^2)\).
+  </p>
+
+  <div class="remark-box">
+    <p class="box-title"><strong>Remark</strong></p>
+    <p>
+      The base of the logarithm does not matter for asymptotic notation, as long
+      as the base is a constant greater than \(1\). For example, \(\log_2 n\),
+      \(\log_{10} n\), and \(\ln n\) differ only by constant factors, so they
+      are all \(\Theta(\log n)\).
+    </p>
+  </div>
+</section>
+
+
+<section id="reading-questions" section-title="Reading Comprehension Questions">
+  <h2>Reading Comprehension Questions</h2>
+  <ol>
+    <li>
+      <strong>Purpose of Asymptotic Notation:</strong>
+      What does asymptotic notation describe, and why is it useful when analyzing algorithms?
+    </li>
+
+    <li>
+      <strong>Big-O Definition:</strong>
+      In the definition of \(f(n)=O(g(n))\), what roles do the constants \(c\) and \(n_0\) play?
+    </li>
+
+    <li>
+      <strong>Upper Bound versus Tight Bound:</strong>
+      If \(f(n)=O(g(n))\), does that mean \(f(n)\) and \(g(n)\) grow at the same rate? Explain.
+    </li>
+
+    <li>
+      <strong>Big-Omega Definition:</strong>
+      What does it mean to say that \(f(n)=\Omega(g(n))\)? How is this different from saying \(f(n)=O(g(n))\)?
+    </li>
+
+    <li>
+      <strong>Big-Theta Definition:</strong>
+      Explain why \(f(n)=\Theta(g(n))\) can be viewed as combining both a Big-O statement and a Big-Omega statement.
+    </li>
+
+    <li>
+      <strong>Choosing Constants:</strong>
+      In a Big-O or Big-Omega proof, do the constants have to be the best possible constants? Explain.
+    </li>
+
+    <li>
+      <strong>Little-o Meaning:</strong>
+      What does \(f(n)=o(g(n))\) mean in terms of the ratio \(f(n)/g(n)\)? What does it mean informally?
+    </li>
+
+    <li>
+      <strong>Comparing Notations:</strong>
+      Match each notation with its rough inequality analogy: \(O\), \(\Omega\), \(\Theta\), \(o\), and \(\omega\).
+    </li>
+  </ol>
+
+  <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
+  <div id="answers" class="answer" hidden>
+    <ol>
+      <li>
+        <strong>Answer:</strong>
+        Asymptotic notation describes the long-term growth rate of a function as the input size grows.
+        In algorithm analysis, it helps us describe how running time or memory use grows without focusing
+        on exact constants or small input sizes.
+      </li>
+
+      <li>
+        <strong>Answer:</strong>
+        The constant \(c\) is the constant multiplier on \(g(n)\), and \(n_0\) is the point after which
+        the inequality must hold. For Big-O, we need \(f(n)\leq c\,g(n)\) for every \(n\geq n_0\).
+      </li>
+
+      <li>
+        <strong>Answer:</strong>
+        No. A Big-O bound is only an upper bound. If \(f(n)=O(g(n))\), then \(f(n)\) grows no faster than
+        \(g(n)\), but it might grow strictly slower. For example, \(n=O(n^2)\).
+      </li>
+
+      <li>
+        <strong>Answer:</strong>
+        Saying \(f(n)=\Omega(g(n))\) means that \(f(n)\) grows no slower than \(g(n)\), or equivalently
+        that \(g(n)\) is an asymptotic lower bound for \(f(n)\). Big-O gives an upper bound, while
+        Big-Omega gives a lower bound.
+      </li>
+
+      <li>
+        <strong>Answer:</strong>
+        A \(\Theta\)-bound gives both an upper and lower bound. By Theorem 2, \(f(n)=\Theta(g(n))\)
+        if and only if \(f(n)=O(g(n))\) and \(f(n)=\Omega(g(n))\).
+      </li>
+
+      <li>
+        <strong>Answer:</strong>
+        No. The constants do not have to be the best possible. It is enough to find constants that make
+        the required inequality true for all sufficiently large \(n\).
+      </li>
+
+      <li>
+        <strong>Answer:</strong>
+        The statement \(f(n)=o(g(n))\) means
+        \[
+          \lim_{n\rightarrow\infty}\frac{f(n)}{g(n)}=0.
+        \]
+        Informally, \(f(n)\) grows asymptotically slower than \(g(n)\). The function \(f(n)\) becomes
+        a smaller and smaller fraction of \(g(n)\).
+      </li>
+
+      <li>
+        <strong>Answer:</strong>
+        \(O\) is like \(\leq\), \(\Omega\) is like \(\geq\), \(\Theta\) is like \(=\),
+        \(o\) is like \(&lt;\), and \(\omega\) is like \(&gt;\). These are only analogies,
+        not formal definitions.
+      </li>
+    </ol>
+  </div>
+</section>
+
+<section id="activities" section-title="In-Class Activities">
+  <h2>In-Class Activities</h2>
+  <ol class="spaced">
+    <li>
+      <strong>Find Constants for Big-O:</strong>
+      For each function below, find constants \(c>0\) and \(n_0\geq 0\) that prove the stated Big-O bound.
+      <ol type="a">
+        <li>\(4n+7=O(n)\)</li>
+        <li>\(3n^2+10n+5=O(n^2)\)</li>
+        <li>\(n^3-20n^2+100=O(n^3)\)</li>
+      </ol>
+    </li>
+
+    <li>
+      <strong>Find Constants for Big-Omega:</strong>
+      For each function below, find constants \(c>0\) and \(n_0\geq 0\) that prove the stated Big-Omega bound.
+      <ol type="a">
+        <li>\(5n+3=\Omega(n)\)</li>
+        <li>\(2n^2+n=\Omega(n^2)\)</li>
+        <li>\(n^3-4n^2=\Omega(n^3)\)</li>
+      </ol>
+    </li>
+
+    <li>
+      <strong>One Function, Many Bounds:</strong>
+      Let \(f(n)=3n^2+5n+8\). Decide whether each statement is true or false, and justify your answer briefly.
+      <ol type="a">
+        <li>\(f(n)=O(n^3)\)</li>
+        <li>\(f(n)=O(n^2)\)</li>
+        <li>\(f(n)=\Omega(n)\)</li>
+        <li>\(f(n)=\Omega(n^3)\)</li>
+        <li>\(f(n)=\Theta(n^2)\)</li>
+        <li>\(f(n)=o(n^2)\)</li>
+        <li>\(f(n)=o(n^3)\)</li>
+      </ol>
+    </li>
+
+    <li>
+      <strong>Sort the Growth Rates:</strong>
+      Put the following functions in increasing asymptotic order. Then mark which adjacent pairs have the same growth rate.
+      \[
+        5n,\quad n^2,\quad n\log n,\quad 100,\quad 3n^2+7n,\quad \log n,\quad 2^n
+      \]
+    </li>
+
+    <li>
+      <strong>Repair the Proof:</strong>
+      A student claims that \(7n^2-5n+20=O(n^2)\) because
+      \[
+        7n^2-5n+20 \leq 7n^2-5n^2+20n^2=22n^2.
+      \]
+      Identify the error and rewrite the proof correctly.
+    </li>
+
+  <li>
+    <strong>Choose the Strongest True Statement:</strong>
+    For each pair of functions, choose the strongest true statement from
+    \(O\), \(\Omega\), \(\Theta\), \(o\), and \(\omega\), using the inequality analogy as a guide.
+    Fill in the blank with the best symbol.
+    <ol type="a">
+      <li>\(f(n)=n\), \(g(n)=n^2\): \(f(n)=\underline{\hspace{1.5cm}}(g(n))\)</li>
+      <li>\(f(n)=4n^2+3n\), \(g(n)=n^2\): \(f(n)=\underline{\hspace{1.5cm}}(g(n))\)</li>
+      <li>\(f(n)=n^3\), \(g(n)=n\log n\): \(f(n)=\underline{\hspace{1.5cm}}(g(n))\)</li>
+      <li>\(f(n)=7n+20\), \(g(n)=n\): \(f(n)=\underline{\hspace{1.5cm}}(g(n))\)</li>
+    </ol>
+  </li>
+
+    <li>
+      <strong>Constants Do Not Matter, But Proofs Still Do:</strong>
+      In small groups, explain why \(1000n+500=O(n)\). Then write a formal proof using specific values of \(c\) and \(n_0\).
+      Compare groups' choices of \(c\) and \(n_0\), and discuss why different correct choices are possible.
+    </li>
+
+    <li>
+      <strong>Upper Bound or Exact Growth?</strong>
+      For each statement below, decide whether it gives only an upper bound, only a lower bound, or a tight bound.
+      <ol type="a">
+        <li>\(f(n)=O(n^2)\)</li>
+        <li>\(f(n)=\Omega(n\log n)\)</li>
+        <li>\(f(n)=\Theta(n^3)\)</li>
+        <li>\(f(n)=o(n^4)\)</li>
+      </ol>
+      Then give one example function \(f(n)\) that satisfies each statement.
+    </li>
+  </ol>
+</section>
+
+<section id="problems" section-title="Homework Problems">
+  <h2>Homework Problems</h2>
+  <ol class="spaced">
+    <li>
+      <strong>Big-O Proof:</strong>
+      Prove that
+      \[
+        6n^4 - 3n^3 + 12n^2 + 8 = O(n^4).
+      \]
+      Your proof should explicitly give values of \(c>0\) and \(n_0\geq 0\).
+    </li>
+
+    <li>
+      <strong>Big-Omega Proof:</strong>
+      Prove that
+      \[
+        5n^3 + 2n^2 + 9 = \Omega(n^3).
+      \]
+      Your proof should explicitly give values of \(c>0\) and \(n_0\geq 0\).
+    </li>
+
+    <li>
+      <strong>Big-Theta Proof:</strong>
+      Prove that
+      \[
+        4n^2 + 11n + 6 = \Theta(n^2).
+      \]
+      You may either use the definition of \(\Theta\) directly or prove separate
+      \(O(n^2)\) and \(\Omega(n^2)\) bounds.
+    </li>
+
+    <li>
+      <strong>(Challenging) Negative Lower-Order Terms:</strong>
+      Prove that
+      \[
+        3n^3 - 10n^2 + 7n - 4 = \Omega(n^3).
+      \]
+      This problem requires more care than simply dropping all lower-order terms.
+      Choose a value of \(c>0\), then find an \(n_0\) large enough to make the
+      inequality true.
+    </li>
+
+    <li>
+      <strong>Little-o Classification:</strong>
+      For each statement, decide whether it is true or false. Give a brief justification.
+      <ol type="a">
+        <li>\(5n+12=o(n^2)\)</li>
+        <li>\(7n^2+3n=o(n^2)\)</li>
+        <li>\(n^2\log n=o(n^3)\)</li>
+        <li>\(2^n=o(n^5)\)</li>
+      </ol>
+    </li>
+
+    <li>
+      <strong>Compare Two Functions:</strong>
+      For each pair of functions, fill in the blank with the strongest appropriate
+      symbol from \(O\), \(\Omega\), \(\Theta\), \(o\), and \(\omega\).
+      <ol type="a">
+        <li>\(f(n)=n\log n\), \(g(n)=n^2\): \(f(n)=\underline{\hspace{1.5cm}}(g(n))\)</li>
+        <li>\(f(n)=9n^3+2n\), \(g(n)=n^3\): \(f(n)=\underline{\hspace{1.5cm}}(g(n))\)</li>
+        <li>\(f(n)=n^4\), \(g(n)=n^2\log n\): \(f(n)=\underline{\hspace{1.5cm}}(g(n))\)</li>
+        <li>\(f(n)=17n+200\), \(g(n)=n\): \(f(n)=\underline{\hspace{1.5cm}}(g(n))\)</li>
+        <li>\(f(n)=\log n\), \(g(n)=n\): \(f(n)=\underline{\hspace{1.5cm}}(g(n))\)</li>
+      </ol>
+    </li>
+
+    <li>
+      <strong>Only an Upper Bound:</strong>
+      Suppose \(f(n)=O(n^3)\). For each statement below, decide whether it must be true.
+      If it is not guaranteed, give a counterexample.
+      <ol type="a">
+        <li>\(f(n)=O(n^4)\)</li>
+        <li>\(f(n)=\Theta(n^3)\)</li>
+        <li>\(f(n)=o(n^4)\)</li>
+        <li>\(f(n)=\Omega(n)\)</li>
+      </ol>
+    </li>
+
+    <li>
+      <strong>Changing Logarithm Bases:</strong>
+      Let \(a&gt;1\) and \(b&gt;1\) be constants. Prove that
+      \[
+        \log_a n = \Theta(\log_b n).
+      \]
+      You may use the change-of-base formula
+      \[
+        \log_a n=\frac{\log_b n}{\log_b a}.
+      \]
+      Your proof should use the definition of \(\Theta\), either directly or by proving
+      both a Big-O bound and a Big-Omega bound.
+      Hint: This is easier than it may look. Since \(a\) and \(b\) are constants,
+      \(\log_b a\) is also a constant.
+    </li>
+  </ol>
+</section>
+</body>
+</html>

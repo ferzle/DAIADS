@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Proving Asymptotic Bounds</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <script src="../../scripts/chapterScripts.js"></script>
+  <script src="analysis-draft.js"></script>
+  <link rel="stylesheet" href="../../css/style.css">
+  <link rel="stylesheet" href="../../css/chapter.css">
+  <link rel="stylesheet" href="analysis-draft.css">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-DQ5LVZVFDC');
+  </script>
+</head>
+<body>
+  <h1>Proving Asymptotic Bounds</h1>
+
+  <section id="overview" section-title="Overview">
+    <h2>Overview</h2>
+    <p>
+      The definitions of \(O\), \(\Omega\), and \(\Theta\) are not just vocabulary. They are
+      proof tools. To prove an upper bound, find constants that make \(f(n)\leq c g(n)\)
+      eventually true. To prove a lower bound, find constants that make \(c g(n)\leq f(n)\)
+      eventually true. To prove a tight bound, prove both.
+    </p>
+    <p>
+      This page collects the proof patterns from the LaTeX chapter and presents them in a
+      form that is easier to reuse when analyzing algorithms.
+    </p>
+  </section>
+
+  <section id="definition-proofs" section-title="Proofs from Definitions">
+    <h2>Proofs from Definitions</h2>
+    <p>
+      Direct proofs usually work by simplifying \(f(n)\) until it is clearly bounded by a
+      constant multiple of the comparison function. For polynomials, the basic idea is that
+      lower powers are eventually at most the highest power. If \(a\leq b\), then
+      \(n^a\leq n^b\) whenever \(n\geq 1\).
+    </p>
+
+    <div class="example-box">
+      <strong class="example-title">Example: Prove \(5n^2-3n+20=O(n^2)\)</strong>
+      <p>
+        For \(n\geq 1\),
+        \[
+        5n^2-3n+20 \leq 5n^2+20 \leq 5n^2+20n^2=25n^2.
+        \]
+        Therefore \(5n^2-3n+20=O(n^2)\), using \(c=25\) and \(n_0=1\).
+      </p>
+      <p>
+        The negative term was removed because it can only make the expression smaller.
+        The constant \(20\) was replaced by \(20n^2\) because \(1\leq n^2\) for \(n\geq 1\).
+      </p>
+    </div>
+
+    <div class="check-card">
+      <p>
+        <strong>Quick check:</strong> Why is it invalid to replace \(-12n\) with
+        \(-12n^2\) when proving an upper bound for \(4n^2-12n+10\)?
+      </p>
+      <button class="answer-toggle show-answer" data-answer-target="negative-term-answer">Show Answer</button>
+      <div id="negative-term-answer" class="answer answer-panel" hidden>
+        <p>
+          For \(n\geq 1\), \(-12n^2\leq -12n\), so replacing \(-12n\) by \(-12n^2\)
+          makes the expression smaller. That is the wrong direction for an upper-bound
+          proof. It is safe to replace \(-12n\) with \(0\), because \(-12n\leq 0\).
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section id="tight-bounds" section-title="Tight Bounds">
+    <h2>Tight Bounds</h2>
+    <p>
+      For a tight bound, prove an upper bound and a lower bound. The upper bound often
+      removes negative lower-order terms. The lower bound often removes positive lower-order
+      terms and then shows that the dominant term eventually outweighs any negative terms.
+    </p>
+
+    <div class="example-box">
+      <strong class="example-title">Example: A Polynomial Tight Bound</strong>
+      <p>
+        Let
+        \[
+          f(n)=n^8+7n^7-10n^5-2n^4+3n^2-17.
+        \]
+        We will show \(f(n)=\Theta(n^8)\).
+      </p>
+      <p>
+        For the upper bound, when \(n\geq 1\),
+        \[
+        f(n)\leq n^8+7n^7+3n^2 \leq n^8+7n^8+3n^8=11n^8.
+        \]
+        So \(f(n)=O(n^8)\).
+      </p>
+      <p>
+        For the lower bound, keep the dominant term and bound the negative lower-order
+        terms by a multiple of \(n^7\):
+        \[
+        f(n)\geq n^8-10n^7-2n^7-17n^7=n^8-29n^7.
+        \]
+        If \(n\geq 58\), then \(29n^7\leq \frac{1}{2}n^8\), so
+        \[
+        f(n)\geq \frac{1}{2}n^8.
+        \]
+        Therefore \(f(n)=\Omega(n^8)\), and together the two bounds give
+        \(f(n)=\Theta(n^8)\).
+      </p>
+    </div>
+
+    <p>
+      The constants do not need to be best possible. A proof with \(c=1000\) and \(n_0=500\)
+      is just as valid as a proof with smaller constants if the inequality is true.
+    </p>
+  </section>
+
+  <section id="properties" section-title="Useful Properties">
+    <h2>Useful Properties</h2>
+    <p>
+      Several properties make asymptotic proofs shorter. They should be used after you understand
+      the definitions, not as magic rules.
+    </p>
+    <table class="example-table left-top-align">
+      <thead>
+        <tr>
+          <th>Property</th>
+          <th>Statement</th>
+          <th>How to read it</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Transitivity</td>
+          <td>If \(f=O(g)\) and \(g=O(h)\), then \(f=O(h)\).</td>
+          <td>An upper bound of an upper bound is still an upper bound.</td>
+        </tr>
+        <tr>
+          <td>Scaling</td>
+          <td>If \(f=O(g)\) and \(k&gt;0\), then \(kf=O(g)\).</td>
+          <td>Constant multipliers do not change growth rate.</td>
+        </tr>
+        <tr>
+          <td>Sums</td>
+          <td>If \(f_1=O(g_1)\) and \(f_2=O(g_2)\), then \(f_1+f_2=O(\max\{g_1,g_2\})\).</td>
+          <td>The faster-growing term controls the sum.</td>
+        </tr>
+        <tr>
+          <td>Products</td>
+          <td>If \(f_1=O(g_1)\) and \(f_2=O(g_2)\), then \(f_1f_2=O(g_1g_2)\).</td>
+          <td>Product bounds multiply.</td>
+        </tr>
+        <tr>
+          <td>Duality</td>
+          <td>\(f=O(g)\) if and only if \(g=\Omega(f)\).</td>
+          <td>Upper bounds and lower bounds are the same comparison read in opposite directions.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="limit-method" section-title="Proofs Using Limits">
+    <h2>Proofs Using Limits</h2>
+    <p>
+      When the relevant limit exists, limits can make asymptotic proofs much shorter. Compute
+      \[
+        \lim_{n\to\infty}\frac{f(n)}{g(n)}.
+      \]
+      Then interpret the result:
+    </p>
+    <table class="example-table left-align">
+      <thead>
+        <tr>
+          <th>Limit value</th>
+          <th>Conclusion</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>\(0\)</td>
+          <td>\(f(n)=o(g(n))\), so \(f(n)=O(g(n))\) but not \(\Theta(g(n))\)</td>
+        </tr>
+        <tr>
+          <td>Finite positive constant</td>
+          <td>\(f(n)=\Theta(g(n))\)</td>
+        </tr>
+        <tr>
+          <td>\(\infty\)</td>
+          <td>\(f(n)=\omega(g(n))\), so \(f(n)=\Omega(g(n))\) but not \(\Theta(g(n))\)</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="example-box">
+      <strong class="example-title">Example: Limits Beat Algebra</strong>
+      <p>Find a tight bound for \(x^4-23x^3+12x^2+15x-21\).</p>
+      <p>
+        Compare it with \(x^4\):
+        \[
+        \begin{aligned}
+        \lim_{x\to\infty}\frac{x^4-23x^3+12x^2+15x-21}{x^4}
+        &amp;= \lim_{x\to\infty}\left(1-\frac{23}{x}+\frac{12}{x^2}+\frac{15}{x^3}-\frac{21}{x^4}\right)\\
+        &amp;=1.
+        \end{aligned}
+        \]
+        Since the limit is a positive finite constant, the function is \(\Theta(x^4)\).
+      </p>
+    </div>
+
+    <p>
+      Limits are not a substitute for understanding. If the limit does not exist, or if you
+      apply a rule such as l'Hopital's Rule outside its conditions, the result may be invalid.
+      But for many functions that occur in algorithm analysis, the limit method is the most
+      efficient proof.
+    </p>
+  </section>
+
+  <section id="proof-writing" section-title="Proof-Writing Habits">
+    <h2>Proof-Writing Habits</h2>
+    <ul class="spaced">
+      <li><strong>State the target:</strong> Say whether you are proving \(O\), \(\Omega\), \(\Theta\), or \(o\).</li>
+      <li><strong>Use the right direction:</strong> Upper-bound proofs need \(f(n)\leq c g(n)\); lower-bound proofs need \(c g(n)\leq f(n)\).</li>
+      <li><strong>Do not erase terms by hand-waving:</strong> You can ignore lower-order terms after proving the bound, but the proof itself needs valid inequalities or a valid limit.</li>
+      <li><strong>Keep only input-size variables in final bounds:</strong> Temporary variables such as \(i\), \(j\), and \(k\) should not appear in the final asymptotic answer.</li>
+      <li><strong>Use simple constants:</strong> Constants do not need to be optimal. Choose values that make the proof easy.</li>
+    </ul>
+  </section>
+
+  <section id="where-next" section-title="Where This Goes Next">
+    <h2>Where This Goes Next</h2>
+    <p>
+      Once you can prove individual bounds, the next step is learning which growth rates are
+      common enough to recognize by sight. Continue with
+      <a href="?path=Analysis_DRAFT%2FCommon%20Growth%20Rates">Common Growth Rates</a>.
+    </p>
+  </section>
+
+  <section id="reading-questions" section-title="Reading Comprehension Questions">
+    <h2>Reading Comprehension Questions</h2>
+    <ol>
+      <li>Why is it not enough to say "lower-order terms become irrelevant" when writing a formal Big-O proof?</li>
+      <li>When proving \(f(n)=\Theta(g(n))\) from the definitions, what two separate inequalities do you need?</li>
+      <li>If \(\lim_{n\to\infty} f(n)/g(n)=0\), what asymptotic relationship follows?</li>
+      <li>Why can the constants \(c\) and \(n_0\) be larger than necessary?</li>
+      <li>What mistake is made when a final running-time bound contains a loop variable such as \(i\)?</li>
+    </ol>
+    <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
+    <div id="answers" class="answer" hidden>
+      <ol>
+        <li><strong>Answer:</strong> It is an intuition, not a proof. A formal proof must provide valid inequalities or a valid limit that justifies the bound.</li>
+        <li><strong>Answer:</strong> You need \(f(n)\leq c_2g(n)\) for an upper bound and \(c_1g(n)\leq f(n)\) for a lower bound, both eventually.</li>
+        <li><strong>Answer:</strong> \(f(n)=o(g(n))\), which also implies \(f(n)=O(g(n))\).</li>
+        <li><strong>Answer:</strong> The definitions only require some positive constants that work. They do not require the best possible constants.</li>
+        <li><strong>Answer:</strong> Loop variables are temporary implementation variables, not input-size variables. The final bound should be expressed in terms of input sizes such as \(n\), \(m\), \(|V|\), or \(|E|\).</li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="activities" section-title="In-Class Activities">
+    <h2>In-Class Activities</h2>
+    <ol>
+      <li><strong>Repair a proof:</strong> A student says \(4n^2-12n+10\leq 2n^2\) for \(n\geq 1\). Find the invalid step and write a correct Big-O proof.</li>
+      <li><strong>Two methods:</strong> Prove \(7n^3+4n^2-8n+27=O(n^3)\) once from the definition and once using limits.</li>
+      <li><strong>Choose constants:</strong> For a proof of \(5n^2-3n+20=O(n^2)\), decide whether \(c=50\), \(c=2\), \(n_0=100\), and \(n_0=0\) can work. Justify each answer.</li>
+    </ol>
+  </section>
+
+  <section id="problems" section-title="Homework Problems">
+    <h2>Homework Problems</h2>
+    <ol>
+      <li>Prove that \(n\log n=o(n^2)\).</li>
+      <li>Prove that \(\log(x^2+x)=\Theta(\log x)\).</li>
+      <li>Prove that \(\sqrt{5x^2+11x}=\Theta(x)\).</li>
+      <li>Prove that \(2^x=O(3^x)\) using both a limit and the definition of Big-O.</li>
+      <li>Prove the transitive property for Big-O: if \(f=O(g)\) and \(g=O(h)\), then \(f=O(h)\).</li>
+    </ol>
+  </section>
+</body>
+</html>

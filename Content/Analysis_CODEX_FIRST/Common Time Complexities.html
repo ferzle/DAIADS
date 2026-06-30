@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Common Time Complexities</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <script src="../../scripts/chapterScripts.js"></script>
+  <script src="analysis-draft.js"></script>
+  <link rel="stylesheet" href="../../css/style.css">
+  <link rel="stylesheet" href="../../css/chapter.css">
+  <link rel="stylesheet" href="analysis-draft.css">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-DQ5LVZVFDC');
+  </script>
+</head>
+<body>
+  <h1>Common Time Complexities</h1>
+
+  <section id="overview" section-title="Overview">
+    <h2>Overview</h2>
+    <p>
+      Algorithm analysis often produces the same families of running times again and again.
+      Recognizing these complexity classes helps you read code, compare algorithms, and set
+      expectations about what input sizes are realistic.
+    </p>
+    <p>
+      This page follows the LaTeX chapter's list of common classes, but places them in the
+      DAIADS context with code patterns and algorithm examples.
+    </p>
+  </section>
+
+  <section id="classes" section-title="Complexity Classes">
+    <h2>Complexity Classes</h2>
+    <table class="example-table left-top-align complexity-table">
+      <thead>
+        <tr>
+          <th>Class</th>
+          <th>Typical notation</th>
+          <th>Common source</th>
+          <th>Examples</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Constant</td>
+          <td>\(\Theta(1)\)</td>
+          <td>A fixed amount of work independent of \(n\)</td>
+          <td>Array indexing; comparing two numbers; stack push in a typical implementation</td>
+        </tr>
+        <tr>
+          <td>Logarithmic</td>
+          <td>\(\Theta(\log n)\)</td>
+          <td>Repeatedly discarding a constant fraction of the remaining input</td>
+          <td>Binary search; balanced search tree operations</td>
+        </tr>
+        <tr>
+          <td>Linear</td>
+          <td>\(\Theta(n)\)</td>
+          <td>Scanning all input items a constant number of times</td>
+          <td>Sequential search worst case; finding a maximum</td>
+        </tr>
+        <tr>
+          <td>Linearithmic</td>
+          <td>\(\Theta(n\log n)\)</td>
+          <td>Many divide-and-conquer algorithms with linear work per level</td>
+          <td>Merge sort; heapsort; average-case quicksort</td>
+        </tr>
+        <tr>
+          <td>Quadratic</td>
+          <td>\(\Theta(n^2)\)</td>
+          <td>Many all-pairs comparisons or two \(n\)-sized nested loops</td>
+          <td>Selection sort; many simple duplicate checks</td>
+        </tr>
+        <tr>
+          <td>Polynomial</td>
+          <td>\(\Theta(n^k)\) for constant \(k\)</td>
+          <td>A fixed power of the input size</td>
+          <td>Standard matrix multiplication is \(\Theta(n^3)\)</td>
+        </tr>
+        <tr>
+          <td>Exponential</td>
+          <td>\(\Theta(k^n)\) for constant \(k&gt;1\)</td>
+          <td>Trying all subsets, assignments, or branching choices</td>
+          <td>Brute-force subset generation; some backtracking worst cases</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="constant-linear" section-title="Constant and Linear">
+    <h2>Constant and Linear</h2>
+    <p>
+      Constant time does not mean the code literally takes exactly the same number of
+      nanoseconds for every input. It means there is a fixed upper bound on the amount of
+      work that does not grow with \(n\).
+    </p>
+    <div class="two-column-code">
+      <div class="example-box">
+        <strong class="example-title">Constant</strong>
+        <pre><code class="language-java">int fifthElement(int[] a) {
+    return a[4];
+}</code></pre>
+        <p>
+          The method does one array access and one return. The work does not grow with the
+          array length, so it is \(\Theta(1)\), assuming index 4 is valid.
+        </p>
+      </div>
+      <div class="example-box">
+        <strong class="example-title">Still Constant</strong>
+        <pre><code class="language-java">int partialSum(int[] a) {
+    int sum = 0;
+    for (int i = 0; i &lt; 42; i++) {
+        sum += a[i];
+    }
+    return sum;
+}</code></pre>
+        <p>
+          The loop runs 42 times no matter how large the input array is. Since 42 is a
+          constant, the method is \(\Theta(1)\), again assuming the array has enough elements.
+        </p>
+      </div>
+    </div>
+
+    <div class="example-box">
+      <strong class="example-title">Linear</strong>
+      <pre><code class="language-java">int sumFirstN(int n) {
+    int sum = 0;
+    for (int i = 1; i &lt;= n; i++) {
+        sum += i;
+    }
+    return sum;
+}</code></pre>
+      <p>
+        The loop runs \(n\) times and does constant work each time, so the running time is
+        \(\Theta(n)\).
+      </p>
+    </div>
+  </section>
+
+  <section id="log-nlogn" section-title="Logarithmic and n log n">
+    <h2>Logarithmic and \(n\log n\)</h2>
+    <p>
+      Logarithmic algorithms usually appear when each step removes a constant fraction of
+      the remaining input. Binary search removes about half of the remaining array each
+      iteration, so its worst-case running time is \(\Theta(\log n)\).
+    </p>
+    <p>
+      Many \(n\log n\) algorithms do linear work across each level of a logarithmic-depth
+      process. Merge sort is the classic example: each level of recursion processes all \(n\)
+      elements during merging, and there are \(\log n\) levels.
+    </p>
+    <figure class="placeholder-figure">
+      <svg viewBox="0 0 680 240" role="img" aria-labelledby="nlognPlaceholderTitle nlognPlaceholderDesc">
+        <title id="nlognPlaceholderTitle">n log n placeholder</title>
+        <desc id="nlognPlaceholderDesc">A placeholder showing several levels of work, each level totaling n.</desc>
+        <rect x="0" y="0" width="680" height="240" fill="#f8fafc"></rect>
+        <rect x="80" y="40" width="520" height="28" rx="4" fill="#dbeafe" stroke="#2563eb"></rect>
+        <rect x="80" y="92" width="250" height="28" rx="4" fill="#dcfce7" stroke="#16a34a"></rect>
+        <rect x="350" y="92" width="250" height="28" rx="4" fill="#dcfce7" stroke="#16a34a"></rect>
+        <rect x="80" y="144" width="115" height="28" rx="4" fill="#fee2e2" stroke="#dc2626"></rect>
+        <rect x="215" y="144" width="115" height="28" rx="4" fill="#fee2e2" stroke="#dc2626"></rect>
+        <rect x="350" y="144" width="115" height="28" rx="4" fill="#fee2e2" stroke="#dc2626"></rect>
+        <rect x="485" y="144" width="115" height="28" rx="4" fill="#fee2e2" stroke="#dc2626"></rect>
+        <text x="340" y="59" text-anchor="middle" font-size="15" fill="#1e3a8a">total work n</text>
+        <text x="340" y="111" text-anchor="middle" font-size="15" fill="#14532d">total work n</text>
+        <text x="340" y="163" text-anchor="middle" font-size="15" fill="#7f1d1d">total work n</text>
+        <text x="340" y="210" text-anchor="middle" font-size="16" fill="#64748b">placeholder for divide-and-conquer level diagram</text>
+      </svg>
+      <figcaption>Figure placeholder: \(O(n)\) work on each of \(O(\log n)\) levels gives \(O(n\log n)\).</figcaption>
+    </figure>
+  </section>
+
+  <section id="quadratic-polynomial" section-title="Quadratic and Polynomial">
+    <h2>Quadratic and Polynomial</h2>
+    <p>
+      Quadratic algorithms often arise from all-pairs work. If every item must be compared
+      with every other item, there are on the order of \(n^2\) pairs. A simple double loop
+      with \(n\) iterations in each loop is also usually quadratic.
+    </p>
+    <pre><code class="language-java">int[][] computeSums(int[] a) {
+    int n = a.length;
+    int[][] sums = new int[n][n];
+    for (int i = 0; i &lt; n; i++) {
+        for (int j = 0; j &lt; n; j++) {
+            sums[i][j] = a[i] + a[j];
+        }
+    }
+    return sums;
+}</code></pre>
+    <p>
+      The assignment inside the inner loop runs \(n\cdot n=n^2\) times, so the algorithm is
+      \(\Theta(n^2)\).
+    </p>
+    <p>
+      More generally, a polynomial-time algorithm has time \(\Theta(n^k)\) for some constant
+      \(k\). Linear and quadratic algorithms are special cases. In many theoretical contexts,
+      "efficient" means polynomial time, though in practice a high-degree polynomial may still
+      be too slow.
+    </p>
+  </section>
+
+  <section id="exponential" section-title="Exponential">
+    <h2>Exponential</h2>
+    <p>
+      Exponential algorithms usually appear when the algorithm branches into many possibilities:
+      all subsets, all binary strings, all assignments, or all choices in a search tree. There
+      are \(2^n\) binary strings of length \(n\), so an algorithm that lists them all must take
+      at least \(\Theta(2^n)\) time just to produce the output.
+    </p>
+    <p>
+      Exponential algorithms are usually practical only for small inputs unless pruning,
+      approximation, randomness, or problem-specific structure changes the effective search.
+    </p>
+  </section>
+
+  <section id="faster-slower" section-title="Faster Growth Means Slower Algorithms">
+    <h2>Faster Growth Means Slower Algorithms</h2>
+    <p>
+      The language can be confusing. A function that grows faster represents more work, so it
+      usually represents a slower algorithm for large inputs. If algorithm \(A\) runs in
+      \(\Theta(n\log n)\) time and algorithm \(B\) runs in \(\Theta(n^2)\) time for the same
+      problem, then \(A\) usually scales better because \(n\log n=o(n^2)\).
+    </p>
+    <p>
+      This does not mean \(A\) is always faster on every small input. Constants, memory behavior,
+      and implementation overhead can matter in practice. Asymptotic complexity describes the
+      long-term growth pattern.
+    </p>
+  </section>
+
+  <section id="where-next" section-title="Where This Goes Next">
+    <h2>Where This Goes Next</h2>
+    <p>
+      The next page applies these classes to longer examples, including changing loop limits,
+      simple sorting algorithms, data structure costs, and binary search:
+      <a href="?path=Analysis_DRAFT%2FAnalysis%20Case%20Studies">Analysis Case Studies</a>.
+    </p>
+  </section>
+
+  <section id="reading-questions" section-title="Reading Comprehension Questions">
+    <h2>Reading Comprehension Questions</h2>
+    <ol>
+      <li>Why can a loop that runs 42 times be \(\Theta(1)\) rather than \(\Theta(n)\)?</li>
+      <li>What code behavior often leads to logarithmic time?</li>
+      <li>Why does a typical all-pairs comparison lead to quadratic time?</li>
+      <li>If algorithm \(A\) has complexity \(\Theta(n^2)\) and algorithm \(B\) has complexity \(\Theta(n\log n)\), which usually scales better?</li>
+      <li>Why are exponential algorithms usually not considered efficient?</li>
+    </ol>
+    <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
+    <div id="answers" class="answer" hidden>
+      <ol>
+        <li><strong>Answer:</strong> Because 42 is a constant independent of the input size. The amount of work is bounded by a fixed number.</li>
+        <li><strong>Answer:</strong> Repeatedly discarding a constant fraction of the remaining input, such as halving the search range.</li>
+        <li><strong>Answer:</strong> There are about \(n^2\) ordered pairs, or \(n(n-1)/2=\Theta(n^2)\) unordered distinct pairs.</li>
+        <li><strong>Answer:</strong> \(B\) usually scales better because \(n\log n\) grows slower than \(n^2\).</li>
+        <li><strong>Answer:</strong> Their running times grow so quickly that even moderate input sizes can become infeasible.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="activities" section-title="In-Class Activities">
+    <h2>In-Class Activities</h2>
+    <ol>
+      <li><strong>Classify code:</strong> Label short code fragments as constant, logarithmic, linear, quadratic, or exponential.</li>
+      <li><strong>Doubling experiment:</strong> For \(n=10,20,40,80\), compare \(n\), \(n\log n\), \(n^2\), and \(2^n\). Describe what changes when \(n\) doubles.</li>
+      <li><strong>Algorithm match:</strong> Match binary search, sequential search, merge sort, selection sort, and subset generation to their typical complexity classes.</li>
+    </ol>
+  </section>
+
+  <section id="problems" section-title="Homework Problems">
+    <h2>Homework Problems</h2>
+    <ol>
+      <li>Give an example of a nested loop that is \(\Theta(n)\), not \(\Theta(n^2)\).</li>
+      <li>Give an example of a double-nested loop that is worse than \(\Theta(n^2)\).</li>
+      <li>Explain why an algorithm that claims to sort \(n\) arbitrary input values in \(\Theta(\log n)\) time cannot be correct under ordinary assumptions.</li>
+      <li>For each class in the table, give one algorithm or operation from this book that belongs to it.</li>
+    </ol>
+  </section>
+</body>
+</html>

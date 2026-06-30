@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Asymptotic Properties and Proofs</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <script src="/DAIADS/scripts/chapterScripts.js"></script>
+  <script src="latex-translation.js"></script>
+  <link rel="stylesheet" href="/DAIADS/css/style.css">
+  <link rel="stylesheet" href="/DAIADS/css/chapter.css">
+  <link rel="stylesheet" href="latex-translation.css">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-DQ5LVZVFDC');
+  </script>
+</head>
+<body class="latex-translation">
+  <h1>Asymptotic Properties and Proofs</h1>
+<section id="proofs-using-the-definitions" section-title="Proofs using the definitions">
+<h2>Proofs using the definitions</h2>
+<p>In this section we provide more examples and exercises that use the definitions to prove bounds.</p>
+<p>The first example is annotated with comments (given in footnotes) about the techniques that are used in many of these proofs. We use the following terminology in our explanation. By <em>lower order term</em> we mean a term that grows slower, and <em>higher order</em> means a term that grows faster.  The <em>dominating term</em> is the term that grows the fastest.  For instance, in \(x^3+7\, x^2-4\), the \(x^2\) term is a lower order term than \(x^3\), and \(x^3\) is the dominating term. We will discuss common growth rates, including how they relate to each other, in Section Common Growth Rates.</p>
+<p>But for now we assume you know that \(x^5\) grows faster than \(x^3\), for instance.</p>
+<div class="example-box">
+<p class="box-title"><strong>Example</strong></p>
+<p>Find a tight bound on \(f(n)=n^8+7n^7-10n^5-2n^4+3n^2-17\).</p>
+<div class="solution-block">
+<p class="box-title"><strong>Solution</strong></p>
+<p>We will prove that \(f(n)=\Theta(n^8)\). First, we will prove an upper bound for \(f(n)\).  It is clear that when \(n\geq 1\),</p>
+<div class="display-math">\[
+\begin{aligned}
+n^8+7n^7-10n^5-2n^4+3n^2-17&amp;\leq&amp; n^8+7n^7+3n^2\, \, \, \,\\
+&amp;\leq&amp; n^8+7n^8+3n^8\, \, \, \,\\
+&amp;=&amp;11n^8
+\end{aligned}
+\]</div><div class="translation-footnotes"><p>Footnote: We can upper bound any function by removing the lower order terms with negative coefficients, as long as \(n\geq 0\).</p><p>Footnote: We  can upper bound any function by replacing lower order terms  that have positive coefficients by the dominating term with the same coefficients. Here, we must make sure that the dominating term is larger than the  given term for all values of \(n\) larger than some threshold \(n_0\), and we must make note of the threshold value \(n_0\).</p></div>
+<p>Thus, we have \[f(n)=n^8+7n^7-10n^5-2n^4+3n^2-17\leq 11n^8 \mbox{ for all } n\geq 1,\] and we have proved that \(f(n)=O(n^8)\).</p>
+<p>Now, we will prove the lower bound for \(f(n)\). When \(n\geq 1\),</p>
+<div class="display-math">\[
+\begin{aligned}
+n^8+7n^7-10n^5-2n^4+3n^2-17 &amp;\geq&amp; n^8-10n^5-2n^4-17\, \, \, \,\\ 
+&amp;\geq&amp; n^8-10n^7-2n^7-17n^7\, \, \, \,\\
+&amp;=&amp;n^8-29n^7
+\end{aligned}
+\]</div><div class="translation-footnotes"><p>Footnote: We can lower bound any function by removing the lower order terms with positive coefficients, as long as \(n\geq 0\).</p><p>Footnote: We can lower bound any function by replacing lower order terms with negative coefficients by a sub-dominating term with the same coefficients. (By sub-dominating, I mean one which dominates all but the dominating term.) Here, we must make sure that the sub-dominating term is larger than the  given term for all values of \(n\) larger than some threshold \(n_0\), and we must make note of the threshold value \(n_0\). Making a wise choice for which sub-dominating term to use is crucial in finishing the proof.</p></div>
+<p>Next, we need to find a value \(c&gt;0\) such that \(n^8-29n^7\geq c n^8\). Doing a little algebra, we see that this is equivalent to \((1-c)n^8 \geq 29n^7\).  When \(n\geq 1\), we can divide by \(n^7\) and obtain \((1-c)n\geq 29\). Solving for \(c\) we obtain \[c\leq 1-\frac{29}{ n}.\] If \(n\geq 58\), then \(c=1/2\) suffices. We have just shown that if \(n\geq 58\), then \[f(n)=n^8+7n^7-10n^5-2n^4+3n^2-17\geq \frac{1}{2}n^8.\] Thus, \(f(n)=\Omega(n^8)\). Since we have shown that \(f(n)=\Omega(n^8)\) and that \(f(n)=O(n^8)\), we have shown that \(f(n)=\Theta(n^8)\).</p>
+</div>
+</div>
+<p>Let's see another example of a \(\Omega\) proof.  You should note the similarities between this and the second half of the proof in the previous example.</p>
+<div class="example-box">
+<p class="box-title"><strong>Example</strong></p>
+<p>Show that \((n \log n - 2\,n + 13)=\Omega(n \log n)\)</p>
+<div class="proof-block">
+<p class="box-title"><strong>Proof</strong></p>
+<p>We need to show that there exist positive constants \(c\) and \(n_0\) such that \[c\,n\log n \leq n\log n -2\,n + 13\mbox{ for all } n\geq n_0.\] Since \(n\log n -2\,n \leq n\log n -2\,n+13,\) we will instead show that \[c\,n\log n \leq n\log n -2\,n,\] which is equivalent to \[c\leq 1-\frac{2}{\log n}, \mbox{ when } n &gt; 1.\] If \(n\geq 8\), then \(2/(\log n)\leq 2/3\), and picking \(c=1/3\) suffices. In other words, we have just shown that if \(n\geq 8\), \[\frac{1}{3}\,n\log n \leq n\log n -2\,n.\] Thus if \(c=1/3\) and \(n_0=8\), then for all \(n\geq n_0\), we have \[c\,n\log n \leq n\log n -2\,n \leq n\log n -2\,n + 13.\] Thus \((n \log n - 2\,n + 13)=\Omega(n \log n)\).</p>
+</div>
+</div>
+<div class="exercise-box">
+<p class="box-title"><strong>Fill in the Blank</strong></p>
+<p>Show that \(\frac{1}{2} n^{2} - 3n = \Theta(n^{2})\)</p>
+<div class="proof-block">
+<p class="box-title"><strong>Proof</strong></p>
+<p>We need to find positive constants \(c_1\), \(c_2\), and \(n_0\) such that \[\underline{\hspace{2.5cm}} \leq \frac{1}{2}n^2 - 3\,n \leq \underline{\hspace{2.5cm}}\mbox{ for all } n\geq n_0\] Dividing by \(n^{2}\), we get  \(c_{1} \leq \underline{\hspace{2.5cm}} \leq c_{2}.\)</p>
+<p>Notice that if \(n\geq 10\),  \(\frac{1}{2} - \frac{3}{n} \geq \frac{1}{2} - \frac{3}{10} = \underline{\hspace{2.5cm}},\) so we can choose \(c_1 =1/5\). If \(n\geq 10\), we also have that \(\frac{1}{2} - \frac{3}{n}\leq \frac{1}{2},\) so we can choose \(c_2=1/2\). Thus, we have shown that \[\underline{\hspace{2.5cm}} \leq \frac{1}{2}n^2 - 3\,n \leq \underline{\hspace{2.5cm}} \mbox{ for all } n\geq \underline{\hspace{2.5cm}} .\] Therefore, \(\frac{1}{2} n^{2} - 3n =\Theta(n^{2})\).</p>
+</div>
+<button type="button" class="show-answer latex-answer-toggle" data-answer-target="latex-answer-17" aria-expanded="false">Show Answer</button>
+<div id="latex-answer-17" class="answer latex-answer" hidden>
+<p>\(c_{1}n^2\); \(c_{2}n^2\); \(\frac{1}{2} - \frac{3}{n}\); \(\frac{10-6}{20}=\frac{1}{5}\); \(\frac{1}{5}n^2\); \(\frac{1}{2}n^2\); \(10\).</p>
+</div>
+</div>
+<div class="question-box">
+<p class="box-title"><strong>Question</strong></p>
+<p>In the previous proof, we claimed that if \(n\geq 10\), \[\frac{1}{2} - \frac{3}{n} \geq \frac{1}{2} - \frac{3}{10}.\] Why is this true?</p>
+<p><span class="answer-space"></span></p>
+<button type="button" class="show-answer latex-answer-toggle" data-answer-target="latex-answer-18" aria-expanded="false">Show Answer</button>
+<div id="latex-answer-18" class="answer latex-answer" hidden>
+<p>There are a few ways to think about this.  First, the larger \(n\) is, the smaller \(\frac{3}{n}\) is, so a smaller amount is being subtracted.  But that's perhaps too fuzzy.  Let's look at it this way: \[n\geq 10\Rightarrow \frac{10}{3} \leq \frac{n}{3} \Rightarrow \frac{3}{n}\leq \frac{3}{10} \Rightarrow -\frac{3}{n}\geq -\frac{3}{10} \Rightarrow \frac{1}{2}-\frac{3}{n}\geq \frac{1}{2}-\frac{3}{10}. \]</p>
+</div>
+</div>
+<div class="example-box">
+<p class="box-title"><strong>Example</strong></p>
+<p>Show that \((\sqrt{2})^{\log n}=O(\sqrt{n})\), where the base of the \(\log\) is 2.</p>
+<div class="proof-block">
+<p class="box-title"><strong>Proof</strong></p>
+<p>It is not too hard to see that \[(\sqrt{2})^{\log n}=n^{\log \sqrt{2}}=n^{\log 2^{1/2}}= n^{\frac{1}{2}\log 2}=n^{\frac{1}{2}}=\sqrt{n}.\] Thus it is clear that \((\sqrt{2})^{\log n}=O(\sqrt{n})\).</p>
+</div>
+</div>
+<div class="remark-box">
+<p class="box-title"><strong>Remark</strong></p>
+<p>You may be confused by the previous proof.  It seems that we never showed that \((\sqrt{2})^{\log n}\leq c\sqrt{n}\) for some constant \(c\). But we essentially did by showing that \((\sqrt{2})^{\log n}=\sqrt{n}\) since this implies that \((\sqrt{2})^{\log n}\leq 1\sqrt{n}\).</p>
+<p>We actually proved something stronger than was required. That is, since we proved the two functions are equal, it is in fact true that \((\sqrt{2})^{\log n}=\Theta(\sqrt{n})\).  But we were only asked to prove that \((\sqrt{2})^{\log n}=O(\sqrt{n})\).</p>
+<p>In general, if you need to prove a Big-O bound, you may instead prove a \(\Theta\) bound, and the Big-O bound essentially comes along for the ride.</p>
+</div>
+<div class="question-box">
+<p class="box-title"><strong>Question</strong></p>
+<p>In our previous note we mentioned that if you prove a \(\Theta\) bound, you get the Big-O bound for free.</p>
+<ol class="spaced">
+<li>
+<p>What theorem implies this?</p>
+<p><span class="answer-space"></span></p>
+<li>
+<p>If we prove \(f(n)=O(g(n))\), does that imply that \(f(n)=\Theta(g(n))\)? In other words, does it work the other way around? Explain, giving an appropriate example.</p>
+<p><span class="answer-space"></span></p>
+</ol>
+<button type="button" class="show-answer latex-answer-toggle" data-answer-target="latex-answer-19" aria-expanded="false">Show Answer</button>
+<div id="latex-answer-19" class="answer latex-answer" hidden>
+<p>(a) Theorem 2. (b) Absolutely not!  Theorem 2 requires that we also prove \(f(n)=\Omega(g(n))\).  Here is a counterexample: \(n=O(n^2)\), but \(n\neq\Theta(n^2)\). So \(f(n)=O(g(n))\) does not imply that \(f(n)=\Theta(g(n))\).</p>
+</div>
+</div>
+<div class="exercise-box">
+<p class="box-title"><strong>Exercise</strong></p>
+<p>Show that \(n!=O(n^n)\). (Don't give up too easily on this one&mdash;the proof is very short and only uses elementary algebra.)</p>
+<button type="button" class="show-answer latex-answer-toggle" data-answer-target="latex-answer-20" aria-expanded="false">Show Answer</button>
+<div id="latex-answer-20" class="answer latex-answer" hidden>
+<p>Notice that when \(n\geq 1\), \(n!=1\cdot 2\cdot 3\cdots n \leq n\cdot n\cdots n = n^n.\) Therefore \(n!=O(n^n)\) (We used \(n_0=1\), and \(c=1\).)</p>
+</div>
+</div>
+<div class="example-box">
+<p class="box-title"><strong>Example</strong></p>
+<p>Show that \(\log (n!) = O(n\log n)\)</p>
+<div class="proof-block">
+<p class="box-title"><strong>Proof</strong></p>
+<p>It should be clear that if \(n\geq 1\), \(n!\leq n^n\) (especially after completing the previous exercise). Taking \(\log\)s of both sides of that inequality, we obtain \[\log n!\leq \log (n^n) = n\log n.\] Therefore \(\log n! = O(n\log n)\).</p>
+</div>
+<p>The last step used the fact that \(\log (f(n)^a)=a\log (f(n))\), a fact that we assume you have seen previously (but may have forgotten).</p>
+</div>
+<p>Proving properties of the asymptotic notations is actually no more difficult than the rest of the proofs we have seen.  You have already seen a few and helped write one. Here we provide one more example and then ask you to prove another result on your own.</p>
+<div class="example-box">
+<p class="box-title"><strong>Example</strong></p>
+<p>Prove that if \(f(n)=O(g(n))\) and \(g(n)=O(f(n))\), then \(f(n)=\Theta(g(n))\).</p>
+<div class="proof-block">
+<p class="box-title"><strong>Proof</strong></p>
+<p>If \(f(n)=O(g(n))\), then there are positive constants \(c_2\) and \(n_{0}^{\prime}\) such that \[f(n)\leq c_2\,g(n)\mbox{ for all }n \ge n_{0}^{\prime}\] Similarly, if \(g(x)=O(f(x))\), then there are positive constants \(c_1^{\prime}\) and \(n_{0}^{\prime\prime}\) such that \[g(n)\leq c_1^{\prime}\,f(n)\mbox{ for all }n \ge n_{0}^{\prime\prime}.\] We can divide this by \(c_1^{\prime}\) to obtain \[\frac{1}{c_1^{\prime}}g(n)\leq f(n)\mbox{ for all }n \ge n_{0}^{\prime\prime}.\] Setting \(c_1=1/c_1^{\prime}\) and \(n_0=\max\{n_0^{\prime},n_0^{\prime\prime}\}\), we have \[c_1 g(n)\leq f(n)\leq c_2\,g(n)\mbox{ for all }n \ge n_{0}.\] Thus, \(f(x)=\Theta(g(x)).\)</p>
+</div>
+</div>
+<div class="exercise-box">
+<p class="box-title"><strong>Exercise</strong></p>
+<p>Let \(f(x)=O(g(x))\) and \(g(x)=O(h(x))\). Show that \(f(x)=O(h(x))\). That is, prove Theorem 3 for Big-O notation.</p>
+<button type="button" class="show-answer latex-answer-toggle" data-answer-target="latex-answer-21" aria-expanded="false">Show Answer</button>
+<div id="latex-answer-21" class="answer latex-answer" hidden>
+<p>If \(f(x)=O(g(x))\), then there are positive constants \(c_1\) and \(n_{0}^{\prime}\) such that \[0\leq f(n)\leq c_1\,g(n)\mbox{ for all }n \ge n_{0}^{\prime},\] and if \(g(x)=O(h(x))\), then there are positive constants \(c_2\) and \(n_{0}^{\prime\prime}\) such that \[0\leq g(n)\leq c_2\,h(n)\mbox{ for all }n \ge n_{0}^{\prime\prime}.\] Set \(n_0=\max(n_0^{\prime},n_0^{\prime\prime})\) and \(c_3=c_1\,c_2\). Then \[0\leq f(n)\leq c_1\,g(n)\leq c_1\,c_2\,h(n)=c_3\,h(n) \mbox{ for all }n \ge n_{0}.\] Thus \(f(x)=O(h(x))\).</p>
+</div>
+</div>
+</section>
+<section id="proofs-using-limits" section-title="Proofs using limits">
+<h2>Proofs using limits</h2>
+<p>So far we have used the definitions of the various notations in all of our proofs. The following theorem provides another technique that is often much easier, assuming you understand and are comfortable with limits.</p>
+<div class="theorem">
+<p class="box-title"><strong>Theorem</strong></p>
+<p>Let \(f(n)\) and \(g(n)\) be functions such that \[\lim_{n\rightarrow \infty}\frac{f(n)}{g(n)} = A.\] Then</p>
+<ol class="spaced">
+<li>If \(A=0\), then \(f(n)=O(g(n))\), and \(f(n)\neq \Theta(g(n))\).  That is, \(f(n)=o(g(n))\).
+<li>If \(A=\infty\), then \(f(n)=\Omega(g(n))\), and \(f(n)\neq \Theta(g(n))\). That is, \(f(n)=\omega(g(n))\).
+<li>If \(A\neq 0\) is finite, then \(f(n)=\Theta(g(n))\).
+</ol>
+</div>
+<p>If the above limit does not exist, then you need to resort to using the definitions or using some other technique. Luckily, in the analysis of algorithms the above approach works most of the time.</p>
+<p>Before we see some examples, let's review a few limits you should know.</p>
+<div class="theorem">
+<p class="box-title"><strong>Theorem</strong></p>
+<p>Let \(a\) and \(c\) be real numbers.  Then</p>
+<ol class="spaced">
+<li>\(\displaystyle \lim_{n\rightarrow \infty} a = a\)
+<li>If \(a&gt;0\), \(\displaystyle \lim_{n\rightarrow \infty} n^a = \infty\)
+<li>If \(a&lt;0\), \(\displaystyle \lim_{n\rightarrow \infty} n^a = 0\)
+<li>If \(a&gt;1\), \(\displaystyle \lim_{n\rightarrow \infty} a^n = \infty\)
+<li>If \(0&lt;a&lt;1\), \(\displaystyle \lim_{n\rightarrow \infty} a^n = 0\)
+<li>If \(c&gt;0\), \(\displaystyle \lim_{n\rightarrow \infty} \log_c n = \infty\).
+</ol>
+</div>
+<div class="example-box">
+<p class="box-title"><strong>Example</strong></p>
+<p>The following are examples based on Theorem 9.</p>
+<ol class="spaced">
+<li>
+<p>\(\displaystyle\lim_{n\rightarrow\infty} 13 = 13\)</p>
+<li>
+<p>\(\displaystyle\lim_{n\rightarrow\infty} n = \infty\)</p>
+<li>
+<p>\(\displaystyle\lim_{n\rightarrow\infty} n^4 = \infty\)</p>
+<li>
+<p>\(\displaystyle\lim_{n\rightarrow\infty} n^{1/2} = \infty\)</p>
+<li>
+<p>\(\displaystyle\lim_{n\rightarrow\infty} n^{-2} = 0\)</p>
+<li>
+<p>\(\displaystyle\lim_{n\rightarrow\infty} \left(\frac{1}{2}\right)^{n} = 0\)</p>
+<li>
+<p>\(\displaystyle\lim_{n\rightarrow\infty} 2^{n} = \infty\)</p>
+<li>
+<p>\(\displaystyle\lim_{n\rightarrow\infty} \log_2 n = \infty\)</p>
+</ol>
+</div>
+<p>Now it's your turn to try a few.</p>
+<div class="exercise-box">
+<p class="box-title"><strong>Exercise</strong></p>
+<p>Evaluate the following limits</p>
+<ol class="spaced">
+<p>\setlength{\itemsep}{.25in}</p>
+<li>
+<p>\(\displaystyle\lim_{n\rightarrow\infty} \log_{10} n =\)</p>
+<li>
+<p>\(\displaystyle\lim_{n\rightarrow\infty} n^3 =\)</p>
+<li>
+<p>\(\displaystyle\lim_{n\rightarrow\infty} 3^n =\)</p>
+<li>
+<p>\(\displaystyle\lim_{n\rightarrow\infty} \left(\frac{3}{2}\right)^n =\)</p>
+<li>
+<p>\(\displaystyle\lim_{n\rightarrow\infty} \left(\frac{2}{3}\right)^n =\)</p>
+<li>
+<p>\(\displaystyle\lim_{n\rightarrow\infty} n^{-1} =\)</p>
+<li>
+<p>\(\displaystyle\lim_{n\rightarrow\infty} 8675309 =\)</p>
+</ol>
+<button type="button" class="show-answer latex-answer-toggle" data-answer-target="latex-answer-22" aria-expanded="false">Show Answer</button>
+<div id="latex-answer-22" class="answer latex-answer" hidden>
+<p>(a) \(\infty\) (b) \(\infty\) (c) \(\infty\) (d) \(\infty\) (e) \(0\) (f) \(0\) (g) \(8675309\)</p>
+</div>
+</div>
+<div class="example-box">
+<p class="box-title"><strong>Example</strong></p>
+<p>Prove that  \(5n^8=\Theta(n^8)\) using Theorem 8.</p>
+<div class="solution-block">
+<p class="box-title"><strong>Solution</strong></p>
+<p>Notice that \[\lim_{n\rightarrow\infty}\frac{5n^8}{n^8}= \lim_{n\rightarrow\infty}5=5,\] so \(f(n)=\Theta(n^8)\) by Theorem 8 (case 3).</p>
+</div>
+</div>
+<p>The following theorem often comes in handy when using Theorem 8.</p>
+<div class="theorem">
+<p class="box-title"><strong>Theorem</strong></p>
+<p>If \(\displaystyle \lim_{n\rightarrow \infty} f(n)=\infty\), then \(\displaystyle \lim_{n\rightarrow \infty} \frac{1}{f(n)}=0\).</p>
+</div>
+<div class="example-box">
+<p class="box-title"><strong>Example</strong></p>
+<p>Prove that  \(n^2=o(n^4)\) using Theorem 8.</p>
+<div class="solution-block">
+<p class="box-title"><strong>Solution</strong></p>
+<p>Notice that \[\lim_{n\rightarrow\infty}\frac{n^2}{n^4}= \lim_{n\rightarrow\infty}\frac{1}{n^2}=0,\] so \(f(n)=o(n^4)\) by Theorem 8 (case 1).</p>
+</div>
+</div>
+<div class="question-box">
+<p class="box-title"><strong>Question</strong></p>
+<p>The proof in the previous example used Theorems 9 and 10. How and where?</p>
+<p><span class="answer-space"></span></p>
+<button type="button" class="show-answer latex-answer-toggle" data-answer-target="latex-answer-23" aria-expanded="false">Show Answer</button>
+<div id="latex-answer-23" class="answer latex-answer" hidden>
+<p>Theorem 9 part (b) implies that \(\displaystyle\lim_{n\rightarrow\infty} n^2=\infty\). Since the limit being computed was actually \(\displaystyle \lim_{n\rightarrow\infty}\frac{1}{n^2}\), Theorem 10 was used to obtain the final answer of \(0\) for the limit.</p>
+</div>
+</div>
+<div class="exercise-box">
+<p class="box-title"><strong>Exercise</strong></p>
+<p>Prove that \(3x^3=\Omega(x^2)\) using Theorem 8.  Which case did you use?</p>
+<button type="button" class="show-answer latex-answer-toggle" data-answer-target="latex-answer-24" aria-expanded="false">Show Answer</button>
+<div id="latex-answer-24" class="answer latex-answer" hidden>
+<p>Notice that \(\lim_{x\rightarrow\infty}\frac{3x^3}{x^2}= \lim_{x\rightarrow\infty}3x=\infty,\) so \(3x^3=\omega(x^2)\) by the second case of the Theorem 8, which also implies that \(3x^3=\Omega(x^2)\).</p>
+</div>
+</div>
+<p>Here are a few more useful properties of limits. Read carefully.  These do not apply in all situations.</p>
+<div class="theorem">
+<p class="box-title"><strong>Theorem</strong></p>
+<p>Let \(a\) be a finite real number and let \(\displaystyle\lim_{n\rightarrow \infty} f(n)=A\) and \(\displaystyle\lim_{n\rightarrow \infty} g(n)=B\), where \(A\) and \(B\) are finite real numbers. Then</p>
+<ol class="spaced">
+<li>
+<p>\(\displaystyle \lim_{n\rightarrow \infty} a\,f(n)=a\,A\)</p>
+<li>
+<p>\(\displaystyle \lim_{n\rightarrow \infty} f(n)\pm g(n)=A\pm B\)</p>
+<li>
+<p>\(\displaystyle \lim_{n\rightarrow \infty} f(n)g(n)=AB\)</p>
+<li>
+<p>If \(B\neq 0\), \(\displaystyle \lim_{n\rightarrow \infty} \frac{f(n)}{g(n)}=\frac{A}{B}\)</p>
+</ol>
+</div>
+<p>We usually use the results from the previous theorem without explicitly mentioning them.</p>
+<div class="example-box">
+<p class="box-title"><strong>Example</strong></p>
+<p>Find a tight bound on \(f(x)=x^8+7x^7-10x^5-2x^4+3x^2-17\) using Theorem 8.</p>
+<p><strong>Solution:</strong> We guess (or know, if we remember the solution to Example 13) that \(f(x)=\Theta(x^8)\). To prove this, notice that</p>
+<div class="display-math">\[
+\begin{aligned}
+\lim_{x\rightarrow\infty}
+{x^8{+}7x^7{-}10x^5{-}2x^4{+}3x^2{-}\frac{17}{ x^8}}
+&amp; =&amp; \lim_{x\rightarrow\infty}
+\frac{x^8}{ x^8}+ \frac{7x^7}{ x^8}- \frac{10x^5}{ x^8}- \frac{2x^4}{ x^8}+
+\frac{3x^2}{ x^8}- \frac{17}{ x^8}\\
+&amp; =&amp; \lim_{x\rightarrow\infty}
+ 1+ \frac{7}{ x}- \frac{10}{ x^3}- \frac{2}{ x^4}+\frac {3}{ x^6}- \frac{17}{ x^8}\\
+&amp;=&amp;1+ 0 - 0 - 0 + 0 - 0=1
+\end{aligned}
+\]</div>
+<p>Thus, \(f(x)=\Theta(x^8)\) by the Theorem 8.</p>
+</div>
+<p>Compare the proof above with the proof given in Example 13. It should be pretty obvious that using Theorem 8 makes the proof a lot easier. Let's see another example that lets us compare the two proof methods.</p>
+<div class="example-box">
+<p class="box-title"><strong>Example</strong></p>
+<p>Prove that \(f(x)=x^4-23 x^3 + 12x^2 + 15 x - 21=\Theta(x^4)\).</p>
+<blockquote>
+<p><strong>Proof \#1</strong></p>
+<p>We will use the definition of \(\Theta\). It is clear that when \(x\geq 1\), \[x^4-23 x^3 + 12x^2 + 15 x - 21\leq x^4+12 x^2+15 x \leq x^4+12 x^4+15 x^4= 28 x^4.\] Also, if \(x\geq 88\), then \(\frac{1}{2}x^4\geq 44x^3\) or \(-44x^3\geq -\frac{1}{2}x^4\), so we have that \[x^4-23 x^3 + 12x^2 + 15 x - 21\geq x^4-23 x^3 - 21\geq x^4 - 23 x^3 - 21 x^3= x^4 - 44 x^3\geq \frac{1}{2}x^4.\]</p>
+<p>Thus \[\frac{1}{2}x^4\leq x^4-23 x^3 + 12x^2 + 15 x - 21\leq 28 x^4, \mbox{ for all } x\geq 88.\] We have shown that \(f(x)=x^4-23 x^3 + 12x^2 + 15 x - 21=\Theta(x^4).\)  \(\square\)</p>
+<p>If you did not follow the steps in this first proof, you should really review your algebra rules.</p>
+<p><strong>Proof \#2</strong></p>
+<p>Since</p>
+<div class="display-math">\[
+\begin{aligned}
+\lim_{x\rightarrow\infty}\frac{
+x^4-23 x^3 + 12x^2 + 15 x - 21}{x^4}
+&amp; =&amp; \lim_{x\rightarrow\infty}
+\frac{x^4}{ x^4} -\frac{23x^3}{ x^4} + \frac{12x^2}{ x^4} 
++ \frac{15x}{ x^4} - \frac{21}{ x^4}\\
+&amp; =&amp; \lim_{x\rightarrow\infty}
+1 - \frac{23}{ x}+ \frac{12}{ x^2} + \frac{15}{ x^3} - \frac{21}{ x^4}\\
+&amp;=&amp; \lim_{x\rightarrow\infty}
+1 - 0 + 0 + 0 - 0=1,
+\end{aligned}
+\]</div>
+<p>\(f(x)=x^4-23 x^3 + 12x^2 + 15 x - 21=\Theta(x^4)\)  \(\square\)</p>
+</blockquote>
+</div>
+<div class="example-box">
+<p class="box-title"><strong>Example</strong></p>
+<p>Prove that \(n(n+1)/2=O(n^3)\) using Theorem 8.</p>
+<div class="proof-block">
+<p class="box-title"><strong>Proof</strong></p>
+<p>Because \({\displaystyle\lim_{n\rightarrow\infty}\frac{n(n+1)/2}{n^3} = \lim_{n\rightarrow\infty}\frac{n^2+n}{2n^3} = \lim_{n\rightarrow\infty}\frac{1}{2n} +\frac{1}{2n^2}= 0+0=0}\), \(n(n+1)/2=o(n^3)\), which implies that \(n(n+1)/2=O(n^3)\).</p>
+</div>
+</div>
+<div class="exercise-box">
+<p class="box-title"><strong>Exercise</strong></p>
+<p>Prove that \(n(n+1)/2=\Theta(n^2)\) using Theorem 8.</p>
+<button type="button" class="show-answer latex-answer-toggle" data-answer-target="latex-answer-25" aria-expanded="false">Show Answer</button>
+<div id="latex-answer-25" class="answer latex-answer" hidden>
+<p>Notice that \({\displaystyle \lim_{n\rightarrow\infty}\frac{n(n+1)/2}{n^2} = \lim_{n\rightarrow\infty}\frac{n^2+n}{2n^2} = \lim_{n\rightarrow\infty}\frac{1}{2} +\frac{1}{2n}= \frac{1}{2}+0=\frac{1}{2}}\), so \(n(n+1)/2=\Theta(n^2)\).</p>
+</div>
+</div>
+<div class="exercise-box">
+<p class="box-title"><strong>Exercise</strong></p>
+<p>Prove that \(2^x=O(3^x)\)</p>
+<ol class="spaced">
+<li>Using Theorem 8.
+<li>Using the definition of Big-O.
+</ol>
+<button type="button" class="show-answer latex-answer-toggle" data-answer-target="latex-answer-26" aria-expanded="false">Show Answer</button>
+<div id="latex-answer-26" class="answer latex-answer" hidden>
+<p>(a) Since \({\displaystyle \lim_{x\rightarrow\infty} \frac{2^x}{ 3^x} = \lim_{x\rightarrow\infty} \left(\frac{2}{ 3}\right)^x = 0}\), the result follows.</p>
+<p>(b) If \(x\geq 1\), then clearly \((3/2)^x\geq 1\), so \(2^x\leq 2^x\left(\frac{3}{ 2}\right)^x= \left(\frac{2\times 3}{ 2}\right)^x=3^x.\) Therefore, \(2^x=O(3^x)\).</p>
+</div>
+</div>
+<p>Now is probably a good time to recall a very useful theorem for computing limits, called <strong>l'Hopital's Rule</strong>.  The version presented here is restricted to limits where the variable approaches infinity since those are the only limits of interest in our context.</p>
+<div class="theorem">
+<p class="box-title"><strong>Theorem: l'Hopital's Rule</strong></p>
+<p>Let \(f(x)\) and \(g(x)\) be differentiable functions. If \[\lim_{x\rightarrow\infty}f(x)=\lim_{x\rightarrow\infty}g(x)=0 \mbox{ or}\] \[\lim_{x\rightarrow\infty}f(x)=\lim_{x\rightarrow\infty}g(x)=\infty,\] then \[ \lim_{x\rightarrow\infty} \frac{f(x)}{ g(x)}= \lim_{x\rightarrow\infty} \frac{f^{\prime}(x)}{ g^{\prime}(x)}\]</p>
+</div>
+<div class="example-box">
+<p class="box-title"><strong>Example</strong></p>
+<p>Since \(\displaystyle \lim_{x\rightarrow\infty} 3x=\infty\) and \(\displaystyle \lim_{x\rightarrow\infty} x^2=\infty\),</p>
+<div class="display-math">\[
+\begin{aligned}
+\lim_{x\rightarrow\infty} \frac{3x}{x^2}
+&amp;=&amp;\lim_{x\rightarrow\infty} \frac{3}{2x} \, \, \, \,   \mbox{(l'Hopital)}\\
+&amp;=&amp;\frac{3}{2}\lim_{x\rightarrow\infty} \frac{1}{x}\\
+&amp;=&amp;\frac{3}{2}\,0\\
+&amp;=&amp;0.
+\end{aligned}
+\]</div>
+</div>
+<div class="example-box">
+<p class="box-title"><strong>Example</strong></p>
+<p>Since \(\displaystyle \lim_{x\rightarrow\infty} 3x^2+4x-9=\infty\) and \(\displaystyle \lim_{x\rightarrow\infty} 12x=\infty\),</p>
+<div class="display-math">\[
+\begin{aligned}
+\lim_{x\rightarrow\infty} \frac{3x^2+4x-9}{12x}
+&amp;=&amp;\lim_{x\rightarrow\infty} \frac{6x+4}{12} \, \, \, \,   \mbox{(l'Hopital)}\\
+&amp;=&amp;\lim_{x\rightarrow\infty} \frac{1}{2}x+\frac{1}{3}\\
+&amp;=&amp;\infty
+\end{aligned}
+\]</div>
+</div>
+<p>Now let's apply it to proving asymptotic bounds.</p>
+<div class="example-box">
+<p class="box-title"><strong>Example</strong></p>
+<p>Show that \(\log x=O(x)\).</p>
+<div class="proof-block">
+<p class="box-title"><strong>Proof</strong></p>
+<p>Notice that</p>
+<div class="display-math">\[
+\begin{aligned}
+\lim_{x\rightarrow\infty} \frac{\log x}{ x}
+&amp;=&amp;\lim_{x\rightarrow\infty} \frac{\frac{1}{ x}}{ 1}\, \, \, \,  \mbox{(l'Hopital)} \\
+&amp;=&amp;\lim_{x\rightarrow\infty} \frac{1}{ x}= 0.
+\end{aligned}
+\]</div>
+<p>Therefore, \(\log x=O(x)\).</p>
+</div>
+<p>We should mention that applying l'Hopital's Rule in the first step is legal since \[\lim_{x\rightarrow\infty} \log x = \lim_{x\rightarrow\infty}  x=\infty.\]</p>
+</div>
+<div class="example-box">
+<p class="box-title"><strong>Example</strong></p>
+<p>Prove that \(x^3=O(2^x)\).</p>
+<div class="proof-block">
+<p class="box-title"><strong>Proof</strong></p>
+<div class="display-math">\[
+\begin{aligned}
+\lim_{x\rightarrow\infty} \frac{x^3}{2^x}
+&amp;=&amp;\lim_{x\rightarrow\infty} \frac{3x^2}{2^x\ln(2)}\, \, \, \,  \mbox{(l'Hopital)} \\
+&amp;=&amp;\lim_{x\rightarrow\infty} \frac{6x}{2^x\ln^2(2)}\, \, \, \,  \mbox{(l'Hopital)} \\
+&amp;=&amp;\lim_{x\rightarrow\infty} \frac{6}{2^x\ln^3(2)}\, \, \, \,  \mbox{(l'Hopital)} \\
+&amp;=&amp;0.
+\end{aligned}
+\]</div>
+<p>Therefore, \(x^3=O(2^x)\).</p>
+<p>As in the previous example, at each step we checked that the functions on both the top and bottom go to infinity as \(n\) goes to infinity before applying l'Hopital's Rule. Notice that we did not apply it in the final step since \(6\) does not go to infinity.</p>
+</div>
+</div>
+<div class="evaluate-box">
+<p class="box-title"><strong>Evaluate</strong></p>
+<p>Prove that \(7^x\) is an upper bound for \(5^x\), but that it is not a tight bound.</p>
+<ol class="spaced student-solution-list">
+<li>
+<p>This is true if and only if \(7^x\) always grows faster than \(5^x\) which means \(7^x-5^x&gt;0\) for all \(x\neq 0\). If it is a tight bound, then \(7^x-5^x=0\), which is only true for \(x=0\). So \(7^x\) is an upper bound on \(5^x\), but not a tight bound.</p>
+<p><span class="answer-space"></span></p>
+<li>
+<p>\({\displaystyle \lim_{x\rightarrow \infty}\frac{5^x}{7^x} = \lim_{x\rightarrow \infty}\frac{x\log 5}{x\log 7}.}\) Both go to infinity, but \(x\log 7\) gets there faster, showing that \(5^x=O(7^x)\).</p>
+<p><span class="answer-space"></span></p>
+<li>
+<p>\({\displaystyle \lim_{x\rightarrow \infty}\frac{7^x}{5^x} = \lim_{x\rightarrow \infty}\left(\frac{7}{5}\right)^x=\infty}\) since \(7/5&gt;1\).  Thus \(5^x=O(7^x)\) by the limit theorem.</p>
+<p><span class="answer-space"></span></p>
+</ol>
+<button type="button" class="show-answer latex-answer-toggle" data-answer-target="latex-answer-27" aria-expanded="false">Show Answer</button>
+<div id="latex-answer-27" class="answer latex-answer" hidden>
+<ol class="spaced student-solution-list">
+<li>
+<p>\(7^x\) grows faster than \(5^x\) does not mean \(7^x-5^x&gt;0\) for all \(x\neq 0\). For one thing, we are really only concerned about positive values of \(x\). Further, we are specifically concerned about very large values of \(x\). In other words, we want something to be true for all \(x\) that are `large enough'. Also, this statement does not take into account constant factors. Similarly, a tight bound does <em>not</em> imply that \(7^x-5^x=0\). The bottom line:  This one is way off.  They are not conveying an understanding of what `upper bound' really means, and they certainly haven't proven anything. Frankly, I don't think they have a clue what they are trying to say in this proof.</p>
+<li>
+<p>This one has several problems.  First, the application of l'Hopital's rule is incorrect. The result should be \(\displaystyle\lim_{x\rightarrow \infty}\frac{5^x\log 5}{7^x\log 7}\), which should make it obvious that l'Hopital's rule doesn't actually help in this case. (The key to this one is to do a little algebra.) The next problem is the statement `but \(x\log 7\) gets there faster'. What exactly does that mean? Asymptotically faster, or just faster?  If the former, it needs to be proven.  If the latter, that isn't enough to prove relative growth rates.  Finally, even if this showed that \(5^x=O(7^x)\), that only shows that \(7^x\) is an upper bound on \(5^x\).  It does not show that the bound is not tight. The bottom line is that bad algebra combined with vague statements falls way short of a correct proof.</p>
+<li>
+<p>This proof is <em>very</em> close to being correct.  The main problem is that they only stated that \(5^x=O(7^x)\), but they also needed to show that \(5^x\neq\Theta(7^x)\).  It turns out that the theorem they mention also gives them that. So all they needed to add is `and \(5^x\neq \Theta(7^x)\)' at the end. Technically, there is another problem&mdash;they should have taken the limit of \(5^x/7^x\).  What they really showed using the limit theorem is that \(7^x=\omega(5^x)\), which is equivalent to \(5^x=o(7^x)\).  It isn't a major problem, but technically the limit theorem does not directly give them the result they say it does. If you are trying to prove that \(f(x)\) is bounded by \(g(x)\), put \(f(x)\) on the top and \(g(x)\) on the bottom.</p>
+</ol>
+</div>
+</div>
+<p>We should mention that it is important to remember to verify that l'Hopital's Rule applies before just blindly taking derivatives. You can actually get the incorrect answer if you apply it when it should not be applied.</p>
+<div class="example-box">
+<p class="box-title"><strong>Example</strong></p>
+<p>Find and prove a simple tight bound for  \(\sqrt{5n^2-4n+12}\).</p>
+<div class="solution-block">
+<p class="box-title"><strong>Solution</strong></p>
+<p>We will show that \(\sqrt{5n^2-4n+12}=\Theta(n)\). Since we are letting \(n\) go to infinity, we can assume that \(n&gt;0\).  In this case, \(n=\sqrt{n^2}\). Using this, we can see that \[\lim_{n\rightarrow\infty}\frac{\sqrt{5n^2-4n+12}}{n} =\lim_{n\rightarrow\infty}\sqrt{\frac{5n^2-4n+12}{n^2}} =\lim_{n\rightarrow\infty}\sqrt{5 - \frac{4}{n}+\frac{12}{n^2}} =\sqrt{5}. \] Therefore, \(\sqrt{5n^2-4n+12}=\Theta(n)\).</p>
+</div>
+</div>
+<div class="exercise-box">
+<p class="box-title"><strong>Exercise</strong></p>
+<p>Find and prove a good simple upper bound on \(n\ln (n^2+1) + n^2\ln n\).</p>
+<ol class="spaced">
+<li>Using the definition of Big-O.
+<li>Using Theorem 8.
+<p>You will probably need to use l'Hopital's Rule a few times.</p>
+</ol>
+<button type="button" class="show-answer latex-answer-toggle" data-answer-target="latex-answer-28" aria-expanded="false">Show Answer</button>
+<div id="latex-answer-28" class="answer latex-answer" hidden>
+<p>You should have come up with \(n^2\log n\) for the upper bound.  If you didn't, now that you know the answer, go back and try to write the proofs before reading them here. (a) If \(n&gt; 1\), \[\ln (n^2+1) \leq \ln (n^2+n^2)= \ln (2 n^2) = ( \ln 2+ \ln n^2) \leq ( \ln n+ 2\ln n) =3\ln n\] Thus when \(n &gt; 1\), \[ n\ln (n^2+1) + n^2\ln n\leq n 3\ln n+n^2\ln n\leq 3 n^2 \ln n+n^2\ln n\leq  4 n^2 \ln n. \] Thus, \(n\ln (n^2+1) + n^2\ln n=O(n^2 \ln n).\) (You may have different algebra in your proof.  Just make certain that however you did it that it is correct.)</p>
+<p>(b)</p>
+<div class="display-math">
+\[
+\begin{array}[t]{llll}
+\displaystyle\lim_{x\rightarrow\infty} \dfrac{{n\ln (n^2+1) + n^2\ln n}}{ n^2\ln n} &amp; =&amp; \displaystyle\lim_{x\rightarrow\infty} \dfrac{n\ln (n^2+1)}{ n^2\ln n}  + 1\\[.125in]
+&amp; =&amp; \displaystyle1+ \lim_{x\rightarrow\infty} \dfrac{\ln (n^2+1)}{ n\ln n} \\[.125in]
+&amp; =&amp; \displaystyle1+ \lim_{x\rightarrow\infty} \dfrac{\dfrac{2n}{n^2+1}}{1\cdot\ln n+n\cdot\frac{1}{n}} &amp;\mbox{(l'Hopital)}\\[.125in]
+&amp; =&amp; \displaystyle1+ \lim_{x\rightarrow\infty} \dfrac{2n}{(n^2+1)(\ln n+1)} \\[.125in]
+&amp; =&amp;\displaystyle 1+ \lim_{x\rightarrow\infty} \dfrac{2}{2n(\ln n + 1) + (n^2+1)\cdot\frac{1}{n}} &amp;\mbox{(l'Hopital)}\\[.125in]
+&amp; =&amp;\displaystyle 1+ \lim_{x\rightarrow\infty} \dfrac{2}{2n(\ln n + 1) + n+\frac{1}{n}}\\
+&amp;=&amp;1+0=1.
+\end{array}
+\]
+</div>
+<p>Therefore, \(n\ln (n^2+1) + n^2\ln n=\Theta(n^2\log n)\).</p>
+</div>
+</div>
+<div class="example-box">
+<p class="box-title"><strong>Example</strong></p>
+<p>Find and prove a simple tight bound for  \(n\log(n^2)+(n-1)^2\log(n/2)\).</p>
+<div class="solution-block">
+<p class="box-title"><strong>Solution</strong></p>
+<p>First notice that \[n\log(n^2)+(n-1)^2\log(n/2)=2n\log n + (n-1)^2(\log n - \log 2).\] We can see that this is \(\Theta(n^2\log n)\) since</p>
+<div class="display-math">\[
+\begin{aligned}
+\lim_{n\rightarrow\infty}\frac{n\log(n^2)+(n-1)^2\log(n/2)}{n^2\log n}
+&amp;=&amp;\lim_{n\rightarrow\infty}\frac{2n\log n + (n-1)^2(\log n - \log 2)}{n^2\log n}\\
+&amp;=&amp;\lim_{n\rightarrow\infty}\frac{2}{n} + \frac{(n-1)^2}{n^2}\frac{(\log n - \log 2)}{\log n}\\
+&amp;=&amp;\lim_{n\rightarrow\infty}\frac{2}{n} + \left(1-\frac{1}{n}\right)^2\left(1-\frac{\log 2}{\log n}\right)\\
+&amp;=&amp;0+(1-0)^2(1-0) = 1.
+\end{aligned}
+\]</div>
+</div>
+</div>
+<div class="exercise-box">
+<p class="box-title"><strong>Exercise</strong></p>
+<p>Find and prove a simple tight bound for \((n^2-1)^5\). You may use either the formal definition of \(\Theta\) or Theorem 8. (The solution uses Theorem 8.)</p>
+<button type="button" class="show-answer latex-answer-toggle" data-answer-target="latex-answer-29" aria-expanded="false">Show Answer</button>
+<div id="latex-answer-29" class="answer latex-answer" hidden>
+<p>We can see that \((n^2-1)^5=\Theta(n^{10})\) since \[\lim_{n\rightarrow\infty}\frac{(n^2-1)^5}{n^{10}} =\lim_{n\rightarrow\infty}\left(\frac{n^2-1}{n^2}\right)^5 =\lim_{n\rightarrow\infty}\left(1 - \frac{1}{n^2}\right)^5 =1 .\]</p>
+</div>
+</div>
+<div class="exercise-box">
+<p class="box-title"><strong>Exercise</strong></p>
+<p>Find and prove a simple tight bound for \(2^{n+1}+5^{n-1}\). You may use either the formal definition of \(\Theta\) or Theorem 8. (The solution uses Theorem 8.)</p>
+<button type="button" class="show-answer latex-answer-toggle" data-answer-target="latex-answer-30" aria-expanded="false">Show Answer</button>
+<div id="latex-answer-30" class="answer latex-answer" hidden>
+<p>The following limit shows that \(2^{n+1}+5^{n-1}=\Theta(5^n)\). \[\lim_{n\rightarrow\infty}\frac{2^{n+1}+5^{n-1}}{5^n} =\lim_{n\rightarrow\infty}\frac{2^{n+1}}{5^n}+\frac{5^{n-1}}{5^n} =\lim_{n\rightarrow\infty}2\left(\frac{2}{5}\right)^n+\frac{1}{5} =0+\frac{1}{5}. \] Note that we could also have shown that \(2^{n+1}+5^{n-1}=\Theta(5^{n-1})\), but that is not as simple of a function.</p>
+</div>
+</div>
+</section>
+</body>
+</html>

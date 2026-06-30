@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Asymptotic Properties and Proofs</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <script src="/DAIADS/scripts/chapterScripts.js"></script>
+  <script src="latex-translation.js"></script>
+  <link rel="stylesheet" href="/DAIADS/css/style.css">
+  <link rel="stylesheet" href="/DAIADS/css/chapter.css?a=b">
+  <link rel="stylesheet" href="latex-translation.css">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-DQ5LVZVFDC');
+  </script>
+  <style>
+    .filled-answer {
+  background-color: #fff3cd;
+  padding: 0.35em 0.5em;
+  border-radius: 4px;
+  margin: 0.5em 0;
+}
+
+.filled-answer mjx-container {
+  margin: 0.25em 0 !important;
+}
+
+mark {
+  background-color: #fff3cd;
+  padding: 0.05em 0.2em;
+  border-radius: 3px;
+}
+  </style>
+</head>
+<body class="latex-translation">
+  <h1>Asymptotic Properties and Proofs</h1>
+
+  <section id="introduction" section-title="Introduction">
+    <h2>Introduction</h2>
+    <p>In this section, we will present some of the properties of Big-O, \(\Theta\), and \(\Omega\) notation.  We will also provide proofs for some of the results.  The rest can be proven without too much difficulty using the definitions of the notations.</p>
+  </section>
+
+<section id="properties-of-the-notations" section-title="Properties of the Notations">
+<h2>Properties of the Notations</h2>
+<p>
+  Before we present the properties of asymptotic notation, it helps to recall
+  a few properties of ordinary comparisons. For real numbers \(x\), \(y\), and
+  \(z\), you already know facts such as these:
+</p>
+
+<table class="example-table left-align">
+  <thead>
+    <tr>
+      <th>Property</th>
+      <th>Ordinary comparison</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Transitivity</td>
+      <td>If \(x\leq y\) and \(y\leq z\), then \(x\leq z\).</td>
+    </tr>
+    <tr>
+      <td>Multiplying by a positive constant</td>
+      <td>If \(x\leq y\) and \(a&gt;0\), then \(a\,x\leq a\,y\).</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>
+  Asymptotic notation has similar properties. You can think of \(O\) as being
+  somewhat like \(\leq\), \(\Theta\) as being somewhat like \(=\), and \(\Omega\)
+  as being somewhat like \(\geq\). Many familiar properties of \(\leq\), \(=\),
+  and \(\geq\) have analogs for \(O\), \(\Theta\), and \(\Omega\).
+</p>
+
+<p>
+  The analogy is useful, but it is not exact. For example, constants cannot
+  simply be ignored in ordinary inequalities, but constant factors can be ignored
+  in asymptotic notation. So the familiar comparison symbols are a guide, not a
+  replacement for the definitions.
+</p>
+
+<div class="theorem">
+<p class="box-title"><strong>Theorem 1: Transitivity</strong></p>
+<p>The transitive property holds for Big-O, \(\Theta\), and \(\Omega\).  That is,</p>
+<ul class="spaced">
+  <li>If \(f(n)=O(g(n))\) and \(g(n)=O(h(n))\), then \(f(n)=O(h(n))\).</li>
+  <li>If \(f(n)=\Theta(g(n))\) and \(g(n)=\Theta(h(n))\), then \(f(n)=\Theta(h(n))\).</li>
+  <li>If \(f(n)=\Omega(g(n))\) and \(g(n)=\Omega(h(n))\), then \(f(n)=\Omega(h(n))\).</li>
+</ul>
+<div class="proof-block">
+<p class="box-title"><strong>Proof</strong></p>
+<p>Left as an exercise.</p>
+</div>
+</div>
+<p>Theorem 1 is pretty intuitive. For instance, when applied to Big-O notation, Theorem 1 is essentially stating that if \(g(n)\) is an upper bound on \(f(n)\) and \(h(n)\) is an upper bound on \(g(n)\), then \(h(n)\) is an upper bound for \(f(n)\). Put another way, if \(f(n)\) grows no faster than \(g(n)\) and \(g(n)\) grows no faster than \(h(n)\), then \(f(n)\) grows no faster than \(h(n)\). This makes perfect sense if you think about it for a few minutes.</p>
+<div class="example-box">
+<p class="box-title"><strong>Example 1</strong></p>
+<p>Let's take it for granted that \(4n^2+3n+17=O(n^3)\) and \(n^3=O(n^4)\) 
+  (both of which you should be able to easily prove at this point). 
+  According to Theorem 1, we can conclude that \(4n^2+3n+17=O(n^4)\).</p>
+</div>
+<div class="theorem">
+<p class="box-title"><strong>Theorem 2: Scaling by a constant factor</strong></p>
+<p>If \(f(n)= O(g(n))\), then for any \(k &gt; 0\), \(k f(n) = O(g(n))\). Similarly for \(\Theta\) and \(\Omega\).</p>
+<div class="proof-block">
+<p class="box-title"><strong>Proof</strong></p>
+<p>We will give the proof for Big-O notation. The other two proofs are similar. Assume \(f(n)= O(g(n))\).  Then by the definition of Big-O, there are positive constants \(c\) and \(n_0\) such that \(f(n)\leq c\,g(n)\) for all \(n\geq n_0\). Thus, if \(n\geq n_0\), \[k\,f(n)\leq k\,c\,g(n)=c^{\prime}g(n),\] where \(c^{\prime}=k\,c\) is a positive constant. By the definition of Big-O, \(k f(n) = O(g(n))\).</p>
+</div>
+</div>
+
+<div class="example-box">
+<p class="box-title"><strong>Example 2</strong></p>
+<p>Example 6 showed that \(\frac{1}{2} n^{2} + 3\,n=\Theta(n^{2})\). We can use Theorem 2 to conclude that \(n^{2} + 6\,n=\Theta(n^{2})\) since \(n^{2} + 6\,n=2\left(\frac{1}{2} n^{2} + 3\,n\right).\)</p>
+</div>
+
+<p>Perhaps now is a good time to point out a related issue.  Typically, we do not include constants inside asymptotic notations.  For instance, although it is technically correct to say that \(34n^3+2n^2-45n+5=O(5n^3)\) (or \(O(50n^3)\), or any other constant you care to place there), it is best to just say it is \(O(n^3)\). In particular, \(\Theta(1)\) is often preferable to \(\Theta(k)\).</p>
+
+<div class="theorem">
+<p class="box-title"><strong>Theorem 3: Sums</strong></p>
+
+<p>
+  If \(f_{1}(n) = O(g_{1}(n))\) and \(f_{2}(n) = O(g_{2}(n))\), then
+  \[
+    f_{1}(n)+f_{2}(n) = O(g_{1}(n)+g_{2}(n))=O(\max\{g_{1}(n),g_{2}(n)\}).
+  \]
+  The first part says that the sum of the two functions is bounded above by a
+  constant multiple of \(g_1(n)+g_2(n)\). The second part uses the fact that,
+  because \(g_1\) and \(g_2\) are nonnegative,
+  \[
+    g_1(n)+g_2(n)\leq 2\max\{g_1(n),g_2(n)\}.
+  \]
+  So using \(g_1(n)+g_2(n)\) or \(\max\{g_1(n),g_2(n)\}\) gives the same Big-O
+  bound up to a constant factor. The statement holds if we replace \(O\) with
+  \(\Theta\) or \(\Omega\) throughout; the proofs are similar.
+</p>
+
+<div class="proof-block">
+<p class="box-title"><strong>Proof</strong></p>
+<p>We will prove the assertion for Big-O. 
+  Assume \(f_{1}(n) = O(g_{1}(n))\) and \(f_{2}(n) = O(g_{2}(n))\). 
+  Then there exist positive constants \(c_1\) and \(n_1\) such that for all \(n\geq n_1\), 
+  \[f_1(n)\leq c_1g_1(n),\] and there exist positive constants \(c_2\) and \(n_2\) 
+  such that for all \(n\geq n_2\), \[f_2(n)\leq c_2g_2(n).\] 
+  Let \(c_0=\max\{c_1,c_2\}\) and \(n_0=\max\{n_1,n_2\}\). 
+  Since \(n_0\) is at least as large as \(n_1\) and \(n_2\), 
+  then for all \(n\geq n_0\), \(f_1(n)\leq c_1g_1(n)\) and \(f_2(n)\leq c_2g_2(n)\). 
+  Similarly, if \(f_1(n)\leq c_1g_1(n)\), then clearly \(f_1(n)\leq c_0g_1(n)\) since 
+  \(c_0\) is at least as big as \(c_1\) (and similarly for \(f_2\)). 
+  Then for all \(n\geq n_0\), we have</p>
+<div class="display-math">\[
+\begin{aligned}
+f_1(n)+f_2(n)&amp;\leq c_1g_1(n)+c_2g_2(n)\\
+&amp;\leq c_0g_1(n)+c_0g_2(n)\\
+&amp;= c_0[g_1(n)+g_2(n)]\\
+&amp;\leq c_0[\max\{g_1(n),g_2(n)\}+\max\{g_1(n),g_2(n)\}]\\
+&amp;= 2c_0\max\{g_1(n),g_2(n)\}\\
+&amp;= c\max\{g_1(n),g_2(n)\},
+\end{aligned}
+\]</div>
+<p>where \(c=2c_0\). By the definition of Big-O, we have shown that \(f_{1}(n)+f_{2}(n)=O(\max\{g_{1}(n),g_{2}(n)\})\).</p>
+</div>
+<p>Notice that in this proof we used \(c=2\max\{c_1,c_2\}\) and \(n_0=\max\{n_1,n_2\}\).</p>
+</div>
+<p>
+  Theorem 3 is the reason we usually keep only the fastest-growing term when
+  simplifying a sum inside asymptotic notation. For example, \(O(n^2+n^3)\)
+  is usually written as \(O(n^3)\). More generally, when several terms are
+  added together, the term with the largest asymptotic growth rate determines
+  the Big-O bound. The lower-growth terms are still present in the original
+  function, but they do not change the asymptotic upper bound.
+</p>
+
+<div class="example-box">
+<p class="box-title"><strong>Example 3</strong></p>
+<p>Since we have previously shown that \(5n^2-3n+20=O(n^2)\) and that \(3n^3-2n^2+13n-15=O(n^3)\), we know that \((5n^2-3n+20) +(3n^3-2n^2+13n-15)=O(n^2+n^3)=O(n^3)\).</p>
+</div>
+<div class="theorem">
+<p class="box-title"><strong>Theorem 4: Products</strong></p>
+<p>If \(f_{1}(n) = O(g_{1}(n))\) and \(f_{2}(n) = O(g_{2}(n))\), then \[f_{1}(n)f_{2}(n) = O(g_{1}(n)g_{2}(n)).\] Similarly for \(\Theta\) and \(\Omega\).</p>
+</div>
+<div class="example-box">
+<p class="box-title"><strong>Example 4</strong></p>
+<p>Since we have previously shown that \(5n^2-3n+20=O(n^2)\) and that \(3n^3-2n^2+13n-15=O(n^3)\), we know that \((5n^2-3n+20)(3n^3-2n^2+13n-15)=O(n^2n^3)=O(n^5)\). Notice that we could arrive at this same conclusion by multiplying the two polynomials and taking the highest term.  However, this would require a lot more work than is necessary.</p>
+</div>
+<p>The next theorem essentially says that if \(g(n)\) is an upper bound on \(f(n)\), then \(f(n)\) is a lower bound on \(g(n)\).  This makes perfect sense if you think about it.</p>
+<div class="theorem">
+<p class="box-title"><strong>Theorem 5: Big-O/Big-Omega Duality</strong></p>
+<p>\(f(n)=O(g(n))\) iff \(g(n)=\Omega(f(n))\).</p>
+</div>
+<p>
+  There are many other properties of asymptotic notation, but these are the ones
+  we will use most often. The main point is not to memorize a long list of rules.
+  Instead, make sure you understand why these properties follow from the
+  definitions. When in doubt, return to the definitions of \(O\), \(\Omega\), and
+  \(\Theta\), choose appropriate constants, and check that the required inequality
+  holds for all sufficiently large \(n\).
+</p>
+</section>
+
+<section id="examples-and-practice" section-title="Examples and Practice">
+<h2>Examples and Practice</h2>
+
+<p>It turns out that \(\Theta\) defines an equivalence relation on the set of functions 
+  from the positive integers \(\mathbb{Z}^{+}\) to the positive integers \(\mathbb{Z}^{+}\).
+  That is, it defines a partition on these functions, with two functions being in the same 
+  partition (or the same equivalence class) if and only if they have the same growth rate. 
+  But don't take our word for it.  You will help to prove this fact next.</p>
+
+  <div class="exercise-box">
+<p class="box-title"><strong>Fill in the Blank</strong></p>
+
+<p>
+  Let \(R\) be the relation on the set of functions from
+  \(\mathbb{Z}^{+}\) to \(\mathbb{Z}^{+}\) such that \((f,g)\in R\)
+  if and only if \(f=\Theta(g)\). Show that \(R\) is an equivalence relation.
+  I recommend that you rewrite the whole proof on paper and then compare your answer
+  with the given one.
+</p>
+
+<div class="proof-block">
+<p class="box-title"><strong>Proof</strong></p>
+
+<p>We need to show that \(R\) is reflexive, symmetric, and transitive.</p>
+
+<p>
+  <strong>Reflexive:</strong> Since
+  \(1\cdot f(n)\leq f(n) \leq 1\cdot f(n)\) for all \(n\geq 1\),
+  \(f(n)=\Theta(f(n))\), so \(R\) is reflexive.
+</p>
+
+<p>
+  <strong>Symmetric:</strong> If \(f(n)=\Theta(g(n))\), then there exist
+  positive constants \(c_1\), \(c_2\), and \(n_0\) such that
+</p>
+
+<p><span class="answer-space"></span></p>
+
+<p>
+  This implies that
+  \[
+    g(n)\leq \frac{1}{c_1} f(n)
+    \mbox{ and }
+    g(n)\geq \frac{1}{c_2} f(n)
+    \mbox{ for all } n\geq n_0.
+  \]
+  This is equivalent to
+</p>
+
+<div class="display-math">\[
+  \underline{\hspace{2.5cm}}
+  \leq g(n) \leq
+  \underline{\hspace{2.5cm}}
+  \mbox{ for all } n\geq n_0.
+\]</div>
+
+<p>
+  Thus \(g(n)=\Theta(f(n))\), and \(R\) is symmetric.
+</p>
+
+<p>
+  <strong>Transitive:</strong> If \(f(n)=\Theta(g(n))\), then there exist
+  positive constants \(c_1\), \(c_2\), and \(n_0\) such that
+  \[
+    c_1 g(n)\leq f(n) \leq c_2 g(n)
+    \mbox{ for all } n\geq n_0.
+  \]
+  Similarly, if \(g(n)=\Theta(h(n))\), then there exist positive constants
+  \(c_3\), \(c_4\), and \(n_1\) such that
+</p>
+
+<p><span class="answer-space"></span></p>
+
+<p>
+  Then
+  \[
+    f(n)\geq c_1\, g(n) \geq c_1c_3\, h(n)
+    \mbox{ for all } n\geq \max\{n_0,n_1\},
+  \]
+  and
+</p>
+
+<div class="display-math">\[
+  f(n)\leq \underline{\hspace{2.5cm}}\, g(n)
+  \leq \underline{\hspace{2.5cm}}\, h(n)
+  \mbox{ for all } n\geq \underline{\hspace{2.5cm}}.
+\]</div>
+
+<div class="display-math">\[
+  \mbox{Thus, }
+  \underline{\hspace{2.5cm}}
+  \leq f(n) \leq
+  \underline{\hspace{2.5cm}}
+  \mbox{ for all } n\geq \max\{n_0,n_1\}.
+\]</div>
+
+<p>
+  Since \(c_1c_3\) and \(c_2c_4\) are both positive constants,
+  \(f(n)=\underline{\hspace{2.5cm}}\) by the definition of
+  <span class="blank-line"></span>, so \(R\) is <span class="blank-line"></span>.
+</p>
+</div>
+
+<button type="button" class="show-answer latex-answer-toggle" data-answer-target="latex-answer-15" aria-expanded="false">Show Answer</button>
+<div id="latex-answer-15" class="answer latex-answer" hidden>
+
+<div class="proof-block">
+<p class="box-title"><strong>Completed Proof</strong></p>
+
+<p>We need to show that \(R\) is reflexive, symmetric, and transitive.</p>
+
+<p>
+  <strong>Reflexive:</strong> Since
+  \(1\cdot f(n)\leq f(n) \leq 1\cdot f(n)\) for all \(n\geq 1\),
+  \(f(n)=\Theta(f(n))\), so \(R\) is reflexive.
+</p>
+
+<p>
+  <strong>Symmetric:</strong> If \(f(n)=\Theta(g(n))\), then there exist
+  positive constants \(c_1\), \(c_2\), and \(n_0\) such that
+</p>
+
+<div class="filled-answer">
+\[
+  c_1 g(n)\leq f(n) \leq c_2 g(n)
+  \mbox{ for all } n\geq n_0.
+\]
+</div>
+
+<p>
+  This implies that
+  \[
+    g(n)\leq \frac{1}{c_1} f(n)
+    \mbox{ and }
+    g(n)\geq \frac{1}{c_2} f(n)
+    \mbox{ for all } n\geq n_0.
+  \]
+  This is equivalent to
+</p>
+
+<div class="filled-answer">
+\[
+  \frac{1}{c_2}f(n)\leq g(n)\leq \frac{1}{c_1}f(n)
+  \mbox{ for all } n\geq n_0.
+\]
+</div>
+
+<p>
+  Thus \(g(n)=\Theta(f(n))\), and \(R\) is symmetric.
+</p>
+
+<p>
+  <strong>Transitive:</strong> If \(f(n)=\Theta(g(n))\), then there exist
+  positive constants \(c_1\), \(c_2\), and \(n_0\) such that
+  \[
+    c_1 g(n)\leq f(n) \leq c_2 g(n)
+    \mbox{ for all } n\geq n_0.
+  \]
+  Similarly, if \(g(n)=\Theta(h(n))\), then there exist positive constants
+  \(c_3\), \(c_4\), and \(n_1\) such that
+</p>
+
+<div class="filled-answer">
+\[
+  c_3 h(n)\leq g(n) \leq c_4 h(n)
+  \mbox{ for all } n\geq n_1.
+\]
+</div>
+
+<p>
+  Then
+  \[
+    f(n)\geq c_1\, g(n) \geq c_1c_3\, h(n)
+    \mbox{ for all } n\geq \max\{n_0,n_1\},
+  \]
+  and
+</p>
+
+<div class="filled-answer">
+\[
+  f(n)\leq c_2\, g(n) \leq c_2c_4\, h(n)
+  \mbox{ for all } n\geq \max\{n_0,n_1\}.
+\]
+</div>
+
+<p>
+  Thus,
+</p>
+
+<div class="filled-answer">
+\[
+  c_1c_3 h(n) \leq f(n) \leq c_2c_4 h(n)
+  \mbox{ for all } n\geq \max\{n_0,n_1\}.
+\]
+</div>
+
+<p>
+  Since \(c_1c_3\) and \(c_2c_4\) are both positive constants,
+  <mark>\(f(n)=\Theta(h(n))\)</mark> by the definition of
+  <mark>\(\Theta\)</mark>, so \(R\) is <mark>transitive</mark>.
+</p>
+</div>
+</div>
+</div>
+
+<div class="example-box">
+<p class="box-title"><strong>Example 5</strong></p>
+<p>The functions \(n^2\), \(3n^2-4n+4\), \(n^2+\log n\), and \(3n^2+n+1\) are all \(\Theta(n^2)\).  That is, they all have the same rate of growth and all belong to the same equivalence class.</p>
+</div>
+
+<p>Let's test your understanding of the material so far.</p>
+<div class="exercise-box">
+<p class="box-title"><strong>Exercise 1</strong></p>
+<p>
+  Answer each of the following true/false questions, giving a very brief justification or counterexample. 
+  Justifications can appeal to a definition and/or theorem. For counterexamples, use simple functions. For instance, \(f(n)=n\) and \(g(n)=n^2\).</p>
+
+<ol class="spaced" type="a">
+  <li>If \(f(n)=O(g(n))\), then \(g(n)=\Omega(f(n))\).</li>
+  <li>If \(f(n)=\Theta(g(n))\), then \(f(n)=\Omega(g(n))\) and \(f(n)=O(g(n))\).</li>
+  <li>If \(f_1(n)=O(g_1(n))\) and \(f_2(n)=O(g_2(n))\), then \(f_1(n)+f_2(n)=O(\max\{g_1(n),g_2(n)\})\).</li>
+  <li>\(f(n)=O(g(n))\) iff \(f(n)=\Theta(g(n))\).</li>
+  <li>\(f(n)=O(g(n))\) iff \(g(n)=O(f(n))\).</li>
+  <li>If \(f(n)=\Theta(g(n))\), then \(g(n)=\Theta(f(n))\).</li>
+  <li>If \(f(n)=o(g(n))\), then \(f(n)=O(g(n))\).</li>
+  <li>If \(f(n)=O(g(n))\) and \(g(n)=O(h(n))\), then \(f(n)=O(h(n))\).</li>
+</ol>
+
+<button type="button" class="show-answer latex-answer-toggle" data-answer-target="latex-answer-16" aria-expanded="false">Show Answer</button>
+<div id="latex-answer-16" class="answer latex-answer" hidden>
+<ol type="a">
+  <li>
+    T. By the Big-O/Big-Omega duality theorem.
+  </li>
+  <li>
+    T. By the theorem that \(f(n)=\Theta(g(n))\) iff \(f(n)=O(g(n))\) and \(f(n)=\Omega(g(n))\).
+  </li>
+  <li>
+    T. By the theorem for sums of functions.
+  </li>
+  <li>
+    F. The reverse implication is true, but the forward implication is not. For example, if
+    \(f(n)=n\) and \(g(n)=n^2\), then \(f(n)=O(g(n))\), but \(f(n)\neq \Theta(g(n))\).
+  </li>
+  <li>
+    F. For example, if \(f(n)=n\) and \(g(n)=n^2\), then \(f(n)=O(g(n))\), but
+    \(g(n)\neq O(f(n))\).
+  </li>
+  <li>
+    T. If \(f(n)=\Theta(g(n))\), then \(f\) and \(g\) have the same asymptotic growth rate,
+    so \(g(n)=\Theta(f(n))\).
+  </li>
+  <li>
+    T. If \(f(n)=o(g(n))\), then \(f\) grows asymptotically slower than \(g\), so it also
+    grows no faster than \(g\). Thus \(f(n)=O(g(n))\).
+  </li>
+  <li>
+    T. By the transitive property of Big-O.
+  </li>
+</ol>
+</div>
+</div>
+
+<div class="exercise-box">
+<p class="box-title"><strong>Exercise 2</strong></p>
+<p>Answer each of the following true/false questions, giving a very brief justification or counterexample.</p>
+
+<ol class="spaced" type="a">
+  <li>\(3n+7=O(n^2)\).</li>
+  <li>\(3n+7=\Theta(n^2)\).</li>
+  <li>\(5n^2-4n+9=\Theta(n^2)\).</li>
+  <li>\(n^2=\Omega(n\log n)\).</li>
+  <li>\(\log n=\Theta(\log_2 n)\).</li>
+  <li>\(n=o(n^2)\).</li>
+  <li>\(4n^3+2n=O(n^2)\).</li>
+  <li>\(n^2+3n=O(n^2+n)\).</li>
+</ol>
+
+<button type="button" class="show-answer latex-answer-toggle" data-answer-target="latex-answer-17" aria-expanded="false">Show Answer</button>
+<div id="latex-answer-17" class="answer latex-answer" hidden>
+<ol type="a">
+  <li>
+    T. Linear growth is no faster than quadratic growth, so \(3n+7=O(n^2)\).
+  </li>
+  <li>
+    F. \(3n+7\) grows linearly, not quadratically. For instance, \(3n+7=O(n)\), but
+    \(3n+7\neq \Theta(n^2)\).
+  </li>
+  <li>
+    T. The leading term is quadratic, and the lower-order terms do not change the
+    asymptotic growth rate.
+  </li>
+  <li>
+    T. Since \(n\log n\) grows slower than \(n^2\), we have \(n^2=\Omega(n\log n)\).
+  </li>
+  <li>
+    T. Changing the base of a logarithm only changes the function by a constant factor.
+  </li>
+  <li>
+    T. \(n\) grows asymptotically slower than \(n^2\), so \(n=o(n^2)\).
+  </li>
+  <li>
+    F. \(4n^3+2n\) grows cubically, so it is not \(O(n^2)\).
+  </li>
+  <li>
+    T. In fact, \(n^2+3n=\Theta(n^2+n)\), so it is also \(O(n^2+n)\).
+  </li>
+</ol>
+</div>
+</div>
+</section>
+
+<section id="reading-questions" section-title="Reading Comprehension Questions">
+<h2>Reading Comprehension Questions</h2>
+
+<ol>
+  <li>
+    <strong>Comparison Analogy:</strong> In what way is \(O\) similar to \(\leq\),
+    \(\Omega\) similar to \(\geq\), and \(\Theta\) similar to \(=\)?
+  </li>
+
+  <li>
+    <strong>Limits of the Analogy:</strong> Why is the analogy between asymptotic
+    notation and ordinary comparison symbols useful but not exact?
+  </li>
+
+  <li>
+    <strong>Transitivity:</strong> What does the transitive property of Big-O say?
+    State it using functions \(f\), \(g\), and \(h\).
+  </li>
+
+  <li>
+    <strong>Scaling:</strong> If \(f(n)=O(g(n))\) and \(k&gt;0\) is a constant,
+    what can we conclude about \(k f(n)\)? Why does multiplying by \(k\) not
+    change the asymptotic upper bound?
+  </li>
+
+  <li>
+    <strong>Sums:</strong> If \(f_1(n)=O(g_1(n))\) and \(f_2(n)=O(g_2(n))\),
+    what upper bound does Theorem 3 give for \(f_1(n)+f_2(n)\)?
+  </li>
+
+  <li>
+    <strong>Dominant Terms:</strong> Why is \(O(n^2+n^3)\) usually written as
+    \(O(n^3)\)?
+  </li>
+
+  <li>
+    <strong>Products:</strong> If \(f_1(n)=O(g_1(n))\) and \(f_2(n)=O(g_2(n))\),
+    what does the product theorem say about \(f_1(n)f_2(n)\)?
+  </li>
+
+  <li>
+    <strong>Big-O/Big-Omega Duality:</strong> What does it mean to say that
+    \(f(n)=O(g(n))\) iff \(g(n)=\Omega(f(n))\)?
+  </li>
+
+  <li>
+    <strong>Equivalence Classes:</strong> Why do \(n^2\), \(3n^2-4n+4\),
+    \(n^2+\log n\), and \(3n^2+n+1\) belong to the same \(\Theta\)-equivalence
+    class?
+  </li>
+
+  <li>
+    <strong>Proof Strategy:</strong> In several proofs, why do we choose
+    \(n_0=\max\{n_1,n_2\}\)?
+  </li>
+</ol>
+
+<button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
+<div id="answers" class="answer" hidden>
+<ol>
+  <li>
+    \(O\) behaves like an asymptotic upper-bound relation, so it is similar to
+    \(\leq\). \(\Omega\) behaves like an asymptotic lower-bound relation, so it
+    is similar to \(\geq\). \(\Theta\) means two functions have the same
+    asymptotic growth rate, so it is similar to \(=\).
+  </li>
+
+  <li>
+    The analogy is useful because many familiar properties, such as transitivity,
+    have asymptotic versions. However, it is not exact because asymptotic notation
+    ignores constant factors and lower-order terms, while ordinary inequalities
+    do not.
+  </li>
+
+  <li>
+    The transitive property of Big-O says that if \(f(n)=O(g(n))\) and
+    \(g(n)=O(h(n))\), then \(f(n)=O(h(n))\).
+  </li>
+
+  <li>
+    We can conclude that \(k f(n)=O(g(n))\). Multiplying by a positive constant
+    only changes the constant in the Big-O definition. If \(f(n)\leq c g(n)\),
+    then \(k f(n)\leq kc g(n)\), and \(kc\) is still a positive constant.
+  </li>
+
+  <li>
+    Theorem 3 gives
+    \[
+      f_1(n)+f_2(n)=O(g_1(n)+g_2(n)).
+    \]
+    Since \(g_1(n)+g_2(n)=O(\max\{g_1(n),g_2(n)\})\), this is also commonly
+    written as
+    \[
+      f_1(n)+f_2(n)=O(\max\{g_1(n),g_2(n)\}).
+    \]
+  </li>
+
+  <li>
+    \(n^3\) grows faster than \(n^2\), so the \(n^3\) term determines the
+    asymptotic upper bound. The \(n^2\) term is still part of the expression,
+    but it does not change the Big-O growth rate.
+  </li>
+
+  <li>
+    The product theorem says that
+    \[
+      f_1(n)f_2(n)=O(g_1(n)g_2(n)).
+    \]
+  </li>
+
+  <li>
+    It means that saying \(g\) is an asymptotic upper bound for \(f\) is
+    equivalent to saying \(f\) is an asymptotic lower bound for \(g\). The two
+    statements express the same relationship from opposite directions.
+  </li>
+
+  <li>
+    They all have quadratic growth. Constant factors and lower-order terms do
+    not change the \(\Theta\)-class, so each function is \(\Theta(n^2)\).
+  </li>
+
+ <li>
+  We choose \(n_0=\max\{n_1,n_2\}\) because the two inequalities may start
+  being true at different values of \(n\). The first inequality is guaranteed
+  for all \(n\geq n_1\), and the second is guaranteed for all \(n\geq n_2\).
+  By choosing the larger of \(n_1\) and \(n_2\), we make sure that both
+  inequalities are true for every \(n\geq n_0\). This lets us combine the two
+  bounds in a single proof.
+</li>
+</ol>
+</div>
+</section>
+<section id="activities" section-title="In-Class Activities">
+<h2>In-Class Activities</h2>
+
+<ol class="spaced">
+  <li>
+  <strong>Big-O Chain:</strong>
+  Arrange the following functions from slowest growing to fastest growing:
+  \[
+    4n+7,\qquad n^2,\qquad n^2\log n,\qquad n^3.
+  \]
+  Then write a Big-O chain connecting consecutive functions. Finally, use
+  transitivity to write two Big-O statements that skip at least one step in the
+  chain.
+</li>
+  <li>
+  <strong>Transitivity Chain:</strong>
+  Suppose \(f(n)=O(g(n))\), \(g(n)=O(h(n))\), and \(h(n)=O(p(n))\).
+  Use transitivity to list every additional Big-O relationship you can conclude
+  among \(f\), \(g\), \(h\), and \(p\). 
+</li>
+
+  <li>
+    <strong>Scaling Constants:</strong>
+    Start with the fact that \(2n^2+5n=\Theta(n^2)\). Use the scaling theorem to
+    justify each of the following:
+    <ol type="a">
+      <li>\(10n^2+25n=\Theta(n^2)\)</li>
+      <li>\(n^2+\frac{5}{2}n=\Theta(n^2)\)</li>
+      <li>\(200n^2+500n=\Theta(n^2)\)</li>
+    </ol>
+  </li>
+
+  <li>
+    <strong>Simplifying Sums:</strong>
+    Simplify each asymptotic expression by keeping only the fastest-growing term.
+    Give a one-sentence justification for each answer.
+    <ol type="a">
+      <li>\(O(n+n^2)\)</li>
+      <li>\(O(n^3+n\log n)\)</li>
+      <li>\(O(2^n+n^5)\)</li>
+      <li>\(O(n^2+\log n+n)\)</li>
+    </ol>
+  </li>
+
+  <li>
+    <strong>Using the Product Theorem:</strong>
+    Without multiplying out the polynomials, use the product theorem to find a
+    Big-O bound for each product.
+    <ol type="a">
+      <li>\((3n+4)(2n^2+7)\)</li>
+      <li>\((n^2+5n+1)(4n^3-2n+8)\)</li>
+      <li>\((7n+\log n)(n^2+n)\)</li>
+    </ol>
+  </li>
+
+  <li>
+    <strong>Duality Practice:</strong>
+    Rewrite each statement using Big-O/Big-Omega duality.
+    <ol type="a">
+      <li>\(f(n)=O(g(n))\)</li>
+      <li>\(p(n)=\Omega(q(n))\)</li>
+      <li>\(n^2=O(n^3)\)</li>
+      <li>\(n^3=\Omega(n^2)\)</li>
+    </ol>
+  </li>
+
+  <li>
+  <strong>Equivalence-Class Grouping:</strong>
+  Group the following functions into \(\Theta\)-equivalence classes 
+  and label each group by a simple representative such as \(\Theta(1)\),
+  \(\Theta(\log n)\), \(\Theta(n)\), etc.
+ <ul>
+  <li>\(7\)</li>
+  <li>\(\log n\)</li>
+  <li>\(3\log n+10\)</li>
+  <li>\(5n+8\)</li>
+  <li>\(100n\)</li>
+  <li>\(n+\log n\)</li>
+  <li>\(n\log n\)</li>
+  <li>\(7n\log n\)</li>
+  <li>\(n^2\)</li>
+  <li>\(3n^2-n\)</li>
+  <li>\(n^2+\log n\)</li>
+  <li>\(4n^3\)</li>
+  <li>\(n^3+20n^2\)</li>
+  <li>\(2^n\)</li>
+</ul>
+</li>
+
+  <li>
+    <strong>Repair the Proof:</strong>
+    A student writes:
+    \[
+      \text{Since } f(n)=O(g(n)) \text{ and } g(n)=O(h(n)), 
+      \text{ we know } f(n)\leq g(n)\leq h(n).
+    \]
+    Explain what is wrong with this proof of transitivity. Then rewrite the
+    argument using constants \(c_1\), \(c_2\), \(n_1\), and \(n_2\).
+  </li>
+  
+  <li>
+    <strong>Prove Transitivity for Big-Omega:</strong>
+    Prove the \(\Omega\) part of Theorem 1. Assume \(f(n)=\Omega(g(n))\) and
+    \(g(n)=\Omega(h(n))\).
+    <ol type="a">
+      <li>Write the inequality guaranteed by \(f(n)=\Omega(g(n))\).</li>
+      <li>Write the inequality guaranteed by \(g(n)=\Omega(h(n))\).</li>
+      <li>Choose \(n_0\) so both inequalities hold for every \(n\geq n_0\).</li>
+      <li>Combine the inequalities to prove \(f(n)=\Omega(h(n))\).</li>
+    </ol>
+  </li>
+</ol>
+</section>
+
+<section id="problems" section-title="Homework Problems">
+<h2>Homework Problems</h2>
+
+<ol class="spaced">
+  <li>
+    <strong>Prove Transitivity for Big-Theta:</strong>
+    Prove the \(\Theta\) part of Theorem 1. That is, assume
+    \(f(n)=\Theta(g(n))\) and \(g(n)=\Theta(h(n))\). Use the definitions to prove
+    that \(f(n)=\Theta(h(n))\). Your proof should clearly state the constants
+    and the value of \(n_0\) you choose.
+  </li>
+
+  <li>
+    <strong>Prove Big-O/Big-Omega Duality:</strong>
+    Prove that
+    \[
+      f(n)=O(g(n)) \quad \text{if and only if} \quad g(n)=\Omega(f(n)).
+    \]
+    Your proof should prove both directions of the iff statement.
+  </li>
+
+  <li>
+    <strong>Prove the Product Theorem for Big-O:</strong>
+    Prove that if \(f_1(n)=O(g_1(n))\) and \(f_2(n)=O(g_2(n))\), then
+    \[
+      f_1(n)f_2(n)=O(g_1(n)g_2(n)).
+    \]
+    Your proof should use constants \(c_1\), \(c_2\), \(n_1\), and \(n_2\), and
+    should explain why the product \(c_1c_2\) is a valid Big-O constant.
+  </li>
+
+  <li>
+    <strong>Using Properties Instead of Expanding:</strong>
+    Use the sum, product, and scaling properties to find a simple Big-O bound
+    for each expression. Do not expand products unless necessary.
+    <ol type="a">
+      <li>\((3n+5)(2n^2+7)\)</li>
+      <li>\((n^2+4n+1)(5n^3-2n+9)\)</li>
+      <li>\((7n\log n+4n)(n^2+3)\)</li>
+      <li>\((2n^2+1)+(9n^3+5n)+(100n\log n)\)</li>
+    </ol>
+  </li>
+
+  <li>
+    <strong>Simplifying Asymptotic Expressions:</strong>
+    Simplify each expression as much as possible.
+    <ol type="a">
+      <li>\(O(n^2+n\log n+n)\)</li>
+      <li>\(O(n^3+n^2\log n+2^n)\)</li>
+      <li>\(O((n+n^2)(n^3+\log n))\)</li>
+      <li>\(O((n\log n+n^2)+(n^2+n^3))\)</li>
+    </ol>
+  </li>
+
+  <li>
+    <strong>Equivalence Classes:</strong>
+    Group the following functions into \(\Theta\)-equivalence classes. Label each
+    group with a simple representative such as \(\Theta(n)\) or \(\Theta(n^2)\).
+    <ul class="inline-list">
+      <li>\(12\)</li>
+      <li>\(4\log n+9\)</li>
+      <li>\(n+100\)</li>
+      <li>\(8n-3\)</li>
+      <li>\(n\log n+5n\)</li>
+      <li>\(3n^2+2n+1\)</li>
+      <li>\(n^2+\log n\)</li>
+      <li>\(6n^3-n^2\)</li>
+      <li>\(n^3+100n\)</li>
+      <li>\(2^n+n^5\)</li>
+    </ul>
+  </li>
+
+  <li>
+    <strong>True or False with Justification:</strong>
+    Decide whether each statement is true or false. Give a brief justification
+    or counterexample.
+    <ol type="a">
+      <li>If \(f(n)=O(g(n))\), then \(f(n)=\Theta(g(n))\).</li>
+      <li>If \(f(n)=\Theta(g(n))\), then \(g(n)=\Theta(f(n))\).</li>
+      <li>If \(f(n)=o(g(n))\), then \(f(n)=O(g(n))\).</li>
+      <li>If \(f(n)=O(g(n))\) and \(h(n)=O(p(n))\), then \(f(n)+h(n)=O(g(n)+p(n))\).</li>
+      <li>If \(f(n)=O(g(n))\), then \(3f(n)+20=O(g(n))\).</li>
+    </ol>
+  </li>
+
+  <li>
+    <strong>Compare Two Approaches:</strong>
+    Consider the expression
+    \[
+      (4n^2+3n+8)(7n^3-2n+5).
+    \]
+    <ol type="a">
+      <li>Find a simple Big-O bound by multiplying the polynomials and identifying the leading term.</li>
+      <li>Find a simple Big-O bound by using the product theorem.</li>
+      <li>Explain why both approaches give the same asymptotic answer.</li>
+      <li>Explain why fully expanding the product was unnecessary and not advised in general.</li>
+    </ol>
+  </li>
+</ol>
+</section>
+</body>
+</html>

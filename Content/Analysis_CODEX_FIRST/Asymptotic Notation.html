@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Asymptotic Notation</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <script src="../../scripts/chapterScripts.js"></script>
+  <script src="analysis-draft.js"></script>
+  <link rel="stylesheet" href="../../css/style.css">
+  <link rel="stylesheet" href="../../css/chapter.css">
+  <link rel="stylesheet" href="analysis-draft.css">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-DQ5LVZVFDC');
+  </script>
+</head>
+<body>
+  <h1>Asymptotic Notation</h1>
+
+  <section id="overview" section-title="Overview">
+    <h2>Overview</h2>
+    <p>
+      Algorithm analysis often turns a program into a function. The input size is \(n\), and
+      the function describes how much work the algorithm does on inputs of that size. Asymptotic
+      notation gives us a careful language for comparing those functions without getting trapped
+      by machine details, constant factors, or the behavior of very small inputs.
+    </p>
+    <p>
+      This page introduces the main notations: Big-O, Big-Omega, Big-Theta, and little-o. The
+      next page focuses on proof techniques for these notations.
+    </p>
+    <div class="analysis-draft-note">
+      <strong>Draft note:</strong> The original LaTeX chapter uses several plotted figures here.
+      The SVG blocks on this page are placeholders for those future illustrations.
+    </div>
+  </section>
+
+  <section id="why-asymptotic" section-title="Why Asymptotic Notation?">
+    <h2>Why Asymptotic Notation?</h2>
+    <p>
+      Suppose one implementation performs \(5n+20\) basic operations and another performs
+      \(3n^2+10n+7\). Exact counts may matter for small inputs, but for large inputs the
+      dominant question is how the work grows. Linear growth and quadratic growth are different
+      enough that the quadratic algorithm will eventually require much more work, even if it has
+      a smaller constant for small \(n\).
+    </p>
+    <p>
+      Asymptotic notation describes what happens as \(n\) grows without bound. We intentionally
+      ignore a finite number of small inputs. This is why the definitions below include a threshold
+      \(n_0\): after \(n\) is large enough, the comparison must hold.
+    </p>
+  </section>
+
+  <section id="big-o" section-title="Big-O: Upper Bounds">
+    <h2>Big-O: Upper Bounds</h2>
+    <div class="definition-card">
+      <h3>Definition</h3>
+      <p>
+        Let \(f\) and \(g\) be nonnegative functions. We say that
+        \(f(n)=O(g(n))\) if there are positive constants \(c\) and \(n_0\) such that
+        \[
+          f(n) \leq c g(n) \quad \text{for all } n \geq n_0.
+        \]
+      </p>
+      <p>
+        If \(f(n)=O(g(n))\), then \(f\) grows no faster than \(g\). Equivalently,
+        \(g\) is an asymptotic upper bound on \(f\).
+      </p>
+    </div>
+
+    <div class="figure-row">
+      <figure class="placeholder-figure">
+        <svg viewBox="0 0 520 260" role="img" aria-labelledby="bigOFigureTitle bigOFigureDesc">
+          <title id="bigOFigureTitle">Big-O upper bound placeholder</title>
+          <desc id="bigOFigureDesc">A placeholder graph showing f of n staying below c times g of n after n sub zero.</desc>
+          <rect x="0" y="0" width="520" height="260" fill="#f8fafc"></rect>
+          <line x1="56" y1="214" x2="470" y2="214" stroke="#334155" stroke-width="2"></line>
+          <line x1="56" y1="214" x2="56" y2="36" stroke="#334155" stroke-width="2"></line>
+          <path d="M70 196 C150 175, 205 145, 270 112 S395 62, 455 48" fill="none" stroke="#2563eb" stroke-width="4"></path>
+          <path d="M70 206 C150 194, 205 170, 270 140 S390 91, 455 78" fill="none" stroke="#16a34a" stroke-width="4"></path>
+          <line x1="155" y1="214" x2="155" y2="40" stroke="#64748b" stroke-dasharray="6 5" stroke-width="2"></line>
+          <text x="162" y="232" font-size="16" fill="#334155">n0</text>
+          <text x="360" y="52" font-size="16" fill="#2563eb">c g(n)</text>
+          <text x="365" y="102" font-size="16" fill="#16a34a">f(n)</text>
+          <text x="150" y="26" font-size="16" fill="#64748b">placeholder for upper-bound diagram</text>
+        </svg>
+        <figcaption>Figure placeholder: after \(n_0\), \(f(n)\) remains below a constant multiple of \(g(n)\).</figcaption>
+      </figure>
+      <div>
+        <p>
+          The constant \(c\) lets us ignore constant factors. The threshold \(n_0\) lets us
+          ignore a finite prefix of small values. For example, \(100n=O(n^2)\), even though
+          \(100n\) is larger than \(n^2\) for several small values of \(n\). Eventually \(n^2\)
+          grows large enough to dominate the constant factor.
+        </p>
+        <p>
+          Be careful with the equals sign. The statement \(f(n)=O(g(n))\) is read as
+          "\(f(n)\) is Big-O of \(g(n)\)." It is not a symmetric equality. The set notation
+          \(f(n) \in O(g(n))\) is more precise, but the equals-style notation is common.
+        </p>
+      </div>
+    </div>
+
+    <div class="example-box">
+      <strong class="example-title">Example: A Simple Upper Bound</strong>
+      <p>Show that \(n^2+n=O(n^3)\).</p>
+      <p>
+        For \(n \geq 1\), we have \(n \leq n^3\) and \(n^2 \leq n^3\). Therefore
+        \[
+          n^2+n \leq n^3+n^3 = 2n^3.
+        \]
+        This proves \(n^2+n=O(n^3)\), using \(c=2\) and \(n_0=1\).
+      </p>
+    </div>
+  </section>
+
+  <section id="omega-theta" section-title="Lower and Tight Bounds">
+    <h2>Lower and Tight Bounds</h2>
+    <div class="definition-grid">
+      <div class="definition-card">
+        <h3>Big-Omega</h3>
+        <p>
+          \(f(n)=\Omega(g(n))\) if there are positive constants \(c\) and \(n_0\) such that
+          \[
+            c g(n) \leq f(n) \quad \text{for all } n \geq n_0.
+          \]
+        </p>
+        <p>\(g\) is an asymptotic lower bound on \(f\).</p>
+      </div>
+      <div class="definition-card">
+        <h3>Big-Theta</h3>
+        <p>
+          \(f(n)=\Theta(g(n))\) if there are positive constants \(c_1\), \(c_2\), and
+          \(n_0\) such that
+          \[
+            c_1g(n) \leq f(n) \leq c_2g(n) \quad \text{for all } n \geq n_0.
+          \]
+        </p>
+        <p>\(g\) is an asymptotically tight bound on \(f\).</p>
+      </div>
+    </div>
+
+    <figure class="placeholder-figure">
+      <svg viewBox="0 0 720 230" role="img" aria-labelledby="thetaFigureTitle thetaFigureDesc">
+        <title id="thetaFigureTitle">Theta bound placeholder</title>
+        <desc id="thetaFigureDesc">A placeholder graph showing f of n between lower and upper constant multiples of g of n.</desc>
+        <rect x="0" y="0" width="720" height="230" fill="#f8fafc"></rect>
+        <line x1="58" y1="190" x2="665" y2="190" stroke="#334155" stroke-width="2"></line>
+        <line x1="58" y1="190" x2="58" y2="34" stroke="#334155" stroke-width="2"></line>
+        <path d="M80 178 C190 150, 300 108, 420 72 S560 42, 640 34" fill="none" stroke="#2563eb" stroke-width="4"></path>
+        <path d="M80 188 C190 168, 300 137, 420 106 S560 72, 640 58" fill="none" stroke="#16a34a" stroke-width="4"></path>
+        <path d="M80 198 C190 188, 300 170, 420 150 S560 120, 640 100" fill="none" stroke="#dc2626" stroke-width="4"></path>
+        <text x="510" y="39" font-size="16" fill="#2563eb">c2 g(n)</text>
+        <text x="510" y="82" font-size="16" fill="#16a34a">f(n)</text>
+        <text x="510" y="125" font-size="16" fill="#dc2626">c1 g(n)</text>
+        <text x="190" y="28" font-size="16" fill="#64748b">placeholder for tight-bound diagram</text>
+      </svg>
+      <figcaption>Figure placeholder: a \(\Theta\)-bound traps \(f(n)\) between two constant multiples of \(g(n)\).</figcaption>
+    </figure>
+
+    <p>
+      A useful theorem connects these ideas:
+      \[
+        f(n)=\Theta(g(n)) \quad \text{if and only if} \quad
+        f(n)=O(g(n)) \text{ and } f(n)=\Omega(g(n)).
+      \]
+      In practice, many \(\Theta\)-proofs are split into an upper-bound proof and a
+      lower-bound proof.
+    </p>
+
+    <div class="example-box">
+      <strong class="example-title">Example: A Tight Bound</strong>
+      <p>Show that \(n^2+5n+7=\Theta(n^2)\).</p>
+      <p>
+        For \(n\geq 1\),
+        \[
+          n^2+5n+7 \leq n^2+5n^2+7n^2=13n^2.
+        \]
+        Also, for \(n\geq 0\), \(n^2 \leq n^2+5n+7\). Combining the two inequalities
+        under the stronger assumption \(n\geq 1\), we get
+        \[
+          n^2 \leq n^2+5n+7 \leq 13n^2.
+        \]
+        Therefore \(n^2+5n+7=\Theta(n^2)\).
+      </p>
+    </div>
+  </section>
+
+  <section id="little-o" section-title="Little-o">
+    <h2>Little-o</h2>
+    <p>
+      Big-O says "no faster than." Sometimes we want to say "strictly slower than." That is
+      what little-o notation does.
+    </p>
+    <div class="definition-card">
+      <h3>Definition</h3>
+      <p>
+        Let \(f\) and \(g\) be nonnegative functions, with \(g(n)\) eventually nonzero. We say
+        \(f(n)=o(g(n))\) if
+        \[
+          \lim_{n\to\infty} \frac{f(n)}{g(n)}=0.
+        \]
+      </p>
+      <p>If \(f(n)=o(g(n))\), then \(f\) grows asymptotically slower than \(g\).</p>
+    </div>
+    <p>
+      For example, \(3n+2=o(n^2)\), but \(3n+2\neq o(n)\). Similarly,
+      \(n^2+n+4=o(n^3)\), but \(n^2+n+4\neq o(n^2)\). The first pair has different
+      growth rates; the second pair has the same growth rate.
+    </p>
+    <p>
+      There is also a little-omega notation, \(\omega\), for "strictly faster than." We will
+      use it less often, but it is the natural counterpart to little-o.
+    </p>
+  </section>
+
+  <section id="comparison-summary" section-title="Comparison Summary">
+    <h2>Comparison Summary</h2>
+    <table class="example-table left-top-align">
+      <thead>
+        <tr>
+          <th>Notation</th>
+          <th>Informal meaning</th>
+          <th>Inequality analogy</th>
+          <th>What it tells you</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>\(f(n)=O(g(n))\)</td>
+          <td>\(f\) grows no faster than \(g\)</td>
+          <td>\(\leq\)</td>
+          <td>Upper bound only; may or may not be tight</td>
+        </tr>
+        <tr>
+          <td>\(f(n)=\Omega(g(n))\)</td>
+          <td>\(f\) grows no slower than \(g\)</td>
+          <td>\(\geq\)</td>
+          <td>Lower bound only; may or may not be tight</td>
+        </tr>
+        <tr>
+          <td>\(f(n)=\Theta(g(n))\)</td>
+          <td>\(f\) and \(g\) grow at the same rate</td>
+          <td>\(=\)</td>
+          <td>Tight asymptotic bound</td>
+        </tr>
+        <tr>
+          <td>\(f(n)=o(g(n))\)</td>
+          <td>\(f\) grows strictly slower than \(g\)</td>
+          <td>\(&lt;\)</td>
+          <td>Strict upper relationship</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="check-card">
+      <p><strong>Quick check:</strong> If \(f(n)=O(g(n))\), must \(f(n)=\Theta(g(n))\)?</p>
+      <button class="answer-toggle show-answer" data-answer-target="quick-check-1">Show Answer</button>
+      <div id="quick-check-1" class="answer answer-panel" hidden>
+        <p>
+          No. For example, \(n=O(n^2)\), but \(n\neq\Theta(n^2)\). Big-O gives an upper
+          bound; it does not promise that the bound is tight.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section id="where-next" section-title="Where This Goes Next">
+    <h2>Where This Goes Next</h2>
+    <p>
+      The definitions on this page are precise, but students usually need practice turning
+      those definitions into proofs. Continue with
+      <a href="?path=Analysis_DRAFT%2FProving%20Asymptotic%20Bounds">Proving Asymptotic Bounds</a>
+      for proof patterns using inequalities and limits.
+    </p>
+  </section>
+
+  <section id="reading-questions" section-title="Reading Comprehension Questions">
+    <h2>Reading Comprehension Questions</h2>
+    <ol>
+      <li>In words, what does \(f(n)=O(g(n))\) mean?</li>
+      <li>What extra information does \(f(n)=\Theta(g(n))\) give compared with \(f(n)=O(g(n))\)?</li>
+      <li>Why does the definition of Big-O include both a constant \(c\) and a threshold \(n_0\)?</li>
+      <li>Explain the difference between \(f(n)=o(g(n))\) and \(f(n)=O(g(n))\).</li>
+      <li>If \(f(n)=\Theta(g(n))\), is it possible that \(f(n)=o(g(n))\)? Explain.</li>
+    </ol>
+    <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
+    <div id="answers" class="answer" hidden>
+      <ol>
+        <li><strong>Answer:</strong> \(f(n)=O(g(n))\) means that \(f\) grows no faster than \(g\), up to a constant factor, once \(n\) is large enough.</li>
+        <li><strong>Answer:</strong> \(\Theta\) gives a tight bound. It says the two functions grow at the same rate, while Big-O only gives an upper bound.</li>
+        <li><strong>Answer:</strong> The constant handles constant-factor differences, and \(n_0\) lets the comparison ignore small inputs where the long-term pattern may not yet be visible.</li>
+        <li><strong>Answer:</strong> Little-o means strictly slower growth. Big-O means no faster growth, so it includes both slower growth and same-rate growth.</li>
+        <li><strong>Answer:</strong> No. \(\Theta\) says same rate; little-o says strictly slower. Both cannot be true for the same pair of functions.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="activities" section-title="In-Class Activities">
+    <h2>In-Class Activities</h2>
+    <ol>
+      <li><strong>Classify the statement:</strong> For each claim \(f=O(g)\), \(f=\Omega(g)\), \(f=\Theta(g)\), or \(f=o(g)\), write one sentence explaining what it says in ordinary language.</li>
+      <li><strong>Find counterexamples:</strong> Give simple functions \(f\) and \(g\) where \(f=O(g)\) but \(f\neq\Theta(g)\).</li>
+      <li><strong>Match the graph:</strong> Sketch a possible graph for an upper bound, a lower bound, and a tight bound. Label \(f(n)\), \(g(n)\), \(c\), and \(n_0\).</li>
+    </ol>
+  </section>
+
+  <section id="problems" section-title="Homework Problems">
+    <h2>Homework Problems</h2>
+    <ol>
+      <li>Prove directly from the definition that \(3n^3-4n^2+13n=O(n^3)\).</li>
+      <li>Prove that \(5n^2-7n=\Theta(n^2)\).</li>
+      <li>Give an example where \(f(n)=\Omega(g(n))\) but \(f(n)\neq\Theta(g(n))\).</li>
+      <li>For each statement, decide whether it is true or false and justify briefly: \(f=O(g)\Rightarrow g=O(f)\), \(f=\Theta(g)\Rightarrow f=O(g)\), and \(f=o(g)\Rightarrow f=O(g)\).</li>
+    </ol>
+  </section>
+</body>
+</html>

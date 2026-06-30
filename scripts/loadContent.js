@@ -20,6 +20,7 @@ const TOP_LEVEL_ORDER = [
   'Start Here',
   'Foundations',
   'Analysis',
+  'Analysis_DRAFT',
   'Data Structures',
   'Techniques',
   'Algorithms',
@@ -91,6 +92,15 @@ const FOUNDATIONS_ORDERS = {
 };
 
 const ANALYSIS_ORDERS = {
+  'Analysis/': [
+  'Overview',
+  'Asymptotic Notation',
+  'Asymptotic Properties',
+  'Asymptotic Proofs',
+  'Common Growth Rates',
+  'Algorithm Analysis Fundamentals',
+  'Algorithm Analysis Examples'
+  ],
   'Analysis/Recurrences/': [
     'From Recursive Code to Recurrences',
     'Iteration Method',
