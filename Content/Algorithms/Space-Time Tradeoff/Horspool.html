@@ -76,12 +76,17 @@
 <body>
   <h1>Horspool's Algorithm</h1>
 
-  <h2>Problem Statement</h2>
+<section id="problem-statement" section-title="Problem Statement">
+<h2>Problem Statement</h2>
   <p>Horspool's algorithm solves the <a class="problem" href="?path=Problems/Other/String Matching">String Matching</a>
-  problem.
-  
-  <h2>Design and Strategy</h2>
-  
+  problem.</p>
+</section>
+
+<section id="design-and-strategy" section-title="Design and Strategy">
+<h2>Design and Strategy</h2>
+
+<section id="right-to-left-comparison" section-title="Right-to-Left Comparisons">
+<h3>Right-to-Left Comparisons</h3>
 <p>
   Horspool's algorithm is a <strong>space-time tradeoff</strong> algorithm designed to efficiently find occurrences of a 
   pattern \(P\) of length \(m\) within a larger text \(T\) of length \(n\). Unlike simpler algorithms that compare each character repeatedly, Horspool minimizes the total number of character comparisons by intelligently skipping portions of the text where matches cannot possibly occur. 
@@ -90,7 +95,10 @@
 <p>
   Horspool compares characters starting from the rightmost character of the pattern moving leftward. This end-to-start comparison is strategic: mismatches near the end of the pattern are more informative, as they often justify larger shifts that skip irrelevant text. The shift distance depends only on the character aligned with the <em>last</em> position of the pattern in the current alignment, regardless of whether any earlier characters matched.
 </p>
+</section>
 
+<section id="shift-table-cases" section-title="Shift Table Cases">
+<h3>Shift Table Cases</h3>
 <p>
   To illustrate, suppose we want to find the pattern "RODEO" in the text "NOW WE RODE ON HORSES". 
   Here we have \(m=5\) and \(n=21\).
@@ -140,8 +148,7 @@
     in this case. Luckily, this is not actually a special case because, as we will see, the algorithm automatically handles it.</li>
 </ul>
 
-<p>
-In summary:
+<p>In summary:</p>
 <table class="example-table" style="margin: 1em auto; border-collapse: collapse;">
   <thead>
     <tr>
@@ -179,9 +186,8 @@ RODEO</div>
       </td>
       <td style="border: 1px solid #ccc; padding: 6px;">Shift the pattern by \(m\).</td>
     </tr>
-  </tbody>
+</tbody>
 </table>
-</p>
 <p>
 Two important points to re-emphasize: 
 First, we look at the character in the text, not the pattern.
@@ -194,7 +200,10 @@ These examples/observations are the idea behind the <em>Bad Character Heuristic<
 The heuristic builds a <strong>shift table</strong> that precomputes optimal shifts for each character, 
 leading to significant reductions in unnecessary comparisons.
 </p>
+</section>
 
+<section id="building-the-shift-table" section-title="Building the Shift Table">
+<h3>Building the Shift Table</h3>
 <p>
 More concretely, given a pattern \(P\) of length \(m\),
 the preprocessing step to compute the shift table (also know as the <em>bad character table</em>)
@@ -215,13 +224,12 @@ the preprocessing step to compute the shift table (also know as the <em>bad char
       </li>
     </ol>
 <p>
-
 For simplicity, in most the remainder of our discussion 
 we will assume the characters are ASCII so we can treat them as integers 0 through 255, 
 making it easy to implement a lookup table.
 Many languages, including Java and C++, make this easy to do.
 This means we will need a shift table with 256 entries. 
-Given that, we can write the preprocessing step of the algorithm in formal pseudocode as follows:
+Given that, we can write the preprocessing step of the algorithm in formal pseudocode as follows:</p>
 
 <pre><code>int [] computeShiftTable(int P[])
     m=P.length
@@ -234,7 +242,6 @@ Given that, we can write the preprocessing step of the algorithm in formal pseud
     }
     return S
 </code></pre>
- </p>
 
 <p>
 Let's see a few examples of constructing the table. 
@@ -257,6 +264,10 @@ whose values are not the full length of the pattern (\(m\)), and if a character 
 the value is assumed to be \(m\). 
 This means no initialization is required, and less space is used most of the time.
 </p>
+</section>
+
+<section id="search-phase" section-title="Search Phase">
+<h3>Search Phase</h3>
 <p>
 Now that we have a shift table, we can get into the main part of the algorithm. 
 </p>
@@ -274,8 +285,8 @@ Now that we have a shift table, we can get into the main part of the algorithm.
     </ol>
 
 
-If more formal pseudocode, it looks something like this
-(where this version simply outputs all matches): 
+<p>In more formal pseudocode, it looks something like this
+(where this version simply outputs all matches):</p>
 
 <pre><code>horspoolSearch(int[]P, int[] T, int[] S) 
     int n=T.length
@@ -292,22 +303,28 @@ If more formal pseudocode, it looks something like this
         int next = T[i + m - 1];  // Get character of text lined up with the last 
                                   // character of pattern (treated like an integer)
         i += S[next];             // Shift according to the bad character table        
-        </pre></code>
+        </code></pre>
 
+
+</section>
+</section>
+
+<section id="demo" section-title="Interactive Demo"
 <p>Use this demo with several patterns and texts until you are comfortable with how the algorithm works.
 This demo only shows the portion of the table with characters from the pattern. The <code>*</code> entry 
 indicates all other characters, which is why its value is \(m\).
 Do not make the text too long unless you have a wide enough monitor!</p>
-
-  <div class="embeddedDemoContainer">
+<div class="embeddedDemoContainer">
     <iframe class="embeddedDemo"
             src="../../Demos/Space-Time Tradeoff/Horspool Demo.html"
             allow="fullscreen"
             name="horspool-demo">
     </iframe>
   </div>
+</section>
 
-  <h2>Code Implementations</h2>
+  <section id="code-implementations" section-title="Code Implementations">
+<h2>Code Implementations</h2>
   <p>In the following implementations, we assume the characters in the <code>char</code> arrays are ASCII characters.
   If they are not, the algorithms will crash (index-out-of-bounds errors). Note that for C++ we need to cast 
   the <code>char</code> into <code>unsigned char</code> since wether or not a <code>char</code> is signed or unsigned
@@ -422,7 +439,9 @@ Do not make the text too long unless you have a wide enough monitor!</p>
         i += shift.get(c, m)  # default to m if char not in shift table</code></pre>
     </div>
   </div>
+</section>
 
+<section id="timespace-analysis" section-title="Time/Space Analysis">
 <h2>Time/Space Analysis</h2>
 
 <p><strong>Time Complexity:</strong>
@@ -442,7 +461,9 @@ This behavior makes Horspool’s algorithm significantly faster in practice than
 </p>
 
 <p><strong>Space Complexity:</strong> The shift table requires \(O(\sigma)\) space, which is constant for fixed-size alphabets such as ASCII (256 characters).</p>
+</section>
 
+<section id="variationsimprovements" section-title="Variations/Improvements">
 <h2>Variations/Improvements</h2>
 <p>
 Horspool's algorithm is a simplified version of the more general <em>Boyer-Moore algorithm</em>, which uses both the bad character rule (as in Horspool) and an additional <em>good suffix rule</em> to determine shift distances. 
@@ -450,8 +471,9 @@ While Horspool is easier to implement and performs well in practice, especially 
 Further refinements, such as the <em>Boyer-Moore-Horspool-Sunday</em> algorithm, adjust the shift logic to examine characters beyond the current window, often improving average-case behavior. 
 Other extensions and hybrid approaches balance preprocessing time and shift table complexity to optimize for specific contexts, such as small alphabets or frequent partial matches in the text.
 </p>
+</section>
 
-
+<section id="links-to-resources" section-title="Links to Resources">
 <h2>Links to Resources</h2>
 <ul>
   <li>
@@ -460,10 +482,9 @@ Other extensions and hybrid approaches balance preprocessing time and shift tabl
     Overview of Horspool's algorithm.
   </li>
 </ul>
+</section>
 
-
-<!-- Reading Comprehension Questions -->
-<section id="reading-questions">
+<section id="reading-questions" section-title="Reading Comprehension Questions">
   <h2>Reading Comprehension Questions</h2>
   <ol>
     <li><strong>Shift Table Purpose</strong> What is the purpose of the bad character table (the shift table) in Horspool’s algorithm?</li>
@@ -529,8 +550,8 @@ Other extensions and hybrid approaches balance preprocessing time and shift tabl
   </div>
 </section>
 
-<div class="section">
-  <h2>In-Class Activities</h2>
+  <section id="in-class-activities" section-title="In-Class Activities">
+<h2>In-Class Activities</h2>
   <ol>
     <li><strong>Build a Shift Table</strong>  
       Given a pattern and an alphabet (e.g., ASCII a–z), manually construct the bad-character shift table by computing \( m - 1 - j \) for each relevant character. Compare answers with a partner.
@@ -561,11 +582,11 @@ Other extensions and hybrid approaches balance preprocessing time and shift tabl
     versus binary data (e.g., image files) or biological data (e.g., DNA)? In case you are unaware, 
     DNA data uses a very small alphabet of only four characters: A, C, G, and T.
     </li>
-  </ol>
-</div>
+  </ol>  
+</section>
 
-<div class="section">
-  <h2>Problems</h2>
+<section id="problems" section-title="Problems">
+<h2>Problems</h2>
   <ol>
     <li><strong>Simulate Horspool by Hand</strong>  
       Given the text "abracadabraabracadabra" and pattern "abra", simulate Horspool's algorithm by hand
@@ -606,8 +627,6 @@ Other extensions and hybrid approaches balance preprocessing time and shift tabl
   Horspool's algorithm is designed for a single pattern. How might you adapt it to search for multiple patterns simultaneously within the same text (e.g., for virus scanning or spam detection)? Could you reuse portions of shift tables, merge preprocessing data, or restructure the patterns to share common information? What are the limitations of running the algorithm separately on each pattern?
 </li>
   </ol>
-</div>
-
-
+</section>
 </body>
 </html>

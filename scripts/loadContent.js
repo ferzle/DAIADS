@@ -93,21 +93,25 @@ const FOUNDATIONS_ORDERS = {
 
 const ANALYSIS_ORDERS = {
   'Analysis/': [
-  'Overview',
-  'Asymptotic Notation',
-  'Asymptotic Properties',
-  'Asymptotic Proofs',
-  'Common Growth Rates',
-  'Algorithm Analysis Fundamentals',
-  'Algorithm Analysis Examples'
+    'Overview',
+	'Mathematical Background',
+    'Asymptotic Notation',
+    'Asymptotic Properties',
+    'Asymptotic Proofs',
+    'Common Growth Rates',
+    'Algorithm Analysis Fundamentals',
+    'Algorithm Analysis Examples',
+    'Recurrences',
+    'Analyzing Recursive Algorithms',
+    'Reading Questions and Problems'
   ],
   'Analysis/Recurrences/': [
-    'From Recursive Code to Recurrences',
+    'Introduction',
+    'Solving Recurrence Relations',
     'Iteration Method',
     'Substitution Method',
-    'Recursion Trees',
     'Master Theorem',
-    'Recursive Algorithm Case Studies'
+    'Linear Recurrence Relations'
   ]
 };
 const DATA_STRUCTURES_ORDERS = {

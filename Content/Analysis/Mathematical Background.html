@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mathematical Background for Algorithm Analysis</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <script src="/DAIADS/scripts/chapterScripts.js"></script>
+  <link rel="stylesheet" href="/DAIADS/css/style.css">
+  <link rel="stylesheet" href="/DAIADS/css/chapter.css">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-DQ5LVZVFDC');
+  </script>
+</head>
+<body>
+  <h1>Mathematical Background for Algorithm Analysis</h1>
+
+  <section id="overview" section-title="Overview">
+    <h2>Overview</h2>
+   <p>
+    Algorithm analysis often uses a small collection of algebra, logarithm rules,
+    limits, and derivatives. This page reviews the facts that come up most often.
+    Some of this material may be review, and some of it may be new. Either way,
+    you do not need a full calculus course to follow the analysis in this text.
+    We will use these ideas in a limited way, and you can return to this page as
+    a reference whenever one of these tools comes up.
+    </p>
+    <p>
+    If limits or derivatives are new to you, it may be helpful to ask your instructor
+    or classmates for a short primer. You do not need the full theory behind these
+    topics here, but you should be comfortable using the basic rules listed below.
+    </p>
+  </section>
+
+  <section id="logarithms" section-title="Logarithms">
+    <h2>Logarithms</h2>
+    <p>
+      Logarithms appear frequently in algorithms that repeatedly divide the input,
+      such as binary search, merge sort, and many balanced tree operations.
+    </p>
+
+    <div class="theorem">
+      <p class="box-title"><strong>Logarithm Rules</strong></p>
+      <p>
+        For positive values \(a\), \(b\), and \(n\), and for valid logarithm bases:
+      </p>
+      <ol class="spaced">
+        <li>\(\log(ab)=\log a+\log b\)</li>
+        <li>\(\log(a/b)=\log a-\log b\)</li>
+        <li>\(\log(a^k)=k\log a\)</li>
+        <li>\(\log_b a=\dfrac{\log_c a}{\log_c b}\)</li>
+        <li>\(a^{\log b}=b^{\log a}\), when both logarithms use the same base</li>
+      </ol>
+    </div>
+
+    <p>
+    The change-of-base rule is especially important in algorithm analysis. It implies
+    that changing the base of a logarithm only changes the result by a constant factor:
+    \[
+        \log_b n = \frac{\log_c n}{\log_c b}.
+    \]
+    Since \(\log_c b\) is a constant, logarithms with different constant bases have
+    the same general growth rate. Later, asymptotic notation will give us a formal
+    way to express this idea. For this reason, the base of the logarithm is often
+    not important in running-time comparisons.
+    </p>
+    
+
+    <div class="example-box">
+      <p class="box-title"><strong>Example</strong></p>
+         <p>
+        Since
+        \[
+            \log_2 n = \frac{\log_{10} n}{\log_{10} 2},
+        \]
+        the functions \(\log_2 n\) and \(\log_{10} n\) differ only by a constant
+        factor. In algorithm analysis, this means they are usually treated as having
+        the same type of growth.
+        </p>
+    </div>
+  </section>
+
+  <section id="exponents" section-title="Exponents">
+    <h2>Exponents</h2>
+    <p>
+      Exponential expressions appear in brute-force algorithms, recursive branching
+      processes, and many counting arguments.
+    </p>
+
+    <div class="theorem">
+      <p class="box-title"><strong>Exponent Rules</strong></p>
+      <p>For positive \(a\) and \(b\):</p>
+      <ol class="spaced">
+        <li>\(a^r a^s = a^{r+s}\)</li>
+        <li>\(\dfrac{a^r}{a^s}=a^{r-s}\)</li>
+        <li>\((a^r)^s=a^{rs}\)</li>
+        <li>\((ab)^r=a^r b^r\)</li>
+        <li>\(a^{-r}=\dfrac{1}{a^r}\)</li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="limits" section-title="Limits">
+    <h2>Limits</h2>
+    <p>
+      Limits provide a convenient way to compare growth rates. These basic limits are
+      often enough for the examples that arise in algorithm analysis.
+    </p>
+    <p>
+    Informally, a statement such as
+    \[
+        \lim_{n\rightarrow\infty} f(n)=L
+    \]
+    means that as \(n\) gets larger and larger, the values of \(f(n)\) get closer
+    and closer to \(L\). If the limit is \(\infty\), then \(f(n)\) does not approach
+    a fixed number; instead, it eventually becomes larger than any fixed number.
+    </p>
+
+    <div class="theorem">
+      <p class="box-title"><strong>Common Limits</strong></p>
+      <ol class="spaced">
+        <li>If \(k&gt;0\), then \(\displaystyle \lim_{n\rightarrow\infty} n^k=\infty\).</li>
+        <li>If \(k&gt;0\), then \(\displaystyle \lim_{n\rightarrow\infty} \frac{1}{n^k}=0\).</li>
+        <li>If \(a&gt;1\), then \(\displaystyle \lim_{n\rightarrow\infty} a^n=\infty\).</li>
+        <li>If \(0&lt;a&lt;1\), then \(\displaystyle \lim_{n\rightarrow\infty} a^n=0\).</li>
+        <li>If \(b&gt;1\), then \(\displaystyle \lim_{n\rightarrow\infty} \log_b n=\infty\).</li>
+        <li>If \(k&gt;0\), then \(\displaystyle \lim_{n\rightarrow\infty} \frac{\log n}{n^k}=0\).</li>
+        <li>If \(a&gt;1\) and \(k&gt;0\), then \(\displaystyle \lim_{n\rightarrow\infty} \frac{n^k}{a^n}=0\).</li>
+      </ol>
+    </div>
+
+    <p>
+      The last two limits summarize two major growth-rate facts:
+      logarithms grow slower than positive powers of \(n\), and polynomials grow slower
+      than exponentials.
+    </p>
+  </section>
+
+  <section id="derivatives" section-title="Common Derivatives">
+    <h2>Common Derivatives</h2>
+    <p>
+      Derivatives are most often needed when using l'Hopital's Rule to evaluate limits.
+      The following are the derivatives that occur most often in this setting.
+    </p>
+
+    <table class="example-table left-align">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Function</th>
+      <th>Derivative</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Constant rule</td>
+      <td>\(c\)</td>
+      <td>\(0\)</td>
+    </tr>
+    <tr>
+      <td>Power rule</td>
+      <td>\(x^k\)</td>
+      <td>\(kx^{k-1}\)</td>
+    </tr>
+    <tr>
+      <td>Natural log rule</td>
+      <td>\(\ln x\)</td>
+      <td>\(\dfrac{1}{x}\)</td>
+    </tr>
+    <tr>
+      <td>Logarithm rule</td>
+      <td>\(\log_b x\)</td>
+      <td>\(\dfrac{1}{x\ln b}\)</td>
+    </tr>
+    <tr>
+      <td>Natural exponential rule</td>
+      <td>\(e^x\)</td>
+      <td>\(e^x\)</td>
+    </tr>
+    <tr>
+      <td>Exponential rule</td>
+      <td>\(a^x\)</td>
+      <td>\(a^x\ln a\)</td>
+    </tr>
+    <tr>
+      <td>Sum rule</td>
+      <td>\(f(x)+g(x)\)</td>
+      <td>\(f'(x)+g'(x)\)</td>
+    </tr>
+    <tr>
+      <td>Product rule</td>
+      <td>\(f(x)g(x)\)</td>
+      <td>\(f'(x)g(x)+f(x)g'(x)\)</td>
+    </tr>
+    <tr>
+      <td>Quotient rule</td>
+      <td>\(\dfrac{f(x)}{g(x)}\)</td>
+      <td>\(\dfrac{f'(x)g(x)-f(x)g'(x)}{g(x)^2}\)</td>
+    </tr>
+  </tbody>
+</table>
+  </section>
+
+  <section id="lhopital" section-title="l'Hopital's Rule">
+    <h2>l'Hopital's Rule</h2>
+    <p>
+      l'Hopital's Rule is useful for comparing functions when a ratio has the form
+      \(0/0\) or \(\infty/\infty\). In algorithm analysis, we usually use it for limits
+      as \(x\) approaches infinity.
+    </p>
+
+    <div class="theorem">
+      <p class="box-title"><strong>l'Hopital's Rule</strong></p>
+      <p>
+        If \(f(x)\) and \(g(x)\) are differentiable and
+        \[
+          \lim_{x\rightarrow\infty} f(x)
+          =
+          \lim_{x\rightarrow\infty} g(x)
+          =
+          0
+        \]
+        or
+        \[
+          \lim_{x\rightarrow\infty} f(x)
+          =
+          \lim_{x\rightarrow\infty} g(x)
+          =
+          \infty,
+        \]
+        then
+        \[
+          \lim_{x\rightarrow\infty} \frac{f(x)}{g(x)}
+          =
+          \lim_{x\rightarrow\infty} \frac{f'(x)}{g'(x)},
+        \]
+        provided the limit on the right exists.
+      </p>
+    </div>
+
+    <div class="example-box">
+      <p class="box-title"><strong>Example</strong></p>
+      <p>
+        To compare \(\log x\) and \(x\), compute
+        \[
+          \lim_{x\rightarrow\infty}\frac{\log x}{x}.
+        \]
+        Since both the numerator and denominator go to infinity, l'Hopital's Rule applies:
+        \[
+          \lim_{x\rightarrow\infty}\frac{\log x}{x}
+          =
+          \lim_{x\rightarrow\infty}\frac{1/x}{1}
+          =
+          0.
+        \]
+        Therefore, \(\log x=o(x)\), and in particular \(\log x=O(x)\).
+      </p>
+    </div>
+  </section>
+
+  <section id="growth-rate-summary" section-title="Growth-Rate Summary">
+    <h2>Growth-Rate Summary</h2>
+    <p>
+  The following informal hierarchy is useful to remember. As you move from left
+  to right, the functions grow asymptotically faster:
+</p>
+
+<p>
+  \[
+    1
+    \prec
+    \log n
+    \prec
+    n^c
+    \prec
+    a^n
+    \prec
+    n!
+  \]
+</p>
+
+<p>
+  Here \(c&gt;0\) is a constant and \(a&gt;1\) is a constant. More specific examples are:
+</p>
+
+<p>
+  \[
+    1
+    \prec
+    \log n
+    \prec
+    \sqrt n
+    \prec
+    n
+    \prec
+    n\log n
+    \prec
+    n^2
+    \prec
+    2^n
+    \prec
+    n!
+  \]
+</p>
+  </section>
+
+  <section id="practice" section-title="Quick Practice">
+    <h2>Quick Practice</h2>
+    <ol class="spaced">
+      <li>Simplify \(\log(n^3)\).</li>
+      <li>Simplify \(\log(n^2/4)\).</li>
+      <li>Find \(\dfrac{d}{dx}(x^3\log x)\), assuming \(\log x=\ln x\).</li>
+      <li>Evaluate \(\displaystyle\lim_{n\rightarrow\infty}\frac{\log n}{n}\).</li>
+      <li>Evaluate \(\displaystyle\lim_{n\rightarrow\infty}\frac{n^3}{2^n}\).</li>
+      <li>Put the following in increasing asymptotic order: \(n^2\), \(\log n\), \(2^n\), \(n\log n\), \(1\).</li>
+    </ol>
+
+    <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
+    <div id="answers" class="answer" hidden>
+      <ol class="spaced">
+        <li>\(\log(n^3)=3\log n\).</li>
+        <li>\(\log(n^2/4)=2\log n-\log 4\).</li>
+        <li>Using the product rule, \(\dfrac{d}{dx}(x^3\log x)=3x^2\log x+x^2\).</li>
+        <li>\(\displaystyle\lim_{n\rightarrow\infty}\frac{\log n}{n}=0\).</li>
+        <li>\(\displaystyle\lim_{n\rightarrow\infty}\frac{n^3}{2^n}=0\).</li>
+        <li>\(1,\log n,n\log n,n^2,2^n\).</li>
+      </ol>
+    </div>
+  </section>
+
+</body>
+</html>
