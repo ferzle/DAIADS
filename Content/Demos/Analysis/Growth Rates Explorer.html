@@ -114,6 +114,8 @@
     .function-editor-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(19rem, 1fr));
+      grid-template-rows: repeat(3, auto);
+      grid-auto-flow: column;
       gap: 0.45rem 0.75rem;
     }
 
@@ -193,25 +195,6 @@
       display: block;
     }
 
-    .legend-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.45rem 0.9rem;
-      margin: 0.4rem 0 0;
-      font-size: 0.86rem;
-    }
-
-    .legend-item {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.35rem;
-      white-space: nowrap;
-    }
-
-    .legend-item.invalid {
-      color: #b91c1c;
-    }
-
     .axis-label {
       fill: #475569;
       font-size: 12px;
@@ -245,6 +228,18 @@
       stroke-dasharray: 4 4;
     }
 
+    .svg-legend-bg {
+      fill: rgba(255,255,255,0.88);
+      stroke: #cbd5e1;
+      stroke-width: 1;
+    }
+
+    .svg-legend-text {
+      fill: #334155;
+      font-size: 22px;
+      dominant-baseline: middle;
+    }
+
     @media (max-width: 680px) {
       body.no-tooltips {
         padding: 4px;
@@ -263,6 +258,11 @@
       .top-controls,
       .function-editor-grid {
         grid-template-columns: 1fr;
+      }
+
+      .function-editor-grid {
+        grid-template-rows: none;
+        grid-auto-flow: row;
       }
 
       .function-row {
@@ -306,16 +306,16 @@
       <label>
         Maximum n
         <span class="range-row">
-          <input id="maxNRange" type="range" min="5" max="200" value="40">
-          <input id="maxN" type="number" min="5" max="200" value="40">
+          <input id="maxNRange" type="range" min="5" max="10000" value="20">
+          <input id="maxN" type="number" min="5" max="10000" value="20">
         </span>
       </label>
 
       <label>
         Selected n
         <span class="range-row">
-          <input id="focusNRange" type="range" min="1" max="40" value="40">
-          <input id="focusN" type="number" min="1" max="40" value="40">
+          <input id="focusNRange" type="range" min="1" max="20" value="20">
+          <input id="focusN" type="number" min="1" max="20" value="20">
         </span>
       </label>
     </div>
@@ -329,12 +329,10 @@
 
     <div id="comment" class="comment"></div>
 
-    <div id="legend" class="legend-list"></div>
-
     <div class="function-panel">
       <p class="parser-note">
         Supported forms include <code>n</code>, <code>n^2</code>, <code>300000n^2 + 300n</code>,
-        <code>2^n</code>, <code>log_2 n</code>, <code>log_3 n</code>, <code>n log_2 n</code>, and <code>log log n</code>.
+        <code>1.5^n</code>, <code>log_2 n</code>, <code>ln n</code>, <code>sqrt n</code>, <code>(log_2 n)^2</code>, and <code>n log_2 n</code>.
         Use <code>n</code> or <code>x</code> for the input; plain <code>log</code> means base 2.
       </p>
       <div id="functionRows" class="function-editor-grid"></div>
@@ -352,52 +350,85 @@
 
     const presets = [
       {
-        name: 'Slow functions',
-        maxN: 40,
-        focusN: 40,
-        scale: 'linear',
-        comment: 'Start with log_2 n, n, n log_2 n, and n^2. Drag Maximum n toward 100 to see the gaps widen. Then edit a function, such as changing n^2 to 10n^2, to test how constants affect the picture.',
-        rows: ['log_2 n', 'n', 'n log_2 n', 'n^2']
-      },
-      {
-        name: 'Polynomial powers',
-        maxN: 40,
-        focusN: 40,
-        scale: 'linear',
-        comment: 'These are all polynomials, but the exponent changes the curve quickly. Move Selected n to compare exact values at the same input, or replace n^4 with n^5 to make the separation sharper.',
-        rows: ['n', 'n^2', 'n^3', 'n^4']
-      },
-      {
-        name: 'Short window can mislead',
-        maxN: 10,
-        focusN: 10,
-        scale: 'linear',
-        comment: 'This short window is deliberately misleading: n^4 appears larger than 2^n through n = 10. Switch to the wider-window preset, or raise Maximum n yourself, before drawing an asymptotic conclusion.',
-        rows: ['n', 'n^3', 'n^4', '2^n']
-      },
-      {
-        name: 'Wider window corrects it',
+        name: 'Constant factors',
         maxN: 20,
         focusN: 20,
         scale: 'linear',
-        comment: 'The same functions tell a different story by n = 20. Try dragging Maximum n past 20, then switch the y-axis to logarithmic so the smaller curves remain visible.',
-        rows: ['n', 'n^3', 'n^4', '2^n']
+        comment: 'Compare n^2, 10n, and 100n on 1 <= n <= 20. Then set Maximum n and Selected n to 1000. What changes? What stays the same?',
+        rows: ['n^2', '10n', '100n']
       },
       {
-        name: 'Large constants',
-        maxN: 55,
-        focusN: 55,
-        scale: 'log',
-        comment: 'Large constants can dominate for a while. Try changing 1000000n to 100n, or change 300000n^2 + 300n to n^2, and watch where the curves cross.',
-        rows: ['1000000n', '300000n^2 + 300n', '2^n']
+        name: 'Constants versus growth class',
+        maxN: 20,
+        focusN: 20,
+        scale: 'linear',
+        comment: 'Compare 10000n, 100n^2, and n^3 on 1 <= n <= 20. Then set Maximum n and Selected n to 200. Which function is largest at first? Which functions eventually dominate?',
+        rows: ['10000n', '100n^2', 'n^3']
       },
       {
         name: 'Lower-order terms',
-        maxN: 80,
-        focusN: 80,
-        scale: 'log',
-        comment: 'Lower-order terms matter most near the beginning. Move Selected n from small to large values, then edit n^2 + 99 to n^2 + 9999 to see how long the constant term stays noticeable.',
-        rows: ['n^2', 'n^2 - n', 'n^2 + 99', 'n^3', 'n^3 + 234']
+        maxN: 20,
+        focusN: 20,
+        scale: 'linear',
+        comment: 'Compare n^3, n^3+12345, and n^3+100n^2 on 1 <= n <= 20. Then set Maximum n and Selected n to 500. Why do the graphs become harder to distinguish as n grows?',
+        rows: ['n^3', 'n^3 + 12345', 'n^3 + 100n^2']
+      },
+      {
+        name: 'Do not judge too quickly',
+        maxN: 10,
+        focusN: 10,
+        scale: 'linear',
+        comment: 'Compare 2^n, 300n^3, and 5000n^2 on 1 <= n <= 10. Then set Maximum n and Selected n to 50. How could the smaller range lead to the wrong conclusion?',
+        rows: ['2^n', '300n^3', '5000n^2']
+      },
+      {
+        name: 'Logarithmic growth',
+        maxN: 100,
+        focusN: 100,
+        scale: 'linear',
+        comment: 'Compare log_2 n, sqrt n, n, and n log_2 n on 1 <= n <= 100. Then set Maximum n and Selected n to 10000. Which functions remain relatively small, and which pull away?',
+        rows: ['log_2 n', 'sqrt n', 'n', 'n log_2 n']
+      },
+      {
+        name: 'Same class, different appearance',
+        maxN: 100,
+        focusN: 100,
+        scale: 'linear',
+        comment: 'Compare n^2, n^2+n, n^2+1000n, and 5n^2 on 1 <= n <= 100. Then set Maximum n and Selected n to 1000. Which differences are caused by constant factors, and which are caused by lower-order terms?',
+        rows: ['n^2', 'n^2 + n', 'n^2 + 1000n', '5n^2']
+      },
+      {
+        name: 'Exponential bases',
+        maxN: 10,
+        focusN: 10,
+        scale: 'linear',
+        comment: 'Compare 1.001^n, 1.1^n, 1.5^n, and 2^n on 1 <= n <= 10. Then set Maximum n and Selected n to 25. Unlike logarithms, changing the base of an exponential changes the growth class.',
+        rows: ['1.001^n', '1.1^n', '1.5^n', '2^n']
+      },
+      {
+        name: 'Logarithm bases',
+        maxN: 100,
+        focusN: 100,
+        scale: 'linear',
+        comment: 'Compare log_2 n, ln n, and log_10 n on 1 <= n <= 100. Then set Maximum n and Selected n to 10000. The values differ by constant factors, but the curves keep the same general shape.',
+        rows: ['log_2 n', 'ln n', 'log_10 n']
+      },
+      {
+        name: 'Powers of logarithms',
+        maxN: 10,
+        focusN: 10,
+        scale: 'linear',
+        comment: 'Compare log_2 n, (log_2 n)^2, (log_2 n)^3, and n on 1 <= n <= 10. Then set Maximum n and Selected n to 10000. Powers of logs can separate from one another while still remaining far below linear growth eventually.',
+        rows: ['log_2 n', '(log_2 n)^2', '(log_2 n)^3', 'n']
+      },
+      {
+        name: 'Enter my own',
+        maxN: 100,
+        focusN: 100,
+        scale: 'linear',
+        custom: true,
+        comment: 'Edit the function rows below, turn rows on or off, and adjust Maximum n and Selected n to test your own comparisons.',
+        rows: []
       }
     ];
 
@@ -412,7 +443,6 @@
     const functionRowsEl = document.getElementById('functionRows');
     const chartEl = document.getElementById('chart');
     const commentEl = document.getElementById('comment');
-    const legendEl = document.getElementById('legend');
 
     function cloneRows(presetRows) {
       const next = Array.from({ length: 6 }, (_, i) => emptyRow(i));
@@ -434,12 +464,15 @@
     }
 
     function setMaxN(value) {
-      const maxN = Math.round(clampNumber(value, 5, 200, 40));
+      const previousMax = Number(maxNRangeEl.value) || 20;
+      const previousFocus = Number(focusNRangeEl.value) || previousMax;
+      const shouldFollowMax = previousFocus === previousMax;
+      const maxN = Math.round(clampNumber(value, 5, 10000, 20));
       maxNEl.value = maxN;
       maxNRangeEl.value = maxN;
       focusNEl.max = maxN;
       focusNRangeEl.max = maxN;
-      if (Number(focusNEl.value) > maxN) {
+      if (Number(focusNEl.value) > maxN || shouldFollowMax) {
         focusNEl.value = maxN;
         focusNRangeEl.value = maxN;
       }
@@ -450,6 +483,33 @@
       const focusN = Math.round(clampNumber(value, 1, maxN, maxN));
       focusNEl.value = focusN;
       focusNRangeEl.value = focusN;
+    }
+
+    function handleMaxNInput() {
+      const value = maxNEl.value.trim();
+      const num = Number(value);
+      if (!value || !Number.isFinite(num) || num < 5 || num > 10000) return;
+      setMaxN(value);
+      render();
+    }
+
+    function commitMaxNInput() {
+      setMaxN(maxNEl.value);
+      render();
+    }
+
+    function handleFocusNInput() {
+      const maxN = Number(maxNRangeEl.value);
+      const value = focusNEl.value.trim();
+      const num = Number(value);
+      if (!value || !Number.isFinite(num) || num < 1 || num > maxN) return;
+      setFocusN(value);
+      render();
+    }
+
+    function commitFocusNInput() {
+      setFocusN(focusNEl.value);
+      render();
     }
 
     function applyPreset(index) {
@@ -515,7 +575,6 @@
       const parsedRows = parseRows();
       updateRowErrors(parsedRows);
       renderChart(maxN, focusN, scale, parsedRows);
-      renderLegend(parsedRows);
       updateRowValues(maxN, focusN, parsedRows);
     }
 
@@ -646,7 +705,34 @@
         }
       });
 
+      pieces.push(renderSvgLegend(active, margin, plotW));
       chartEl.innerHTML = pieces.join('');
+    }
+
+    function renderSvgLegend(items, margin, plotW) {
+      if (!items.length) return '';
+
+      const labels = items.map(item => item.row.expr || 'blank');
+      const rowH = 32;
+      const pad = 12;
+      const x = margin.left + 12;
+      const y = margin.top + 12;
+      const width = Math.min(plotW - 24, Math.max(150, Math.max(...labels.map(label => label.length)) * 12 + 54));
+      const height = labels.length * rowH + pad * 2;
+      const rows = labels.map((label, i) => {
+        const cy = y + pad + i * rowH + rowH / 2;
+        return `
+          <circle cx="${x + pad}" cy="${cy}" r="7" fill="${items[i].row.color}"></circle>
+          <text class="svg-legend-text" x="${x + pad + 20}" y="${cy}">${escapeHtml(label)}</text>
+        `;
+      }).join('');
+
+      return `
+        <g class="svg-legend" aria-hidden="true">
+          <rect class="svg-legend-bg" x="${x}" y="${y}" width="${width}" height="${height}" rx="5"></rect>
+          ${rows}
+        </g>
+      `;
     }
 
     function makeTicks(min, max, count) {
@@ -660,28 +746,32 @@
     function buildPath(item, maxN, xFor, yFor) {
       let d = '';
       let open = false;
-      for (let n = 1; n <= maxN; n += 1) {
+      sampleNs(maxN).forEach(n => {
         const value = valueFor(item, n);
         const y = yFor(value);
         if (!Number.isFinite(value) || !Number.isFinite(y)) {
           open = false;
-          continue;
+          return;
         }
         const x = xFor(n);
         d += `${open ? 'L' : 'M'} ${x.toFixed(2)} ${y.toFixed(2)} `;
         open = true;
-      }
+      });
       return d.trim();
     }
 
-    function renderLegend(parsedRows) {
-      const enabled = parsedRows.filter(item => item.row.enabled);
-      legendEl.innerHTML = enabled.map(item => `
-        <span class="legend-item ${item.parsed.ok ? '' : 'invalid'}">
-          <span class="swatch" style="background:${item.row.color}"></span>
-          <span>${escapeHtml(item.row.expr || 'blank')}${item.parsed.ok ? '' : ' (not plotted)'}</span>
-        </span>
-      `).join('');
+    function sampleNs(maxN) {
+      const maxPoints = 800;
+      if (maxN <= maxPoints) {
+        return Array.from({ length: maxN }, (_, i) => i + 1);
+      }
+
+      const samples = new Set([1, maxN]);
+      const step = (maxN - 1) / (maxPoints - 1);
+      for (let i = 0; i < maxPoints; i += 1) {
+        samples.add(Math.round(1 + i * step));
+      }
+      return Array.from(samples).sort((a, b) => a - b);
     }
 
     function valueFor(item, n) {
@@ -770,6 +860,12 @@
         if (text.startsWith('lg', i)) {
           tokens.push({ type: 'func', name: 'lg' });
           i += 2;
+          continue;
+        }
+
+        if (text.startsWith('sqrt', i)) {
+          tokens.push({ type: 'func', name: 'sqrt' });
+          i += 4;
           continue;
         }
 
@@ -879,7 +975,7 @@
           return expr;
         }
 
-        throw new Error('Expected a number, n, x, log, or parentheses.');
+        throw new Error('Expected a number, n, x, log, sqrt, or parentheses.');
       }
 
       parseFunctionArgument() {
@@ -943,6 +1039,9 @@
 
       if (node.type === 'func') {
         const value = evaluateAst(node.arg, n);
+        if (node.name === 'sqrt') {
+          return value < 0 ? NaN : Math.sqrt(value);
+        }
         const base = logBaseFor(node);
         if (value <= 0 || base <= 0 || base === 1) return NaN;
         return Math.log(value) / Math.log(base);
@@ -966,14 +1065,28 @@
     }
 
     presetEl.innerHTML = presets.map((preset, i) =>
-      `<option value="${i}">${preset.name}</option>`
+      `<option value="${i}">${i + 1}. ${preset.name}</option>`
     ).join('');
 
     presetEl.addEventListener('change', () => applyPreset(Number(presetEl.value)));
     scaleEl.addEventListener('change', render);
-    maxNEl.addEventListener('input', () => { setMaxN(maxNEl.value); render(); });
+    maxNEl.addEventListener('input', handleMaxNInput);
+    maxNEl.addEventListener('change', commitMaxNInput);
+    maxNEl.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        commitMaxNInput();
+        maxNEl.blur();
+      }
+    });
     maxNRangeEl.addEventListener('input', () => { setMaxN(maxNRangeEl.value); render(); });
-    focusNEl.addEventListener('input', () => { setFocusN(focusNEl.value); render(); });
+    focusNEl.addEventListener('input', handleFocusNInput);
+    focusNEl.addEventListener('change', commitFocusNInput);
+    focusNEl.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        commitFocusNInput();
+        focusNEl.blur();
+      }
+    });
     focusNRangeEl.addEventListener('input', () => { setFocusN(focusNRangeEl.value); render(); });
     functionRowsEl.addEventListener('input', (event) => syncRowFromInput(event.target));
     functionRowsEl.addEventListener('change', (event) => syncRowFromInput(event.target));

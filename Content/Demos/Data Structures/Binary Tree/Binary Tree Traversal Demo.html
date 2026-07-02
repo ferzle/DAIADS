@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <title>Binary Tree Traversal Demo</title>
-  <script src="../../../../scripts/demoScripts.js"></script>
-  <link rel="stylesheet" href="../../../../css/style.css">
-  <link rel="stylesheet" href="../../../../css/demo.css">
+  <script src="/DAIADS/scripts/demoScripts.js"></script>
+  <link rel="stylesheet" href="/DAIADS/css/style.css">
+  <link rel="stylesheet" href="/DAIADS/css/demo.css">
   <style>
     .tree-controls {
       display: flex;
@@ -19,19 +19,62 @@
       align-items: center;
       gap: 4px;
     }
+    .tree-demo-layout {
+      --panel-height: 560px;
+      --stack-width: 270px;
+      display: grid;
+      grid-template-columns: minmax(360px, 680px) var(--stack-width);
+      gap: 16px;
+      align-items: stretch;
+      justify-content: start;
+      margin-top: 12px;
+    }
+    .visual-panel,
+    .state-panel {
+      border: 1px solid #b8c6cc;
+      background: #fff;
+      box-sizing: border-box;
+    }
+    .visual-panel {
+      min-width: 0;
+      min-height: var(--panel-height);
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+    }
+    .traversal-summary {
+      display: grid;
+      gap: 6px;
+      margin: 10px 0 8px;
+      line-height: 1.45;
+    }
     #status {
-      min-height: 42px;
-      margin: 8px 0;
-      padding: 6px 8px;
+      min-height: 60px;
+      margin: 0;
+      padding: 8px 10px;
       border-left: 4px solid #4a768b;
       background: #f7fbfd;
+      box-sizing: border-box;
+      line-height: 1.35;
     }
-    .tree-demo-layout {
+    .step-status-row {
       display: grid;
-      grid-template-columns: minmax(320px, 620px) minmax(220px, 1fr);
-      gap: 16px;
-      align-items: start;
-      margin-top: 12px;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 8px;
+      align-items: stretch;
+      margin: 8px 0 10px;
+    }
+    .step-count {
+      min-width: 104px;
+      padding: 8px 10px;
+      border: 1px solid #b8c6cc;
+      background: #fff;
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-weight: 700;
     }
     svg {
       width: 100%;
@@ -45,17 +88,21 @@
       stroke: #777;
       stroke-width: 2;
     }
+    .tree-edge.active {
+      stroke: #d17a00;
+      stroke-width: 4;
+    }
     .tree-node circle {
       fill: #cce3ff;
       stroke: #333;
       stroke-width: 1.5;
     }
+    .tree-node.visited circle {
+      fill: #74b474;
+    }
     .tree-node.current circle {
       fill: #ffe16a;
       stroke-width: 3;
-    }
-    .tree-node.visited circle {
-      fill: #74b474;
     }
     .tree-node text {
       text-anchor: middle;
@@ -63,8 +110,93 @@
       font-weight: bold;
       fill: #111;
     }
-    .traversal-panel {
-      line-height: 1.5;
+    .state-panel {
+      height: var(--panel-height);
+      overflow-y: auto;
+      padding: 10px;
+    }
+    .state-panel h3 {
+      margin: 0 0 8px;
+      font-size: 1rem;
+    }
+    .state-details {
+      margin-bottom: 8px;
+      font-size: 0.95rem;
+      color: #334;
+    }
+    .call-frame {
+      border: 1px solid #b5bec5;
+      border-radius: 6px;
+      background: #fbfcfd;
+      margin-bottom: 8px;
+      overflow: hidden;
+    }
+    .call-frame.active {
+      border-color: #285f7a;
+      box-shadow: inset 3px 0 0 #285f7a;
+    }
+    .call-frame.call-active .call-frame-header {
+      background: #ffe16a;
+      color: #111;
+    }
+    .call-frame-header {
+      padding: 6px 8px;
+      background: #eef3f6;
+      border-bottom: 1px solid #d8e0e5;
+      font-family: monospace;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .frame-code {
+      padding: 5px 0;
+    }
+    .code-line {
+      padding: 3px 8px 3px 18px;
+      font-family: monospace;
+      white-space: nowrap;
+    }
+    .code-line.waiting {
+      background: #fff8df;
+    }
+    .code-line.active {
+      background: #ffe16a;
+      font-weight: 700;
+    }
+    .resume-marker {
+      margin: 2px 8px 2px 18px;
+      padding: 2px 8px;
+      border-left: 3px solid #d17a00;
+      background: #ffe16a;
+      font-family: monospace;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .code-line.indent-1 {
+      padding-left: 34px;
+    }
+    .code-line.indent-2 {
+      padding-left: 50px;
+    }
+    .empty-state {
+      padding: 8px;
+      border: 1px dashed #b8c6cc;
+      background: #f8fafb;
+      color: #445;
+    }
+    .queue-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+    .queue-chip {
+      min-width: 28px;
+      padding: 4px 7px;
+      border: 1px solid #7891a0;
+      background: #edf5f9;
+      text-align: center;
+      font-family: monospace;
+      font-weight: 700;
     }
     .output-list {
       min-height: 36px;
@@ -74,6 +206,26 @@
       background: #f6f6f6;
       font-family: monospace;
       font-size: 16px;
+    }
+    @media (max-width: 760px) {
+      .tree-demo-layout {
+        --panel-height: auto;
+        --stack-width: auto;
+      }
+      .tree-demo-layout,
+      .step-status-row {
+        grid-template-columns: 1fr;
+      }
+      .visual-panel {
+        min-height: 0;
+      }
+      svg {
+        height: 300px;
+      }
+      .state-panel {
+        height: auto;
+        max-height: 280px;
+      }
     }
   </style>
   <!-- Google tag (gtag.js) -->
@@ -99,56 +251,141 @@
           <option value="levelorder">Level-order</option>
         </select>
       </label>
+      <label>
+        Tree
+        <select id="treeSelect">
+          <option value="small">Small</option>
+          <option value="medium" selected>Medium</option>
+          <option value="large">Large</option>
+        </select>
+      </label>
       <button id="prevBtn">Previous</button>
       <button id="nextBtn">Next</button>
       <button id="resetBtn">Reset Traversal</button>
     </div>
 
-    <div class="legend">
-      <strong>Legend:</strong>
-      <span class="legend-box" style="background:#ffe16a;"></span>Current visit
-      <span class="legend-box" style="background:#74b474;"></span>Already visited
-      <span class="legend-box" style="background:#cce3ff;"></span>Not visited yet
-    </div>
-
-    <div id="status"></div>
     <div class="tree-demo-layout">
-      <svg id="treeSvg" viewBox="0 0 640 320" preserveAspectRatio="xMidYMid meet"></svg>
-      <div class="traversal-panel">
-        <div><strong>Rule:</strong> <span id="ruleText"></span></div>
-        <div><strong>Visited order:</strong></div>
-        <div id="outputList" class="output-list"></div>
-        <div id="stepCount"></div>
-      </div>
+      <section class="visual-panel">
+        <div class="legend">
+          <strong>Legend:</strong>
+          <span class="legend-box" style="background:#ffe16a;"></span>Current
+          <span class="legend-box" style="background:#74b474;"></span>Visited
+          <span class="legend-box" style="background:#cce3ff;"></span>Unvisited
+        </div>
+
+        <div class="traversal-summary">
+          <div><strong>Rule:</strong> <span id="ruleText"></span></div>
+          <div>
+            <strong>Visited order:</strong>
+            <div id="outputList" class="output-list"></div>
+          </div>
+        </div>
+        <div class="step-status-row">
+          <div id="status"></div>
+          <div id="stepCount" class="step-count"></div>
+        </div>
+        <svg id="treeSvg" viewBox="0 0 640 320" preserveAspectRatio="xMidYMid meet"></svg>
+      </section>
+      <aside class="state-panel">
+        <h3 id="stateTitle">Call Stack</h3>
+        <div id="stateDetails" class="state-details"></div>
+        <div id="callStack" class="call-stack"></div>
+      </aside>
     </div>
   </div>
 
   <script>
-    const tree = {
-      id: 'A',
-      left: {
-        id: 'B',
-        left: { id: 'D' },
-        right: {
-          id: 'E',
-          left: { id: 'G' }
+    const treeChoices = {
+      small: {
+        tree: {
+          id: 'A',
+          left: { id: 'B' },
+          right: { id: 'C' }
+        },
+        positions: {
+          A: { x: 320, y: 70 },
+          B: { x: 220, y: 190 },
+          C: { x: 420, y: 190 }
         }
       },
-      right: {
-        id: 'C',
-        right: { id: 'F' }
+      medium: {
+        tree: {
+          id: 'A',
+          left: {
+            id: 'B',
+            left: { id: 'D' },
+            right: {
+              id: 'E',
+              left: { id: 'G' }
+            }
+          },
+          right: {
+            id: 'C',
+            right: { id: 'F' }
+          }
+        },
+        positions: {
+          A: { x: 320, y: 42 },
+          B: { x: 185, y: 112 },
+          C: { x: 455, y: 112 },
+          D: { x: 105, y: 190 },
+          E: { x: 265, y: 190 },
+          F: { x: 535, y: 190 },
+          G: { x: 225, y: 268 }
+        }
+      },
+      large: {
+        tree: {
+          id: 'A',
+          left: {
+            id: 'B',
+            left: {
+              id: 'D',
+              left: { id: 'H' },
+              right: { id: 'I' }
+            },
+            right: {
+              id: 'E',
+              left: { id: 'J' },
+              right: { id: 'K' }
+            }
+          },
+          right: {
+            id: 'C',
+            left: {
+              id: 'F',
+              left: { id: 'L' },
+              right: { id: 'M' }
+            },
+            right: {
+              id: 'G',
+              left: { id: 'N' },
+              right: { id: 'O' }
+            }
+          }
+        },
+        positions: {
+          A: { x: 320, y: 34 },
+          B: { x: 160, y: 102 },
+          C: { x: 480, y: 102 },
+          D: { x: 80, y: 170 },
+          E: { x: 240, y: 170 },
+          F: { x: 400, y: 170 },
+          G: { x: 560, y: 170 },
+          H: { x: 40, y: 248 },
+          I: { x: 120, y: 248 },
+          J: { x: 200, y: 248 },
+          K: { x: 280, y: 248 },
+          L: { x: 360, y: 248 },
+          M: { x: 440, y: 248 },
+          N: { x: 520, y: 248 },
+          O: { x: 600, y: 248 }
+        }
       }
     };
 
-    const positions = {
-      A: { x: 320, y: 42 },
-      B: { x: 185, y: 112 },
-      C: { x: 455, y: 112 },
-      D: { x: 105, y: 190 },
-      E: { x: 265, y: 190 },
-      F: { x: 535, y: 190 },
-      G: { x: 225, y: 268 }
-    };
+    let tree = treeChoices.medium.tree;
+    let positions = treeChoices.medium.positions;
 
     const rules = {
       preorder: 'visit the node, then traverse the left subtree, then the right subtree.',
@@ -157,47 +394,232 @@
       levelorder: 'visit nodes level by level, from left to right within each level.'
     };
 
-    let order = [];
+    const traversalConfigs = {
+      preorder: {
+        name: 'Preorder',
+        functionName: 'preOrderTraversal',
+        sequence: ['visit', 'left', 'right']
+      },
+      inorder: {
+        name: 'Inorder',
+        functionName: 'inOrderTraversal',
+        sequence: ['left', 'visit', 'right']
+      },
+      postorder: {
+        name: 'Postorder',
+        functionName: 'postOrderTraversal',
+        sequence: ['left', 'right', 'visit']
+      }
+    };
+
+    const levelOrderLines = [
+      { key: 'enqueueRoot', text: 'queue.enqueue(root)', indent: 0 },
+      { key: 'loop', text: 'while queue is not empty', indent: 0 },
+      { key: 'dequeue', text: 'node = queue.dequeue()', indent: 1 },
+      { key: 'visit', text: 'print(node)', indent: 1 },
+      { key: 'leftCheck', text: 'if node.hasLeft', indent: 1 },
+      { key: 'leftEnqueue', text: 'queue.enqueue(node.left)', indent: 2 },
+      { key: 'rightCheck', text: 'if node.hasRight', indent: 1 },
+      { key: 'rightEnqueue', text: 'queue.enqueue(node.right)', indent: 2 }
+    ];
+
+    const outputArrow = ' → ';
+
+    let steps = [];
     let stepIndex = -1;
 
-    function preorder(node, result) {
-      if (!node) return;
-      result.push(node.id);
-      preorder(node.left, result);
-      preorder(node.right, result);
+    function formatAction(action, nodeId, config) {
+      if (action === 'visit') return `print(${nodeId})`;
+      return `${config.functionName}(${action})`;
     }
 
-    function inorder(node, result) {
-      if (!node) return;
-      inorder(node.left, result);
-      result.push(node.id);
-      inorder(node.right, result);
+    function cloneStack(stack) {
+      return stack.map((frame, index) => ({
+        nodeId: frame.nodeId,
+        functionName: frame.functionName,
+        lineKey: frame.lineKey,
+        callActive: frame.callActive,
+        resumeAfter: frame.resumeAfter,
+        resumeBefore: frame.resumeBefore,
+        active: index === stack.length - 1
+      }));
     }
 
-    function postorder(node, result) {
-      if (!node) return;
-      postorder(node.left, result);
-      postorder(node.right, result);
-      result.push(node.id);
-    }
-
-    function levelorder(node, result) {
-      const queue = node ? [node] : [];
-      while (queue.length > 0) {
-        const current = queue.shift();
-        result.push(current.id);
-        if (current.left) queue.push(current.left);
-        if (current.right) queue.push(current.right);
-      }
-    }
-
-    function buildOrder(kind) {
+    function buildDepthFirstSteps(kind) {
+      const config = traversalConfigs[kind];
       const result = [];
-      if (kind === 'preorder') preorder(tree, result);
-      if (kind === 'inorder') inorder(tree, result);
-      if (kind === 'postorder') postorder(tree, result);
-      if (kind === 'levelorder') levelorder(tree, result);
+      const visited = [];
+      const stack = [];
+
+      function addStep(comment, currentId, activeEdge) {
+        result.push({
+          kind,
+          comment,
+          currentId,
+          activeEdge: activeEdge || null,
+          visited: [...visited],
+          stack: cloneStack(stack)
+        });
+      }
+
+      function setTopLine(action) {
+        const top = stack[stack.length - 1];
+        top.lineKey = action;
+        top.callActive = false;
+        top.resumeAfter = '';
+        top.resumeBefore = '';
+      }
+
+      function setTopResume(afterAction, beforeAction) {
+        const top = stack[stack.length - 1];
+        top.lineKey = '';
+        top.callActive = false;
+        top.resumeAfter = afterAction;
+        top.resumeBefore = beforeAction || '';
+      }
+
+      function traverse(node, parent, side) {
+        stack.push({
+          nodeId: node.id,
+          functionName: config.functionName,
+          lineKey: '',
+          callActive: true,
+          resumeAfter: '',
+          resumeBefore: ''
+        });
+
+        if (parent) {
+          addStep(
+            `Execute ${config.functionName}(${side}) from ${parent.id}; enter ${config.functionName}(${node.id}).`,
+            node.id,
+            [parent.id, node.id]
+          );
+        } else {
+          addStep(
+            `Call ${config.functionName}(${node.id}) at the root.`,
+            node.id
+          );
+        }
+
+        for (let actionIndex = 0; actionIndex < config.sequence.length; actionIndex++) {
+          const action = config.sequence[actionIndex];
+          setTopLine(action);
+
+          if (action === 'visit') {
+            visited.push(node.id);
+            addStep(`Execute print(${node.id}); append it to the visited order.`, node.id);
+            continue;
+          }
+
+          const child = node[action];
+          if (child) {
+            traverse(child, node, action);
+
+            setTopResume(action, config.sequence[actionIndex + 1]);
+            addStep(
+              `Return from ${child.id} to ${node.id}; resume ${config.functionName}(${node.id}).`,
+              node.id,
+              [child.id, node.id]
+            );
+          } else {
+            addStep(
+              `${node.id} has no ${action} child, so ${config.functionName}(${action}) returns immediately.`,
+              node.id
+            );
+          }
+        }
+
+        stack.pop();
+      }
+
+      traverse(tree, null, null);
+      result.push({
+        kind,
+        comment: `Traversal complete. The visited order is ${visited.join(outputArrow)}.`,
+        currentId: '',
+        activeEdge: null,
+        visited: [...visited],
+        stack: []
+      });
+
       return result;
+    }
+
+    function buildLevelOrderSteps() {
+      const result = [];
+      const visited = [];
+      const queue = [];
+
+      function addStep(comment, currentId, lineKey, activeEdge) {
+        result.push({
+          kind: 'levelorder',
+          comment,
+          currentId,
+          lineKey,
+          activeEdge: activeEdge || null,
+          visited: [...visited],
+          queue: queue.map((node) => node.id)
+        });
+      }
+
+      queue.push(tree);
+      addStep(`Enqueue the root ${tree.id} to start the traversal.`, tree.id, 'enqueueRoot');
+
+      while (queue.length > 0) {
+        addStep(`The queue front is ${queue[0].id}, so the loop continues.`, queue[0].id, 'loop');
+        const current = queue.shift();
+        addStep(`Dequeue ${current.id}; it becomes the current node.`, current.id, 'dequeue');
+
+        visited.push(current.id);
+        addStep(`Print ${current.id}; append it to the visited order.`, current.id, 'visit');
+
+        addStep(
+          current.left ? `${current.id} has a left child, so node.hasLeft is true.` : `${current.id} has no left child, so node.hasLeft is false.`,
+          current.id,
+          'leftCheck'
+        );
+        if (current.left) {
+          queue.push(current.left);
+          addStep(
+            `Enqueue ${current.left.id}, the left child of ${current.id}.`,
+            current.id,
+            'leftEnqueue',
+            [current.id, current.left.id]
+          );
+        }
+
+        addStep(
+          current.right ? `${current.id} has a right child, so node.hasRight is true.` : `${current.id} has no right child, so node.hasRight is false.`,
+          current.id,
+          'rightCheck'
+        );
+        if (current.right) {
+          queue.push(current.right);
+          addStep(
+            `Enqueue ${current.right.id}, the right child of ${current.id}.`,
+            current.id,
+            'rightEnqueue',
+            [current.id, current.right.id]
+          );
+        }
+      }
+
+      result.push({
+        kind: 'levelorder',
+        comment: `Traversal complete. The visited order is ${visited.join(outputArrow)}.`,
+        currentId: '',
+        lineKey: '',
+        activeEdge: null,
+        visited: [...visited],
+        queue: []
+      });
+
+      return result;
+    }
+
+    function buildSteps(kind) {
+      if (kind === 'levelorder') return buildLevelOrderSteps();
+      return buildDepthFirstSteps(kind);
     }
 
     function collectEdges(node, edges) {
@@ -229,8 +651,10 @@
 
       const edges = [];
       const nodes = [];
-      const visited = new Set(order.slice(0, stepIndex + 1));
-      const currentId = stepIndex >= 0 ? order[stepIndex] : '';
+      const step = stepIndex >= 0 ? steps[stepIndex] : null;
+      const visited = new Set(step ? step.visited : []);
+      const currentId = step ? step.currentId : '';
+      const activeEdge = step ? step.activeEdge : null;
 
       collectEdges(tree, edges);
       collectNodes(tree, nodes);
@@ -244,6 +668,11 @@
         line.setAttribute('x2', b.x);
         line.setAttribute('y2', b.y);
         line.setAttribute('class', 'tree-edge');
+        if (activeEdge &&
+            ((activeEdge[0] === from && activeEdge[1] === to) ||
+             (activeEdge[0] === to && activeEdge[1] === from))) {
+          line.classList.add('active');
+        }
         svg.appendChild(line);
       });
 
@@ -270,36 +699,154 @@
       });
     }
 
+    function renderCallStack(step, kind) {
+      const title = document.getElementById('stateTitle');
+      const details = document.getElementById('stateDetails');
+      const container = document.getElementById('callStack');
+      const config = traversalConfigs[kind];
+
+      title.textContent = 'Call Stack';
+      container.innerHTML = '';
+
+      if (!step || step.stack.length === 0) {
+        details.textContent = step ? 'Call stack is empty.' : 'No active calls.';
+        const empty = document.createElement('div');
+        empty.className = 'empty-state';
+        empty.textContent = step ? 'All recursive calls have returned.' : 'The traversal has not entered a recursive call.';
+        container.appendChild(empty);
+        return;
+      }
+
+      details.textContent = `Depth ${step.stack.length}`;
+
+      step.stack.forEach((frame) => {
+        const frameElement = document.createElement('div');
+        frameElement.className = 'call-frame';
+        if (frame.active) frameElement.classList.add('active');
+        if (frame.callActive) frameElement.classList.add('call-active');
+
+        const header = document.createElement('div');
+        header.className = 'call-frame-header';
+        header.textContent = `${frame.functionName}(${frame.nodeId})`;
+        frameElement.appendChild(header);
+
+        const code = document.createElement('div');
+        code.className = 'frame-code';
+        config.sequence.forEach((action) => {
+          const line = document.createElement('div');
+          line.className = 'code-line';
+          if (frame.lineKey === action) {
+            line.classList.add(frame.active ? 'active' : 'waiting');
+          }
+          line.textContent = formatAction(action, frame.nodeId, config);
+          code.appendChild(line);
+
+          if (frame.resumeAfter === action) {
+            const marker = document.createElement('div');
+            marker.className = 'resume-marker';
+            marker.textContent = frame.resumeBefore ? 'continuing here' : 'finished. returning.';
+            code.appendChild(marker);
+          }
+        });
+
+        frameElement.appendChild(code);
+        container.appendChild(frameElement);
+      });
+    }
+
+    function renderQueueState(step) {
+      const title = document.getElementById('stateTitle');
+      const details = document.getElementById('stateDetails');
+      const container = document.getElementById('callStack');
+
+      title.textContent = 'Queue';
+      container.innerHTML = '';
+
+      const queue = step ? step.queue : [];
+      details.textContent = queue.length === 0 ? 'Queue is empty.' : `Queue front: ${queue[0]}`;
+
+      const queueList = document.createElement('div');
+      queueList.className = 'queue-list';
+      if (queue.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'empty-state';
+        empty.textContent = 'No queued nodes.';
+        queueList.appendChild(empty);
+      } else {
+        queue.forEach((id) => {
+          const chip = document.createElement('div');
+          chip.className = 'queue-chip';
+          chip.textContent = id;
+          queueList.appendChild(chip);
+        });
+      }
+      container.appendChild(queueList);
+
+      const frameElement = document.createElement('div');
+      frameElement.className = 'call-frame active';
+
+      const header = document.createElement('div');
+      header.className = 'call-frame-header';
+      header.textContent = 'levelOrderTraversal(root)';
+      frameElement.appendChild(header);
+
+      const code = document.createElement('div');
+      code.className = 'frame-code';
+      levelOrderLines.forEach((item) => {
+        const line = document.createElement('div');
+        line.className = 'code-line';
+        if (item.indent) line.classList.add(`indent-${item.indent}`);
+        if (step && step.lineKey === item.key) line.classList.add('active');
+        line.textContent = item.text;
+        code.appendChild(line);
+      });
+      frameElement.appendChild(code);
+      container.appendChild(frameElement);
+    }
+
+    function renderStatePane(kind, step) {
+      if (kind === 'levelorder') {
+        renderQueueState(step);
+      } else {
+        renderCallStack(step, kind);
+      }
+    }
+
     function render() {
       const kind = document.getElementById('traversalSelect').value;
+      const step = stepIndex >= 0 ? steps[stepIndex] : null;
       document.getElementById('ruleText').textContent = rules[kind];
 
-      const visitedOrder = order.slice(0, stepIndex + 1);
+      const visitedOrder = step ? step.visited : [];
       document.getElementById('outputList').textContent =
-        visitedOrder.length === 0 ? '(none yet)' : visitedOrder.join(' -> ');
+        visitedOrder.length === 0 ? '(none yet)' : visitedOrder.join(outputArrow);
       document.getElementById('stepCount').textContent =
-        `Step ${Math.max(stepIndex + 1, 0)} of ${order.length}`;
+        `Step ${Math.max(stepIndex + 1, 0)} of ${steps.length}`;
 
-      if (stepIndex < 0) {
+      if (!step) {
         document.getElementById('status').textContent = 'Choose Next to begin the traversal.';
       } else {
-        document.getElementById('status').textContent =
-          `Visit ${order[stepIndex]}. It is appended to the traversal output.`;
+        document.getElementById('status').textContent = step.comment;
       }
 
       document.getElementById('prevBtn').disabled = stepIndex < 0;
-      document.getElementById('nextBtn').disabled = stepIndex >= order.length - 1;
+      document.getElementById('nextBtn').disabled = stepIndex >= steps.length - 1;
+      renderStatePane(kind, step);
       renderTree();
     }
 
     function resetTraversal() {
       const kind = document.getElementById('traversalSelect').value;
-      order = buildOrder(kind);
+      const treeChoice = document.getElementById('treeSelect').value;
+      tree = treeChoices[treeChoice].tree;
+      positions = treeChoices[treeChoice].positions;
+      steps = buildSteps(kind);
       stepIndex = -1;
       render();
     }
 
     document.getElementById('traversalSelect').addEventListener('change', resetTraversal);
+    document.getElementById('treeSelect').addEventListener('change', resetTraversal);
     document.getElementById('prevBtn').addEventListener('click', () => {
       if (stepIndex >= 0) {
         stepIndex--;
@@ -307,7 +854,7 @@
       }
     });
     document.getElementById('nextBtn').addEventListener('click', () => {
-      if (stepIndex < order.length - 1) {
+      if (stepIndex < steps.length - 1) {
         stepIndex++;
         render();
       }

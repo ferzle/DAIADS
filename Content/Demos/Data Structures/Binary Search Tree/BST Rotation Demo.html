@@ -39,6 +39,7 @@
     .tree-edge {
       stroke: #777;
       stroke-width: 2;
+      stroke-linecap: round;
     }
     .rotation-node circle {
       fill: #cce3ff;
@@ -146,6 +147,7 @@
           title: 'Left rotation',
           message: 'After rotating left: 20 moves up, 10 becomes its left child, and T2 becomes the right subtree of 10.',
           focus: ['A', 'B'],
+          motionFocus: ['A', 'B'],
           inorder: 'T1, 10, T2, 20, T3',
           tree: n('B', '20', n('A', '10', t('T1'), t('T2')), t('T3'))
         }
@@ -165,6 +167,7 @@
           title: 'Right rotation',
           message: 'After rotating right: 10 moves up, 20 becomes its right child, and T2 becomes the left subtree of 20.',
           focus: ['A', 'B'],
+          motionFocus: ['A', 'B'],
           inorder: 'T1, 10, T2, 20, T3',
           tree: n('A', '10', t('T1'), n('B', '20', t('T2'), t('T3')))
         }
@@ -184,6 +187,7 @@
           title: 'Left-right rotation',
           message: 'Step 1: rotate left at 10. This converts the shape into a simple left-heavy case at 30.',
           focus: ['Y', 'X'],
+          motionFocus: ['Y', 'X'],
           inorder: 'T1, 10, T2, 20, T3, 30, T4',
           tree: n('Z', '30', n('X', '20', n('Y', '10', t('T1'), t('T2')), t('T3')), t('T4'))
         },
@@ -191,6 +195,7 @@
           title: 'Left-right rotation',
           message: 'Step 2: rotate right at 30. The middle value, 20, becomes the root of this local subtree.',
           focus: ['X', 'Z'],
+          motionFocus: ['X', 'Z'],
           inorder: 'T1, 10, T2, 20, T3, 30, T4',
           tree: n('X', '20', n('Y', '10', t('T1'), t('T2')), n('Z', '30', t('T3'), t('T4')))
         }
@@ -210,6 +215,7 @@
           title: 'Right-left rotation',
           message: 'Step 1: rotate right at 30. This converts the shape into a simple right-heavy case at 10.',
           focus: ['X', 'Y'],
+          motionFocus: ['X', 'Y'],
           inorder: 'T1, 10, T2, 20, T3, 30, T4',
           tree: n('Z', '10', t('T1'), n('X', '20', t('T2'), n('Y', '30', t('T3'), t('T4'))))
         },
@@ -217,6 +223,7 @@
           title: 'Right-left rotation',
           message: 'Step 2: rotate left at 10. The middle value, 20, becomes the root of this local subtree.',
           focus: ['Z', 'X'],
+          motionFocus: ['Z', 'X'],
           inorder: 'T1, 10, T2, 20, T3, 30, T4',
           tree: n('X', '20', n('Z', '10', t('T1'), t('T2')), n('Y', '30', t('T3'), t('T4')))
         }
@@ -230,9 +237,25 @@
       rightLeft: rightLeftSteps
     };
 
+    const NODE_RADIUS = 22;
+    const SUBTREE_WIDTH = 44;
+    const SUBTREE_HEIGHT = 32;
+    const LAYOUT_WIDTH = 720;
+    const LAYOUT_HEIGHT = 360;
+    const ROOT_X = LAYOUT_WIDTH / 2;
+    const ROOT_Y = 44;
+    const ROOT_CHILD_GAP = 180;
+    const MIN_CHILD_GAP = 58;
+    const LEVEL_GAP = 76;
+    const ANIMATION_MS = 900;
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
     let currentCase = 'left';
     let steps = [];
     let stepIndex = 0;
+    let renderedLayout = null;
+    let animationFrameId = null;
+    let isAnimating = false;
 
     function svgElement(name) {
       return document.createElementNS('http://www.w3.org/2000/svg', name);
@@ -241,125 +264,330 @@
     function layoutTree(root) {
       const positions = new Map();
       const edges = [];
-      let nextX = 0;
+      const parents = new Map();
       let maxDepth = 0;
 
-      function assign(node, depth) {
+      function assign(node, depth, x) {
         if (!node) return;
         maxDepth = Math.max(maxDepth, depth);
-        assign(node.left, depth + 1);
         positions.set(node.id, {
-          x: 50 + nextX * 84,
-          y: 42 + depth * 72,
+          x,
+          y: ROOT_Y + depth * LEVEL_GAP,
           node
         });
-        nextX++;
-        if (node.left) edges.push([node.id, node.left.id]);
-        if (node.right) edges.push([node.id, node.right.id]);
-        assign(node.right, depth + 1);
+
+        const childGap = Math.max(MIN_CHILD_GAP, ROOT_CHILD_GAP / Math.pow(2, depth));
+        if (node.left) {
+          edges.push([node.id, node.left.id]);
+          parents.set(node.left.id, node.id);
+          assign(node.left, depth + 1, x - childGap);
+        }
+        if (node.right) {
+          edges.push([node.id, node.right.id]);
+          parents.set(node.right.id, node.id);
+          assign(node.right, depth + 1, x + childGap);
+        }
       }
 
-      assign(root, 0);
+      assign(root, 0, ROOT_X);
       return {
         positions,
         edges,
-        width: Math.max(640, 110 + Math.max(1, nextX) * 84),
-        height: Math.max(320, 90 + (maxDepth + 1) * 72)
+        parents,
+        width: LAYOUT_WIDTH,
+        height: Math.max(LAYOUT_HEIGHT, ROOT_Y + (maxDepth + 1) * LEVEL_GAP)
       };
     }
 
-    function renderTree(step) {
-      const svg = document.getElementById('rotationSvg');
-      svg.innerHTML = '';
+    function setAnimationBusy(busy) {
+      isAnimating = busy;
+      updateButtonStates();
+    }
 
-      const layout = layoutTree(step.tree);
+    function updateButtonStates() {
+      document.querySelectorAll('[data-case]').forEach((button) => {
+        button.disabled = isAnimating;
+      });
+      document.getElementById('prevBtn').disabled = isAnimating || stepIndex === 0;
+      document.getElementById('nextBtn').disabled = isAnimating || stepIndex === steps.length - 1;
+    }
+
+    function edgeKey(edge) {
+      return edge.slice().sort().join('|');
+    }
+
+    function easeInOutCubic(t) {
+      return t < 0.5
+        ? 4 * t * t * t
+        : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    }
+
+    function interpolatePoint(a, b, progress) {
+      return {
+        x: a.x + (b.x - a.x) * progress,
+        y: a.y + (b.y - a.y) * progress
+      };
+    }
+
+    function distance(a, b) {
+      return Math.hypot(b.x - a.x, b.y - a.y);
+    }
+
+    function pointAlongPath(path, progress) {
+      if (path.length <= 1) return path[0];
+
+      const segmentLengths = [];
+      let totalLength = 0;
+      for (let i = 1; i < path.length; i += 1) {
+        const length = distance(path[i - 1], path[i]);
+        segmentLengths.push(length);
+        totalLength += length;
+      }
+
+      if (totalLength === 0) return path[path.length - 1];
+
+      let remaining = totalLength * progress;
+      for (let i = 0; i < segmentLengths.length; i += 1) {
+        if (remaining <= segmentLengths[i]) {
+          const localProgress = segmentLengths[i] === 0 ? 1 : remaining / segmentLengths[i];
+          return interpolatePoint(path[i], path[i + 1], localProgress);
+        }
+        remaining -= segmentLengths[i];
+      }
+
+      return path[path.length - 1];
+    }
+
+    function buildMotionPaths(fromLayout, toLayout, focusIds) {
+      const paths = new Map();
+      const focusSet = new Set(focusIds);
+      const nodeIds = new Set([...fromLayout.positions.keys(), ...toLayout.positions.keys()]);
+
+      nodeIds.forEach((id) => {
+        const start = fromLayout.positions.get(id) || toLayout.positions.get(id);
+        const end = toLayout.positions.get(id) || start;
+        const path = [start];
+        const oldParentId = fromLayout.parents.get(id);
+        const newParentId = toLayout.parents.get(id);
+
+        if (oldParentId && newParentId && oldParentId !== newParentId
+            && focusSet.has(oldParentId) && focusSet.has(newParentId)) {
+          const oldParent = fromLayout.positions.get(oldParentId);
+          const newParent = toLayout.positions.get(newParentId);
+          if (oldParent && newParent) {
+            path.push({
+              x: (oldParent.x + newParent.x) / 2,
+              y: (oldParent.y + newParent.y) / 2
+            });
+          }
+        }
+
+        path.push(end);
+        paths.set(id, path);
+      });
+
+      return paths;
+    }
+
+    function positionAt(id, motionPaths, progress) {
+      const path = motionPaths.get(id);
+      if (!path) return { x: 0, y: 0 };
+      return pointAlongPath(path, progress);
+    }
+
+    function setLinePosition(line, a, b) {
+      line.setAttribute('x1', a.x);
+      line.setAttribute('y1', a.y);
+      line.setAttribute('x2', b.x);
+      line.setAttribute('y2', b.y);
+    }
+
+    function setNodePosition(group, point) {
+      group.setAttribute('transform', `translate(${point.x} ${point.y})`);
+    }
+
+    function buildNodeGroup(pos, id, step) {
+      const group = svgElement('g');
+      group.setAttribute('class', pos.node.subtree ? 'subtree' : 'rotation-node');
+      if (!pos.node.subtree && step.focus.includes(id)) group.classList.add('focus');
+      if (id === step.tree.id) group.classList.add('root');
+
+      if (pos.node.subtree) {
+        const rect = svgElement('rect');
+        rect.setAttribute('x', -SUBTREE_WIDTH / 2);
+        rect.setAttribute('y', -SUBTREE_HEIGHT / 2);
+        rect.setAttribute('width', SUBTREE_WIDTH);
+        rect.setAttribute('height', SUBTREE_HEIGHT);
+        rect.setAttribute('rx', 4);
+
+        const text = svgElement('text');
+        text.setAttribute('x', 0);
+        text.setAttribute('y', 1);
+        text.textContent = pos.node.label;
+
+        group.appendChild(rect);
+        group.appendChild(text);
+      } else {
+        const circle = svgElement('circle');
+        circle.setAttribute('cx', 0);
+        circle.setAttribute('cy', 0);
+        circle.setAttribute('r', NODE_RADIUS);
+
+        const text = svgElement('text');
+        text.setAttribute('x', 0);
+        text.setAttribute('y', 1);
+        text.textContent = pos.node.label;
+
+        group.appendChild(circle);
+        group.appendChild(text);
+      }
+
+      return group;
+    }
+
+    function drawStaticTree(svg, step, layout) {
+      svg.innerHTML = '';
       svg.setAttribute('viewBox', `0 0 ${layout.width} ${layout.height}`);
 
       layout.edges.forEach(([from, to]) => {
         const a = layout.positions.get(from);
         const b = layout.positions.get(to);
         const line = svgElement('line');
-        line.setAttribute('x1', a.x);
-        line.setAttribute('y1', a.y);
-        line.setAttribute('x2', b.x);
-        line.setAttribute('y2', b.y);
+        setLinePosition(line, a, b);
         line.setAttribute('class', 'tree-edge');
         svg.appendChild(line);
       });
 
       layout.positions.forEach((pos, id) => {
-        const group = svgElement('g');
-        group.setAttribute('class', pos.node.subtree ? 'subtree' : 'rotation-node');
-        if (!pos.node.subtree && step.focus.includes(id)) group.classList.add('focus');
-        if (id === step.tree.id) group.classList.add('root');
-
-        if (pos.node.subtree) {
-          const rect = svgElement('rect');
-          rect.setAttribute('x', pos.x - 22);
-          rect.setAttribute('y', pos.y - 16);
-          rect.setAttribute('width', 44);
-          rect.setAttribute('height', 32);
-          rect.setAttribute('rx', 4);
-
-          const text = svgElement('text');
-          text.setAttribute('x', pos.x);
-          text.setAttribute('y', pos.y + 1);
-          text.textContent = pos.node.label;
-
-          group.appendChild(rect);
-          group.appendChild(text);
-        } else {
-          const circle = svgElement('circle');
-          circle.setAttribute('cx', pos.x);
-          circle.setAttribute('cy', pos.y);
-          circle.setAttribute('r', 22);
-
-          const text = svgElement('text');
-          text.setAttribute('x', pos.x);
-          text.setAttribute('y', pos.y + 1);
-          text.textContent = pos.node.label;
-
-          group.appendChild(circle);
-          group.appendChild(text);
-        }
-
+        const group = buildNodeGroup(pos, id, step);
+        setNodePosition(group, pos);
         svg.appendChild(group);
       });
     }
 
-    function render() {
+    function drawAnimatedTree(svg, step, fromLayout, toLayout, motionFocus) {
+      if (animationFrameId !== null) cancelAnimationFrame(animationFrameId);
+
+      svg.innerHTML = '';
+      svg.setAttribute('viewBox', `0 0 ${toLayout.width} ${toLayout.height}`);
+
+      const oldEdges = new Map(fromLayout.edges.map(edge => [edgeKey(edge), edge]));
+      const newEdges = new Map(toLayout.edges.map(edge => [edgeKey(edge), edge]));
+      const motionPaths = buildMotionPaths(fromLayout, toLayout, motionFocus);
+      const edgeMorphs = [];
+
+      new Set([...oldEdges.keys(), ...newEdges.keys()]).forEach((key) => {
+        const oldEdge = oldEdges.get(key);
+        const newEdge = newEdges.get(key);
+        const startEdge = oldEdge || newEdge;
+        const endEdge = newEdge || oldEdge;
+        const line = svgElement('line');
+        line.setAttribute('class', 'tree-edge');
+        line.style.opacity = oldEdge ? '1' : '0';
+        svg.appendChild(line);
+        edgeMorphs.push({
+          line,
+          start: startEdge,
+          end: endEdge,
+          fromOpacity: oldEdge ? 1 : 0,
+          toOpacity: newEdge ? 1 : 0
+        });
+      });
+
+      const nodeGroups = new Map();
+      toLayout.positions.forEach((pos, id) => {
+        const group = buildNodeGroup(pos, id, step);
+        svg.appendChild(group);
+        nodeGroups.set(id, group);
+      });
+
+      setAnimationBusy(true);
+      const startTime = performance.now();
+
+      function animate(now) {
+        const raw = Math.min(1, (now - startTime) / ANIMATION_MS);
+        const progress = easeInOutCubic(raw);
+
+        edgeMorphs.forEach((morph) => {
+          const edge = morph.toOpacity > morph.fromOpacity ? morph.end : morph.start;
+          const a = positionAt(edge[0], motionPaths, progress);
+          const b = positionAt(edge[1], motionPaths, progress);
+          setLinePosition(morph.line, a, b);
+          morph.line.style.opacity = morph.fromOpacity + (morph.toOpacity - morph.fromOpacity) * progress;
+        });
+
+        nodeGroups.forEach((group, id) => {
+          setNodePosition(group, positionAt(id, motionPaths, progress));
+        });
+
+        if (raw < 1) {
+          animationFrameId = requestAnimationFrame(animate);
+          return;
+        }
+
+        animationFrameId = null;
+        renderedLayout = toLayout;
+        drawStaticTree(svg, step, toLayout);
+        setAnimationBusy(false);
+      }
+
+      animationFrameId = requestAnimationFrame(animate);
+    }
+
+    function renderTree(step, animate = true, motionFocus = step.focus || []) {
+      const svg = document.getElementById('rotationSvg');
+      const layout = layoutTree(step.tree);
+
+      if (!renderedLayout || !animate || prefersReducedMotion) {
+        if (animationFrameId !== null) cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+        renderedLayout = layout;
+        drawStaticTree(svg, step, layout);
+        setAnimationBusy(false);
+        return;
+      }
+
+      drawAnimatedTree(svg, step, renderedLayout, layout, motionFocus);
+    }
+
+    function render(options = {}) {
+      const { animate = true } = options;
       const step = steps[stepIndex];
+      const motionFocus = options.motionFocus || step.motionFocus || step.focus || [];
       document.getElementById('caseTitle').textContent = step.title;
       document.getElementById('stepCount').textContent = `${stepIndex + 1} of ${steps.length}`;
       document.getElementById('status').textContent = step.message;
       document.getElementById('inorderBox').textContent = step.inorder;
-      document.getElementById('prevBtn').disabled = stepIndex === 0;
-      document.getElementById('nextBtn').disabled = stepIndex === steps.length - 1;
-      renderTree(step);
+      updateButtonStates();
+      renderTree(step, animate, motionFocus);
     }
 
     function chooseCase(caseName) {
       currentCase = caseName;
       steps = caseBuilders[currentCase]();
       stepIndex = 0;
-      render();
+      renderedLayout = null;
+      render({ animate: false });
     }
 
     document.querySelectorAll('[data-case]').forEach((button) => {
-      button.addEventListener('click', () => chooseCase(button.dataset.case));
+      button.addEventListener('click', () => {
+        if (!isAnimating) chooseCase(button.dataset.case);
+      });
     });
 
     document.getElementById('prevBtn').addEventListener('click', () => {
-      if (stepIndex > 0) {
+      if (!isAnimating && stepIndex > 0) {
+        const previousStep = steps[stepIndex];
         stepIndex--;
-        render();
+        render({ motionFocus: previousStep.motionFocus || previousStep.focus || [] });
       }
     });
 
     document.getElementById('nextBtn').addEventListener('click', () => {
-      if (stepIndex < steps.length - 1) {
+      if (!isAnimating && stepIndex < steps.length - 1) {
         stepIndex++;
-        render();
+        render({ motionFocus: steps[stepIndex].motionFocus || steps[stepIndex].focus || [] });
       }
     });
 
