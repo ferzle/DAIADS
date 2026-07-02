@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>BST Operations Demo</title>
+  <script src="../../../../scripts/demoScripts.js"></script>
+  <link rel="stylesheet" href="../../../../css/style.css">
+  <link rel="stylesheet" href="../../../../css/demo.css">
+  <style>
+    #demoContainer {
+      max-width: 980px;
+      margin: 0 auto;
+    }
+    .bst-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+    .control-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+    .bst-controls label {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .bst-controls input {
+      width: 80px;
+    }
+    #status {
+      min-height: 42px;
+      margin: 8px 0;
+      padding: 6px 8px;
+      border-left: 4px solid #4a768b;
+      background: #f7fbfd;
+    }
+    .bst-layout {
+      margin-top: 12px;
+    }
+    .tree-viewport {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      overflow: hidden;
+      border: 1px solid #ccc;
+      background: #fff;
+      box-sizing: border-box;
+    }
+    svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+      background: #fff;
+      box-sizing: border-box;
+    }
+    .bst-edge {
+      stroke: #777;
+      stroke-width: 2;
+      stroke-linecap: round;
+    }
+    .bst-missing-edge {
+      stroke: #d4a600;
+      stroke-width: 2.5;
+      stroke-dasharray: 6 5;
+      stroke-linecap: round;
+    }
+    .bst-missing-node {
+      fill: url(#missing-node-fill);
+      stroke: #d4a600;
+      stroke-width: 3;
+      stroke-dasharray: 5 4;
+    }
+    .bst-node circle {
+      fill: #cce3ff;
+      stroke: #333;
+      stroke-width: 1.5;
+    }
+    .bst-node.visited circle {
+      fill: #74b474;
+    }
+    .bst-node.candidate circle {
+      fill: #d8b4fe;
+    }
+    .bst-node.replacement circle {
+      fill: #9ddf8b;
+    }
+    .bst-node.inserted circle {
+      fill: #8ecae6;
+      stroke-width: 3;
+    }
+    .bst-node.removed circle {
+      fill: #f4a7a1;
+      stroke: #9b1c1c;
+      stroke-dasharray: 4 3;
+      stroke-width: 3;
+    }
+    .bst-node.current circle {
+      fill: #ffe16a;
+      stroke-width: 3;
+    }
+    .bst-node.target circle {
+      stroke: #c4511b;
+      stroke-width: 4;
+    }
+    .bst-node text {
+      text-anchor: middle;
+      dominant-baseline: middle;
+      font-weight: bold;
+      fill: #111;
+    }
+    .path-panel {
+      margin-top: 10px;
+      line-height: 1.5;
+    }
+    .trace-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(220px, 1fr));
+      gap: 12px;
+    }
+    .path-output,
+    .result-output {
+      min-height: 34px;
+      margin: 8px 0;
+      padding: 8px;
+      border: 1px solid #777;
+      background: #f6f6f6;
+      font-family: monospace;
+      font-size: 15px;
+    }
+    .legend {
+      flex-wrap: wrap;
+      row-gap: 4px;
+    }
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+    }
+    @media (max-width: 820px) {
+      .trace-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-DQ5LVZVFDC');
+  </script>
+</head>
+<body class="no-tooltips">
+  <div id="demoContainer">
+    <h2>BST Operations Demo</h2>
+
+    <div class="bst-controls">
+      <div class="control-row">
+        <label>Value <input id="valueInput" type="number" value="20"></label>
+        <button id="searchBtn">Search</button>
+        <button id="insertBtn">Insert</button>
+        <button id="deleteBtn">Delete</button>
+        <button id="predecessorBtn">Predecessor</button>
+        <button id="successorBtn">Successor</button>
+      </div>
+      <div class="control-row">
+        <button id="prevBtn">Previous Step</button>
+        <button id="nextBtn">Next Step</button>
+        <button id="resetBtn">Reset Tree</button>
+      </div>
+    </div>
+
+    <div class="legend">
+      <strong>Legend:</strong>
+      <span class="legend-item"><span class="legend-box" style="background:#ffe16a;"></span>Current</span>
+      <span class="legend-item"><span class="legend-box" style="background:#74b474;"></span>Path</span>
+      <span class="legend-item"><span class="legend-box" style="background:#d8b4fe;"></span>Candidate</span>
+      <span class="legend-item"><span class="legend-box" style="background:#9ddf8b;"></span>Replacement</span>
+      <span class="legend-item"><span class="legend-box" style="background:#8ecae6;"></span>Inserted</span>
+      <span class="legend-item"><span class="legend-box" style="background:#f4a7a1;"></span>Removed</span>
+    </div>
+
+    <div id="status"></div>
+    <div class="bst-layout">
+      <div class="tree-viewport">
+        <svg id="bstSvg" preserveAspectRatio="xMidYMid meet"></svg>
+      </div>
+      <div class="path-panel">
+        <div class="trace-grid">
+          <div>
+            <strong>Path:</strong>
+            <div id="pathOutput" class="path-output">(none)</div>
+          </div>
+          <div>
+            <strong>Result:</strong>
+            <div id="resultOutput" class="result-output">(none)</div>
+          </div>
+        </div>
+        <div id="stepCount"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const initialValues = [40, 20, 60, 10, 30, 50, 70, 25, 35, 65, 80];
+    let nextNodeId = 1;
+    let tree;
+    let steps = [];
+    let stepIndex = -1;
+
+    function makeNode(value) {
+      return { id: nextNodeId++, value, left: null, right: null };
+    }
+
+    function insertValue(root, value) {
+      if (!root) return makeNode(value);
+      if (value < root.value) {
+        root.left = insertValue(root.left, value);
+      } else if (value > root.value) {
+        root.right = insertValue(root.right, value);
+      }
+      return root;
+    }
+
+    function buildTree(values) {
+      nextNodeId = 1;
+      let root = null;
+      values.forEach((value) => {
+        root = insertValue(root, value);
+      });
+      return root;
+    }
+
+    function cloneTree(node) {
+      if (!node) return null;
+      return {
+        id: node.id,
+        value: node.value,
+        left: cloneTree(node.left),
+        right: cloneTree(node.right)
+      };
+    }
+
+    function findNode(root, value) {
+      let current = root;
+      while (current) {
+        if (value === current.value) return current;
+        current = value < current.value ? current.left : current.right;
+      }
+      return null;
+    }
+
+    function findNodeById(root, id) {
+      if (!root) return null;
+      if (root.id === id) return root;
+      return findNodeById(root.left, id) || findNodeById(root.right, id);
+    }
+
+    function deleteValue(root, value) {
+      if (!root) return null;
+      if (value < root.value) {
+        root.left = deleteValue(root.left, value);
+      } else if (value > root.value) {
+        root.right = deleteValue(root.right, value);
+      } else {
+        if (!root.left) return root.right;
+        if (!root.right) return root.left;
+
+        let successor = root.right;
+        while (successor.left) {
+          successor = successor.left;
+        }
+        root.value = successor.value;
+        root.right = deleteValue(root.right, successor.value);
+      }
+      return root;
+    }
+
+    function countChildren(node) {
+      return (node.left ? 1 : 0) + (node.right ? 1 : 0);
+    }
+
+    function pathIds(path) {
+      return path.map((node) => node.id);
+    }
+
+    function pathValues(path) {
+      return path.map((node) => node.value);
+    }
+
+    function readValue() {
+      return Number.parseInt(document.getElementById('valueInput').value, 10);
+    }
+
+    function reportInvalidValue(action) {
+      document.getElementById('status').textContent = `Enter an integer value before choosing ${action}.`;
+    }
+
+    function createSearchSteps(value) {
+      const result = [];
+      const path = [];
+      let current = tree;
+      let parent = null;
+      let side = '';
+
+      if (!current) {
+        result.push({
+          tree: cloneTree(tree),
+          path: [],
+          missingRoot: true,
+          message: 'The tree is empty.',
+          result: `${value} was not found.`
+        });
+        return { result, found: false, parent: null, side: '', pathNodes: [] };
+      }
+
+      while (current) {
+        const currentPath = path.concat(current);
+        if (value === current.value) {
+          result.push({
+            tree: cloneTree(tree),
+            currentId: current.id,
+            visitedIds: pathIds(path),
+            path: pathValues(currentPath),
+            message: `${value} equals ${current.value}. Search succeeds.`,
+            result: `${value} is in the tree.`
+          });
+          return { result, found: true, parent: current, side: '', node: current, pathNodes: currentPath };
+        }
+
+        side = value < current.value ? 'left' : 'right';
+        result.push({
+          tree: cloneTree(tree),
+          currentId: current.id,
+          visitedIds: pathIds(path),
+          path: pathValues(currentPath),
+          message: value < current.value
+            ? `${value} is less than ${current.value}, so move left.`
+            : `${value} is greater than ${current.value}, so move right.`,
+          result: 'Searching...'
+        });
+
+        path.push(current);
+        parent = current;
+        current = current[side];
+      }
+
+      result.push({
+        tree: cloneTree(tree),
+        currentId: parent ? parent.id : null,
+        missingParentId: parent ? parent.id : null,
+        missingSide: side,
+        visitedIds: pathIds(path),
+        path: pathValues(path),
+        message: parent
+          ? `The ${side} child of ${parent.value} is empty. ${value} is not in the tree.`
+          : 'The tree is empty.',
+        result: `${value} was not found.`
+      });
+
+      return {
+        result,
+        found: false,
+        parent,
+        side,
+        pathNodes: path
+      };
+    }
+
+    function createPredecessorSteps(value) {
+      const search = createSearchSteps(value);
+      const result = search.result;
+
+      if (!search.found) {
+        if (result.length > 0) {
+          result[result.length - 1].message = `There is no node containing ${value}, so this pointer-based predecessor operation cannot start.`;
+          result[result.length - 1].result = 'No node pointer.';
+        }
+        return result;
+      }
+
+      const node = search.node;
+      const nodePath = search.pathNodes;
+      result.push({
+        tree: cloneTree(tree),
+        currentId: node.id,
+        targetId: node.id,
+        visitedIds: pathIds(nodePath.slice(0, -1)),
+        path: pathValues(nodePath),
+        message: `Start predecessor at the node containing ${value}. The algorithm is given this node pointer and can use parent pointers.`,
+        result: `Node pointer: ${value}`
+      });
+
+      if (node.left) {
+        let current = node.left;
+        const walkPath = [node, current];
+        result.push({
+          tree: cloneTree(tree),
+          currentId: current.id,
+          targetId: node.id,
+          candidateId: current.id,
+          visitedIds: [node.id],
+          path: pathValues(walkPath),
+          message: `${value} has a left subtree, so the predecessor is the maximum node in that subtree. Move left once.`,
+          result: `Candidate: ${current.value}`
+        });
+
+        while (current.right) {
+          result.push({
+            tree: cloneTree(tree),
+            currentId: current.id,
+            targetId: node.id,
+            candidateId: current.id,
+            visitedIds: pathIds(walkPath.slice(0, -1)),
+            path: pathValues(walkPath),
+            message: `${current.value} has a right child, so there is a larger value that is still below ${value}. Move right.`,
+            result: `Candidate: ${current.value}`
+          });
+          current = current.right;
+          walkPath.push(current);
+        }
+
+        result.push({
+          tree: cloneTree(tree),
+          currentId: current.id,
+          targetId: node.id,
+          candidateId: current.id,
+          visitedIds: pathIds(walkPath.slice(0, -1)),
+          path: pathValues(walkPath),
+          message: `${current.value} has no right child, so it is the maximum node in ${value}'s left subtree.`,
+          result: `Predecessor: ${current.value}`
+        });
+        return result;
+      }
+
+      result.push({
+        tree: cloneTree(tree),
+        currentId: node.id,
+        targetId: node.id,
+        visitedIds: pathIds(nodePath.slice(0, -1)),
+        path: pathValues(nodePath),
+        message: `${value} has no left subtree. Follow parent pointers until the climb comes from a right child.`,
+        result: 'Climb to an ancestor.'
+      });
+
+      let childIndex = nodePath.length - 1;
+      while (childIndex > 0 && nodePath[childIndex] === nodePath[childIndex - 1].left) {
+        const child = nodePath[childIndex];
+        const parent = nodePath[childIndex - 1];
+        result.push({
+          tree: cloneTree(tree),
+          currentId: parent.id,
+          targetId: node.id,
+          visitedIds: pathIds(nodePath.slice(childIndex)),
+          path: pathValues(nodePath.slice(childIndex).concat(parent)),
+          message: `${child.value} is the left child of ${parent.value}. That ancestor is larger, so keep climbing.`,
+          result: 'Still climbing.'
+        });
+        childIndex--;
+      }
+
+      if (childIndex === 0) {
+        result.push({
+          tree: cloneTree(tree),
+          targetId: node.id,
+          visitedIds: pathIds(nodePath),
+          path: pathValues(nodePath),
+          message: `The climb reached the root without ever coming from a right child.`,
+          result: 'No predecessor.'
+        });
+        return result;
+      }
+
+      const child = nodePath[childIndex];
+      const parent = nodePath[childIndex - 1];
+      result.push({
+        tree: cloneTree(tree),
+        currentId: parent.id,
+        targetId: node.id,
+        candidateId: parent.id,
+        visitedIds: pathIds(nodePath.slice(childIndex)),
+        path: pathValues(nodePath.slice(childIndex).concat(parent)),
+        message: `${child.value} is the right child of ${parent.value}. This is the first smaller ancestor, so it is the predecessor.`,
+        result: `Predecessor: ${parent.value}`
+      });
+
+      return result;
+    }
+
+    function createSuccessorSteps(value) {
+      const search = createSearchSteps(value);
+      const result = search.result;
+
+      if (!search.found) {
+        if (result.length > 0) {
+          result[result.length - 1].message = `There is no node containing ${value}, so this pointer-based successor operation cannot start.`;
+          result[result.length - 1].result = 'No node pointer.';
+        }
+        return result;
+      }
+
+      const node = search.node;
+      const nodePath = search.pathNodes;
+      result.push({
+        tree: cloneTree(tree),
+        currentId: node.id,
+        targetId: node.id,
+        visitedIds: pathIds(nodePath.slice(0, -1)),
+        path: pathValues(nodePath),
+        message: `Start successor at the node containing ${value}. The algorithm is given this node pointer and can use parent pointers.`,
+        result: `Node pointer: ${value}`
+      });
+
+      if (node.right) {
+        let current = node.right;
+        const walkPath = [node, current];
+        result.push({
+          tree: cloneTree(tree),
+          currentId: current.id,
+          targetId: node.id,
+          candidateId: current.id,
+          visitedIds: [node.id],
+          path: pathValues(walkPath),
+          message: `${value} has a right subtree, so the successor is the minimum node in that subtree. Move right once.`,
+          result: `Candidate: ${current.value}`
+        });
+
+        while (current.left) {
+          result.push({
+            tree: cloneTree(tree),
+            currentId: current.id,
+            targetId: node.id,
+            candidateId: current.id,
+            visitedIds: pathIds(walkPath.slice(0, -1)),
+            path: pathValues(walkPath),
+            message: `${current.value} has a left child, so there is a smaller value that is still above ${value}. Move left.`,
+            result: `Candidate: ${current.value}`
+          });
+          current = current.left;
+          walkPath.push(current);
+        }
+
+        result.push({
+          tree: cloneTree(tree),
+          currentId: current.id,
+          targetId: node.id,
+          candidateId: current.id,
+          visitedIds: pathIds(walkPath.slice(0, -1)),
+          path: pathValues(walkPath),
+          message: `${current.value} has no left child, so it is the minimum node in ${value}'s right subtree.`,
+          result: `Successor: ${current.value}`
+        });
+        return result;
+      }
+
+      result.push({
+        tree: cloneTree(tree),
+        currentId: node.id,
+        targetId: node.id,
+        visitedIds: pathIds(nodePath.slice(0, -1)),
+        path: pathValues(nodePath),
+        message: `${value} has no right subtree. Follow parent pointers until the climb comes from a left child.`,
+        result: 'Climb to an ancestor.'
+      });
+
+      let childIndex = nodePath.length - 1;
+      while (childIndex > 0 && nodePath[childIndex] === nodePath[childIndex - 1].right) {
+        const child = nodePath[childIndex];
+        const parent = nodePath[childIndex - 1];
+        result.push({
+          tree: cloneTree(tree),
+          currentId: parent.id,
+          targetId: node.id,
+          visitedIds: pathIds(nodePath.slice(childIndex)),
+          path: pathValues(nodePath.slice(childIndex).concat(parent)),
+          message: `${child.value} is the right child of ${parent.value}. That ancestor is smaller, so keep climbing.`,
+          result: 'Still climbing.'
+        });
+        childIndex--;
+      }
+
+      if (childIndex === 0) {
+        result.push({
+          tree: cloneTree(tree),
+          targetId: node.id,
+          visitedIds: pathIds(nodePath),
+          path: pathValues(nodePath),
+          message: `The climb reached the root without ever coming from a left child.`,
+          result: 'No successor.'
+        });
+        return result;
+      }
+
+      const child = nodePath[childIndex];
+      const parent = nodePath[childIndex - 1];
+      result.push({
+        tree: cloneTree(tree),
+        currentId: parent.id,
+        targetId: node.id,
+        candidateId: parent.id,
+        visitedIds: pathIds(nodePath.slice(childIndex)),
+        path: pathValues(nodePath.slice(childIndex).concat(parent)),
+        message: `${child.value} is the left child of ${parent.value}. This is the first larger ancestor, so it is the successor.`,
+        result: `Successor: ${parent.value}`
+      });
+
+      return result;
+    }
+
+    function createCopiedTree(targetId, replacementValue) {
+      const copiedTree = cloneTree(tree);
+      const target = findNodeById(copiedTree, targetId);
+      if (target) target.value = replacementValue;
+      return copiedTree;
+    }
+
+    function finishDeleteSteps(value, node, path, result) {
+      const children = countChildren(node);
+      const basePath = pathValues(path);
+      const visitedIds = pathIds(path.slice(0, -1));
+
+      if (children === 0) {
+        result.push({
+          tree: cloneTree(tree),
+          currentId: node.id,
+          targetId: node.id,
+          removedId: node.id,
+          visitedIds,
+          path: basePath,
+          message: `${value} is a leaf, so deletion just removes that node.`,
+          result: 'Leaf case.'
+        });
+        const finalTree = deleteValue(cloneTree(tree), value);
+        result.push({
+          tree: finalTree,
+          visitedIds,
+          path: basePath,
+          message: `The parent link that used to point to ${value} is now empty.`,
+          result: `Deleted ${value}.`
+        });
+        return { result, deleted: true, tree: finalTree };
+      }
+
+      if (children === 1) {
+        const child = node.left || node.right;
+        result.push({
+          tree: cloneTree(tree),
+          currentId: node.id,
+          targetId: node.id,
+          replacementId: child.id,
+          visitedIds,
+          path: basePath,
+          message: `${value} has one child, ${child.value}. Splice that child into ${value}'s position.`,
+          result: 'One-child case.'
+        });
+        const finalTree = deleteValue(cloneTree(tree), value);
+        result.push({
+          tree: finalTree,
+          replacementId: child.id,
+          visitedIds,
+          path: basePath,
+          message: `${child.value} now occupies the link where ${value} used to be, and the BST order is unchanged.`,
+          result: `Deleted ${value}.`
+        });
+        return { result, deleted: true, tree: finalTree };
+      }
+
+      let successor = node.right;
+      const successorPath = path.concat(successor);
+      result.push({
+        tree: cloneTree(tree),
+        currentId: successor.id,
+        targetId: node.id,
+        replacementId: successor.id,
+        visitedIds: pathIds(path),
+        path: pathValues(successorPath),
+        message: `${value} has two children. Use the in-order successor: start at the right child, ${successor.value}, then keep moving left.`,
+        result: 'Two-child case.'
+      });
+
+      while (successor.left) {
+        result.push({
+          tree: cloneTree(tree),
+          currentId: successor.id,
+          targetId: node.id,
+          replacementId: successor.id,
+          visitedIds: pathIds(successorPath.slice(0, -1)),
+          path: pathValues(successorPath),
+          message: `${successor.value} still has a left child, so it is not the smallest value in the right subtree. Move left.`,
+          result: `Candidate successor: ${successor.value}`
+        });
+        successor = successor.left;
+        successorPath.push(successor);
+      }
+
+      result.push({
+        tree: cloneTree(tree),
+        currentId: successor.id,
+        targetId: node.id,
+        replacementId: successor.id,
+        visitedIds: pathIds(successorPath.slice(0, -1)),
+        path: pathValues(successorPath),
+        message: `${successor.value} has no left child, so it is the smallest value in ${value}'s right subtree.`,
+        result: `Successor: ${successor.value}`
+      });
+
+      result.push({
+        tree: createCopiedTree(node.id, successor.value),
+        targetId: node.id,
+        replacementId: successor.id,
+        visitedIds: pathIds(successorPath.slice(0, -1)),
+        path: pathValues(successorPath),
+        message: `Copy ${successor.value} into the target node. The old ${successor.value} still exists temporarily and must be removed next.`,
+        result: `Copied ${successor.value} into ${value}'s position.`
+      });
+
+      const finalTree = deleteValue(cloneTree(tree), value);
+      result.push({
+        tree: finalTree,
+        replacementId: node.id,
+        visitedIds: pathIds(successorPath.slice(0, -1)),
+        path: pathValues(successorPath),
+        message: `Remove the old successor from its original position. Since a successor has no left child, this final removal is a leaf or one-child splice.`,
+        result: `Deleted ${value}; ${successor.value} replaced it.`
+      });
+
+      return { result, deleted: true, tree: finalTree };
+    }
+
+    function createDeleteSteps(value) {
+      const result = [];
+      const path = [];
+      let current = tree;
+      let side = '';
+
+      if (!current) {
+        result.push({
+          tree: cloneTree(tree),
+          path: [],
+          message: 'The tree is empty, so there is nothing to delete.',
+          result: `Could not delete ${value}.`
+        });
+        return { result, deleted: false, tree };
+      }
+
+      while (current) {
+        const currentPath = path.concat(current);
+        if (value === current.value) {
+          result.push({
+            tree: cloneTree(tree),
+            currentId: current.id,
+            targetId: current.id,
+            visitedIds: pathIds(path),
+            path: pathValues(currentPath),
+            message: `Found ${value}. Now choose the deletion case from its number of children.`,
+            result: `${value} found.`
+          });
+          return finishDeleteSteps(value, current, currentPath, result);
+        }
+
+        side = value < current.value ? 'left' : 'right';
+        result.push({
+          tree: cloneTree(tree),
+          currentId: current.id,
+          visitedIds: pathIds(path),
+          path: pathValues(currentPath),
+          message: value < current.value
+            ? `${value} is less than ${current.value}, so move left.`
+            : `${value} is greater than ${current.value}, so move right.`,
+          result: 'Searching for the value to delete...'
+        });
+
+        path.push(current);
+        current = current[side];
+      }
+
+      result.push({
+        tree: cloneTree(tree),
+        visitedIds: pathIds(path),
+        currentId: path.length > 0 ? path[path.length - 1].id : null,
+        missingParentId: path.length > 0 ? path[path.length - 1].id : null,
+        missingSide: side,
+        path: pathValues(path),
+        message: `The ${side} child on this search path is empty, so ${value} is not in the tree.`,
+        result: `Could not delete ${value}.`
+      });
+      return { result, deleted: false, tree };
+    }
+
+    function layoutTree(root) {
+      const positions = new Map();
+      const edges = [];
+      const nodes = [];
+      const topMargin = 44;
+      const sideMargin = 96;
+      const verticalGap = 76;
+      const minNodeGap = 76;
+      const crossLevelGap = 72;
+      const minChildOffset = 76;
+      const baseWidth = 980;
+
+      function mergeContour(contours, depth, min, max) {
+        if (!contours[depth]) {
+          contours[depth] = { min, max };
+        } else {
+          contours[depth].min = Math.min(contours[depth].min, min);
+          contours[depth].max = Math.max(contours[depth].max, max);
+        }
+      }
+
+      function shiftedContour(source, dx, depthOffset) {
+        const contours = [];
+        source.forEach((range, depth) => {
+          if (!range) return;
+          mergeContour(contours, depth + depthOffset, range.min + dx, range.max + dx);
+        });
+        return contours;
+      }
+
+      function appendLayout(target, layout, dx, depthOffset) {
+        layout.items.forEach((item) => {
+          target.items.push({
+            node: item.node,
+            x: item.x + dx,
+            depth: item.depth + depthOffset
+          });
+        });
+
+        shiftedContour(layout.contours, dx, depthOffset).forEach((range, depth) => {
+          if (!range) return;
+          mergeContour(target.contours, depth, range.min, range.max);
+        });
+      }
+
+      function offsetForSubtrees(leftLayout, rightLayout) {
+        let offset = minChildOffset;
+        const sharedDepth = Math.min(leftLayout.contours.length, rightLayout.contours.length);
+
+        function requireGap(left, right, gap) {
+          if (!left || !right) return;
+          offset = Math.max(offset, (gap + left.max - right.min) / 2);
+        }
+
+        for (let depth = 0; depth < sharedDepth; depth++) {
+          requireGap(leftLayout.contours[depth], rightLayout.contours[depth], minNodeGap);
+          requireGap(leftLayout.contours[depth + 1], rightLayout.contours[depth], crossLevelGap);
+          requireGap(leftLayout.contours[depth], rightLayout.contours[depth + 1], crossLevelGap);
+        }
+
+        return Math.ceil(offset);
+      }
+
+      function compact(node) {
+        if (!node) return { items: [], contours: [] };
+
+        const layout = {
+          items: [{ node, x: 0, depth: 0 }],
+          contours: [{ min: 0, max: 0 }]
+        };
+
+        if (node.left && node.right) {
+          const leftLayout = compact(node.left);
+          const rightLayout = compact(node.right);
+          const offset = offsetForSubtrees(leftLayout, rightLayout);
+          appendLayout(layout, leftLayout, -offset, 1);
+          appendLayout(layout, rightLayout, offset, 1);
+        } else if (node.left) {
+          appendLayout(layout, compact(node.left), -minChildOffset, 1);
+        } else if (node.right) {
+          appendLayout(layout, compact(node.right), minChildOffset, 1);
+        }
+
+        return layout;
+      }
+
+      const compactLayout = compact(root);
+      let minX = 0;
+      let maxX = 0;
+      let maxDepth = 0;
+
+      compactLayout.items.forEach((item) => {
+        minX = Math.min(minX, item.x);
+        maxX = Math.max(maxX, item.x);
+        maxDepth = Math.max(maxDepth, item.depth);
+      });
+
+      const naturalWidth = maxX - minX + sideMargin * 2;
+      const width = Math.max(baseWidth, naturalWidth);
+      const offsetX = (width - (maxX - minX)) / 2 - minX;
+      const height = Math.max(320, 88 + (maxDepth + 1) * verticalGap);
+
+      compactLayout.items.forEach((item) => {
+        const x = item.x + offsetX;
+        const y = topMargin + item.depth * verticalGap;
+        positions.set(item.node.id, { x, y, node: item.node, depth: item.depth });
+        nodes.push(item.node);
+
+        if (item.node.left) {
+          edges.push([item.node.id, item.node.left.id]);
+        }
+        if (item.node.right) {
+          edges.push([item.node.id, item.node.right.id]);
+        }
+      });
+
+      return {
+        positions,
+        edges,
+        nodes,
+        width,
+        height,
+        childOffset: minChildOffset,
+        verticalGap
+      };
+    }
+
+    function svgElement(name) {
+      return document.createElementNS('http://www.w3.org/2000/svg', name);
+    }
+
+    function renderDefs(svg) {
+      const defs = svgElement('defs');
+
+      const pattern = svgElement('pattern');
+      pattern.setAttribute('id', 'missing-node-fill');
+      pattern.setAttribute('patternUnits', 'userSpaceOnUse');
+      pattern.setAttribute('width', 8);
+      pattern.setAttribute('height', 8);
+      pattern.setAttribute('patternTransform', 'rotate(45)');
+
+      const background = svgElement('rect');
+      background.setAttribute('width', 8);
+      background.setAttribute('height', 8);
+      background.setAttribute('fill', '#fff3a6');
+
+      const stripe = svgElement('line');
+      stripe.setAttribute('x1', 0);
+      stripe.setAttribute('y1', 0);
+      stripe.setAttribute('x2', 0);
+      stripe.setAttribute('y2', 8);
+      stripe.setAttribute('stroke', '#d4a600');
+      stripe.setAttribute('stroke-width', 2);
+
+      pattern.appendChild(background);
+      pattern.appendChild(stripe);
+
+      const marker = svgElement('marker');
+      marker.setAttribute('id', 'missing-arrowhead');
+      marker.setAttribute('markerWidth', 8);
+      marker.setAttribute('markerHeight', 8);
+      marker.setAttribute('refX', 7);
+      marker.setAttribute('refY', 4);
+      marker.setAttribute('orient', 'auto');
+      marker.setAttribute('markerUnits', 'strokeWidth');
+
+      const arrow = svgElement('path');
+      arrow.setAttribute('d', 'M 0 0 L 8 4 L 0 8 z');
+      arrow.setAttribute('fill', '#d4a600');
+      marker.appendChild(arrow);
+
+      defs.appendChild(pattern);
+      defs.appendChild(marker);
+      svg.appendChild(defs);
+    }
+
+    function missingChildPosition(parentPos, side, layout) {
+      let offset = layout.childOffset;
+      if (side === 'left' && parentPos.node.right) {
+        const sibling = layout.positions.get(parentPos.node.right.id);
+        if (sibling) offset = Math.abs(sibling.x - parentPos.x);
+      }
+      if (side === 'right' && parentPos.node.left) {
+        const sibling = layout.positions.get(parentPos.node.left.id);
+        if (sibling) offset = Math.abs(parentPos.x - sibling.x);
+      }
+
+      return {
+        x: parentPos.x + (side === 'right' ? offset : -offset),
+        y: parentPos.y + layout.verticalGap
+      };
+    }
+
+    function drawMissingNode(svg, x, y) {
+      const circle = svgElement('circle');
+      circle.setAttribute('cx', x);
+      circle.setAttribute('cy', y);
+      circle.setAttribute('r', 22);
+      circle.setAttribute('class', 'bst-missing-node');
+      svg.appendChild(circle);
+    }
+
+    function drawMissingEdge(svg, from, to) {
+      const dx = to.x - from.x;
+      const dy = to.y - from.y;
+      const length = Math.hypot(dx, dy) || 1;
+      const endPadding = 27;
+      const line = svgElement('line');
+      line.setAttribute('x1', from.x);
+      line.setAttribute('y1', from.y);
+      line.setAttribute('x2', to.x - (dx / length) * endPadding);
+      line.setAttribute('y2', to.y - (dy / length) * endPadding);
+      line.setAttribute('class', 'bst-missing-edge');
+      line.setAttribute('marker-end', 'url(#missing-arrowhead)');
+      svg.appendChild(line);
+    }
+
+    function renderTree(root, step) {
+      const svg = document.getElementById('bstSvg');
+      svg.innerHTML = '';
+      renderDefs(svg);
+
+      if (!root) {
+        svg.setAttribute('viewBox', '0 0 720 320');
+        if (step && step.missingRoot) {
+          drawMissingNode(svg, 360, 160);
+        } else {
+          const text = svgElement('text');
+          text.setAttribute('x', 360);
+          text.setAttribute('y', 160);
+          text.setAttribute('text-anchor', 'middle');
+          text.setAttribute('dominant-baseline', 'middle');
+          text.setAttribute('fill', '#555');
+          text.textContent = 'Empty tree';
+          svg.appendChild(text);
+        }
+        return;
+      }
+
+      const layout = layoutTree(root);
+      const visitedIds = new Set(step && step.visitedIds ? step.visitedIds : []);
+      svg.setAttribute('viewBox', `0 0 ${layout.width} ${layout.height}`);
+
+      layout.edges.forEach(([from, to]) => {
+        const a = layout.positions.get(from);
+        const b = layout.positions.get(to);
+        const line = svgElement('line');
+        line.setAttribute('x1', a.x);
+        line.setAttribute('y1', a.y);
+        line.setAttribute('x2', b.x);
+        line.setAttribute('y2', b.y);
+        line.setAttribute('class', 'bst-edge');
+        svg.appendChild(line);
+      });
+
+      let missingPos = null;
+      if (step && step.missingParentId && step.missingSide) {
+        const parentPos = layout.positions.get(step.missingParentId);
+        if (parentPos) {
+          missingPos = missingChildPosition(parentPos, step.missingSide, layout);
+          drawMissingEdge(svg, parentPos, missingPos);
+        }
+      }
+
+      layout.nodes.forEach((node) => {
+        const pos = layout.positions.get(node.id);
+        const group = svgElement('g');
+        group.setAttribute('class', 'bst-node');
+        if (visitedIds.has(node.id)) group.classList.add('visited');
+        if (step && step.candidateId === node.id) group.classList.add('candidate');
+        if (step && step.replacementId === node.id) group.classList.add('replacement');
+        if (step && step.insertedId === node.id) group.classList.add('inserted');
+        if (step && step.removedId === node.id) group.classList.add('removed');
+        if (step && step.currentId === node.id) group.classList.add('current');
+        if (step && step.targetId === node.id) group.classList.add('target');
+
+        const circle = svgElement('circle');
+        circle.setAttribute('cx', pos.x);
+        circle.setAttribute('cy', pos.y);
+        circle.setAttribute('r', 22);
+
+        const text = svgElement('text');
+        text.setAttribute('x', pos.x);
+        text.setAttribute('y', pos.y + 1);
+        text.textContent = node.value;
+
+        group.appendChild(circle);
+        group.appendChild(text);
+        svg.appendChild(group);
+      });
+
+      if (missingPos) {
+        drawMissingNode(svg, missingPos.x, missingPos.y);
+      }
+    }
+
+    function render() {
+      const activeStep = stepIndex >= 0 ? steps[stepIndex] : null;
+      const shownTree = activeStep ? activeStep.tree : tree;
+
+      document.getElementById('status').textContent = activeStep
+        ? activeStep.message
+        : 'Choose an operation to follow the comparison path from the root.';
+      document.getElementById('pathOutput').textContent =
+        activeStep && activeStep.path && activeStep.path.length > 0 ? activeStep.path.join(' -> ') : '(none)';
+      document.getElementById('resultOutput').textContent =
+        activeStep && activeStep.result ? activeStep.result : '(none)';
+      document.getElementById('stepCount').textContent =
+        steps.length === 0 ? 'No active operation.' : `Step ${stepIndex + 1} of ${steps.length}`;
+
+      document.getElementById('prevBtn').disabled = stepIndex <= 0;
+      document.getElementById('nextBtn').disabled = stepIndex < 0 || stepIndex >= steps.length - 1;
+
+      renderTree(shownTree, activeStep);
+    }
+
+    function startOperation(newSteps) {
+      steps = newSteps;
+      stepIndex = steps.length > 0 ? 0 : -1;
+      render();
+    }
+
+    document.getElementById('searchBtn').addEventListener('click', () => {
+      const value = readValue();
+      if (!Number.isInteger(value)) {
+        reportInvalidValue('Search');
+        return;
+      }
+      startOperation(createSearchSteps(value).result);
+    });
+
+    document.getElementById('insertBtn').addEventListener('click', () => {
+      const value = readValue();
+      if (!Number.isInteger(value)) {
+        reportInvalidValue('Insert');
+        return;
+      }
+
+      const search = createSearchSteps(value);
+      const operationSteps = search.result;
+
+      if (search.found) {
+        operationSteps[operationSteps.length - 1].message = `${value} is already in the BST, so no duplicate is inserted.`;
+        operationSteps[operationSteps.length - 1].result = 'No insertion.';
+      } else {
+        let newTree = cloneTree(tree);
+        newTree = insertValue(newTree, value);
+        const inserted = findNode(newTree, value);
+        const lastPath = operationSteps.length > 0 && operationSteps[operationSteps.length - 1].path
+          ? operationSteps[operationSteps.length - 1].path.slice()
+          : [];
+        tree = newTree;
+        operationSteps.push({
+          tree: cloneTree(tree),
+          insertedId: inserted ? inserted.id : null,
+          visitedIds: inserted ? lastPath.filter((pathValue) => pathValue !== value).map((pathValue) => {
+            const node = findNode(tree, pathValue);
+            return node ? node.id : null;
+          }).filter((id) => id !== null) : [],
+          path: lastPath.concat(value),
+          message: search.parent === null
+            ? `Inserted ${value} as the root.`
+            : `Inserted ${value} as the ${search.side} child of ${search.parent.value}.`,
+          result: `Inserted ${value}.`
+        });
+      }
+
+      startOperation(operationSteps);
+    });
+
+    document.getElementById('deleteBtn').addEventListener('click', () => {
+      const value = readValue();
+      if (!Number.isInteger(value)) {
+        reportInvalidValue('Delete');
+        return;
+      }
+
+      const deletion = createDeleteSteps(value);
+      if (deletion.deleted) {
+        tree = deletion.tree;
+      }
+      startOperation(deletion.result);
+    });
+
+    document.getElementById('predecessorBtn').addEventListener('click', () => {
+      const value = readValue();
+      if (!Number.isInteger(value)) {
+        reportInvalidValue('Predecessor');
+        return;
+      }
+      startOperation(createPredecessorSteps(value));
+    });
+
+    document.getElementById('successorBtn').addEventListener('click', () => {
+      const value = readValue();
+      if (!Number.isInteger(value)) {
+        reportInvalidValue('Successor');
+        return;
+      }
+      startOperation(createSuccessorSteps(value));
+    });
+
+    document.getElementById('prevBtn').addEventListener('click', () => {
+      if (stepIndex > 0) {
+        stepIndex--;
+        render();
+      }
+    });
+
+    document.getElementById('nextBtn').addEventListener('click', () => {
+      if (stepIndex < steps.length - 1) {
+        stepIndex++;
+        render();
+      }
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      tree = buildTree(initialValues);
+      document.getElementById('valueInput').value = '20';
+      steps = [];
+      stepIndex = -1;
+      render();
+    });
+
+    document.getElementById('valueInput').addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        document.getElementById('searchBtn').click();
+      }
+    });
+
+    tree = buildTree(initialValues);
+    render();
+  </script>
+</body>
+</html>

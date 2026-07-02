@@ -17,7 +17,7 @@
     <link rel="stylesheet"
           href="/DAIADS/css/style.css">
     <link rel="stylesheet"
-          href="/DAIADS/css/chapter.css">
+          href="/DAIADS/css/chapter.css?a=b">
     <link rel="stylesheet"
           href="latex-translation.css">
     <!-- Google tag (gtag.js) -->
@@ -910,16 +910,16 @@
     }</code></pre>
         <div class="solution-block">
             <p class="box-title"><strong>Solution</strong></p>
-            <p>Clearly the assignment (<code>V=A[i]*A[j])</code> occurs the most often. The inner loop
+            <p>Clearly the assignment (<code>v=v + A[i] * A[j])</code> occurs the most often. The inner loop
                 always executes \(n\) times, each time doing one assignment. The outer loop
                     executes \(n\) times, and each time it executes, it executes the inner loop. Therefore the total
                     time is \(n\cdot n=\Theta(n^2)\). This is the best, worst, and average case complexity since nothing
                     about the input can change what the algorithm does.</p>
                 <p>Here is another way to think about it. The inner loop executes the assignment statement \(n\) times
-                    every time it executes. The first time through the outer loop, the whole inner loop executes an
+                    every time it executes. The first time through the outer loop, the whole inner loop executes and
                     calls the assignment \(n\) times. The second time through the outer loop, the whole inner loop
-                    executes an calls the assignment \(n\) times. This happens all the way until the \(n\)th time
-                    through the outer loop during which the whole inner loop executes an calls the assignment \(n\)
+                    executes and calls the assignment \(n\) times. This happens all the way until the \(n\)th time
+                    through the outer loop during which the whole inner loop executes and calls the assignment \(n\)
                     times. Thus, the total number of times the assignment is called is \(n+n+\cdots+n\) times (where
                     there are \(n\) terms in the sum), which is just \(n\cdot n\). Thus the complexity is
                     \(\Theta(n^2)\).</p>
@@ -1039,246 +1039,653 @@ for(stair 1 through 10)
         </div>
     </div>
 </section>
-
     </section>
+
     <section id="common-time-complexities"
-             section-title="Common Time Complexities">
-        <h2>Common Time Complexities</h2>
-        <p>We have already discussed the relative growth rates of functions. In this section we apply that understanding
-            to the analysis of algorithms. That is, we will discuss common time complexities that are encountered when
-            analyzing algorithms. Let \(n\) be the size of the input and \(k\) a constant. We will briefly discuss each
-            of the following complexity classes, which are listed (mostly) in order of rate of growth.</p>
-        <ul class="spaced">
-            <li>Constant: \(\Theta(k)\), for example \(\Theta(1)\)
-            </li>
-            <li>Logarithmic: \(\Theta(\log_{k}n)\)
-            </li>
-            <li>Linear: \(\Theta(n)\)
-            </li>
-            <li>\(n\log n\): \(\Theta(n \log_{k}n)\)
-            </li>
-            <li>Quadratic: \(\Theta(n^{2})\)
-            </li>
-            <li>Polynomial: \(\Theta(n^k)\)
-            </li>
-            <li>Exponential: \(\Theta(k^{n})\)
-            </li>
-        </ul>
-        <div class="definition-box">
-            <p class="box-title"><strong>Definition: Constant</strong></p>
-            <p>An algorithm with running time \(\Theta(1)\) (or \(\Theta(k)\) for some constant \(k\)) is said to have
-                <strong>constant</strong> complexity. Note that this does not necessarily mean that the algorithm takes
-                exactly the same amount of time for all inputs, but it <strong>does</strong> mean that there is some
-                number \(K\) such that it always takes no more than \(K\) operations.</p>
-        </div>
-        <div class="example-box">
-            <p class="box-title"><strong>Example 9</strong></p>
-            <p>The following algorithms have constant complexity.</p>
-            <pre><code class="language-java">int FifthElement(int A[],int n) 
-{
-    return A[4];
-}</code></pre>
-            <pre><code class="language-java">    int PartialSum(int A[],int n) {
-        int sum=0;
-        for(int i=0;i&lt;42;i++) 
-           sum=sum+A[i];
+         section-title="Common Time Complexities">
+    <h2>Common Time Complexities</h2>
+
+    <p>
+        Once we analyze an algorithm, the final answer often matches one of a small
+        number of common growth rates. The table below lists several common complexity
+        classes in increasing order of growth of the function \(f(n)\). Since \(f(n)\)
+        represents running time, larger growth rates generally describe algorithms that
+        scale worse as \(n\) increases.
+    </p>
+
+    <table class="example-table left-top-align">
+        <thead>
+            <tr>
+                <th>Complexity</th>
+                <th>Name</th>
+                <th>Common source</th>
+                <th>Example pattern</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>\(\Theta(1)\)</td>
+                <td>constant</td>
+                <td>A fixed amount of work independent of \(n\)</td>
+                <td>Accessing one array entry; swapping two values</td>
+            </tr>
+            <tr>
+                <td>\(\Theta(\log n)\)</td>
+                <td>logarithmic</td>
+                <td>Repeatedly discarding a constant fraction of the input</td>
+                <td>Binary search</td>
+            </tr>
+            <tr>
+                <td>\(\Theta(n)\)</td>
+                <td>linear</td>
+                <td>Examining each input item a constant number of times</td>
+                <td>Sequential search in the worst case; summing an array</td>
+            </tr>
+            <tr>
+                <td>\(\Theta(n \log n)\)</td>
+                <td>linearithmic</td>
+                <td>Many efficient divide-and-conquer algorithms</td>
+                <td>Merge sort; average-case quicksort</td>
+            </tr>
+            <tr>
+                <td>\(\Theta(n^2)\)</td>
+                <td>quadratic</td>
+                <td>Comparing or combining many pairs of items;
+                    examining every element of an \(n\times n\) matrix
+                </td>
+                <td>Many simple sorting algorithms; two \(n\)-by-\(n\) nested loops</td>
+            </tr>
+            <tr>
+                <td>\(\Theta(n^k)\)</td>
+                <td>polynomial</td>
+                <td>A fixed number of nested loops or stages that each depend on \(n\)</td>                
+                <td>Standard matrix multiplication is \(\Theta(n^3)\)</td>
+            </tr>
+            <tr>
+                <td>\(\Theta(k^n)\)</td>
+                <td>exponential</td>
+                <td>Trying all subsets, strings, assignments, or choices</td>
+                <td>Brute force over all \(2^n\) subsets</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <p>
+        These names are useful shortcuts, but they are not substitutes for analysis. A loop
+        does not automatically imply linear time, and nested loops do not automatically imply
+        quadratic time. The bound depends on how many times the relevant operations execute.
+    </p>
+    <p>Let's see an example of an algorithm with each of the given complexities.</p>
+
+    <div class="example-box">
+        <p class="box-title"><strong>Example 14: Constant Time</strong></p>
+        <p>
+            The following code returns the fifth element of an array.
+        </p>
+        <pre><code class="language-java">    int theFifthElement(int a[], int n) {
+        return a[4];
+    }</code></pre>
+        <p>
+            Array indexing and returning a value both take constant time. The number of
+            operations does not depend on \(n\), so the complexity is \(\Theta(1)\).
+        </p>
+    </div>
+
+    <div class="example-box">
+        <p class="box-title"><strong>Example 15: Logarithmic Time</strong></p>
+        <p>
+            Binary search is a typical logarithmic-time algorithm. Each iteration compares
+            the target value to the middle element of the current search range and then
+            discards about half of the remaining elements.
+        </p>
+        <p>
+            Since the input size is repeatedly divided by \(2\), the number of iterations is
+            proportional to the number of times \(n\) can be divided by \(2\) before reaching
+            \(1\). Therefore, binary search has worst-case complexity \(\Theta(\log n)\).
+            If you aren't buying it that quickly, do not fret. We will give a more detailed
+            analysis of binary search shortly.
+        </p>
+    </div>
+
+    <div class="example-box">
+        <p class="box-title"><strong>Example 16: Linear Time</strong></p>
+        <p>
+            The following code sums all \(n\) entries in an array.
+        </p>
+        <pre><code class="language-java">    int sumArray(int a[], int n) {
+        int sum = 0;
+        for (int i = 0; i &lt; n; i++) {
+            sum = sum + a[i];
+        }
         return sum;
     }</code></pre>
-            <p>The algorithm <code>FifthElement</code> just indexes into an array and returns that value. Since array
-                indexing takes constant time, as does returning a single value, this algorithm clearly takes just
-                constant time, no matter how large \(n\) is.</p>
-            <p>The algorithm <code>PartialSum</code> might seem to take \(O(n)\) time since it contains a loop. But
-                don't jump to conclusions too quickly. Notice that the loop executes \(42\) times, regardless of how
-                large \(n\) might be. All of the other operations (both in and out of the loop) takes constant time.
-                Thus, the overall complexity is something like \(c_1+42*c_2\), where \(c_1\) is the time it takes to do
-                the operations outside the loop, and \(c_2\) is the time it takes to execute the code in the loop each
-                time it executes, including the comparison and increment in the for loop itself. Since both \(c_1\) and
-                \(c_2\) are constant, so is \(c_1+42*c_2\). Thus, the algorithm takes constant time.</p>
-        </div>
-        <div class="exercise-box">
-            <p class="box-title"><strong>Exercise 5</strong></p>
-            <p>Which of the following algorithms have constant complexity? Briefly justify your answers.</p>
-            <ol class="spaced">
-                <li>
-                    <p>The <code>AreaTrapezoid</code> algorithm from Example [exa:areaTrap].</p>
-                </li>
-                <li>
-                    <p>The <code>factorial</code> algorithm from Example [exa:factorial].</p>
-                </li>
-                <li>
-                    <p>The <code>absoluteValue</code> algorithm from Problem [pro:ab1].</p>
-                </li>
-            </ol>
-            <button type="button"
-                    class="show-answer latex-answer-toggle"
-                    data-answer-target="latex-answer-46"
-                    aria-expanded="false">Show Answer</button>
-            <div id="latex-answer-46"
-                 class="answer latex-answer"
-                 hidden>
-                <p>(a) <code>AreaTrapezoid</code> is constant. (b) <code>factorial</code>is not constant. It should be
-                    easy to see that it has a complexity of \(\Theta(n)\). (c) <code>absoluteValue</code> is constant if
-                    we assume <code>sqrt</code> takes constant time.</p>
-            </div>
-        </div>
-        <div class="definition-box">
-            <p class="box-title"><strong>Definition: Logarithmic</strong></p>
-            <p>Algorithms with running time \(\Theta(\log n)\) are said to have <strong>logarithmic</strong> complexity.
-                As the input size \(n\) increases, so does the running time, but very slowly. Logarithmic algorithms are
-                typically found when the algorithm can systematically ignore fractions of the input.</p>
-        </div>
-        <div class="example-box">
-            <p class="box-title"><strong>Example 10</strong></p>
-            <p>In Example 62 we will see that <em>binary search</em> has complexity \(\Theta(\log n)\).</p>
-        </div>
-        <div class="definition-box">
-            <p class="box-title"><strong>Definition: Linear</strong></p>
-            <p>Algorithms with running time \(\Theta(n)\) are said to have <strong>linear</strong> complexity. As \(n\)
-                increases, the run time increases in proportion with \(n\). Linear algorithms access each of their \(n\)
-                inputs at most some constant number of times.</p>
-        </div>
-        <div class="example-box">
-            <p class="box-title"><strong>Example 11</strong></p>
-            <p>The following are linear algorithms.</p>
-            <pre><code class="language-java">  void sumFirstN(int n) {
-      int sum=0; 
-      for (int i=1;i&lt;=n;i++)
-      sum = sum + i;  
-  }</code></pre>
-            <pre><code class="language-java">  void mSumFirstN(int n) {
-      int sum=0;
-      for(int i=1;i&lt;=n;i++)
-          for(int k=1;k&lt;7;k++)
-              sum = sum + i;
-  }</code></pre>
-            <p>It is pretty easy to see that <code>sumFirstN</code> takes linear time since it contains a single for
-                loop that executes \(n\) times and does a constant amount of work each time.</p>
-            <p>At first glance it may seem that <code>mSumFirstN</code> takes \(\Theta(n^2)\) time since it has a double
-                nested loop. You will think about why it is actually \(\Theta(n)\) in the next question.</p>
-        </div>
-        <div class="question-box">
-            <p class="box-title"><strong>Question 5</strong></p>
-            <p>Why is the complexity of <code>mSumFirstN</code> from the previous example \(\Theta(n)\) and not
-                \(\Theta(n^2)\)?</p>
-            <button type="button"
-                    class="show-answer latex-answer-toggle"
-                    data-answer-target="latex-answer-47"
-                    aria-expanded="false">Show Answer</button>
-            <div id="latex-answer-47"
-                 class="answer latex-answer"
-                 hidden>
-                <p>Although it has a nested loop, the inside loop always executes \(6\) times, which is a constant. So
-                    the algorithm takes about \(6\cdot c\cdot n=\Theta(n)\) operations, not \(\Theta(n^2)\).</p>
-            </div>
-        </div>
-        <div class="definition-box">
-            <p class="box-title"><strong>Definition: \(n \log n\)</strong></p>
-            <p>Many divide-and-conquer algorithms have complexity \(\Theta(n\log n)\). These algorithms break the input
-                into a constant number of subproblems of the same type, solve them independently, and then combine the
-                solutions together. Not all divide-and-conquer algorithms have this complexity, however.</p>
-        </div>
-        <div class="example-box">
-            <p class="box-title"><strong>Example 12</strong></p>
-            <p>Two of the most well known sorting algorithms, <em>Quicksort</em> and <em>merge sort</em>, have an
-                average case complexity of \(\Theta(n\log n)\). We will do a complete analysis of both algorithms in
-                Chapter [ch:recurrences].</p>
-        </div>
-        <div class="definition-box">
-            <p class="box-title"><strong>Definition: Quadratic</strong></p>
-            <p>Algorithms with a running time of \(\Theta(n^2)\) are said to have <strong>quadratic</strong> complexity.
-                As \(n\) doubles, the running time quadruples.</p>
-        </div>
-        <div class="example-box">
-            <p class="box-title"><strong>Example 13</strong></p>
-            <p>The following algorithm is quadratic.</p>
-            <pre><code class="language-java">    int compute_sums(int A[], int n) {
-        int M[n][n];
-        for (int i=0;i&lt;n;i++) 
-            for (int j=0;j&lt;n;j++)
-                M[i][j]=A[i]+A[j];
-        return M;
+        <p>
+            The loop executes exactly \(n\) times, and each iteration takes constant time.
+            Therefore, the complexity is \(\Theta(n)\).
+        </p>
+    </div>
+
+    <div class="example-box">
+        <p class="box-title"><strong>Example 17: \(n \log n\) Time</strong></p>
+        <p>
+            Many efficient sorting algorithms, such as merge sort, have running time
+            \(\Theta(n \log n)\). Very roughly, merge sort has \(\log n\) levels of recursive
+            splitting, and each level performs \(\Theta(n)\) total work to merge the pieces.
+        </p>
+        <p>
+            Multiplying the work per level by the number of levels gives
+            \[
+                \Theta(n)\cdot \Theta(\log n)=\Theta(n\log n).
+            \]
+            We will analyze algorithms like this more carefully when we study recurrences.
+        </p>
+    </div>
+
+    <div class="example-box">
+        <p class="box-title"><strong>Example 18: Quadratic Time</strong></p>
+        <p>
+            The following code computes all pairwise sums from an array.
+        </p>
+        <pre><code class="language-java">    int[][] pairSums(int a[], int n) {
+        int sums[][] = new int[n][n];
+
+        for (int i = 0; i &lt; n; i++) {
+            for (int j = 0; j &lt; n; j++) {
+                sums[i][j] = a[i] + a[j];
+            }
+        }
+
+        return sums;
     }</code></pre>
-            <p>This one is pretty easy to see since it has double nested loops that each execute \(n\) times, and the
-                amount of work done in the inner loop is constant.</p>
-        </div>
-        <div class="exercise-box">
-            <p class="box-title"><strong>Exercise 6</strong></p>
-            <p>Which of the following algorithms have quadratic complexity? Briefly justify your answers.</p>
-            <ol class="spaced">
+        <p>
+            The inner loop executes \(n\) times for each of the \(n\) iterations of the outer
+            loop. Thus, the assignment executes \(n\cdot n=n^2\) times, so the complexity is
+            \(\Theta(n^2)\).
+        </p>
+    </div>
+
+    <div class="example-box">
+        <p class="box-title"><strong>Example 19: Polynomial Time</strong></p>
+        <p>
+            Standard matrix multiplication is a common cubic-time algorithm.
+        </p>
+        <pre><code class="language-java">    for (int i = 0; i &lt; n; i++) {
+        for (int j = 0; j &lt; n; j++) {
+            C[i][j] = 0;
+            for (int k = 0; k &lt; n; k++) {
+                C[i][j] = C[i][j] + A[i][k] * B[k][j];
+            }
+        }
+    }</code></pre>
+        <p>
+            There are three nested loops, each with \(n\) iterations. The innermost statement
+            executes \(n\cdot n\cdot n=n^3\) times, so the complexity is \(\Theta(n^3)\).
+            Since \(n^3\) is \(n^k\) for the constant \(k=3\), this is polynomial time.
+        </p>
+    </div>
+
+    <p>
+        Later we will see an algorithm for matrix multiplication with a more interesting complexity.
+        It is called Strassen's Algorithm and it has a complexity of about \(\Theta(n^{2.8})\)
+        (to be precise, its complexity is \(\Theta(n^{\log_2 7})\)).
+    </p>
+
+    <div class="example-box">
+        <p class="box-title"><strong>Example 20: Exponential Time</strong></p>
+        <p>
+            Suppose an algorithm prints every subset of an \(n\)-element set. Each element is
+            either included or not included in a subset, so there are \(2^n\) possible subsets.
+        </p>
+        <p>
+            Since the algorithm must output \(2^n\) subsets, its running time is at least
+            proportional to \(2^n\). A straightforward brute-force version therefore has
+            complexity \(\Theta(2^n)\), which is exponential.
+        </p>
+    </div>
+
+    <p>
+        Generally speaking, we consider algorithms whose complexity is no worse than polynomial
+        to be <strong>efficient</strong>. This does not mean that every polynomial-time algorithm
+        is practical. For example, an algorithm with complexity \(\Theta(n^{100})\) would be
+        polynomial, but it would be useless for all but very small inputs. Still, polynomial time
+        is an important dividing line because, for a fixed exponent, the running time grows much
+        more slowly than exponential functions such as \(2^n\).
+    </p>
+
+    <p>
+        Exponential-time algorithms are usually considered impractical, especially when \(n\)
+        can be even moderately large. There are exceptions, however. Sometimes the problem itself
+        requires exponential work. For example, an algorithm that lists all subsets of an
+        \(n\)-element set must take at least \(\Theta(2^n)\) time because there are \(2^n\)
+        subsets to output. In that case, the exponential running time is caused by the size of
+        the required output, not by a poor algorithm design.
+    </p>
+
+</section>
+
+<section id="summary"
+         section-title="Summary">
+    <h2>Summary</h2>
+
+    <p>
+        Algorithm analysis describes how the work done by an algorithm grows as the input
+        size grows. We usually do this by choosing representative operations, counting how
+        often they execute, and simplifying the result using asymptotic notation.
+    </p>
+
+    <p>
+        Remember that a faster-growing complexity function describes a slower-scaling
+        algorithm. For example, \(n^2\) grows faster than \(n\), so a \(\Theta(n^2)\)
+        algorithm generally scales worse than a \(\Theta(n)\) algorithm.
+    </p>
+
+    <p>
+        The examples on this page used relatively simple loops and familiar operations.
+        On the <a href="?path=Analysis/Algorithm%20Analysis%20Examples">Algorithm Analysis Examples</a>
+        page, we will apply the same ideas to algorithms where the loop bounds, helper
+        methods, or data structures make the analysis less direct.
+    </p>
+</section>
+
+<section id="reading-questions"
+         section-title="Reading Comprehension Questions">
+    <h2>Reading Comprehension Questions</h2>
+    <ol>
+        <li>
+            <strong>Measuring Running Time:</strong>
+            Why do we usually avoid using wall-clock time as the main way to compare algorithms?
+        </li>
+
+        <li>
+            <strong>Input Size:</strong>
+            For an algorithm that takes an array of \(n\) values and one extra number \(val\),
+            why do we usually say the input size is \(n\), not \(n+1\)?
+        </li>
+
+        <li>
+            <strong>Representative Operation:</strong>
+            In sequential search, why is the comparison <code>a[i] == val</code> a reasonable
+            operation to count?
+        </li>
+
+        <li>
+            <strong>Best Case:</strong>
+            Why is the best-case complexity of sequential search \(\Theta(1)\) even when the
+            input array has size \(n\)?
+        </li>
+
+        <li>
+            <strong>Average Case:</strong>
+            Why is average-case analysis usually more difficult than worst-case analysis?
+        </li>
+
+        <li>
+            <strong>Method Calls:</strong>
+            Why is it dangerous to assume that a method call inside a loop takes constant time?
+        </li>
+
+        <li>
+            <strong>Nested Loops:</strong>
+            Explain why nested loops do not automatically imply \(\Theta(n^2)\) running time.
+        </li>
+
+        <li>
+            <strong>Growth Rates and Algorithms:</strong>
+            If \(n^2\) grows faster than \(n\), why do we say a \(\Theta(n)\) algorithm scales
+            better than a \(\Theta(n^2)\) algorithm?
+        </li>
+    </ol>
+
+    <button id="toggleAnswers"
+            class="show-answer"
+            aria-expanded="false">Show Answers</button>
+    <div id="answers"
+         class="answer"
+         hidden>
+        <ol>
+            <li>
+                <strong>Answer:</strong>
+                Wall-clock time depends on many details besides the algorithm itself, including
+                the computer, programming language, compiler, operating system, and other
+                processes running at the same time. Algorithm analysis tries to compare the
+                growth rate of the work done by the algorithm, not one particular timed run.
+            </li>
+
+            <li>
+                <strong>Answer:</strong>
+                The array contains the growing part of the input. The extra value \(val\) is
+                just one additional item, so it changes the input size by only a constant. Since
+                asymptotic analysis ignores constant differences, we usually describe the input
+                size as \(n\).
+            </li>
+
+            <li>
+                <strong>Answer:</strong>
+                Sequential search examines array elements one at a time, and the comparison
+                <code>a[i] == val</code> happens once for each element examined. Counting that
+                comparison therefore captures the main work of the algorithm.
+            </li>
+
+            <li>
+                <strong>Answer:</strong>
+                Best case means the least work done on an input of size \(n\), not the work done
+                on the smallest possible input. For sequential search, the target could be in
+                the first position even when the array has \(n\) elements, so the algorithm can
+                return after one comparison.
+            </li>
+
+            <li>
+                <strong>Answer:</strong>
+                Worst-case analysis asks for the largest amount of work possible on an input of
+                size \(n\), and that is generally not that difficult to determine. 
+                Average-case analysis requires a probability model describing
+                which inputs are possible and how likely they are. Different assumptions about
+                the input distribution can lead to different average-case calculations.
+                Further, the computations to determine the average-case are typically a lot 
+                more complicated.
+            </li>
+
+            <li>
+                <strong>Answer:</strong>
+                A method call may hide work. For example, <code>list.get(i)</code> might take
+                constant time for an array-based list but linear time for a linked list. If the
+                method is inside a loop, that hidden cost can change the total complexity.
+            </li>
+
+            <li>
+                <strong>Answer:</strong>
+                The complexity depends on the loop bounds, not just the number of loops. If an
+                inner loop runs a constant number of times, the total may be \(\Theta(n)\). If
+                the inner loop runs \(n^2\) times for each outer-loop iteration, the total may
+                be \(\Theta(n^3)\). The loops must be analyzed from the inside out.
+            </li>
+
+            <li>
+                <strong>Answer:</strong>
+                The function describes running time. A faster-growing running-time function
+                means the algorithm's work increases more quickly as \(n\) grows. Since \(n^2\)
+                grows faster than \(n\), a \(\Theta(n^2)\) algorithm generally becomes worse
+                more quickly than a \(\Theta(n)\) algorithm.
+            </li>
+        </ol>
+    </div>
+</section>
+
+<section id="activities"
+         section-title="In-Class Activities">
+    <h2>In-Class Activities</h2>
+    <ol>
+        <li>
+            <strong>Timing Is Not Enough:</strong>
+            Suppose two students implement algorithms for the same problem. One program takes
+            \(12\) seconds on a laptop, and the other takes \(4\) seconds on a lab computer.
+            In small groups, list at least four reasons why this does not prove that the second
+            algorithm is better. Then decide what information would make the comparison more
+            meaningful.
+        </li>
+
+        <li>
+            <strong>Choose the Input Size:</strong>
+            For each situation below, identify a reasonable input-size variable or variables.
+            Briefly justify your choices.
+            <ol type="a">
+                <li>An algorithm processes an array of \(n\) integers and a target value.</li>
+                <li>An algorithm processes an \(r\) by \(c\) image.</li>
+                <li>An algorithm processes a graph with \(V\) vertices and \(E\) edges.</li>
+                <li>An algorithm processes two arrays, one of size \(n\) and one of size \(m\).</li>
+            </ol>
+        </li>
+
+        <li>
+            <strong>What Should We Count?</strong>
+            Consider the following code.<br>
+            <pre><code class="language-java">int countPositive(int a[], int n) {
+    int count = 0;
+    for (int i = 0; i &lt; n; i++) {
+        if (a[i] &gt; 0) {
+            count++;
+        }
+    }
+    return count;
+}</code></pre>
+            <br>
+            Identify two reasonable operations to count. For each choice, decide whether it
+            captures the growth rate of the whole algorithm.
+        </li>
+
+        <li>
+            <strong>Best, Worst, and Average Inputs:</strong>
+            For sequential search on an array of size \(8\), write down one input/search-value
+            pair that gives the best case and one that gives the worst case. Then describe what
+            assumptions would be needed before computing an average case.
+        </li>
+
+        <li>
+            <strong>Same Code Shape, Different Costs:</strong>
+            The following loop looks simple.<br>
+            <pre><code class="language-java">int total = 0;
+for (int i = 0; i &lt; n; i++) {
+    total = total + list.get(i);
+}</code></pre>
+            <br>
+            Analyze it twice: first assuming <code>list.get(i)</code> takes \(\Theta(1)\) time,
+            and then assuming <code>list.get(i)</code> takes \(\Theta(i)\) time. Explain why the
+            answers differ even though the loop structure did not change.
+        </li>
+
+        <li>
+    <strong>Loop Bounds Matter:</strong>
+    Each of the following fragments contains nested or repeated loops. For each one,
+    count how many times <code>x++</code> executes and give the complexity. Be careful:
+    the answer is not determined just by the number of loops.
+    <ol type="a">
+        <li>
+<pre><code class="language-java">for (int i = 0; i &lt; n; i++) {
+    for (int j = 0; j &lt; 20; j++) {
+        x++;
+    }
+}</code></pre>
+        </li>
+        <li>
+<pre><code class="language-java">for (int i = 0; i &lt; 20; i++) {
+    for (int j = 0; j &lt; n; j++) {
+        x++;
+    }
+}</code></pre>
+        </li>
+        <li>
+<pre><code class="language-java">for (int i = 0; i &lt; n; i++) {
+    x++;
+}
+for (int j = 0; j &lt; n * n; j++) {
+    x++;
+}</code></pre>
+        </li>
+        <li>
+<pre><code class="language-java">for (int row = 0; row &lt; r; row++) {
+    for (int col = 0; col &lt; c; col++) {
+        x++;
+    }
+}</code></pre>
+        </li>
+    </ol>
+</li>
+
+        <li>
+            <strong>Classify the Complexity:</strong>
+            Match each expression with its common name: constant, logarithmic, linear,
+            linearithmic, quadratic, polynomial, or exponential.
+            \[
+                \Theta(1),\quad
+                \Theta(n^2),\quad
+                \Theta(2^n),\quad
+                \Theta(n\log n),\quad
+                \Theta(\log n),\quad
+                \Theta(n),\quad
+                \Theta(n^5)
+            \]
+            Then rank the expressions in increasing order of growth.
+        </li>
+
+        <li>
+            <strong>Faster-Growing Versus Faster Algorithm:</strong>
+            Work with a partner to explain the following statement in your own words:
+            "A faster-growing complexity function describes a slower-scaling algorithm."
+            Use \(\Theta(n)\) and \(\Theta(n^2)\) as your example, and include a short numerical
+            comparison using \(n=10\), \(n=100\), and \(n=1000\).
+        </li>
+    </ol>
+</section>
+<section id="problems"
+         section-title="Homework Problems">
+    <h2>Homework Problems</h2>
+    <ol>
+        <li>
+            <strong>Choosing Input Size:</strong>
+            For each algorithm description below, identify a reasonable input-size variable
+            or variables. Briefly justify your answer.
+            <ol type="a">
+                <li>An algorithm checks whether a word of length \(n\) is a palindrome.</li>
+                <li>An algorithm multiplies two \(n\) by \(n\) matrices.</li>
+                <li>An algorithm determines whether a graph with \(V\) vertices and \(E\) edges is connected.</li>
+                <li>An algorithm compares every value in an array of size \(n\) with every value in an array of size \(m\).</li>
+            </ol>
+        </li>
+
+        <li>
+            <strong>Representative Operation:</strong>
+            Consider the following algorithm.
+            <pre><code class="language-java">int countOccurrences(int a[], int n, int val) {
+    int count = 0;
+
+    for (int i = 0; i &lt; n; i++) {
+        if (a[i] == val) {
+            count++;
+        }
+    }
+
+    return count;
+}</code></pre>
+            <ol type="a">
+                <li>Choose a representative operation to count.</li>
+                <li>How many times does that operation execute?</li>
+                <li>Give the best-case, worst-case, and average-case complexities.</li>
+                <li>Explain why this differs from sequential search, even though both compare array entries to <code>val</code>.</li>
+            </ol>
+        </li>
+
+        <li>
+            <strong>Best Case Is Not Smallest Input:</strong>
+            Consider the following algorithm.
+            <pre><code class="language-java">boolean containsNegative(int a[], int n) {
+    for (int i = 0; i &lt; n; i++) {
+        if (a[i] &lt; 0) {
+            return true;
+        }
+    }
+
+    return false;
+}</code></pre>
+            <ol type="a">
+                <li>Describe an input of size \(n\) that results in the best case complexity.</li>
+                <li>Describe an input of size \(n\) that results in the worst case complexity.</li>
+                <li>Give the best-case and worst-case complexities.</li>
+                <li>Explain why the best case is not found by setting \(n=0\).</li>
+            </ol>
+        </li>
+
+        <li>
+            <strong>Hidden Cost of a Method Call:</strong>
+            Suppose <code>bag.contains(x)</code> takes \(\Theta(1)\) time in one implementation
+            and \(\Theta(n)\) time in another implementation, where \(n\) is the number of items
+            in <code>bag</code>. Analyze the following code under both assumptions.
+            <pre><code class="language-java">int countMatches(int a[], int m, Bag bag) {
+    int count = 0;
+
+    for (int i = 0; i &lt; m; i++) {
+        if (bag.contains(a[i])) {
+            count++;
+        }
+    }
+
+    return count;
+}</code></pre>
+            <ol type="a">
+                <li>Give the complexity if <code>bag.contains(x)</code> takes \(\Theta(1)\) time.</li>
+                <li>Give the complexity if <code>bag.contains(x)</code> takes \(\Theta(n)\) time.</li>
+                <li>Explain why the answer should use both \(m\) and \(n\) in the second case.</li>
+            </ol>
+        </li>
+
+        <li>
+            <strong>Loop Bounds:</strong>
+            For each code fragment below, count how many times <code>x++</code> executes and
+            give the tight asymptotic complexity.
+            <ol type="a">
                 <li>
-                    <p>The <code>factorial</code> algorithm from Example [exa:factorial].</p>
+<pre><code class="language-java">for (int i = 0; i &lt; n; i++) {
+    x++;
+}
+
+for (int j = 0; j &lt; n * n; j++) {
+    x++;
+}</code></pre>
                 </li>
                 <li>
-                    <p>An algorithm that tries to find the smallest element in an array of size \(n\times n\) by
-                        searching through the entire array.</p>
+<pre><code class="language-java">for (int i = 0; i &lt; n; i++) {
+    for (int j = 0; j &lt; 5; j++) {
+        x++;
+    }
+}</code></pre>
+                </li>
+                <li>
+<pre><code class="language-java">for (int row = 0; row &lt; r; row++) {
+    for (int col = 0; col &lt; c; col++) {
+        x++;
+    }
+}</code></pre>
+                </li>
+                <li>
+<pre><code class="language-java">for (int i = 0; i &lt; n * n; i++) {
+    for (int j = 0; j &lt; 3; j++) {
+        x++;
+    }
+}</code></pre>
                 </li>
             </ol>
-            <button type="button"
-                    class="show-answer latex-answer-toggle"
-                    data-answer-target="latex-answer-48"
-                    aria-expanded="false">Show Answer</button>
-            <div id="latex-answer-48"
-                 class="answer latex-answer"
-                 hidden>
-                <p>(a) Since <code>factorial</code> has a complexity of \(\Theta(n)\), it is not quadratic. (b) Since
-                    there are \(n^2\) entries it to consider, the algorithm takes \(\Theta(n^2)\) time, so it would be
-                    quadratic.<span class="translation-footnote">Footnote: Technically this is linear with respect to
-                        the <em>size</em> of the input since the size of the input is \(n^2\). But it is quadratic in
-                        \(n\). In either case, it is \(\Theta(n^2)\).</span></p>
-            </div>
-        </div>
-        <div class="question-box">
-            <p class="box-title"><strong>Question 6</strong></p>
-            <p>In a previous course you may have encountered several quadratic sorting algorithms. Name them. (Note: We
-                will analyze two of them soon.)</p>
-            <button type="button"
-                    class="show-answer latex-answer-toggle"
-                    data-answer-target="latex-answer-49"
-                    aria-expanded="false">Show Answer</button>
-            <div id="latex-answer-49"
-                 class="answer latex-answer"
-                 hidden>
-                <p>Bubble sort, selection sort, and insertion sort are three of them that you may have seen before.</p>
-            </div>
-        </div>
-        <div class="definition-box">
-            <p class="box-title"><strong>Definition: Polynomial</strong></p>
-            <p>Algorithms with running time \(\Theta(n^k)\) for some constant \(k\) are said to have
-                <strong>polynomial</strong> complexity. We call them <strong>polynomial-time algorithms</strong>. Note
-                that linear and quadratic are special cases of polynomial. When we say an <strong>efficient</strong>
-                algorithm exists to solve a problem, we typically mean a polynomial-time algorithm.</p>
-        </div>
-        <div class="example-box">
-            <p class="box-title"><strong>Example 14</strong></p>
-            <p>As we will see in Example 57, <code>MatrixMultiply</code> takes \(\Theta(n^3)\) time. Since \(3\) is a
-                constant, that is a polynomial-time algorithm. We will also mention Strassen's algorithm that has a
-                complexity of about \(\Theta(n^{2.8})\). That is also a polynomial-time algorithm. It's actual
-                complexity is \(\Theta(n^{\log_2 7})\).</p>
-        </div>
-        <div class="definition-box">
-            <p class="box-title"><strong>Definition: Exponential</strong></p>
-            <p>Algorithms with running time \(\Theta(k^n)\) for some constant \(k\) are said to have
-                <strong>exponential</strong> complexity. Since exponential algorithms can only be run for small values
-                of \(n\), they are not considered to be efficient. Brute-force algorithms are often exponential.</p>
-        </div>
-        <div class="example-box">
-            <p class="box-title"><strong>Example 15</strong></p>
-            <p>Since there are \(2^n\) binary numbers of length \(n\), an algorithm that lists all binary numbers of
-                length \(n\) would take \(\Theta(2^n)\) time, which is exponential.</p>
-        </div>
-        <div class="remark-box">
-            <p class="box-title"><strong>Remark</strong></p>
-            <p>As we have already seen, exponentials with different bases do not grow at the same rate. Thus, two
-                exponential algorithms do not belong to the same complexity class unless the base of the exponent is the
-                same. In other words, \(a^n\neq\Theta(b^n)\) unless \(a=b\).</p>
-        </div>
-        <p>Let me end on a very important note regarding analysis of algorithms and asymptotic growth of functions. If
-            algorithm \(A\) is faster than algorithm \(B\), then the running time of \(A\) is less than the running time
-            of \(B\). On the other hand, if \(A\)'s running time is asymptotically faster than the running time of
-            \(B\), that means \(B\) is a faster algorithm! In other words, the words fast/slow need to be reversed when
-            discussing algorithm speeds versus the growth of the functions. Put simply: <em>A faster growing complexity
-                means a slower algorithm, and vice-versa</em>.</p>
-    </section>
+        </li>
+
+        <li>
+            <strong>Rank the Algorithms:</strong>
+            Suppose several algorithms solve the same problem and have the following worst-case
+            complexities:
+            \[
+                \Theta(n),\quad
+                \Theta(n^2),\quad
+                \Theta(\log n),\quad
+                \Theta(2^n),\quad
+                \Theta(n\log n),\quad
+                \Theta(1).
+            \]
+            <ol type="a">
+                <li>Rank them from best-scaling to worst-scaling.</li>
+                <li>Which of these would usually be considered efficient?</li>
+                <li>Explain why "best-scaling" does not always mean "fastest on every input."</li>
+            </ol>
+        </li>
+
+        <li>
+            <strong>Output Size and Exponential Time:</strong>
+            An algorithm prints every binary string of length \(n\).
+            <ol type="a">
+                <li>How many binary strings of length \(n\) are there?</li>
+                <li>Why must any algorithm that prints all of them take at least exponential time?</li>
+                <li>Explain why this exponential running time is not necessarily evidence of a poor algorithm.</li>
+            </ol>
+        </li>
+    </ol>
+</section>
+
 </body>
 
 </html>
