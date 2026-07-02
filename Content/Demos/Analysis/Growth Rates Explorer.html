@@ -42,7 +42,7 @@
 
     .top-controls {
       display: grid;
-      grid-template-columns: minmax(12rem, 16rem) 8.5rem repeat(2, minmax(11rem, 13rem));
+      grid-template-columns: 16.25rem 6.5rem repeat(2, 11rem);
       gap: 0.6rem;
       align-items: end;
       justify-content: start;
@@ -70,7 +70,7 @@
     }
 
     .explorer input[type="number"] {
-      width: 4.75rem;
+      width: 4.125rem;
     }
 
     .range-row {
@@ -337,6 +337,9 @@
       </p>
       <div id="functionRows" class="function-editor-grid"></div>
     </div>
+
+    <div>If you are viewing this demo by itself, see the <a href='?path=Analysis/Common%20Growth%20Rates'>Common Growth Rates</a>
+    page Exercise 1 for the answers.</div>
   </main>
 
   <script>
@@ -348,89 +351,117 @@
       color: COLORS[i]
     });
 
-    const presets = [
-      {
-        name: 'Constant factors',
-        maxN: 20,
-        focusN: 20,
-        scale: 'linear',
-        comment: 'Compare n^2, 10n, and 100n on 1 <= n <= 20. Then set Maximum n and Selected n to 1000. What changes? What stays the same?',
-        rows: ['n^2', '10n', '100n']
-      },
-      {
-        name: 'Constants versus growth class',
-        maxN: 20,
-        focusN: 20,
-        scale: 'linear',
-        comment: 'Compare 10000n, 100n^2, and n^3 on 1 <= n <= 20. Then set Maximum n and Selected n to 200. Which function is largest at first? Which functions eventually dominate?',
-        rows: ['10000n', '100n^2', 'n^3']
-      },
-      {
-        name: 'Lower-order terms',
-        maxN: 20,
-        focusN: 20,
-        scale: 'linear',
-        comment: 'Compare n^3, n^3+12345, and n^3+100n^2 on 1 <= n <= 20. Then set Maximum n and Selected n to 500. Why do the graphs become harder to distinguish as n grows?',
-        rows: ['n^3', 'n^3 + 12345', 'n^3 + 100n^2']
-      },
-      {
-        name: 'Do not judge too quickly',
-        maxN: 10,
-        focusN: 10,
-        scale: 'linear',
-        comment: 'Compare 2^n, 300n^3, and 5000n^2 on 1 <= n <= 10. Then set Maximum n and Selected n to 50. How could the smaller range lead to the wrong conclusion?',
-        rows: ['2^n', '300n^3', '5000n^2']
-      },
-      {
-        name: 'Logarithmic growth',
-        maxN: 100,
-        focusN: 100,
-        scale: 'linear',
-        comment: 'Compare log_2 n, sqrt n, n, and n log_2 n on 1 <= n <= 100. Then set Maximum n and Selected n to 10000. Which functions remain relatively small, and which pull away?',
-        rows: ['log_2 n', 'sqrt n', 'n', 'n log_2 n']
-      },
-      {
-        name: 'Same class, different appearance',
-        maxN: 100,
-        focusN: 100,
-        scale: 'linear',
-        comment: 'Compare n^2, n^2+n, n^2+1000n, and 5n^2 on 1 <= n <= 100. Then set Maximum n and Selected n to 1000. Which differences are caused by constant factors, and which are caused by lower-order terms?',
-        rows: ['n^2', 'n^2 + n', 'n^2 + 1000n', '5n^2']
-      },
-      {
-        name: 'Exponential bases',
-        maxN: 10,
-        focusN: 10,
-        scale: 'linear',
-        comment: 'Compare 1.001^n, 1.1^n, 1.5^n, and 2^n on 1 <= n <= 10. Then set Maximum n and Selected n to 25. Unlike logarithms, changing the base of an exponential changes the growth class.',
-        rows: ['1.001^n', '1.1^n', '1.5^n', '2^n']
-      },
-      {
-        name: 'Logarithm bases',
-        maxN: 100,
-        focusN: 100,
-        scale: 'linear',
-        comment: 'Compare log_2 n, ln n, and log_10 n on 1 <= n <= 100. Then set Maximum n and Selected n to 10000. The values differ by constant factors, but the curves keep the same general shape.',
-        rows: ['log_2 n', 'ln n', 'log_10 n']
-      },
-      {
-        name: 'Powers of logarithms',
-        maxN: 10,
-        focusN: 10,
-        scale: 'linear',
-        comment: 'Compare log_2 n, (log_2 n)^2, (log_2 n)^3, and n on 1 <= n <= 10. Then set Maximum n and Selected n to 10000. Powers of logs can separate from one another while still remaining far below linear growth eventually.',
-        rows: ['log_2 n', '(log_2 n)^2', '(log_2 n)^3', 'n']
-      },
-      {
-        name: 'Enter my own',
-        maxN: 100,
-        focusN: 100,
-        scale: 'linear',
-        custom: true,
-        comment: 'Edit the function rows below, turn rows on or off, and adjust Maximum n and Selected n to test your own comparisons.',
-        rows: []
-      }
-    ];
+const presets = [
+  {
+    name: 'Constant factors versus growth rate',
+    maxN: 5,
+    focusN: 5,
+    scale: 'linear',
+    comment: 'Compare <em>n<sup>2</sup></em>, <em>10n</em>, and <em>100n</em> on 1 &le; <em>n</em> &le; 5. '
+      + 'Then use the arrows on the input box to raise <strong>Maximum n</strong> until '
+      + '<em>n</em> reaches 150. What happened and when did it happen? Why did it happen? What can you learn from it?',
+    rows: ['n^2', '10n', '100n']
+  },
+  {
+    name: 'Large constants versus growth class',
+    maxN: 20,
+    focusN: 20,
+    scale: 'linear',
+    comment: 'Compare <em>10000n</em>, <em>100n<sup>2</sup></em>, and <em>n<sup>3</sup></em> on 1 &le; <em>n</em> &le; 20. '
+      + 'Then use the arrows on the input box to raise <strong>Maximum n</strong> until '
+      + '<em>n</em> reaches 150. What happened and when did it happen? Why did it happen? What can you learn from it?',
+    rows: ['10000n', '100n^2', 'n^3']
+  },
+  {
+    name: 'Lower-order terms',
+    maxN: 10,
+    focusN: 10,
+    scale: 'linear',
+    comment: 'Compare <em>n<sup>3</sup></em>, <em>n<sup>3</sup>+12345</em>, and <em>n<sup>3</sup>+100n<sup>2</sup></em> on 1 &le; <em>n</em> &le; 10. '
+      + 'Then use the arrows on the input box to raise <strong>Maximum n</strong> until '
+      + '<em>n</em> reaches 500. Then set it to the maximum value. '
+      + 'At two values of <em>n</em> you should have noticed important changes. What were they? Why did it happen? What can you learn from it?',
+    rows: ['n^3', 'n^3 + 12345', 'n^3 + 100n^2']
+  },
+  {
+    name: 'Do not judge too quickly',
+    maxN: 10,
+    focusN: 10,
+    scale: 'linear',
+    comment: 'Compare <em>2<sup>n</sup></em>, <em>300n<sup>3</sup></em>, and <em>5000n<sup>2</sup></em> on 1 &le; <em>n</em> &le; 10. '
+      + 'Then use the arrows on the input box to <em>slowly</em> raise <strong>Maximum n</strong> until <em>n</em> reaches 25. '
+      + 'What happened and when did it happen? Why did it happen? What can you learn from it?',
+    rows: ['2^n', '300n^3', '5000n^2']
+  },
+  {
+    name: 'Logarithmic growth',
+    maxN: 100,
+    focusN: 100,
+    scale: 'linear',
+    comment: 'Compare <em>log<sub>2</sub> n</em>, <em>&radic;n</em>, <em>n</em>, and <em>n log<sub>2</sub> n</em> on 1 &le; <em>n</em> &le; 100. '
+      + 'Then set <strong>Maximum n</strong> to 10000. Which functions remain relatively small, and which pull away? '
+      +'Do the functions behave as you expect?',
+    rows: ['log_2 n', 'sqrt n', 'n', 'n log_2 n']
+  },
+  {
+    name: 'Same class, different appearance',
+    maxN: 100,
+    focusN: 100,
+    scale: 'linear',
+    comment: 'Compare <em>n<sup>2</sup></em>, <em>n<sup>2</sup>+n</em>, <em>n<sup>2</sup>+1000n</em>, and <em>5n<sup>2</sup></em> on 1 &le; <em>n</em> &le; 100. '
+      +'You should have one interesting observation immediately. What do you notice that might be unexpected? '  
+      + 'Then use the arrows on the input box to raise <strong>Maximum n</strong> until <em>n</em> reaches 300. '
+      +' What happened and at what value of <em>n</em> did it happen? '
+      + 'Now use the slider to increase <strong>Maximum n</strong> to 10000. '
+      + 'What do you notice now? Explain why the graph makes sense and what the implications are.',
+    rows: ['n^2', 'n^2 + n', 'n^2 + 1000n', '5n^2']
+  },
+  {
+    name: 'Exponential bases',
+    maxN: 10,
+    focusN: 10,
+    scale: 'linear',
+    comment: 'Compare <em>1.001<sup>n</sup></em>, <em>1.1<sup>n</sup></em>, <em>1.5<sup>n</sup></em>, and <em>2<sup>n</sup></em> on 1 &le; <em>n</em> &le; 10. '
+      + 'Then use the arrows on the input box to <em>slowly</em> raise <strong>Maximum n</strong> until <em>n</em> reaches 25. '
+      +'What do you notice about the relative values of the functions? Now uncheck the box next to <em>2<sup>n</sup></em> and then '
+      +'uncheck the box next to <em>1.5<sup>n</sup></em>. What happened? What do you think this means in terms of the relative growth '
+      +'rates of these functions?',
+    rows: ['1.001^n', '1.1^n', '1.5^n', '2^n']
+  },
+  {
+    name: 'Logarithm bases',
+    maxN: 100,
+    focusN: 100,
+    scale: 'linear',
+    comment: 'Compare <em>log<sub>2</sub> n</em>, <em>ln n</em>, and <em>log<sub>10</sub> n</em> on 1 &le; <em>n</em> &le; 100. '
+      + 'Then use the slider to set <strong>Maximum n</strong> to 10000. '
+      +' What happens to the relative positions of the 3 functions? What does that imply?',
+    rows: ['log_2 n', 'ln n', 'log_10 n']
+  },
+  {
+    name: 'Powers of logarithms',
+    maxN: 10,
+    focusN: 10,
+    scale: 'linear',
+    comment: 'Compare <em>log<sub>2</sub> n</em>, <em>(log<sub>2</sub> n)<sup>2</sup></em>, <em>(log<sub>2</sub> n)<sup>3</sup></em>, and <em>n</em> on 1 &le; <em>n</em> &le; 10. '
+      + 'Write down the relative order of the functions. '
+      + 'Does the order match your intuition? If not, write down what you think the correct order is.'
+      + 'Then use the arrows on the input box to raise <strong>Maximum n</strong> until <em>n</em> reaches 100. '
+      + 'What changed? Is this the final correct order? '
+      + 'Now use the slider to set <strong>Maximum n</strong> to 10000. '
+      + 'What changed? Make comments on what you learned from this.',
+    rows: ['log_2 n', '(log_2 n)^2', '(log_2 n)^3', 'n']
+  },
+  {
+    name: 'Enter my own',
+    maxN: 100,
+    focusN: 100,
+    scale: 'linear',
+    custom: true,
+    comment: 'Edit the function rows below, turn rows on or off, and adjust <strong>Maximum n</strong> and <strong>Selected n</strong> to test your own comparisons.',
+    rows: []
+  }
+];
 
     let rows = [];
 
@@ -519,7 +550,8 @@
       scaleEl.value = preset.scale;
       setMaxN(preset.maxN);
       setFocusN(preset.focusN);
-      commentEl.textContent = preset.comment;
+      commentEl.innerHTML = preset.comment;
+      //commentEl.textContent = preset.comment;
       renderRows();
       render();
     }
