@@ -62,7 +62,7 @@
     <section id="sorting-examples"
              section-title="Sorting Examples">
         <h2>Sorting Examples</h2>
-       <p>
+        <p>
             We begin with sorting algorithms because they provide useful examples of nested loops,
             changing loop bounds, and different best- and worst-case behavior. If you have taken a
             data structures course, these algorithms should be familiar. If you have not, the brief
@@ -70,7 +70,7 @@
             the sorting algorithms themselves, but on practicing how to analyze their running times.
         </p>
         <div class="example-box">
-            <p class="box-title"><strong>Example</strong></p>
+            <p class="box-title"><strong>Example 1</strong></p>
             <p>The <code>bubblesort</code> algorithm is one of the first sorting algorithms that students learn about.
                 Here is one implementation of the algorithm.</p>
             <pre><code class="language-java">    void bubblesort(int a[],int n) {
@@ -81,20 +81,28 @@
                 }
             }
         }
-    }
-    </code></pre>
+    } </code></pre>
+            <pre><code class="language-java">    void swap(int a[], int x, int y) {
+        int temp = a[x];
+        a[x] = a[y];
+        a[y] = temp;
+    }</code></pre>
             <p>If you have seen <code>bubblesort</code> previously, hopefully you know by now that you should
                 <em>never</em> use it. It is one of the worst sorting algorithms. Because of this, we won't even
-                describe the algorithm here and just focus on analyzing it.\\</p>
+                describe the algorithm here and just focus on analyzing it.
+            </p>
             <p>Find the complexity of <code>bubblesort</code>, where \(n\) is the size of the array \(a\).</p>
             <div class="solution-block">
                 <p class="box-title"><strong>Solution</strong></p>
                 <p>First, notice that the input size is \(n\) since we are sorting an array with \(n\) elements.</p>
-                <p>Example [exa:swapforArray] gives an implementation of <code>swap</code> that takes constant time
-                    (verify this!). The conditional statement, including the swap, takes constant time (we'll call it
+                <p>Notice that <code>swap</code> does 4 array accesses and 3 assignments, so about 7 operations.
+                Thus, it takes constant time.</p>
+                <p> 
+                    The conditional statement in the inner loop of <code>bubblesort</code>, 
+                    including the swap, takes constant time (we'll call it
                     \(c\), as usual), regardless of whether or not the condition is true. It takes longer if the
                     condition is true, but it is constant either way&mdash;about \(3\) operations (array indexing
-                    (\(\times 2\)) and comparison) versus about \(6\) (the swap adds about \(3\)).</p>
+                    (\(\times 2\)) and comparison) versus about \(10\).</p>
                 <p>The inner loop goes from \(j=0\) to \(j=i-1\), so it executes \(i\) times and takes \(ci\) time. But
                     what is \(i\)? This is where things get a little more complicated than in the previous examples.
                     Notice that the outer loop is changing the value of \(i\). We need to look at this a little more
@@ -141,9 +149,11 @@
                     in the complexity of an algorithm are those that are related to the size of the input.</strong></p>
         </div>
         <div class="question-box">
-            <p class="box-title"><strong>Question</strong></p>
-            <p>In the best case, the code in the conditional statement in <code>bubblesort</code> never executes. Why
-                does this still result in a complexity of \(\Theta(n^2)\)?</p>
+            <p class="box-title"><strong>Question 1</strong></p>
+            <p>
+                In the best case, the body of the <code>if</code> statement in <code>bubblesort</code>
+                never executes. Why does this still result in a complexity of \(\Theta(n^2)\)?
+            </p>
             <button type="button"
                     class="show-answer latex-answer-toggle"
                     data-answer-target="latex-answer-50"
@@ -151,16 +161,16 @@
             <div id="latex-answer-50"
                  class="answer latex-answer"
                  hidden>
-                <p>As we mentioned in our analysis, executing the conditional statement takes about \(3\) operations,
-                    and if it is true, about \(3\) additional operations are performed. So the worst case is no more
-                    than about twice as many operations as the best case. In other words, we are comparing \(c\cdot
-                    n^2\) to \(2c\cdot n^2\), both of which are \(\Theta(n^2)\).</p>
+                <p>As we mentioned in our analysis, checking the condition takes about \(3\) operations,
+                    and if it is true, about \(7\) additional operations are performed. So the worst case is no more
+                    than about three times as many operations as the best case. In other words, we are comparing \(c\cdot
+                    n^2\) to \(3c\cdot n^2\), both of which are \(\Theta(n^2)\).</p>
             </div>
         </div>
         <p>In reality, the best and worst case performance of <code>bubblesort</code> are different&mdash;the worst case
-            is about twice as many operations. But when we are discussing the <em>complexity</em> of algorithms, we care
+            is about three times as many operations. But when we are discussing the <em>complexity</em> of algorithms, we care
             about the asymptotic behavior&mdash;that is, what happens as \(n\) gets larger. In that case, the difference
-            is still just a factor of \(2\). The best and worst-case complexities have the same growth rate (quadratic).
+            is still just a factor of \(3\). The best and worst-case complexities have the same growth rate (quadratic).
         </p>
         <p>Consider how this is different if the best-case complexity of an algorithm is \(\Theta(n)\) and the
             worst-case complexity is \(\Theta(n^2)\). As \(n\) gets larger, the gap between the performance in the best
@@ -175,12 +185,12 @@
                 have no meaning in that context.</p>
         </div>
         <div class="example-box">
-            <p class="box-title"><strong>Example</strong></p>
+            <p class="box-title"><strong>Example 2</strong></p>
             <p>One of the best simple sorting algorithms is <code>insertionSort</code>. It works much like one might
-                sort a hand of playing cards. The first card is in order since there is one one. Compare the second card
+                sort a hand of playing cards. The first card is in order since there is only one. Compare the second card
                 to the first card and swap if they are out of order. Now the first two are in order. Now pick up the
                 third card and go down the list and place it where it belongs. Just keep repeating this process until
-                the whole list is sorter. Here is an implementation of that idea:</p>
+                the whole list is sorted. Here is an implementation of that idea:</p>
             <pre><code class="language-java">    void insertionSort(int a[], int n) {
         for (int i=1;i&lt;n;i++) { 
             int v=a[i];  
@@ -205,9 +215,14 @@
                     counting the number of assignments in the while loop if you wish. So the worst-case complexity is
                     \[\sum_{i=1}^{n-1}i = \frac{(n-1)n}{2} =\Theta(n^2).\] This happens, by the way, if the elements in
                     the array start out in reverse order.</p>
-                <p>In the best case, the loop only executes once each time because <code>a[j]&gt;v</code> is always true
-                    (which happens if the array is already sorted). In this case, the complexity is \(\Theta(n)\) since
-                    the outer loop executes \(n-1\) times, each time doing a constant amount of work.</p>
+                <p>
+                    In the best case, the array is already sorted. Then <code>a[j] &gt; v</code> is false
+                    the first time it is checked, so the <code>while</code> loop body never executes for
+                    that value of \(i\). The outer loop still executes \(n-1\) times and does a constant
+                    amount of work each time, so the best-case complexity is \(\Theta(n)\).
+                </p>
+                <p>As is usually the case, the average case complexity is more difficult to analyze precisely, 
+                    but it turns out to also be \(\Theta(n^2)\).</p>
             </div>
             <p>We should point out that if we had done our computations using \(c_1+c_2i\) instead of \(i\) we would
                 have arrived at the same answer, but it would have been more work: \[\sum_{i=1}^{n-1}c_1+c_2i =
@@ -225,18 +240,18 @@
         </div>
         <p>Let's complicate things a bit by bringing in some basic data structures.</p>
         <div class="example-box">
-            <p class="box-title"><strong>Example</strong></p>
+            <p class="box-title"><strong>Example 3</strong></p>
             <p>Consider the following implementation of insertion sort that works on lists of integers (written using
                 Java syntax).</p>
             <pre><code class="language-java">void insertionSort(List&lt;Integer&gt; A, int n) {
     for (int i = 1; i &lt; n; i++) {
-        Integer T = A.get(i);
+        Integer ith = A.get(i);
         int j = i-1;
-        while (j &gt;= 0 &amp;&amp; A.get(j).compareTo(T) &gt; 0) {
+        while (j &gt;= 0 &amp;&amp; A.get(j).compareTo(ith) &gt; 0) {
             A.set(j + 1, A.get(j));
             j--;
         }
-        A.set(j+1, T);
+        A.set(j+1, ith);
     }
 }</code></pre>
             <p><em>Note: In some languages the size of the list, \(n\), does not need to be passed in since it can be
@@ -244,9 +259,10 @@
                     the size of the list is \(n\).</em></p>
             <p>In this implementation <code>A.get(i)</code> retrieves that \(i\)th element from the list and
                 <code>A.set(i,x)</code> sets the \(i\)th element of the list to \(x\). Also,
-                <code>A.get(j).compareTo(T)</code> returns a positive number if <code>A.get(j)</code> is greater than
-                <code>T</code>, 0 of they are the same, and a negative number otherwise. It is essentially equivalent to
-                <code>A.get(j) &gt; T</code>.</p>
+                <code>A.get(j).compareTo(ith)</code> returns a positive number if <code>A.get(j)</code> is greater than
+                <code>ith</code>, 0 if they are the same, and a negative number otherwise. It is essentially equivalent to
+                <code>A.get(j) &gt; ith</code>.
+            </p>
             <p>Give the complexity of this version of <code>insertionSort</code> assuming that the list is an
                 array-based implementation (e.g. an ArrayList in Java). In case you are not aware from a previous
                 course, this means that both <code>get</code> and <code>set</code> take constant time. In addition, we
@@ -257,14 +273,16 @@
                 <p>Notice that this algorithm is almost identical to the earlier version that is implemented on an
                     array. Array indexing and assignment are simply replaced with calls to <code>get</code> and
                     <code>set</code>. Since the time of these calls remains constant, the earlier analysis still holds.
-                    Thus, the algorithm has a complexity of \(\Theta(n^2)\).</p>
+                    Thus, the algorithm has a worst-case complexity of \(\Theta(n^2)\) 
+                    and a best-case complexity of \(\Theta(n)\).
+                </p>
             </div>
         </div>
         <p>The following should be review from a previous course. If you have not had a data structures course, read the
             solution and just take it as a given.</p>
         <div class="question-box">
-            <p class="box-title"><strong>Question</strong></p>
-            <p>What are the complexities of the methods <code>set(i,x)</code> (set the \(i\)th element of the the list
+            <p class="box-title"><strong>Question 2</strong></p>
+            <p>What are the complexities of the methods <code>set(i,x)</code> (set the \(i\)th element of the list
                 to \(x\)) and <code>get(i)</code> (return the \(i\)th element of the list) for a <em>linked list</em>,
                 assuming a reasonable implementation?</p>
             <button type="button"
@@ -288,7 +306,7 @@
             </div>
         </div>
         <div class="example-box">
-            <p class="box-title"><strong>Example</strong></p>
+            <p class="box-title"><strong>Example 4</strong></p>
             <p>Analyze the previous <code>insertionSort</code> algorithm assuming that the list is now a <em>linked
                     list</em>.</p>
             <div class="solution-block">
@@ -302,20 +320,32 @@
                     iteration). Thus, the complexity of the while loop is about \[\sum_{j=1}^{i}(3j+c^{\prime} ) =
                     3\sum_{j=1}^{i}j + \sum_{j=1}^{i} c^{\prime} =3\frac{(i+1)i}{2} +ic^{\prime} =\Theta(i^2)\] The rest
                     of the code inside the for loop takes constant time, except the one call to <code>get</code> and one
-                    call to <code>set</code> which take time \(\Theta(i)\).<span class="translation-footnote">Footnote:
-                        Note that there is a tricky part here. It is subtle, but important. The call to \(set\) actually
-                        takes \(j\) as a parameter. However we cannot use \(\Theta(j)\) as the complexity of this
-                        because the \(j\) has no meaning in this context. Therefore we use the fact that \(1\leq j \leq
-                        i\) to instead call it \(\Theta(i)\).</span> Thus, the code inside the for loop has complexity
+                    call to <code>set</code> which take time \(\Theta(i)\). Thus, the code inside the for loop has complexity
                     \(\Theta(i^2+i)=\Theta(i^2)\). The outer for loop makes \(i\) go from \(1\) to \(n-1\). Thus, the
                     overall complexity is \[\sum_{i=1}^{n-1}\Theta(i^2) =\Theta\left(\sum_{i=1}^{n-1}i^2\right)
                     =\Theta\left(\frac{(n-1)n(2(n-1)+1)}{6}\right) =\Theta(n^3). \] Clearly using a linked list in this
                     implementation of insertion sort is a bad idea.</p>
+                    <p>
+                        We glossed over one detail: The call to \(set\) after the <code>while</code> loop actually
+                        takes \(j\) as a parameter. However we cannot use \(\Theta(j)\) as the complexity of this
+                        because the \(j\) has no meaning in this context. Therefore we use the fact that \(1\leq j \leq
+                        i\) to instead call it \(\Theta(i)\).</p>
+                        <p>
+                    In a similar manner, we can conclude that the best case occurs when the list is already
+                    sorted. In that case, the <code>while</code> loop never shifts any values, but each iteration
+                    of the outer <code>for</code> loop still uses linked-list <code>get</code> and <code>set</code>
+                    operations whose costs depend on the position \(i\). Thus, the best-case complexity is
+                    \[
+                        \sum_{i=1}^{n-1}\Theta(i)=\Theta(n^2).
+                    \]
+                    Again, this is not good.
+                </p>
             </div>
         </div>
         <p>You will get a chance to analyze the third popular basic sorting algorithm, <em>Selection Sort</em>, in the
             exercises.</p>
     </section>
+
     <section id="data-structure-operation-review"
              section-title="Data Structure Operation Review">
         <h2>Data Structure Operation Review</h2>
@@ -323,7 +353,7 @@
             probably skip this section since you will be unable to complete the exercises without understanding the data
             structures involved.</p>
         <div class="exercise-box">
-            <p class="box-title"><strong>Exercise</strong></p>
+            <p class="box-title"><strong>Exercise 1</strong></p>
             <p>For each of the following implementations of a <em>stack</em>, give a tight bound (using
                 \(\Theta\)-notation, of course) on the expected running time of the given operations, assuming that the
                 data structure has \(n\) items in it before the operation is performed.</p>
@@ -360,15 +390,47 @@
                     class="show-answer latex-answer-toggle"
                     data-answer-target="latex-answer-52"
                     aria-expanded="false">Show Answer</button>
-            <div id="latex-answer-52"
-                 class="answer latex-answer"
-                 hidden>
-                <p>All of them should be \(\Theta(1)\), assuming we keep track of how many elements are currently in the
-                    stack (which is a reasonable thing to do).</p>
-            </div>
+           <div id="latex-answer-52"
+     class="answer latex-answer"
+     hidden>
+    <div class="translation-table-wrapper">
+        <table class="translation-table">
+            <tr>
+                <th><strong>Stack</strong></th>
+                <th>array</th>
+                <th>linked list</th>
+            </tr>
+            <tr>
+                <th scope="row">push</th>
+                <td>\(\Theta(1)\)</td>
+                <td>\(\Theta(1)\)</td>
+            </tr>
+            <tr>
+                <th scope="row">pop</th>
+                <td>\(\Theta(1)\)</td>
+                <td>\(\Theta(1)\)</td>
+            </tr>
+            <tr>
+                <th scope="row">peek</th>
+                <td>\(\Theta(1)\)</td>
+                <td>\(\Theta(1)\)</td>
+            </tr>
+            <tr>
+                <th scope="row">size</th>
+                <td>\(\Theta(1)\)</td>
+                <td>\(\Theta(1)\)</td>
+            </tr>
+        </table>
+    </div>
+    <p>
+        These bounds assume that the array has available capacity when <code>push</code> is
+        called, or that we are using the expected/amortized cost of resizing. They also assume
+        that we keep track of the current number of elements.
+    </p>
+</div>
         </div>
         <div class="exercise-box">
-            <p class="box-title"><strong>Exercise</strong></p>
+            <p class="box-title"><strong>Exercise 2</strong></p>
             <p>For each of the following implementations of a <em>queue</em>, give a tight bound on the expected running
                 time of the given operations, assuming that the data structure has \(n\) items in it before the
                 operation is performed.</p>
@@ -411,16 +473,52 @@
                     data-answer-target="latex-answer-53"
                     aria-expanded="false">Show Answer</button>
             <div id="latex-answer-53"
-                 class="answer latex-answer"
-                 hidden>
-                <p>For an array, either enqueue or dequeue (but not both) will be \(\Theta(n)\). All of the others will
-                    be \(\Theta(1)\), assuming we keep track of how many elements are currently in the queue. Note that
-                    the advantage of the circular array implementation is that both enqueue and dequeue are
-                    \(\Theta(1)\).</p>
-            </div>
+     class="answer latex-answer"
+     hidden>
+    <div class="translation-table-wrapper">
+        <table class="translation-table">
+            <tr>
+                <th><strong>Queue</strong></th>
+                <th>array</th>
+                <th>linked list</th>
+                <th>circular array</th>
+            </tr>
+            <tr>
+                <th scope="row">enqueue</th>
+                <td>\(\Theta(1)\) or \(\Theta(n)\)</td>
+                <td>\(\Theta(1)\)</td>
+                <td>\(\Theta(1)\)</td>
+            </tr>
+            <tr>
+                <th scope="row">dequeue</th>
+                <td>\(\Theta(n)\) or \(\Theta(1)\)</td>
+                <td>\(\Theta(1)\)</td>
+                <td>\(\Theta(1)\)</td>
+            </tr>
+            <tr>
+                <th scope="row">first</th>
+                <td>\(\Theta(1)\)</td>
+                <td>\(\Theta(1)\)</td>
+                <td>\(\Theta(1)\)</td>
+            </tr>
+            <tr>
+                <th scope="row">size</th>
+                <td>\(\Theta(1)\)</td>
+                <td>\(\Theta(1)\)</td>
+                <td>\(\Theta(1)\)</td>
+            </tr>
+        </table>
+    </div>
+    <p>
+        For a simple array implementation, either <code>enqueue</code> or <code>dequeue</code>
+        is usually \(\Theta(n)\), depending on which end is treated as the front. The circular
+        array avoids this shifting cost, so both <code>enqueue</code> and <code>dequeue</code>
+        are \(\Theta(1)\), ignoring resizing or using expected/amortized bounds.
+    </p>
+</div>
         </div>
         <div class="exercise-box">
-            <p class="box-title"><strong>Exercise</strong></p>
+            <p class="box-title"><strong>Exercise 3</strong></p>
             <p>For each of the following implementations of a <em>list</em>, give a tight bound on the expected running
                 time of the given operations, assuming that the data structure has \(n\) items in it before the
                 operation is performed.</p>
@@ -468,20 +566,64 @@
                     data-answer-target="latex-answer-54"
                     aria-expanded="false">Show Answer</button>
             <div id="latex-answer-54"
-                 class="answer latex-answer"
-                 hidden>
-                <p>For the array implementation, addToFront, removeFirst and contains will all be \(\Theta(n)\) and the
-                    rest will be \(\Theta(1)\). For the linked list implementation, contains will be \(\Theta(n)\) and
-                    the rest will be constant if we assume there is both a head and tail pointer. If there is no tail
-                    pointer, addToEnd will be \(\Theta(n)\).</p>
-            </div>
+     class="answer latex-answer"
+     hidden>
+    <div class="translation-table-wrapper">
+        <table class="translation-table">
+            <tr>
+                <th><strong>List</strong></th>
+                <th>array</th>
+                <th>linked list</th>
+            </tr>
+            <tr>
+                <th scope="row">addToFront</th>
+                <td>\(\Theta(n)\)</td>
+                <td>\(\Theta(1)\)</td>
+            </tr>
+            <tr>
+                <th scope="row">addToEnd</th>
+                <td>\(\Theta(1)\)</td>
+                <td>\(\Theta(1)\)</td>
+            </tr>
+            <tr>
+                <th scope="row">removeFirst</th>
+                <td>\(\Theta(n)\)</td>
+                <td>\(\Theta(1)\)</td>
+            </tr>
+            <tr>
+                <th scope="row">contains</th>
+                <td>\(\Theta(n)\)</td>
+                <td>\(\Theta(n)\)</td>
+            </tr>
+            <tr>
+                <th scope="row">size</th>
+                <td>\(\Theta(1)\)</td>
+                <td>\(\Theta(1)\)</td>
+            </tr>
+            <tr>
+                <th scope="row">isEmpty</th>
+                <td>\(\Theta(1)\)</td>
+                <td>\(\Theta(1)\)</td>
+            </tr>
+        </table>
+    </div>
+    <p>
+        These bounds assume the array has available capacity or that resizing is counted using
+        expected/amortized bounds. For the linked list, <code>addToEnd</code> is \(\Theta(1)\)
+        only if we keep a tail pointer; without a tail pointer, it is \(\Theta(n)\).
+    </p>
+</div>
         </div>
         <div class="exercise-box">
-            <p class="box-title"><strong>Exercise</strong></p>
-            <p>For each of the following implementations of a <em>binary search tree (BST)</em>, give a tight bound on
-                the expected running time of the given operations, assuming that the data structure has \(n\) items in
-                it before the operation is performed. Assume a linked implementations (rather than arrays). For
-                balanced, assume an implementation like red-black tree or AVL tree.</p>
+            <p class="box-title"><strong>Exercise 4</strong></p>
+           <p>
+                For each of the following implementations of a <em>binary search tree (BST)</em>, give a tight 
+                worst-case bound on the running time of the given operations, 
+                assuming that the data structure has \(n\) items in
+                it before the operation is performed. Let \(h\) be the height of the tree, meaning the maximum number
+                of nodes on any path from the root to a leaf. Assume linked-node implementations rather than arrays.
+                For balanced trees, assume an implementation such as an AVL tree or red-black tree.
+            </p>
             <div class="translation-table-wrapper">
                 <table class="translation-table">
                     <tr>
@@ -520,21 +662,53 @@
                     class="show-answer latex-answer-toggle"
                     data-answer-target="latex-answer-55"
                     aria-expanded="false">Show Answer</button>
-            <div id="latex-answer-55"
-                 class="answer latex-answer"
-                 hidden>
-                <p>For unbalanced, all operations can be done in \(\Theta(h)\) time, where \(h\) is the height of the
-                    tree.
-                    This is the best answer you can give. You could also say \(O(n)\) time since the height is no more
-                    then \(n\),
-                    but this answer is not precise enough to be of much use. You <em>cannot</em> say
-                    \(\Theta(\log n)\) since this is not necessarily true for an unbalanced tree.</p>
-                <p>For balanced (red-black, AVL, etc.), all operations can be implemented with complexity \(\Theta(\log
-                    n)\).</p>
-            </div>
+           <div id="latex-answer-55"
+     class="answer latex-answer"
+     hidden>
+    <div class="translation-table-wrapper">
+        <table class="translation-table">
+            <tr>
+                <th><strong>BST</strong></th>
+                <th>unbalanced</th>
+                <th>balanced</th>
+            </tr>
+            <tr>
+                <th scope="row">insert/add</th>
+                <td>\(\Theta(h)\)</td>
+                <td>\(\Theta(\log n)\)</td>
+            </tr>
+            <tr>
+                <th scope="row">delete/remove</th>
+                <td>\(\Theta(h)\)</td>
+                <td>\(\Theta(\log n)\)</td>
+            </tr>
+            <tr>
+                <th scope="row">search/contains</th>
+                <td>\(\Theta(h)\)</td>
+                <td>\(\Theta(\log n)\)</td>
+            </tr>
+            <tr>
+                <th scope="row">maximum</th>
+                <td>\(\Theta(h)\)</td>
+                <td>\(\Theta(\log n)\)</td>
+            </tr>
+            <tr>
+                <th scope="row">successor</th>
+                <td>\(\Theta(h)\)</td>
+                <td>\(\Theta(\log n)\)</td>
+            </tr>
+        </table>
+    </div>
+    <p>
+        Note: Although \(O(n)\) is a correct bound for the unbalanced case, it is not a tight bound. 
+        The tight bound is \(\Theta(h)\), the height of the tree. 
+        For a balanced BST such as an AVL tree or red-black tree, \(h=\Theta(\log n)\), so these operations take
+        \(\Theta(\log n)\).
+    </p>
+</div>
         </div>
         <div class="exercise-box">
-            <p class="box-title"><strong>Exercise</strong></p>
+            <p class="box-title"><strong>Exercise 5</strong></p>
             <p>Give the average- and worst-case complexity of the following operations on a <em>hash table</em>
                 (implemented with open-addressing or chaining--it doesn't matter), assuming that the data structure has
                 \(n\) items in it before the operation is performed.</p>
@@ -566,66 +740,124 @@
                     class="show-answer latex-answer-toggle"
                     data-answer-target="latex-answer-56"
                     aria-expanded="false">Show Answer</button>
-            <div id="latex-answer-56"
-                 class="answer latex-answer"
-                 hidden>
-                <p>The average-case complexity for all of these operations is \(\Theta(1)\), and the worst-case
-                    complexity is \(\Theta(n)\).</p>
-            </div>
+           <div id="latex-answer-56"
+     class="answer latex-answer"
+     hidden>
+    <div class="translation-table-wrapper">
+        <table class="translation-table">
+            <tr>
+                <th><strong>Hash Table</strong></th>
+                <th>average</th>
+                <th>worst</th>
+            </tr>
+            <tr>
+                <th scope="row">insert/add</th>
+                <td>\(\Theta(1)\)</td>
+                <td>\(\Theta(n)\)</td>
+            </tr>
+            <tr>
+                <th scope="row">delete/remove</th>
+                <td>\(\Theta(1)\)</td>
+                <td>\(\Theta(n)\)</td>
+            </tr>
+            <tr>
+                <th scope="row">search/contains</th>
+                <td>\(\Theta(1)\)</td>
+                <td>\(\Theta(n)\)</td>
+            </tr>
+        </table>
+    </div>
+    <p>
+        The average-case bounds assume a good hash function and a reasonable load factor. The
+        worst case occurs when many items collide or otherwise force a long search.
+    </p>
+</div>
         </div>
+       <p>
+            If your instructor assigned this section (presumably as review)
+            and any of the answers surprised you,
+            take a moment to review the relevant data structures, their implementations,
+            and the reasoning behind the analysis.
+        </p>
     </section>
+
     <section id="mixed-examples"
              section-title="Mixed Analysis Examples">
         <h2>Mixed Analysis Examples</h2>
-        <p>Before presenting several more examples of algorithm analysis, let's summarize a few principles from the
-            examples we have seen so far.</p>
-        <ol class="spaced">
+        <p>
+        Before presenting several more examples of algorithm analysis, let's summarize a few principles from the
+        examples we have seen so far.
+        </p>
+
+        <ol>
             <li>
-                <p>We can usually replace constants with \(1\). For instance, if something performs \(30\) operations,
-                    we can say it is constant and call it \(1\). This is only valid if it really is always \(30\), of
-                    course.</p>
+                <p>
+                    <strong>Constant factors do not affect the growth rate.</strong>
+                    If a step always performs \(30\) primitive operations, then that step still takes
+                    constant time, \(\Theta(1)\). This is only valid when the amount of work is truly
+                    bounded by a constant independent of the input size.
+                </p>
             </li>
             <li>
-                <p>We can usually ignore lower-order terms. So if an algorithm takes \(c_1n+c_2\) operations, we can
-                    usually say that it takes \(n\).</p>
+                <p>
+                    <strong>Lower-order terms usually disappear in asymptotic notation.</strong>
+                    If an algorithm takes \(c_1n+c_2\) operations, then the dominant term is linear, so
+                    the running time is \(\Theta(n)\).
+                </p>
             </li>
             <li>
-                <p>Nested loops must be treated with caution. If the limits in an inner loop change based on the outer
-                    loop, we generally need to write this as a summation.</p>
+                <p>
+                    <strong>Consecutive loops add; nested loops often multiply.</strong>
+                    However, nested loops must be treated carefully. If the number of inner-loop
+                    iterations changes based on the outer-loop variable, the total work usually needs
+                    to be written as a summation.
+                </p>
             </li>
             <li>
-                <p>We should generally work from the inside-out. Until you know how much time it takes to execute the
-                    code inside a loop, you cannot determine how much time the loop takes.</p>
+                <p>
+                    <strong>Analyze from the inside out.</strong>
+                    Before you can determine the cost of a loop, you must understand the cost of one
+                    execution of its body. This is especially important when the body contains another
+                    loop or a method call.
+                </p>
             </li>
             <li>
-                <p>Function calls must be examined carefully. Do not assume that a function takes constant time unless
-                    you know that to be true. We already saw a few examples where function calls did <em>not</em> take
-                    constant time, and the next example will demonstrate it again.</p>
+                <p>
+                    <strong>Function calls are not automatically constant time.</strong>
+                    A method call might take constant, logarithmic, linear, or even larger time,
+                    depending on what the method does and what data structure it uses. Do not treat a
+                    function call as \(\Theta(1)\) unless you know that is true.
+                </p>
             </li>
             <li>
-                <p>Only the size of the input should appear as a variable in the complexity of an algorithm. If you have
-                    variables like \(i\), \(j\), or \(k\) in your complexity (because they were indexes of a loop, for
-                    instance), you should probably rethink your analysis of the algorithm. Loop variables should
-                    <em>never</em> appear in the complexity of an algorithm.</p>
+                <p>
+                    <strong>Final complexity bounds should use input-size variables.</strong>
+                    Loop variables such as \(i\), \(j\), and \(k\) should not appear in the final
+                    complexity of the whole algorithm. If such variables remain in your answer, you
+                    probably still need to finish summing, bounding, or rewriting the expression in
+                    terms of the input size.
+                </p>
             </li>
         </ol>
         <p>Now it's time to see if you can spot where someone didn't follow some of these principles.</p>
         <div class="evaluate-box">
-            <p class="box-title"><strong>Evaluate</strong></p>
-            <p>Consider the following code that computes \(a^0+a^1+a^2+\cdots+a^{n-1}\).</p>
-            <pre><code class="language-java">	  double addPowers(double a, int n) {
-	      if(a==1) {
-	          return n;
-	      } else {
-	          double sum = 0;
-	          for(int i=0;i&lt;n;i++) {
-	              sum += power(a,i); 
-	          }
-	          return sum;
-	      }
-	  }</code></pre>
-            <p>The function <code>power(a,i)</code> computes \(a^i\), and takes \(i\) operations. Regard the input size
-                as \(n\). What is the worst-case complexity of <code>addPowers(a,n)</code>?</p>
+            <p class="box-title"><strong>Evaluate 1</strong></p>
+            <p>Students were asked: 
+            <em>Consider the following code that computes \(a^0+a^1+a^2+\cdots+a^{n-1}\).</em></p>
+            <pre><code class="language-java">double addPowers(double a, int n) {
+    if(a==1) {
+        return n;
+    } else {
+        double sum = 0;
+        for(int i=0;i&lt;n;i++) {
+            sum += power(a,i); 
+        }
+        return sum;
+    }
+}</code></pre>
+            <p><em>The function <code>power(a,i)</code> computes \(a^i\), and takes \(i\) operations. Regard the input size
+                as \(n\). What is the worst-case complexity of <code>addPowers(a,n)</code>?</em></p>
+                <p>Evaluate each of the following student solutions:</p>
             <ol class="spaced student-solution-list">
                 <li>
                     <p>Since \(a^n\) is an exponential function, the complexity is \(O(a^n)\).</p>
@@ -674,8 +906,8 @@
             </div>
         </div>
         <div class="exercise-box">
-            <p class="box-title"><strong>Exercise</strong></p>
-            <p>What is the worst-case complexity of <code>addPowers</code> from Evaluate 4? Justify your answer.</p>
+            <p class="box-title"><strong>Exercise 6</strong></p>
+            <p>What is the worst-case complexity of <code>addPowers</code> from Evaluate 1? Justify your answer.</p>
             <button type="button"
                     class="show-answer latex-answer-toggle"
                     data-answer-target="latex-answer-58"
@@ -688,83 +920,66 @@
                     \(n-1\), and each time the code in the loop takes \(i\) time (since that is how long
                     <code>power(a,i)</code> takes). Thus, the complexity is \[\sum_{i=0}^{n-1} i =
                     \frac{(n-1)n}{2}=\Theta(n^2).\] Notice that just because the answer is \(\Theta(n^2)\), that does
-                    not mean that the third solution to Evaluate 4 was correct. As we stated in the solution to that
+                    not mean that the third solution to Evaluate 1 was correct. As we stated in the solution to that
                     problem, because they overestimated the number of operations, they only proved that the algorithm
-                    has complexity \(O(n^2)\).</p>
+                    has complexity \(O(n^2)\).
+                </p>
             </div>
         </div>
         <div class="exercise-box">
-            <p class="box-title"><strong>Exercise</strong></p>
+            <p class="box-title"><strong>Exercise 7</strong></p>
             <p>Give an implementation of the <code>addPowers</code> algorithm that takes \(\Theta(n)\) time. Justify the
                 fact that it takes \(\Theta(n)\) time. (Hint: Why compute \(a^5\) (for instance) from scratch if you
                 have already computed \(a^4\)?)</p>
-            <pre><code class="language-java">	  double addPowers(double a, int n) {
-	     
-	     
-	     
-	     
-	     
-	     
-	     
-	     
-	     
-	     
-	     
-	     
-	     
-	     
-	     
-	     
-	  }</code></pre>
-            <p>Justification of complexity:</p>
             <button type="button"
                     class="show-answer latex-answer-toggle"
                     data-answer-target="latex-answer-59"
                     aria-expanded="false">Show Answer</button>
             <div id="latex-answer-59"
-                 class="answer latex-answer"
-                 hidden>
-                <p>Here is one solution.</p>
-                <pre><code class="language-java">	  double addPowers(double a, int n) {
-	      if(a==1) {
-	          return n;
-	      } else {
-	          double sum = 1; // for the \(a^0\) term.
-	          double pow = 1;
-	          for(int i=1;i&lt;n;i++) {
-	              pow = pow*a;
-	              sum += pow; 
-	          }
-	          return sum;
-	      }
-	  }</code></pre>
-                <p>If \(a=1\), the algorithm takes constant time. Otherwise, it executes a constant number of operations
-                    and a single for loop \(n\) times. The code in the loop takes constant time. Thus the algorithm
-                    takes \(\Theta(n)\) time.</p>
-            </div>
+     class="answer latex-answer"
+     hidden>
+    <p>
+        The idea is to build the powers incrementally. Once we know \(a^i\), we can get
+        \(a^{i+1}\) with one multiplication:
+        \[
+            a^{i+1}=a^i\cdot a.
+        \]
+        So instead of recomputing each power from scratch, we keep track of the current
+        power and update it as the loop progresses. Here is one solution that uses the idea.</p>
+    <pre><code class="language-java">double addPowers(double a, int n) {
+    if (a == 1) {
+        return n;
+    } else {
+        double sum = 1; // for the a^0 term
+        double pow = 1;
+
+        for (int i = 1; i &lt; n; i++) {
+            pow = pow * a;
+            sum = sum + pow;
+        }
+
+        return sum;
+    }
+}</code></pre>
+    <p>
+        The variable <code>pow</code> stores the most recent power of \(a\). At the start,
+        <code>pow</code> is \(1=a^0\). Each time through the loop, the assignment
+        <code>pow = pow * a</code> changes it from \(a^{i-1}\) to \(a^i\), and then that
+        value is added to <code>sum</code>.
+    </p>
+    <p>
+        If \(a=1\), the algorithm takes constant time. Otherwise, the loop executes \(n-1\)
+        times, and each iteration takes constant time. Therefore the running time is
+        \(\Theta(n)\).
+    </p>
+</div>
         </div>
+
         <div class="exercise-box">
-            <p class="box-title"><strong>Exercise</strong></p>
+            <p class="box-title"><strong>Exercise 8</strong></p>
             <p>Give an implementation of the <code>addPowers</code> algorithm that takes \(\Theta(n)\) time <em>but does
                     not use a loop</em>. Justify the fact that it takes \(\Theta(n)\) time. (Hint: This solution should
                 be much shorter than your previous one.)</p>
-            <pre><code class="language-java">	  double addPowers(double a, int n) {
-	     
-	     
-	     
-	     
-	     
-	     
-	     
-	     
-	     
-	     
-	     
-	     
-	     
-	     
-	  }</code></pre>
-            <p>Justification of complexity:</p>
             <button type="button"
                     class="show-answer latex-answer-toggle"
                     data-answer-target="latex-answer-60"
@@ -778,7 +993,8 @@
                     stuck), keep reading.</p>
                 <p>The trick is to use the formula for a geometric series (did you recognize that this is what
                     <code>addPowers</code> is really computing?). We need a special case for \(a=1\) because the formula
-                    requires that \(a\neq 1\).</p>
+                    requires that \(a\neq 1\).
+                </p>
                 <pre><code class="language-java">	  double addPowers(double a, int n) {
 	      if(a==1) {
 	          return n;
@@ -797,8 +1013,8 @@
             </div>
         </div>
         <div class="example-box">
-            <p class="box-title"><strong>Example</strong></p>
-            <p>A student turned in the code below (which does as its name suggests). I gave them a `C' on the assignment
+            <p class="box-title"><strong>Example 5</strong></p>
+            <p>A student turned in the code below (which does as its name suggests). I gave them a 'C' on the assignment
                 because although it works, it is very inefficient. About how many operations does their implementation
                 require?</p>
             <pre><code class="language-java">	int sumFromMToN(int m, int n) {
@@ -819,39 +1035,37 @@
             </div>
         </div>
         <div class="evaluate-box">
-            <p class="box-title"><strong>Evaluate</strong></p>
-            <p>Write an `A' version of the method from Example 56. You can assume that \(1\leq m\leq n\). <em>For each
-                    solution, determine how many operations are required and evaluate it based on that as well as
-                    whether or not it is correct.</em></p>
-            <ol class="spaced student-solution-list">
+            <p class="box-title"><strong>Evaluate 2</strong></p>
+            <p>Students were asked:  <em>Write an 'A' version of the method from Example 5. 
+                You can assume that \(1\leq m\leq n\).</em></p>
+                <p>For each solution, determine how many operations are required and evaluate 
+                    it based on that as well as whether or not it is correct.</p>
+            <ol type='a' class="spaced student-solution-list">
                 <li>
-                    <pre><code class="language-java">
-	int sumFromMToN(int m,int n) {
-	    int sum = 0;
-	    for(int i=0;i&lt;n;i++) {
-	        sum = sum + i;
-	    }
-	    for(int i=0;i&lt;m;i++) {
-	        sum = sum - i;
-	    }
-	    return sum;
-	}</code></pre>
+                    <pre><code class="language-java">int sumFromMToN(int m,int n) {
+    int sum = 0;
+    for(int i=0;i&lt;n;i++) {
+        sum = sum + i;
+    }
+    for(int i=0;i&lt;m;i++) {
+        sum = sum - i;
+    }
+	return sum;
+}</code></pre>
                 </li>
                 <li>
-                    <pre><code class="language-java">
-	int sumFromMToN(int m,int n) {
-	    int sum = 0;
-	    for(int i=m;i&lt;n;i++) {
-	        sum = sum + i;
-	    }
-	    return sum;
-	}</code></pre>
+                    <pre><code class="language-java">int sumFromMToN(int m,int n) {
+    int sum = 0;
+    for(int i=m;i&lt;n;i++) {
+        sum = sum + i;
+    }
+    return sum;
+}</code></pre>
                 </li>
                 <li>
-                    <pre><code class="language-java">
-	int sumFromMToN(int m,int n) {
-	    return (n*(n-1)/2 - m*(m-1)/2);
-	}</code></pre>
+                    <pre><code class="language-java">int sumFromMToN(int m,int n) {
+    return (n*(n-1)/2 - m*(m-1)/2);
+}</code></pre>
                 </li>
             </ol>
             <button type="button"
@@ -863,15 +1077,15 @@
                  hidden>
                 <ol class="spaced student-solution-list">
                     <li>
-                        <p>This takes about \(2+4n+4m\) operations, which is essentially the same as the `C' version.
+                        <p>This takes about \(2+4n+4m\) operations, which is essentially the same as the 'C' version.
                             Unfortunately, it is slightly worse than the original solution since it is now incorrect.
-                            All they did is omit adding the final \(n\) in the first sum. This went from a `C' to a `D'
+                            All they did is omit adding the final \(n\) in the first sum. This went from a 'C' to a 'D'
                             (at best).</p>
                     </li>
                     <li>
                         <p>This one takes about \(2+4(n-1-m+1)=2+4(n-m)\) operations. This is a lot better than the
                             previous solutions. Unfortunately, it misses adding the final \(n\), so it is incorrect. It
-                            also is not as efficient as possible. I'd say this is still a `C'.</p>
+                            also is not as efficient as possible. I'd say this is still a 'C'.</p>
                     </li>
                     <li>
                         <p>This student figured out the trick&mdash;they know a formula to compute the sum, so they
@@ -880,27 +1094,15 @@
                             made either one or two errors), so the algorithm is not correct. In terms of efficiency,
                             their solution is great because it takes a constant number of operations no matter what
                             \(n\) and \(m\) are. Because their answer is efficient and <em>very close</em> to being
-                            correct, I'd probably give them a `B'.</p>
+                            correct, I'd probably give them a 'B'.</p>
                     </li>
                 </ol>
             </div>
         </div>
         <div class="exercise-box">
-            <p class="box-title"><strong>Exercise</strong></p>
-            <p>Write an `A' version of the method from Example 56. You can assume that \(1\leq m\leq n\). Explain why
-                your solution is correct and give its efficiency.</p>
-            <pre><code class="language-java">	int sumFromMToN(int m,int n) {
-	    
-	    
-	    
-	    
-	    
-	    
-	    
-	    
-	}</code></pre>
-            <p>Justification</p>
-            <p>Efficiency with justification</p>
+            <p class="box-title"><strong>Exercise 9</strong></p>
+            <p>Write an 'A' version of the method from Example 5. You can assume that \(1\leq m\leq n\). Explain why
+                your solution is correct and give its efficiency, with justification.</p>
             <button type="button"
                     class="show-answer latex-answer-toggle"
                     data-answer-target="latex-answer-62"
@@ -918,7 +1120,7 @@
             </div>
         </div>
         <div class="example-box">
-            <p class="box-title"><strong>Example</strong></p>
+            <p class="box-title"><strong>Example 6</strong></p>
             <p>The <code>MatrixMultiply</code> algorithm given below is the standard algorithm used to compute the
                 product of two matrices. Find the worst-case complexity of <code>MatrixMultiply</code>. Assume that
                 \(A\) and \(B\) are \(n\times n\) matrices.</p>
@@ -944,7 +1146,8 @@
                     often as any of the code in the for loops (i.e. the comparisons and increments) so we will ignore
                     that code as well. The bottom line is that if we count the number of times
                     <code>C[i][j]+=A[i][k]*B[k][j]</code> executes, it will give us a tight bound on the complexity of
-                    <code>MatrixMultiply</code>.</p>
+                    <code>MatrixMultiply</code>.
+                </p>
                 <p>The inner loop executes the statement \(n\) times. The middle loop executes \(n\) times, each time
                     executing the inner loop (which executes the statement \(n\) times). Thus, the middle loop executes
                     the statement \(n\times n=n^2\) times. The outer loop simply executes the middle loop \(n\) times.
@@ -954,8 +1157,13 @@
                     this code.</p>
             </div>
         </div>
+
+        <p>The next few examples illustrate the application of these concepts to algorithms involving various
+            data structures. The examples are given in terms of Java since we had to pick a language, 
+            but the concepts are applicable to any programming language with similar data structures.
+        </p>
         <div class="example-box">
-            <p class="box-title"><strong>Example</strong></p>
+            <p class="box-title"><strong>Example 7</strong></p>
             <p>In Java, the ArrayList <code>retainAll</code> method is implemented as follows (this code is simplified a
                 little from the actual implementation, but the changes do not affect the complexity of the code). Note
                 that <code>Object[] elementData</code> and <code>int size</code> are fields of ArrayList whose meaning
@@ -977,7 +1185,7 @@
       return modified;
   }</code></pre>
             <p>Let <code>al1</code> be an ArrayList of size \(n\).</p>
-            <ol class="spaced">
+            <ol type='a' class="spaced">
                 <li>
                     <p>What is the complexity of <code>al1.retainAll(al2)</code>, where <code>al2</code> is an ArrayList
                         with \(m\) elements?</p>
@@ -1007,9 +1215,9 @@
             </ol>
         </div>
         <div class="exercise-box">
-            <p class="box-title"><strong>Exercise</strong></p>
-            <p>Answer the following two questions based on the code from Example 58.</p>
-            <ol class="spaced">
+            <p class="box-title"><strong>Exercise 10</strong></p>
+            <p>Answer the following two questions based on the code from Example 7.</p>
+            <ol type='a' class="spaced">
                 <li>
                     <p>What is the complexity of <code>al1.retainAll(ll2)</code>, where <code>ll2</code> is a LinkedList
                         with \(m\) elements? </p>
@@ -1026,16 +1234,20 @@
             <div id="latex-answer-63"
                  class="answer latex-answer"
                  hidden>
-                <p>The analysis of these is very similar to the analysis of Examples 58, so the details are omitted. (a)
-                    For a LinkedList the <code>contains</code> method takes \(\Theta(m)\) time, so the overall
-                    complexity is \(\Theta(nm)\). (b)For a HashSet it takes \(\Theta(1)\) time to call
-                    <code>contains</code> (on average), so the overall complexity is \(\Theta(n+n)=\Theta(n)\).</p>
+                <p>The analysis of these is very similar to the analysis of Examples 7, so the details are omitted.</p>
+                <ol type="a">
+                    <li>For a LinkedList the <code>contains</code> method takes \(\Theta(m)\) time
+                        (just like an ArrayList), so the overall complexity is \(\Theta(nm)\).</li>
+                    <li>For a HashSet it takes \(\Theta(1)\) time to call
+                    <code>contains</code> (on average), so the overall complexity is \(\Theta(n+n)=\Theta(n)\).</li>
+                </ol>
             </div>
         </div>
         <div class="example-box">
-            <p class="box-title"><strong>Example</strong></p>
+            <p class="box-title"><strong>Example 8</strong></p>
             <p>In Java, the <code>retainAll</code> method is implemented as follows for <code>LinkedList</code>,
-                <code>TreeSet</code>, and <code>HashSet</code>.</p>
+                <code>TreeSet</code>, and <code>HashSet</code>.
+            </p>
             <pre><code class="language-java">    public boolean retainAll(Collection&lt;?&gt; c) {
         boolean modified = false;
         Iterator&lt;E&gt; iter = iterator();
@@ -1049,8 +1261,9 @@
     }</code></pre>
             <p>Assume that the calls <code>iter.hasNext()</code> and <code>iter.next()</code> take constant time. Let
                 <code>ts1</code> be a TreeSet of size \(n\). Find the worst-case complexity of each of the following
-                method calls.</p>
-            <ol class="spaced">
+                method calls.
+            </p>
+            <ol type='a' class="spaced">
                 <li>
                     <p><code>ts1.retainAll(al2)</code>, where <code>al2</code> is an ArrayList of size \(m\).</p>
                     <div class="solution-block">
@@ -1065,26 +1278,27 @@
                     </div>
                 </li>
                 <li>
-                    <p><code>ts1.retainAll(hs2)</code>, where <code>hs2</code> is an HashSet of size \(m\).</p>
+                    <p><code>ts1.retainAll(hs2)</code>, where <code>hs2</code> is a HashSet of size \(m\).</p>
                     <div class="solution-block">
                         <p class="box-title"><strong>Solution</strong></p>
                         <p>The call to <code>iter.remove()</code> takes \(\Theta(\log n)\) time. The call to
                             <code>contains</code> takes \(\Theta(1)\) time since \(c\) is the HashSet <code>hs2</code>.
                             Thus, each iteration of the while loop takes \(\Theta(\log n+1)\) time and the overall
-                            complexity is therefore \(\Theta(n(\log n + 1))=\Theta(n\log n)\).</p>
+                            complexity is therefore \(\Theta(n(\log n + 1))=\Theta(n\log n)\).
+                        </p>
                     </div>
                 </li>
             </ol>
         </div>
         <div class="exercise-box">
-            <p class="box-title"><strong>Exercise</strong></p>
-            <p>Using the setup and code from Example 59, determine the complexity of the following method calls.</p>
-            <ol class="spaced">
+            <p class="box-title"><strong>Exercise 11</strong></p>
+            <p>Using the setup and code from Example 8, determine the complexity of the following method calls.</p>
+            <ol type='a' class="spaced">
                 <li>
                     <p><code>ts1.retainAll(ll2)</code>, where <code>ll2</code> is a LinkedList of size \(m\). </p>
                 </li>
                 <li>
-                    <p><code>ts1.retainAll(ts2)</code>, where <code>ts2</code> is an TreeSet of size \(m\). </p>
+                    <p><code>ts1.retainAll(ts2)</code>, where <code>ts2</code> is a TreeSet of size \(m\). </p>
                 </li>
             </ol>
             <button type="button"
@@ -1094,10 +1308,12 @@
             <div id="latex-answer-64"
                  class="answer latex-answer"
                  hidden>
-                <p>(a) contains takes \(\Theta(m)\) time so the complexity is \(\Theta(n(\log n+m))\).</p>
-                <p>(b) Here the contains method takes \(\Theta(\log m)\) time, so the overall complexity is
+                <ol type="a">
+                    <li>The call to contains takes \(\Theta(m)\) time so the complexity is \(\Theta(n(\log n+m))\).</li>
+                <li>Here the contains method takes \(\Theta(\log m)\) time, so the overall complexity is
                     \(\Theta(n(\log n+\log m))\) (or \(\Theta(n\log n + n\log m)\) if you prefer to write it that way).
-                </p>
+                </li>
+                </ol>
                 <p>Note that we don't know the relationship between \(n\) and \(m\) so we can't simplify either answer.
                 </p>
             </div>
@@ -1105,14 +1321,16 @@
         <p>It is important to note that the number of examples related to the <code>retainAll</code> method is not
             reflective of the importance of this method. It just turns out to be an interesting method to analyze the
             complexity of given different data structures.</p>
-        <p>We end this section with a comment that perhaps too few people think about. <em>Theory</em> and
+        <p>We end this part with a comment that perhaps too few people think about. <em>Theory</em> and
             <em>practice</em> don't always agree. Since asymptotic notation ignores the <em>constants</em>, two
             algorithms that have the same complexity are not always equally good in practice. For instance, if one takes
             \(4\cdot n^2\) operations and the other \(10,000\cdot n^2\) operations, clearly the first will be preferred
-            even though they are both \(\Theta(n^2)\) algorithms.</p>
+            even though they are both \(\Theta(n^2)\) algorithms.
+        </p>
         <p>As another example, consider matrix multiplication, which is used extensively in many scientific
-            applications. As we saw, the standard algorithm has complexity \(\Theta(n^3)\). Strassen's algorithm for
-            matrix multiplication (the details of which are beyond the scope of this book) has complexity of about
+            applications. As we saw, the standard algorithm has complexity \(\Theta(n^3)\). 
+            <a href="?path=Algorithms/Divide-and-Conquer/Strassen">Strassen's algorithm</a> for
+            matrix multiplication has complexity of about
             \(\Theta(n^{2.8})\). Clearly, Strassen's algorithm is better asymptotically. In other words, if your
             matrices are large enough, Strassen's algorithm is certainly the better choice. However, it turns out that
             if \(n=50\), the standard algorithm performs better. There is debate about the "crossover point." This is
@@ -1122,55 +1340,148 @@
             somewhere between \(75\) and \(100\), but don't quote me on that. The point is that for small enough
             matrices, the standard algorithm should be used. For matrices that are large enough, Strassen's algorithm
             should be used. Neither one is <em>always</em> better to use.</p>
-        <p>Analyzing recursive algorithms can be a little more complex. We will consider such algorithms in Chapter
-            [ch:recurrences], where we develop the necessary tools.</p>
+        <p>Analyzing recursive algorithms can be a little more complex. We will consider such algorithms in
+            <a href="?path=Analysis/Analyzing%20Recursive%20Algorithms">Analyzing Recursive Algorithms</a>, 
+            where we develop the necessary tools.</p>
     </section>
+
     <section id="binary-search"
-             section-title="Binary Search">
-        <h2>Binary Search</h2>
-        <p>Next we analyze the <em>binary search</em> algorithm. If you haven't seen it before, the concept is simple:
-            If you want to find something in a sorted list, start by comparing with the middle element. If the array is
-            empty, the element is not in it. If they are the middle and the element you are searching for are the same,
-            you have found what you are looking for. If what you are looking for is smaller than the middle element,
-            then it is in the first half of the array. If what you are looking for is bigger than the middle element,
-            then it is in the second half of the array. Now we simply repeat the process on the appropriate half of the
-            array until we have our answer.</p>
-        <div class="example-box">
-            <p class="box-title"><strong>Example</strong></p>
-            <p>Here is an implementation of <em>binary search</em>.</p>
-            <pre><code class="language-java">    int binarySearch(int a[], int n, int val) {
-       int left=0, right=n-1;
-       while (right-left&gt;=0) {
-           int middle = (left+right)/2;
-           if(val==a[middle]) 
-               return middle;
-           else if(val&lt;a[middle]) 
-               right=middle-1;
-           else 
-               left=middle+1; 
+         section-title="Binary Search">
+    <h2>Binary Search</h2>
+
+   <p>
+        Binary search gives a useful example of an algorithm with a logarithmic running time. Each iteration cuts
+        the remaining search interval roughly in half, so the key question is how many halvings
+        are possible before the interval is empty. We answer that question by looking at what
+        dividing by \(2\) does to the binary representation of a number. This gives us a more
+        detailed analysis than we strictly need, but it makes the connection between binary
+        search, halving, and binary representation explicit.
+    </p>
+
+    <p>
+        The idea behind <em>binary search</em> is simple. If you want to find a value in a
+        sorted array, compare the value with the middle element. If the middle element is the
+        value you are looking for, the search is done. If the search value is smaller than the
+        middle element, then it can only appear in the left half of the array. If the search
+        value is larger than the middle element, then it can only appear in the right half of
+        the array. The algorithm repeats this process on the appropriate half until it either
+        finds the value or runs out of entries to search.
+    </p>
+
+    <div class="example-box">
+        <p class="box-title"><strong>Example 9</strong></p>
+        <p>Here is an iterative implementation of <em>binary search</em>.</p>
+        <pre><code class="language-java">    int binarySearch(int a[], int n, int val) {
+        int left = 0;
+        int right = n - 1;
+
+        while (right - left &gt;= 0) {
+            int middle = (left + right) / 2;
+
+            if (val == a[middle]) {
+                return middle;
+            } else if (val &lt; a[middle]) {
+                right = middle - 1;
+            } else {
+                left = middle + 1;
+            }
         }
-       return -1;
+
+        return -1;
     }</code></pre>
+    </div>
+
+    <p>
+        You may be more familiar with a recursive version of binary search. That version is
+        also important, but we have not yet covered the analysis of recursive
+        algorithms, so we will analyze the iterative version here.
+    </p>
+
+    <p>
+        Before analyzing the algorithm, we develop a few useful facts about binary
+        representation. These facts will help explain why repeatedly cutting the input size in
+        half leads to a logarithmic running time.
+    </p>
+
+    <div class="example-box">
+        <p class="box-title"><strong>Example 10</strong></p>
+        <p>
+            How is the binary representation of a number \(n\) related to the binary
+            representation of \(\lfloor n/2\rfloor\)? Let's start with a few examples.
+        </p>
+        <p>
+            If \(n=9\), then \(\lfloor n/2\rfloor=4\). The binary representation of \(9\) is
+            \(1001\), and the binary representation of \(4\) is \(100\). If \(n=22\), then
+            \(\lfloor n/2\rfloor=11\). The binary representation of \(22\) is \(10110\), and
+            the binary representation of \(11\) is \(1011\). There seems to be a pattern, but
+            we should look at a few more examples before stating it.
+        </p>
+    </div>
+
+    <p>Fill in the next table and look for the pattern.</p>
+
+    <div class="exercise-box">
+        <p class="box-title"><strong>Exercise 12</strong></p>
+        <p>Fill in the following table with the binary representations.</p>
+        <div class="translation-table-wrapper">
+            <table class="translation-table">
+                <tr>
+                    <th>\(n\)</th>
+                    <th></th>
+                    <th>\(\lfloor n/2\rfloor\)</th>
+                    <th></th>
+                </tr>
+                <tr>
+                    <th>decimal</th>
+                    <th>binary</th>
+                    <th>decimal</th>
+                    <th>binary</th>
+                </tr>
+                <tr>
+                    <th scope="row">12</th>
+                    <td></td>
+                    <td>6</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <th scope="row">13</th>
+                    <td></td>
+                    <td>6</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <th scope="row">32</th>
+                    <td></td>
+                    <td>16</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <th scope="row">33</th>
+                    <td></td>
+                    <td>16</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <th scope="row">118</th>
+                    <td></td>
+                    <td>59</td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <th scope="row">119</th>
+                    <td></td>
+                    <td>59</td>
+                    <td></td>
+                </tr>
+            </table>
         </div>
-        <p>You may be familiar with the recursive version of this algorithm instead of this iterative implementation. In
-            some ways it is more intuitive, but we have not yet covered recursion or the analysis of recursive
-            algorithms so instead we will analyze the iterative version.</p>
-        <p>Before we can analyze the algorithm, we need to develop a few useful results that will make the proof much
-            easier to understand. We start by trying to get you to understand how the binary representation of \(n\) and
-            \(\lfloor n/2\rfloor\) are related to each other.</p>
-        <div class="example-box">
-            <p class="box-title"><strong>Example</strong></p>
-            <p>How is the binary representation of a number \(n\) related to the binary representation of \(\lfloor
-                n/2\rfloor\)? Let's try some examples. If \(n=9\), \(\lfloor n/2\rfloor=4\). Notice that the binary
-                representation of \(9\) is \(1001\) and the binary representation of \(4\) is \(100\). If \(n=22\),
-                \(\lfloor n/2\rfloor=11\). The binary representation of \(22\) is \(10110\) and the binary
-                representation of \(11\) is \(1011\). Is there a pattern here? This probably isn't enough data to be
-                certain yet.</p>
-        </div>
-        <p>Let's see if you can find the pattern with just a few more data points.</p>
-        <div class="exercise-box">
-            <p class="box-title"><strong>Exercise</strong></p>
-            <p>Fill in the following table with the binary representations.</p>
+        <button type="button"
+                class="show-answer latex-answer-toggle"
+                data-answer-target="latex-answer-65"
+                aria-expanded="false">Show Answer</button>
+        <div id="latex-answer-65"
+             class="answer latex-answer"
+             hidden>
             <div class="translation-table-wrapper">
                 <table class="translation-table">
                     <tr>
@@ -1187,227 +1498,377 @@
                     </tr>
                     <tr>
                         <th scope="row">12</th>
-                        <td></td>
+                        <td>1100</td>
                         <td>6</td>
-                        <td></td>
+                        <td>110</td>
                     </tr>
                     <tr>
                         <th scope="row">13</th>
-                        <td></td>
+                        <td>1101</td>
                         <td>6</td>
-                        <td></td>
+                        <td>110</td>
                     </tr>
                     <tr>
                         <th scope="row">32</th>
-                        <td></td>
+                        <td>100000</td>
                         <td>16</td>
-                        <td></td>
+                        <td>10000</td>
                     </tr>
                     <tr>
                         <th scope="row">33</th>
-                        <td></td>
+                        <td>100001</td>
                         <td>16</td>
-                        <td></td>
+                        <td>10000</td>
                     </tr>
                     <tr>
                         <th scope="row">118</th>
-                        <td></td>
+                        <td>1110110</td>
                         <td>59</td>
-                        <td></td>
+                        <td>111011</td>
                     </tr>
                     <tr>
                         <th scope="row">119</th>
-                        <td></td>
+                        <td>1110111</td>
                         <td>59</td>
-                        <td></td>
+                        <td>111011</td>
                     </tr>
                 </table>
             </div>
-            <button type="button"
-                    class="show-answer latex-answer-toggle"
-                    data-answer-target="latex-answer-65"
-                    aria-expanded="false">Show Answer</button>
-            <div id="latex-answer-65"
-                 class="answer latex-answer"
-                 hidden>
-                <div class="translation-table-wrapper">
-                    <table class="translation-table">
-                        <tr>
-                            <th>\(n\)</th>
-                            <th></th>
-                            <th>\(\lfloor n/2\rfloor\)</th>
-                            <th></th>
-                        </tr>
-                        <tr>
-                            <th>decimal</th>
-                            <th>binary</th>
-                            <th>decimal</th>
-                            <th>binary</th>
-                        </tr>
-                        <tr>
-                            <th scope="row">12</th>
-                            <td>1100</td>
-                            <td>6</td>
-                            <td>110</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">13</th>
-                            <td>1101</td>
-                            <td>6</td>
-                            <td>110</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">32</th>
-                            <td>100000</td>
-                            <td>16</td>
-                            <td>10000</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">33</th>
-                            <td>100001</td>
-                            <td>16</td>
-                            <td>10000</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">118</th>
-                            <td>1110110</td>
-                            <td>59</td>
-                            <td>111011</td>
-                        </tr>
-                        <tr>
-                            <th scope="row">119</th>
-                            <td>1110111</td>
-                            <td>59</td>
-                            <td>111011</td>
-                        </tr>
-                    </table>
-                </div>
-            </div>
         </div>
-        <div class="question-box">
-            <p class="box-title"><strong>Question</strong></p>
-            <p>How are the binary representations of \(n\) and \(\lfloor n/2\rfloor\) related?</p>
-            <button type="button"
-                    class="show-answer latex-answer-toggle"
-                    data-answer-target="latex-answer-66"
-                    aria-expanded="false">Show Answer</button>
-            <div id="latex-answer-66"
-                 class="answer latex-answer"
-                 hidden>
-                <p>The next theorem answers the question about the pattern.</p>
-            </div>
+    </div>
+
+    <div class="question-box">
+        <p class="box-title"><strong>Question 3</strong></p>
+        <p>How are the binary representations of \(n\) and \(\lfloor n/2\rfloor\) related?</p>
+        <button type="button"
+                class="show-answer latex-answer-toggle"
+                data-answer-target="latex-answer-66"
+                aria-expanded="false">Show Answer</button>
+        <div id="latex-answer-66"
+             class="answer latex-answer"
+             hidden>
+            <p>
+                The binary representation of \(\lfloor n/2\rfloor\) is obtained by removing
+                the last bit from the binary representation of \(n\). Equivalently, dividing
+                by \(2\) and taking the floor shifts the binary representation one bit to the
+                right.
+            </p>
         </div>
-        <p>Hopefully you observed a clear pattern in the previous exercise. The next theorem formalizes this idea. We
-            provide a proof of the theorem to make it clear what is going on.</p>
-        <div class="theorem">
-            <p class="box-title"><strong>Theorem</strong></p>
-            <p>The binary representation of \(\lfloor n/2\rfloor\) is the binary representation of n shifted to the
-                right one bit. That is, the binary representation of \(\lfloor n/2\rfloor\) is the same as that of \(n\)
-                with the last bit (the lowest order bit) chopped off.</p>
-            <div class="proof-block">
-                <p class="box-title"><strong>Proof</strong></p>
-                <p>Let the binary representation of \(n\) be \(a_m a_{m-1}a_{m-2}\ldots a_2a_1a_0\), where \(a_m=1\) (so
-                    the highest order bit is a \(1\)). Then \[n=a_m\, 2^m + a_{m-1}\, 2^{m-1}+ \ldots+ a_2\, 2^2 + a_1\,
-                    2^1 +a_0\, 2^0.\] From this we can see that</p>
-                <div class="display-math">\[
-                    \begin{aligned}
-                    \lfloor n/2\rfloor
-                    &amp;=\lfloor (a_m\, 2^m + a_{m-1}\, 2^{m-1} +
-                    \ldots+ a_2\, 2^2 + a_1\, 2^1 + a_0\, 2^0)/2\rfloor \\
-                    &amp;= \lfloor a_m\, 2^m/2 + a_{m-1}\, 2^{m-1}/2 +
-                    \ldots+ a_2\, 2^2/2 + a_1\, 2^1/2 + a_0\, 2^0/2\rfloor \\
-                    &amp;= \lfloor a_m\, 2^{m-1} + a_{m-1}\, 2^{m-2} +
-                    \ldots+ a_2\, 2^1 + a_1\, 2^0 + a_0/2\rfloor\\
-                    &amp;= a_m\, 2^{m-1} + a_{m-1}\, 2^{m-2} +
-                    \ldots+ a_2\, 2^1 + a_1\, 2^0.
-                    \end{aligned}
-                    \]</div>
-                <p>Notice that in the last step, \(a_0/2\) is chopped off by the floor since it is either \(0/2\) or
-                    \(1/2\) and the other numbers are integers. From this we can see that the binary representation of
-                    \(\lfloor n/2\rfloor\) is \(a_ma_{m-1}a_{m-2}\ldots a_2a_1\), which is the binary representation of
-                    \(n\) shifted to the right one bit.</p>
-            </div>
+    </div>
+
+    <p>
+        The previous examples suggest a clear pattern. The next theorem formalizes this idea.
+        We include the proof to make clear why the pattern always works, not just why it works
+        for the examples in the table.
+    </p>
+
+    <div class="theorem">
+        <p class="box-title"><strong>Theorem 1</strong></p>
+        <p>
+            The binary representation of \(\lfloor n/2\rfloor\) is the binary representation
+            of \(n\) shifted to the right one bit. That is, the binary representation of
+            \(\lfloor n/2\rfloor\) is the same as that of \(n\) with the last bit, the lowest
+            order bit, removed.
+        </p>
+        <div class="proof-block">
+            <p class="box-title"><strong>Proof</strong></p>
+            <p>
+                Let the binary representation of \(n\) be
+                \(a_m a_{m-1}a_{m-2}\ldots a_2a_1a_0\), where \(a_m=1\). Then
+                \[
+                    n=a_m2^m+a_{m-1}2^{m-1}+\cdots+a_2 2^2+a_1 2^1+a_0 2^0.
+                \]
+                From this we can see that
+            </p>
+            <div class="display-math">\[
+                \begin{aligned}
+                \lfloor n/2\rfloor
+                &amp;=\left\lfloor
+                \frac{a_m2^m+a_{m-1}2^{m-1}+\cdots+a_2 2^2+a_1 2^1+a_0 2^0}{2}
+                \right\rfloor \\
+                &amp;= \left\lfloor
+                a_m2^{m-1}+a_{m-1}2^{m-2}+\cdots+a_2 2^1+a_1 2^0+\frac{a_0}{2}
+                \right\rfloor \\
+                &amp;= a_m2^{m-1}+a_{m-1}2^{m-2}+\cdots+a_2 2^1+a_1 2^0.
+                \end{aligned}
+                \]</div>
+            <p>
+                In the last step, the term \(a_0/2\) disappears because \(a_0\) is either
+                \(0\) or \(1\), while all the other terms are integers. Therefore the binary
+                representation of \(\lfloor n/2\rfloor\) is
+                \(a_ma_{m-1}a_{m-2}\ldots a_2a_1\), which is the binary representation of
+                \(n\) shifted to the right one bit.
+            </p>
         </div>
-        <div class="corollary">
-            <p class="box-title"><strong>Corollary 1</strong></p>
-            <p>If the number \(n\) requires exactly \(k\) bits to represent in binary, then \(\lfloor n/2\rfloor\)
-                requires exactly \(k-1\) bits to represent in binary.</p>
-            <div class="proof-block">
-                <p class="box-title"><strong>Proof</strong></p>
-                <p>According to Theorem 20, the binary representation of \(\lfloor n/2\rfloor\) is the binary
-                    representation of \(n\) shifted to the right one bit. Thus it is clear that \(\lfloor n/2\rfloor\)
-                    requires one less bit to represent.</p>
-            </div>
+    </div>
+
+    <div class="corollary">
+        <p class="box-title"><strong>Corollary 1</strong></p>
+        <p>
+            If the number \(n\) requires exactly \(k\) bits to represent in binary, then
+            \(\lfloor n/2\rfloor\) requires exactly \(k-1\) bits to represent in binary.
+        </p>
+        <div class="proof-block">
+            <p class="box-title"><strong>Proof</strong></p>
+            <p>
+                According to Theorem 1, the binary representation of \(\lfloor n/2\rfloor\)
+                is the binary representation of \(n\) shifted to the right one bit. Thus it is
+                clear that \(\lfloor n/2\rfloor\) requires one less bit to represent.
+            </p>
         </div>
-        <p>We need just one more result.</p>
-        <div class="theorem">
-            <p class="box-title"><strong>Theorem</strong></p>
-            <p>It takes \(\lfloor \log_2 n\rfloor +1\) bits to represent \(n\) in binary.</p>
-            <div class="proof-block">
-                <p class="box-title"><strong>Proof</strong></p>
-                <p>Recall that \(\log_c b\) is defined as "the number that \(c\) must be raised to in order to get
-                    \(b\)." That is, if \(k = \log_c b\), then \(c^k=b\). Also, it should be clear that \(2^k\) is the
-                    smallest number that requires \(k+1\) bits to represent in binary. (If you are not convinced of
-                    this, write out some binary numbers near powers of two until you see it.) Let \(k\) be the number
-                    such that</p>
-                <div class="display-math">\[
-                    \begin{aligned}
-                    2^{k-1}&amp;\leq n &lt; 2^k.
-                    \end{aligned}
-                    \]</div>
-                <p>Since writing \(2^{k-1}\) takes \(k\) bits and \(2^k\) is the smallest number that requires \(k+1\)
-                    bits, it should be clear that \(n\) requires exactly \(k\) bits to represent in binary. Taking the
-                    logarithm of equation 21, we get \[\log_2 2^{k-1}\leq \log_2 n &lt; \log_2 2^k,\] which leads to
-                    \[k-1\leq \log_2 n &lt; k.\] Clearly \(\lfloor \log_2 n\rfloor =k-1\) since it is an integer. Thus,
-                    \(k=\lfloor \log_2 n\rfloor+1\), so it takes \(\lfloor \log_2 n\rfloor +1\) bits to represent \(n\)
-                    in binary.</p>
-            </div>
+    </div>
+
+    <p>We need just one more result.</p>
+
+    <div class="theorem">
+        <p class="box-title"><strong>Theorem 2</strong></p>
+        <p>It takes \(\lfloor \log_2 n\rfloor +1\) bits to represent \(n\) in binary.</p>
+        <div class="proof-block">
+            <p class="box-title"><strong>Proof</strong></p>
+            <p>
+                Recall that \(\log_c b\) is the number that \(c\) must be raised to in order
+                to get \(b\). That is, if \(k=\log_c b\), then \(c^k=b\). Also, \(2^k\) is
+                the smallest number that requires \(k+1\) bits to represent in binary. If you
+                are not convinced of this, write out some binary numbers near powers of two
+                until you see it.
+            </p>
+            <p>
+                Let \(k\) be the number such that
+            </p>
+            <div class="display-math">\[
+                2^{k-1}\leq n &lt; 2^k. \quad (1)
+                \]</div>
+            <p>
+                Since writing \(2^{k-1}\) takes \(k\) bits and \(2^k\) is the smallest number
+                that requires \(k+1\) bits, \(n\) requires exactly \(k\) bits to represent in
+                binary. Taking the logarithm of equation (1) above, we get
+                \[
+                    \log_2 2^{k-1}\leq \log_2 n &lt; \log_2 2^k,
+                \]
+                which gives
+                \[
+                    k-1\leq \log_2 n &lt; k.
+                \]
+                Therefore \(\lfloor \log_2 n\rfloor=k-1\), so
+                \(k=\lfloor \log_2 n\rfloor+1\). Thus it takes
+                \(\lfloor \log_2 n\rfloor+1\) bits to represent \(n\) in binary.
+            </p>
         </div>
-        <p>Now we are ready to analyze <em>binary search</em>.</p>
-        <div class="example-box">
-            <p class="box-title"><strong>Example</strong></p>
-            <p>We will show that <em>binary search</em> has worst-case complexity \(\Theta(\log n)\). More precisely, we
-                will prove that the while loop executes no more than \(\lfloor \log_2 n\rfloor +1\) times. Here is the
-                algorithm as a reminder:</p>
-            <pre><code class="language-java">    int binarySearch(int a[], int n, int val) {
-       int left=0, right=n-1;
-       while (right-left&gt;=0) {
-           int middle = (left+right)/2;
-           if(val==a[middle]) 
-               return middle;
-           else if(val&lt;a[middle]) 
-               right=middle-1;
-           else 
-               left=middle+1; 
+    </div>
+
+    <p>Now we are ready to analyze <em>binary search</em>.</p>
+
+    <div class="example-box">
+        <p class="box-title"><strong>Example 11</strong></p>
+        <p>
+            We will show that <em>binary search</em> has worst-case complexity
+            \(\Theta(\log n)\). More precisely, we will show that the while loop executes no
+            more than \(\lfloor \log_2 n\rfloor+1\) times. Here is the algorithm again.
+        </p>
+
+        <pre><code class="language-java">    int binarySearch(int a[], int n, int val) {
+        int left = 0;
+        int right = n - 1;
+
+        while (right - left &gt;= 0) {
+            int middle = (left + right) / 2;
+
+            if (val == a[middle]) {
+                return middle;
+            } else if (val &lt; a[middle]) {
+                right = middle - 1;
+            } else {
+                left = middle + 1;
+            }
         }
-       return -1;
+
+        return -1;
     }</code></pre>
-            <p>Recall that binary search finds the index of a value in a sorted array by comparing the value being
-                searched for with the middle element of the array. If they are the same, it returns the index of the
-                element. Otherwise it continues the search in only half of the array. In other words, it removes from
-                consideration half of the array at each iteration. Which half depends on whether the search value was
-                greater than or less than the middle value.</p>
-            <p>Since the code inside the while loop takes a constant amount of time, the complexity of <em>binary
-                    search</em> depends only on the number of iterations of the loop. Clearly the worst case is when a
-                value is not in the array since otherwise the loop ends early with the <code>return</code> statement.
-                Thus we will assume the value is not in the array.</p>
-            <p>Notice that the value <code>right-left</code> is the number of entries of the array that are still under
-                consideration by the algorithm. The loop executes until <code>right-left</code> \(&lt;0\). Before the
-                first iteration, <code>right-left</code> \(=n\). During each iteration, either <code>right</code> or
-                <code>left</code> is set to the middle value between <code>right</code> and <code>left</code> (plus or
-                minus 1). So after the first iteration, <code>right-left</code> \(\leq \lfloor n/2\rfloor\). In other
-                words, the algorithm has discarded at least half of the entries of the array. During each subsequent
-                iteration, <code>right-left</code> continues to be no more than the floor of half of its previous value,
-                so the algorithm continues to discard half of the entries of the array each time through the loop.</p>
-            <p>According to Corollary 2, each iteration of the loop reduces the number of bits used to represent
-                <code>right-left</code> by one. According to Theorem 21, it takes \(\lfloor \log_2 n\rfloor +1\) bits to
-                represent \(n\) in binary, and \(right-left\) started out as \(n\). Therefore, after \(\lfloor \log_2
-                n\rfloor\) iterations through the loop, <code>right-left</code> becomes \(1\), and the next iterations
-                ensures that <code>right-left</code> becomes negative and the loop terminates (check this!). Since the
-                loop executes at most \(\lfloor \log_2 n\rfloor +1\) times, the worst-case complexity of <em>binary
-                    search</em> is \(\Theta(\log n)\).</p>
+
+        <p>
+            Each iteration compares <code>val</code> with the middle element of the remaining
+            search interval. If the values are equal, the algorithm returns immediately.
+            Otherwise, because the array is sorted, the algorithm can discard either the left
+            half or the right half of the remaining interval.
+        </p>
+
+        <p>
+            The code inside the while loop takes constant time, so the running time depends on
+            the number of loop iterations. The worst case occurs when the value is not in the
+            array, or when it is found only after the search interval has been reduced as much
+            as possible. In either case, the loop continues until there are no entries left to
+            search.
+        </p>
+
+        <p>
+            Let
+            \[
+                m=\texttt{right}-\texttt{left}+1
+            \]
+            be the number of array entries still under consideration. Before the first
+            iteration, \(m=n\). During each iteration, the algorithm compares against the
+            middle remaining entry. If the values are not equal, the algorithm discards the
+            middle entry and one of the two halves. Therefore, after one iteration, the number
+            of remaining entries is at most \(\lfloor m/2\rfloor\). Repeating this process
+            keeps cutting the number of remaining entries at least in half.
+        </p>
+
+        <p>
+            According to Corollary 1, each time \(m\) is replaced by at most
+            \(\lfloor m/2\rfloor\), its binary representation loses at least one bit.
+            According to Theorem 2, it takes \(\lfloor \log_2 n\rfloor+1\) bits to represent
+            \(n\) in binary. Since \(m\) starts at \(n\), after at most
+            \(\lfloor \log_2 n\rfloor+1\) iterations there are no entries left to search.
+            Thus the while loop executes \(O(\log n)\) times.
+        </p>
+
+        <p>
+            Since each iteration takes constant time, the worst-case running time of binary
+            search is \(O(\log n)\). The algorithm also has worst-case complexity
+            \(\Omega(\log n)\), since there are inputs for which the search interval is reduced
+            by only about half each time until it becomes empty. Therefore the worst-case
+            complexity is \(\Theta(\log n)\).
+        </p>
+    </div>
+</section>
+
+<section id="reading-questions"
+         section-title="Reading Comprehension Questions">
+    <h2>Reading Comprehension Questions</h2>
+        <ol>
+            <li>
+                <strong>Bubble Sort Summation:</strong>
+                In the <code>bubblesort</code> example, why do we use a summation instead of simply
+                multiplying \(n\) by \(n\)?
+            </li>
+            <li>
+                <strong>Loop Variables:</strong>
+                Why should loop variables such as \(i\), \(j\), and \(k\) usually not appear in the
+                final complexity of an algorithm?
+            </li>
+            <li>
+                <strong>Array-Based List:</strong>
+                Why does the array-based list version of <code>insertionSort</code> have the same
+                asymptotic complexity as the ordinary array version?
+            </li>
+            <li>
+                <strong>Linked List Insertion Sort:</strong>
+                Why is the linked-list version of <code>insertionSort</code> worse than the array-based
+                version in this implementation?
+            </li>
+            <li>
+                <strong>Naive <code>addPowers</code>:</strong>
+                In the first <code>addPowers</code> implementation, why is the running time
+                \(\Theta(n^2)\) instead of \(\Theta(n)\)?
+            </li>
+            <li>
+                <strong>Improved <code>addPowers</code>:</strong>
+                How does the improved loop-based version of <code>addPowers</code> reduce the running
+                time from \(\Theta(n^2)\) to \(\Theta(n)\)?
+            </li>
+            <li>
+                <strong>Data Structure Choice:</strong>
+                In the <code>retainAll</code> examples, why does the type of the collection passed as
+                the parameter affect the running time?
+            </li>
+            <li>
+                <strong>Binary Representation:</strong>
+                What does dividing a positive integer \(n\) by \(2\) and taking the floor do to its
+                binary representation?
+            </li>
+            <li>
+                <strong>Binary Search:</strong>
+                Why does binary search have worst-case running time \(\Theta(\log n)\)?
+            </li>
+        </ol>
+
+        <button type="button"
+                class="show-answer latex-answer-toggle"
+                data-answer-target="latex-answer-reading-questions"
+                aria-expanded="false">Show Answers</button>
+        <div id="latex-answer-reading-questions"
+             class="answer latex-answer"
+             hidden>
+            <ol>
+                <li>
+                    <strong>Answer:</strong>
+                    The inner loop does not execute \(n\) times for every value of the outer loop.
+                    Its number of iterations depends on the current value of \(i\). It first executes
+                    \(n-1\) times, then \(n-2\) times, and so on down to \(1\) time. Therefore the
+                    total work is
+                    \[
+                        (n-1)+(n-2)+\cdots+1,
+                    \]
+                    which is a summation. This sum is \(\Theta(n^2)\).
+                </li>
+                <li>
+                    <strong>Answer:</strong>
+                    Loop variables describe temporary positions during the execution of the algorithm.
+                    They do not describe the size of the input. Final complexity bounds should be
+                    written in terms of input-size variables such as \(n\), \(m\), or the height \(h\)
+                    of a tree. If a loop variable still appears in the final answer, the analysis is
+                    probably unfinished.
+                </li>
+                <li>
+                    <strong>Answer:</strong>
+                    In an array-based list, <code>get(i)</code> and <code>set(i,x)</code> take constant
+                    time. These operations replace ordinary array indexing and assignment, which also
+                    take constant time. Since the loop structure is unchanged and the replacement
+                    operations have the same asymptotic cost, the original analysis still applies.
+                </li>
+                <li>
+                    <strong>Answer:</strong>
+                    In a linked list, accessing position \(i\) requires walking through the list, so
+                    <code>get(i)</code> and <code>set(i,x)</code> are not constant-time operations.
+                    Their costs depend on the position being accessed. The insertion sort code makes
+                    many repeated indexed accesses, so the cost of those accesses adds another layer
+                    of work. In this implementation, the worst-case complexity becomes \(\Theta(n^3)\)
+                    instead of \(\Theta(n^2)\).
+                </li>
+                <li>
+                    <strong>Answer:</strong>
+                    The loop executes \(n\) times, but the work inside the loop is not constant.
+                    On iteration \(i\), the call <code>power(a,i)</code> takes \(i\) time. Therefore
+                    the total work is
+                    \[
+                        \sum_{i=0}^{n-1} i = \frac{(n-1)n}{2} = \Theta(n^2).
+                    \]
+                </li>
+                <li>
+                    <strong>Answer:</strong>
+                    It avoids recomputing each power from scratch. Instead, it keeps a variable holding
+                    the current power of \(a\). Once the algorithm has \(a^i\), it can compute
+                    \(a^{i+1}\) with one multiplication by \(a\). Thus each loop iteration takes
+                    constant time, and there are \(n-1\) iterations, giving total running time
+                    \(\Theta(n)\).
+                </li>
+                <li>
+                    <strong>Answer:</strong>
+                    The method repeatedly calls <code>contains</code> on the parameter collection.
+                    The cost of <code>contains</code> depends on the data structure. For example, it is
+                    linear for an ArrayList or LinkedList, logarithmic for a TreeSet, and constant on
+                    average for a HashSet. Since this call occurs inside a loop, changing the cost of
+                    <code>contains</code> changes the overall running time.
+                </li>
+                <li>
+                    <strong>Answer:</strong>
+                    Dividing by \(2\) and taking the floor shifts the binary representation one bit to
+                    the right. Equivalently, it removes the last bit, which is the lowest-order bit.
+                    For example, \(22\) is \(10110\) in binary, while \(\lfloor 22/2\rfloor=11\),
+                    which is \(1011\) in binary.
+                </li>
+                <li>
+                    <strong>Answer:</strong>
+                    Each iteration of binary search discards about half of the remaining search
+                    interval. Starting with \(n\) entries, the number of times we can cut the interval
+                    in half before nothing remains is proportional to \(\log_2 n\). Since each
+                    iteration takes constant time, the worst-case running time is \(\Theta(\log n)\).
+                </li>
+            </ol>
         </div>
-    </section>
+</section>
+
+
 </body>
 
 </html>
