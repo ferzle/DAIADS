@@ -24,6 +24,7 @@ const TOP_LEVEL_ORDER = [
   'Data Structures',
   'Techniques',
   'Algorithms',
+  'Appendix',
   'Problems',
   'Demos',
   'More'
@@ -34,9 +35,10 @@ const TOP_LEVEL_NUMBER_LABELS = {
   'Data Structures': '3',
   'Techniques': '4',
   'Algorithms': '5',
-  'Problems': 'A',
-  'Demos': 'B',
-  'More': 'C'
+  'Appendix': 'A',
+  'Problems': 'B',
+  'Demos': 'C',
+  'More': 'D'
 };
 const NUMBERED_CHILD_SECTIONS = new Set([
   'Foundations',
@@ -94,24 +96,13 @@ const FOUNDATIONS_ORDERS = {
 const ANALYSIS_ORDERS = {
   'Analysis/': [
     'Overview',
-	'Mathematical Background',
     'Asymptotic Notation',
     'Asymptotic Properties',
     'Asymptotic Proofs',
     'Common Growth Rates',
     'Algorithm Analysis Fundamentals',
     'Algorithm Analysis Examples',
-    'Recurrences',
-    'Analyzing Recursive Algorithms',
-    'Reading Questions and Problems'
-  ],
-  'Analysis/Recurrences/': [
-    'Introduction',
-    'Solving Recurrence Relations',
-    'Iteration Method',
-    'Substitution Method',
-    'Master Theorem',
-    'Linear Recurrence Relations'
+    'Analyzing Recursive Algorithms'
   ]
 };
 const DATA_STRUCTURES_ORDERS = {
@@ -179,6 +170,21 @@ const DATA_STRUCTURES_ORDERS = {
   ]
 };
 
+const APPENDIX_ORDERS = {
+  'Appendix/': [
+    'Mathematical Background',
+    'Recurrences'
+  ],
+  'Appendix/Recurrences/': [
+    'Introduction',
+    'Solving Recurrence Relations',
+    'Iteration Method',
+    'Substitution Method',
+    'Master Theorem',
+    'Linear Recurrence Relations'
+  ]
+};
+
 // For "Demos", we just mirror the same order as the algorithm names:
 const DEMOS_ORDER = [...ALGORITHMS_ORDER];
 const TECHNIQUES_ORDER = [...ALGORITHMS_ORDER];
@@ -228,6 +234,7 @@ const getOrderListForPath = (pathPrefix) => {
   if (FOUNDATIONS_ORDERS[pathPrefix]) return FOUNDATIONS_ORDERS[pathPrefix];
   if (ANALYSIS_ORDERS[pathPrefix]) return ANALYSIS_ORDERS[pathPrefix];
   if (DATA_STRUCTURES_ORDERS[pathPrefix]) return DATA_STRUCTURES_ORDERS[pathPrefix];
+  if (APPENDIX_ORDERS[pathPrefix]) return APPENDIX_ORDERS[pathPrefix];
   return [];
 };
 

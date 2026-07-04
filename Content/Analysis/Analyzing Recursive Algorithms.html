@@ -1,237 +1,975 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
   <title>Analyzing Recursive Algorithms</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
-  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <script id="MathJax-script"
+          async
+          src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
   <script src="../../scripts/chapterScripts.js"></script>
   <script src="latex-translation.js"></script>
-  <link rel="stylesheet" href="../../css/style.css">
-  <link rel="stylesheet" href="../../css/chapter.css">
-  <link rel="stylesheet" href="latex-translation.css">
+  <link rel="stylesheet"
+        href="../../css/style.css">
+  <link rel="stylesheet"
+        href="../../css/chapter.css">
+  <link rel="stylesheet"
+        href="latex-translation.css">
   <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+  <script async
+          src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
+    function gtag() { dataLayer.push(arguments); }
     gtag('js', new Date());
     gtag('config', 'G-DQ5LVZVFDC');
   </script>
+  <style>
+    .codeline {
+  white-space: pre;
+}
+  </style>
 </head>
+
 <body class="latex-translation">
   <h1>Analyzing Recursive Algorithms</h1>
 
-<section id="analyzing-recursive-algorithms" section-title="Analyzing Recursive Algorithms">
-<h2>Analyzing Recursive Algorithms</h2>
-<p>In Section Solving Recurrence Relations we already saw a few examples of analyzing recursive algorithms. We will provide a few more examples in this section. In case it isn't clear, the most common method to analyze a recursive algorithm is to develop and solve a recurrence relation for its running time.  Let's see some examples.</p>
-<p>The two most two popular recursive sorting algorithms are <em>merge sort</em> and <em>Quicksort</em>. We will briefly discuss each algorithm and then analyze the running time of each.</p>
-<p>The basic idea behind <em>merge sort</em> is simple: Divide an array in half. Sort the first half, then sort the second half, then merge the two halves together. The first question you might be asking is how do you sort the two halves. Easy: merge sort them! But we need a base case otherwise the recursion will go on forever. That is also easy: An array of size 0 or 1 is clearly already sorted.</p>
-<p>Now we are left with two questions: how do we merge the two halves and how do we use that to implement the entire algorithm? Here we will simply provide both algorithms without much explanation and we will focus on analyzing them. If you want to better understand both merge sort and Quicksort, I recommend you take a data structures and algorithms course.</p>
-<div class="example-box">
-<p class="box-title"><strong>Example</strong></p>
-<p>The <code>Merge</code> algorithm needs to take two sorted arrays and combine them into a single sorted array. More accurately, it takes as input an array \(A\) which is sorted from \(left\) to \(mid\) and from \(mid+1\) to \(right\), and modifies \(A\) so it is sorted from \(left\) to \(right\).</p>
-<p>For instance, we might have \(left=5\), \(right=15\), \(mid=9\), and</p>
-<div class="display-math">\[
-A=[73, 23, 45, 67, 34, \underline{23, 37, 41, 45, 65}, \overline{12, 28, 39, 59, 68, 89}, 12, 34, 48, 47],
-\]</div>
-<p>where the underlined portion, indexed from \(left\) to \(mid\), is sorted, and the overlined portion, indexed from \(mid+1\) to \(right\) is also sorted, and we want merge to return the array</p>
-<div class="display-math">\[
-A=[73, 23, 45, 67, 34, \underline{12, 23, 28, 37, 39, 41, 45, 59,  65, 68, 89}, 12, 34, 48, 47]
-\]</div>
-<p>in which the underlined portion, indexed from \(left\) to \(right\) is now fully sorted (check carefully that it is correct).</p>
-<p>Now that we better understand what <code>Merge</code> is supposed to do, we can present an algorithm that accomplishes the task.</p>
-<pre><code class="language-java">void Merge(int A[],int left,int mid,int right) {
-int n=right-left+1;
-int m=mid-left+1;
-int *B=new int[n]; // Create new array
-for(int i=0;i&lt;m;i++)
-B[i]=A[left+i]; // copy 1st half forward
-for(int j=m;j&lt;n;j++)
-B[j]=A[right-j+m]; // copy 2nd half reversed
-int i=0;
-int j=n-1;
-for(int k=left;k&lt;=right;k++) // Now merge back to A
-if(B[i]&lt;B[j])
-A[k]=B[i++];
-else
-A[k]=B[j--];
-}</code></pre>
-<p>If we set \(n=right-left+1\), the size of the portion of the array that we are dealing with, we should be able to easily see that <code>Merge</code> takes \(O(n)\) time since it executes two loops whose total number of iterations is \(n\), and the third loop which has \(n\) iterations, and the rest of the code takes constant time.</p>
-</div>
-<div class="example-box">
-<p class="box-title"><strong>Example</strong></p>
-<p>Now that we have the <code>Merge</code> algorithm, implementing merge sort is pretty straightforward given the description above.</p>
-<pre><code class="language-java">MergeSort(int[] A,int left,int right) {
-if (left &lt; right) {
-int mid = (left + right)/2;
-MergeSort(A, left, mid);
-MergeSort(A, mid + 1, right);
-Merge(A, left, mid, right);
-}
-}</code></pre>
-<p>Notice that if \(left\geq right\) the algorithm does nothing. Also notice that this corresponds to subarrays with 0 or 1 elements, which clear do not need to be sorted. This is the base case we mentioned above.</p>
-</div>
-<div class="example-box">
-<p class="box-title"><strong>Example</strong></p>
-<p>What is the worst-case running time of merge sort?</p>
-<div class="solution-block">
-<p class="box-title"><strong>Solution</strong></p>
-<p>The algorithm for <code>MergeSort</code> is below. Let \(T(n)\) be the worst-case running time of <code>MergeSort</code> on an array of size \(n=right-left\). Recall that <code>Merge</code> takes two sorted arrays and merges them into one sorted array in time \(\Theta(n)\), where \(n\) is the number of elements in both arrays.<span class="translation-footnote">Footnote: Since our goal here is to analyze the algorithm, we won't provide a detailed implementation of <code>Merge</code>. All we need to know is its complexity.</span> Since the two recursive calls to <code>MergeSort</code> are on arrays of half the size, they each require time \(T(n/2)\) in the worst-case. The other operations take constant time.  Below we annotate the <code>MergeSort</code> algorithm with these running times.</p>
-<div class="translation-table-wrapper"><table class="translation-table">
-<tr><th>Algorithm</th><th>Time required</th></tr>
-<tr><th scope="row"><code>MergeSort(int[] A,int left,int right) {</code></th><td>\(T(n)\)</td></tr>
-<tr><th scope="row"><code>   if (left &lt; right) {</code></th><td>\(C_1\)</td></tr>
-<tr><th scope="row"><code>       int mid = (left + right)/2;</code></th><td>\(C_2\)</td></tr>
-<tr><th scope="row"><code>       MergeSort(A, left, mid);</code></th><td>\(T(n/2)\)</td></tr>
-<tr><th scope="row"><code>       MergeSort(A, mid + 1, right);</code></th><td>\(T(n/2)\)</td></tr>
-<tr><th scope="row"><code>       Merge(A, left, mid, right);</code></th><td>\(\Theta(n)\leq C_3n\)</td></tr>
-<tr><th scope="row"><code>   }</code></th><td></td></tr>
-<tr><th scope="row"><code>}</code></th><td></td></tr>
-</table></div>
-<p>Given this, we can see that</p>
-<div class="display-math">\[
-\begin{aligned}
-T(n)&amp;=C_1+C_2+T(n/2)+T(n/2)+\Theta(n)\\
-&amp;=2 T(n/2) +\Theta(n).
-\end{aligned}
-\]</div>
-<p>Notice that we absorbed the constants \(C_1\) and \(C_2\) into the \(\Theta(n)\) term. For simplicity, we will also replace the \(\Theta(n)\) term with \(cn\) (where \(c\) is a constant) and rewrite this as</p>
-<div class="display-math">\[
-T(n)=2 T(n/2)+c n.
-\]</div>
-<p>We could use the Master Theorem to prove that \(T(n)=\Theta(n\log n)\), but that would be too easy. Instead, we will use induction to prove that \(T(n)=O(n\log n)\), and leave the \(\Omega\)-bound to the reader.</p>
-<p>By definition, \(T(n)=O(n\log n)\) if and only if there exists constants \(k\) and \(n_0\) such that \(T(n)\leq k n\log n\) for all \(n\geq n_0\).</p>
-<p>For the base case, notice that \(T(2)=a\) for some constant \(a\), and \(a\leq k 2\log 2= 2 k\) as long as we pick \(k\geq a/2\). Now, assume that \(T(n/2)\leq k(n/2)\log (n/2)\). Then</p>
-<div class="display-math">\[
-\begin{aligned}
-T(n)&amp;=2 T(n/2) + c n\\
-&amp;\leq2(k(n/2)\log(n/2)+ c n\\
-&amp;=k n \log(n/2)+ c n\\
-&amp;=k n \log n - k n\log 2 + c n\\
-&amp;=k n\log n + (c-k)n\\
-&amp;\leq k n\log n \,\,\,\,\, \mbox{ if } k\geq c
-\end{aligned}
-\]</div>
-<p>As long as we pick \(k=\max\{a/2,c\}\), we have \(T(n)\leq k n\log n\), so \(T(n)=O(n\log n)\) as desired.</p>
-</div>
-</div>
-<div class="exercise-box">
-<p class="box-title"><strong>Exercise</strong></p>
-<p>We stated in the previous example that we could use the Master Theorem to prove that if \(T(n)=2 T(n/2)+c n,\) then \(T(n)=\Theta(n\log n)\).  Verify this.</p>
-<button type="button" class="show-answer latex-answer-toggle" data-answer-target="recurrence-answer-15" aria-expanded="false">Show Answer</button>
-<div id="recurrence-answer-15" class="answer latex-answer" hidden>
-<p>We have \(a=2\), \(b=2\), and \(d=1\). Since \(2=2^1\), we have that \(T(n)=\Theta(n\log n)\) by the second case of the Master Theorem.</p>
-</div>
-</div>
-<div class="question-box">
-<p class="box-title"><strong>Question</strong></p>
-<p>Answer  the following questions about points that were made in Example 42.</p>
-<ol class="spaced">
-<li><p>Why were we allowed to absorb the constants \(C_1\) and \(C_2\) into the \(\Theta(n)\) term?</p>
-</li>
-<li><p>Why were we able to replace the \(\Theta(n)\) term with \(cn\)?</p>
-</li>
-</ol>
-<button type="button" class="show-answer latex-answer-toggle" data-answer-target="recurrence-answer-16" aria-expanded="false">Show Answer</button>
-<div id="recurrence-answer-16" class="answer latex-answer" hidden>
-<p>(a) \(C_1\) and \(C_2\) are of lower order than \(n\). Thus, we can do this according to part (c) of Theorem [thm:asyprops]. (b) We know that the \(\Theta(n)\) represents some function \(f(n)\).  By definition of \(\Theta\), there are constants, \(c_1\) and \(c_2\) such that \(c_1n\leq f(n)\leq c_2n\) for all \(n\geq n_0\) for some constant \(n_0\).  So we essentially replaced \(f(n)\) with \(c_2n\) (since we are looking for a worst-case). Note that it doesn't matter what \(c_2\) is. We know there is some constant that works, so we just call it \(c\).</p>
-</div>
-</div>
-<div class="example-box">
-<p class="box-title"><strong>Example: Towers of Hanoi</strong></p>
-<p>The following legend is attributed to French mathematician Edouard Lucas in 1883. In an Indian temple there are 64 gold disks resting on three pegs. At the beginning of time, God placed these disks on the first peg and ordained that a group of priests should transfer them to the third peg according to the following rules:</p>
-<ol class="spaced">
-<li>The disks are initially stacked on peg A, in decreasing order (from bottom to top).</li>
-<li>The disks must be moved to another peg in such a way that only one disk is moved at a time and without stacking a larger disk onto a smaller disk.</li>
-</ol>
-<p>When they finish, the Tower will crumble and the world will end. How many moves does it take to solve the <em>Towers of Hanoi</em> problem with \(n\) disks?</p>
-<div class="solution-block">
-<p class="box-title"><strong>Solution</strong></p>
-<p>The usual (and best) algorithm to solve the <em>Towers of Hanoi</em> is:</p>
-<ul class="spaced">
-<li>Move the top \(n-1\) disk to from peg 1 to peg 2.</li>
-<li>Move the last disk from peg 1 to peg 3.</li>
-<li>Move the top \(n-1\) disks from peg 2 to peg 3.</li>
-</ul>
-<p>The only question is how to move the top \(n-1\) disks. The answer is simple: use recursion but switch the peg numbers. Here is an implementation of this idea:</p>
-<pre><code class="language-java">void solveHanoi(int N,int source,int dest,int spare) {
-if(N==1) {
-moveDisk(source,dest);
-} else {
-solveHanoi(N-1,source,spare,dest);
-moveDisk(source,dest);
-solveHanoi(N-1,spare,dest,source);
-}
-}</code></pre>
-<p>Don't worry if you don't see why this algorithm works. Our main concern here is analyzing the algorithm.</p>
-<p>The exact details of <code>moveDisk</code> depend on how the pegs/disks are implemented, so we won't provide an implementation of it. But it doesn't actually matter anyway since we just need to count the number of times <code>moveDisk</code> is called.  As it turns out, any reasonable implementation of <code>moveDisk</code> will take constant time, so the complexity of the algorithm is essentially the same as the number of calls to <code>moveDisk</code>.</p>
-<p>Let \(H(n)\) be the number of moves it takes to solve the <em>Towers of Hanoi</em> problem with \(n\) disks. Then \(H(n)\) is the number of times <code>moveDisk</code> is called when running <code>solveHanoi(n,1,2,3)</code>. It should be clear that \(H(1)=1\) since the algorithm simply makes a single call to <code>moveDisk</code> and quits. When \(n&gt;1\), the algorithm makes two calls to <code>solveHanoi</code> with the first parameter being \(n-1\) and one call to <code>moveDisk</code>. Therefore, we can see that</p>
-<p>As with the first example, we want a closed form for \(H(n)\). But we already showed that \(H(n)=2^{n}-1\) in Examples 26 and 9.</p>
-</div>
-</div>
-<div class="exercise-box">
-<p class="box-title"><strong>Exercise</strong></p>
-<p>Let \(T(n)\)  be the complexity of <code>blarg(n)</code>. Give a recurrence relation for \(T(n)\).</p>
-<pre><code class="language-java">int blarg(int n) {
-if(n&gt;5) {
-return blarg(n-1)+blarg(n-1)+blarg(n-5)+blarg(sqrt(n));
-}
-else {
-return n;
-}
-}</code></pre>
-<button type="button" class="show-answer latex-answer-toggle" data-answer-target="recurrence-answer-17" aria-expanded="false">Show Answer</button>
-<div id="recurrence-answer-17" class="answer latex-answer" hidden>
-<p>\(T(n)=2 T(n-1)+T(n-5)+T(\sqrt{n})+1\) if \(n&gt;5\), \(T(1)=T(2)=T(3)=T(4)=T(5)=1\). You can also have \(+c\) instead of \(+1\) in the recursive definition.</p>
-</div>
-</div>
-<div class="exercise-box">
-<p class="box-title"><strong>Exercise</strong></p>
-<p>Give a recurrence relation for the running time of <code>stoogeSort(A,0,n-1)</code>. (Hint: Start by letting \(T(n)\) be the running time of <code>stoogeSort</code> on an array of size \(n\).)</p>
-<pre><code class="language-java">void stoogeSort(int[] A,int L,int R){
-if(R&lt;=L) return; // Array has at most one element
-if(A[R]&lt;A[L]) {  // Swap first and last element
-Swap(A,L,R); // if they are out of order
-}
-if(R-L&gt;1){ // If the list has at least 2 elements
-int third=(R-L+1)/3;
-stoogeSort(A,L,R-third); // Sort first two-thirds
-stoogeSort(A,L+third,R); // Sort last two-thirds
-stoogeSort(A,L,R-third); // Sort first two-thirds again
-}
-}</code></pre>
-<button type="button" class="show-answer latex-answer-toggle" data-answer-target="recurrence-answer-18" aria-expanded="false">Show Answer</button>
-<div id="recurrence-answer-18" class="answer latex-answer" hidden>
-<p>Beyond the recursive calls, <code>StoogeSort</code> does only a constant amount of work&mdash;we'll call it \(1\). Then it makes three calls with sub-arrays of size \((2/3)n\).  Therefore, \(T(n)=3T((2/3)n)+1\) or \(T(n)=3T(2n/3)+1\), with base case \(T(1)=1\).</p>
-</div>
-</div>
-<div class="exercise-box">
-<p class="box-title"><strong>Exercise</strong></p>
-<p>Solve the recurrence relation you developed for <code>StoogeSort</code> in the previous exercise. (Make sure you verify your solution to the previous problem before you attempt to solve your recurrence relation).</p>
-<button type="button" class="show-answer latex-answer-toggle" data-answer-target="recurrence-answer-19" aria-expanded="false">Show Answer</button>
-<div id="recurrence-answer-19" class="answer latex-answer" hidden>
-<p>We can use the Master Theorem for this one. \(a=3\), \(b=3/2\) and \(d=0\). (Notice that \(b\neq 2/3\)!  If you made this mistake, make sure you understand why it is incorrect.) Since \(3&gt;1=(3/2)^0\), the third case of the Master Theorem tells us that \(T(n)=\Theta\left(n^{\log_{3/2}(3)}\right)\).  Although this looks weird, we can have a rational number as the base of a logarithm (in fact, the base of \(ln(n)\) is \(e\), an irrational number). It might be helpful to compute the \(\log\) since it isn't clear how good or bad this complexity is. Notice that \(\log_{3/2}(3)\approx 2.71\), so \(T(n)\) is approximately \(\Theta(n^{2.71})\), but \(T(n)\neq \Theta(n^{2.71})\), so resist the urge to place an equals sign between these.</p>
-</div>
-</div>
-<div class="question-box">
-<p class="box-title"><strong>Question</strong></p>
-<p>Which sorting algorithm is faster, <code>MergeSort</code> or <code>StoogeSort</code>? Justify your answer.</p>
-<button type="button" class="show-answer latex-answer-toggle" data-answer-target="recurrence-answer-20" aria-expanded="false">Show Answer</button>
-<div id="recurrence-answer-20" class="answer latex-answer" hidden>
-<p>The complexity of <code>MergeSort</code> is \(\Theta(n\log n)\) and the complexity of <code>StoogeSort</code> is \(\Theta\left(n^{\log_\frac{3}{2}(3)}\right)\) which is \(\Omega(n^{2.7})\). Clearly \(\Theta\left(n^{\log_\frac{3}{2}(3)}\right)\) grows faster than \(\Theta(n\log n)\), so <code>MergeSort</code> is faster. <em>Remember: Faster growth rate means slower algorithm!</em></p>
-</div>
-</div>
-<div class="exercise-box">
-<p class="box-title"><strong>Exercise</strong></p>
-<p>Give and solve a recurrence relation for the running time of an algorithm that does as follows: The algorithm is given an input array of size \(n\). If \(n&lt;3\), the algorithm does nothing. If \(n\geq 3\), create 5 separate arrays, each one-third of the size of the original array. This takes \(\Theta(n)\) to accomplish. Then call the same algorithm on each of the 5 arrays.</p>
-<button type="button" class="show-answer latex-answer-toggle" data-answer-target="recurrence-answer-21" aria-expanded="false">Show Answer</button>
-<div id="recurrence-answer-21" class="answer latex-answer" hidden>
-<p>Let \(T(n)\) be the complexity of this algorithm. From the description, it seems pretty clear that \(T(n)=5T(n/3)+cn\). Using the Master Theorem with \(a=5\), \(b=3\), and \(d=1\), we see that \(5&gt;3^1\), so the third case applies and \(T(n)=\Theta\left(n^{\log_3(5)}\right)\), which is approximately \(\Theta(n^{1.46})\).</p>
-</div>
-</div>
+  <section id="recurrence-prerequisites"
+           section-title="Prerequisites">
+    <h2>Prerequisites</h2>
+    <p>
+      This section assumes familiarity with recurrence relations and the basic idea of
+      solving them. If you need a review, see the
+      <a class="problem"
+         href="?path=Appendix/Recurrences/Introduction">Recurrence Relations</a>
+      section of the appendix. In fact, there are a few examples of analyzing recursive algorithms in that section, 
+      so you may want to review those as well.
+    </p>
+  </section>
+
+  <section id="analyzing-recursive-algorithms"
+           section-title="Analyzing Recursive Algorithms">
+    <h2>Analyzing Recursive Algorithms</h2>
+
+    <section id="introduction"
+         section-title="Introduction">
+  <h3>Introduction</h3>
+  <p>In the appendix section on solving recurrence relations, we already saw a few examples of analyzing recursive
+    algorithms. We will provide a few more examples in this section. The most common method for analyzing a
+    recursive algorithm is to write a recurrence relation for its running time and then solve that recurrence.</p>
+
+  <p>We begin with <em>merge sort</em>, a classic recursive sorting algorithm, because its running time leads to a
+    clean divide-and-conquer recurrence. We then look at the <em>Towers of Hanoi</em>, where the recurrence counts
+    the number of moves made by the recursive process. Finally, we practice setting up and solving recurrences
+    for several additional recursive algorithms, including examples where the subproblem sizes are less familiar.</p>
 </section>
+
+    <section id="merge-sort"
+             section-title="Merge Sort">
+      <h3>Merge Sort</h3>
+       <p>The basic idea behind <em>merge sort</em> is simple: divide an array in half, sort the first half, sort the
+        second half, and then merge the two sorted halves together. The two halves are sorted recursively using merge
+        sort again. The base case occurs when the subarray has size 0 or 1, since such a subarray is already sorted.</p>
+
+      <p>That leaves two main tasks: describing how the merge step works and using that cost to analyze the full
+        recursive algorithm. We will provide enough detail about the algorithm to support the analysis, but the focus of
+        this section is on setting up and solving the recurrence relation.</p>
+
+      <div class="example-box">
+        <p class="box-title"><strong>Example 1: Merge</strong></p>
+        <p>The <code>Merge</code> algorithm needs to take two sorted arrays and combine them into a single sorted array.
+          More accurately, it takes as input an array \(A\) which is sorted from \(left\) to \(mid\) and from \(mid+1\)
+          to \(right\), and modifies \(A\) so it is sorted from \(left\) to \(right\).</p>
+        <p>For instance, we might have \(left=5\), \(right=15\), \(mid=9\), and</p>
+        <div class="display-math">\[
+          A=[73, 23, 45, 67, 34, \underline{23, 37, 41, 45, 65}, \overline{12, 28, 39, 59, 68, 89}, 12, 34, 48, 47],
+          \]</div>
+        <p>where the underlined portion, indexed from \(left\) to \(mid\), is sorted, and the overlined portion, indexed
+          from \(mid+1\) to \(right\) is also sorted, and we want merge to return the array</p>
+        <div class="display-math">\[
+          A=[73, 23, 45, 67, 34, \underline{12, 23, 28, 37, 39, 41, 45, 59, 65, 68, 89}, 12, 34, 48, 47]
+          \]</div>
+        <p>in which the underlined portion, indexed from \(left\) to \(right\) is now fully sorted (check carefully that
+          it is correct).</p>
+        <p>Now that we better understand what <code>Merge</code> is supposed to do, we can present an algorithm that
+          accomplishes the task.</p>
+        <pre><code class="language-java">void merge(int[] A, int left, int mid, int right) {
+    int n = right - left + 1;
+    int m = mid - left + 1;
+    int[] B = new int[n];
+
+    // Copy first half forward.
+    for (int i = 0; i &lt; m; i++) {
+        B[i] = A[left + i];
+    }
+
+    // Copy second half backward.
+    for (int j = m; j &lt; n; j++) {
+        B[j] = A[right - j + m];
+    }
+
+    int i = 0;
+    int j = n - 1;
+
+    // Merge back into A.
+    for (int k = left; k &lt;= right; k++) {
+        if (B[i] &lt; B[j]) {
+            A[k] = B[i++];
+        } else {
+            A[k] = B[j--];
+        }
+    }
+}</code></pre>
+        <p>If we set \(n=right-left+1\), the size of the portion of the array that we are dealing with, we should be
+          able to easily see that <code>Merge</code> takes \(O(n)\) time since it executes two loops whose total number
+          of iterations is \(n\), and the third loop which has \(n\) iterations, and the rest of the code takes constant
+          time.</p>
+      </div>
+      <div class="example-box">
+        <p class="box-title"><strong>Example 2: Merge Sort</strong></p>
+        <p>Now that we have the <code>Merge</code> algorithm, implementing merge sort is pretty straightforward given
+          the description above.</p>
+        <pre><code class="language-java">void mergeSort(int[] A, int left, int right) {
+    if (left &lt; right) {
+        int mid = (left + right) / 2;
+        mergeSort(A, left, mid);
+        mergeSort(A, mid + 1, right);
+        merge(A, left, mid, right);
+    }
+}</code></pre>
+        <p>Notice that if \(left\geq right\) the algorithm does nothing. Also notice that this corresponds to subarrays
+          with 0 or 1 elements, which clearly do not need to be sorted. This is the base case we mentioned above.</p>
+      </div>
+      <div class="example-box">
+        <p class="box-title"><strong>Example 3: Analyzing Merge Sort</strong></p>
+        <p>What is the worst-case running time of merge sort?</p>
+        <div class="solution-block">
+          <p class="box-title"><strong>Solution</strong></p>
+          <p>The algorithm for <code>MergeSort</code> is below. Let \(T(n)\) be the worst-case running time of
+            <code>MergeSort</code> on an array of size \(n=right-left\). Recall that <code>Merge</code> takes two sorted
+            arrays and merges them into one sorted array in time \(\Theta(n)\), where \(n\) is the number of elements in
+            both arrays. Since the two recursive calls to <code>MergeSort</code> are on arrays of half the size,
+            they each require time \(T(n/2)\) in the worst-case. The other operations take constant time. Below we
+            annotate the <code>MergeSort</code> algorithm with these running times.</p>
+          <div class="translation-table-wrapper">
+            <table class="translation-table">
+              <tr>
+                <th>Algorithm</th>
+                <th>Time required</th>
+              </tr>
+              <tr>
+                <th scope="row"><code class="codeline">MergeSort(int[] A,int left,int right) {</code></th>
+                <td>\(T(n)\)</td>
+              </tr>
+              <tr>
+                <th scope="row"><code class="codeline">   if (left &lt; right) {</code></th>
+                <td>\(C_1\)</td>
+              </tr>
+              <tr>
+                <th scope="row"><code class="codeline">       int mid = (left + right)/2;</code></th>
+                <td>\(C_2\)</td>
+              </tr>
+              <tr>
+                <th scope="row"><code class="codeline">       MergeSort(A, left, mid);</code></th>
+                <td>\(T(n/2)\)</td>
+              </tr>
+              <tr>
+                <th scope="row"><code class="codeline">       MergeSort(A, mid + 1, right);</code></th>
+                <td>\(T(n/2)\)</td>
+              </tr>
+              <tr>
+                <th scope="row"><code class="codeline">       Merge(A, left, mid, right);</code></th>
+                <td>\(\Theta(n)\leq C_3n\)</td>
+              </tr>
+              <tr>
+                <th scope="row"><code class="codeline">   }</code></th>
+                <td></td>
+              </tr>
+              <tr>
+                <th scope="row"><code class="codeline">}</code></th>
+                <td></td>
+              </tr>
+            </table>
+          </div>
+          <p>Given this, we can see that</p>
+          <div class="display-math">\[
+            \begin{aligned}
+            T(n)&amp;=C_1+C_2+T(n/2)+T(n/2)+\Theta(n)\\
+            &amp;=2 T(n/2) +\Theta(n).
+            \end{aligned}
+            \]</div>
+          <p>Notice that we absorbed the constants \(C_1\) and \(C_2\) into the \(\Theta(n)\) term. For simplicity, we
+            will also replace the \(\Theta(n)\) term with \(cn\) (where \(c\) is a constant) and rewrite this as</p>
+          <div class="display-math">\[
+            T(n)=2 T(n/2)+c n.
+            \]</div>
+          <p>We could use the Master Theorem to prove that \(T(n)=\Theta(n\log n)\), but that would be too easy.
+            Instead, we will use induction to prove that \(T(n)=O(n\log n)\), and leave the \(\Omega\)-bound to the
+            reader.</p>
+          <p>By definition, \(T(n)=O(n\log n)\) if and only if there exists constants \(k\) and \(n_0\) such that
+            \(T(n)\leq k n\log n\) for all \(n\geq n_0\).</p>
+          <p>For the base case, notice that \(T(2)=a\) for some constant \(a\), and \(a\leq k 2\log 2= 2 k\) as long as
+            we pick \(k\geq a/2\). Now, assume that \(T(n/2)\leq k(n/2)\log (n/2)\). Then</p>
+          <div class="display-math">\[
+            \begin{aligned}
+            T(n)&amp;=2 T(n/2) + c n\\
+            &amp;\leq 2\left(k(n/2)\log(n/2)\right)+ c n\\
+            &amp;=k n \log(n/2)+ c n\\
+            &amp;=k n \log n - k n\log 2 + c n\\
+            &amp;=k n\log n + (c-k)n\\
+            &amp;\leq k n\log n \,\,\,\,\, \mbox{ if } k\geq c
+            \end{aligned}
+            \]</div>
+          <p>As long as we pick \(k=\max\{a/2,c\}\), we have \(T(n)\leq k n\log n\), so \(T(n)=O(n\log n)\) as desired.
+          </p>
+        </div>
+      </div>
+      <div class="exercise-box">
+        <p class="box-title"><strong>Exercise 1</strong></p>
+        <p>We stated in the previous example that we could use the Master Theorem to prove that if \(T(n)=2 T(n/2)+c
+          n,\) then \(T(n)=\Theta(n\log n)\). Verify this.</p>
+        <button type="button"
+                class="show-answer latex-answer-toggle"
+                data-answer-target="recurrence-answer-15"
+                aria-expanded="false">Show Answer</button>
+        <div id="recurrence-answer-15"
+             class="answer latex-answer"
+             hidden>
+          <p>We have \(a=2\), \(b=2\), and \(d=1\). Since \(2=2^1\), we have that \(T(n)=\Theta(n\log n)\) by the second
+            case of the Master Theorem.</p>
+        </div>
+      </div>
+      <div class="question-box">
+        <p class="box-title"><strong>Question 1</strong></p>
+        <p>Answer the following questions about points that were made in Example 3.</p>
+        <ol type="a" class="spaced">
+          <li>
+            <p>Why were we allowed to absorb the constants \(C_1\) and \(C_2\) into the \(\Theta(n)\) term?</p>
+          </li>
+          <li>
+            <p>Why were we able to replace the \(\Theta(n)\) term with \(cn\)?</p>
+          </li>
+        </ol>
+        <button type="button"
+                class="show-answer latex-answer-toggle"
+                data-answer-target="recurrence-answer-16"
+                aria-expanded="false">Show Answer</button>
+        <div id="recurrence-answer-16"
+             class="answer latex-answer"
+             hidden>
+          <ol type="a">
+            <li>\(C_1\) and \(C_2\) are of lower order than \(n\).</li>
+            <li>We know that the \(\Theta(n)\) represents some function \(f(n)\). By definition
+              of \(\Theta\), there are constants, \(c_1\) and \(c_2\) such that \(c_1n\leq f(n)\leq c_2n\) for all \(n\geq
+              n_0\) for some constant \(n_0\). So we essentially replaced \(f(n)\) with \(c_2n\) (since we are looking for
+              a worst-case). Note that it doesn't matter what \(c_2\) is. We know there is some constant that works, so we
+              just call it \(c\).</li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <section id="towers-of-hanoi"
+             section-title="Towers of Hanoi">
+      <h3>Towers of Hanoi</h3>
+      </div>
+      <div class="example-box">
+        <p class="box-title"><strong>Example 4: Towers of Hanoi</strong></p>
+        <p>The following legend is attributed to French mathematician Edouard Lucas in 1883. In an Indian temple there
+          are 64 gold disks resting on three pegs. At the beginning of time, God placed these disks on the first peg and
+          ordained that a group of priests should transfer them to the third peg according to the following rules:</p>
+        <ol class="spaced">
+          <li>The disks are initially stacked on peg A, in decreasing order (from bottom to top).</li>
+          <li>The disks must be moved to another peg in such a way that only one disk is moved at a time and without
+            stacking a larger disk onto a smaller disk.</li>
+        </ol>
+        <p>When they finish, the Tower will crumble and the world will end. How many moves does it take to solve the
+          <em>Towers of Hanoi</em> problem with \(n\) disks?</p>
+        <div class="solution-block">
+          <p class="box-title"><strong>Solution</strong></p>
+          <p>The usual (and best) algorithm to solve the <em>Towers of Hanoi</em> is:</p>
+          <ul class="spaced">
+            <li>Move the top \(n-1\) disk to from peg 1 to peg 2.</li>
+            <li>Move the last disk from peg 1 to peg 3.</li>
+            <li>Move the top \(n-1\) disks from peg 2 to peg 3.</li>
+          </ul>
+          <p>The only question is how to move the top \(n-1\) disks. The answer is simple: use recursion but switch the
+            peg numbers. Here is an implementation of this idea:</p>
+          <pre><code class="language-java">void solveHanoi(int N,int source,int dest,int spare) {
+  if(N==1) {
+    moveDisk(source,dest);
+  } else {
+    solveHanoi(N-1,source,spare,dest);
+    moveDisk(source,dest);
+    solveHanoi(N-1,spare,dest,source);
+  }
+}</code></pre>
+          <p>Don't worry if you don't see why this algorithm works. Our main concern here is analyzing the algorithm.
+          </p>
+          <p>The exact details of <code>moveDisk</code> depend on how the pegs/disks are implemented, so we won't
+            provide an implementation of it. But it doesn't actually matter anyway since we just need to count the
+            number of times <code>moveDisk</code> is called. As it turns out, any reasonable implementation of
+            <code>moveDisk</code> will take constant time, so the complexity of the algorithm is essentially the same as
+            the number of calls to <code>moveDisk</code>.</p>
+         <p>Let \(H(n)\) be the number of moves it takes to solve the <em>Towers of Hanoi</em> problem with \(n\)
+          disks. Then \(H(n)\) is the number of times <code>moveDisk</code> is called when running
+          <code>solveHanoi(n,1,2,3)</code>. It should be clear that \(H(1)=1\), since the algorithm simply makes a
+          single call to <code>moveDisk</code> and quits. When \(n&gt;1\), the algorithm makes two calls to
+          <code>solveHanoi</code> with the first parameter being \(n-1\) and one call to <code>moveDisk</code>.
+          Therefore,</p>
+
+        <div class="display-math">\[
+        H(n)=2H(n-1)+1.
+        \]</div>
+
+        <p>You have almost certainly seen this solution before, 
+          but let's go through the details of solving this recurrence relation anyway&mdash;it never hurts to review the basics.
+          We can easily do it by repeated substitution:</p>
+
+        <div class="display-math">\[
+        \begin{aligned}
+        H(n) &= 2H(n-1)+1 \\
+            &= 2(2H(n-2)+1)+1 \\
+            &= 2^2H(n-2)+2+1 \\
+            &= 2^2(2H(n-3)+1)+2+1 \\
+            &= 2^3H(n-3)+2^2+2+1.
+        \end{aligned}
+        \]</div>
+
+        <p>After continuing this pattern for \(k\) steps, we get</p>
+
+        <div class="display-math">\[
+        H(n)=2^kH(n-k)+(2^{k-1}+2^{k-2}+\cdots+2+1).
+        \]</div>
+
+        <p>We reach the base case when \(n-k=1\), so \(k=n-1\). Since \(H(1)=1\),</p>
+
+        <div class="display-math">\[
+        \begin{aligned}
+        H(n) &= 2^{n-1}H(1)+(2^{n-2}+2^{n-3}+\cdots+2+1) \\
+            &= 2^{n-1}+\sum_{i=0}^{n-2}2^i \\
+            &= \sum_{i=0}^{n-1}2^i \\
+            &= 2^n-1.
+        \end{aligned}
+        \]</div>
+        <p>The third line simply combines \(2^{n-1}\) with the lower powers of 2 to form one geometric sum.</p>
+        <p>Thus, the Towers of Hanoi algorithm makes exactly \(2^n-1\) moves, so its running time is
+          \(\Theta(2^n)\), assuming each call to <code>moveDisk</code> takes constant time.</p>
+        </div>
+
+    </section>
+
+    <section id="additional-recurrence-practice"
+             section-title="Additional Recurrence Practice">
+      <h3>Additional Recurrence Practice</h3>
+
+      <div class="exercise-box">
+        <p class="box-title"><strong>Exercise 2</strong></p>
+        <p>Let \(T(n)\) be the complexity of <code>blarg(n)</code>. Give a recurrence relation for \(T(n)\).</p>
+        <pre><code class="language-java">int blarg(int n) {
+  if(n&gt;5) {
+    return blarg(n-1)+blarg(n-1)+blarg(n-5)+blarg(sqrt(n));
+  } else {
+    return n;
+  }
+}</code></pre>
+        <br>
+        <button type="button"
+                class="show-answer latex-answer-toggle"
+                data-answer-target="recurrence-answer-17"
+                aria-expanded="false">Show Answer</button>
+        <div id="recurrence-answer-17"
+             class="answer latex-answer"
+             hidden>
+          <p>\(T(n)=2 T(n-1)+T(n-5)+T(\sqrt{n})+1\) if \(n&gt;5\), \(T(1)=T(2)=T(3)=T(4)=T(5)=1\). You can also have
+            \(+c\) instead of \(+1\) in the recursive definition.</p>
+        </div>
+      </div>
+      <div class="exercise-box">
+        <p class="box-title"><strong>Exercise 3</strong></p>
+        <p>Give a recurrence relation for the running time of <code>stoogeSort(A,0,n-1)</code>. (Hint: Start by letting
+          \(T(n)\) be the running time of <code>stoogeSort</code> on an array of size \(n\).)</p>
+        <pre><code class="language-java">void stoogeSort(int[] A,int L,int R){
+  if(R&lt;=L) return; // Array has at most one element
+  if(A[R]&lt;A[L]) {  // Swap first and last element
+    Swap(A,L,R); // if they are out of order
+  }
+  if(R-L&gt;1){ // If the list has at least 2 elements
+    int third=(R-L+1)/3;
+    stoogeSort(A,L,R-third); // Sort first two-thirds
+    stoogeSort(A,L+third,R); // Sort last two-thirds
+    stoogeSort(A,L,R-third); // Sort first two-thirds again
+  }
+}</code></pre>
+        <br>
+        <button type="button"
+                class="show-answer latex-answer-toggle"
+                data-answer-target="recurrence-answer-18"
+                aria-expanded="false">Show Answer</button>
+        <div id="recurrence-answer-18"
+             class="answer latex-answer"
+             hidden>
+          <p>Beyond the recursive calls, <code>StoogeSort</code> does only a constant amount of work&mdash;we'll call it
+            \(1\). Then it makes three calls with sub-arrays of size \((2/3)n\). Therefore, \(T(n)=3T((2/3)n)+1\) or
+            \(T(n)=3T(2n/3)+1\), with base case \(T(1)=1\).</p>
+        </div>
+      </div>
+      <div class="exercise-box">
+        <p class="box-title"><strong>Exercise 4</strong></p>
+        <p>Solve the recurrence relation you developed for <code>StoogeSort</code> in the previous exercise. (Make sure
+          you verify your solution to the previous problem before you attempt to solve your recurrence relation).</p>
+        <button type="button"
+                class="show-answer latex-answer-toggle"
+                data-answer-target="recurrence-answer-19"
+                aria-expanded="false">Show Answer</button>
+        <div id="recurrence-answer-19"
+             class="answer latex-answer"
+             hidden>
+          <p>We can use the Master Theorem for this one. \(a=3\), \(b=3/2\) and \(d=0\). (Notice that \(b\neq 2/3\)! If
+            you made this mistake, make sure you understand why it is incorrect.) Since \(3&gt;1=(3/2)^0\), the third
+            case of the Master Theorem tells us that \(T(n)=\Theta\left(n^{\log_{3/2}(3)}\right)\). Although this looks
+            weird, we can have a rational number as the base of a logarithm (in fact, the base of \(ln(n)\) is \(e\), an
+            irrational number). It might be helpful to compute the \(\log\) since it isn't clear how good or bad this
+            complexity is. Notice that \(\log_{3/2}(3)\approx 2.71\), so \(T(n)\) is approximately \(\Theta(n^{2.71})\),
+            but \(T(n)\neq \Theta(n^{2.71})\), so resist the urge to place an equals sign between these.</p>
+        </div>
+      </div>
+      <div class="question-box">
+        <p class="box-title"><strong>Question 2</strong></p>
+        <p>Which sorting algorithm is faster, <code>MergeSort</code> or <code>StoogeSort</code>? Justify your answer.
+        </p>
+        <button type="button"
+                class="show-answer latex-answer-toggle"
+                data-answer-target="recurrence-answer-20"
+                aria-expanded="false">Show Answer</button>
+        <div id="recurrence-answer-20"
+             class="answer latex-answer"
+             hidden>
+          <p>The complexity of <code>MergeSort</code> is \(\Theta(n\log n)\) and the complexity of
+            <code>StoogeSort</code> is \(\Theta\left(n^{\log_\frac{3}{2}(3)}\right)\) which is \(\Omega(n^{2.7})\).
+            Clearly \(\Theta\left(n^{\log_\frac{3}{2}(3)}\right)\) grows faster than \(\Theta(n\log n)\), so
+            <code>MergeSort</code> is faster. <em>Remember: Faster growth rate means slower algorithm!</em></p>
+        </div>
+      </div>
+      <div class="exercise-box">
+        <p class="box-title"><strong>Exercise 5</strong></p>
+        <p>Give and solve a recurrence relation for the running time of an algorithm that does as follows: The algorithm
+          is given an input array of size \(n\). If \(n&lt;3\), the algorithm does nothing. If \(n\geq 3\), create 5
+          separate arrays, each one-third of the size of the original array. This takes \(\Theta(n)\) to accomplish.
+          Then call the same algorithm on each of the 5 arrays.</p>
+        <button type="button"
+                class="show-answer latex-answer-toggle"
+                data-answer-target="recurrence-answer-21"
+                aria-expanded="false">Show Answer</button>
+        <div id="recurrence-answer-21"
+             class="answer latex-answer"
+             hidden>
+         <p>Let \(T(n)\) be the running time of this algorithm on an array of size \(n\). If \(n&lt;3\), the algorithm does only
+          constant work, so \(T(n)=\Theta(1)\). If \(n\geq 3\), it creates five arrays of size \(n/3\), which takes
+          \(\Theta(n)\) time, and then makes five recursive calls on inputs of size \(n/3\). Therefore,</p>
+
+        <div class="display-math">\[
+        T(n)=
+        \begin{cases}
+        \Theta(1), & n&lt;3,\\
+        5T(n/3)+cn, & n\geq 3.
+        \end{cases}
+        \]</div>
+
+        <p>Using the Master Theorem with \(a=5\), \(b=3\), and \(d=1\), we compare \(a\) with \(b^d\). Since
+          \(5&gt;3^1\), the third case applies, so</p>
+
+        <div class="display-math">\[
+        T(n)=\Theta\left(n^{\log_3 5}\right).
+        \]</div>
+
+        <p>Since \(\log_3 5\approx 1.46\), this is approximately \(n^{1.46}\) growth, but the exact asymptotic form is
+          \(\Theta\left(n^{\log_3 5}\right)\).</p>
+        </div>
+      </div>
+      <p>
+        These examples illustrate the main pattern: identify the recursive calls, account for the nonrecursive work,
+        include the base case, and then solve the resulting recurrence.
+      </p>
+    </section>
+
+  </section>
+
+  <section id="reading-questions" section-title="Reading Comprehension Questions">
+  <h2>Reading Comprehension Questions</h2>
+  <ol class="spaced">
+    <li>
+      <strong>Setting Up a Recurrence:</strong>
+      When analyzing a recursive algorithm, what are the two main parts of the algorithm that usually determine the recurrence relation?
+    </li>
+
+    <li>
+      <strong>Merge Sort Recurrence:</strong>
+      Why does the merge sort analysis lead to the recurrence
+      \[
+        T(n)=2T(n/2)+cn?
+      \]
+    </li>
+
+    <li>
+      <strong>Cost of Merge:</strong>
+      In the merge sort analysis, why does the call to <code>merge</code> take \(\Theta(n)\) time?
+    </li>
+
+    <li>
+      <strong>Base Case:</strong>
+      What is the base case for merge sort, and how does it appear in the code?
+    </li>
+
+    <li>
+      <strong>Using the Master Theorem:</strong>
+      For the recurrence
+      \[
+        T(n)=2T(n/2)+cn,
+      \]
+      what are \(a\), \(b\), and \(d\), and which case of the Master Theorem applies?
+    </li>
+
+    <li>
+      <strong>Towers of Hanoi Recurrence:</strong>
+      Why does the Towers of Hanoi algorithm satisfy
+      \[
+        H(n)=2H(n-1)+1?
+      \]
+    </li>
+
+    <li>
+      <strong>Exact Versus Asymptotic Answer:</strong>
+      The Towers of Hanoi algorithm makes exactly \(2^n-1\) moves. Why is its running time written as \(\Theta(2^n)\)?
+    </li>
+
+    <li>
+      <strong>Stooge Sort Subproblem Size:</strong>
+      In the recurrence for Stooge Sort, why is \(b=3/2\) rather than \(2/3\) when applying the Master Theorem?
+    </li>
+
+    <li>
+      <strong>Comparing Algorithms:</strong>
+      Why is merge sort faster than Stooge Sort, even though both are recursive sorting algorithms?
+    </li>
+  </ol>
+
+  <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
+  <div id="answers" class="answer" hidden>
+    <ol class="spaced">
+      <li>
+        <strong>Answer:</strong>
+        The recurrence usually comes from the recursive calls and the nonrecursive work. The recursive calls determine
+        how many subproblems there are and how large they are. The nonrecursive work accounts for everything else the
+        algorithm does outside those recursive calls.
+      </li>
+
+      <li>
+        <strong>Answer:</strong>
+        Merge sort makes two recursive calls, each on roughly half of the array, giving the term \(2T(n/2)\). After the
+        recursive calls return, the algorithm merges the two sorted halves in linear time, giving the \(cn\) term.
+      </li>
+
+      <li>
+        <strong>Answer:</strong>
+        The <code>merge</code> method copies the relevant portion of the array into a temporary array and then scans
+        through that temporary array to merge the values back into the original array. Each loop processes only a linear
+        number of values, so the total time is \(\Theta(n)\).
+      </li>
+
+      <li>
+        <strong>Answer:</strong>
+        The base case occurs when the subarray has 0 or 1 elements, since such a subarray is already sorted. In the code,
+        this is handled by the condition <code>if (left &lt; right)</code>. If \(left\geq right\), the method does not make
+        any recursive calls.
+      </li>
+
+      <li>
+        <strong>Answer:</strong>
+        For \(T(n)=2T(n/2)+cn\), we have \(a=2\), \(b=2\), and \(d=1\). Since \(a=b^d\), because \(2=2^1\), the second
+        case of the Master Theorem applies. Therefore, \(T(n)=\Theta(n\log n)\).
+      </li>
+
+      <li>
+        <strong>Answer:</strong>
+        To solve Towers of Hanoi with \(n\) disks, the algorithm first moves \(n-1\) disks to the spare peg, then moves
+        the largest disk once, and then moves the \(n-1\) disks onto the destination peg. The two recursive parts each
+        take \(H(n-1)\) moves, and the largest disk move adds 1 more move, so \(H(n)=2H(n-1)+1\).
+      </li>
+
+      <li>
+        <strong>Answer:</strong>
+        The exact number of moves is \(2^n-1\). In asymptotic notation, subtracting 1 does not change the growth rate.
+        Thus, \(2^n-1=\Theta(2^n)\), so the running time is \(\Theta(2^n)\) if each move takes constant time.
+      </li>
+
+      <li>
+        <strong>Answer:</strong>
+        In the Master Theorem, the recurrence is written in the form \(T(n)=aT(n/b)+f(n)\). Stooge Sort makes recursive
+        calls on subarrays of size \(2n/3\). Since \(2n/3=n/(3/2)\), the correct value of \(b\) is \(3/2\), not \(2/3\).
+      </li>
+
+      <li>
+        <strong>Answer:</strong>
+        Merge sort has running time \(\Theta(n\log n)\), while Stooge Sort has running time
+        \(\Theta\left(n^{\log_{3/2}3}\right)\), which is approximately \(\Theta(n^{2.71})\). Since \(n^{2.71}\) grows
+        much faster than \(n\log n\), Stooge Sort is slower and merge sort is faster.
+      </li>
+    </ol>
+  </div>
+</section>
+
+<section id="activities" section-title="In-Class Activities">
+  <h2>In-Class Activities</h2>
+  <ol class="spaced">
+   
+    <li>
+  <strong>Draw the Merge Sort Calls:</strong>
+  Suppose <code>mergeSort</code> is called on an array of size \(16\). Draw a diagram showing the recursive calls:
+  one node of size \(16\), then two nodes of size \(8\), then four nodes of size \(4\), then eight nodes of size \(2\), 
+  and finally sixteen nodes of size \(1\). For each level of the diagram, answer:
+  <ol type="a">
+    <li>How many subarrays are there?</li>
+    <li>What is the size of each subarray?</li>
+    <li>What is the total amount of merge work done at that level?</li>
+  </ol>
+  Use your answers to explain why the total running time is proportional to \(n\log n\) for an array of size \(n\).
+</li>
+
+    <li>
+      <strong>Finish the Induction Proof:</strong>
+      The page proves that the recurrence
+      \[
+        T(n)=2T(n/2)+cn
+      \]
+      satisfies \(T(n)=O(n\log n)\). Fill in the missing details for the matching lower bound
+      \(T(n)=\Omega(n\log n)\). State the induction hypothesis, choose an appropriate constant,
+      and explain why the proof works.
+    </li>
+
+    <li>
+      <strong>Recover the Hanoi Recurrence:</strong>
+      Without looking at the solution, write a short explanation of why solving Towers of Hanoi with
+      \(n\) disks requires two smaller Hanoi solutions with \(n-1\) disks and one additional move.
+      Use that explanation to derive
+      \[
+        H(n)=2H(n-1)+1.
+      \]
+    </li>
+
+    <li>
+  <p><strong>Repeated Substitution:</strong>
+  Consider the following recursive method:</p>
+  <pre><code class="language-java">int sumArray(int[] A, int n) {
+  if (n == 0) {
+    return 0;
+  }
+  return A[n - 1] + sumArray(A, n - 1);
+}</code></pre>
+  <ol type="a">
+    <li>Write a recurrence relation for the running time \(T(n)\).</li>
+    <li>Expand the recurrence for three steps.</li>
+    <li>Write the general expression after \(k\) steps.</li>
+    <li>Choose \(k\) so that the expression reaches the base case.</li>
+    <li>Give the final Big-Theta running time.</li>
+  </ol>
+</li>
+
+    <li>
+      <strong>Master Theorem Parameters:</strong>
+      For each recurrence below, identify \(a\), \(b\), and \(d\), then decide which case of the Master
+      Theorem applies.
+      <ol type="a">
+        <li>\(T(n)=2T(n/2)+n\)</li>
+        <li>\(T(n)=5T(n/3)+n\)</li>
+        <li>\(T(n)=3T(2n/3)+1\)</li>
+        <li>\(T(n)=4T(n/2)+n^2\)</li>
+      </ol>
+    </li>
+
+    <li>
+      <strong>Spot the Mistake:</strong>
+      A student says that the recurrence for Stooge Sort has \(b=2/3\) because each recursive call
+      is on a subarray of size \(2n/3\). Explain what is wrong with this statement and rewrite the
+      recurrence in the form required by the Master Theorem.
+    </li>
+
+   <li>
+  <strong>Find the Recurrences from Code:</strong>
+  For each recursive method below, write a recurrence relation for its running time. Include a base case.
+  Then decide which of the recurrences can be solved directly with the Master Theorem.
+  <ol type="a">
+    <li>
+      <pre><code class="language-java">int countDown(int n) {
+  if (n &lt;= 1) {
+    return 1;
+  }
+  return countDown(n - 1) + 1;
+}</code></pre>
+    </li>
+    <li>
+      <pre><code class="language-java">int splitWork(int n) {
+  if (n &lt;= 1) {
+    return 1;
+  }
+
+  int total = 0;
+  for (int i = 0; i &lt; n; i++) {
+    total++;
+  }
+
+  return splitWork(n / 2) + splitWork(n / 2) + total;
+}</code></pre>
+    </li>
+    <li>
+      <pre><code class="language-java">int unevenWork(int n) {
+  if (n &lt;= 1) {
+    return 1;
+  }
+
+  return unevenWork(n - 1) + unevenWork(n / 2) + 1;
+}</code></pre>
+    </li>
+  </ol>
+</li>
+  </ol>
+</section>
+
+<section id="problems" section-title="Homework Problems">
+  <h2>Homework Problems</h2>
+  <ol class="spaced">
+    <li>
+      <strong>Analyze a Modified Merge Sort:</strong>
+      Suppose a variant of merge sort divides the array into four equal parts, recursively sorts each part, and then
+      combines the four sorted parts in \(\Theta(n)\) time.
+      <ol type="a">
+        <li>Write a recurrence relation for the running time.</li>
+        <li>Identify \(a\), \(b\), and \(d\) for the Master Theorem.</li>
+        <li>Solve the recurrence using the Master Theorem.</li>
+        <li>Compare the asymptotic running time to ordinary merge sort.</li>
+      </ol>
+    </li>
+
+    <li>
+      <strong>Finish the Lower Bound:</strong>
+      In the merge sort analysis, the page proves that
+      \[
+        T(n)=2T(n/2)+cn
+      \]
+      satisfies \(T(n)=O(n\log n)\). Prove the matching lower bound
+      \(T(n)=\Omega(n\log n)\) by induction. You may assume \(T(2)=a\) for some positive constant \(a\).
+    </li>
+
+    <li>
+      <strong>Hanoi Exact Values:</strong>
+      The Towers of Hanoi recurrence is
+      \[
+        H(n)=2H(n-1)+1,\qquad H(1)=1.
+      \]
+      <ol type="a">
+        <li>Compute \(H(2)\), \(H(3)\), \(H(4)\), and \(H(5)\).</li>
+        <li>Verify that each value agrees with the formula \(H(n)=2^n-1\).</li>
+        <li>Explain why this gives an exponential running time.</li>
+      </ol>
+    </li>
+
+    <li>
+      <strong>Solve by Repeated Substitution:</strong>
+      Consider the recurrence
+      \[
+        T(n)=3T(n-1)+2,\qquad T(1)=1.
+      \]
+      <ol type="a">
+        <li>Expand the recurrence for three steps.</li>
+        <li>Write the expression after \(k\) steps.</li>
+        <li>Choose \(k\) so that the expression reaches the base case.</li>
+        <li>Give a closed form for \(T(n)\).</li>
+        <li>Give the Big-Theta running time.</li>
+      </ol>
+    </li>
+
+    <li>
+      <strong>Recurrence from Code:</strong>
+      For each method below, write a recurrence relation for its running time, including a base case. Then solve the
+      recurrence if it can be solved using the Master Theorem. If not, explain why it cannot be solved using the Master Theorem.
+      <ol type="a">
+        <li>
+          <pre><code class="language-java">int mysteryA(int n) {
+  if (n &lt;= 1) {
+    return 1;
+  }
+
+  int total = 0;
+  for (int i = 0; i &lt; n; i++) {
+    total++;
+  }
+
+  return mysteryA(n / 2) + mysteryA(n / 2)+ mysteryA(n / 2) + total;
+}</code></pre>
+        </li>
+        <li>
+          <pre><code class="language-java">int mysteryB(int n) {
+  if (n &lt;= 1) {
+    return 1;
+  }
+
+  int total = 0;
+  for (int i = 0; i &lt; n * n; i++) {
+    total++;
+  }
+
+  return mysteryB(n / 2) + total;
+}</code></pre>
+        </li>
+        <li>
+          <pre><code class="language-java">int mysteryC(int n) {
+  if (n &lt;= 1) {
+    return 1;
+  }
+
+  return mysteryC(n - 1) + mysteryC(n / 2) + 1;
+}</code></pre>
+        </li>
+      </ol>
+    </li>
+
+    <li>
+      <strong>Compare Three Recurrences:</strong>
+      Solve each recurrence using the Master Theorem.
+      Then rank the resulting running times from fastest growing to slowest growing.
+      <ol type="a">
+        <li>\(A(n)=2A(n/2)+n\)</li>
+        <li>\(B(n)=4B(n/2)+n\)</li>
+        <li>\(C(n)=5C(n/3)+n\)</li>
+      </ol>
+    </li>
+
+    <li>
+      <strong>Stooge Sort Check:</strong>
+      Stooge Sort has recurrence
+      \[
+        T(n)=3T(2n/3)+1.
+      \]
+      <ol type="a">
+        <li>Rewrite the recurrence in the form \(T(n)=aT(n/b)+f(n)\).</li>
+        <li>Identify \(a\), \(b\), and \(d\).</li>
+        <li>Solve the recurrence using the Master Theorem.</li>
+        <li>Explain why this running time is worse than \(\Theta(n^2)\).</li>
+      </ol>
+    </li>
+
+    <li>
+      <strong>Design an Algorithm with a Given Recurrence:</strong>
+      Describe, in words or pseudocode, a recursive algorithm whose running time satisfies
+      \[
+        T(n)=3T(n/2)+n^2.
+      \]
+      Then solve the recurrence using the Master Theorem. Your algorithm does not need to solve a useful problem,
+      but it should clearly perform three recursive calls on inputs of size \(n/2\) and \(\Theta(n^2)\) nonrecursive
+      work.
+    </li>
+    <li>
+  <strong>Master Theorem Practice:</strong>
+  Use the Master Theorem to find a tight asymptotic bound for each recurrence below.
+  For each one, identify \(a\), \(b\), and \(d\), state which case applies, and give the final
+  \(\Theta\)-bound.
+  <ol type="a">
+    <li>\(T(n)=8T(n/2)+7n^3+6n^2+5n+4\)</li>
+    <li>\(T(n)=3T(n/5)+n^2-4n+23\)</li>
+    <li>\(T(n)=3T(n/2)+3\)</li>
+    <li>\(T(n)=T(n/3)+n\)</li>
+    <li>\(T(n)=2T(2n/5)+n\)</li>
+    <li>\(T(n)=5T(2n/5)+n\)</li>
+  </ol>
+</li>
+
+<li>
+  <strong>Recursive Bubble Sort:</strong>
+  Consider the classic bubble sort algorithm.
+  <ol type="a">
+    <li>Write a recursive version of bubble sort. Your version should contain one recursive call and one loop.</li>
+    <li>Let \(B(n)\) be the running time of your recursive version. Give a recurrence relation for \(B(n)\), including a base case.</li>
+    <li>Solve the recurrence relation from part (b).</li>
+    <li>Is your recursive implementation asymptotically better, worse, or the same as the usual iterative version of bubble sort? Justify your answer.</li>
+    <li>Based on your analysis, is there any reason to ever implement recursive bubble sort? Explain.</li>
+  </ol>
+</li>
+
+<li>
+  <strong>Analyzing <code>halfIt</code>:</strong>
+  Consider the following algorithm. Remember that integer division truncates.
+  <pre><code class="language-java">int halfIt(int n) {
+  if (n &gt; 0) {
+    return 1 + halfIt(n / 2);
+  } else {
+    return 0;
+  }
+}</code></pre>
+  <ol type="a">
+    <li>What does <code>halfIt(n)</code> return? Your answer should be a function of \(n\).</li>
+    <li>Prove that the algorithm returns the value you gave in part (a).</li>
+    <li>What is the running time of <code>halfIt(n)</code>? Give a recurrence relation and solve it exactly.</li>
+  </ol>
+</li>
+
+<li>
+  <strong>Towers of Hanoi and Time:</strong>
+  Suppose the priests in the Towers of Hanoi legend can move one disk per second, they started moving disks
+  6000 years ago, and the legend is true for \(64\) disks.
+  <ol type="a">
+    <li>How many total disk moves are required?</li>
+    <li>Approximately how many years does the full process take?</li>
+    <li>Approximately how many years remain?</li>
+    <li>Based on your calculation, when would the world end?</li>
+  </ol>
+</li>
+<li>
+  <strong>Sum of Squares with Restricted Arithmetic:</strong>
+  This problem involves computing
+  \[
+    \sum_{k=1}^n k^2
+  \]
+  using recursion.
+  <ol type="a">
+    <li>
+      Write a recursive algorithm to compute \(\sum_{k=1}^n k^2\) that uses only increment and decrement
+      for arithmetic. For example, you may not use ordinary addition, multiplication, division, or a closed-form
+      formula. Your algorithm should use one recursive call and one or two loops. You should not need to pass in
+      multiple variables, and you should not use a global variable. 
+      Not that you cannot even have code like <code>n-1</code> since that is subtraction. You should only use 
+      <code>++</code> and <code>--</code> for arithmetic.
+      (Yes, this is a ridiculous restriction, but it makes for a fun problem.)
+    </li>
+    <li>
+      Let \(S(n)\) be the running time of your algorithm from part (a). Give a recurrence relation for \(S(n)\),
+      including a base case.
+    </li>
+    <li>
+      Solve the recurrence relation from part (b) to determine the asymptotic running time of your algorithm.
+    </li>
+    <li>
+      Now remove the arithmetic restriction. Give a recursive linear-time algorithm for the same problem and briefly
+      justify why it runs in \(\Theta(n)\) time.
+    </li>
+    <li>
+      Give a constant-time algorithm for the same problem using a formula that you should have learned in your discrete math class.
+      Briefly justify why it runs in \(\Theta(1)\) time under the usual assumption that basic arithmetic operations
+      take constant time.
+    </li>
+    <li>
+      Compare the three algorithms. Which is asymptotically fastest? Which is slowest?
+      What makes the three algorithms so different in terms of running time?
+    </li>
+  </ol>
+</li>
+  </ol>
+</section>
+
 </body>
+
 </html>
