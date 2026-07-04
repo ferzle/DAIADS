@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mixed Practice</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <script src="/DAIADS/scripts/chapterScripts.js"></script>
+  <script src="/DAIADS/scripts/latex-translation.js"></script>
+  <link rel="stylesheet" href="/DAIADS/css/style.css">
+  <link rel="stylesheet" href="/DAIADS/css/chapter.css">
+  <link rel="stylesheet" href="/DAIADS/css/latex-translation.css">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-DQ5LVZVFDC');
+  </script>
+</head>
+<body class="latex-translation">
+  <h1>Mixed Practice</h1>
+
+  <section id="mixed-practice" section-title="Mixed Practice">
+    <h2>Mixed Practice</h2>
+    <p>
+      In the previous sections, each recurrence was usually placed near the method used to solve it.
+      That made it easier to focus on one technique at a time. In practice, however, recurrence
+      relations do not arrive with labels. Before solving one, we often have to decide which method
+      is appropriate.
+    </p>
+    <p>
+      This page gives mixed practice with the recurrence-solving methods from this part of the book.
+      For each recurrence, first decide which method looks promising. Then solve the recurrence, prove
+      a proposed bound, or explain why a particular method does not apply.
+    </p>
+
+    <div class="remark-box">
+      <p class="box-title"><strong>Strategy Reminder</strong></p>
+      <ul class="spaced">
+        <li>
+          <strong>Substitution:</strong> Useful when you already have a good guess and need to prove it.
+          It is especially helpful for proving asymptotic bounds.
+        </li>
+        <li>
+          <strong>Iteration:</strong> Useful when repeated expansion creates a visible pattern or sum.
+          It often gives more detail than an asymptotic theorem.
+        </li>
+        <li>
+          <strong>Master Theorem:</strong> Useful for divide-and-conquer recurrences of the form
+          \(T(n)=aT(n/b)+f(n)\), especially when \(f(n)\) is a simple polynomial.
+        </li>
+        <li>
+          <strong>Linear recurrence techniques:</strong> Useful for recurrences such as
+          \(x_n=ax_{n-1}+bx_{n-2}\), especially when an exact closed form is requested.
+        </li>
+      </ul>
+    </div>
+    <p>
+    We include one example before the activities and homework problems. The example shows how
+    the same recurrence can be approached in more than one way.
+    </p>
+
+    <div class="example-box">
+  <p class="box-title"><strong>Example 1</strong></p>
+  <p>
+    Solve or tightly bound the recurrence
+    \[
+      T(n)=2T(n/2)+n,\qquad T(1)=1.
+    \]
+    Assume \(n\) is a power of \(2\). We will solve the same recurrence in three
+    different ways: iteration, the Master Theorem, and substitution.
+  </p>
+
+  <div class="solution-block">
+    <p class="box-title"><strong>Solution 1: Iteration</strong></p>
+    <p>
+      First, expand the recurrence several times:
+    </p>
+
+    <div class="display-math">\[
+    \begin{aligned}
+    T(n)&amp;=2T(n/2)+n\\
+    &amp;=2\left(2T(n/4)+n/2\right)+n\\
+    &amp;=2^2T(n/4)+n+n\\
+    &amp;=2^2\left(2T(n/8)+n/4\right)+2n\\
+    &amp;=2^3T(n/8)+3n\\
+    &amp;\vdots\\
+    &amp;=2^kT(n/2^k)+kn.
+    \end{aligned}
+    \]</div>
+
+    <p>
+      To reach the base case, we need
+      \[
+        n/2^k=1.
+      \]
+      Thus \(2^k=n\), so \(k=\log_2 n\). Substituting this value of \(k\), we get
+    </p>
+
+    <div class="display-math">\[
+    \begin{aligned}
+    T(n)&amp;=2^{\log_2 n}T(n/2^{\log_2 n})+n\log_2 n\\
+    &amp;=nT(1)+n\log_2 n\\
+    &amp;=n+n\log_2 n.
+    \end{aligned}
+    \]</div>
+
+    <p>
+      Therefore,
+      \[
+        T(n)=n+n\log_2 n=\Theta(n\log n).
+      \]
+    </p>
+  </div>
+
+  <div class="solution-block">
+    <p class="box-title"><strong>Solution 2: Master Theorem</strong></p>
+    <p>
+      The recurrence has the form
+      \[
+        T(n)=aT(n/b)+f(n).
+      \]
+      Here,
+      \[
+        a=2,\qquad b=2,\qquad f(n)=n.
+      \]
+      Since \(f(n)=\Theta(n^1)\), we have \(d=1\). Now compare \(a\) with \(b^d\):
+    </p>
+
+    <div class="display-math">\[
+      a=2
+      \qquad\text{and}\qquad
+      b^d=2^1=2.
+    \]</div>
+
+    <p>
+      Since \(a=b^d\), the second case of the Master Theorem applies. Therefore,
+    </p>
+
+    <div class="display-math">\[
+      T(n)=\Theta(n^d\log n)=\Theta(n\log n).
+    \]</div>
+
+    <p>
+      This agrees with the result from iteration.
+    </p>
+  </div>
+
+  <div class="solution-block">
+    <p class="box-title"><strong>Solution 3: Substitution</strong></p>
+    <p>
+      From the first solution, we found the closed form
+      \[
+        T(n)=n+n\log_2 n.
+      \]
+      We can verify this formula by substitution. Assume \(n\) is a power of \(2\).
+      The base case works because
+    </p>
+
+    <div class="display-math">\[
+      T(1)=1+1\log_2 1=1.
+    \]</div>
+
+    <p>
+      Now suppose the formula holds for \(n/2\). Then
+    </p>
+
+    <div class="display-math">\[
+    \begin{aligned}
+    T(n)&amp;=2T(n/2)+n\\
+    &amp;=2\left(\frac{n}{2}+\frac{n}{2}\log_2(n/2)\right)+n\\
+    &amp;=n+n\log_2(n/2)+n\\
+    &amp;=n+n(\log_2 n-1)+n\\
+    &amp;=n+n\log_2 n.
+    \end{aligned}
+    \]</div>
+
+    <p>
+      Thus the closed form is correct. In particular,
+      \[
+        T(n)=n+n\log_2 n=\Theta(n\log n).
+      \]
+    </p>
+  </div>
+
+  <p>
+    The three methods give consistent information. Iteration gives an exact closed form,
+    the Master Theorem gives the asymptotic bound quickly, and substitution verifies the
+    claimed closed form.
+  </p>
+</div>
+  </section>
+
+  <section id="reading-questions" section-title="Reading Comprehension Questions">
+    <h2>Reading Comprehension Questions</h2>
+    <ol class="spaced">
+      <li><strong>Choosing a Method:</strong> Why is method selection part of solving recurrence relations?</li>
+      <li><strong>Master Theorem Form:</strong> What form must a recurrence have before the Master Theorem can be applied directly?</li>
+      <li>
+        <strong>Iteration Pattern:</strong>
+        Why is iteration often useful for recurrences such as \(T(n)=T(n-1)+n\) or
+        \(T(n)=T(n/2)+n\)?
+      </li>
+      <li>
+        <strong>Substitution Role:</strong>
+        If someone claims that \(T(n)=O(n^2)\), what can the substitution method help you do?
+      </li>
+      <li>
+        <strong>Exact Form or Asymptotic Bound:</strong>
+        Why might the Master Theorem be less useful if you need an exact closed form?
+      </li>
+      <li>
+        <strong>Linear Recurrence Recognition:</strong>
+        Why is \(x_n=3x_{n-1}-2x_{n-2}\) a better candidate for the linear recurrence method
+        than for the Master Theorem?
+      </li>
+      <li>
+        <strong>Multiple Methods:</strong>
+        Give an example of a recurrence that can be handled by both iteration and the Master Theorem.
+      </li>
+      <li>
+        <strong>Method Failure:</strong>
+        Why does the Master Theorem not directly apply to \(T(n)=T(n-1)+n\)?
+      </li>
+      <li>
+        <strong>Overlapping Methods:</strong>
+        Can a recurrence be solved using both the Master Theorem and the linear recurrence
+        techniques from the previous page? Explain why or why not.
+        </li>
+    </ol>
+
+    <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
+    <div id="answers" class="answer" hidden>
+      <ol class="spaced">
+        <li>
+          <strong>Answer:</strong>
+          Different recurrences have different structures. Some match the Master Theorem, some
+          expand cleanly by iteration, some require a proof by substitution, and some are linear
+          recurrence relations with characteristic equations. Choosing the method is part of recognizing
+          the structure.
+        </li>
+        <li>
+          <strong>Answer:</strong>
+          It must have the form \(T(n)=aT(n/b)+f(n)\), where \(a\) and \(b\) are constants
+          with \(a\geq 1\) and \(b>1\). In the version used here, \(f(n)\) should be comparable
+          to a polynomial such as \(n^d\).
+        </li>
+        <li>
+          <strong>Answer:</strong>
+          These recurrences usually produce a simple sequence of non-recursive terms when expanded.
+          For example, \(T(n)=T(n-1)+n\) produces terms such as \(n+(n-1)+(n-2)+\cdots\), while
+          \(T(n)=T(n/2)+n\) produces terms such as \(n+n/2+n/4+\cdots\).
+        </li>
+        <li>
+          <strong>Answer:</strong>
+          The substitution method can be used to prove the claimed bound. You assume the bound holds
+          for smaller inputs, substitute that assumption into the recurrence, and then show that the
+          desired bound follows for input size \(n\).
+        </li>
+        <li>
+          <strong>Answer:</strong>
+          The Master Theorem gives an asymptotic bound such as \(\Theta(n\log n)\). It usually does
+          not give the exact constants or lower-order terms in the closed form.
+        </li>
+        <li>
+          <strong>Answer:</strong>
+          The recurrence is written in terms of previous sequence values, \(x_{n-1}\) and
+          \(x_{n-2}\), rather than a divided input size such as \(T(n/2)\). It fits the form of a
+          second-order homogeneous linear recurrence.
+        </li>
+        <li>
+          <strong>Answer:</strong>
+          One example is \(T(n)=2T(n/2)+n\). The Master Theorem gives \(\Theta(n\log n)\), and
+          iteration shows that each of the \(\log_2 n\) levels contributes \(n\).
+        </li>
+        <li>
+          <strong>Answer:</strong>
+          The recursive argument is \(n-1\), not \(n/b\) for a constant \(b>1\). Therefore it is
+          not in the divide-and-conquer form required by the Master Theorem.
+        </li>
+        <li>
+        <strong>Answer:</strong>
+        Usually no, at least not for the forms covered here. The Master Theorem applies to
+        divide-and-conquer recurrences of the form
+        \[
+            T(n)=aT(n/b)+f(n),
+        \]
+        where the recursive input is divided by a constant. Linear recurrence techniques apply
+        to recurrences such as
+        \[
+            x_n=c_1x_{n-1}+c_2x_{n-2}+\cdots+c_kx_{n-k}+f(n),
+        \]
+        where the recursive terms use previous indices. Thus \(T(n)=2T(n/2)+n\) fits the
+        Master Theorem form, while \(x_n=3x_{n-1}+2\) fits the linear recurrence form. The two
+        methods usually apply to different families of recurrences.
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="activities" section-title="In-Class Activities">
+    <h2>In-Class Activities</h2>
+    <ol class="spaced">
+      <li>
+        <strong>Sort by Method:</strong>
+        For each recurrence below, choose the method that looks most promising: substitution,
+        iteration, Master Theorem, or linear recurrence techniques. Give a one-sentence reason.
+        <ol type="a">
+          <li>\(T(n)=2T(n/2)+n\)</li>
+          <li>\(T(n)=T(n-1)+n\)</li>
+          <li>\(T(n)=4T(n/2)+n^3\)</li>
+          <li>\(x_0=1,\ x_n=3x_{n-1}+2\)</li>
+          <li>\(x_0=0,\ x_1=1,\ x_n=x_{n-1}+x_{n-2}\)</li>
+        </ol>
+      </li>
+      <li>
+        <strong>Three Methods:</strong>
+        Consider the recurrence
+        \[
+            T(n)=2T(n/2)+n^2,\qquad T(1)=1.
+        \]
+        Assume \(n\) is a power of \(2\).
+        <ol type="a">
+            <li>
+            Use the iteration method to solve the recurrence exactly. Show the first few
+            substitutions, write the expression after \(k\) substitutions, and then substitute
+            the value of \(k\) that reaches the base case.
+            </li>
+            <li>
+            Use substitution to verify the closed form you found in part (a).
+            </li>
+            <li>
+            Use the Master Theorem to verify the asymptotic complexity of your answer.
+            </li>
+        </ol>
+        </li>
+      <li>
+        <strong>Master Theorem or Not:</strong>
+        Decide whether the Master Theorem applies directly to each recurrence. If it does, apply it.
+        If it does not, explain why not.
+        <ol type="a">
+          <li>\(T(n)=3T(n/3)+n\)</li>
+          <li>\(T(n)=T(n-1)+n\)</li>
+          <li>\(T(n)=T(n/2)+T(n/3)+n\)</li>
+          <li>\(T(n)=4T(n/2)+n^2\)</li>
+        </ol>
+      </li>
+      <li>
+        <strong>Wrong Method Diagnosis:</strong>
+        For each attempted method choice below, explain what is wrong and suggest a better approach.
+        <ol type="a">
+          <li>Use the Master Theorem on \(T(n)=T(n-1)+4\).</li>
+          <li>Use a characteristic equation on \(T(n)=2T(n/2)+n\).</li>
+          <li>Use the Master Theorem to get an exact closed form for \(T(n)=2T(n/2)+n\).</li>
+        </ol>
+      </li>
+      
+      <li>
+        <strong>Can Both Apply?</strong>
+        For each recurrence below, decide whether the Master Theorem applies, whether the linear
+        recurrence techniques apply, both, or neither. Briefly justify each answer.
+        <ol type="a">
+            <li>\(T(n)=2T(n/2)+n\)</li>
+            <li>\(x_n=3x_{n-1}+2\)</li>
+            <li>\(x_n=x_{n-1}+x_{n-2}\)</li>
+            <li>\(T(n)=T(n/2)+T(n/3)+n\)</li>
+        </ol>
+        </li>
+    </ol>
+  </section>
+
+  <section id="problems" section-title="Homework Problems">
+    <h2>Homework Problems</h2>
+    <ol class="spaced">
+      <li>
+        <strong>Choose and Solve:</strong>
+        For each recurrence below, choose an appropriate method and solve it. If an exact closed
+        form is difficult or unnecessary, give a tight asymptotic bound and justify it.
+        <ol type="a">
+          <li>\(T(n)=T(n/2)+1,\quad T(1)=1\)</li>
+          <li>\(T(n)=T(n-1)+4,\quad T(1)=3\)</li>
+          <li>\(T(n)=3T(n/3)+n^2,\quad T(1)=1\)</li>
+          <li>\(x_0=2,\quad x_n=5x_{n-1}+3\)</li>
+        </ol>
+      </li>
+      <li>
+        <strong>Iteration, Substitution, and Master Theorem:</strong>
+        Consider the recurrence
+        \[
+            T(n)=3T(n/3)+n,\qquad T(1)=1.
+        \]
+        Assume \(n\) is a power of \(3\).
+        <ol type="a">
+            <li>
+            Use the iteration method to solve the recurrence exactly. Show the first few
+            substitutions, write the expression after \(k\) substitutions, and then substitute
+            the value of \(k\) that reaches the base case.
+            </li>
+            <li>
+            Use substitution to verify the closed form you found in part (a).
+            </li>
+            <li>
+            Use the Master Theorem to verify the asymptotic complexity of your answer.
+            </li>
+        </ol>
+        </li>
+        <li>
+        <strong>Iteration and Substitution:</strong>
+        Consider the recurrence
+        \[
+            T(n)=T(n-1)+2n,\qquad T(1)=2.
+        \]
+        <ol type="a">
+            <li>
+            Use the iteration method to solve the recurrence exactly. Show the first few
+            substitutions, write the expression after \(k\) substitutions, and then substitute
+            the value of \(k\) that reaches the base case.
+            </li>
+            <li>
+            Use substitution to verify the closed form you found in part (a).
+            </li>
+            <li>
+            Can this recurrence be solved using the Master Theorem? Explain why or why not.
+            </li>
+            <li>
+            Can this recurrence be solved using the first-order linear recurrence technique
+            as presented in the previous section? Explain why or why not. 
+            (Hint: read that section carefully; it is not obvious.)
+            </li>
+        </ol>
+        </li>
+        <li>
+            <strong>Iteration, Substitution, and Linear Recurrences:</strong>
+            Consider the recurrence
+            \[
+                T(n)=3T(n-1)+2,\qquad T(1)=1.
+            \]
+            <ol type="a">
+                <li>
+                Use the iteration method to solve the recurrence exactly. Show the first few
+                substitutions, write the expression after \(k\) substitutions, and then substitute
+                the value of \(k\) that reaches the base case.
+                </li>
+                <li>
+                Use substitution to verify the closed form you found in part (a).
+                </li>
+                <li>
+                Use the first-order linear recurrence technique to solve the same recurrence.
+                </li>
+                <li>
+                Can this recurrence be solved using the Master Theorem? Explain why or why not.
+                </li>
+            </ol>
+            </li>
+
+      <li>
+        <strong>Method Does Not Apply:</strong>
+        For each recurrence below, explain why the Master Theorem does not apply directly.
+        Then suggest another reasonable method or explain why the recurrence is outside the
+        methods covered here.
+        <ol type="a">
+          <li>\(T(n)=T(n-1)+n\)</li>
+          <li>\(T(n)=T(n/2)+T(n/3)+n\)</li>
+          <li>\(x_n=4x_{n-1}-4x_{n-2}\)</li>
+        </ol>
+      </li>
+      <li>
+        <strong>Mixed Challenge:</strong>
+        For each recurrence, choose a method and solve it or give a tight asymptotic bound.
+        State clearly which method you used and why. If possible, solve it by a second method.
+        If you are unable to solve it by a second method, explain why the other methods do not apply.
+        <ol type="a">
+          <li>\(T(n)=9T(n/3)+n^2,\quad T(1)=1\)</li>
+          <li>\(T(n)=T(n/2)+n^2,\quad T(1)=1\)</li>
+          <li>\(x_0=1,\quad x_1=4,\quad x_n=4x_{n-1}-4x_{n-2}\)</li>
+          <li>\(T(n)=T(n-1)+3,\quad T(1)=5\)</li>
+        </ol>
+      </li>
+    </ol>
+  </section>
+
+</body>
+</html>

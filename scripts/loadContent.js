@@ -177,11 +177,11 @@ const APPENDIX_ORDERS = {
   ],
   'Appendix/Recurrences/': [
     'Introduction',
-    'Solving Recurrence Relations',
-    'Iteration Method',
     'Substitution Method',
+    'Iteration Method',
     'Master Theorem',
-    'Linear Recurrence Relations'
+    'Linear Recurrence Relations',
+	'Mixed Practice'
   ]
 };
 

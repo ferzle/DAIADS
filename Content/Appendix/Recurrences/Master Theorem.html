@@ -7,11 +7,11 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
   <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-  <script src="../../../scripts/chapterScripts.js"></script>
-  <script src="../latex-translation.js"></script>
-  <link rel="stylesheet" href="../../../css/style.css">
-  <link rel="stylesheet" href="../../../css/chapter.css">
-  <link rel="stylesheet" href="../latex-translation.css">
+  <script src="/DAIADS/scripts/chapterScripts.js"></script>
+  <script src="/DAIADS/scripts/latex-translation.js"></script>
+  <link rel="stylesheet" href="/DAIADS/css/style.css">
+  <link rel="stylesheet" href="/DAIADS/css/chapter.css">
+  <link rel="stylesheet" href="/DAIADS/css/latex-translation.css">
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
   <script>
@@ -26,9 +26,9 @@
 
 <section id="master-theorem" section-title="Master Theorem">
 <h2>Master Theorem</h2>
-<p>We will omit the proof of the following theorem which is particularly useful for solving recurrence relations that result from the analysis of certain types of recursive algorithms--especially divide-and-conquer algorithms.</p>
+<p>The Master Theorem is a useful shortcut for solving recurrence relations that come from many divide-and-conquer algorithms. We will omit the proof, but we will use the theorem to quickly classify the growth rate of recurrences with a very specific form.</p>
 <div class="theorem">
-<p class="box-title"><strong>Theorem: Master Theorem</strong></p>
+<p class="box-title"><strong>Theorem 1: Master Theorem</strong></p>
 <p>Let \(T(n)\) be a monotonically increasing function satisfying</p>
 <div class="display-math">\[
 \begin{aligned}
@@ -47,98 +47,340 @@ T(n)=\left\{
 \right.
 \]</div>
 </div>
+<p>In practice, the main work is identifying \(a\), \(b\), and \(d\), then comparing \(a\) with \(b^d\).</p>
 <div class="example-box">
-<p class="box-title"><strong>Example</strong></p>
+<p class="box-title"><strong>Example 1</strong></p>
 <p>Use the Master Theorem to solve the recurrence</p>
 <div class="display-math">\[
-T(n) = 4T(n/2) + n, T(1)=1.
+T(n) = 4T(n/2) + n, \qquad T(1)=1.
 \]</div>
 <div class="solution-block">
 <p class="box-title"><strong>Solution</strong></p>
-<p>We have \(a=4, b=2\), and \(d = 1\). Since \(4&gt;2^1\), \(T(n)=\Theta(n^{\log_2{4}})=\Theta(n^2)\) by the third case of the Master Theorem.</p>
+<p>We have \(a=4\), \(b=2\), and \(d = 1\). Since \(4&gt;2^1\), the third case of the Master Theorem applies. Therefore,</p>
+<div class="display-math">\[
+T(n)=\Theta(n^{\log_2{4}})=\Theta(n^2).
+\]</div>
 </div>
 </div>
 <div class="example-box">
-<p class="box-title"><strong>Example</strong></p>
+<p class="box-title"><strong>Example 2</strong></p>
 <p>Use the Master Theorem to solve the recurrence</p>
 <div class="display-math">\[
-T(n) = 4T(n/2) + n^{2}, T(1)=1.
+T(n) = 4T(n/2) + n^{2}, \qquad T(1)=1.
 \]</div>
 <div class="solution-block">
 <p class="box-title"><strong>Solution</strong></p>
-<p>We have \(a=4, b=2\), and \(d=2\). Since \(4=2^2\), we have \(T(n)=\Theta(n^2\log n)\) by the second case of the Master Theorem.</p>
+<p>We have \(a=4\), \(b=2\), and \(d=2\). Since \(4=2^2\), the second case of the Master Theorem applies. Therefore,</p>
+<div class="display-math">\[
+T(n)=\Theta(n^2\log n).
+\]</div>
 </div>
 </div>
 <div class="example-box">
-<p class="box-title"><strong>Example</strong></p>
+<p class="box-title"><strong>Example 3</strong></p>
 <p>Use the Master Theorem to solve the recurrence</p>
 <div class="display-math">\[
-T(n) = 4T(n/2) + n^{3}, T(1)=1.
+T(n) = 4T(n/2) + n^{3}, \qquad T(1)=1.
 \]</div>
 <div class="solution-block">
 <p class="box-title"><strong>Solution</strong></p>
-<p>Here, \(a=4, b=2\), and \(d=3\). Since \(4&lt;2^3\), we have \(T(n)=\Theta(n^3)\) by the first case of the Master Theorem.</p>
+<p>Here, \(a=4\), \(b=2\), and \(d=3\). Since \(4&lt;2^3\), the first case of the Master Theorem applies. Therefore,</p>
+<div class="display-math">\[
+T(n)=\Theta(n^3).
+\]</div>
 </div>
 </div>
-<p>Wow.  That was easy.<span class="translation-footnote">Footnote: Almost <em>too</em> easy.</span> But the ease of use of the Master Method comes with a cost.  Well, two actually. First, notice that we do not get an <em>exact</em> solution, but only an <em>asymptotic bound</em> on the solution.  Depending on the context, this may be good enough.  If you need an exact numerical solution, the Master Method will do you no good.  But when analyzing algorithms, typically we are more interested in the asymptotic behavior.  In that case, it works great. Second, it only works for recurrences that have the exact form \(T(n)=aT(n/b)+f(n)\). It won't even work on similar recurrences, such as \(T(n)=T(n/b)+T(n/c)+f(n)\).</p>
+<p>That was quick. The ease of use of the Master Theorem comes with two costs. First, it gives an <em>asymptotic bound</em>, not an exact closed form. For algorithm analysis, that is usually what we want. If you need an exact formula, the Master Theorem will not provide it. Second, it only applies to recurrences with the exact form \(T(n)=aT(n/b)+f(n)\). It does not apply directly to similar-looking recurrences such as \(T(n)=T(n/b)+T(n/c)+f(n)\).</p>
 <div class="exercise-box">
-<p class="box-title"><strong>Exercise</strong></p>
+<p class="box-title"><strong>Exercise 1</strong></p>
 <p>Use the Master Theorem to solve the recurrence</p>
 <div class="display-math">\[
-T(n) = 2T(n/2) + 1, T(1)=1.
+T(n) = 2T(n/2) + 1, \qquad T(1)=1.
 \]</div>
 <button type="button" class="show-answer latex-answer-toggle" data-answer-target="recurrence-answer-9" aria-expanded="false">Show Answer</button>
 <div id="recurrence-answer-9" class="answer latex-answer" hidden>
-<p>Here, \(a=2, b=2\), and \(d=0\). (\(d=0\) since \(1=1\cdot n^0\).  In general, \(c=c\cdot n^0\), so when \(f(n)\) is a constant, \(d=0\).) Since \(a&gt;2^0\), we have \(T(n)=\Theta(n^{\log_aa})=\Theta(n^1)=\Theta(n)\) by the third case of the Master Theorem.</p>
+<p>Here, \(a=2\), \(b=2\), and \(d=0\). We use \(d=0\) because \(1=1\cdot n^0\). Since \(2&gt;2^0\), the third case of the Master Theorem applies. Therefore,</p>
+<div class="display-math">\[
+T(n)=\Theta(n^{\log_2 2})=\Theta(n).
+\]</div>
 </div>
 </div>
 <div class="example-box">
-<p class="box-title"><strong>Example</strong></p>
-<p>Let's redo one from a previous section. Use the Master Theorem to solve the recurrence</p>
+<p class="box-title"><strong>Example 4</strong></p>
+<p>Let's redo one we solved earlier with iteration. Use the Master Theorem to solve the recurrence</p>
 <div class="display-math">\[
 R(n) = \left\{
 \begin{array}{ll}
-1&amp;\mbox{when n = 1}\\
+1&amp;\mbox{when } n = 1\\
 2 R(n/2) + n/2 &amp; \mbox{otherwise}
 \end{array}
 \right.
 \]</div>
 <div class="solution-block">
 <p class="box-title"><strong>Solution</strong></p>
-<p>Here, we have \(a=2\), \(b=2\), and \(d=1\).  Since \(2=2^1\), \(R(n)=\Theta(n^1\log n)=\Theta(n\log n)\). Recall that in Example 28 we showed that \(R(n)=n + (\log_2 n) n/2\). Since \(n + (\log_2 n) n/2=\Theta(n\log n)\), our solution is consistent.</p>
+<p>Here, we have \(a=2\), \(b=2\), and \(d=1\), since \(n/2=\Theta(n)\). Since \(2=2^1\), the second case of the Master Theorem applies. Therefore,</p>
+<div class="display-math">\[
+R(n)=\Theta(n\log n).
+\]</div>
+<p>This is consistent with the exact solution from the iteration method:</p>
+<div class="display-math">\[
+R(n)=n+(\log_2 n)n/2=\Theta(n\log n).
+\]</div>
 </div>
 </div>
 <div class="exercise-box">
-<p class="box-title"><strong>Exercise</strong></p>
+<p class="box-title"><strong>Exercise 2</strong></p>
 <p>Use the Master Theorem to solve the recurrence</p>
 <div class="display-math">\[
-T(n)=7T(n/2)+15n^2/4, T(1)=1.
+T(n)=7T(n/2)+15n^2/4, \qquad T(1)=1.
 \]</div>
 <button type="button" class="show-answer latex-answer-toggle" data-answer-target="recurrence-answer-10" aria-expanded="false">Show Answer</button>
 <div id="recurrence-answer-10" class="answer latex-answer" hidden>
-<p>We have \(a=7\), \(b=2\), and \(d=2\).  Since \(7&gt;2^2\), the third case of the Master Theorem applies so \(T(n)=\Theta(n^{\log_{2} 7})\), which is about \(\Theta(n^{2.8})\).</p>
+<p>We have \(a=7\), \(b=2\), and \(d=2\), since \(15n^2/4=\Theta(n^2)\). Since \(7&gt;2^2\), the third case of the Master Theorem applies. Therefore,</p>
+<div class="display-math">\[
+T(n)=\Theta(n^{\log_{2} 7}).
+\]</div>
+<p>Since \(\log_2 7\approx 2.807\), this is a little larger than quadratic but smaller than cubic.</p>
 </div>
 </div>
 <div class="question-box">
-<p class="box-title"><strong>Question</strong></p>
-<p>In the solution to the previous exercise, we stated that</p>
+<p class="box-title"><strong>Question 1</strong></p>
+<p>In the solution to the previous exercise, we could say that</p>
 <blockquote>
-<p>"\(T(n)=\Theta(n^{\log_{2} 7})\), which is about \(\Theta(n^{2.8})\)."</p>
+<p>\(T(n)=\Theta(n^{\log_{2} 7})\), and \(\log_2 7\approx 2.807\).</p>
 </blockquote>
-<p>Why didn't we just say "\(T(n)=\Theta(n^{\log_{2} 7})=\Theta(n^{2.8})\)"?</p>
+<p>Why should we not replace this with \(T(n)=\Theta(n^{2.8})\)?</p>
 <button type="button" class="show-answer latex-answer-toggle" data-answer-target="recurrence-answer-11" aria-expanded="false">Show Answer</button>
 <div id="recurrence-answer-11" class="answer latex-answer" hidden>
-<p>Because it isn't true.  Although the growth rate of \(n^{\log_{2} 7}\) and \(n^{2.8}\) are close, they are not exactly the same, so \(\Theta(n^{\log_{2} 7})\neq \Theta(n^{2.8})\). We <em>could</em> say that \(T(n)=\Theta(n^{\log_{2} 7})=O(n^{2.81})\), but then we have lost the "tightness" of the bound.  And I want to be able to say "Yo dawg, that bound is really <em>tight</em>!"</p>
+<p>Because \(2.8\) is only an approximation. The functions \(n^{\log_2 7}\) and \(n^{2.8}\) do not have exactly the same growth rate, so \(\Theta(n^{\log_2 7})\neq \Theta(n^{2.8})\). We can use the decimal approximation for intuition, but the exact exponent gives the tight asymptotic bound.</p>
 </div>
 </div>
 <div class="exercise-box">
-<p class="box-title"><strong>Exercise</strong></p>
-<p>We saw in Example 24 that the complexity of binary search is given by the recurrence relation \(T(n)=T(n/2)+1\), \(T(0)=1\) (and you may assume that \(T(1)=1\)). Use the Master Theorem to solve this recurrence.</p>
+<p class="box-title"><strong>Exercise 3</strong></p>
+<p>Use the Master Theorem to solve the recurrence for the complexity of binary search:</p>
+<div class="display-math">\[
+T(n)=T(n/2)+1, \qquad T(1)=1.
+\]</div>
 <button type="button" class="show-answer latex-answer-toggle" data-answer-target="recurrence-answer-12" aria-expanded="false">Show Answer</button>
 <div id="recurrence-answer-12" class="answer latex-answer" hidden>
-<p>Here we have \(a=1\), \(b=2\), and \(d=0\).  Since \(1=2^0\), the second case of the Master Theorem tells is that \(T(n)=\Theta(n^0\log n)=\Theta(\log n)\). Since we have already seen several times that \(T(n)=\log_2 n +1\), we can notice that this answer is consistent with those.  It's a good thing.</p>
+<p>Here we have \(a=1\), \(b=2\), and \(d=0\). Since \(1=2^0\), the second case of the Master Theorem applies. Therefore,</p>
+<div class="display-math">\[
+T(n)=\Theta(n^0\log n)=\Theta(\log n).
+\]</div>
+<p>This is consistent with the exact solution \(T(n)=\log_2 n+1\) for powers of \(2\).</p>
 </div>
 </div>
+</section>
+
+<section id="reading-questions" section-title="Reading Comprehension Questions">
+  <h2>Reading Comprehension Questions</h2>
+  <ol class="spaced">
+    <li>
+      <strong>Form of the Recurrence:</strong>
+      What form must a recurrence have in order to use the Master Theorem as stated on this page?
+    </li>
+    <li>
+      <strong>Identifying the Parameters:</strong>
+      In \(T(n)=5T(n/3)+n^2\), what are \(a\), \(b\), and \(d\)?
+    </li>
+    <li>
+      <strong>Comparing Quantities:</strong>
+      After identifying \(a\), \(b\), and \(d\), what comparison determines which case of the theorem applies?
+    </li>
+    <li>
+      <strong>Exact Versus Asymptotic:</strong>
+      Why does the Master Theorem not usually give the same kind of answer as the iteration method?
+    </li>
+    <li>
+      <strong>Constant Work:</strong>
+      Why is \(d=0\) when \(f(n)\) is a positive constant?
+    </li>
+    <li>
+      <strong>Middle Case:</strong>
+      What extra factor appears in the answer when \(a=b^d\)?
+    </li>
+    <li>
+      <strong>Approximate Exponents:</strong>
+      Why is \(\Theta(n^{\log_2 7})\) not the same as \(\Theta(n^{2.8})\)?
+    </li>
+    <li>
+      <strong>When Not to Use It:</strong>
+      Why does the theorem on this page not apply directly to \(T(n)=T(n/2)+T(n/3)+n\)?
+    </li>
+  </ol>
+  <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
+  <div id="answers" class="answer" hidden>
+    <ol class="spaced">
+      <li>
+        <strong>Answer:</strong>
+        It must have the form \(T(n)=aT(n/b)+f(n)\), with one recursive term, a constant number \(a\) of subproblems, each of size \(n/b\), and non-recursive work \(f(n)=\Theta(n^d)\).
+      </li>
+      <li>
+        <strong>Answer:</strong>
+        We have \(a=5\), \(b=3\), and \(d=2\), since the non-recursive term is \(n^2\).
+      </li>
+      <li>
+        <strong>Answer:</strong>
+        Compare \(a\) with \(b^d\). The three cases are \(a&lt;b^d\), \(a=b^d\), and \(a&gt;b^d\).
+      </li>
+      <li>
+        <strong>Answer:</strong>
+        The Master Theorem gives an asymptotic bound, such as \(\Theta(n\log n)\), rather than an exact closed form. The iteration method can sometimes produce an exact formula.
+      </li>
+      <li>
+        <strong>Answer:</strong>
+        A positive constant can be written as \(c\cdot n^0\), and \(n^0=1\). Thus constant work is \(\Theta(n^0)\).
+      </li>
+      <li>
+        <strong>Answer:</strong>
+        The answer gains a logarithmic factor. If \(a=b^d\), then \(T(n)=\Theta(n^d\log n)\).
+      </li>
+      <li>
+        <strong>Answer:</strong>
+        The value \(2.8\) is only an approximation to \(\log_2 7\). Since the exponents are not exactly equal, the functions do not have exactly the same asymptotic growth rate.
+      </li>
+      <li>
+        <strong>Answer:</strong>
+        It has two recursive terms with different input sizes, \(n/2\) and \(n/3\). The theorem on this page applies to recurrences with one recursive term of the form \(aT(n/b)\).
+      </li>
+    </ol>
+  </div>
+</section>
+
+<section id="activities" section-title="In-Class Activities">
+  <h2>In-Class Activities</h2>
+  <ol class="spaced">
+    <li>
+      <strong>Parameter Hunt:</strong>
+      For each recurrence below, identify \(a\), \(b\), \(d\), and \(b^d\). Do not solve the recurrence yet.
+      <ol type="a">
+        <li>\(T(n)=3T(n/2)+n\)</li>
+        <li>\(T(n)=2T(n/4)+n^{1/2}\)</li>
+        <li>\(T(n)=8T(n/2)+n^3\)</li>
+        <li>\(T(n)=5T(n/5)+7n\)</li>
+      </ol>
+    </li>
+    <li>
+      <strong>Case Sorting:</strong>
+      Sort the following recurrences into the first, second, and third cases of the Master Theorem. Briefly justify each placement.
+      <ol type="a">
+        <li>\(T(n)=2T(n/2)+n^2\)</li>
+        <li>\(T(n)=4T(n/2)+n^2\)</li>
+        <li>\(T(n)=8T(n/2)+n^2\)</li>
+        <li>\(T(n)=9T(n/3)+n^2\)</li>
+      </ol>
+    </li>
+    <li>
+      <strong>Same \(a\) and \(b\), Different Work:</strong>
+      Compare the three recurrences
+      \[
+        T(n)=4T(n/2)+n,\qquad
+        T(n)=4T(n/2)+n^2,\qquad
+        T(n)=4T(n/2)+n^3.
+      \]
+      Explain why changing only the non-recursive work changes which case applies.
+    </li>
+    <li>
+      <strong>Does the Theorem Apply?</strong>
+      For each recurrence below, decide whether the Master Theorem on this page applies directly. If it does not, identify which part of the required form is missing.
+      <ol type="a">
+        <li>\(T(n)=2T(n/2)+n\)</li>
+        <li>\(T(n)=T(n/2)+T(n/3)+n\)</li>
+        <li>\(T(n)=3T(n-1)+n\)</li>
+        <li>\(T(n)=2T(n/2)+n\log n\)</li>
+      </ol>
+    </li>
+    <li>
+      <strong>Check a Claimed Solution:</strong>
+      A student claims that \(T(n)=2T(n/2)+n\) has solution \(\Theta(n)\) because \(f(n)=n\). Check this claim using the Master Theorem and correct it if necessary.
+    </li>
+    <li>
+      <strong>Build Your Own:</strong>
+      Write one recurrence of the form \(T(n)=aT(n/b)+n^d\) for each case of the Master Theorem. For each one, state the resulting asymptotic bound.
+    </li>
+  </ol>
+</section>
+
+<section id="problems" section-title="Homework Problems">
+  <h2>Homework Problems</h2>
+  <ol class="spaced">
+    <li>
+      <strong>First Case:</strong>
+      Use the Master Theorem to solve
+      \[
+        T(n)=2T(n/2)+n^2,\qquad T(1)=1.
+      \]
+      Identify \(a\), \(b\), \(d\), compare \(a\) with \(b^d\), and state the final \(\Theta\)-bound.
+    </li>
+    <li>
+      <strong>Second Case:</strong>
+      Use the Master Theorem to solve
+      \[
+        T(n)=3T(n/3)+n,\qquad T(1)=1.
+      \]
+      Identify the case and the final \(\Theta\)-bound.
+    </li>
+    <li>
+      <strong>Third Case:</strong>
+      Use the Master Theorem to solve
+      \[
+        T(n)=9T(n/3)+n,\qquad T(1)=1.
+      \]
+      Leave the exponent exact if needed.
+    </li>
+    <li>
+      <strong>Constant Non-Recursive Work:</strong>
+      Use the Master Theorem to solve
+      \[
+        T(n)=5T(n/2)+10,\qquad T(1)=1.
+      \]
+      Explain why \(d=0\).
+    </li>
+    <li>
+      <strong>Fractional Power:</strong>
+      Use the Master Theorem to solve
+      \[
+        T(n)=2T(n/4)+\sqrt n,\qquad T(1)=1.
+      \]
+      Be careful when computing \(b^d\).
+    </li>
+    <li>
+      <strong>Coefficient Does Not Change \(d\):</strong>
+      Use the Master Theorem to solve
+      \[
+        T(n)=6T(n/3)+25n^2,\qquad T(1)=1.
+      \]
+      Explain why the coefficient \(25\) does not affect the case.
+    </li>
+    <li>
+      <strong>Not in Master Theorem Form:</strong>
+      For each recurrence below, explain why the Master Theorem on this page does not apply directly.
+      <ol type="a">
+        <li>\(T(n)=T(n/2)+T(n/4)+n\)</li>
+        <li>\(T(n)=2T(n-1)+n\)</li>
+        <li>\(T(n)=2T(n/2)+n\log n\)</li>
+      </ol>
+    </li>
+   <li>
+      <strong>Compare with Iteration:</strong>
+      Consider the recurrence
+      \[
+        T(n)=2T(n/2)+n,
+        \qquad T(1)=1.
+      \]
+      <ol type="a">
+        <li>
+          Solve the recurrence using the iteration method. Show the first few substitutions,
+          write the expression after \(k\) substitutions, and then substitute the value of
+          \(k\) that reaches the base case.
+        </li>
+        <li>
+          Use the Master Theorem to verify the asymptotic complexity of your answer from
+          part (a).
+        </li>
+      </ol>
+    </li>
+  </ol>
 </section>
 </body>
 </html>
