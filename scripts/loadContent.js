@@ -126,11 +126,13 @@ const DATA_STRUCTURES_ORDERS = {
     'Dynamic Arrays',
   ],
   'Data Structures/Trees/': [
-    'Tree Terminology',
+    'Introduction to Trees',
     'Binary Trees',
     'Tree Traversals',
     'Binary Search Trees',
+    'Balanced Search Trees',
     'AVL Trees',
+    '2-3 Trees',
     'Red-Black Trees',
     'B-Trees'
   ],
