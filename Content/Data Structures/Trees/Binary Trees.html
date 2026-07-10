@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -23,123 +23,1941 @@
   <h1>Binary Trees</h1>
 
   <section id="overview" section-title="Overview">
-    <h2>Overview</h2>
+  <h2>Overview</h2>
+
+  <p>
+    A <strong>binary tree</strong> is a rooted tree in which each node has two distinct child
+    positions: a <strong>left child</strong> and a <strong>right child</strong>. Either position
+    may be empty, so a node may have no children, only a left child, only a right child, or both
+    children. Because the two positions are different, a node with only a left child represents
+    a different structure from a node with only a right child.
+  </p>
+
+  <p>
+  The labels <em>left</em> and <em>right</em> identify positions in the tree; by themselves,
+  they say nothing about how the stored values are related. In an ordinary binary tree, a left
+  child may contain a larger or smaller value than its parent, and the same is true of a right
+  child. More specialized structures add additional rules. For example, binary search trees
+  impose an ordering rule, AVL trees add a balancing rule, and binary heaps impose both a shape
+  rule and a heap-order rule.
+</p>
+  <p>
+    This page focuses on properties that arise specifically from having two child positions. We
+    will examine common binary-tree shapes, relationships among the number of nodes, leaves, and
+    height, linked and array-based representations, and basic recursive algorithms for computing
+    structural properties of a binary tree.
+  </p>
+</section>
+
+
+ <section id="left-right-structure" section-title="Left and Right Structure">
+  <h2>Left and Right Structure</h2>
+
+  <p>
+    In a binary tree, each node has a left-child position and a right-child position. These
+    positions exist even when one or both are empty. Thus, a node with one child does not merely
+    have a single unspecified child; it has either a left child or a right child.
+    This distinction affects the structure of the tree. 
+  </p>
+
+  <div class="example-box">
+  <strong class="example-title">Example 1: Same values, different structure</strong>
+  <p>
+    These two binary trees contain the same values, \(A\) and \(B\), but they are different
+    because \(B\) occupies a different child position.
+  </p>
+
+  <div style="display:flex; flex-wrap:wrap; gap:24px; align-items:flex-start;">
+
+    <div>
+      <p><strong>Only a left child</strong></p>
+      <svg width="200" height="140" viewBox="0 0 200 140" role="img"
+           aria-label="Binary tree with root A and left child B">
+        <line x1="100" y1="35" x2="55" y2="95" stroke="#555" stroke-width="2"/>
+
+        <circle cx="100" cy="30" r="16" fill="#f0f8ff"
+                stroke="#003366" stroke-width="2"/>
+        <text x="100" y="35" text-anchor="middle" font-size="14">A</text>
+
+        <circle cx="55" cy="95" r="16" fill="#f0f8ff"
+                stroke="#003366" stroke-width="2"/>
+        <text x="55" y="100" text-anchor="middle" font-size="14">B</text>
+
+        <text x="55" y="128" text-anchor="middle" font-size="12">left child</text>
+      </svg>
+    </div>
+
+    <div>
+      <p><strong>Only a right child</strong></p>
+      <svg width="200" height="140" viewBox="0 0 200 140" role="img"
+           aria-label="Binary tree with root A and right child B">
+        <line x1="100" y1="35" x2="145" y2="95" stroke="#555" stroke-width="2"/>
+
+        <circle cx="100" cy="30" r="16" fill="#f0f8ff"
+                stroke="#003366" stroke-width="2"/>
+        <text x="100" y="35" text-anchor="middle" font-size="14">A</text>
+
+        <circle cx="145" cy="95" r="16" fill="#f0f8ff"
+                stroke="#003366" stroke-width="2"/>
+        <text x="145" y="100" text-anchor="middle" font-size="14">B</text>
+
+        <text x="145" y="128" text-anchor="middle" font-size="12">right child</text>
+      </svg>
+    </div>
+
+  </div>
+
+  <p>
+    In the first tree, \(B\) is the left child of \(A\), and the right-child position
+    is empty. In the second tree, \(B\) is the right child of \(A\), and the left-child
+    position is empty. Since left and right are distinct positions, these are different
+    binary trees.
+  </p>
+</div>
+
+  <p>
+    Binary trees also have a natural recursive definition. A binary tree is either empty or
+    consists of a root together with a left subtree and a right subtree, where each subtree is
+    itself a binary tree. Either subtree may be empty.
+  </p>
+</section>
+
+
+<section id="shapes" section-title="Common Binary-Tree Shapes">
+  <h2>Common Binary-Tree Shapes</h2>
+
+  <p>
+    Binary trees can have many different shapes. Some shape terms describe an exact structural
+    property, while others describe a more general goal, such as keeping the height small.
+    These distinctions matter because the shape of a binary tree strongly affects its height,
+    and the height often affects the running time of tree algorithms.
+  </p>
+
+  <div class="example-box">
+  <strong class="example-title">Example 2: Full binary trees</strong>
+  <p>
+    A <strong>full binary tree</strong> is a binary tree in which every node has either
+    \(0\) children or \(2\) children. No node has exactly one child.
+  </p>
+
+  <div style="display:flex; flex-wrap:wrap; gap:28px; align-items:flex-start;">
+
+    <div>
+      <svg width="320" height="230" viewBox="0 0 320 230" role="img"
+           aria-label="A full but not perfect binary tree">
+        <line x1="160" y1="30" x2="100" y2="80" stroke="#555" stroke-width="2"/>
+        <line x1="160" y1="30" x2="220" y2="80" stroke="#555" stroke-width="2"/>
+
+        <line x1="100" y1="80" x2="70" y2="140" stroke="#555" stroke-width="2"/>
+        <line x1="100" y1="80" x2="130" y2="140" stroke="#555" stroke-width="2"/>
+
+        <line x1="70" y1="140" x2="50" y2="195" stroke="#555" stroke-width="2"/>
+        <line x1="70" y1="140" x2="90" y2="195" stroke="#555" stroke-width="2"/>
+
+        <circle cx="160" cy="25" r="15" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+        <text x="160" y="30" text-anchor="middle" font-size="13">A</text>
+
+        <circle cx="100" cy="80" r="15" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+        <text x="100" y="85" text-anchor="middle" font-size="13">B</text>
+
+        <circle cx="220" cy="80" r="15" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+        <text x="220" y="85" text-anchor="middle" font-size="13">C</text>
+
+        <circle cx="70" cy="140" r="15" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+        <text x="70" y="145" text-anchor="middle" font-size="13">D</text>
+
+        <circle cx="130" cy="140" r="15" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+        <text x="130" y="145" text-anchor="middle" font-size="13">E</text>
+
+        <circle cx="50" cy="195" r="15" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+        <text x="50" y="200" text-anchor="middle" font-size="13">F</text>
+
+        <circle cx="90" cy="195" r="15" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+        <text x="90" y="200" text-anchor="middle" font-size="13">G</text>
+      </svg>
+    </div>
+
+    <div>
+      <svg width="340" height="230" viewBox="0 0 340 230" role="img"
+           aria-label="Another full but not perfect binary tree">
+        <line x1="170" y1="30" x2="110" y2="80" stroke="#555" stroke-width="2"/>
+        <line x1="170" y1="30" x2="230" y2="80" stroke="#555" stroke-width="2"/>
+
+        <line x1="110" y1="80" x2="80" y2="140" stroke="#555" stroke-width="2"/>
+        <line x1="110" y1="80" x2="140" y2="140" stroke="#555" stroke-width="2"/>
+
+        <line x1="230" y1="80" x2="200" y2="140" stroke="#555" stroke-width="2"/>
+        <line x1="230" y1="80" x2="260" y2="140" stroke="#555" stroke-width="2"/>
+
+        <line x1="200" y1="140" x2="180" y2="195" stroke="#555" stroke-width="2"/>
+        <line x1="200" y1="140" x2="220" y2="195" stroke="#555" stroke-width="2"/>
+
+        <circle cx="170" cy="25" r="15" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+        <text x="170" y="30" text-anchor="middle" font-size="13">A</text>
+
+        <circle cx="110" cy="80" r="15" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+        <text x="110" y="85" text-anchor="middle" font-size="13">B</text>
+
+        <circle cx="230" cy="80" r="15" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+        <text x="230" y="85" text-anchor="middle" font-size="13">C</text>
+
+        <circle cx="80" cy="140" r="15" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+        <text x="80" y="145" text-anchor="middle" font-size="13">D</text>
+
+        <circle cx="140" cy="140" r="15" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+        <text x="140" y="145" text-anchor="middle" font-size="13">E</text>
+
+        <circle cx="200" cy="140" r="15" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+        <text x="200" y="145" text-anchor="middle" font-size="13">F</text>
+
+        <circle cx="260" cy="140" r="15" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+        <text x="260" y="145" text-anchor="middle" font-size="13">G</text>
+
+        <circle cx="180" cy="195" r="15" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+        <text x="180" y="200" text-anchor="middle" font-size="13">H</text>
+
+        <circle cx="220" cy="195" r="15" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+        <text x="220" y="200" text-anchor="middle" font-size="13">I</text>
+      </svg>
+    </div>
+
+  </div>
+
+  <p>
+    Both trees are full because every node has either two children or no children. Neither tree
+    is perfect (see next example), since not all leaves are at the same depth.
+  </p>
+</div>
+
+  <div class="example-box">
+    <strong class="example-title">Example 3: A perfect binary tree</strong>
     <p>
-      A <strong>binary tree</strong> is a tree in which each node has at most two children. The children are usually
-      called the <em>left child</em> and the <em>right child</em>. This left/right distinction is part of the structure:
-      swapping the two children of a node generally produces a different binary tree.
+      A <strong>perfect binary tree</strong> is a binary tree in which every internal node has
+      two children and all leaves are at the same depth.
     </p>
+
+    <svg width="320" height="190" viewBox="0 0 320 190" role="img"
+         aria-label="A perfect binary tree of height 2">
+      <line x1="160" y1="30" x2="105" y2="80" stroke="#555" stroke-width="2"/>
+      <line x1="160" y1="30" x2="215" y2="80" stroke="#555" stroke-width="2"/>
+
+      <line x1="105" y1="80" x2="75" y2="140" stroke="#555" stroke-width="2"/>
+      <line x1="105" y1="80" x2="135" y2="140" stroke="#555" stroke-width="2"/>
+
+      <line x1="215" y1="80" x2="185" y2="140" stroke="#555" stroke-width="2"/>
+      <line x1="215" y1="80" x2="245" y2="140" stroke="#555" stroke-width="2"/>
+
+      <circle cx="160" cy="25" r="15" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+      <text x="160" y="30" text-anchor="middle" font-size="13">A</text>
+
+      <circle cx="105" cy="80" r="15" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+      <text x="105" y="85" text-anchor="middle" font-size="13">B</text>
+
+      <circle cx="215" cy="80" r="15" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+      <text x="215" y="85" text-anchor="middle" font-size="13">C</text>
+
+      <circle cx="75" cy="140" r="15" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+      <text x="75" y="145" text-anchor="middle" font-size="13">D</text>
+
+      <circle cx="135" cy="140" r="15" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+      <text x="135" y="145" text-anchor="middle" font-size="13">E</text>
+
+      <circle cx="185" cy="140" r="15" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+      <text x="185" y="145" text-anchor="middle" font-size="13">F</text>
+
+      <circle cx="245" cy="140" r="15" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+      <text x="245" y="145" text-anchor="middle" font-size="13">G</text>
+    </svg>
+
     <p>
-      A plain binary tree does not require any ordering rule among the values. It is a structural idea. More specialized
-      trees add extra rules: a <a href="?path=Data%20Structures%2FTrees%2FBinary%20Search%20Trees">binary search tree</a> orders values,
-      a binary heap requires a completeness rule and a heap-order rule, and AVL/red-black trees add balancing rules.
+      Every internal node has two children, and every leaf lies at depth \(2\). Thus this tree
+      is perfect. Every perfect binary tree is also full.
+    </p>
+  </div>
+
+  <div class="example-box">
+    <strong class="example-title">Example 4: A complete binary tree</strong>
+    <p>
+      A <strong>complete binary tree</strong> is a binary tree in which every level is full
+      except possibly the last, and the last level is filled from left to right.
+    </p>
+
+    <svg width="440" height="250" viewBox="0 0 440 250" role="img"
+     aria-label="A complete binary tree of height 3">
+  <!-- Edges from root -->
+  <line x1="220" y1="28" x2="140" y2="72" stroke="#555" stroke-width="2"/>
+  <line x1="220" y1="28" x2="300" y2="72" stroke="#555" stroke-width="2"/>
+
+  <!-- Edges from second level -->
+  <line x1="140" y1="72" x2="90" y2="122" stroke="#555" stroke-width="2"/>
+  <line x1="140" y1="72" x2="190" y2="122" stroke="#555" stroke-width="2"/>
+
+  <line x1="300" y1="72" x2="350" y2="122" stroke="#555" stroke-width="2"/>
+
+  <!-- Edges to last level -->
+  <line x1="90" y1="122" x2="60" y2="182" stroke="#555" stroke-width="2"/>
+  <line x1="90" y1="122" x2="120" y2="182" stroke="#555" stroke-width="2"/>
+
+  <line x1="190" y1="122" x2="160" y2="182" stroke="#555" stroke-width="2"/>
+  <line x1="190" y1="122" x2="220" y2="182" stroke="#555" stroke-width="2"/>
+
+
+  <!-- C to F -->
+  <line x1="300" y1="72" x2="280" y2="122" stroke="#555" stroke-width="2"/>
+
+  <!-- F to L -->
+  <line x1="280" y1="122" x2="260" y2="182" stroke="#555" stroke-width="2"/>
+
+
+  <!-- Root -->
+  <circle cx="220" cy="24" r="13" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+  <text x="220" y="28" text-anchor="middle" font-size="12">A</text>
+
+  <!-- Level 1 -->
+  <circle cx="140" cy="72" r="13" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+  <text x="140" y="76" text-anchor="middle" font-size="12">B</text>
+
+  <circle cx="300" cy="72" r="13" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+  <text x="300" y="76" text-anchor="middle" font-size="12">C</text>
+
+  <!-- Level 2 -->
+  <circle cx="90" cy="122" r="13" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+  <text x="90" y="126" text-anchor="middle" font-size="12">D</text>
+
+  <circle cx="190" cy="122" r="13" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+  <text x="190" y="126" text-anchor="middle" font-size="12">E</text>
+
+  <circle cx="350" cy="122" r="13" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+  <text x="350" y="126" text-anchor="middle" font-size="12">G</text>
+
+  <!-- Level 3 -->
+  <circle cx="60" cy="182" r="13" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+  <text x="60" y="186" text-anchor="middle" font-size="12">H</text>
+
+  <circle cx="120" cy="182" r="13" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+  <text x="120" y="186" text-anchor="middle" font-size="12">I</text>
+
+  <circle cx="160" cy="182" r="13" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+  <text x="160" y="186" text-anchor="middle" font-size="12">J</text>
+
+  <circle cx="220" cy="182" r="13" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+  <text x="220" y="186" text-anchor="middle" font-size="12">K</text>
+
+
+      <!-- F -->
+    <circle cx="280" cy="122" r="13" fill="#f0f8ff"
+            stroke="#003366" stroke-width="2"/>
+    <text x="280" y="126" text-anchor="middle" font-size="12">F</text>
+
+    <!-- L -->
+    <circle cx="260" cy="182" r="13" fill="#f0f8ff"
+            stroke="#003366" stroke-width="2"/>
+    <text x="260" y="186" text-anchor="middle" font-size="12">L</text>
+</svg>
+
+    <p>
+      This tree is complete. The first three levels are full, and the last level is filled
+      from left to right with no gaps.
+    </p>
+  </div>
+
+  <div class="example-box">
+    <strong class="example-title">Example 5: A balanced binary tree</strong>
+    <p>
+      Informally, a <strong>balanced binary tree</strong> is one whose height is kept
+      proportional to \(\log n\) as the number of nodes grows. Different data structures
+      impose different balance conditions, so this term is less precise than
+      <em>full</em>, <em>perfect</em>, or <em>complete</em>.
+    </p>
+
+    <svg width="320" height="220" viewBox="0 0 320 220" role="img"
+         aria-label="One example of a balanced binary tree">
+      <line x1="160" y1="28" x2="100" y2="78" stroke="#555" stroke-width="2"/>
+      <line x1="160" y1="28" x2="220" y2="78" stroke="#555" stroke-width="2"/>
+
+      <line x1="100" y1="78" x2="70" y2="138" stroke="#555" stroke-width="2"/>
+      <line x1="100" y1="78" x2="130" y2="138" stroke="#555" stroke-width="2"/>
+
+      <line x1="220" y1="78" x2="190" y2="138" stroke="#555" stroke-width="2"/>
+
+      
+      <line x1="130" y1="138" x2="150" y2="195" stroke="#555" stroke-width="2"/>
+
+      <circle cx="160" cy="24" r="14" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+      <text x="160" y="28" text-anchor="middle" font-size="12">A</text>
+
+      <circle cx="100" cy="78" r="14" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+      <text x="100" y="82" text-anchor="middle" font-size="12">B</text>
+
+      <circle cx="220" cy="78" r="14" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+      <text x="220" y="82" text-anchor="middle" font-size="12">C</text>
+
+      <circle cx="70" cy="138" r="14" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+      <text x="70" y="142" text-anchor="middle" font-size="12">D</text>
+
+      <circle cx="130" cy="138" r="14" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+      <text x="130" y="142" text-anchor="middle" font-size="12">E</text>
+
+      <circle cx="190" cy="138" r="14" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+      <text x="190" y="142" text-anchor="middle" font-size="12">F</text>
+
+
+      <circle cx="150" cy="195" r="14" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+      <text x="150" y="199" text-anchor="middle" font-size="12">G</text>
+    </svg>
+
+    <p>
+      This tree is not perfect or complete, but it is still fairly compact. Its height is small
+      compared with the number of nodes, which is the main idea behind balance.
+    </p>
+  </div>
+
+  <div class="example-box">
+    <strong class="example-title">Example 6: A degenerate binary tree</strong>
+    <p>
+      A <strong>degenerate binary tree</strong> is a binary tree in which every internal node has
+      exactly one child. It behaves much like a linked list. If every child lies on the same side,
+      the tree is called <strong>skewed</strong>.
+    </p>
+
+    <svg width="260" height="320" viewBox="0 0 260 320" role="img"
+         aria-label="A right-skewed degenerate binary tree">
+      <line x1="60" y1="28" x2="90" y2="78" stroke="#555" stroke-width="2"/>
+      <line x1="90" y1="78" x2="120" y2="128" stroke="#555" stroke-width="2"/>
+      <line x1="120" y1="128" x2="150" y2="178" stroke="#555" stroke-width="2"/>
+      <line x1="150" y1="178" x2="180" y2="228" stroke="#555" stroke-width="2"/>
+      <line x1="180" y1="228" x2="210" y2="278" stroke="#555" stroke-width="2"/>
+
+      <circle cx="60" cy="24" r="14" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+      <text x="60" y="28" text-anchor="middle" font-size="12">A</text>
+
+      <circle cx="90" cy="78" r="14" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+      <text x="90" y="82" text-anchor="middle" font-size="12">B</text>
+
+      <circle cx="120" cy="128" r="14" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+      <text x="120" y="132" text-anchor="middle" font-size="12">C</text>
+
+      <circle cx="150" cy="178" r="14" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+      <text x="150" y="182" text-anchor="middle" font-size="12">D</text>
+
+      <circle cx="180" cy="228" r="14" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+      <text x="180" y="232" text-anchor="middle" font-size="12">E</text>
+
+      <circle cx="210" cy="278" r="14" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+      <text x="210" y="282" text-anchor="middle" font-size="12">F</text>
+    </svg>
+
+    <p>
+      This is a right-skewed binary tree. Its height is large compared with its number of nodes,
+      so operations that follow root-to-leaf paths may become much slower.
+    </p>
+  </div>
+
+    <p>
+      A perfect binary tree is both full and complete. A complete binary tree need not be full,
+      and a full binary tree need not be complete. The term <em>balanced</em> is broader: it
+      usually means that the height stays relatively small, not that the tree has one exact shape.
+    </p>
+</section>
+
+
+<section id="structural-properties" section-title="Structural Properties">
+  <h2>Structural Properties</h2>
+
+  <p>
+    Because each node in a binary tree has at most two children, binary trees satisfy several
+    useful counting relationships. These relationships connect the depth, height, number of
+    nodes, and number of leaves of a tree.
+  </p>
+
+<section id="nodes-at-depth" section-title="Nodes at a Given Depth">
+  <h3>Nodes at a Given Depth</h3>
+
+  <p>
+    The root is the only node at depth \(0\), so there can be at most \(1=2^0\) node at that
+    depth. Each node can have at most two children, so each depth can contain at most twice as
+    many nodes as the depth above it.
+  </p>
+
+  <div class="example-box">
+    <strong class="example-title">Example 7: A Perfect Binary Tree of Height 4</strong>
+
+  <p>
+    The perfect binary tree below has the maximum possible number of nodes at every depth.
+    Notice that the number of nodes doubles as we move from one depth to the next.
+  </p>
+
+  <svg width="620" height="250" viewBox="0 0 620 250" role="img"
+     aria-label="Perfect binary tree of height 4 with 1, 2, 4, 8, and 16 nodes at successive depths">
+
+  <!-- Depth labels and node counts -->
+  <text x="5" y="34" font-size="14">
+    depth 0: 1 = 2<tspan baseline-shift="super" font-size="8">0</tspan> nodes
+  </text>
+
+  <text x="5" y="84" font-size="14">
+    depth 1: 2 = 2<tspan baseline-shift="super" font-size="8">1</tspan> nodes
+  </text>
+
+  <text x="5" y="134" font-size="14">
+    depth 2: 4 = 2<tspan baseline-shift="super" font-size="8">2</tspan> nodes
+  </text>
+
+  <text x="5" y="184" font-size="14">
+    depth 3: 8 = 2<tspan baseline-shift="super" font-size="8">3</tspan> nodes
+  </text>
+
+  <text x="5" y="234" font-size="14">
+    depth 4: 16 = 2<tspan baseline-shift="super" font-size="8">4</tspan> nodes
+  </text>
+
+  <g transform="translate(15 0)">
+
+    <!-- Depth 0 to depth 1 -->
+    <line x1="360" y1="30" x2="240" y2="80" stroke="#555" stroke-width="1.4"/>
+    <line x1="360" y1="30" x2="480" y2="80" stroke="#555" stroke-width="1.4"/>
+
+    <!-- Depth 1 to depth 2 -->
+    <line x1="240" y1="80" x2="180" y2="130" stroke="#555" stroke-width="1.4"/>
+    <line x1="240" y1="80" x2="300" y2="130" stroke="#555" stroke-width="1.4"/>
+    <line x1="480" y1="80" x2="420" y2="130" stroke="#555" stroke-width="1.4"/>
+    <line x1="480" y1="80" x2="540" y2="130" stroke="#555" stroke-width="1.4"/>
+
+    <!-- Depth 2 to depth 3 -->
+    <line x1="180" y1="130" x2="150" y2="180" stroke="#555" stroke-width="1.4"/>
+    <line x1="180" y1="130" x2="210" y2="180" stroke="#555" stroke-width="1.4"/>
+
+    <line x1="300" y1="130" x2="270" y2="180" stroke="#555" stroke-width="1.4"/>
+    <line x1="300" y1="130" x2="330" y2="180" stroke="#555" stroke-width="1.4"/>
+
+    <line x1="420" y1="130" x2="390" y2="180" stroke="#555" stroke-width="1.4"/>
+    <line x1="420" y1="130" x2="450" y2="180" stroke="#555" stroke-width="1.4"/>
+
+    <line x1="540" y1="130" x2="510" y2="180" stroke="#555" stroke-width="1.4"/>
+    <line x1="540" y1="130" x2="570" y2="180" stroke="#555" stroke-width="1.4"/>
+
+    <!-- Depth 3 to depth 4 -->
+    <line x1="150" y1="180" x2="135" y2="230" stroke="#555" stroke-width="1.4"/>
+    <line x1="150" y1="180" x2="165" y2="230" stroke="#555" stroke-width="1.4"/>
+
+    <line x1="210" y1="180" x2="195" y2="230" stroke="#555" stroke-width="1.4"/>
+    <line x1="210" y1="180" x2="225" y2="230" stroke="#555" stroke-width="1.4"/>
+
+    <line x1="270" y1="180" x2="255" y2="230" stroke="#555" stroke-width="1.4"/>
+    <line x1="270" y1="180" x2="285" y2="230" stroke="#555" stroke-width="1.4"/>
+
+    <line x1="330" y1="180" x2="315" y2="230" stroke="#555" stroke-width="1.4"/>
+    <line x1="330" y1="180" x2="345" y2="230" stroke="#555" stroke-width="1.4"/>
+
+    <line x1="390" y1="180" x2="375" y2="230" stroke="#555" stroke-width="1.4"/>
+    <line x1="390" y1="180" x2="405" y2="230" stroke="#555" stroke-width="1.4"/>
+
+    <line x1="450" y1="180" x2="435" y2="230" stroke="#555" stroke-width="1.4"/>
+    <line x1="450" y1="180" x2="465" y2="230" stroke="#555" stroke-width="1.4"/>
+
+    <line x1="510" y1="180" x2="495" y2="230" stroke="#555" stroke-width="1.4"/>
+    <line x1="510" y1="180" x2="525" y2="230" stroke="#555" stroke-width="1.4"/>
+
+    <line x1="570" y1="180" x2="555" y2="230" stroke="#555" stroke-width="1.4"/>
+    <line x1="570" y1="180" x2="585" y2="230" stroke="#555" stroke-width="1.4"/>
+
+    <!-- Depth 0 -->
+    <circle cx="360" cy="30" r="8" fill="#f0f8ff"
+            stroke="#003366" stroke-width="1.5"/>
+
+    <!-- Depth 1 -->
+    <circle cx="240" cy="80" r="8" fill="#f0f8ff"
+            stroke="#003366" stroke-width="1.5"/>
+    <circle cx="480" cy="80" r="8" fill="#f0f8ff"
+            stroke="#003366" stroke-width="1.5"/>
+
+    <!-- Depth 2 -->
+    <circle cx="180" cy="130" r="8" fill="#f0f8ff"
+            stroke="#003366" stroke-width="1.5"/>
+    <circle cx="300" cy="130" r="8" fill="#f0f8ff"
+            stroke="#003366" stroke-width="1.5"/>
+    <circle cx="420" cy="130" r="8" fill="#f0f8ff"
+            stroke="#003366" stroke-width="1.5"/>
+    <circle cx="540" cy="130" r="8" fill="#f0f8ff"
+            stroke="#003366" stroke-width="1.5"/>
+
+    <!-- Depth 3 -->
+    <circle cx="150" cy="180" r="7" fill="#f0f8ff"
+            stroke="#003366" stroke-width="1.5"/>
+    <circle cx="210" cy="180" r="7" fill="#f0f8ff"
+            stroke="#003366" stroke-width="1.5"/>
+    <circle cx="270" cy="180" r="7" fill="#f0f8ff"
+            stroke="#003366" stroke-width="1.5"/>
+    <circle cx="330" cy="180" r="7" fill="#f0f8ff"
+            stroke="#003366" stroke-width="1.5"/>
+    <circle cx="390" cy="180" r="7" fill="#f0f8ff"
+            stroke="#003366" stroke-width="1.5"/>
+    <circle cx="450" cy="180" r="7" fill="#f0f8ff"
+            stroke="#003366" stroke-width="1.5"/>
+    <circle cx="510" cy="180" r="7" fill="#f0f8ff"
+            stroke="#003366" stroke-width="1.5"/>
+    <circle cx="570" cy="180" r="7" fill="#f0f8ff"
+            stroke="#003366" stroke-width="1.5"/>
+
+    <!-- Depth 4 -->
+    <circle cx="135" cy="230" r="6" fill="#f0f8ff"
+            stroke="#003366" stroke-width="1.5"/>
+    <circle cx="165" cy="230" r="6" fill="#f0f8ff"
+            stroke="#003366" stroke-width="1.5"/>
+    <circle cx="195" cy="230" r="6" fill="#f0f8ff"
+            stroke="#003366" stroke-width="1.5"/>
+    <circle cx="225" cy="230" r="6" fill="#f0f8ff"
+            stroke="#003366" stroke-width="1.5"/>
+    <circle cx="255" cy="230" r="6" fill="#f0f8ff"
+            stroke="#003366" stroke-width="1.5"/>
+    <circle cx="285" cy="230" r="6" fill="#f0f8ff"
+            stroke="#003366" stroke-width="1.5"/>
+    <circle cx="315" cy="230" r="6" fill="#f0f8ff"
+            stroke="#003366" stroke-width="1.5"/>
+    <circle cx="345" cy="230" r="6" fill="#f0f8ff"
+            stroke="#003366" stroke-width="1.5"/>
+    <circle cx="375" cy="230" r="6" fill="#f0f8ff"
+            stroke="#003366" stroke-width="1.5"/>
+    <circle cx="405" cy="230" r="6" fill="#f0f8ff"
+            stroke="#003366" stroke-width="1.5"/>
+    <circle cx="435" cy="230" r="6" fill="#f0f8ff"
+            stroke="#003366" stroke-width="1.5"/>
+    <circle cx="465" cy="230" r="6" fill="#f0f8ff"
+            stroke="#003366" stroke-width="1.5"/>
+    <circle cx="495" cy="230" r="6" fill="#f0f8ff"
+            stroke="#003366" stroke-width="1.5"/>
+    <circle cx="525" cy="230" r="6" fill="#f0f8ff"
+            stroke="#003366" stroke-width="1.5"/>
+    <circle cx="555" cy="230" r="6" fill="#f0f8ff"
+            stroke="#003366" stroke-width="1.5"/>
+    <circle cx="585" cy="230" r="6" fill="#f0f8ff"
+            stroke="#003366" stroke-width="1.5"/>
+
+  </g>
+</svg>
+
+  <p>
+    At depth \(d\), this tree contains \(2^d\) nodes. A general binary tree may contain fewer
+    nodes at a depth, but it cannot contain more.
+  </p>
+</div>
+
+<p>We can easily prove that this continues to hold.</p>
+
+  <div class="theorem">
+    <p class="box-title"><strong>Theorem 1: Maximum Nodes at a Given Depth</strong></p>
+
+<p>
+  A binary tree has at most \(2^d\) nodes at depth \(d\).
+</p>
+
+<div class="proof-block">
+  <p class="box-title"><strong>Proof</strong></p>
+
+  <p>
+    We prove the result by induction on \(d\). At depth \(0\), the tree has at most one
+    node, and \(1=2^0\).
+  </p>
+
+  <p>
+    Suppose that depth \(d\) contains at most \(2^d\) nodes. Each of those nodes has at
+    most two children, so depth \(d+1\) contains at most
+    \[
+      2\cdot 2^d=2^{d+1}
+    \]
+    nodes. Therefore, a binary tree has at most \(2^d\) nodes at every depth \(d\).
+  </p>
+</div>
+
+  </div>
+
+  <p>
+    The maximum is reached only when every possible child position above depth \(d\) is occupied.
+    For example, a perfect binary tree of height at least \(d\) has exactly \(2^d\) nodes at
+    depth \(d\).
+  </p>
+
+  </section>
+
+  <section id="nodes-and-height" section-title="Nodes and Height">
+  <h3>Nodes and Height</h3>
+
+  <p>
+    A binary tree of height \(h\) has nodes at depths \(0,1,\ldots,h\). Using Theorem 1, the
+    largest possible number of nodes is
+    \[
+      1+2+4+\cdots+2^h.
+    \]
+    This is a geometric sum:
+    \[
+      1+2+4+\cdots+2^h=2^{h+1}-1.
+    \]
+  </p>
+
+  <div class="theorem">
+    <p class="box-title"><strong>Theorem 2: Maximum Nodes for a Given Height</strong></p>
+
+<p>
+  A binary tree of height \(h\) has at most
+  \[
+    2^{h+1}-1
+  \]
+  nodes. Equality holds if and only if the tree is perfect.
+</p>
+
+<div class="proof-block">
+  <p class="box-title"><strong>Proof</strong></p>
+
+  <p>
+    By Theorem 1, depth \(d\) contains at most \(2^d\) nodes. Therefore, a binary tree of
+    height \(h\) has at most
+    \[
+      \sum_{d=0}^{h}2^d=2^{h+1}-1
+    \]
+    nodes.
+  </p>
+
+  <p>
+    Equality holds exactly when every depth from \(0\) through \(h\) contains the maximum
+    possible number of nodes. This means that every internal node has two children and all
+    leaves occur at depth \(h\), which is precisely the definition of a perfect binary tree.
+  </p>
+</div>
+
+  </div>
+
+
+  <div class="theorem">
+  <p class="box-title"><strong>Theorem 3: Height Bounds for a Binary Tree</strong></p>
+
+  <p>
+    Every nonempty binary tree with \(n\) nodes and height \(h\) satisfies
+    \[
+      \lceil\log_2(n+1)\rceil-1\leq h\leq n-1.
+    \]
+    Equivalently, the lower bound may be written as
+    \[
+      \lfloor\log_2 n\rfloor\leq h.
+    \]
+  </p>
+
+  <div class="proof-block">
+    <p class="box-title"><strong>Proof</strong></p>
+
+<p>
+  By Theorem 2, a binary tree of height \(h\) has at most
+  \[
+    2^{h+1}-1
+  \]
+  nodes. Therefore,
+  \[
+    n\leq 2^{h+1}-1.
+  \]
+  Adding \(1\) to both sides gives
+  \[
+    n+1\leq 2^{h+1}.
+  \]
+  Taking base-\(2\) logarithms gives
+  \[
+    \log_2(n+1)\leq h+1,
+  \]
+  and hence
+  \[
+    \log_2(n+1)-1\leq h.
+  \]
+</p>
+
+<p>
+  The height \(h\) must be an integer. Therefore, \(h\) must be at least the
+  smallest integer greater than or equal to \(\log_2(n+1)-1\), so 
+  \[
+    h\geq \left\lceil\log_2(n+1)-1\right\rceil.
+  \]
+  Since subtracting \(1\) shifts an integer boundary by exactly \(1\),
+  \[
+    \left\lceil\log_2(n+1)-1\right\rceil
+    =
+    \lceil\log_2(n+1)\rceil-1.
+  \]
+  This proves the lower bound.
+</p>
+
+<p>
+  The same lower bound can also be written using a floor:
+  \[
+    \lceil\log_2(n+1)\rceil-1=\lfloor\log_2 n\rfloor.
+  \]
+  We leave it to the reader to supply a proof of this if they so desire.
+</p>
+
+<p>
+  For the upper bound, a binary tree with \(n\) nodes has \(n-1\) edges.
+  A root-to-leaf path cannot contain more than all \(n-1\) edges, so
+  \[
+    h\leq n-1.
+  \]
+  A degenerate binary tree has one node at each depth from \(0\) through
+  \(n-1\), so it achieves this upper bound.
+</p>
+
+  </div>
+</div>
+
+<p>
+  The lower bound is achieved by binary trees that are as compact as possible,
+  including complete binary trees. The upper bound is achieved by degenerate
+  binary trees.
+</p>
+
+</section>
+<section id="leaves-and-internal-nodes" section-title="Leaves and Internal Nodes">
+  <h3>Leaves and Internal Nodes in a Full Binary Tree</h3>
+
+  <div class="theorem">
+  <p class="box-title"><strong>Theorem 4: Number of Edges in a Tree</strong></p>
+
+  <p>
+    Every nonempty tree with \(n\) nodes has exactly \(n-1\) edges.
+  </p>
+
+  <div class="proof-block">
+    <p class="box-title"><strong>Proof</strong></p>
+    <p>
+      The root has no parent. Each of the other \(n-1\) nodes has exactly one parent and
+      therefore has exactly one edge connecting it to its parent. Thus there is one edge for
+      each non-root node, giving a total of \(n-1\) edges.
+    </p>
+  </div>
+</div>
+
+<p>
+  We can now use Theorem 4 to relate the number of leaves and internal nodes in a full
+  binary tree.
+</p>
+
+<div class="theorem">
+  <p class="box-title"><strong>Theorem 5: Leaves in a Full Binary Tree</strong></p>
+
+  <p>
+    In every nonempty full binary tree, if \(i\) is the number of internal nodes and
+    \(\ell\) is the number of leaves, then
+    \[
+      \ell=i+1.
+    \]
+  </p>
+
+  <div class="proof-block">
+    <p class="box-title"><strong>Proof</strong></p>
+
+<p>
+  The tree has \(i+\ell\) nodes, so by Theorem 4 it has
+  \[
+    i+\ell-1
+  \]
+  edges.
+</p>
+
+<p>
+  We can also count the edges by looking at the internal nodes. Every internal node in a
+  full binary tree has exactly two children, so each internal node contributes two edges
+  leading to its children. Therefore, the tree has \(2i\) edges.
+</p>
+
+<p>
+  Equating the two counts gives
+  \[
+    2i=i+\ell-1.
+  \]
+  Solving for \(\ell\), we obtain
+  \[
+    \ell=i+1.
+  \]
+</p>
+
+  </div>
+</div>
+
+<p>
+  Since the total number of nodes is \(n=i+\ell\), Theorem 5 also gives
+  \[
+    n=2i+1=2\ell-1.
+  \]
+  Solving these equations for \(i\) and \(\ell\), we obtain
+  \[
+    i=\frac{n-1}{2}
+    \qquad\text{and}\qquad
+    \ell=\frac{n+1}{2}.
+  \]
+  Therefore, every nonempty full binary tree has an odd number of nodes. Of those
+  nodes, \((n-1)/2\) are internal nodes and \((n+1)/2\) are leaves, so there is
+  exactly one more leaf than internal node.
+</p>
+
+<p>A very similar result holds for complete binary trees.</p>
+<div class="theorem">
+  <p class="box-title"><strong>Theorem 6: Leaves in a Complete Binary Tree</strong></p>
+
+  <p>
+    In every nonempty complete binary tree with \(n\) nodes, the number of internal
+    nodes is
+    \[
+      \left\lfloor\frac{n}{2}\right\rfloor,
+    \]
+    and the number of leaves is
+    \[
+      \left\lceil\frac{n}{2}\right\rceil.
+    \]
+  </p>
+
+  <div class="proof-block">
+    <p class="box-title"><strong>Proof</strong></p>
+
+<p>
+  First suppose the complete binary tree is full. By Theorem 5,
+  \[
+    i=\frac{n-1}{2}
+    \qquad\text{and}\qquad
+    \ell=\frac{n+1}{2}.
+  \]
+  In this case \(n\) is odd, so
+  \[
+    i=\left\lfloor\frac{n}{2}\right\rfloor
+    \qquad\text{and}\qquad
+    \ell=\left\lceil\frac{n}{2}\right\rceil.
+  \]
+</p>
+
+<p>
+  Now suppose the complete binary tree is not full. Because the final level is filled
+  from left to right, exactly one internal node has only one child: its left child,
+  which is the final node in the tree. Removing that final node produces a full binary
+  tree with \(n-1\) nodes.
+</p>
+
+<p>
+  Since this smaller tree is full, it has
+  \[
+    \frac{(n-1)-1}{2}=\frac{n-2}{2}
+  \]
+  internal nodes and
+  \[
+    \frac{(n-1)+1}{2}=\frac{n}{2}
+  \]
+  leaves.
+</p>
+
+<p>
+  Adding the removed node back changes its parent from a leaf into an internal node,
+  while the added node becomes a new leaf. Therefore, the number of leaves does not
+  change, and the number of internal nodes increases by one. The original tree has
+  \[
+    i=\frac{n-2}{2}+1=\frac{n}{2}
+    \qquad\text{and}\qquad
+    \ell=\frac{n}{2}.
+  \]
+  Since \(n\) is even in this case,
+  \[
+    i=\left\lfloor\frac{n}{2}\right\rfloor
+    \qquad\text{and}\qquad
+    \ell=\left\lceil\frac{n}{2}\right\rceil.
+  \]
+</p>
+  </div>
+</div>
+
+<p>
+  Thus, in a complete binary tree, the number of leaves is either equal to the number
+  of internal nodes or exactly one larger. If \(n\) is even, the two numbers are equal;
+  if \(n\) is odd, there is one more leaf than internal node. This fact is especially
+  useful when complete binary trees are stored as arrays, as in binary heaps.
+</p>
+</section>
+</section>
+
+<section id="representations" section-title="Representations">
+  <h2>Representations</h2>
+  <section id="Introduction" section-title="Introduction">
+    <h3>Introduction</h3>
+  <p>
+    There are two common ways to represent a binary tree in memory. The most flexible
+    method stores one record for each node, together with references to its left and
+    right children. Another method stores the tree implicitly in an array, where the
+    position of a node determines the positions of its children and parent. The linked-node
+    representation works well for binary trees of any shape, while the array
+    representation is especially convenient for complete binary trees.
+  </p>
+
+  <p>
+    We will use the following two binary trees to compare these representations. The
+    first tree is complete but not perfect. The second is a right-skewed degenerate
+    binary tree.
+  </p>
+
+  <div style="display:flex; flex-wrap:wrap; gap:36px; align-items:flex-start;">
+    <div>
+      <p><strong>Complete binary tree</strong></p>
+
+  <svg width="340" height="190" viewBox="0 0 340 190" role="img"
+       aria-label="Complete binary tree with nodes A through F">
+    <!-- Edges -->
+    <line x1="170" y1="30" x2="95" y2="85" stroke="#555" stroke-width="2"/>
+    <line x1="170" y1="30" x2="245" y2="85" stroke="#555" stroke-width="2"/>
+
+    <line x1="95" y1="85" x2="55" y2="145" stroke="#555" stroke-width="2"/>
+    <line x1="95" y1="85" x2="135" y2="145" stroke="#555" stroke-width="2"/>
+
+    <line x1="245" y1="85" x2="215" y2="145" stroke="#555" stroke-width="2"/>
+
+    <!-- Nodes -->
+    <circle cx="170" cy="30" r="15" fill="#f0f8ff"
+            stroke="#003366" stroke-width="2"/>
+    <text x="170" y="35" text-anchor="middle" font-size="13">A</text>
+
+    <circle cx="95" cy="85" r="15" fill="#f0f8ff"
+            stroke="#003366" stroke-width="2"/>
+    <text x="95" y="90" text-anchor="middle" font-size="13">B</text>
+
+    <circle cx="245" cy="85" r="15" fill="#f0f8ff"
+            stroke="#003366" stroke-width="2"/>
+    <text x="245" y="90" text-anchor="middle" font-size="13">C</text>
+
+    <circle cx="55" cy="145" r="15" fill="#f0f8ff"
+            stroke="#003366" stroke-width="2"/>
+    <text x="55" y="150" text-anchor="middle" font-size="13">D</text>
+
+    <circle cx="135" cy="145" r="15" fill="#f0f8ff"
+            stroke="#003366" stroke-width="2"/>
+    <text x="135" y="150" text-anchor="middle" font-size="13">E</text>
+
+    <circle cx="215" cy="145" r="15" fill="#f0f8ff"
+            stroke="#003366" stroke-width="2"/>
+    <text x="215" y="150" text-anchor="middle" font-size="13">F</text>
+  </svg>
+</div>
+
+<div>
+  <p><strong>Right-skewed degenerate binary tree</strong></p>
+
+  <svg width="270" height="240" viewBox="0 0 270 240" role="img"
+       aria-label="Right-skewed degenerate binary tree with nodes A through D">
+    <!-- Edges -->
+    <line x1="50" y1="30" x2="105" y2="85" stroke="#555" stroke-width="2"/>
+    <line x1="105" y1="85" x2="160" y2="140" stroke="#555" stroke-width="2"/>
+    <line x1="160" y1="140" x2="215" y2="195" stroke="#555" stroke-width="2"/>
+
+    <!-- Nodes -->
+    <circle cx="50" cy="25" r="14" fill="#f0f8ff"
+            stroke="#003366" stroke-width="2"/>
+    <text x="50" y="30" text-anchor="middle" font-size="12">A</text>
+
+    <circle cx="105" cy="85" r="14" fill="#f0f8ff"
+            stroke="#003366" stroke-width="2"/>
+    <text x="105" y="90" text-anchor="middle" font-size="12">B</text>
+
+    <circle cx="160" cy="140" r="14" fill="#f0f8ff"
+            stroke="#003366" stroke-width="2"/>
+    <text x="160" y="145" text-anchor="middle" font-size="12">C</text>
+
+    <circle cx="215" cy="195" r="14" fill="#f0f8ff"
+            stroke="#003366" stroke-width="2"/>
+    <text x="215" y="200" text-anchor="middle" font-size="12">D</text>
+  </svg>
+</div>
+
+  </div>
+  </section>
+
+  <section id="linked-node-representation"
+           section-title="Linked-Node Representation">
+    <h3>Linked-Node Representation</h3>
+<p>
+  In the linked-node representation, each tree node is represented by a separate
+  node object or record. Each record stores a value, a reference to the left child,
+  and a reference to the right child.
+</p>
+
+<pre><code>BinaryNode:
+value
+left
+right</code></pre>
+
+<p>
+  If a child position is empty, the corresponding reference is <code>null</code>.
+  The tree itself is represented by a reference to its root. For an empty tree, the
+  root reference is <code>null</code>.
+</p>
+
+<p>
+  The individual node records may be stored in different locations in memory, just like nodes
+  in a linked list. 
+  In the examples below, we place the records together in tables only to make their values
+  and child references easier to compare. The table rows do not imply that the nodes
+  are stored next to one another.
+</p>
+
+<div class="example-box">
+    <strong class="box-title">Example 8: Linked Representation of the Complete Tree</strong>
+
+  <p>
+    The complete tree shown above is represented by six separate node records.
+  </p>
+
+  <table class="example-table">
+    <thead>
+      <tr>
+        <th>Node</th>
+        <th>Left</th>
+        <th>Right</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>\(A\)</td>
+        <td>\(B\)</td>
+        <td>\(C\)</td>
+      </tr>
+      <tr>
+        <td>\(B\)</td>
+        <td>\(D\)</td>
+        <td>\(E\)</td>
+      </tr>
+      <tr>
+        <td>\(C\)</td>
+        <td>\(F\)</td>
+        <td><code>null</code></td>
+      </tr>
+      <tr>
+        <td>\(D\)</td>
+        <td><code>null</code></td>
+        <td><code>null</code></td>
+      </tr>
+      <tr>
+        <td>\(E\)</td>
+        <td><code>null</code></td>
+        <td><code>null</code></td>
+      </tr>
+      <tr>
+        <td>\(F\)</td>
+        <td><code>null</code></td>
+        <td><code>null</code></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>
+    The root reference points to \(A\). The left and right references stored in
+    \(A\) point to \(B\) and \(C\), respectively. Node \(C\) has a left child but
+    no right child, so its right reference is <code>null</code>. 
+    Since \(D\), \(E\), and \(F\) are leaves, both of their child references are <code>null</code>.
+  </p>
+</div>
+
+<div class="example-box">
+    <strong class="box-title">Example 9: Linked Representation of the Degenerate Tree</strong>
+
+  <p>
+    The same representation works without modification for the degenerate tree.
+  </p>
+
+  <table class="example-table">
+    <thead>
+      <tr>
+        <th>Node</th>
+        <th>Left</th>
+        <th>Right</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>\(A\)</td>
+        <td><code>null</code></td>
+        <td>\(B\)</td>
+      </tr>
+      <tr>
+        <td>\(B\)</td>
+        <td><code>null</code></td>
+        <td>\(C\)</td>
+      </tr>
+      <tr>
+        <td>\(C\)</td>
+        <td><code>null</code></td>
+        <td>\(D\)</td>
+      </tr>
+      <tr>
+        <td>\(D\)</td>
+        <td><code>null</code></td>
+        <td><code>null</code></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>
+    Only the four existing nodes are stored. The shape of the tree does not cause
+    any additional node records to be allocated. The unused left-child positions
+    are represented by null references.
+  </p>
+</div>
+
+  </section>
+
+  <section id="array-representation" section-title="Array Representation">
+    <h3>Array Representation</h3>
+<p>
+  A binary tree can also be represented implicitly in an array. The root is stored
+  at index \(0\), and the nodes are assigned indices according to the positions they
+  would occupy in a complete binary tree.
+</p>
+
+<p>
+  For zero-based indexing, if a node is stored at index \(i\), then
+  \[
+    \operatorname{left}(i)=2i+1,
+  \]
+  \[
+    \operatorname{right}(i)=2i+2,
+  \]
+  and, for \(i>0\),
+  \[
+    \operatorname{parent}(i)=
+    \left\lfloor\frac{i-1}{2}\right\rfloor.
+  \]
+</p>
+
+<p>
+  Unlike the linked representation, the array does not need to store explicit
+  child references. The location of a node determines the locations of its parent
+  and children.
+</p>
+
+<div class="example-box">
+    <strong class="box-title">Example 10: Array Representation of the Complete Tree</strong>
+
+  <p>
+    The complete tree fits into consecutive array positions when its nodes are
+    stored in level order:
+  </p>
+
+  <table class="example-table">
+    <thead>
+      <tr>
+        <th>Index</th>
+        <th>\(0\)</th>
+        <th>\(1\)</th>
+        <th>\(2\)</th>
+        <th>\(3\)</th>
+        <th>\(4\)</th>
+        <th>\(5\)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th>Value</th>
+        <td>\(A\)</td>
+        <td>\(B\)</td>
+        <td>\(C\)</td>
+        <td>\(D\)</td>
+        <td>\(E\)</td>
+        <td>\(F\)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>
+    For example, \(B\) is stored at index \(1\). Its children are found at
+    \[
+      2(1)+1=3
+      \qquad\text{and}\qquad
+      2(1)+2=4,
+    \]
+    which contain \(D\) and \(E\) as expected.
+  </p>
+
+  <p>
+    Node \(C\) is stored at index \(2\). Its left child is at index
+    \[
+      2(2)+1=5,
+    \]
+    which contains \(F\). Its right-child position would be index \(6\), but the
+    array ends at index \(5\), so \(C\) has no right child.
+  </p>
+
+  <p>
+    All six array positions are occupied. No explicit left or right references are
+    needed, and no array positions are wasted.
+  </p>
+</div>
+
+<div class="example-box">
+    <strong class="box-title">Example 11: Array Representation of the Degenerate Tree</strong>
+
+  <p>
+    The array representation is much less compact for the right-skewed degenerate
+    tree. The nodes must be placed at indices \(0\), \(2\), \(6\), and \(14\).
+  </p>
+
+  <div style="overflow-x:auto;">
+    <table class="example-table">
+      <thead>
+        <tr>
+          <th>Index</th>
+          <th>\(0\)</th>
+          <th>\(1\)</th>
+          <th>\(2\)</th>
+          <th>\(3\)</th>
+          <th>\(4\)</th>
+          <th>\(5\)</th>
+          <th>\(6\)</th>
+          <th>\(7\)</th>
+          <th>\(8\)</th>
+          <th>\(9\)</th>
+          <th>\(10\)</th>
+          <th>\(11\)</th>
+          <th>\(12\)</th>
+          <th>\(13\)</th>
+          <th>\(14\)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>Value</th>
+          <td>\(A\)</td>
+          <td>-</td>
+          <td>\(B\)</td>
+          <td>-</td>
+          <td>-</td>
+          <td>-</td>
+          <td>\(C\)</td>
+          <td>-</td>
+          <td>-</td>
+          <td>-</td>
+          <td>-</td>
+          <td>-</td>
+          <td>-</td>
+          <td>-</td>
+          <td>\(D\)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>
+    A dash represents an unused array position. Since \(B\) is the right child of
+    \(A\), it must be stored at index
+    \[
+      2(0)+2=2.
+    \]
+    Since \(C\) is the right child of \(B\), it must be stored at index
+    \[
+      2(2)+2=6.
+    \]
+    Similarly, \(D\) must be stored at index
+    \[
+      2(6)+2=14.
+    \]
+  </p>
+
+  <p>
+    Thus, an array with at least \(15\) positions is needed to store only four
+    nodes. Eleven of those positions are unused.
+  </p>
+
+  <p>
+    More generally, a node at depth \(d\) in a completely right-skewed tree is
+    stored at index
+    \[
+      2^{d+1}-2.
+    \]
+    A right-skewed tree of height \(h\) therefore requires an array with at least
+    \[
+      2^{h+1}-1
+    \]
+    positions, even though the tree contains only \(h+1\) nodes. The amount of
+    wasted space grows rapidly as the tree becomes taller.
+  </p>
+</div>
+
+  </section>
+
+  <section id="representation-comparison"
+           section-title="Comparing the Representations">
+    <h3>Comparing the Representations</h3>
+<p>
+  The two examples show that neither representation is always best. The linked-node
+  representation uses the same amount of structural space regardless of the shape of
+  the tree, while the array representation is compact only when the occupied positions
+  are close together. The following table summarizes the main tradeoffs.
+</p>
+
+<table class="example-table left-top-align">
+  <thead>
+    <tr>
+      <th>Feature</th>
+      <th>Linked-Node Representation</th>
+      <th>Array Representation</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Stored information</td>
+      <td>Each node stores a value and two child references.</td>
+      <td>Each occupied array position stores a value; relationships are determined by indices.</td>
+    </tr>
+    <tr>
+      <td>Tree shapes</td>
+      <td>Works naturally for binary trees of any shape.</td>
+      <td>Works best for complete or nearly complete binary trees.</td>
+    </tr>
+    <tr>
+      <td>Space usage</td>
+      <td>Stores only existing nodes, but each node requires two references.</td>
+      <td>Requires no child references, but sparse trees may leave many positions unused.</td>
+    </tr>
+    <tr>
+      <td>Finding children</td>
+      <td>Follow the stored left or right reference.</td>
+      <td>Compute \(2i+1\) or \(2i+2\).</td>
+    </tr>
+    <tr>
+      <td>Finding the parent</td>
+      <td>Requires a parent reference or a search from the root.</td>
+      <td>Compute \(\lfloor(i-1)/2\rfloor\).</td>
+    </tr>
+   <tr>
+    <td>Changing the shape</td>
+    <td>
+      References can be changed to move or reconnect a subtree without moving the
+      unrelated node records.
+    </td>
+    <td>
+      Moving or reconnecting a subtree is more difficult because its nodes may need to
+      be copied to new array positions. Shape changes can also create gaps and waste space.
+    </td>
+  </tr>
+  </tbody>
+</table>
+
+<p>
+  The linked-node representation is generally the better choice when the tree may
+  be sparse, unbalanced, or frequently reorganized. Binary search trees, AVL trees,
+  and many other general binary-tree structures are usually represented this way.
+</p>
+
+<p>
+  The array representation is especially effective when the tree is complete and
+  remains complete. Its nodes occupy consecutive positions, parent and child
+  locations can be computed in constant time, and no space is needed for child
+  references. Binary heaps use this representation because their shape condition
+  requires the tree to remain complete.
+</p>
+
+<p>
+  Neither representation is universally better. The appropriate choice depends
+  primarily on the shapes the tree may take and the operations that must be
+  supported.
+</p>
+
+  </section>
+</section>
+
+<section id="recursive-algorithms" section-title="Basic Recursive Algorithms">
+  <h2>Basic Recursive Algorithms</h2>
+<section id="introduction" section-title="Introduction">
+    <h3>Introduction</h3>
+  <p>
+    The recursive structure of a binary tree leads naturally to recursive algorithms.
+    A nonempty binary tree consists of a root, a left subtree, and a right subtree, and
+    either subtree may be empty. Consequently, many binary-tree algorithms follow the
+    same general pattern:
+  </p>
+
+  <ol>
+    <li>Handle the empty-tree base case.</li>
+    <li>Recursively process the left subtree.</li>
+    <li>Recursively process the right subtree.</li>
+    <li>Combine the results with information from the root.</li>
+  </ol>
+
+  <p>
+    The algorithms in this section compute structural properties of a tree. They do not
+    depend on the values stored in its nodes.
+  </p>
+  <p>
+  In the following descriptions, \(T\) denotes the binary tree currently being
+  processed, and \(T_{\mathrm{left}}\) and \(T_{\mathrm{right}}\) denote its left
+  and right subtrees. In the pseudocode, however, the algorithm does not receive a
+  separate tree object. Instead, the parameter <code>node</code> is a reference to
+  the root node of \(T\). The references <code>node.left</code> and
+  <code>node.right</code> identify the roots of \(T_{\mathrm{left}}\) and
+  \(T_{\mathrm{right}}\), and a null reference represents an empty tree.
+</p>
+
+</section>
+
+<section id="counting-nodes" section-title="Counting Nodes">
+  <h3>Counting Nodes</h3>
+
+  <p>
+    We want to determine the number of nodes in a binary tree, which is called the
+    <strong>size</strong> of the tree. Let \(\operatorname{size}(T)\) denote the
+    number of nodes in \(T\). An empty tree has size \(0\). A nonempty tree consists
+    of its root, its left subtree, and its right subtree. Therefore,
+    \[
+      \operatorname{size}(T)
+      =
+      1+\operatorname{size}(T_{\mathrm{left}})
+      +\operatorname{size}(T_{\mathrm{right}}).
+    \]
+    The \(1\) counts the root of \(T\). This recursive description leads directly
+    to a recursive algorithm.
+  </p>
+
+  <p>
+    In the pseudocode, <code>node</code> is a reference to the root of the tree or
+    subtree currently being processed. A null reference represents an empty subtree.
+  </p>
+
+  <pre><code>size(node):
+    if node = null:
+        return 0
+
+    return 1 + size(node.left) + size(node.right)</code></pre>
+
+  <p>
+    Each call counts its current node and then asks the same question of the subtrees
+    rooted at <code>node.left</code> and <code>node.right</code>. When a child reference
+    is null, the corresponding recursive call returns \(0\) since there are no nodes in an empty subtree.
+  </p>
+</section>
+
+<section id="computing-height" section-title="Computing Height">
+  <h3>Computing Height</h3>
+
+  <p>
+    Recall that the height of a node is the number of edges from that node down to
+    a deepest leaf. A nonempty tree has a left subtree and a right subtree, either
+    of which may be empty. The height of the tree is one more than the greater of
+    the heights of those two subtrees:
+    \[
+      \operatorname{height}(T)
+      =
+      1+\max\left\{
+        \operatorname{height}(T_{\mathrm{left}}),
+        \operatorname{height}(T_{\mathrm{right}})
+      \right\}.
+    \]
+    The larger subtree height determines how far the tree extends below the root,
+    and the added \(1\) accounts for the edge from the root to that subtree.
+  </p>
+
+  <p>
+    We define the height of an empty tree to be \(-1\). This convention makes the
+    formula work correctly for a leaf. Since both subtrees of a leaf are empty, their
+    heights are both \(-1\), so
+    \[
+      \operatorname{height}(T)
+      =
+      1+\max\{-1,-1\}
+      =
+      0.
+    \]
+    Thus, a leaf has height \(0\), as required.
+  </p>
+
+  <p>
+    This recursive description leads to the following algorithm.
+  </p>
+
+  <pre><code>height(node):
+    if node = null:
+        return -1
+
+    leftHeight = height(node.left)
+    rightHeight = height(node.right)
+
+    return 1 + max(leftHeight, rightHeight)</code></pre>
+
+  <p>
+    Each call first computes the heights of the two subtrees rooted at
+    <code>node.left</code> and <code>node.right</code>. It then uses the larger
+    value and adds \(1\) to obtain the height of the current node.
+  </p>
+
+  <div class="remark-box">
+    <p class="box-title"><strong>Remark</strong></p>
+
+<p>
+  Some sources count nodes rather than edges when defining height. Under that
+  convention, an empty tree has height \(0\) and a leaf has height \(1\). We
+  count edges, so an empty tree has height \(-1\) and a leaf has height \(0\).
+  Neither of these conventions is more correct than the other, but it is important to be
+  aware of which one is being used in a particular context.
+</p>
+  </div>
+</section>
+
+<font size="+4" color="red">I am here!</font>
+
+  <section id="counting-leaves" section-title="Counting Leaves">
+    <h3>Counting Leaves</h3>
+
+<p>
+  An empty tree contains no leaves. A nonempty node is a leaf exactly when both of
+  its child references are null. If the node is not a leaf, the number of leaves
+  below it is the sum of the numbers of leaves in its two subtrees.
+</p>
+
+<pre><code>CountLeaves(node):
+if node = null:
+    return 0
+
+if node.left = null and node.right = null:
+    return 1
+
+return CountLeaves(node.left)
+       + CountLeaves(node.right)</code></pre>
+
+<p>
+  The separate leaf case is necessary. Without it, a leaf would make two recursive
+  calls on empty subtrees, both of which would return \(0\), and the leaf would not
+  be counted.
+</p>
+  </section>
+
+  <section id="counting-two-child-nodes"
+           section-title="Counting Nodes with Two Children">
+    <h3>Counting Nodes with Two Children</h3>
+
+<p>
+  To count nodes that have both a left and a right child, the algorithm checks the
+  current node and then recursively counts such nodes in both subtrees.
+</p>
+
+<pre><code>CountTwoChildNodes(node):
+if node = null:
+    return 0
+
+if node.left != null and node.right != null:
+    rootCount = 1
+else:
+    rootCount = 0
+
+return rootCount
+       + CountTwoChildNodes(node.left)
+       + CountTwoChildNodes(node.right)</code></pre>
+
+<p>
+  In a full binary tree, every internal node has two children. Therefore, when this
+  algorithm is applied to a full binary tree, it returns the total number of internal
+  nodes.
+</p>
+
+  </section>
+
+  <section id="recursive-algorithm-example"
+           section-title="Applying the Algorithms">
+    <h3>Applying the Algorithms</h3>
+
+<div class="example-box">
+  <p class="box-title">
+    <strong>Example 12: Structural Properties of the Example Trees</strong>
+  </p>
+
+  <p>
+    Applying the four algorithms to the complete and degenerate trees from the
+    previous section gives the following results.
+  </p>
+
+  <table class="example-table left-align">
+    <thead>
+      <tr>
+        <th>Property</th>
+        <th>Complete Tree</th>
+        <th>Degenerate Tree</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Number of nodes</td>
+        <td>\(6\)</td>
+        <td>\(4\)</td>
+      </tr>
+      <tr>
+        <td>Height</td>
+        <td>\(2\)</td>
+        <td>\(3\)</td>
+      </tr>
+      <tr>
+        <td>Number of leaves</td>
+        <td>\(3\)</td>
+        <td>\(1\)</td>
+      </tr>
+      <tr>
+        <td>Nodes with two children</td>
+        <td>\(2\)</td>
+        <td>\(0\)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>
+    In the complete tree, \(D\), \(E\), and \(F\) are leaves, while \(A\) and
+    \(B\) have two children. Node \(C\) is internal but has only one child.
+  </p>
+
+  <p>
+    In the degenerate tree, \(D\) is the only leaf. Every other node has exactly
+    one child, so no node has two children. Its height is \(3\) because the path
+    from \(A\) to \(D\) contains three edges.
+  </p>
+</div>
+  </section>
+
+  <section id="recursive-algorithm-analysis" section-title="Analysis">
+    <h3>Analysis</h3>
+
+<p>
+  Each algorithm visits every node exactly once and performs a constant amount of
+  work at each node. If the left and right subtrees contain \(n_L\) and \(n_R\)
+  nodes, respectively, then the running time satisfies
+  \[
+    T(n)=T(n_L)+T(n_R)+\Theta(1),
+  \]
+  where
+  \[
+    n_L+n_R=n-1.
+  \]
+  Therefore, each algorithm has running time
+  \[
+    \Theta(n).
+  \]
+</p>
+
+<p>
+  The recursive calls use additional stack space. At any moment, the call stack
+  contains at most one call for each node on a path from the root downward.
+  Therefore, the extra space used by the recursion is
+  \[
+    \Theta(h),
+  \]
+  where \(h\) is the height of the tree.
+</p>
+
+<p>
+  For a complete binary tree, \(h=\Theta(\log n)\), so the recursive stack uses
+  \(\Theta(\log n)\) extra space. For a degenerate binary tree,
+  \(h=n-1\), so the stack may use \(\Theta(n)\) extra space.
+</p>
+
+<table class="example-table left-align">
+  <thead>
+    <tr>
+      <th>Algorithm</th>
+      <th>Running Time</th>
+      <th>Recursive Stack Space</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Count nodes</td>
+      <td>\(\Theta(n)\)</td>
+      <td>\(\Theta(h)\)</td>
+    </tr>
+    <tr>
+      <td>Compute height</td>
+      <td>\(\Theta(n)\)</td>
+      <td>\(\Theta(h)\)</td>
+    </tr>
+    <tr>
+      <td>Count leaves</td>
+      <td>\(\Theta(n)\)</td>
+      <td>\(\Theta(h)\)</td>
+    </tr>
+    <tr>
+      <td>Count nodes with two children</td>
+      <td>\(\Theta(n)\)</td>
+      <td>\(\Theta(h)\)</td>
+    </tr>
+  </tbody>
+</table>
+
+  </section>
+
+  <section id="connection-to-traversals"
+           section-title="Connection to Tree Traversals">
+    <h3>Connection to Tree Traversals</h3>
+
+<p>
+  Each algorithm in this section processes the root and recursively processes the
+  left and right subtrees. More generally, a tree algorithm must decide when to
+  process the root relative to its two subtrees. Processing the root before, between,
+  or after the recursive calls gives preorder, inorder, or postorder traversal.
+  A tree may also be processed one level at a time.
+</p>
+
+<p>
+  The algorithms above combine the results from the two subtrees after the recursive
+  calls return, so their computations have a postorder structure. Tree traversal
+  orders and their applications are developed in detail on the
+  <a href="?path=Data%20Structures%2FTrees%2FTree%20Traversals">Tree Traversals</a>
+  page.
+</p>
+  </section>
+</section>
+
+
+
+  <section id="connections" section-title="Connections to Other Trees">
+    <h2>Connections to Other Trees</h2>
+
+    <p>
+      Briefly connect binary trees to binary search trees, AVL trees, red-black
+      trees, binary heaps, expression trees, and other later structures.
+    </p>
+
+    <p>
+      Emphasize that these structures all begin with the same left-subtree/right-subtree
+      organization but impose different additional rules.
     </p>
   </section>
 
-  <section id="terminology" section-title="Terminology">
-    <h2>Terminology</h2>
+  <section id="links" section-title="Helpful Links and Resources">
+    <h2>Links to Resources</h2>
+
     <ul>
-      <li><strong>Root:</strong> the top node of the tree.</li>
-      <li><strong>Parent and child:</strong> a node is the parent of its left and right children.</li>
-      <li><strong>Leaf:</strong> a node with no children.</li>
-      <li><strong>Subtree:</strong> a node together with all of its descendants.</li>
-      <li><strong>Depth:</strong> the number of edges from the root to a node.</li>
-      <li><strong>Height:</strong> the number of edges on the longest downward path from a node to a leaf.</li>
-      <li><strong>Full node:</strong> a node with exactly two children.</li>
+      <li>
+        Add a directly relevant resource on binary trees.
+      </li>
+      <li>
+        Add a resource on complete, full, and perfect binary trees.
+      </li>
+      <li>
+        Add a resource on binary-tree representations and properties.
+      </li>
     </ul>
-    <p>
-      In many algorithms, a binary tree is defined recursively: a tree is either empty or consists of a root, a left
-      subtree, and a right subtree. That recursive definition is why tree algorithms often have compact recursive
-      descriptions.
-    </p>
   </section>
 
-  <section id="shapes" section-title="Common Shapes">
-    <h2>Common Shapes</h2>
-    <ul>
-      <li><strong>Perfect binary tree:</strong> every internal node has two children and all leaves are at the same depth.</li>
-      <li><strong>Complete binary tree:</strong> every level is full except possibly the last, and the last level is filled from left to right.</li>
-      <li><strong>Balanced binary tree:</strong> the height stays proportional to \(\log n\), usually because the tree enforces a balancing rule.</li>
-      <li><strong>Degenerate tree:</strong> each internal node has only one child, so the tree behaves like a linked list.</li>
-    </ul>
-    <p>
-      Shape matters because height controls the cost of many tree operations. A tree with \(n\) nodes can have height
-      as small as \(\Theta(\log n)\) or as large as \(\Theta(n)\).
-    </p>
-  </section>
+  <section id="reading-questions" section-title="Reading Comprehension Questions">
+    <h2>Reading Comprehension Questions</h2>
 
-  <section id="traversals" section-title="Traversals">
-    <h2>Traversals</h2>
-    <p>
-      A <strong>traversal</strong> visits every node in a systematic order. The most common depth-first traversals are:
-    </p>
-    <ul>
-      <li><strong>Preorder:</strong> visit the node, then the left subtree, then the right subtree.</li>
-      <li><strong>Inorder:</strong> visit the left subtree, then the node, then the right subtree.</li>
-      <li><strong>Postorder:</strong> visit the left subtree, then the right subtree, then the node.</li>
-    </ul>
-    <p>
-      <strong>Level-order</strong> traversal visits nodes by depth, from left to right within each level. It is the
-      traversal used by breadth-first search on a tree.
-    </p>
-    <p>
-      All four traversals visit each node once, so their running time is \(O(n)\). Their auxiliary space depends on the
-      method used: recursive depth-first traversals use call-stack space proportional to the tree height, while
-      level-order traversal uses a queue that can hold many nodes from one level.
-    </p>
-  </section>
+    <ol>
+      <li>
+        <strong>Question Title:</strong>
+        Add a question about left and right child positions.
+      </li>
+      <li>
+        <strong>Question Title:</strong>
+        Add a question about common binary-tree shapes.
+      </li>
+      <li>
+        <strong>Question Title:</strong>
+        Add a question about structural properties.
+      </li>
+      <li>
+        <strong>Question Title:</strong>
+        Add a question about representations.
+      </li>
+      <li>
+        <strong>Question Title:</strong>
+        Add a question about recursive binary-tree algorithms.
+      </li>
+    </ol>
 
-  <section id="demo" section-title="Interactive Demo">
-    <h2>Interactive Demo</h2>
-    <p>
-      This demo compares preorder, inorder, postorder, and level-order traversal on the same binary tree.
-    </p>
-    <div class="embeddedDemoContainer">
-      <iframe class="embeddedDemo"
-              src="../../../Content/Demos/Data Structures/Binary Tree/Binary Tree Traversal Demo.html"
-              allow="fullscreen"
-              name="binary-tree-traversal-demo">
-      </iframe>
+    <button id="toggleAnswers" class="show-answer" aria-expanded="false">
+      Show Answers
+    </button>
+
+    <div id="answers" class="answer" hidden>
+      <ol>
+        <li>
+          <strong>Answer:</strong>
+          Add the answer.
+        </li>
+        <li>
+          <strong>Answer:</strong>
+          Add the answer.
+        </li>
+        <li>
+          <strong>Answer:</strong>
+          Add the answer.
+        </li>
+        <li>
+          <strong>Answer:</strong>
+          Add the answer.
+        </li>
+        <li>
+          <strong>Answer:</strong>
+          Add the answer.
+        </li>
+      </ol>
     </div>
   </section>
 
-  <section id="representations" section-title="Representations">
-    <h2>Representations</h2>
-    <h3>Node and References</h3>
-    <p>
-      The most direct representation stores one object per node. Each node stores a value and references to its left
-      and right children.
-    </p>
-    <pre><code>Node:
-    value
-    left
-    right</code></pre>
-    <p>
-      This representation is flexible: the tree can have any shape, and rotations or subtree moves are local reference
-      updates.
-    </p>
+  <section id="activities" section-title="In-Class Activities">
+    <h2>In-Class Activities</h2>
 
-    <h3>Implicit Array Layout</h3>
-    <p>
-      Complete binary trees are often stored in arrays. For zero-based indexing, the children of index \(i\) are
-      \(2i + 1\) and \(2i + 2\), and the parent is \(\lfloor(i - 1)/2\rfloor\). Binary heaps use this representation
-      because their complete-tree shape makes it efficient.
-    </p>
-    <p>
-      A general binary tree can also be stored in an array, but arbitrary missing children can waste space or require
-      extra markers. For general tree algorithms, node references are usually easier to reason about.
-    </p>
+    <ol class="spaced">
+      <li>
+        <strong>Activity Title:</strong>
+        Add an activity distinguishing left-child and right-child structure.
+      </li>
+      <li>
+        <strong>Activity Title:</strong>
+        Add an activity classifying binary-tree shapes.
+      </li>
+      <li>
+        <strong>Activity Title:</strong>
+        Add an activity deriving or applying the node-count formulas.
+      </li>
+      <li>
+        <strong>Activity Title:</strong>
+        Add an activity comparing linked and array representations.
+      </li>
+      <li>
+        <strong>Activity Title:</strong>
+        Add an activity tracing a recursive structural algorithm.
+      </li>
+      <li>
+        <strong>Activity Title:</strong>
+        Add an activity comparing trees with the same number of nodes but different shapes.
+      </li>
+    </ol>
   </section>
 
-  <section id="connections" section-title="Connections">
-    <h2>Connections</h2>
-    <ul>
-      <li><strong>Expression trees:</strong> operators are internal nodes and operands are leaves.</li>
-      <li><strong>Decision trees:</strong> internal nodes represent choices and leaves represent outcomes.</li>
-      <li><strong>Binary search trees:</strong> add an ordering invariant that supports search.</li>
-      <li><strong>Heaps:</strong> add shape and priority rules for efficient priority queues.</li>
-      <li><strong>AVL and red-black trees:</strong> add balancing rules to keep search-tree height logarithmic.</li>
-    </ul>
+  <section id="problems" section-title="Homework Problems">
+    <h2>Homework Problems</h2>
+
+    <ol class="spaced">
+      <li>
+        <strong>Problem Title:</strong>
+        Add a problem about identifying left and right children and subtrees.
+      </li>
+      <li>
+        <strong>Problem Title:</strong>
+        Add a problem classifying full, perfect, complete, balanced, and degenerate trees.
+      </li>
+      <li>
+        <strong>Problem Title:</strong>
+        Add a problem involving nodes at each depth.
+      </li>
+      <li>
+        <strong>Problem Title:</strong>
+        Add a problem involving height and maximum node counts.
+      </li>
+      <li>
+        <strong>Problem Title:</strong>
+        Add a problem involving leaves and internal nodes in a full binary tree.
+      </li>
+      <li>
+        <strong>Problem Title:</strong>
+        Add a problem converting between a complete tree and its array representation.
+      </li>
+      <li>
+        <strong>Problem Title:</strong>
+        Add a problem tracing or modifying a recursive binary-tree algorithm.
+      </li>
+    </ol>
   </section>
+
 </body>
 </html>
+
