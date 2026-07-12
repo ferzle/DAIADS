@@ -92,6 +92,18 @@
       stroke: #d17a00;
       stroke-width: 4;
     }
+    .null-pointer {
+      stroke: #d17a00;
+      stroke-width: 3;
+      stroke-dasharray: 5 3;
+    }
+    .null-label {
+      fill: #9a5700;
+      font-family: monospace;
+      font-size: 14px;
+      font-weight: 700;
+      text-anchor: middle;
+    }
     .tree-node circle {
       fill: #cce3ff;
       stroke: #333;
@@ -261,6 +273,15 @@
       </label>
       <button id="prevBtn">Previous</button>
       <button id="nextBtn">Next</button>
+      <button id="playBtn">Play</button>
+      <label for="speedSelect">
+        Speed:
+        <select id="speedSelect">
+          <option value="1">1&times;</option>
+          <option value="2">2&times;</option>
+          <option value="4">4&times;</option>
+        </select>
+      </label>
       <button id="resetBtn">Reset Traversal</button>
     </div>
 
@@ -427,6 +448,44 @@
 
     let steps = [];
     let stepIndex = -1;
+    let playbackTimer = null;
+    const playbackInterval = 800;
+
+    function stopPlayback() {
+      if (playbackTimer !== null) {
+        window.clearTimeout(playbackTimer);
+        playbackTimer = null;
+      }
+      document.getElementById('playBtn').textContent = 'Play';
+    }
+
+    function scheduleNextStep() {
+      if (stepIndex >= steps.length - 1) {
+        stopPlayback();
+        return;
+      }
+
+      const speed = Number(document.getElementById('speedSelect').value) || 1;
+      playbackTimer = window.setTimeout(() => {
+        stepIndex++;
+        render();
+        scheduleNextStep();
+      }, playbackInterval / speed);
+    }
+
+    function togglePlayback() {
+      if (playbackTimer !== null) {
+        stopPlayback();
+        return;
+      }
+
+      if (stepIndex >= steps.length - 1) {
+        stepIndex = -1;
+        render();
+      }
+      document.getElementById('playBtn').textContent = 'Pause';
+      scheduleNextStep();
+    }
 
     function formatAction(action, nodeId, config) {
       if (action === 'visit') return `print(${nodeId})`;
@@ -451,12 +510,13 @@
       const visited = [];
       const stack = [];
 
-      function addStep(comment, currentId, activeEdge) {
+      function addStep(comment, currentId, activeEdge, missingSide) {
         result.push({
           kind,
           comment,
           currentId,
           activeEdge: activeEdge || null,
+          missingSide: missingSide || '',
           visited: [...visited],
           stack: cloneStack(stack)
         });
@@ -524,7 +584,9 @@
           } else {
             addStep(
               `${node.id} has no ${action} child, so ${config.functionName}(${action}) returns immediately.`,
-              node.id
+              node.id,
+              null,
+              action
             );
           }
         }
@@ -645,6 +707,53 @@
       return document.createElementNS('http://www.w3.org/2000/svg', name);
     }
 
+    function renderNullPointer(svg, nodeId, side) {
+      const from = positions[nodeId];
+      if (!from || (side !== 'left' && side !== 'right')) return;
+
+      const direction = side === 'left' ? -1 : 1;
+      const target = {
+        x: Math.max(28, Math.min(612, from.x + direction * 55)),
+        y: Math.min(300, from.y + 46)
+      };
+      const dx = target.x - from.x;
+      const dy = target.y - from.y;
+      const length = Math.hypot(dx, dy) || 1;
+
+      const defs = svgElement('defs');
+      const marker = svgElement('marker');
+      marker.setAttribute('id', 'null-arrowhead');
+      marker.setAttribute('markerWidth', 8);
+      marker.setAttribute('markerHeight', 8);
+      marker.setAttribute('refX', 7);
+      marker.setAttribute('refY', 4);
+      marker.setAttribute('orient', 'auto');
+      marker.setAttribute('markerUnits', 'strokeWidth');
+
+      const arrowhead = svgElement('path');
+      arrowhead.setAttribute('d', 'M 0 0 L 8 4 L 0 8 z');
+      arrowhead.setAttribute('fill', '#d17a00');
+      marker.appendChild(arrowhead);
+      defs.appendChild(marker);
+      svg.appendChild(defs);
+
+      const pointer = svgElement('line');
+      pointer.setAttribute('x1', from.x + (dx / length) * 24);
+      pointer.setAttribute('y1', from.y + (dy / length) * 24);
+      pointer.setAttribute('x2', target.x);
+      pointer.setAttribute('y2', target.y);
+      pointer.setAttribute('class', 'null-pointer');
+      pointer.setAttribute('marker-end', 'url(#null-arrowhead)');
+      svg.appendChild(pointer);
+
+      const label = svgElement('text');
+      label.setAttribute('x', target.x);
+      label.setAttribute('y', Math.min(316, target.y + 15));
+      label.setAttribute('class', 'null-label');
+      label.textContent = 'null';
+      svg.appendChild(label);
+    }
+
     function renderTree() {
       const svg = document.getElementById('treeSvg');
       svg.innerHTML = '';
@@ -675,6 +784,10 @@
         }
         svg.appendChild(line);
       });
+
+      if (step && step.missingSide) {
+        renderNullPointer(svg, step.currentId, step.missingSide);
+      }
 
       nodes.forEach((id) => {
         const pos = positions[id];
@@ -836,6 +949,7 @@
     }
 
     function resetTraversal() {
+      stopPlayback();
       const kind = document.getElementById('traversalSelect').value;
       const treeChoice = document.getElementById('treeSelect').value;
       tree = treeChoices[treeChoice].tree;
@@ -848,17 +962,20 @@
     document.getElementById('traversalSelect').addEventListener('change', resetTraversal);
     document.getElementById('treeSelect').addEventListener('change', resetTraversal);
     document.getElementById('prevBtn').addEventListener('click', () => {
+      stopPlayback();
       if (stepIndex >= 0) {
         stepIndex--;
         render();
       }
     });
     document.getElementById('nextBtn').addEventListener('click', () => {
+      stopPlayback();
       if (stepIndex < steps.length - 1) {
         stepIndex++;
         render();
       }
     });
+    document.getElementById('playBtn').addEventListener('click', togglePlayback);
     document.getElementById('resetBtn').addEventListener('click', resetTraversal);
 
     resetTraversal();
