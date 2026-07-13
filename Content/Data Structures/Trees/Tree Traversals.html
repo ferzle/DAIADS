@@ -762,6 +762,184 @@
 </p>
   </section>
 
+
+  <section id="recursive-trace" section-title="Tracing the Recursive Process">
+  <h3>Tracing the Recursive Process</h3>
+
+  <p>
+    The previous subsections focused primarily on the order in which nodes are
+    visited. We now examine the recursive process in more detail by separating
+    movement through the tree from the visit operation.
+  </p>
+
+  <p>
+    For any node \(X\), we will use the following notation:
+  </p>
+
+  <ul>
+    <li>
+      \(X_e\): the recursive call enters node \(X\);
+    </li>
+    <li>
+      \(X_l\): control resumes at \(X\) after the recursive call on its left
+      child returns;
+    </li>
+    <li>
+      \(X_r\): control resumes at \(X\) after the recursive call on its right
+      child returns;
+    </li>
+    <li>
+      \(X_v\): node \(X\) is visited.
+    </li>
+  </ul>
+
+  <p>
+    If a child reference is null, the corresponding recursive call returns
+    immediately. We will not list the calls on null references themselves, but
+    we will still record the resulting \(X_l\) or \(X_r\) event.
+  </p>
+
+  <div class="example-box">
+    <strong class="example-title">Example 5: A Complete Trace of the Recursive Process
+    </strong>
+<p>
+  Consider the following binary tree:
+</p>
+
+<div style="text-align:center;">
+  <svg class="traversal-tree"
+       style="display:block; width:100%; max-width:330px; height:auto; margin:0 auto;"
+       viewBox="35 5 300 220"
+       role="img"
+       aria-label="Binary tree with root A, children B and C, and node B with right child D">
+
+    <!-- Edges -->
+    <line x1="180" y1="30" x2="110" y2="95"
+          stroke="#555" stroke-width="2"/>
+    <line x1="180" y1="30" x2="250" y2="95"
+          stroke="#555" stroke-width="2"/>
+    <line x1="110" y1="95" x2="145" y2="170"
+          stroke="#555" stroke-width="2"/>
+
+    <!-- Nodes -->
+    <circle cx="180" cy="30" r="17" fill="#f0f8ff"
+            stroke="#003366" stroke-width="2"/>
+    <text x="180" y="35" text-anchor="middle" font-size="14">A</text>
+
+    <circle cx="110" cy="95" r="17" fill="#f0f8ff"
+            stroke="#003366" stroke-width="2"/>
+    <text x="110" y="100" text-anchor="middle" font-size="14">B</text>
+
+    <circle cx="250" cy="95" r="17" fill="#f0f8ff"
+            stroke="#003366" stroke-width="2"/>
+    <text x="250" y="100" text-anchor="middle" font-size="14">C</text>
+
+    <circle cx="145" cy="170" r="17" fill="#f0f8ff"
+            stroke="#003366" stroke-width="2"/>
+    <text x="145" y="175" text-anchor="middle" font-size="14">D</text>
+  </svg>
+</div>
+
+<p>
+  All three recursive depth-first traversal algorithms enter nodes and return
+  from their left and right subtrees in exactly the same order. To isolate this
+  shared recursive control flow, first ignore the visit events. We also omit the
+  calls on null child references themselves, although we still record the return
+  events that follow them. The resulting sequence of enter-and-return events is
+  \[
+    A_e,\ B_e,\ B_l,\ D_e,\ D_l,\ D_r,\ B_r,\ A_l,\ 
+    C_e,\ C_l,\ C_r,\ A_r.
+  \]
+</p>
+
+<p>
+  This sequence records the complete recursive process at each non-null node:
+  entering the node, traversing its left subtree and returning, then traversing
+  its right subtree and returning again. Preorder, inorder, and postorder differ
+  only in where the visit event is inserted into this shared sequence.
+</p>
+<p>
+  The process first enters \(A\), then enters its left child \(B\).
+  Because \(B\) has no left child, the recursive call on that null reference
+  returns immediately, producing \(B_l\). The process then enters \(D\),
+  the root of the right subtree of \(B\). Since \(D\) is a leaf, its left
+  and right recursive calls both return immediately, producing \(D_l\) and
+  \(D_r\). Control then returns to \(B\), producing \(B_r\), and eventually
+  returns to \(A\), producing \(A_l\). The same pattern continues through
+  the right subtree rooted at \(C\).
+</p>
+
+<p>
+  This sequence of enter-and-return events is identical for preorder, inorder,
+  and postorder. The only difference is where the visit event is inserted into
+  that shared recursive process.
+</p>
+
+
+<div style="overflow-x:auto;">
+  <table class="example-table left-top-align">
+  <thead>
+    <tr>
+      <th>Traversal</th>
+      <th>Complete Event Sequence</th>
+      <th>Visit Order</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Preorder</td>
+      <td>
+        \(A_e,\mathbf{A_v},B_e,\mathbf{B_v},B_l,D_e,\mathbf{D_v},
+        D_l,D_r,B_r,A_l,C_e,\mathbf{C_v},C_l,C_r,A_r\)
+      </td>
+      <td>\(A,B,D,C\)</td>
+    </tr>
+    <tr>
+      <td>Inorder</td>
+      <td>
+        \(A_e,B_e,B_l,\mathbf{B_v},D_e,D_l,\mathbf{D_v},D_r,B_r,
+        A_l,\mathbf{A_v},C_e,C_l,\mathbf{C_v},C_r,A_r\)
+      </td>
+      <td>\(B,D,A,C\)</td>
+    </tr>
+    <tr>
+      <td>Postorder</td>
+      <td>
+        \(A_e,B_e,B_l,D_e,D_l,D_r,\mathbf{D_v},B_r,\mathbf{B_v},
+        A_l,C_e,C_l,C_r,\mathbf{C_v},A_r,\mathbf{A_v}\)
+      </td>
+      <td>\(D,B,C,A\)</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<p>
+  Thus, the visit event is placed at a different point in the same recursive
+  process:
+</p>
+
+<ul>
+  <li>
+    preorder visits immediately after \(X_e\);
+  </li>
+  <li>
+    inorder visits immediately after \(X_l\);
+  </li>
+  <li>
+    postorder visits immediately after \(X_r\).
+  </li>
+</ul>
+  </div>
+
+  <p>
+    This trace explains why the three algorithms make exactly the same recursive
+    calls and move through the tree in the same way. Changing only the location
+    of the visit operation changes the traversal order without changing the
+    recursive structure of the algorithm.
+  </p>
+</section>
+
   <section id="depth-first-analysis" section-title="Analysis">
   <h3>Analysis</h3>
 
@@ -945,7 +1123,7 @@
 </p>
 
 <div class="example-box" id="level-order-animation">
-    <strong class="example-title">Example 5: Level-Order Traversal</strong>
+    <strong class="example-title">Example 6: Level-Order Traversal</strong>
 
   <div class="traversal-example-layout">
     <div class="traversal-animation-panel">
@@ -1186,8 +1364,7 @@
   </p>
 
   <div class="example-box">
-    <strong class="example-title">
-      Example 6: Comparing the Traversal Orders
+    <strong class="example-title">Example 7: Comparing the Traversal Orders
     </strong>
 <p>
   Applied to the tree used throughout this page, the four traversals produce
@@ -1306,7 +1483,7 @@ postorder:  left,  right, visit</code></pre>
           larger than \(n\) because the array may contain many empty positions.
         </td>
       </tr>
-    </tbody>
+    </tbody
   </table>
 </div>
 
@@ -1464,7 +1641,7 @@ postorder:  left,  right, visit</code></pre>
   </p>
 
   <div class="example-box">
-    <strong class="example-title">Example 7: Three Notations from One Expression Tree</strong>
+    <strong class="example-title">Example 8: Three Notations from One Expression Tree</strong>
 
 <div style="display:flex; flex-wrap:wrap; gap:28px; align-items:center;">
   <div style="flex:0 1 350px; text-align:center;">
@@ -1536,7 +1713,6 @@ postorder:  left,  right, visit</code></pre>
       subtrees.
     </p>
 
-    FOO 
     <table class="example-table left-top-align">
   <thead>
     <tr>
@@ -1748,7 +1924,7 @@ postorder:  left,  right, visit</code></pre>
   return apply(node.value, leftValue, rightValue)</code></pre>
 
   <div class="example-box" id="expression-evaluation-example">
-    <strong class="example-title">Example 8: Evaluating an Expression Tree</strong>
+    <strong class="example-title">Example 9: Evaluating an Expression Tree</strong>
 
   <p>
     Suppose that \(a=8\), \(b=2\), \(c=7\), and \(d=3\). 
@@ -2003,7 +2179,7 @@ postorder:  left,  right, visit</code></pre>
   </p>
 
   <div class="example-box">
-    <strong class="example-title">Example 9: Finding a Shallowest Leaf</strong>
+    <strong class="example-title">Example 10: Finding a Shallowest Leaf</strong>
 
 <div style="display:flex; flex-wrap:wrap; gap:16px; align-items:center;">
   <div style="flex:1 1 520px; min-width:420px; text-align:center;">
@@ -2199,29 +2375,1868 @@ postorder:  left,  right, visit</code></pre>
     starting vertex.
   </p>
 </section>
-
 </section>
-
 
 <section id="links" section-title="Helpful Links and Resources">
   <h2>Links to Resources</h2>
+
+  <ul class="resource-list">
+    <li>
+      <a href="https://en.wikipedia.org/wiki/Tree_traversal"
+         target="_blank" rel="noopener">
+        Tree Traversal - Wikipedia
+      </a>
+      provides an overview of depth-first and breadth-first tree traversals,
+      implementations, variants, and common applications.
+    </li>
+<li>
+  <a href="https://opendsa-server.cs.vt.edu/ODSA/Books/Everything/html/BinaryTreeTraversal.html"
+     target="_blank" rel="noopener">
+    Binary Tree Traversals - OpenDSA
+  </a>
+  develops preorder, inorder, and postorder traversal with explanations,
+  pseudocode, examples, and interactive material.
+</li>
+
+<li>
+  <a href="https://visualgo.net/en/bst?slide=1"
+     target="_blank" rel="noopener">
+    Binary Search Tree Visualization - VisuAlgo
+  </a>
+  provides animated binary-search-tree operations and tree traversals.
+</li>
+
+<li>
+  <a href="https://runestone.academy/ns/books/published/welcomeprogramming/trees_expression-trees.html"
+     target="_blank" rel="noopener">
+    Expression Trees and Tree Traversals - Runestone Academy
+  </a>
+  connects preorder, inorder, and postorder traversal with prefix, infix,
+  and postfix expressions.
+</li>
+
+<li>
+  <a href="https://www.geeksforgeeks.org/dsa/tree-traversals-inorder-preorder-and-postorder/"
+     target="_blank" rel="noopener">
+    Tree Traversal Techniques - GeeksforGeeks
+  </a>
+  reviews the principal traversal orders and provides implementations and
+  worked examples.
+</li>
+
+<li>
+  <a href="https://cp-algorithms.com/graph/breadth-first-search.html"
+     target="_blank" rel="noopener">
+    Breadth-First Search - Algorithms for Competitive Programming
+  </a>
+  extends the level-order idea to graphs and explains why breadth-first
+  search finds minimum-edge paths in unweighted graphs.
+</li>
+  </ul>
 </section>
 
 <section id="reading-questions" section-title="Reading Comprehension Questions">
   <h2>Reading Comprehension Questions</h2>
+
+  <ol>
+    <li>
+      <strong>Entering Versus Visiting:</strong>
+      What is the difference between entering a node during a recursive traversal
+      and visiting that node? Why might the traversal enter or return to the same
+      node more than once but visit it only once?
+    </li>
+
+<li>
+  <strong>Three Depth-First Traversals:</strong>
+  Where is the <code>visit(node)</code> operation placed in preorder,
+  inorder, and postorder traversal?
+</li>
+
+<li>
+  <strong>Why Inorder Is Special:</strong>
+  Why does inorder traversal apply naturally to binary trees but not have
+  one standard definition for general trees?
+</li>
+
+<li>
+  <strong>Depth-First Running Time:</strong>
+  Why do preorder, inorder, and postorder traversal all take
+  \(\Theta(n)\) time, even though the recursive process may return to the
+  same node more than once?
+</li>
+
+<li>
+  <strong>Traversal Space:</strong>
+  What determines the extra space used by a recursive depth-first traversal,
+  and what determines the extra space used by queue-based level-order
+  traversal?
+</li>
+
+<li>
+  <strong>Array-Based Level Order:</strong>
+  Why can scanning an array representation of a sparse binary tree take much
+  more than \(\Theta(n)\) time, even though the tree contains only \(n\)
+  nodes?
+</li>
+
+<li>
+  <strong>Expression Notation:</strong>
+  Which traversal produces prefix, infix, and postfix notation from an
+  expression tree? Why must the inorder algorithm be modified if the exact
+  grouping of the expression is to be preserved?
+</li>
+
+<li>
+  <strong>Minimum-Depth Search:</strong>
+  Why does the first leaf found by a level-order traversal have minimum
+  depth, while the first leaf found by a depth-first traversal may not?
+</li>
+  </ol>
+
+<button id="toggleAnswers"
+       class="show-answer"
+       aria-expanded="false">
+Show Answers </button>
+
+  <div id="answers" class="answer" hidden>
+    <ol>
+      <li>
+        <strong>Answer:</strong>
+        Entering a node means that the recursive call has reached that node and begun
+        processing it. Control may later return to the same node after traversing its
+        left subtree and again after traversing its right subtree. Visiting the node
+        means performing the operation associated with the traversal, such as
+        displaying or recording its value. Preorder, inorder, and postorder choose
+        different moments for that visit, but each normally visits the node only once.
+      </li>
+
+        <li>
+          <strong>Answer:</strong>
+          Preorder places <code>visit(node)</code> before both recursive calls.
+          Inorder places it between the recursive calls on the left and right
+          subtrees. Postorder places it after both recursive calls.
+        </li>
+
+        <li>
+          <strong>Answer:</strong>
+          A binary-tree node has two distinguished child positions: left and
+          right. Inorder visits the node between traversing those two subtrees. A
+          general tree may have any number of children, so there is no single
+          distinguished point that is naturally "between" all of them.
+        </li>
+
+       <li>
+        <strong>Answer:</strong>
+        The traversal is called once on each of the \(n\) nodes. At every non-null
+        node, it performs a constant amount of work and makes exactly two recursive
+        calls: one on the left child and one on the right child. Some of those calls
+        reach another node, and the rest reach a null child reference. Altogether,
+        there are \(n\) calls on nodes and \(n+1\) calls on null references. Since
+        each call contributes only constant work apart from the recursive work counted
+        in the other calls, the total running time is \(\Theta(n)\).
+      </li>
+
+        <li>
+          <strong>Answer:</strong>
+          A recursive depth-first traversal uses
+          \(\Theta(h+1)\) extra stack space, where \(h\) is the height of the tree,
+          because the active calls form a downward path. Queue-based level order
+          uses \(\Theta(w)\) extra space, where \(w\) is the maximum width of the
+          tree, because the queue may contain nodes from the current and next
+          depths.
+        </li>
+
+        <li>
+          <strong>Answer:</strong>
+          The array scan examines every array position, including empty positions.
+          If the array has length \(m\), the scan takes \(\Theta(m)\) time. In a
+          sparse tree, \(m\) may be much larger than \(n\), and in the extreme
+          case an \(n\)-node tree may require an array of length \(2^n-1\).
+        </li>
+
+        <li>
+          <strong>Answer:</strong>
+          Preorder produces prefix notation, inorder produces infix notation, and
+          postorder produces postfix notation. Ordinary inorder traversal lists
+          the operator between its operands but does not record all grouping
+          information. To preserve the exact expression tree, the algorithm can
+          output an opening parenthesis before the left subtree and a closing
+          parenthesis after the right subtree of every internal node.
+        </li>
+
+        <li>
+          <strong>Answer:</strong>
+          Level order examines nodes in increasing order of depth, so all nodes at
+          smaller depths are tested before any node at a larger depth. Therefore,
+          the first leaf found is shallowest. A depth-first traversal may descend
+          far into one subtree and encounter a deeper leaf before examining a
+          shallower leaf in another subtree.
+        </li>
+</ol>
+  </div>
 </section>
 
 <section id="activities" section-title="In-Class Activities">
   <h2>In-Class Activities</h2>
-</section>
 
-<section id="problems" section-title="Homework Problems">
-  <h2>Homework Problems</h2>
+  <ol class="spaced">
+<li>
+  <strong>Trace Recursive Events and Traversal Orders:</strong>
+  Consider the following binary tree.
+
+  <div style="text-align:center;">
+    <svg class="traversal-tree"
+         style="display:block; width:100%; max-width:500px; height:auto; margin:0 auto;"
+         viewBox="25 5 450 245"
+         role="img"
+         aria-label="Binary tree with root M; children F and T; F has children B and J; B has children D and H; T has children P and W; P has right child R; W has left child V">
+  <!-- Edges from M -->
+  <line x1="250" y1="30" x2="150" y2="90"
+        stroke="#555" stroke-width="2"/>
+  <line x1="250" y1="30" x2="350" y2="90"
+        stroke="#555" stroke-width="2"/>
+
+  <!-- Edges from F -->
+  <line x1="150" y1="90" x2="95" y2="155"
+        stroke="#555" stroke-width="2"/>
+  <line x1="150" y1="90" x2="205" y2="155"
+        stroke="#555" stroke-width="2"/>
+
+  <!-- Edges from T -->
+  <line x1="350" y1="90" x2="300" y2="155"
+        stroke="#555" stroke-width="2"/>
+  <line x1="350" y1="90" x2="405" y2="155"
+        stroke="#555" stroke-width="2"/>
+
+  <!-- Edges from B -->
+  <line x1="95" y1="155" x2="65" y2="220"
+        stroke="#555" stroke-width="2"/>
+  <line x1="95" y1="155" x2="125" y2="220"
+        stroke="#555" stroke-width="2"/>
+
+  <!-- Lower edges on right -->
+  <line x1="300" y1="155" x2="330" y2="220"
+        stroke="#555" stroke-width="2"/>
+  <line x1="405" y1="155" x2="375" y2="220"
+        stroke="#555" stroke-width="2"/>
+
+  <!-- Nodes -->
+  <circle cx="250" cy="30" r="17" fill="#f0f8ff"
+          stroke="#003366" stroke-width="2"/>
+  <text x="250" y="35" text-anchor="middle" font-size="14">M</text>
+
+  <circle cx="150" cy="90" r="17" fill="#f0f8ff"
+          stroke="#003366" stroke-width="2"/>
+  <text x="150" y="95" text-anchor="middle" font-size="14">F</text>
+
+  <circle cx="350" cy="90" r="17" fill="#f0f8ff"
+          stroke="#003366" stroke-width="2"/>
+  <text x="350" y="95" text-anchor="middle" font-size="14">T</text>
+
+  <circle cx="95" cy="155" r="17" fill="#f0f8ff"
+          stroke="#003366" stroke-width="2"/>
+  <text x="95" y="160" text-anchor="middle" font-size="14">B</text>
+
+  <circle cx="205" cy="155" r="17" fill="#f0f8ff"
+          stroke="#003366" stroke-width="2"/>
+  <text x="205" y="160" text-anchor="middle" font-size="14">J</text>
+
+  <circle cx="300" cy="155" r="17" fill="#f0f8ff"
+          stroke="#003366" stroke-width="2"/>
+  <text x="300" y="160" text-anchor="middle" font-size="14">P</text>
+
+  <circle cx="405" cy="155" r="17" fill="#f0f8ff"
+          stroke="#003366" stroke-width="2"/>
+  <text x="405" y="160" text-anchor="middle" font-size="14">W</text>
+
+  <circle cx="65" cy="220" r="17" fill="#f0f8ff"
+          stroke="#003366" stroke-width="2"/>
+  <text x="65" y="225" text-anchor="middle" font-size="14">D</text>
+
+  <circle cx="125" cy="220" r="17" fill="#f0f8ff"
+          stroke="#003366" stroke-width="2"/>
+  <text x="125" y="225" text-anchor="middle" font-size="14">H</text>
+
+  <circle cx="330" cy="220" r="17" fill="#f0f8ff"
+          stroke="#003366" stroke-width="2"/>
+  <text x="330" y="225" text-anchor="middle" font-size="14">R</text>
+
+  <circle cx="375" cy="220" r="17" fill="#f0f8ff"
+          stroke="#003366" stroke-width="2"/>
+  <text x="375" y="225" text-anchor="middle" font-size="14">V</text>
+</svg>
+  </div>
+
+  <p>
+    For the depth-first traversals, use the notation introduced earlier:
+    \(X_e\) for entering node \(X\), \(X_l\) for returning from its left
+    subtree, \(X_r\) for returning from its right subtree, and \(X_v\) for
+    visiting it. Ignore recursive calls on null child references.
+  </p>
+
+  <ol type="a">
+    <li>
+      Write the sequence of \(X_e\), \(X_l\), and \(X_r\) events produced by
+      the process of the recursive traversals, ignoring visit.
+    </li>
+    <li>
+      Write out the sequence of all 4 events types (\(X_e\), \(X_l\), \(X_r\), and \(X_v\))
+      for <code>preorder</code> traversal.
+    </li>
+    <li>
+      Write the preorder visit sequence.
+    </li>
+    <li>
+      Write out the sequence of all 4 events types (\(X_e\), \(X_l\), \(X_r\), and \(X_v\))
+      for <code>inorder</code> traversal.
+    </li>
+    <li>
+      Write the inorder visit sequence.
+    </li>
+    <li>
+      Write out the sequence of all 4 events types (\(X_e\), \(X_l\), \(X_r\), and \(X_v\))
+      for <code>postorder</code> traversal.
+    </li>
+    <li>
+      Write the postorder visit sequence.
+    </li>
+    <li>
+      Trace a level-order traversal. Before each step, record the queue,
+      the node removed from the front, and any children added to the back.
+    </li>
+
+    <li>
+      Write the final level-order visit sequence.
+    </li>
+  </ol>
+</li>
+
+<li>
+  <strong>Translate an Expression Tree:</strong>
+  Consider the expression \((8-3)*(9+12/(7-3))\).
+
+  <ol type="a">
+    <li>
+    Construct an expression tree for \((8-3)*(9+12/(7-3))\).
+    Remember, each operand should appear on a leaf and the operators on internal nodes.
+    </li>
+    <li>
+      Use a preorder traversal to write the expression in prefix notation.
+    </li>
+    <li>
+      Use a postorder traversal to write it in postfix notation.
+    </li>
+    <li>
+      Perform an ordinary inorder traversal and explain why the result does not
+      preserve the intent of the original expression.
+    </li>
+    <li>
+      Apply the modified inorder algorithm from the page to produce a fully
+      parenthesized infix expression and verify that it correctly produces the original expression.
+    </li>
+    <li>Evaluate the expression.</li>
+    <li>
+      Use a stack to evaluate the postfix expression and verify that it results in the same
+      answer. Make sure to show all of the steps!
+    </li>
+  </ol>
+</li>
+
+<li>
+  <strong>Trace a Minimum-Depth Search:</strong>
+  Consider the following binary tree.
+
+  <div style="text-align:center; margin:12px 0;">
+    <svg class="traversal-tree"
+         style="display:block; width:100%; max-width:520px; height:auto; margin:0 auto;"
+         viewBox="20 5 500 260"
+         role="img"
+         aria-label="Binary tree with root A; children B and C; B has children D and E; C has children F and G; D has children H and I; F has left child J; G has right child K">
+
+      <!-- Edges from A -->
+      <line x1="250" y1="30" x2="160" y2="90" stroke="#555" stroke-width="2"/>
+      <line x1="250" y1="30" x2="340" y2="90" stroke="#555" stroke-width="2"/>
+
+      <!-- Edges from B -->
+      <line x1="160" y1="90" x2="100" y2="155" stroke="#555" stroke-width="2"/>
+      <line x1="160" y1="90" x2="220" y2="155" stroke="#555" stroke-width="2"/>
+
+      <!-- Edges from C -->
+      <line x1="340" y1="90" x2="280" y2="155" stroke="#555" stroke-width="2"/>
+      <line x1="340" y1="90" x2="400" y2="155" stroke="#555" stroke-width="2"/>
+
+      <!-- Edges from D -->
+      <line x1="100" y1="155" x2="70" y2="225" stroke="#555" stroke-width="2"/>
+      <line x1="100" y1="155" x2="130" y2="225" stroke="#555" stroke-width="2"/>
+
+      <!-- Edge from F -->
+      <line x1="280" y1="155" x2="250" y2="225" stroke="#555" stroke-width="2"/>
+
+      <!-- Edge from G -->
+      <line x1="400" y1="155" x2="430" y2="225" stroke="#555" stroke-width="2"/>
+
+      <!-- Nodes -->
+      <circle cx="250" cy="30" r="17" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+      <text x="250" y="35" text-anchor="middle" font-size="14">A</text>
+
+      <circle cx="160" cy="90" r="17" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+      <text x="160" y="95" text-anchor="middle" font-size="14">B</text>
+
+      <circle cx="340" cy="90" r="17" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+      <text x="340" y="95" text-anchor="middle" font-size="14">C</text>
+
+      <circle cx="100" cy="155" r="17" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+      <text x="100" y="160" text-anchor="middle" font-size="14">D</text>
+
+      <circle cx="220" cy="155" r="17" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+      <text x="220" y="160" text-anchor="middle" font-size="14">E</text>
+
+      <circle cx="280" cy="155" r="17" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+      <text x="280" y="160" text-anchor="middle" font-size="14">F</text>
+
+      <circle cx="400" cy="155" r="17" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+      <text x="400" y="160" text-anchor="middle" font-size="14">G</text>
+
+      <circle cx="70" cy="225" r="17" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+      <text x="70" y="230" text-anchor="middle" font-size="14">H</text>
+
+      <circle cx="130" cy="225" r="17" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+      <text x="130" y="230" text-anchor="middle" font-size="14">I</text>
+
+      <circle cx="250" cy="225" r="17" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+      <text x="250" y="230" text-anchor="middle" font-size="14">J</text>
+
+      <circle cx="430" cy="225" r="17" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+      <text x="430" y="230" text-anchor="middle" font-size="14">K</text>
+    </svg>
+  </div>
+
+  <ol type="a">
+    <li>Run the 
+  <code>findShallowestLeaf</code> algorithm, keeping enough detail (e.g. the queue, removed node, etc.) 
+  at each step to make it clear what the algorithm is doing.
+    </li>
+    <li>
+      Identify the point at which the search stops.
+    </li>
+    <li>
+      Explain why no leaf at a smaller depth could remain unexamined.
+    </li>
+    <li>
+      Trace preorder on the same tree and identify the first leaf it reaches
+      and explain why the first preorder leaf is not guaranteed to be shallowest in general.
+    </li>
+    <li>
+      Can inorder or postorder guarantee that the first leaf visited is a
+      shallowest leaf? Explain.
+    </li>
+  </ol>
+</li>
+<li>
+  <strong>Compare Traversal Space:</strong>
+  Consider the following two binary trees, each containing \(31\) nodes:
+
+  <ul>
+    <li>a perfect binary tree of height \(4\);</li>
+    <li>a degenerate binary tree of height \(30\).</li>
+  </ul>
+
+  For each tree:
+
+  <ol type="a">
+    <li>
+      Determine the maximum number of active recursive calls on non-null nodes during a
+      depth-first traversal.
+    </li>
+    <li>
+      Determine the maximum number of nodes that may be stored in the
+      level-order queue.
+    </li>
+    <li>
+      State the asymptotic extra space used by each traversal.
+    </li>
+    <li>
+      Explain which tree is less favorable for recursive depth-first
+      traversal and which is less favorable for queue-based level order.
+    </li>
+  </ol>
+</li>
+
+<li>
+  <strong>Implement Recursive Depth-First Traversals:</strong>
+    In this activity, you will implement preorder, inorder, and postorder
+    traversals for a binary tree and test the order produced by each one.
+  <p>
+    Each traversal is divided into two functions. The function named
+    <code>preorder</code>, <code>inorder</code>, or <code>postorder</code> is a
+    <strong>wrapper</strong>. It receives the root of a tree or subtree, creates
+    an empty result list, calls a recursive helper to fill the list, and returns
+    the completed list.
+  </p>
+
+  <p>
+    The corresponding helper function performs the recursive traversal. For
+    example, <code>preorderHelper</code> implements the same preorder algorithm
+    described earlier on this page. Its additional <code>result</code> parameter
+    allows it to append each value to a list instead of printing the value when
+    the node is visited. The same relationship holds between
+    <code>inorder</code> and <code>inorderHelper</code>, and between
+    <code>postorder</code> and <code>postorderHelper</code>.
+  </p>
+
+  <p>
+    Returning a list makes it possible to test the complete traversal order
+    directly. The starter code already provides the wrapper functions,
+    tree-building functions, testing utilities, and tests. Your primary
+    programming task is to complete the three recursive helper functions.
+  </p>
+
+  <p>
+    Append values directly to the provided result list. Do not recursively
+    construct separate lists for the left and right subtrees and then concatenate
+    them. Repeated concatenation may copy values many times and can make the
+    running time larger than \(\Theta(n)\). Your traversal functions should not
+    print values, use global variables, or modify the tree.
+  </p>
+
+  <ol type="a">
+    <li>
+      Select a language, copy the complete starter program, and implement
+      <code>preorderHelper</code>, <code>inorderHelper</code>, and
+      <code>postorderHelper</code>. Each language has a comment on 
+      how to properly implement the <em>visit</em> part of the code.
+    </li>
+    <li>
+      Run the program and verify that every provided test passes. If a test
+      fails, compare the returned list with the expected traversal order and
+      revise the appropriate helper function.
+    </li>
+
+    <li>
+      For each traversal, determine its time complexity and recursive-stack
+      space complexity in terms of the number of nodes \(n\) and the tree height
+      \(h\).
+    </li>
+
+    <li>
+      Separately state how much space is required for the returned list. Explain
+      why this output space is distinct from the recursive stack space.
+    </li>
+  </ol>
+
+  <div class="tab-group scrollable-code-tabs">
+    <div class="tabs" role="tablist">
+      <button id="tab-java-dfs-traversal-activity"
+              class="tablink active"
+              data-lang="java-dfs-traversal-activity"
+              role="tab"
+              aria-controls="java-dfs-traversal-activity"
+              aria-selected="true">Java</button>
+  <button id="tab-cpp-dfs-traversal-activity"
+          class="tablink"
+          data-lang="cpp-dfs-traversal-activity"
+          role="tab"
+          aria-controls="cpp-dfs-traversal-activity"
+          aria-selected="false">C++</button>
+
+  <button id="tab-python-dfs-traversal-activity"
+          class="tablink"
+          data-lang="python-dfs-traversal-activity"
+          role="tab"
+          aria-controls="python-dfs-traversal-activity"
+          aria-selected="false">Python</button>
+</div>
+
+<div id="java-dfs-traversal-activity"
+     class="code-container active copyable-code"
+     role="tabpanel"
+     aria-labelledby="tab-java-dfs-traversal-activity">
+<pre><code class="language-java">import java.util.ArrayList;
+import java.util.List;
+
+public class DepthFirstTraversalExercise {
+    static class BinaryNode {
+        int value;
+        BinaryNode left;
+        BinaryNode right;
+
+        BinaryNode(int value) {
+            this.value = value;
+            this.left = null;
+            this.right = null;
+        }
+    }
+
+    static List&lt;Integer&gt; preorder(BinaryNode node) {
+        List&lt;Integer&gt; result = new ArrayList&lt;&gt;();
+        preorderHelper(node, result);
+        return result;
+    }
+
+    
+    // To visit a node, append its value to the result list:
+    // result.add(node.value);
+
+    static void preorderHelper(BinaryNode node, List&lt;Integer&gt; result) {
+        // TODO
+    }
+
+    static List&lt;Integer&gt; inorder(BinaryNode node) {
+        List&lt;Integer&gt; result = new ArrayList&lt;&gt;();
+        inorderHelper(node, result);
+        return result;
+    }
+
+    static void inorderHelper(BinaryNode node, List&lt;Integer&gt; result) {
+        // TODO
+    }
+
+    static List&lt;Integer&gt; postorder(BinaryNode node) {
+        List&lt;Integer&gt; result = new ArrayList&lt;&gt;();
+        postorderHelper(node, result);
+        return result;
+    }
+
+    static void postorderHelper(BinaryNode node, List&lt;Integer&gt; result) {
+        // TODO
+    }
+
+    static void check(String name, List&lt;Integer&gt; actual, List&lt;Integer&gt; expected) {
+        if (actual.equals(expected)) {
+            System.out.println("pass: " + name);
+        } else {
+            System.out.println(
+                "fail: " + name
+                + "; expected " + expected
+                + " but got " + actual
+            );
+        }
+    }
+
+    static BinaryNode buildCompleteTree() {
+        BinaryNode root = new BinaryNode(1);
+
+        root.left = new BinaryNode(2);
+        root.right = new BinaryNode(3);
+
+        root.left.left = new BinaryNode(4);
+        root.left.right = new BinaryNode(5);
+        root.right.left = new BinaryNode(6);
+
+        return root;
+    }
+
+    static BinaryNode buildDegenerateTree() {
+        BinaryNode root = new BinaryNode(7);
+
+        root.right = new BinaryNode(8);
+        root.right.right = new BinaryNode(9);
+        root.right.right.right = new BinaryNode(10);
+
+        return root;
+    }
+
+    static void testTraversals() {
+        BinaryNode empty = null;
+
+        check("preorder empty", preorder(empty), List.of());
+        check("inorder empty", inorder(empty), List.of());
+        check("postorder empty", postorder(empty), List.of());
+
+        BinaryNode single = new BinaryNode(11);
+
+        check("preorder single", preorder(single), List.of(11));
+        check("inorder single", inorder(single), List.of(11));
+        check("postorder single", postorder(single), List.of(11));
+
+        BinaryNode complete = buildCompleteTree();
+
+        check(
+            "preorder complete",
+            preorder(complete),
+            List.of(1, 2, 4, 5, 3, 6)
+        );
+        check(
+            "inorder complete",
+            inorder(complete),
+            List.of(4, 2, 5, 1, 6, 3)
+        );
+        check(
+            "postorder complete",
+            postorder(complete),
+            List.of(4, 5, 2, 6, 3, 1)
+        );
+
+        check(
+            "preorder left subtree",
+            preorder(complete.left),
+            List.of(2, 4, 5)
+        );
+        check(
+            "inorder left subtree",
+            inorder(complete.left),
+            List.of(4, 2, 5)
+        );
+        check(
+            "postorder left subtree",
+            postorder(complete.left),
+            List.of(4, 5, 2)
+        );
+
+        BinaryNode degenerate = buildDegenerateTree();
+
+        check(
+            "preorder degenerate",
+            preorder(degenerate),
+            List.of(7, 8, 9, 10)
+        );
+        check(
+            "inorder degenerate",
+            inorder(degenerate),
+            List.of(7, 8, 9, 10)
+        );
+        check(
+            "postorder degenerate",
+            postorder(degenerate),
+            List.of(10, 9, 8, 7)
+        );
+    }
+
+    public static void main(String[] args) {
+        testTraversals();
+    }
+}</code></pre>
+</div>
+
+<div id="cpp-dfs-traversal-activity"
+     class="code-container copyable-code"
+     role="tabpanel"
+     aria-labelledby="tab-cpp-dfs-traversal-activity">
+<pre><code class="language-cpp">#include &lt;iostream&gt;
+#include &lt;string&gt;
+#include &lt;vector&gt;
+using namespace std;
+
+struct BinaryNode {
+    int value;
+    BinaryNode* left;
+    BinaryNode* right;
+
+    BinaryNode(int v) {
+        value = v;
+        left = nullptr;
+        right = nullptr;
+    }
+};
+void preorderHelper(BinaryNode* node, vector&lt;int&gt;& result);
+void inorderHelper(BinaryNode* node, vector&lt;int&gt;& result);
+void postorderHelper(BinaryNode* node, vector&lt;int&gt;& result);
+
+vector&lt;int&gt; preorder(BinaryNode* node) {
+    vector&lt;int&gt; result;
+    preorderHelper(node, result);
+    return result;
+}
+
+// To visit node, append its value to the result vector:
+// result.push_back(node->value);
+
+void preorderHelper(BinaryNode* node, vector&lt;int&gt;&amp; result) {
+    // TODO
+}
+
+vector&lt;int&gt; inorder(BinaryNode* node) {
+    vector&lt;int&gt; result;
+    inorderHelper(node, result);
+    return result;
+}
+
+void inorderHelper(BinaryNode* node, vector&lt;int&gt;&amp; result) {
+    // TODO
+}
+
+vector&lt;int&gt; postorder(BinaryNode* node) {
+    vector&lt;int&gt; result;
+    postorderHelper(node, result);
+    return result;
+}
+
+void postorderHelper(BinaryNode* node, vector&lt;int&gt;&amp; result) {
+    // TODO
+}
+
+void printVector(const vector&lt;int&gt;&amp; values) {
+    cout &lt;&lt; "[";
+
+    for (int i = 0; i &lt; static_cast&lt;int&gt;(values.size()); i++) {
+        if (i &gt; 0) {
+            cout &lt;&lt; ", ";
+        }
+
+        cout &lt;&lt; values[i];
+    }
+
+    cout &lt;&lt; "]";
+}
+
+void check(
+    const string&amp; name,
+    const vector&lt;int&gt;&amp; actual,
+    const vector&lt;int&gt;&amp; expected
+) {
+    if (actual == expected) {
+        cout &lt;&lt; "pass: " &lt;&lt; name &lt;&lt; endl;
+    } else {
+        cout &lt;&lt; "fail: " &lt;&lt; name &lt;&lt; "; expected ";
+        printVector(expected);
+        cout &lt;&lt; " but got ";
+        printVector(actual);
+        cout &lt;&lt; endl;
+    }
+}
+
+BinaryNode* buildCompleteTree() {
+    BinaryNode* root = new BinaryNode(1);
+
+    root-&gt;left = new BinaryNode(2);
+    root-&gt;right = new BinaryNode(3);
+
+    root-&gt;left-&gt;left = new BinaryNode(4);
+    root-&gt;left-&gt;right = new BinaryNode(5);
+    root-&gt;right-&gt;left = new BinaryNode(6);
+
+    return root;
+}
+
+BinaryNode* buildDegenerateTree() {
+    BinaryNode* root = new BinaryNode(7);
+
+    root-&gt;right = new BinaryNode(8);
+    root-&gt;right-&gt;right = new BinaryNode(9);
+    root-&gt;right-&gt;right-&gt;right = new BinaryNode(10);
+
+    return root;
+}
+
+void destroyTree(BinaryNode* node) {
+    if (node == nullptr) {
+        return;
+    }
+
+    destroyTree(node-&gt;left);
+    destroyTree(node-&gt;right);
+    delete node;
+}
+
+void testTraversals() {
+    BinaryNode* empty = nullptr;
+
+    check("preorder empty", preorder(empty), vector&lt;int&gt;{});
+    check("inorder empty", inorder(empty), vector&lt;int&gt;{});
+    check("postorder empty", postorder(empty), vector&lt;int&gt;{});
+
+    BinaryNode* single = new BinaryNode(11);
+
+    check("preorder single", preorder(single), vector&lt;int&gt;{11});
+    check("inorder single", inorder(single), vector&lt;int&gt;{11});
+    check("postorder single", postorder(single), vector&lt;int&gt;{11});
+
+    BinaryNode* complete = buildCompleteTree();
+
+    check(
+        "preorder complete",
+        preorder(complete),
+        vector&lt;int&gt;{1, 2, 4, 5, 3, 6}
+    );
+    check(
+        "inorder complete",
+        inorder(complete),
+        vector&lt;int&gt;{4, 2, 5, 1, 6, 3}
+    );
+    check(
+        "postorder complete",
+        postorder(complete),
+        vector&lt;int&gt;{4, 5, 2, 6, 3, 1}
+    );
+
+    check(
+        "preorder left subtree",
+        preorder(complete-&gt;left),
+        vector&lt;int&gt;{2, 4, 5}
+    );
+    check(
+        "inorder left subtree",
+        inorder(complete-&gt;left),
+        vector&lt;int&gt;{4, 2, 5}
+    );
+    check(
+        "postorder left subtree",
+        postorder(complete-&gt;left),
+        vector&lt;int&gt;{4, 5, 2}
+    );
+
+    BinaryNode* degenerate = buildDegenerateTree();
+
+    check(
+        "preorder degenerate",
+        preorder(degenerate),
+        vector&lt;int&gt;{7, 8, 9, 10}
+    );
+    check(
+        "inorder degenerate",
+        inorder(degenerate),
+        vector&lt;int&gt;{7, 8, 9, 10}
+    );
+    check(
+        "postorder degenerate",
+        postorder(degenerate),
+        vector&lt;int&gt;{10, 9, 8, 7}
+    );
+
+    destroyTree(single);
+    destroyTree(complete);
+    destroyTree(degenerate);
+}
+
+int main() {
+    testTraversals();
+    return 0;
+}</code></pre>
+</div>
+
+<div id="python-dfs-traversal-activity"
+     class="code-container copyable-code"
+     role="tabpanel"
+     aria-labelledby="tab-python-dfs-traversal-activity">
+<pre><code class="language-python">class BinaryNode:
+    def __init__(self, value):
+        self.value = value
+        self.left = None
+        self.right = None
+
+
+def preorder(node):
+    result = []
+    preorder_helper(node, result)
+    return result
+
+
+# To visit node, append its value to the result list:
+# result.append(node.value)  
+
+def preorder_helper(node, result):
+    # TODO
+    pass
+
+
+def inorder(node):
+    result = []
+    inorder_helper(node, result)
+    return result
+
+
+def inorder_helper(node, result):
+    # TODO
+    pass
+
+
+def postorder(node):
+    result = []
+    postorder_helper(node, result)
+    return result
+
+
+def postorder_helper(node, result):
+    # TODO
+    pass
+
+
+def check(name, actual, expected):
+    if actual == expected:
+        print("pass:", name)
+    else:
+        print(
+            "fail:", name,
+            "; expected", expected,
+            "but got", actual
+        )
+
+
+def build_complete_tree():
+    root = BinaryNode(1)
+
+    root.left = BinaryNode(2)
+    root.right = BinaryNode(3)
+
+    root.left.left = BinaryNode(4)
+    root.left.right = BinaryNode(5)
+    root.right.left = BinaryNode(6)
+
+    return root
+
+
+def build_degenerate_tree():
+    root = BinaryNode(7)
+
+    root.right = BinaryNode(8)
+    root.right.right = BinaryNode(9)
+    root.right.right.right = BinaryNode(10)
+
+    return root
+
+
+def test_traversals():
+    empty = None
+
+    check("preorder empty", preorder(empty), [])
+    check("inorder empty", inorder(empty), [])
+    check("postorder empty", postorder(empty), [])
+
+    single = BinaryNode(11)
+
+    check("preorder single", preorder(single), [11])
+    check("inorder single", inorder(single), [11])
+    check("postorder single", postorder(single), [11])
+
+    complete = build_complete_tree()
+
+    check(
+        "preorder complete",
+        preorder(complete),
+        [1, 2, 4, 5, 3, 6]
+    )
+    check(
+        "inorder complete",
+        inorder(complete),
+        [4, 2, 5, 1, 6, 3]
+    )
+    check(
+        "postorder complete",
+        postorder(complete),
+        [4, 5, 2, 6, 3, 1]
+    )
+
+    check(
+        "preorder left subtree",
+        preorder(complete.left),
+        [2, 4, 5]
+    )
+    check(
+        "inorder left subtree",
+        inorder(complete.left),
+        [4, 2, 5]
+    )
+    check(
+        "postorder left subtree",
+        postorder(complete.left),
+        [4, 5, 2]
+    )
+
+    degenerate = build_degenerate_tree()
+
+    check(
+        "preorder degenerate",
+        preorder(degenerate),
+        [7, 8, 9, 10]
+    )
+    check(
+        "inorder degenerate",
+        inorder(degenerate),
+        [7, 8, 9, 10]
+    )
+    check(
+        "postorder degenerate",
+        postorder(degenerate),
+        [10, 9, 8, 7]
+    )
+
+
+test_traversals()</code></pre>
+</div>
+  </div>
+</li>
+
+<li>
+  <strong>Extend the Program with Level-Order Traversal:</strong>
+    Add a level-order traversal to the program from the previous activity.
+    Unlike the three depth-first traversals, level-order traversal is iterative
+    and uses a queue rather than recursive calls.
+  <p>
+    The <code>levelOrder</code> function should receive the root of a tree or
+    subtree and return a list containing its values in level order. If the root
+    is null, it should return an empty list. Otherwise, place the root in a
+    queue and repeatedly perform the following steps:
+  </p>
+
+  <ol>
+    <li>Remove the node at the front of the queue.</li>
+    <li>Visit it by appending its value to the result list.</li>
+    <li>
+      Add its left child to the back of the queue if the left child exists.
+    </li>
+    <li>
+      Add its right child to the back of the queue if the right child exists.
+    </li>
+  </ol>
+
+  <p>
+    Copy the additions for your language into the program from the preceding
+    activity. Add the required import or include statement near the top of the
+    program, add the traversal function with the other traversal functions, and
+    add the new tests to the existing test function. All of the earlier
+    depth-first traversal tests should continue to pass.
+  </p>
+
+  <ol type="a">
+    <li>
+      Complete the <code>levelOrder</code> function using the queue operations
+      shown in the starter code. Do not use recursion.
+    </li>
+<li>
+  Run the complete program and verify that both the earlier depth-first
+  traversal tests and the new level-order tests pass.
+</li>
+
+<li>
+  Determine the time complexity of level-order traversal in terms of the
+  number of nodes \(n\).
+</li>
+
+<li>
+  Determine the auxiliary space required by the queue in terms of the
+  maximum width \(w\) of the tree. Separately state the space required for
+  the returned list.
+</li>
+
+<li>
+  Compare the maximum queue size for the complete test tree and the
+  degenerate test tree. Explain how the shapes of the trees account for the
+  difference.
+</li>
+  </ol>
+
+  <div class="tab-group scrollable-code-tabs">
+    <div class="tabs" role="tablist">
+      <button id="tab-java-level-order-activity"
+              class="tablink active"
+              data-lang="java-level-order-activity"
+              role="tab"
+              aria-controls="java-level-order-activity"
+              aria-selected="true">Java</button>
+  <button id="tab-cpp-level-order-activity"
+          class="tablink"
+          data-lang="cpp-level-order-activity"
+          role="tab"
+          aria-controls="cpp-level-order-activity"
+          aria-selected="false">C++</button>
+
+  <button id="tab-python-level-order-activity"
+          class="tablink"
+          data-lang="python-level-order-activity"
+          role="tab"
+          aria-controls="python-level-order-activity"
+          aria-selected="false">Python</button>
+</div>
+
+<div id="java-level-order-activity"
+     class="code-container active copyable-code"
+     role="tabpanel"
+     aria-labelledby="tab-java-level-order-activity">
+<pre><code class="language-java">// Add these imports near the top of the program.
+import java.util.ArrayDeque;
+import java.util.Queue;
+
+// Add this function with the other traversal functions.
+
+static List&lt;Integer&gt; levelOrder(BinaryNode root) {
+    List&lt;Integer&gt; result = new ArrayList&lt;&gt;();
+
+    if (root == null) {
+        return result;
+    }
+
+    Queue&lt;BinaryNode&gt; queue = new ArrayDeque&lt;&gt;();
+    queue.add(root);
+
+    while (!queue.isEmpty()) {
+        BinaryNode node = queue.remove();
+
+        // To visit node:
+        // result.add(node.value);
+
+        // TODO: Visit node and add its existing children
+        // to the back of the queue in left-to-right order.
+    }
+
+    return result;
+}
+
+// Add these tests to testTraversals().
+
+check(
+    "level order empty",
+    levelOrder(empty),
+    List.of()
+);
+
+check(
+    "level order single",
+    levelOrder(single),
+    List.of(11)
+);
+
+check(
+    "level order complete",
+    levelOrder(complete),
+    List.of(1, 2, 3, 4, 5, 6)
+);
+
+check(
+    "level order left subtree",
+    levelOrder(complete.left),
+    List.of(2, 4, 5)
+);
+
+check(
+    "level order degenerate",
+    levelOrder(degenerate),
+    List.of(7, 8, 9, 10)
+);</code></pre>
+</div>
+
+<div id="cpp-level-order-activity"
+     class="code-container copyable-code"
+     role="tabpanel"
+     aria-labelledby="tab-cpp-level-order-activity">
+<pre><code class="language-cpp">// Add this include near the top of the program.
+#include &lt;queue&gt;
+
+// Add this function with the other traversal functions.
+
+vector&lt;int&gt; levelOrder(BinaryNode* root) {
+    vector&lt;int&gt; result;
+
+    if (root == nullptr) {
+        return result;
+    }
+
+    queue&lt;BinaryNode*&gt; nodes;
+    nodes.push(root);
+
+    while (!nodes.empty()) {
+        BinaryNode* node = nodes.front();
+        nodes.pop();
+
+        // To visit node:
+        // result.push_back(node-&gt;value);
+
+        // TODO: Visit node and add its existing children
+        // to the back of the queue in left-to-right order.
+    }
+
+    return result;
+}
+
+// Add these tests to testTraversals().
+
+check(
+    "level order empty",
+    levelOrder(empty),
+    vector&lt;int&gt;{}
+);
+
+check(
+    "level order single",
+    levelOrder(single),
+    vector&lt;int&gt;{11}
+);
+
+check(
+    "level order complete",
+    levelOrder(complete),
+    vector&lt;int&gt;{1, 2, 3, 4, 5, 6}
+);
+
+check(
+    "level order left subtree",
+    levelOrder(complete-&gt;left),
+    vector&lt;int&gt;{2, 4, 5}
+);
+
+check(
+    "level order degenerate",
+    levelOrder(degenerate),
+    vector&lt;int&gt;{7, 8, 9, 10}
+);</code></pre>
+</div>
+
+<div id="python-level-order-activity"
+     class="code-container copyable-code"
+     role="tabpanel"
+     aria-labelledby="tab-python-level-order-activity">
+<pre><code class="language-python"># Add this import near the top of the program.
+from collections import deque
+
+
+# Add this function with the other traversal functions.
+
+def level_order(root):
+    result = []
+
+    if root is None:
+        return result
+
+    queue = deque([root])
+
+    while queue:
+        node = queue.popleft()
+
+        # To visit node:
+        # result.append(node.value)
+
+        # TODO: Visit node and add its existing children
+        # to the back of the queue in left-to-right order.
+
+    return result
+
+
+# Add these tests to test_traversals().
+
+check(
+    "level order empty",
+    level_order(empty),
+    []
+)
+
+check(
+    "level order single",
+    level_order(single),
+    [11]
+)
+
+check(
+    "level order complete",
+    level_order(complete),
+    [1, 2, 3, 4, 5, 6]
+)
+
+check(
+    "level order left subtree",
+    level_order(complete.left),
+    [2, 4, 5]
+)
+
+check(
+    "level order degenerate",
+    level_order(degenerate),
+    [7, 8, 9, 10]
+)</code></pre>
+</div>
+  </div>
+</li>
+
+  </ol>
+</section>
+<section id="problems" section-title="Homework">
+  <h2>Homework</h2>
+
+  <ol class="spaced">
+    <li>
+      <strong>Complete Traversal Traces:</strong>
+      Consider the following binary tree:
+    <div style="text-align:center; margin: 12px 0;">
+  <svg width="320" height="230" viewBox="0 0 320 230" role="img"
+       aria-label="Binary tree with root M; children F and T; F has children B and J; T has left child P; B has right child D; P has right child R">
+
+    <!-- Edges -->
+    <line x1="160" y1="30" x2="95" y2="85" stroke="#555" stroke-width="2"/>
+    <line x1="160" y1="30" x2="225" y2="85" stroke="#555" stroke-width="2"/>
+
+    <line x1="95" y1="85" x2="55" y2="145" stroke="#555" stroke-width="2"/>
+    <line x1="95" y1="85" x2="135" y2="145" stroke="#555" stroke-width="2"/>
+
+    <line x1="225" y1="85" x2="195" y2="145" stroke="#555" stroke-width="2"/>
+
+    <line x1="55" y1="145" x2="75" y2="200" stroke="#555" stroke-width="2"/>
+    <line x1="195" y1="145" x2="215" y2="200" stroke="#555" stroke-width="2"/>
+
+    <!-- Nodes -->
+    <circle cx="160" cy="30" r="16" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+    <text x="160" y="35" text-anchor="middle" font-size="14">M</text>
+
+    <circle cx="95" cy="85" r="16" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+    <text x="95" y="90" text-anchor="middle" font-size="14">F</text>
+
+    <circle cx="225" cy="85" r="16" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+    <text x="225" y="90" text-anchor="middle" font-size="14">T</text>
+
+    <circle cx="55" cy="145" r="16" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+    <text x="55" y="150" text-anchor="middle" font-size="14">B</text>
+
+    <circle cx="135" cy="145" r="16" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+    <text x="135" y="150" text-anchor="middle" font-size="14">J</text>
+
+    <circle cx="195" cy="145" r="16" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+    <text x="195" y="150" text-anchor="middle" font-size="14">P</text>
+
+    <circle cx="75" cy="200" r="16" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+    <text x="75" y="205" text-anchor="middle" font-size="14">D</text>
+
+    <circle cx="215" cy="200" r="16" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+    <text x="215" y="205" text-anchor="middle" font-size="14">R</text>
+  </svg>
+</div>
+  <ol type="a">
+    <li>Write the preorder traversal.</li>
+    <li>Write the inorder traversal.</li>
+    <li>Write the postorder traversal.</li>
+    <li>Write the level-order traversal.</li>
+    <li>
+      For each depth-first traversal, identify the point at which node
+      \(F\) is visited relative to the recursive calls on its two children.
+    </li>
+  </ol>
+</li>
+
+<li>
+  <strong>Design a Leaf-Listing Algorithm:</strong>
+  Design an algorithm that returns a list containing only the leaves of a
+  binary tree from left to right.
+
+  <ol type="a">
+    <li>
+      Choose preorder, inorder, postorder, or level-order as the basis for
+      your algorithm. Give a justification for your choice. 
+      (Hint: They don't all necessarily work, so choose wisely!)
+    </li>
+    <li>Give pseudocode for your algorithm.</li>
+    <li>Run your algorithm on the tree from the previous problem and verify that it
+      correctly returned \([D, J, R]\).</li>
+    <li>
+      Explain why the leaves appear in left-to-right order.
+    </li>
+    <li>
+      Analyze the running time and auxiliary space usage.
+    </li>
+  </ol>
+</li>
+
+<li>
+  <strong>Construct an Expression Tree from Postfix Notation:</strong>
+  A postfix expression can be converted into an expression tree by scanning its
+  tokens from left to right and maintaining a stack of tree roots.
+
+  <ul>
+    <li>
+      When an operand is encountered, create a leaf containing that operand and
+      push it onto the stack.
+    </li>
+    <li>
+      When an operator is encountered, create a node containing the operator.
+      Pop the first tree from the stack and make it the right subtree. Pop the
+      second tree and make it the left subtree. Then push the new tree onto the
+      stack.
+    </li>
+  </ul>
+
+  <ol type="a">
+    <li>
+      Give pseudocode for an algorithm that constructs an expression tree from
+      a postfix expression using the procedure described above.
+    </li>
+
+    <li>
+      Apply your algorithm to the postfix expression
+    \[
+      \mathtt{7\ 2\ 3\ *\ +\ 8\ 4\ /\ -}.
+    \]
+      Record the contents
+      of the stack after each token is processed. Represent each partial tree by
+      its root or by a fully parenthesized expression.
+    </li>
+
+    <li>
+      Draw the final expression tree.
+    </li>
+
+    <li>
+      Give the fully parenthesized inorder expression represented by the tree.
+    </li>
+
+    <li>
+      Verify that a postorder traversal of the completed tree reproduces the
+      original postfix expression.
+    </li>
+
+    <li>
+      Analyze the running time and auxiliary space usage for an expression
+      containing \(n\) tokens.
+    </li>
+  </ol>
+</li>
+
+
+<li>
+  <strong>Compute Values by Depth:</strong>
+  Design a level-order algorithm that returns a list in which the value at
+  index \(d\) is the sum of all node values at depth \(d\).
+
+  For example, if the tree is
+ <div style="text-align:center; margin: 12px 0;">
+  <svg width="280" height="180" viewBox="0 0 280 180" role="img"
+       aria-label="Binary tree with root 5; children 3 and 8; node 3 has children 1 and 4; node 8 has right child 10">
+
+    <!-- Edges -->
+    <line x1="140" y1="30" x2="85" y2="85" stroke="#555" stroke-width="2"/>
+    <line x1="140" y1="30" x2="195" y2="85" stroke="#555" stroke-width="2"/>
+
+    <line x1="85" y1="85" x2="55" y2="140" stroke="#555" stroke-width="2"/>
+    <line x1="85" y1="85" x2="115" y2="140" stroke="#555" stroke-width="2"/>
+
+    <line x1="195" y1="85" x2="225" y2="140" stroke="#555" stroke-width="2"/>
+
+    <!-- Nodes -->
+    <circle cx="140" cy="30" r="16" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+    <text x="140" y="35" text-anchor="middle" font-size="14">5</text>
+
+    <circle cx="85" cy="85" r="16" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+    <text x="85" y="90" text-anchor="middle" font-size="14">3</text>
+
+    <circle cx="195" cy="85" r="16" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+    <text x="195" y="90" text-anchor="middle" font-size="14">8</text>
+
+    <circle cx="55" cy="140" r="16" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+    <text x="55" y="145" text-anchor="middle" font-size="14">1</text>
+
+    <circle cx="115" cy="140" r="16" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+    <text x="115" y="145" text-anchor="middle" font-size="14">4</text>
+
+    <circle cx="225" cy="140" r="16" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+    <text x="225" y="145" text-anchor="middle" font-size="14">10</text>
+  </svg>
+</div>
+  the algorithm should return
+  \[
+    [5,11,15].
+  \]
+
+  <ol type="a">
+    <li>Give pseudocode for the algorithm.</li>
+    <li>
+      Explain how the algorithm determines where one depth ends and the
+      next begins.
+    </li>
+    <li>Analyze its time and auxiliary space usage.</li>
+  </ol>
+</li>
+
+<li>
+  <strong>Serialize a Binary Tree:</strong>
+  A serialization converts a tree into a sequence that can later be used to
+  reconstruct the tree.
+
+  <ol type="a">
+    <li>
+      Explain why preorder alone is not enough to reconstruct an arbitrary
+      binary tree. Give two different binary trees with the same preorder
+      sequence.
+    </li>
+    <li>
+      Implement <code>serialize</code> by modifying preorder traversal so that it records each
+      node's value and also records a special marker (use <code>#</code>) whenever it reaches a null
+      child reference. Give full pseudocode for the algorithm.
+    </li>
+    <li>
+      Serialize the following tree:
+     <div style="text-align:center; margin: 12px 0;">
+
+      <svg class="traversal-tree"
+     style="display:block; width:100%; max-width:240px; height:auto; margin:0 auto;"
+     viewBox="0 0 240 180"
+     role="img"
+     aria-label="Binary tree with root A; children B and C; node B has right child D">
+
+    <!-- Edges -->
+    <line x1="120" y1="30" x2="75" y2="85" stroke="#555" stroke-width="2"/>
+    <line x1="120" y1="30" x2="165" y2="85" stroke="#555" stroke-width="2"/>
+    <line x1="75" y1="85" x2="105" y2="140" stroke="#555" stroke-width="2"/>
+
+    <!-- Nodes -->
+    <circle cx="120" cy="30" r="16" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+    <text x="120" y="35" text-anchor="middle" font-size="14">A</text>
+
+    <circle cx="75" cy="85" r="16" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+    <text x="75" y="90" text-anchor="middle" font-size="14">B</text>
+
+    <circle cx="165" cy="85" r="16" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+    <text x="165" y="90" text-anchor="middle" font-size="14">C</text>
+
+    <circle cx="105" cy="140" r="16" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+    <text x="105" y="145" text-anchor="middle" font-size="14">D</text>
+  </svg>
+</div>
+    </li>
+    <li>
+      Explain why the added null markers make reconstruction possible.
+    </li>
+    <li>
+      <p>
+        Design a recursive algorithm
+        <code>deserialize(sequence)</code> that reconstructs a binary tree from a
+        preorder serialization containing null markers. The algorithm should return
+        the root of the reconstructed tree. Because each recursive call must read the
+        next unused token, the algorithm uses a shared <code>position</code> variable
+        to track where it is in the sequence.
+      </p>
+
+      <p>
+        Complete the partial pseudocode below. The helper function returns the root of
+        the subtree represented by the next portion of the sequence. The code for
+        reading and advancing past the next token is provided; you must complete the
+        recursive reconstruction logic.
+      </p>
+
+<pre><code>deserialize(sequence)
+    position = 0
+    root = deserializeHelper(sequence, position)
+
+    if position != length(sequence)
+        report an invalid serialization
+
+    return root
+
+
+deserializeHelper(sequence, position)
+    if position == length(sequence)
+        report an invalid serialization
+
+    token = sequence[position]
+    position = position + 1
+
+    // TODO: Handle the null marker.
+
+    // TODO: Create a node for a non-null token.
+
+    // TODO: Recursively reconstruct and assign the left subtree.
+
+    // TODO: Recursively reconstruct and assign the right subtree.
+
+    // TODO: Return the root of the reconstructed subtree.</code></pre>
+    </li>
+    <li>
+      Trace your deserialization algorithm on the sequence produced in part (c).
+      Show which item is read by each recursive call and identify the left and right
+      child assigned to each non-null node.
+    </li>
+    <li>
+      Deserialize the following longer sequence and draw the binary tree that it
+      represents:
+      \[
+        \mathtt{A,\ B,\ D,\ \#,\ H,\ \#,\ \#,\ E,\ I,\ \#,\ \#,\ \#,\ 
+        C,\ F,\ \#,\ \#,\ G,\ J,\ \#,\ \#,\ \#}.
+      \]
+      Then serialize your reconstructed tree using preorder and null markers to
+      verify that you obtain the original sequence.
+    </li>
+    <li>
+      Analyze the running time and auxiliary space usage of both
+      <code>serialize</code> and <code>deserialize</code> for a tree with \(n\)
+      nodes. Also state the length of the serialized sequence.
+    </li>
+  </ol>
+  </li>
+
+<li>
+  <strong>Implement Iterative Preorder:</strong>
+  Preorder traversal can also be implemented iteratively with the help of a
+  stack.
+  <ol type="a">
+    <li>
+      Give pseudocode for an iterative version of preorder traversal. The
+      algorithm should return a list of values rather than print them.
+    </li>
+    <li>
+      Test the algorithm on an empty tree, a single-node tree, a complete tree,
+      and a degenerate tree.
+    </li>
+
+    <li>
+      Compare its time and auxiliary space complexity with recursive preorder.
+    </li>
+      </ol>
+    </li>
+<li>
+  <strong>Compute Subtree Sizes:</strong>
+  Design a recursive algorithm
+  <code>computeSubtreeSizes(node)</code> that stores, at every node, the number
+  of nodes in the subtree rooted at that node, and returns that value.
+
+  <p>
+    The parameter <code>node</code> is the root of the tree or subtree currently
+    being processed. You may assume that each node has a <code>size</code>
+    variable. The algorithm should store the size of the current subtree in
+    <code>node.size</code> and return that same integer value to the caller.
+    When <code>node</code> is null, the algorithm should return \(0\).
+  </p>
+
+  <ol type="a">
+    <li>
+      Explain how knowing the sizes of the left and right subtrees allows you to
+      compute <code>node.size</code>. Which depth-first traversal order naturally
+      provides the needed information?
+    </li>
+
+    <li>
+      Give pseudocode for <code>computeSubtreeSizes(node)</code>.
+    </li>
+
+    <li>
+      Show the value stored in <code>size</code> at each node of the following
+      tree:
+
+      <div style="text-align:center; margin:12px 0;">
+        <svg class="traversal-tree"
+            style="display:block; width:100%; max-width:280px; height:auto; margin:0 auto;"
+            viewBox="0 0 280 180"
+            role="img"
+            aria-label="Binary tree with root A; children B and C; B has children D and E; C has left child F">
+
+          <!-- Edges -->
+          <line x1="140" y1="30" x2="85" y2="85"
+                stroke="#555" stroke-width="2"/>
+          <line x1="140" y1="30" x2="195" y2="85"
+                stroke="#555" stroke-width="2"/>
+
+          <line x1="85" y1="85" x2="55" y2="140"
+                stroke="#555" stroke-width="2"/>
+          <line x1="85" y1="85" x2="115" y2="140"
+                stroke="#555" stroke-width="2"/>
+
+          <line x1="195" y1="85" x2="165" y2="140"
+                stroke="#555" stroke-width="2"/>
+
+          <!-- Nodes -->
+          <circle cx="140" cy="30" r="16" fill="#f0f8ff"
+                  stroke="#003366" stroke-width="2"/>
+          <text x="140" y="35" text-anchor="middle" font-size="14">A</text>
+
+          <circle cx="85" cy="85" r="16" fill="#f0f8ff"
+                  stroke="#003366" stroke-width="2"/>
+          <text x="85" y="90" text-anchor="middle" font-size="14">B</text>
+
+          <circle cx="195" cy="85" r="16" fill="#f0f8ff"
+                  stroke="#003366" stroke-width="2"/>
+          <text x="195" y="90" text-anchor="middle" font-size="14">C</text>
+
+          <circle cx="55" cy="140" r="16" fill="#f0f8ff"
+                  stroke="#003366" stroke-width="2"/>
+          <text x="55" y="145" text-anchor="middle" font-size="14">D</text>
+
+          <circle cx="115" cy="140" r="16" fill="#f0f8ff"
+                  stroke="#003366" stroke-width="2"/>
+          <text x="115" y="145" text-anchor="middle" font-size="14">E</text>
+
+          <circle cx="165" cy="140" r="16" fill="#f0f8ff"
+                  stroke="#003366" stroke-width="2"/>
+          <text x="165" y="145" text-anchor="middle" font-size="14">F</text>
+        </svg>
+      </div>
+    </li>
+
+    <li>
+      Analyze the running time and recursive-stack space usage in terms of the
+      number of nodes \(n\) and the tree height \(h\).
+    </li>
+
+  </ol>
+</li>
+
+<li>
+  <strong>Find the Right-Side View:</strong>
+  The right-side view of a binary tree is the list of nodes visible when
+  the tree is viewed from the right. It contains the right-most node at each
+  depth.
+
+  <ol type="a">
+    <li>
+      Design a level-order algorithm that returns the right-side view.
+    </li>
+    <li>
+      State what information must be tracked while processing each level.
+    </li>
+    <li>
+      Apply the algorithm to the following tree
+      and give the resulting list.
+      <div style="text-align:center; margin: 12px 0;">
+  <svg class="traversal-tree"
+       style="display:block; width:100%; max-width:420px; height:auto; margin:0 auto;"
+       viewBox="20 5 400 300"
+       role="img"
+       aria-label="Binary tree with root A; children B and C; B has children D and E; C has left child F; D has left child H; E has right child I; F has children J and K; I has left child L">
+
+    <!-- Edges -->
+    <line x1="200" y1="30" x2="120" y2="85" stroke="#555" stroke-width="2"/>
+    <line x1="200" y1="30" x2="280" y2="85" stroke="#555" stroke-width="2"/>
+
+    <line x1="120" y1="85" x2="80" y2="145" stroke="#555" stroke-width="2"/>
+    <line x1="120" y1="85" x2="160" y2="145" stroke="#555" stroke-width="2"/>
+
+    <line x1="280" y1="85" x2="260" y2="145" stroke="#555" stroke-width="2"/>
+
+    <line x1="80" y1="145" x2="55" y2="205" stroke="#555" stroke-width="2"/>
+    <line x1="160" y1="145" x2="185" y2="205" stroke="#555" stroke-width="2"/>
+
+    <line x1="260" y1="145" x2="235" y2="205" stroke="#555" stroke-width="2"/>
+    <line x1="260" y1="145" x2="305" y2="205" stroke="#555" stroke-width="2"/>
+
+    <line x1="185" y1="205" x2="165" y2="265" stroke="#555" stroke-width="2"/>
+
+    <!-- Nodes -->
+    <circle cx="200" cy="30" r="16" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+    <text x="200" y="35" text-anchor="middle" font-size="14">A</text>
+
+    <circle cx="120" cy="85" r="16" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+    <text x="120" y="90" text-anchor="middle" font-size="14">B</text>
+
+    <circle cx="280" cy="85" r="16" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+    <text x="280" y="90" text-anchor="middle" font-size="14">C</text>
+
+    <circle cx="80" cy="145" r="16" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+    <text x="80" y="150" text-anchor="middle" font-size="14">D</text>
+
+    <circle cx="160" cy="145" r="16" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+    <text x="160" y="150" text-anchor="middle" font-size="14">E</text>
+
+    <circle cx="260" cy="145" r="16" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+    <text x="260" y="150" text-anchor="middle" font-size="14">F</text>
+
+    <circle cx="55" cy="205" r="16" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+    <text x="55" y="210" text-anchor="middle" font-size="14">H</text>
+
+    <circle cx="185" cy="205" r="16" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+    <text x="185" y="210" text-anchor="middle" font-size="14">I</text>
+
+    <circle cx="235" cy="205" r="16" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+    <text x="235" y="210" text-anchor="middle" font-size="14">J</text>
+
+    <circle cx="305" cy="205" r="16" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+    <text x="305" y="210" text-anchor="middle" font-size="14">K</text>
+
+    <circle cx="165" cy="265" r="16" fill="#f0f8ff" stroke="#003366" stroke-width="2"/>
+    <text x="165" y="270" text-anchor="middle" font-size="14">L</text>
+  </svg>
+</div>
+
+    </li>
+    <li>Analyze the running time and auxiliary space usage.</li>
+  </ol>
+</li>
+  </ol>
 </section>
 
 
 <script>
-  /* Needed for the 4 animations */
+  /* Needed for all of the animations */
   document.addEventListener("DOMContentLoaded", function () {
     const animations = [
       {
