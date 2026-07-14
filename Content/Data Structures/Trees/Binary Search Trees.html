@@ -18,184 +18,1451 @@
     gtag('js', new Date());
     gtag('config', 'G-DQ5LVZVFDC');
   </script>
+  <style>
+    /* Shared styles for static BST drawings. */
+    .bst-comparison-svg {
+      display: block;
+      width: 100%;
+      max-width: 760px;
+      height: auto;
+      margin: 1em 0;
+    }
+
+    .bst-edge {
+      stroke: #0a3974;
+      stroke-width: 2;
+    }
+
+    .bst-node {
+      fill: #ffffff;
+      stroke: #0a3974;
+      stroke-width: 2;
+    }
+
+    .bst-bad-node {
+      fill: #fff3d9;
+      stroke: #d9822b;
+      stroke-width: 2;
+    }
+
+    .bst-value {
+      fill: #0f264a;
+      font-family: Verdana, sans-serif;
+      font-size: 17px;
+      font-weight: 700;
+      text-anchor: middle;
+      dominant-baseline: middle;
+    }
+
+    .bst-heading {
+      fill: #0f264a;
+      font-family: Verdana, sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      text-anchor: middle;
+    }
+
+    /* Treat example titles as block headings without paragraph margins or <br>. */
+    .example-box > .example-title {
+      display: block;
+    }
+
+    .example-box > .example-title + p {
+      margin-top: 0.5em;
+    }
+
+    /* Shared controls and status line for every inline BST demo. */
+    .bst-demo-controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5em;
+      margin: 1em 0 0.25em;
+    }
+
+    .bst-demo-controls label {
+      font-weight: 600;
+      color: #003366;
+    }
+
+    .bst-demo-controls input {
+      width: 4em;
+      margin: 2px;
+      padding: 2px;
+      font: inherit;
+    }
+
+    .bst-demo-controls button {
+      margin: 2px;
+      padding: 2px 0.5em;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    .bst-demo-status {
+      min-height: 1em;
+      margin: 0.25em 0.5em 0.5em;
+    }
+
+    /* Shared tree drawing and animation states for all inline BST demos. */
+    .bst-demo-svg {
+      display: block;
+      width: 100%;
+      height: auto;
+      margin: 0.5em 0;
+    }
+
+    .bst-demo-svg--search {
+      max-width: 800px;
+    }
+
+    .bst-demo-svg--insert {
+      max-width: 900px;
+    }
+
+    .bst-demo-svg text {
+      font-family: Verdana, sans-serif;
+    }
+
+    .bst-demo-edge {
+      stroke: #0a3974;
+      stroke-width: 2;
+      transition: stroke 0.3s, stroke-width 0.3s;
+    }
+
+    .bst-demo-node {
+      fill: #ffffff;
+      stroke: #0a3974;
+      stroke-width: 2;
+      transition: fill 0.3s, stroke 0.3s, stroke-width 0.3s;
+    }
+
+    .bst-demo-value {
+      fill: #0f264a;
+      font-size: 16px;
+      font-weight: 700;
+      text-anchor: middle;
+      dominant-baseline: middle;
+    }
+
+    .bst-demo-current {
+      fill: #fff3d9;
+      stroke: #d9822b;
+      stroke-width: 3;
+    }
+
+    .bst-demo-visited {
+      fill: #e7f0fa;
+      stroke: #0a3974;
+      stroke-width: 3;
+    }
+
+    .bst-demo-success {
+      fill: #e8f7ed;
+      stroke: #2f855a;
+      stroke-width: 3;
+    }
+
+    .bst-demo-error {
+      fill: #fde8e8;
+      stroke: #b83232;
+      stroke-width: 3;
+    }
+
+    .bst-demo-path-edge {
+      stroke: #d9822b;
+      stroke-width: 4;
+    }
+
+    .bst-demo-success-edge {
+      stroke: #2f855a;
+      stroke-width: 4;
+    }
+  </style>
 </head>
 <body>
   <h1>Binary Search Trees</h1>
 
-  <section id="overview" section-title="Overview">
-    <h2>Overview</h2>
-    <p>
-      A <strong>binary search tree</strong>, or <strong>BST</strong>, is a binary tree with an ordering invariant:
-      every value in a node's left subtree is smaller than the node's value, and every value in the right subtree is
-      larger. This invariant lets search make one comparison per level.
-    </p>
-    <p>
-      The BST idea is independent of the exact implementation. The tree might be represented by linked nodes, objects,
-      or records in memory. What matters conceptually is the ordering rule and the path it creates for search, insert,
-      and delete.
-    </p>
-  </section>
+<section id="overview" section-title="Overview">
+  <h2>Overview</h2>
 
-  <section id="invariant" section-title="BST Invariant">
-    <h2>BST Invariant</h2>
-    <p>
-      For each node \(x\):
-    </p>
-    <ul>
-      <li>all values in \(x\)'s left subtree are less than \(x.value\), and</li>
-      <li>all values in \(x\)'s right subtree are greater than \(x.value\).</li>
-    </ul>
-    <p>
-      This rule applies recursively to every subtree. It is not enough for a node's immediate children to be on the
-      correct side; every descendant must also respect the range implied by its ancestors.
-    </p>
-    <p>
-      Different implementations make different choices about duplicate keys. Some disallow duplicates, some store a
-      count in each node, and some consistently put equal keys on one side. The demos on this page disallow duplicate
-      values so the ordering rule stays uncluttered.
-    </p>
-  </section>
+  <p>
+  A <strong>binary search tree</strong>, or <strong>BST</strong>, stores comparable
+  values in a binary tree according to the following rule: at every node, all values
+  in the left subtree are smaller than the value at the node, and all values in the
+  right subtree are larger. We call this ordering rule the
+  <strong>search tree property</strong>.
+</p>
 
-  <section id="search-insert" section-title="BST Operations">
-    <h2>BST Operations</h2>
+<p>
+  The ordering gives us a clear path when looking for a value. After comparing the
+  target with the value at the current node, we continue in the left subtree if the
+  target is smaller and in the right subtree if it is larger. The same comparisons
+  guide insertion and removal. In an ordinary binary tree, there is no relationship
+  between a node's value and the values below it, so searching may require examining
+  the entire tree.
+</p>
+
+
+  <div class="example-box">
+    <strong class="example-title">Binary Search Tree and Ordinary Binary Tree</strong>
+<svg class="bst-comparison-svg"
+     viewBox="0 0 760 320"
+     role="img"
+     aria-labelledby="bstComparisonTitle bstComparisonDesc">
+  <title id="bstComparisonTitle">Comparison of a binary search tree and an ordinary binary tree</title>
+  <desc id="bstComparisonDesc">
+    Two binary trees with the same shape. The tree on the left is a binary search
+    tree because smaller values are placed to the left and larger values to the
+    right. The tree on the right does not follow that ordering.
+  </desc>
+
+  <text x="190" y="28" class="bst-heading">Binary Search Tree</text>
+  <text x="570" y="28" class="bst-heading">Not a Binary Search Tree</text>
+
+  <!-- Left tree edges -->
+  <line x1="190" y1="70" x2="110" y2="135" class="bst-edge" />
+  <line x1="190" y1="70" x2="270" y2="135" class="bst-edge" />
+  <line x1="110" y1="135" x2="65" y2="220" class="bst-edge" />
+  <line x1="110" y1="135" x2="155" y2="220" class="bst-edge" />
+  <line x1="270" y1="135" x2="225" y2="220" class="bst-edge" />
+  <line x1="270" y1="135" x2="315" y2="220" class="bst-edge" />
+
+  <!-- Left tree nodes -->
+  <circle cx="190" cy="70" r="25" class="bst-node" />
+  <circle cx="110" cy="135" r="25" class="bst-node" />
+  <circle cx="270" cy="135" r="25" class="bst-node" />
+  <circle cx="65" cy="220" r="25" class="bst-node" />
+  <circle cx="155" cy="220" r="25" class="bst-node" />
+  <circle cx="225" cy="220" r="25" class="bst-node" />
+  <circle cx="315" cy="220" r="25" class="bst-node" />
+
+  <!-- Left tree values -->
+  <text x="190" y="70" class="bst-value">50</text>
+  <text x="110" y="135" class="bst-value">30</text>
+  <text x="270" y="135" class="bst-value">70</text>
+  <text x="65" y="220" class="bst-value">20</text>
+  <text x="155" y="220" class="bst-value">40</text>
+  <text x="225" y="220" class="bst-value">60</text>
+  <text x="315" y="220" class="bst-value">80</text>
+
+  <!-- Right tree edges -->
+  <line x1="570" y1="70" x2="490" y2="135" class="bst-edge" />
+  <line x1="570" y1="70" x2="650" y2="135" class="bst-edge" />
+  <line x1="490" y1="135" x2="445" y2="220" class="bst-edge" />
+  <line x1="490" y1="135" x2="535" y2="220" class="bst-edge" />
+  <line x1="650" y1="135" x2="605" y2="220" class="bst-edge" />
+  <line x1="650" y1="135" x2="695" y2="220" class="bst-edge" />
+
+  <!-- Right tree nodes -->
+  <circle cx="570" cy="70" r="25" class="bst-node" />
+  <circle cx="490" cy="135" r="25" class="bst-bad-node" />
+  <circle cx="650" cy="135" r="25" class="bst-bad-node" />
+  <circle cx="445" cy="220" r="25" class="bst-node" />
+  <circle cx="535" cy="220" r="25" class="bst-node" />
+  <circle cx="605" cy="220" r="25" class="bst-node" />
+  <circle cx="695" cy="220" r="25" class="bst-node" />
+
+  <!-- Right tree values -->
+  <text x="570" y="70" class="bst-value">50</text>
+  <text x="490" y="135" class="bst-value">70</text>
+  <text x="650" y="135" class="bst-value">30</text>
+  <text x="445" y="220" class="bst-value">20</text>
+  <text x="535" y="220" class="bst-value">40</text>
+  <text x="605" y="220" class="bst-value">60</text>
+  <text x="695" y="220" class="bst-value">80</text>
+</svg>
+
+<p>
+  The trees have the same shape, but only the tree on the left is a binary search
+  tree. The tree on the right violates the search tree property in several places.
+  For instance, the value \(70\) appears in the left subtree of \(50\), and the value
+  \(30\) appears in the right subtree of \(50\). Can you find the other two
+  violations?
+</p>
+  </div>
+
+  <p>
+  Recall that an <strong>inorder traversal</strong> visits the left subtree, then the
+  node itself, and then the right subtree. Each node is therefore visited <em>in
+  between</em> its two subtrees. By the definition of a BST, every value in the left
+  subtree is smaller than the value at the current node, and every value in the right
+  subtree is larger. Because the left and right subtrees are themselves binary search
+  trees, an inorder traversal lists the values in the left subtree in increasing order,
+  then visits the current node, and then lists the values in the right subtree in
+  increasing order. These three parts combine into a single increasing sequence.
+  Thus, for a binary search tree, an inorder traversal literally lists the entries in
+  order.
+</p>
+
+  <p>
+    Every binary search tree is a binary tree, but not every binary tree is a binary
+    search tree. A basic BST controls where values are placed but does not control the
+    overall shape of the tree. Depending on the order in which values are inserted, the
+    tree may be short and well distributed or may become a long chain. Later pages will
+    introduce self-balancing search trees, which use additional rules to prevent the
+    tree from becoming too tall.
+  </p>
+
+  <p>
+    On this page, we treat a binary search tree as a set of distinct values. Duplicate
+    values are not inserted. Other implementations may store a count with each value or
+    use a consistent rule for placing duplicates, but those choices add details that are
+    not needed for the basic operations.
+  </p>
+</section>
+
+<section id="core-operations" section-title="Core Operations">
+  <h2>Core Operations</h2>
+
+  <p>
+    A binary search tree supports operations for locating, adding, and removing keys.
+    The three essential operations are shown in bold below. Because the keys are stored
+    in order, a BST also supports useful queries involving the smallest, largest, next
+    smaller, and next larger keys. Most implementations additionally provide basic
+    container operations such as <code>isEmpty()</code> and <code>size()</code>.
+  </p>
+
+  <table class="example-table left-top-align">
+    <thead>
+      <tr>
+        <th>Operation</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong><code>search(key)</code></strong></td>
+        <td>
+          Find and return the entry with the given key, or report that the key is not
+          present.
+        </td>
+      </tr>
+      <tr>
+        <td><strong><code>insert(key)</code></strong></td>
+        <td>
+          Add the key in a position that preserves the search tree property. On this
+          page, duplicate keys are not inserted.
+        </td>
+      </tr>
+      <tr>
+        <td><strong><code>remove(key)</code></strong></td>
+        <td>
+          Remove the entry with the given key, if it is present, while preserving the
+          search tree property.
+        </td>
+      </tr>
+      <tr>
+        <td><code>minimum()</code> / <code>maximum()</code></td>
+        <td>
+          Return the smallest or largest key in the tree. These operations have no
+          result when the tree is empty.
+        </td>
+      </tr>
+      <tr>
+        <td><code>predecessor(key)</code> / <code>successor(key)</code></td>
+        <td>
+          Return the largest stored key smaller than <code>key</code> (predecessor), 
+          or the smallest stored key larger than <code>key</code> (successor), 
+          when such a key exists.
+        </td>
+      </tr>
+      <tr>
+        <td><code>isEmpty()</code></td>
+        <td>Report whether the tree contains no keys.</td>
+      </tr>
+      <tr>
+        <td><code>size()</code></td>
+        <td>
+          Return the number of keys currently stored. This can be done in constant time
+          if the implementation maintains a count as keys are inserted and removed.
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+
+  <h3>Search</h3>
+
+  <div>
+  <p>
+    Searching begins at the root. If the target key equals the key at the current
+    node, the search succeeds. If the target is smaller, the search continues in the
+    left subtree; if the target is larger, it continues in the right subtree. Each
+    comparison therefore determines which child to follow.
+  </p>
+
+  <p>
+    The search continues along a single downward path. If it reaches an empty child
+    reference, the key is not in the tree. For example, when searching for \(42\),
+    reaching a node containing \(50\) tells us to move left, reaching a node containing
+    \(30\) tells us to move right, and reaching a node containing \(40\) tells us to
+    move right again. Since there is no right child of \(40\), the search ends and we
+    conclude that \(42\) is not stored in the tree.
+  </p></div>
+
+<div class="example-box">
+  <strong class="example-title">Example: Searching a Binary Search Tree</strong>
+
+  <p>
+    Search for \(68\) in the tree below to see how a successful search works.
+    Then search for \(34\) to see what happens when a key is not in the tree.
+  </p>
+
+  <div class="bst-demo-controls">
+    <label for="bst-search-demo-input">Key:</label>
+    <input id="bst-search-demo-input"
+           type="number"
+           step="1"
+           value="68">
+    <button id="bst-search-demo-button" type="button">Search</button>
+  </div>
+
+  <p id="bst-search-demo-status"
+     class="bst-demo-status"
+     aria-live="polite">
+    <strong>Status:</strong> Enter a key and select Search.
+  </p>
+
+  <svg id="bst-search-demo-svg"
+       class="bst-demo-svg bst-demo-svg--search"
+       viewBox="0 0 800 350"
+       role="img"
+       aria-labelledby="bst-search-demo-title bst-search-demo-desc">
+  </svg>
+</div>
+
+  <h3>Insertion</h3>
+
+  <p>
+    Insertion begins by following the same comparisons used during a search. Starting
+    at the root, the algorithm moves to the left child when the new key is smaller than
+    the current key and to the right child when the new key is larger. If the new key
+    equals a key already in the tree, the duplicate policy used on this page leaves the
+    tree unchanged.
+  </p>
+
+  <p>
+    If the key is not already present, the comparisons eventually lead to an empty
+    child position. A new node containing the key is attached at that position. Since
+    the new node has no children, every newly inserted node begins as a leaf. If the
+    tree was initially empty, the new node instead becomes the root.
+  </p>
+
+  <p>
+    The comparisons along the path determine exactly where the new key belongs. For
+    example, moving left from a node containing \(50\) and then right from a node
+    containing \(25\) tells us that the new key is smaller than \(50\) but larger than
+    \(25\). Attaching the new node at the first appropriate empty position therefore
+    preserves the search tree property.
+  </p>
+
+  <div class="example-box">
+    <strong class="example-title">Example: Inserting into a Binary Search Tree</strong>
+
     <p>
-      Searching starts at the root. If the target equals the current value, the search succeeds. If the target is
-      smaller, move left. If it is larger, move right. The search fails only when the next subtree is empty.
+      Enter a key and select <strong>Insert</strong> to follow the comparisons and add
+      the key as a new leaf. First insert \(68\). Then insert \(34\) and compare the
+      two insertion paths. You can continue inserting other integer keys. Attempting
+      to insert a key already in the tree leaves the tree unchanged.
     </p>
-    <p>
-      Insertion follows the same comparison path. When the search reaches an empty child position, the new value is
-      placed there. This preserves the BST invariant because every comparison on the path has narrowed the valid range
-      for the new value.
+
+    <div class="bst-demo-controls">
+      <label for="bst-insert-demo-input">Key:</label>
+      <input id="bst-insert-demo-input"
+             type="number"
+             step="1"
+             value="68">
+      <button id="bst-insert-demo-button" type="button">Insert</button>
+    </div>
+
+    <p id="bst-insert-demo-status"
+       class="bst-demo-status"
+       aria-live="polite">
+      <strong>Status:</strong> Enter a key and select Insert.
     </p>
+
+    <svg id="bst-insert-demo-svg"
+         class="bst-demo-svg bst-demo-svg--insert"
+         viewBox="0 0 900 500"
+         role="img"
+         aria-labelledby="bst-insert-demo-title bst-insert-demo-desc">
+    </svg>
+  </div>
+
+  <h3>Minimum and Maximum</h3>
+  <p>
+  DRAFT! The minimum
+  key is found by following left-child references as far as possible, because each
+  left move leads to a smaller key. Similarly, the maximum key is found by following
+  right-child references as far as possible.
+</p>
+  <div>INSERT DEMO EXAMPLE HERE. It should just have two buttons: minimum and maximum.</div>
+  
+  <h3>Successor and Predecessor</h3>
+  <p>DRAFT! 
+  The <strong>predecessor</strong> of a key is the largest stored key smaller than
+  it, and the <strong>successor</strong> is the smallest stored key larger than it.
+  If a node has a left subtree, its predecessor is the maximum key in that subtree.
+  If it has a right subtree, its successor is the minimum key in that subtree.
+  Otherwise, finding the predecessor or successor may require moving upward through
+  the node's ancestors.
+</p>
+
+<p>
+  A predecessor or successor does not always exist: the smallest key has no predecessor, 
+  and the largest key has no successor.
+</p>
+  <div>INSERT DEMO EXAMPLE HERE. It should allow the user to click a node (It should 
+    say that somewhere) and then predecessor and succesor buttons. The path from one
+    to the other should be drawn as it goes and stay on the screen so the viewer can 
+    see what happened.
+    </canvas>
+  </div>
+
+    <h3>Removal</h3>
+<p>
+  Removal begins by searching for the key. If the key is absent, the tree does not
+  change. If the key is found, the way it is removed depends on the number of
+  children its node has.
+</p>
+
+<ul>
+  <li>
+    <strong>No children:</strong> The node is a leaf and can simply be removed.
+  </li>
+  <li>
+    <strong>One child:</strong> The node is replaced by its only child.
+  </li>
+  <li>
+    <strong>Two children:</strong> The node's key is replaced by a nearby key in
+    the ordering, usually its predecessor or successor. That replacement key is
+    then removed from its original position.
+  </li>
+</ul>
+
+<p>
+  The first two cases require only a small change to the tree. The two-child case
+  requires an additional step because removing the node directly would disconnect
+  both of its subtrees. The implementation section will examine all three cases in
+  detail.
+</p>
+  <div>INSERT DEMO EXAMPLE HERE. Input box and delete button--a lot like insert.</div>
+
+</section>
+
+
+  <section id="demo" section-title="Interactive Demo">
+    <h2>Interactive Demo</h2>
     <p>
-      Deletion also begins with the same search path. Once the target is found, the shape of that node determines the
-      case: remove a leaf, splice a one-child node out of the tree, or replace a two-child node with its in-order
-      predecessor or successor before removing the replacement from its old location. The demo lets you trace each
-      operation separately, including predecessor and successor searches.
+      [Explain which operations the demo supports and suggest a short sequence that
+      demonstrates successful search, unsuccessful search, insertion, and all deletion cases.]
     </p>
     <div class="embeddedDemoContainer">
       <iframe class="embeddedDemo"
-              src="../../../Content/Demos/Data Structures/Binary Search Tree/BST Operations Demo.html"
+              src="/DAIADS/Content/Demos/Data Structures/Binary Search Tree/BST Operations Demo.html"
               allow="fullscreen"
               name="bst-operations-demo">
       </iframe>
     </div>
   </section>
 
-  <section id="traversal" section-title="Traversal">
-    <h2>Traversal</h2>
+  <section id="implementation" section-title="Implementation">
+    <h2>Implementation</h2>
     <p>
-      In-order traversal of a BST visits the values in sorted order. This follows directly from the invariant:
-      the left subtree contains smaller values, the node itself comes next, and the right subtree contains larger
-      values.
+      [Introduce the linked-node representation and the fields maintained by the tree.
+      State whether nodes store keys only or key-value pairs, whether parent references
+      are used, and whether the implementation maintains a size field.]
     </p>
-    <pre><code>inorder(node):
-    if node is empty:
-        return
-    inorder(node.left)
-    visit(node.value)
-    inorder(node.right)</code></pre>
-    <p>
-      The traversal still takes \(O(n)\) time because every node is visited once.
-    </p>
-  </section>
 
-  <section id="delete" section-title="Delete">
-    <h2>Delete</h2>
-    <p>
-      Deletion has three conceptual cases.
-    </p>
-    <ul>
-      <li><strong>Leaf:</strong> remove the node.</li>
-      <li><strong>One child:</strong> replace the node by its child.</li>
-      <li><strong>Two children:</strong> replace the value by its in-order predecessor or successor, then delete that replacement value from its old location.</li>
-    </ul>
-    <p>
-      The two-child case is the only one that feels different. The in-order successor is the smallest value in the
-      node's right subtree; the in-order predecessor is the largest value in the left subtree. Either replacement keeps
-      the values in sorted order.
-    </p>
-  </section>
+    <section id="implementation-representation" section-title="Node and Tree Representation">
+      <h3>Node and Tree Representation</h3>
+      <p>
+        [Describe the node fields and the tree's root reference. Include an empty-tree
+        invariant and any class invariants used by the implementations.]
+      </p>
+      <!-- Add a node-and-pointer SVG here. -->
+    </section>
 
-  <section id="rotations" section-title="Rotations">
-    <h2>Rotations</h2>
-    <p>
-      A <strong>rotation</strong> is a local restructuring operation. It changes which node is the parent inside a
-      small subtree while preserving the BST in-order sequence. Rotations are the basic tool used by AVL trees and
-      red-black trees to restore balance after updates.
-    </p>
-    <p>
-      The simple rotations are <em>left rotation</em> and <em>right rotation</em>. The double rotations are built from
-      those: a left-right rotation is a left rotation followed by a right rotation, and a right-left rotation is a
-      right rotation followed by a left rotation.
-    </p>
-    <div class="embeddedDemoContainer">
-      <iframe class="embeddedDemo"
-              src="../../../Content/Demos/Data Structures/Binary Search Tree/BST Rotation Demo.html"
-              allow="fullscreen"
-              name="bst-rotation-demo">
-      </iframe>
-    </div>
-  </section>
+    <section id="implementation-search" section-title="Search">
+      <h3>Search</h3>
+      <p>[Walk through iterative search and explain the role of the current reference.]</p>
+      <pre><code>search(key):
+    [pseudocode placeholder]</code></pre>
+    </section>
 
-  <section id="complexity" section-title="Complexity">
-    <h2>Complexity</h2>
+    <section id="implementation-insert" section-title="Insertion">
+      <h3>Insertion</h3>
+      <p>
+        [Explain how to retain the parent of the final empty position, attach the new
+        node on the correct side, handle an empty tree, and apply the duplicate policy.]
+      </p>
+      <pre><code>insert(key):
+    [pseudocode placeholder]</code></pre>
+    </section>
+
+    <section id="implementation-min-max" section-title="Minimum and Maximum">
+      <h3>Minimum and Maximum</h3>
+      <p>
+        [Explain why repeatedly following left references finds the minimum and repeatedly
+        following right references finds the maximum.]
+      </p>
+      <pre><code>minimum(node):
+    [pseudocode placeholder]
+
+maximum(node):
+    [pseudocode placeholder]</code></pre>
+    </section>
+
+    <section id="implementation-predecessor-successor" section-title="Predecessor and Successor">
+      <h3>Predecessor and Successor</h3>
+      <p>
+        [Explain the subtree case and ancestor case for successor and predecessor.
+        Decide whether the main implementation uses parent references or tracks the
+        candidate ancestor during a root-to-node search.]
+      </p>
+      <pre><code>successor(key):
+    [pseudocode placeholder]
+
+predecessor(key):
+    [pseudocode placeholder]</code></pre>
+    </section>
+
+    <section id="implementation-remove" section-title="Removal">
+      <h3>Removal</h3>
+      <p>[Introduce a helper such as replaceSubtree or transplant if one will be used.]</p>
+
+      <h4>Case 1: Leaf</h4>
+      <p>[Explain how a leaf is disconnected.]</p>
+
+      <h4>Case 2: One Child</h4>
+      <p>[Explain how the node is replaced by its only child.]</p>
+
+      <h4>Case 3: Two Children</h4>
+      <p>
+        [Explain replacement by the in-order successor or predecessor, including why the
+        replacement node has at most one child in the direction that matters.]
+      </p>
+
+      <pre><code>remove(key):
+    [pseudocode placeholder]</code></pre>
+    </section>
+
+      <section id="analysis" section-title="Analysis">
+    <h3>Analysis</h3>
     <p>
-      Search, insert, and delete follow a single root-to-leaf path, so their running time is \(O(h)\), where \(h\) is
-      the height of the tree.
+      [Define the tree height convention used on this page and explain why path-based
+      operations take time proportional to the height.]
     </p>
     <table class="example-table">
       <thead>
         <tr>
-          <th>Tree Shape</th>
-          <th>Height</th>
-          <th>Search/Insert/Delete</th>
+          <th>Operation</th>
+          <th>Time in Terms of Height</th>
+          <th>Balanced Tree</th>
+          <th>Degenerate Tree</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td>Balanced</td>
-          <td>\(\Theta(\log n)\)</td>
-          <td>\(\Theta(\log n)\)</td>
+          <td><code>search</code></td>
+          <td>[placeholder]</td>
+          <td>[placeholder]</td>
+          <td>[placeholder]</td>
         </tr>
         <tr>
-          <td>Degenerate</td>
-          <td>\(\Theta(n)\)</td>
-          <td>\(\Theta(n)\)</td>
+          <td><code>insert</code></td>
+          <td>[placeholder]</td>
+          <td>[placeholder]</td>
+          <td>[placeholder]</td>
+        </tr>
+        <tr>
+          <td><code>remove</code></td>
+          <td>[placeholder]</td>
+          <td>[placeholder]</td>
+          <td>[placeholder]</td>
+        </tr>
+        <tr>
+          <td><code>minimum</code> / <code>maximum</code></td>
+          <td>[placeholder]</td>
+          <td>[placeholder]</td>
+          <td>[placeholder]</td>
+        </tr>
+        <tr>
+          <td><code>predecessor</code> / <code>successor</code></td>
+          <td>[placeholder]</td>
+          <td>[placeholder]</td>
+          <td>[placeholder]</td>
+        </tr>
+        <tr>
+          <td>in-order traversal</td>
+          <td>[placeholder]</td>
+          <td>[placeholder]</td>
+          <td>[placeholder]</td>
         </tr>
       </tbody>
     </table>
     <p>
-      A plain BST does not automatically stay balanced. If values are inserted in sorted order, the tree can become a
-      chain. Balanced BST variants add rules and rotations to keep \(h = O(\log n)\).
+      [Discuss extra space for iterative versus recursive implementations, the storage
+      used by the nodes, and the effect of maintaining parent references or a size field.]
     </p>
-  </section>
-
-  <section id="implementation-sketch" section-title="Implementation Sketch">
-    <h2>Implementation Sketch</h2>
-    <pre><code>search(root, target):
-    current = root
-    while current is not empty:
-        if target == current.value:
-            return current
-        if target < current.value:
-            current = current.left
-        else:
-            current = current.right
-    return not found
-
-insert(root, value):
-    if root is empty:
-        return new node containing value
-    if value < root.value:
-        root.left = insert(root.left, value)
-    else if value > root.value:
-        root.right = insert(root.right, value)
-    return root</code></pre>
     <p>
-      This sketch omits duplicate handling and parent references. Production implementations also need careful update
-      logic for deletion and, in balanced trees, rebalancing metadata such as heights or colors.
+      [Discuss expected height under an explicitly stated random-insertion assumption,
+      while emphasizing that a plain BST provides no worst-case balance guarantee.]
     </p>
   </section>
+
+    <section id="implementation-code" section-title="Implementation in Java, C++, Python">
+      <h3>Implementation in Java, C++, Python</h3>
+      <p>
+        [State the shared design choices used in all three implementations: duplicate
+        policy, return values, parent references, maintained size, and deletion strategy.]
+      </p>
+      <div class="tab-group scrollable-code-tabs">
+        <div class="tabs" role="tablist">
+          <button id="tab-java-bst" class="tablink active" data-lang="java-bst" role="tab" aria-controls="java-bst" aria-selected="true">Java</button>
+          <button id="tab-cpp-bst" class="tablink" data-lang="cpp-bst" role="tab" aria-controls="cpp-bst" aria-selected="false">C++</button>
+          <button id="tab-python-bst" class="tablink" data-lang="python-bst" role="tab" aria-controls="python-bst" aria-selected="false">Python</button>
+        </div>
+        <div id="java-bst" class="code-container active copyable-code" role="tabpanel" aria-labelledby="tab-java-bst">
+          <pre><code class="language-java">// Java BST implementation placeholder</code></pre>
+        </div>
+        <div id="cpp-bst" class="code-container copyable-code" role="tabpanel" aria-labelledby="tab-cpp-bst">
+          <pre><code class="language-cpp">// C++ BST implementation placeholder</code></pre>
+        </div>
+        <div id="python-bst" class="code-container copyable-code" role="tabpanel" aria-labelledby="tab-python-bst">
+          <pre><code class="language-python"># Python BST implementation placeholder</code></pre>
+        </div>
+      </div>
+    </section>
+
+  <section id="library-implementations" section-title="Library Implementations">
+    <h3>Library Implementations</h3>
+    <p>
+      [Explain that standard libraries generally expose ordered sets and maps rather than
+      a plain unbalanced BST class, and that their internal tree type may be balanced or
+      otherwise unspecified.]
+    </p>
+    <table class="example-table left-align">
+      <thead>
+        <tr>
+          <th>Language</th>
+          <th>Ordered Set or Map</th>
+          <th>Relevant Operations</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Java</strong></td>
+          <td>[placeholder]</td>
+          <td>[placeholder]</td>
+          <td>[placeholder]</td>
+        </tr>
+        <tr>
+          <td><strong>C++</strong></td>
+          <td>[placeholder]</td>
+          <td>[placeholder]</td>
+          <td>[placeholder]</td>
+        </tr>
+        <tr>
+          <td><strong>Python</strong></td>
+          <td>[placeholder]</td>
+          <td>[placeholder]</td>
+          <td>[placeholder]</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+
+  </section>
+
+
+
+  <section id="applications" section-title="Applications">
+    <h2>Applications</h2>
+    <p>[Explain situations that need a dynamic ordered set or ordered map.]</p>
+    <ul>
+      <li>[Maintaining a changing collection with search, insertion, and deletion.]</li>
+      <li>[Reporting keys in sorted order.]</li>
+      <li>[Range queries and nearest-key queries.]</li>
+      <li>[Implementing ordered sets, maps, symbol tables, and indexes.]</li>
+    </ul>
+    <!-- Add one concrete worked application if it contributes new understanding. -->
+  </section>
+
+  <section id="connections" section-title="Connections and Comparisons">
+    <h2>Connections and Comparisons</h2>
+    <ul>
+      <li>[BST versus arbitrary binary tree.]</li>
+      <li>[BST versus sorted array.]</li>
+      <li>[BST versus hash table.]</li>
+      <li>[Plain BST versus AVL tree and red-black tree.]</li>
+      <li>[In-order traversal and sorted order.]</li>
+    </ul>
+  </section>
+
+  <section id="variations" section-title="Variations and Extensions">
+    <h2>Variations and Extensions</h2>
+    <ul>
+      <li>[Key-value binary search trees and ordered maps.]</li>
+      <li>[Policies for duplicate keys: reject, replace, count, or consistently place.]</li>
+      <li>[Parent references versus no parent references.]</li>
+      <li>[Augmented BSTs that store subtree size, sums, or interval information.]</li>
+      <li>[Self-balancing BSTs: AVL trees, red-black trees, and related structures.]</li>
+      <li>[Randomized BST variants, if appropriate for the scope of the chapter.]</li>
+    </ul>
+  </section>
+
+  <section id="pitfalls" section-title="Common Pitfalls">
+    <h2>Common Pitfalls</h2>
+    <ul>
+      <li>[Checking only immediate children instead of entire subtrees.]</li>
+      <li>[Losing a subtree while changing references during insertion or deletion.]</li>
+      <li>[Forgetting the empty-tree and root-removal cases.]</li>
+      <li>[Mishandling duplicates or leaving the duplicate policy unspecified.]</li>
+      <li>[Assuming a plain BST remains balanced.]</li>
+      <li>[Confusing a node's successor with its right child.]</li>
+      <li>[Copying a replacement key without completing the corresponding deletion.]</li>
+    </ul>
+  </section>
+
+  <section id="summary" section-title="Summary">
+    <h2>Summary</h2>
+    <p>[Summarize the invariant, core operations, height-dependent cost, and balance issue.]</p>
+  </section>
+
+  <section id="links" section-title="Helpful Links and Resources">
+    <h2>Helpful Links and Resources</h2>
+    <ul>
+      <li><a href="URL1" target="_blank">[Resource title]</a>: [Short description.]</li>
+      <li><a href="URL2" target="_blank">[Resource title]</a>: [Short description.]</li>
+      <li><a href="URL3" target="_blank">[Resource title]</a>: [Short description.]</li>
+    </ul>
+  </section>
+
+  <section id="reading-questions" section-title="Reading Comprehension Questions">
+    <h2>Reading Comprehension Questions</h2>
+    <ol>
+      <li><strong>[Short Title]:</strong> [Question about the invariant.]</li>
+      <li><strong>[Short Title]:</strong> [Question tracing search or insertion.]</li>
+      <li><strong>[Short Title]:</strong> [Question about a deletion case.]</li>
+      <li><strong>[Short Title]:</strong> [Question about predecessor or successor.]</li>
+      <li><strong>[Short Title]:</strong> [Question about height-dependent analysis.]</li>
+      <li><strong>[Short Title]:</strong> [Question comparing a BST with another structure.]</li>
+    </ol>
+    <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
+    <div id="answers" class="answer" hidden>
+      <ol>
+        <li><strong>Answer:</strong> [Answer placeholder.]</li>
+        <li><strong>Answer:</strong> [Answer placeholder.]</li>
+        <li><strong>Answer:</strong> [Answer placeholder.]</li>
+        <li><strong>Answer:</strong> [Answer placeholder.]</li>
+        <li><strong>Answer:</strong> [Answer placeholder.]</li>
+        <li><strong>Answer:</strong> [Answer placeholder.]</li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="activities" section-title="In-Class Activities">
+    <h2>In-Class Activities</h2>
+    <ol>
+      <li><strong>[Activity Title]:</strong> [Trace searches and insertions on a fixed tree.]</li>
+      <li><strong>[Activity Title]:</strong> [Classify several trees as BSTs or non-BSTs.]</li>
+      <li><strong>[Activity Title]:</strong> [Perform each deletion case by hand.]</li>
+      <li><strong>[Activity Title]:</strong> [Use the operations demo with a specified sequence.]</li>
+      <li><strong>[Activity Title]:</strong> [Implement or complete one BST operation.]</li>
+      <li><strong>[Activity Title]:</strong> [Compare insertion orders and resulting heights.]</li>
+    </ol>
+  </section>
+
+  <section id="problems" section-title="Homework Problems">
+    <h2>Homework Problems</h2>
+    <ol>
+      <li><strong>[Problem Title]:</strong> [Trace a specified operation sequence.]</li>
+      <li><strong>[Problem Title]:</strong> [Implement search and insertion.]</li>
+      <li><strong>[Problem Title]:</strong> [Implement deletion.]</li>
+      <li><strong>[Problem Title]:</strong> [Add predecessor and successor.]</li>
+      <li><strong>[Problem Title]:</strong> [Analyze trees produced by specific insertion orders.]</li>
+      <li><strong>[Problem Title]:</strong> [Augment nodes with subtree sizes or another field.]</li>
+    </ol>
+  </section>
+
+
+<script>
+  /*
+   * Shared support for the small BST demonstrations on this page.
+   * New demos can reuse TreeDemo for node creation, layout, rendering,
+   * path tracing, timers, status messages, and integer controls.
+   */
+  window.BSTDemo = (function () {
+    const SVG_NS = "http://www.w3.org/2000/svg";
+
+    class TreeDemo {
+      constructor(options) {
+        this.prefix = options.prefix;
+        this.svg = document.getElementById(options.svgId);
+        this.status = document.getElementById(options.statusId);
+        this.width = options.width;
+        this.minHeight = options.minHeight;
+        this.sidePadding = options.sidePadding;
+        this.top = options.top;
+        this.levelGap = options.levelGap;
+        this.nodeRadius = options.nodeRadius || 24;
+        this.stepDelay = options.stepDelay || 2000;
+        this.title = options.title;
+        this.description = options.description;
+        this.titleId = options.titleId;
+        this.descriptionId = options.descriptionId;
+        this.root = null;
+        this.nextNodeId = 1;
+        this.timerIds = [];
+      }
+
+      makeNode(key) {
+        return {
+          id: this.nextNodeId++,
+          key: key,
+          left: null,
+          right: null
+        };
+      }
+
+      createSvgElement(name, attributes) {
+        const element = document.createElementNS(SVG_NS, name);
+
+        Object.keys(attributes).forEach(function (attribute) {
+          element.setAttribute(attribute, attributes[attribute]);
+        });
+
+        return element;
+      }
+
+      clearTimers() {
+        this.timerIds.forEach(function (timerId) {
+          clearTimeout(timerId);
+        });
+
+        this.timerIds = [];
+      }
+
+      schedule(callback, index, delay) {
+        const timerId = setTimeout(
+          callback,
+          index * (delay || this.stepDelay)
+        );
+
+        this.timerIds.push(timerId);
+        return timerId;
+      }
+
+      setStatus(message) {
+        if (this.status) {
+          this.status.innerHTML = "<strong>Status:</strong> " + message;
+        }
+      }
+
+      edgeId(parent, child) {
+        return this.prefix + "-edge-" + parent.id + "-" + child.id;
+      }
+
+      nodeId(node) {
+        return this.prefix + "-node-" + node.id;
+      }
+
+      trace(target) {
+        const visits = [];
+        let current = this.root;
+        let parent = null;
+        let direction = null;
+
+        while (current !== null) {
+          let comparison = 0;
+
+          if (target < current.key) {
+            comparison = -1;
+            direction = "left";
+          } else if (target > current.key) {
+            comparison = 1;
+            direction = "right";
+          } else {
+            direction = null;
+          }
+
+          visits.push({
+            node: current,
+            parent: parent,
+            edgeId: parent === null ? null : this.edgeId(parent, current),
+            comparison: comparison,
+            direction: direction
+          });
+
+          if (comparison === 0) {
+            return {
+              visits: visits,
+              found: current,
+              parent: parent,
+              direction: null
+            };
+          }
+
+          parent = current;
+          current = current[direction];
+        }
+
+        return {
+          visits: visits,
+          found: null,
+          parent: parent,
+          direction: direction
+        };
+      }
+
+      collectLayout(node, minX, maxX, depth, parent, result) {
+        if (node === null) {
+          return;
+        }
+
+        const x = (minX + maxX) / 2;
+        const y = this.top + depth * this.levelGap;
+        const entry = {
+          node: node,
+          parent: parent,
+          x: x,
+          y: y,
+          depth: depth
+        };
+
+        result.entries.push(entry);
+        result.positions.set(node.id, entry);
+        result.maxDepth = Math.max(result.maxDepth, depth);
+
+        this.collectLayout(node.left, minX, x, depth + 1, node, result);
+        this.collectLayout(node.right, x, maxX, depth + 1, node, result);
+      }
+
+      getLayout() {
+        const result = {
+          entries: [],
+          positions: new Map(),
+          maxDepth: 0
+        };
+
+        this.collectLayout(
+          this.root,
+          this.sidePadding,
+          this.width - this.sidePadding,
+          0,
+          null,
+          result
+        );
+
+        return result;
+      }
+
+      render(options) {
+        const settings = options || {};
+        const visitedIds = new Set(settings.visitedIds || []);
+        const pathEdgeIds = new Set(settings.pathEdgeIds || []);
+        const currentId = settings.currentId || null;
+        const successId = settings.successId || null;
+        const errorId = settings.errorId || null;
+        const successEdgeId = settings.successEdgeId || null;
+
+        while (this.svg.firstChild) {
+          this.svg.removeChild(this.svg.firstChild);
+        }
+
+        const layout = this.getLayout();
+        const requiredHeight = Math.max(
+          this.minHeight,
+          this.top + (layout.maxDepth + 1) * this.levelGap + 45
+        );
+
+        this.svg.setAttribute(
+          "viewBox",
+          "0 0 " + this.width + " " + requiredHeight
+        );
+
+        const title = this.createSvgElement("title", { id: this.titleId });
+        title.textContent = this.title;
+        this.svg.appendChild(title);
+
+        const description = this.createSvgElement("desc", {
+          id: this.descriptionId
+        });
+        description.textContent = this.description;
+        this.svg.appendChild(description);
+
+        layout.entries.forEach((entry) => {
+          if (entry.parent === null) {
+            return;
+          }
+
+          const parentPosition = layout.positions.get(entry.parent.id);
+          const edgeId = this.edgeId(entry.parent, entry.node);
+          let edgeClass = "bst-demo-edge";
+
+          if (pathEdgeIds.has(edgeId)) {
+            edgeClass += " bst-demo-path-edge";
+          }
+
+          if (edgeId === successEdgeId) {
+            edgeClass += " bst-demo-success-edge";
+          }
+
+          const line = this.createSvgElement("line", {
+            id: edgeId,
+            x1: parentPosition.x,
+            y1: parentPosition.y,
+            x2: entry.x,
+            y2: entry.y,
+            class: edgeClass
+          });
+
+          this.svg.appendChild(line);
+        });
+
+        layout.entries.forEach((entry) => {
+          let nodeClass = "bst-demo-node";
+
+          if (visitedIds.has(entry.node.id)) {
+            nodeClass += " bst-demo-visited";
+          }
+
+          if (entry.node.id === currentId) {
+            nodeClass += " bst-demo-current";
+          }
+
+          if (entry.node.id === successId) {
+            nodeClass += " bst-demo-success";
+          }
+
+          if (entry.node.id === errorId) {
+            nodeClass += " bst-demo-error";
+          }
+
+          const circle = this.createSvgElement("circle", {
+            id: this.nodeId(entry.node),
+            cx: entry.x,
+            cy: entry.y,
+            r: this.nodeRadius,
+            class: nodeClass
+          });
+
+          const value = this.createSvgElement("text", {
+            x: entry.x,
+            y: entry.y,
+            class: "bst-demo-value"
+          });
+          value.textContent = entry.node.key;
+
+          this.svg.appendChild(circle);
+          this.svg.appendChild(value);
+        });
+      }
+    }
+
+    function buildTree(demo, specification) {
+      if (specification === null) {
+        return null;
+      }
+
+      const node = demo.makeNode(specification[0]);
+      node.left = specification.length > 1
+        ? buildTree(demo, specification[1])
+        : null;
+      node.right = specification.length > 2
+        ? buildTree(demo, specification[2])
+        : null;
+      return node;
+    }
+
+    function bindIntegerControl(demo, inputId, buttonId, action) {
+      const input = document.getElementById(inputId);
+      const button = document.getElementById(buttonId);
+
+      function run() {
+        const value = Number(input.value);
+
+        if (!Number.isInteger(value)) {
+          demo.clearTimers();
+          demo.render();
+          demo.setStatus("Enter an integer key.");
+          return;
+        }
+
+        action(value);
+      }
+
+      button.addEventListener("click", run);
+      input.addEventListener("keydown", function (event) {
+        if (event.key === "Enter") {
+          run();
+        }
+      });
+    }
+
+    return {
+      TreeDemo: TreeDemo,
+      buildTree: buildTree,
+      bindIntegerControl: bindIntegerControl
+    };
+  })();
+
+  (function initializeSearchDemo() {
+    const demo = new BSTDemo.TreeDemo({
+      prefix: "bst-search-demo",
+      svgId: "bst-search-demo-svg",
+      statusId: "bst-search-demo-status",
+      width: 800,
+      minHeight: 350,
+      sidePadding: 40,
+      top: 52,
+      levelGap: 85,
+      stepDelay: 3000,
+      title: "Binary search tree search demonstration",
+      description:
+        "A four-level binary search tree in which a user can animate a search for an integer key.",
+      titleId: "bst-search-demo-title",
+      descriptionId: "bst-search-demo-desc"
+    });
+
+    demo.root = BSTDemo.buildTree(demo, [
+      50,
+      [
+        25,
+        [12, [6], [18]],
+        [37, [31], [43]]
+      ],
+      [
+        75,
+        [62, [56], [68]],
+        [87, [81], [93]]
+      ]
+    ]);
+
+    function startSearch(target) {
+      demo.clearTimers();
+      demo.render();
+
+      const trace = demo.trace(target);
+
+      if (trace.visits.length === 0) {
+        demo.setStatus("The tree is empty, so the search fails.");
+        return;
+      }
+
+      trace.visits.forEach(function (visit, index) {
+        demo.schedule(function () {
+          const visitedIds = trace.visits
+            .slice(0, index)
+            .map(function (item) {
+              return item.node.id;
+            });
+
+          const pathEdgeIds = trace.visits
+            .slice(1, index + 1)
+            .map(function (item) {
+              return item.edgeId;
+            });
+
+          const isFound = visit.comparison === 0;
+
+          demo.render({
+            visitedIds: visitedIds,
+            currentId: isFound ? null : visit.node.id,
+            successId: isFound ? visit.node.id : null,
+            pathEdgeIds: pathEdgeIds
+          });
+
+          if (isFound) {
+            demo.setStatus(
+              target + " equals " + visit.node.key +
+              ", so the search succeeds."
+            );
+          } else {
+            const comparison = visit.comparison < 0 ? "&lt;" : "&gt;";
+            demo.setStatus(
+              target + " " + comparison + " " + visit.node.key +
+              ", so move " + visit.direction + "."
+            );
+          }
+        }, index);
+      });
+
+      if (trace.found === null) {
+        demo.schedule(function () {
+          const lastVisit = trace.visits[trace.visits.length - 1];
+          const visitedIds = trace.visits
+            .slice(0, -1)
+            .map(function (item) {
+              return item.node.id;
+            });
+          const pathEdgeIds = trace.visits
+            .slice(1)
+            .map(function (item) {
+              return item.edgeId;
+            });
+
+          demo.render({
+            visitedIds: visitedIds,
+            errorId: lastVisit.node.id,
+            pathEdgeIds: pathEdgeIds
+          });
+
+          demo.setStatus(
+            lastVisit.node.key + " has no " + lastVisit.direction +
+            " child, so " + target + " is not in the tree."
+          );
+        }, trace.visits.length);
+      }
+    }
+
+    BSTDemo.bindIntegerControl(
+      demo,
+      "bst-search-demo-input",
+      "bst-search-demo-button",
+      startSearch
+    );
+
+    demo.render();
+  })();
+
+  (function initializeInsertionDemo() {
+    const demo = new BSTDemo.TreeDemo({
+      prefix: "bst-insert-demo",
+      svgId: "bst-insert-demo-svg",
+      statusId: "bst-insert-demo-status",
+      width: 900,
+      minHeight: 500,
+      sidePadding: 20,
+      top: 50,
+      levelGap: 85,
+      stepDelay: 1800,
+      title: "Binary search tree insertion demonstration",
+      description:
+        "A sparse binary search tree in which the user can animate the insertion of integer keys.",
+      titleId: "bst-insert-demo-title",
+      descriptionId: "bst-insert-demo-desc"
+    });
+
+    demo.root = BSTDemo.buildTree(demo, [
+      50,
+      [25, [12], [37, [31], null]],
+      [75, null, [87, [81], null]]
+    ]);
+
+    function startInsertion(target) {
+      demo.clearTimers();
+      demo.render();
+
+      const trace = demo.trace(target);
+
+      trace.visits.forEach(function (visit, index) {
+        demo.schedule(function () {
+          const visitedIds = trace.visits
+            .slice(0, index)
+            .map(function (item) {
+              return item.node.id;
+            });
+          const pathEdgeIds = trace.visits
+            .slice(1, index + 1)
+            .map(function (item) {
+              return item.edgeId;
+            });
+
+          demo.render({
+            visitedIds: visitedIds,
+            currentId: visit.node.id,
+            pathEdgeIds: pathEdgeIds
+          });
+
+          if (visit.comparison === 0) {
+            demo.setStatus(
+              target + " equals " + visit.node.key +
+              ". That key is already in the tree."
+            );
+          } else {
+            const comparison = visit.comparison < 0 ? "&lt;" : "&gt;";
+            demo.setStatus(
+              target + " " + comparison + " " + visit.node.key +
+              ", so move " + visit.direction + "."
+            );
+          }
+        }, index);
+      });
+
+      demo.schedule(function () {
+        const pathEdgeIds = trace.visits
+          .slice(1)
+          .map(function (item) {
+            return item.edgeId;
+          });
+
+        if (trace.found !== null) {
+          const visitedIds = trace.visits
+            .slice(0, -1)
+            .map(function (item) {
+              return item.node.id;
+            });
+
+          demo.render({
+            visitedIds: visitedIds,
+            errorId: trace.found.id,
+            pathEdgeIds: pathEdgeIds
+          });
+
+          demo.setStatus(
+            target + " is already in the tree, so no new node is inserted."
+          );
+          return;
+        }
+
+        const newNode = demo.makeNode(target);
+
+        if (trace.parent === null) {
+          demo.root = newNode;
+          demo.render({ successId: newNode.id });
+          demo.setStatus(
+            "The tree was empty, so " + target + " becomes the root."
+          );
+          return;
+        }
+
+        trace.parent[trace.direction] = newNode;
+
+        const visitedIds = trace.visits.map(function (item) {
+          return item.node.id;
+        });
+        const newEdgeId = demo.edgeId(trace.parent, newNode);
+
+        demo.render({
+          visitedIds: visitedIds,
+          successId: newNode.id,
+          pathEdgeIds: pathEdgeIds,
+          successEdgeId: newEdgeId
+        });
+
+        demo.setStatus(
+          "The " + trace.direction + " child of " + trace.parent.key +
+          " was empty, so " + target +
+          " is inserted there as a new leaf."
+        );
+      }, trace.visits.length);
+    }
+
+    BSTDemo.bindIntegerControl(
+      demo,
+      "bst-insert-demo-input",
+      "bst-insert-demo-button",
+      startInsertion
+    );
+
+    demo.render();
+  })();
+</script>
+
 </body>
 </html>
