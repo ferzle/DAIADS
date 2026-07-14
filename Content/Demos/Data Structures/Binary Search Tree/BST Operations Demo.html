@@ -44,7 +44,6 @@
     }
     .tree-viewport {
       width: 100%;
-      aspect-ratio: 16 / 9;
       overflow: hidden;
       border: 1px solid #ccc;
       background: #fff;
@@ -53,7 +52,7 @@
     svg {
       display: block;
       width: 100%;
-      height: 100%;
+      height: auto;
       background: #fff;
       box-sizing: border-box;
     }
@@ -165,7 +164,7 @@
         <label>Value <input id="valueInput" type="number" value="20"></label>
         <button id="searchBtn">Search</button>
         <button id="insertBtn">Insert</button>
-        <button id="deleteBtn">Delete</button>
+        <button id="removeBtn">Remove</button>
         <button id="predecessorBtn">Predecessor</button>
         <button id="successorBtn">Successor</button>
       </div>
@@ -256,18 +255,29 @@
       return null;
     }
 
+    function findNodePath(root, value) {
+      const path = [];
+      let current = root;
+      while (current) {
+        path.push(current);
+        if (value === current.value) return path;
+        current = value < current.value ? current.left : current.right;
+      }
+      return [];
+    }
+
     function findNodeById(root, id) {
       if (!root) return null;
       if (root.id === id) return root;
       return findNodeById(root.left, id) || findNodeById(root.right, id);
     }
 
-    function deleteValue(root, value) {
+    function removeValue(root, value) {
       if (!root) return null;
       if (value < root.value) {
-        root.left = deleteValue(root.left, value);
+        root.left = removeValue(root.left, value);
       } else if (value > root.value) {
-        root.right = deleteValue(root.right, value);
+        root.right = removeValue(root.right, value);
       } else {
         if (!root.left) return root.right;
         if (!root.right) return root.left;
@@ -277,7 +287,7 @@
           successor = successor.left;
         }
         root.value = successor.value;
-        root.right = deleteValue(root.right, successor.value);
+        root.right = removeValue(root.right, successor.value);
       }
       return root;
     }
@@ -374,25 +384,26 @@
     }
 
     function createPredecessorSteps(value) {
-      const search = createSearchSteps(value);
-      const result = search.result;
+      const result = [];
+      const nodePath = findNodePath(tree, value);
+      const node = nodePath.length > 0 ? nodePath[nodePath.length - 1] : null;
 
-      if (!search.found) {
-        if (result.length > 0) {
-          result[result.length - 1].message = `There is no node containing ${value}, so this pointer-based predecessor operation cannot start.`;
-          result[result.length - 1].result = 'No node pointer.';
-        }
+      if (!node) {
+        result.push({
+          tree: cloneTree(tree),
+          path: [],
+          message: `${value} is not a valid starting node because it is not in the tree.`,
+          result: 'No node pointer.'
+        });
         return result;
       }
 
-      const node = search.node;
-      const nodePath = search.pathNodes;
       result.push({
         tree: cloneTree(tree),
         currentId: node.id,
         targetId: node.id,
-        visitedIds: pathIds(nodePath.slice(0, -1)),
-        path: pathValues(nodePath),
+        visitedIds: [],
+        path: [value],
         message: `Start predecessor at the node containing ${value}. The algorithm is given this node pointer and can use parent pointers.`,
         result: `Node pointer: ${value}`
       });
@@ -443,8 +454,8 @@
         tree: cloneTree(tree),
         currentId: node.id,
         targetId: node.id,
-        visitedIds: pathIds(nodePath.slice(0, -1)),
-        path: pathValues(nodePath),
+        visitedIds: [],
+        path: [value],
         message: `${value} has no left subtree. Follow parent pointers until the climb comes from a right child.`,
         result: 'Climb to an ancestor.'
       });
@@ -494,25 +505,26 @@
     }
 
     function createSuccessorSteps(value) {
-      const search = createSearchSteps(value);
-      const result = search.result;
+      const result = [];
+      const nodePath = findNodePath(tree, value);
+      const node = nodePath.length > 0 ? nodePath[nodePath.length - 1] : null;
 
-      if (!search.found) {
-        if (result.length > 0) {
-          result[result.length - 1].message = `There is no node containing ${value}, so this pointer-based successor operation cannot start.`;
-          result[result.length - 1].result = 'No node pointer.';
-        }
+      if (!node) {
+        result.push({
+          tree: cloneTree(tree),
+          path: [],
+          message: `${value} is not a valid starting node because it is not in the tree.`,
+          result: 'No node pointer.'
+        });
         return result;
       }
 
-      const node = search.node;
-      const nodePath = search.pathNodes;
       result.push({
         tree: cloneTree(tree),
         currentId: node.id,
         targetId: node.id,
-        visitedIds: pathIds(nodePath.slice(0, -1)),
-        path: pathValues(nodePath),
+        visitedIds: [],
+        path: [value],
         message: `Start successor at the node containing ${value}. The algorithm is given this node pointer and can use parent pointers.`,
         result: `Node pointer: ${value}`
       });
@@ -563,8 +575,8 @@
         tree: cloneTree(tree),
         currentId: node.id,
         targetId: node.id,
-        visitedIds: pathIds(nodePath.slice(0, -1)),
-        path: pathValues(nodePath),
+        visitedIds: [],
+        path: [value],
         message: `${value} has no right subtree. Follow parent pointers until the climb comes from a left child.`,
         result: 'Climb to an ancestor.'
       });
@@ -620,7 +632,7 @@
       return copiedTree;
     }
 
-    function finishDeleteSteps(value, node, path, result) {
+    function finishRemoveSteps(value, node, path, result) {
       const children = countChildren(node);
       const basePath = pathValues(path);
       const visitedIds = pathIds(path.slice(0, -1));
@@ -633,18 +645,18 @@
           removedId: node.id,
           visitedIds,
           path: basePath,
-          message: `${value} is a leaf, so deletion just removes that node.`,
+          message: `${value} is a leaf, so removal just removes that node.`,
           result: 'Leaf case.'
         });
-        const finalTree = deleteValue(cloneTree(tree), value);
+        const finalTree = removeValue(cloneTree(tree), value);
         result.push({
           tree: finalTree,
           visitedIds,
           path: basePath,
           message: `The parent link that used to point to ${value} is now empty.`,
-          result: `Deleted ${value}.`
+          result: `Removed ${value}.`
         });
-        return { result, deleted: true, tree: finalTree };
+        return { result, removed: true, tree: finalTree };
       }
 
       if (children === 1) {
@@ -659,16 +671,16 @@
           message: `${value} has one child, ${child.value}. Splice that child into ${value}'s position.`,
           result: 'One-child case.'
         });
-        const finalTree = deleteValue(cloneTree(tree), value);
+        const finalTree = removeValue(cloneTree(tree), value);
         result.push({
           tree: finalTree,
           replacementId: child.id,
           visitedIds,
           path: basePath,
           message: `${child.value} now occupies the link where ${value} used to be, and the BST order is unchanged.`,
-          result: `Deleted ${value}.`
+          result: `Removed ${value}.`
         });
-        return { result, deleted: true, tree: finalTree };
+        return { result, removed: true, tree: finalTree };
       }
 
       let successor = node.right;
@@ -720,20 +732,20 @@
         result: `Copied ${successor.value} into ${value}'s position.`
       });
 
-      const finalTree = deleteValue(cloneTree(tree), value);
+      const finalTree = removeValue(cloneTree(tree), value);
       result.push({
         tree: finalTree,
         replacementId: node.id,
         visitedIds: pathIds(successorPath.slice(0, -1)),
         path: pathValues(successorPath),
         message: `Remove the old successor from its original position. Since a successor has no left child, this final removal is a leaf or one-child splice.`,
-        result: `Deleted ${value}; ${successor.value} replaced it.`
+        result: `Removed ${value}; ${successor.value} replaced it.`
       });
 
-      return { result, deleted: true, tree: finalTree };
+      return { result, removed: true, tree: finalTree };
     }
 
-    function createDeleteSteps(value) {
+    function createRemoveSteps(value) {
       const result = [];
       const path = [];
       let current = tree;
@@ -743,10 +755,10 @@
         result.push({
           tree: cloneTree(tree),
           path: [],
-          message: 'The tree is empty, so there is nothing to delete.',
-          result: `Could not delete ${value}.`
+          message: 'The tree is empty, so there is nothing to remove.',
+          result: `Could not remove ${value}.`
         });
-        return { result, deleted: false, tree };
+        return { result, removed: false, tree };
       }
 
       while (current) {
@@ -758,10 +770,10 @@
             targetId: current.id,
             visitedIds: pathIds(path),
             path: pathValues(currentPath),
-            message: `Found ${value}. Now choose the deletion case from its number of children.`,
+            message: `Found ${value}. Now choose the removal case from its number of children.`,
             result: `${value} found.`
           });
-          return finishDeleteSteps(value, current, currentPath, result);
+          return finishRemoveSteps(value, current, currentPath, result);
         }
 
         side = value < current.value ? 'left' : 'right';
@@ -773,7 +785,7 @@
           message: value < current.value
             ? `${value} is less than ${current.value}, so move left.`
             : `${value} is greater than ${current.value}, so move right.`,
-          result: 'Searching for the value to delete...'
+          result: 'Searching for the value to remove...'
         });
 
         path.push(current);
@@ -788,9 +800,9 @@
         missingSide: side,
         path: pathValues(path),
         message: `The ${side} child on this search path is empty, so ${value} is not in the tree.`,
-        result: `Could not delete ${value}.`
+        result: `Could not remove ${value}.`
       });
-      return { result, deleted: false, tree };
+      return { result, removed: false, tree };
     }
 
     function layoutTree(root) {
@@ -893,7 +905,7 @@
       const naturalWidth = maxX - minX + sideMargin * 2;
       const width = Math.max(baseWidth, naturalWidth);
       const offsetX = (width - (maxX - minX)) / 2 - minX;
-      const height = Math.max(320, 88 + (maxDepth + 1) * verticalGap);
+      const height = Math.max(320, 88 + maxDepth * verticalGap);
 
       compactLayout.items.forEach((item) => {
         const x = item.x + offsetX;
@@ -1163,18 +1175,18 @@
       startOperation(operationSteps);
     });
 
-    document.getElementById('deleteBtn').addEventListener('click', () => {
+    document.getElementById('removeBtn').addEventListener('click', () => {
       const value = readValue();
       if (!Number.isInteger(value)) {
-        reportInvalidValue('Delete');
+        reportInvalidValue('Remove');
         return;
       }
 
-      const deletion = createDeleteSteps(value);
-      if (deletion.deleted) {
-        tree = deletion.tree;
+      const removal = createRemoveSteps(value);
+      if (removal.removed) {
+        tree = removal.tree;
       }
-      startOperation(deletion.result);
+      startOperation(removal.result);
     });
 
     document.getElementById('predecessorBtn').addEventListener('click', () => {

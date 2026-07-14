@@ -320,17 +320,35 @@
     introduce self-balancing search trees, which use additional rules to prevent the
     tree from becoming too tall.
   </p>
+<p>
+  On this page, we treat a binary search tree as an implementation of an ordered set:
+  it stores distinct values and supports operations such as search, insertion, removal,
+  minimum, maximum, predecessor, and successor. Duplicate values are not inserted.
+  Other BST implementations may store a count with each value or use a consistent rule
+  for placing duplicates, but those choices add details that are not needed for the
+  basic operations considered here.
+</p>
 
-  <p>
-    On this page, we treat a binary search tree as a set of distinct values. Duplicate
-    values are not inserted. Other implementations may store a count with each value or
-    use a consistent rule for placing duplicates, but those choices add details that are
-    not needed for the basic operations.
-  </p>
 </section>
 
 <section id="core-operations" section-title="Core Operations and Implementation">
   <h2>Core Operations and Implementation</h2>
+
+  <section id="core-intro" section-title="Core Operations">
+  <h3>Core Operations</h3>
+<p>
+  As we have previously seen, a binary tree can be represented either in an array or
+  with linked nodes. Although the array representation is useful for complete or nearly
+  complete trees, it is not normally used for binary search trees. The shape of a BST
+  depends on the order in which keys are inserted, so the tree may be sparse or highly
+  unbalanced. In an array, this can leave many unused positions and may require an
+  impractically large index range. Linked nodes store only the nodes that are actually
+  present and adapt naturally as insertions and removals change the shape of the tree.
+  Array representations become even more unwieldy for balanced search trees, where
+  rotations and other restructuring operations repeatedly change the relationships
+  among nodes. For these reasons, linked nodes are the standard representation for BSTs,
+  and we discuss each operation together with its linked implementation.
+</p>
 
   <p>
     A binary search tree supports operations for locating, adding, and removing keys.
@@ -358,8 +376,8 @@
       <tr>
         <td><strong><code>insert(key)</code></strong></td>
         <td>
-          Add the key in a position that preserves the search tree property. On this
-          page, duplicate keys are not inserted.
+          Add the key in a position that preserves the search tree property,
+          assuming it is not already present.
         </td>
       </tr>
       <tr>
@@ -370,20 +388,33 @@
         </td>
       </tr>
       <tr>
-        <td><code>minimum()</code> / <code>maximum()</code></td>
+        <td><code>minimum()</code></td>
         <td>
-          Return the smallest or largest key in the tree. These operations have no
-          result when the tree is empty.
+          Return the smallest key in the tree, or report that no such key exists when
+          the tree is empty.
         </td>
       </tr>
       <tr>
-        <td><code>predecessor(key)</code> / <code>successor(key)</code></td>
+        <td><code>maximum()</code></td>
         <td>
-          Return the largest stored key smaller than <code>key</code> (predecessor), 
-          or the smallest stored key larger than <code>key</code> (successor), 
-          when such a key exists.
+          Return the largest key in the tree, or report that no such key exists when
+          the tree is empty.
         </td>
       </tr>
+      <tr>
+      <td><code>predecessor(node)</code></td>
+      <td>
+        Return the node containing the largest key smaller than
+        <code>node.key</code>, when such a node exists.
+      </td>
+    </tr>
+    <tr>
+      <td><code>successor(node)</code></td>
+      <td>
+        Return the node containing the smallest key larger than
+        <code>node.key</code>, when such a node exists.
+      </td>
+    </tr>
       <tr>
         <td><code>isEmpty()</code></td>
         <td>Report whether the tree contains no keys.</td>
@@ -401,16 +432,24 @@
   <p>
     The pseudocode below uses a linked-node representation. Each node stores a
     <code>key</code> and references named <code>left</code>, <code>right</code>, and
-    <code>parent</code>. The tree stores a <code>root</code> reference and a
-    <code>size</code>. An empty reference is written as <code>null</code>. Parent
-    references are not required for search or insertion, but they make predecessor,
-    successor, and removal especially clear.
+    <code>parent</code>. The tree stores a <code>root</code> reference and an integer
+    <code>size</code>. An empty reference is written as <code>null</code>. An empty tree
+    has <code>root == null</code> and <code>size == 0</code>; in a nonempty tree, the
+    root's parent reference is <code>null</code>.
   </p>
+
+  <p>
+    Parent references are not required for search or insertion, but they make
+    predecessor, successor, and removal especially clear. The implementation stores
+    distinct keys only, so an attempt to insert a duplicate leaves the tree unchanged.
+    Operations that search for a key or a related key report failure when the requested
+    result does not exist.
+  </p>
+  </section>
 
   <section id="operation-search" section-title="Search">
   <h3>Search</h3>
 
-  <div>
   <p>
     Searching begins at the root. If the target key equals the key at the current
     node, the search succeeds. If the target is smaller, the search continues in the
@@ -420,65 +459,64 @@
 
   <p>
     The search continues along a single downward path. If it reaches an empty child
-    reference, the key is not in the tree. For example, when searching for \(42\),
-    reaching a node containing \(50\) tells us to move left, reaching a node containing
-    \(30\) tells us to move right, and reaching a node containing \(40\) tells us to
-    move right again. Since there is no right child of \(40\), the search ends and we
-    conclude that \(42\) is not stored in the tree.
-  </p></div>
-
-<div class="example-box">
-  <strong class="example-title">Example: Searching a Binary Search Tree</strong>
-
-  <p>
-    Search for \(68\) in the tree below to see how a successful search works.
-    Then search for \(34\) to see what happens when a key is not in the tree.
+    reference, the key is not in the tree. For example, when searching for \(34\) in
+    the tree below, the search moves left from \(50\), right from \(25\), left from
+    \(37\), and right from \(31\). Since \(31\) has no right child, the search ends
+    and we conclude that \(34\) is not stored in the tree.
   </p>
 
-  <div class="bst-demo-controls">
-    <label for="bst-search-demo-input">Key:</label>
-    <input id="bst-search-demo-input"
-           type="number"
-           step="1"
-           value="68">
-    <button id="bst-search-demo-button" type="button">Search</button>
-  </div>
+  <div class="example-box">
+    <strong class="example-title">Example: Searching a Binary Search Tree</strong>
 
-  <p id="bst-search-demo-status"
-     class="bst-demo-status"
-     aria-live="polite">
-    <strong>Status:</strong> Enter a key and select Search.
-  </p>
+<p>
+  Search for \(68\) in the tree below to see how a successful search works.
+  Then search for \(34\) to see what happens when a key is not in the tree.
+</p>
 
-  <svg id="bst-search-demo-svg"
-       class="bst-demo-svg bst-demo-svg--search"
-       viewBox="0 0 800 350"
-       role="img"
-       aria-labelledby="bst-search-demo-title bst-search-demo-desc">
-  </svg>
+<div class="bst-demo-controls">
+  <label for="bst-search-demo-input">Key:</label>
+  <input id="bst-search-demo-input"
+         type="number"
+         step="1"
+         value="68">
+  <button id="bst-search-demo-button" type="button">Search</button>
 </div>
+
+<p id="bst-search-demo-status"
+   class="bst-demo-status"
+   aria-live="polite">
+  <strong>Status:</strong> Enter a key and select Search.
+</p>
+
+<svg id="bst-search-demo-svg"
+     class="bst-demo-svg bst-demo-svg--search"
+     viewBox="0 0 800 350"
+     role="img"
+     aria-labelledby="bst-search-demo-title bst-search-demo-desc">
+</svg>
+  </div>
 
   <p>
     The implementation keeps a reference to the current node and follows exactly one
-    child after each comparison. Returning the node, rather than only a Boolean,
-    allows other operations to reuse the search result.
+    child after each comparison. Returning the node rather than only a Boolean value
+    allows other operations to use the node and its links after the search succeeds.
   </p>
 
   <pre><code>search(key):
-    current &larr; root
+    current = root
 
-    while current &ne; null:
-        if key = current.key:
+    while current != null:
+        if key == current.key:
             return current
-        else if key &lt; current.key:
-            current &larr; current.left
+        if key < current.key:
+            current = current.left
         else:
-            current &larr; current.right
+            current = current.right
 
     return null</code></pre>
-  </section>
+</section>
 
-  <section id="operation-insertion" section-title="Insertion">
+<section id="operation-insertion" section-title="Insertion">
   <h3>Insertion</h3>
 
   <p>
@@ -490,160 +528,202 @@
   </p>
 
   <p>
+    The return value of insertion varies among implementations. Some return
+    <code>true</code> or <code>false</code> to indicate whether a new key was inserted.
+    Our implementation returns the node containing the key: the existing node if the
+    key was already present, or the newly created node otherwise.
+  </p>
+
+  <p>
     If the key is not already present, the comparisons eventually lead to an empty
     child position. A new node containing the key is attached at that position. Since
     the new node has no children, every newly inserted node begins as a leaf. If the
     tree was initially empty, the new node instead becomes the root.
   </p>
 
-  <p>
-    The comparisons along the path determine exactly where the new key belongs. For
-    example, moving left from a node containing \(50\) and then right from a node
-    containing \(25\) tells us that the new key is smaller than \(50\) but larger than
-    \(25\). Attaching the new node at the first appropriate empty position therefore
-    preserves the search tree property.
-  </p>
-
   <div class="example-box">
     <strong class="example-title">Example: Inserting into a Binary Search Tree</strong>
 
-    <p>
-      Enter a key and select <strong>Insert</strong> to follow the comparisons and add
-      the key as a new leaf. First insert \(68\). Then insert \(34\) and compare the
-      two insertion paths. You can continue inserting other integer keys. Attempting
-      to insert a key already in the tree leaves the tree unchanged.
-    </p>
+<p>
+  Insert \(68\) into the tree below. Then insert \(34\) and compare the two
+  insertion paths. Finally, try to insert \(62\), which is already present in the
+  tree. Continue inserting other integer keys until you are comfortable with the
+  process.
+</p>
 
-    <div class="bst-demo-controls">
-      <label for="bst-insert-demo-input">Key:</label>
-      <input id="bst-insert-demo-input"
-             type="number"
-             step="1"
-             value="68">
-      <button id="bst-insert-demo-button" type="button">Insert</button>
-    </div>
+<div class="bst-demo-controls">
+  <label for="bst-insert-demo-input">Key:</label>
+  <input id="bst-insert-demo-input"
+         type="number"
+         step="1"
+         value="68">
+  <button id="bst-insert-demo-button" type="button">Insert</button>
+</div>
 
-    <p id="bst-insert-demo-status"
-       class="bst-demo-status"
-       aria-live="polite">
-      <strong>Status:</strong> Enter a key and select Insert.
-    </p>
+<p id="bst-insert-demo-status"
+   class="bst-demo-status"
+   aria-live="polite">
+  <strong>Status:</strong> Enter a key and select Insert.
+</p>
 
-    <svg id="bst-insert-demo-svg"
-         class="bst-demo-svg bst-demo-svg--insert"
-         viewBox="0 0 800 350"
-         role="img"
-         aria-labelledby="bst-insert-demo-title bst-insert-demo-desc">
-    </svg>
+<svg id="bst-insert-demo-svg"
+     class="bst-demo-svg bst-demo-svg--insert"
+     viewBox="0 0 800 350"
+     role="img"
+     aria-labelledby="bst-insert-demo-title bst-insert-demo-desc">
+</svg>
   </div>
 
   <p>
-    Insertion remembers the parent of the current node while searching for an empty
-    position. Once the search reaches <code>null</code>, the final comparison determines
-    whether the new node becomes the parent's left or right child. The method returns
-    <code>false</code> when the key is already present.
+    The implementation keeps track of both the current node and its parent while
+    searching for the key. If the search reaches <code>null</code>, the parent is the
+    node beneath which the new node must be attached. Comparing the new key with the
+    parent's key determines whether it becomes the left or right child. If the key is
+    already present, the existing node is returned and the tree is not changed.
   </p>
 
   <pre><code>insert(key):
-    parent &larr; null
-    current &larr; root
+    parent = null
+    current = root
 
-    while current &ne; null:
-        parent &larr; current
-        if key = current.key:
-            return false
-        else if key &lt; current.key:
-            current &larr; current.left
+    while current != null:
+        parent = current
+
+        if key == current.key:
+            return current
+        if key &lt; current.key:
+            current = current.left
         else:
-            current &larr; current.right
+            current = current.right
 
-    node &larr; new Node(key)
-    node.parent &larr; parent
+    newNode = new Node(key)
+    newNode.parent = parent
 
-    if parent = null:
-        root &larr; node
+    if parent == null:
+        root = newNode
     else if key &lt; parent.key:
-        parent.left &larr; node
+        parent.left = newNode
     else:
-        parent.right &larr; node
+        parent.right = newNode
 
-    size &larr; size + 1
-    return true</code></pre>
-  </section>
+    size = size + 1
+    return newNode</code></pre>
 
-  <section id="operation-minimum-maximum" section-title="Minimum and Maximum">
+</section>
+
+<section id="operation-minimum-maximum" section-title="Minimum and Maximum">
   <h3>Minimum and Maximum</h3>
+
   <p>
-  DRAFT! The minimum
-  key is found by following left-child references as far as possible, because each
-  left move leads to a smaller key. Similarly, the maximum key is found by following
-  right-child references as far as possible.
-</p>
+    The search tree property makes the smallest and largest keys easy to locate. In
+    any nonempty subtree, a node's left child has a smaller key than the node. Thus, as
+    long as a left child exists, the minimum must be found farther to the left. When a
+    node has no left child, no smaller key remains in that subtree, so that node
+    contains the minimum key.
+  </p>
+
+  <p>
+    The maximum is found symmetrically. As long as the current node has a right child,
+    the subtree contains a larger key. The first node reached with no right child
+    therefore contains the maximum key.
+  </p>
+
   <div class="example-box">
     <strong class="example-title">Example: Finding the Smallest and Largest Keys</strong>
+<p>
+  Select <strong>Minimum</strong> to follow left-child references until no further
+  left move is possible. Then select <strong>Maximum</strong> to follow
+  right-child references to the largest key.
+</p>
 
-    <p>
-      Select <strong>Minimum</strong> or <strong>Maximum</strong> to follow the one-way
-      path from the root to the requested endpoint.
-    </p>
+<div class="bst-demo-controls">
+  <button id="bst-min-demo-button" type="button">Minimum</button>
+  <button id="bst-max-demo-button" type="button">Maximum</button>
+</div>
 
-    <div class="bst-demo-controls">
-      <button id="bst-min-demo-button" type="button">Minimum</button>
-      <button id="bst-max-demo-button" type="button">Maximum</button>
-    </div>
+<p id="bst-extreme-demo-status"
+   class="bst-demo-status"
+   aria-live="polite">
+  <strong>Status:</strong> Select Minimum or Maximum.
+</p>
 
-    <p id="bst-extreme-demo-status"
-       class="bst-demo-status"
-       aria-live="polite">
-      <strong>Status:</strong> Select Minimum or Maximum.
-    </p>
-
-    <svg id="bst-extreme-demo-svg"
-         class="bst-demo-svg bst-demo-svg--operation"
-         viewBox="0 0 800 350"
-         role="img"
-         aria-labelledby="bst-extreme-demo-title bst-extreme-demo-desc">
-    </svg>
+<svg id="bst-extreme-demo-svg"
+     class="bst-demo-svg bst-demo-svg--operation"
+     viewBox="0 0 800 350"
+     role="img"
+     aria-labelledby="bst-extreme-demo-title bst-extreme-demo-desc">
+</svg>
   </div>
 
   <p>
-    These helpers accept a subtree root so that other operations can reuse them.
-    Calling either helper with the tree's root finds the extreme key in the entire
-    tree. Passing <code>null</code> represents an empty subtree and produces no result.
+    The algorithms accept the root of a subtree rather than always beginning at the
+    root of the entire tree. Thus, <code>minimum(root)</code> and
+    <code>maximum(root)</code> find the minimum and maximum nodes in the full tree,
+    while passing another node finds the corresponding result within that node's
+    subtree. This flexibility will be useful when finding predecessors, successors,
+    and replacement nodes during removal. If the given subtree is empty, the
+    algorithm returns <code>null</code>.
   </p>
 
   <pre><code>minimum(node):
-    if node = null:
+    if node == null:
         return null
 
-    while node.left &ne; null:
-        node &larr; node.left
-    return node
+    current = node
+
+    while current.left != null:
+        current = current.left
+
+    return current
 
 maximum(node):
-    if node = null:
+    if node == null:
         return null
 
-    while node.right &ne; null:
-        node &larr; node.right
-    return node</code></pre>
-  </section>
-  
-  <section id="operation-successor-predecessor" section-title="Successor and Predecessor">
-  <h3>Successor and Predecessor</h3>
-  <p>DRAFT! 
-  The <strong>predecessor</strong> of a key is the largest stored key smaller than
-  it, and the <strong>successor</strong> is the smallest stored key larger than it.
-  If a node has a left subtree, its predecessor is the maximum key in that subtree.
-  If it has a right subtree, its successor is the minimum key in that subtree.
-  Otherwise, finding the predecessor or successor may require moving upward through
-  the node's ancestors.
-</p>
+    current = node
 
-<p>
-  A predecessor or successor does not always exist: the smallest key has no predecessor, 
-  and the largest key has no successor.
-</p>
+    while current.right != null:
+        current = current.right
+
+    return current</code></pre>
+
+<p> Now that we have seen the simplest BST operations, 
+  we can turn to the more challenging ones: 
+  predecessor, successor, and removal. </p>
+</section>
+  
+<section id="operation-successor-predecessor"
+         section-title="Successor and Predecessor">
+  <h3>Successor and Predecessor</h3>
+
+  <p>
+    The <strong>successor</strong> of a node is the node containing the smallest key
+    larger than its key. Similarly, the <strong>predecessor</strong> is the node
+    containing the largest key smaller than its key. In an inorder traversal, these
+    are the nodes visited immediately after and immediately before the given node.
+  </p>
+
+  <p>
+    We will develop the successor operation here. The predecessor operation is
+    symmetric and will be left as an activity. The algorithm assumes that the given
+    node is already in the tree.
+  </p>
+
+  <p>
+    There are two cases. If the node has a right subtree, its successor is the minimum
+    node in that subtree. Every key in the right subtree is larger than the node's key,
+    and the minimum operation finds the smallest of those larger keys.
+  </p>
+
+  <p>
+    If the node has no right subtree, the successor must be one of its ancestors. The
+    algorithm follows parent references upward while the current node is a right child.
+    In each such step, the parent has a smaller key and therefore cannot be the
+    successor. The first time the algorithm reaches a node that is a left child of its
+    parent, that parent is the next larger key. If the algorithm moves above the root,
+    the original node was the largest node in the tree and has no successor.
+  </p>
+
   <div class="example-box">
     <strong class="example-title">Example: Finding a Neighbor in Sorted Order</strong>
 
@@ -683,209 +763,237 @@ maximum(node):
   </div>
 
   <p>
-    The subtree cases reduce to the minimum or maximum helpers. When the needed
-    subtree is absent, the algorithm follows parent references until it first moves
-    up from the side that makes the ancestor the next key in sorted order. These
-    versions require <code>key</code> to be stored in the tree.
+    The implementation of successor first checks the right-subtree case. If there is no right
+    subtree, <code>current</code> and <code>parent</code> move upward together until
+    <code>current</code> is a left child or there is no parent. The algorithm returns
+    the node it finds, or <code>null</code> if the given node has no successor.
   </p>
 
-  <pre><code>successor(key):
-    node &larr; search(key)
-    if node = null:
-        return null
-    if node.right &ne; null:
+  <pre><code>successor(node):
+    if node.right != null:
         return minimum(node.right)
 
-    parent &larr; node.parent
-    while parent &ne; null and node = parent.right:
-        node &larr; parent
-        parent &larr; parent.parent
-    return parent
+    current = node
+    parent = current.parent
 
-predecessor(key):
-    node &larr; search(key)
-    if node = null:
-        return null
-    if node.left &ne; null:
-        return maximum(node.left)
+    while parent != null and current == parent.right:
+        current = parent
+        parent = parent.parent
 
-    parent &larr; node.parent
-    while parent &ne; null and node = parent.left:
-        node &larr; parent
-        parent &larr; parent.parent
     return parent</code></pre>
-  </section>
 
-  <section id="operation-removal" section-title="Removal">
+  <p>
+    Finding a predecessor uses the same idea with left and right reversed: first look
+    for the maximum node in the left subtree, and otherwise move upward through
+    ancestors. We will develop that algorithm in the activities.
+  </p>
+</section>
+
+<section id="operation-removal" section-title="Removal">
   <h3>Removal</h3>
-<p>
-  Removal begins by searching for the key. If the key is absent, the tree does not
-  change. If the key is found, the way it is removed depends on the number of
-  children its node has.
+
+  <p>
+  Removal begins by searching for the key. If the key is not present, the tree is
+  unchanged and the operation returns <code>false</code>. If the key is found, the
+  node containing it must be taken out of the tree without losing any of its
+  descendants or violating the search tree property. How this is done depends on
+  whether the node has zero, one, or two children. After a successful removal, the
+  operation decreases <code>size</code> and returns <code>true</code>.
 </p>
 
-<ul>
-  <li>
-    <strong>No children:</strong> The node is a leaf and can simply be removed.
-  </li>
-  <li>
-    <strong>One child:</strong> The node is replaced by its only child.
-  </li>
-  <li>
-    <strong>Two children:</strong> The node's key is replaced by a nearby key in
-    the ordering, usually its predecessor or successor. That replacement key is
-    then removed from its original position.
-  </li>
-</ul>
 
-<p>
-  The first two cases require only a small change to the tree. The two-child case
-  requires an additional step because removing the node directly would disconnect
-  both of its subtrees. The pseudocode following the example handles all three cases.
-</p>
+  <ul>
+    <li>
+      <strong>No children:</strong> A leaf has no subtrees that need to be preserved.
+      It can therefore be disconnected from its parent. If the leaf is the root, the
+      tree becomes empty.
+    </li>
+    <li>
+      <strong>One child:</strong> The node is replaced by its only child. The removed
+      node's parent is connected directly to that child, and the child's parent
+      reference is updated. If the removed node is the root, its child becomes the new
+      root.
+    </li>
+    <li>
+      <strong>Two children:</strong> Neither subtree can simply be discarded, so a
+      different node must take the removed node's position. This implementation uses
+      the removed node's successor, which is the minimum node in its right subtree.
+    </li>
+  </ul>
+
+  <p>
+    The two-child case works because the successor is the smallest key larger than the
+    removed key. It is larger than every key in the removed node's left subtree, but no
+    other key in the right subtree is smaller than it. Placing the successor in the
+    removed node's position therefore preserves the ordering of both subtrees.
+  </p>
+
+  <p>
+    Since the successor is the minimum node in the right subtree, it cannot have a left
+    child. It may have a right child, however. If the successor is not already the
+    removed node's right child, the successor is first detached from its original
+    position and replaced there by its right child. The successor can then take the
+    removed node's position and adopt both of its subtrees.
+  </p>
+
   <div class="example-box">
     <strong class="example-title">Example: Removing a Key</strong>
 
-    <p>
-      Enter a key and select <strong>Remove</strong>. Try <code>18</code>,
-      <code>12</code>, and <code>25</code>, in that order, to see the leaf,
-      one-child, and two-child cases. Each successful removal changes the tree, so
-      reload the page to restore the original example.
-    </p>
+<p>
+  Enter a key and select <strong>Remove</strong>. Remove \(18\), \(12\), and
+  \(25\), in that order, to see the leaf, one-child, and two-child cases. Each
+  successful removal changes the tree, so reload the page to restore the original
+  example.
+</p>
 
-    <p>
-      For another revealing sequence, reload the page and remove <code>62</code>,
-      <code>68</code>, <code>56</code>, and then <code>75</code>. Watch the final
-      removal closely: the earlier operations have changed which removal case applies
-      to <code>75</code>.
-    </p>
+<p>
+  For another useful sequence, reload the page and remove \(62\), \(68\), \(56\),
+  and then \(75\). Initially, \(75\) has two children. The earlier removals change
+  its left subtree, so a different case applies when \(75\) is finally removed.
+  You can also try removing \(34\) to see what happens when the key is absent.
+</p>
 
-    <div class="bst-demo-controls">
-      <label for="bst-remove-demo-input">Key:</label>
-      <input id="bst-remove-demo-input"
-             type="number"
-             step="1"
-             value="25">
-      <button id="bst-remove-demo-button" type="button">Remove</button>
-    </div>
+<div class="bst-demo-controls">
+  <label for="bst-remove-demo-input">Key:</label>
+  <input id="bst-remove-demo-input"
+         type="number"
+         step="1"
+         value="18">
+  <button id="bst-remove-demo-button" type="button">Remove</button>
+</div>
 
-    <p id="bst-remove-demo-status"
-       class="bst-demo-status"
-       aria-live="polite">
-      <strong>Status:</strong> Enter a key and select Remove.
-    </p>
+<p id="bst-remove-demo-status"
+   class="bst-demo-status"
+   aria-live="polite">
+  <strong>Status:</strong> Enter a key and select Remove.
+</p>
 
-    <svg id="bst-remove-demo-svg"
-         class="bst-demo-svg bst-demo-svg--operation"
-         viewBox="0 0 800 350"
-         role="img"
-         aria-labelledby="bst-remove-demo-title bst-remove-demo-desc">
-    </svg>
+<svg id="bst-remove-demo-svg"
+     class="bst-demo-svg bst-demo-svg--operation"
+     viewBox="0 0 800 350"
+     role="img"
+     aria-labelledby="bst-remove-demo-title bst-remove-demo-desc">
+</svg>
+
   </div>
 
-  <p>
-    The <code>replaceSubtree</code> helper reconnects a replacement subtree at the
-    position formerly occupied by another node. In the two-child case,
-    <code>minimum(node.right)</code> finds the node's successor. That successor has no
-    left child, so it can be detached using the same replacement helper before it
-    takes the removed node's place.
-  </p>
+<p>
+  Each removal case requires changing the link from the removed node's parent to the
+  node or subtree that will take its place. The parent reference of that replacement
+  must also be updated. Rather than repeat these link changes in several places, the
+  implementation uses a helper named <code>replaceSubtree</code>.
+  <code>replaceSubtree(oldRoot, newRoot)</code> replaces the subtree rooted at
+  <code>oldRoot</code> with the subtree rooted at <code>newRoot</code>. It changes the
+  appropriate child reference in <code>oldRoot</code>'s parent and, when
+  <code>newRoot</code> is not <code>null</code>, updates its parent reference. The
+  helper also handles the special case in which <code>oldRoot</code> is the root of
+  the entire tree.
+</p>
 
-  <pre><code>replaceSubtree(oldRoot, newRoot):
-    if oldRoot.parent = null:
-        root &larr; newRoot
-    else if oldRoot = oldRoot.parent.left:
-        oldRoot.parent.left &larr; newRoot
+<p>
+  The <code>remove</code> algorithm first handles nodes with at most one child. If the
+  node has no left child, it is replaced by its right subtree, which may be
+  <code>null</code>. Otherwise, if it has no right child, it is replaced by its left
+  subtree (which might be null, but that is not a problem).
+</p>
+
+<p>
+  If the node has two children, the algorithm finds its successor, which is the
+  minimum node in its right subtree. It copies the successor's key into the node being
+  removed and then removes the successor from its original position. Because the
+  successor is the minimum node in that subtree, it has no left child. Removing it
+  therefore reduces to one of the simpler cases already handled above.
+</p>
+
+<pre><code>replaceSubtree(oldRoot, newRoot):
+    if oldRoot.parent == null:
+        root = newRoot
+    else if oldRoot == oldRoot.parent.left:
+        oldRoot.parent.left = newRoot
     else:
-        oldRoot.parent.right &larr; newRoot
+        oldRoot.parent.right = newRoot
 
-    if newRoot &ne; null:
-        newRoot.parent &larr; oldRoot.parent
+    if newRoot != null:
+        newRoot.parent = oldRoot.parent
+
 
 remove(key):
-    node &larr; search(key)
-    if node = null:
+    node = search(key)
+
+    if node == null:
         return false
 
-    if node.left = null:
-        replaceSubtree(node, node.right)
-    else if node.right = null:
+    if node.left != null and node.right != null:
+        successor = minimum(node.right)
+        node.key = successor.key
+        node = successor
+
+    if node.left != null:
         replaceSubtree(node, node.left)
     else:
-        successor &larr; minimum(node.right)
+        replaceSubtree(node, node.right)
 
-        if successor.parent &ne; node:
-            replaceSubtree(successor, successor.right)
-            successor.right &larr; node.right
-            successor.right.parent &larr; successor
-
-        replaceSubtree(node, successor)
-        successor.left &larr; node.left
-        successor.left.parent &larr; successor
-
-    size &larr; size - 1
+    size = size - 1
     return true</code></pre>
-  </section>
 
-  <section id="analysis" section-title="Analysis">
-    <h3>Analysis</h3>
-    <p>
-      Let \(h\) be the number of edges on the longest path from the root to a leaf.
-      Search and every update follow a constant number of root-to-leaf or
-      ancestor-to-root paths, so their running times are \(O(h)\). Minimum, maximum,
-      predecessor, and successor also follow at most one such path and take
-      \(O(h)\) time.
-    </p>
+</section>
 
-    <table class="example-table">
-      <thead>
-        <tr>
-          <th>Operation</th>
-          <th>Time in Terms of Height</th>
-          <th>Balanced Tree</th>
-          <th>Degenerate Tree</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><code>search</code>, <code>insert</code>, or <code>remove</code></td>
-          <td>\(O(h)\)</td>
-          <td>\(O(\log n)\)</td>
-          <td>\(O(n)\)</td>
-        </tr>
-        <tr>
-          <td><code>minimum</code> or <code>maximum</code></td>
-          <td>\(O(h)\)</td>
-          <td>\(O(\log n)\)</td>
-          <td>\(O(n)\)</td>
-        </tr>
-        <tr>
-          <td><code>predecessor</code> or <code>successor</code></td>
-          <td>\(O(h)\)</td>
-          <td>\(O(\log n)\)</td>
-          <td>\(O(n)\)</td>
-        </tr>
-      </tbody>
-    </table>
+<section id="analysis" section-title="Analysis">
+  <h3>Analysis</h3>
 
-    <p>
-      A balanced tree has height \(\Theta(\log n)\), while a degenerate tree created
-      by an unfortunate insertion order can have height \(n - 1\). A plain BST does
-      not guarantee balance. The nodes use \(\Theta(n)\) total storage, and the
-      iterative algorithms above use \(O(1)\) additional working space. Parent references add one
-      reference per node but do not change the asymptotic storage bound.
-    </p>
-  </section>
+  <p>
+    Let \(h\) be the height of the tree, measured as the number of edges on the
+    longest path from the root to a leaf. Each comparison during search or insertion
+    moves down one level of the tree, so these operations visit at most \(h + 1\)
+    nodes and take \(O(h)\) time.
+  </p>
+
+  <p>
+    Finding a minimum or maximum also follows a single downward path, repeatedly
+    moving left or right. Finding a successor or predecessor may move down through a
+    subtree or upward through parent references, but it still traverses at most
+    \(O(h)\) edges. Removal first searches for the key and may then locate a successor
+    and remove a node with at most one child. Although this can involve more than one
+    path, only a constant number of paths are followed, so removal also takes
+    \(O(h)\) time.
+  </p>
+
+  <p>
+    The value of \(h\) depends on the shape of the tree. In a balanced tree,
+    \(h = \Theta(\log n)\), so all of these operations take \(O(\log n)\) time.
+    However, a plain BST does not guarantee balance. For example, inserting keys in
+    increasing order produces a degenerate tree with height \(n - 1\), causing the
+    same operations to take \(O(n)\) time in the worst case.
+  </p>
+
+  <p>
+    If distinct keys are inserted in random order, the expected height of the BST is
+    \(\Theta(\log n)\), and the expected running time of the operations is therefore
+    \(O(\log n)\). This is an expected result, not a worst-case guarantee. The
+    self-balancing search trees introduced later maintain logarithmic height even for
+    unfavorable insertion orders.
+  </p>
+
+  <p>
+    The nodes occupy \(\Theta(n)\) total space. Storing a parent reference adds one
+    reference to each node but does not change this asymptotic bound. The iterative
+    algorithms presented on this page use \(O(1)\) additional working space. Recursive
+    versions would use \(O(h)\) additional space for the recursion stack.
+  </p>
+</section>
 
 </section>
 
 
   <section id="demo" section-title="Interactive Demo">
     <h2>Interactive Demo</h2>
-    <p>
-      [Explain which operations the demo supports and suggest a short sequence that
-      demonstrates successful search, unsuccessful search, insertion, and all deletion cases.]
+   <p>
+      The demo below allows you to experiment with search, insertion, removal, 
+      predecessor, and successor. Use it to compare how the different operations
+      follow paths through the tree and how insertion and removal change the tree's
+      structure. Minimum and maximum are not included since they are not that interesting.
     </p>
+
     <div class="embeddedDemoContainer">
       <iframe class="embeddedDemo"
               src="/DAIADS/Content/Demos/Data Structures/Binary Search Tree/BST Operations Demo.html"
