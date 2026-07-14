@@ -10,7 +10,6 @@
       max-width: 800px;
       margin: 2rem auto;
       padding: 0 1rem;
-      padding-bottom: 4rem; /* space for fixed nav */
     }
     .glossary-entry { margin-bottom: 1rem; }
     .glossary-term { font-weight: bold; font-size: 1.1em; color: #333; }
@@ -26,20 +25,45 @@
   gtag('config', 'G-DQ5LVZVFDC');
 </script>
 </head>
-<body class="no-tooltips">
+<body class="no-tooltips" data-sections-initially-collapsed>
   <main id="glossary-container">
-    <h2>Glossary</h2>
+    <h1>Glossary</h1>
     <div id="entries"></div>
   </main>
 
   <script type="module">
     // Fetch and render glossary entries
     const container = document.getElementById('entries');
+    const letterContainers = new Map();
+
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('').forEach(letter => {
+      const section = document.createElement('section');
+      section.id = `letter-${letter.toLowerCase()}`;
+      section.setAttribute('section-title', letter);
+
+      const heading = document.createElement('h2');
+      heading.textContent = letter;
+
+      const entries = document.createElement('div');
+      entries.className = 'glossary-letter-entries';
+
+      section.append(heading, entries);
+      container.appendChild(section);
+      letterContainers.set(letter, entries);
+    });
+
     function render(glossary) {
-      container.innerHTML = '';
+      letterContainers.forEach(entries => entries.replaceChildren());
       glossary.forEach(({variants, definition}) => {
         const term = variants[0];
         const others = variants.slice(1);
+        const letter = term
+          .normalize('NFKD')
+          .match(/[A-Za-z]/)?.[0]
+          .toUpperCase();
+        const letterContainer = letterContainers.get(letter);
+        if (!letterContainer) return;
+
         const entry = document.createElement('div');
         entry.className = 'glossary-entry';
         let html = `<div class="glossary-term">${term}</div>`;
@@ -48,7 +72,7 @@
         }
         html += `<div class="glossary-definition">${definition}</div>`;
         entry.innerHTML = html;
-        container.appendChild(entry);
+        letterContainer.appendChild(entry);
       });
     }
 

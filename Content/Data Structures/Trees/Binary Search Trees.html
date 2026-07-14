@@ -329,8 +329,8 @@
   </p>
 </section>
 
-<section id="core-operations" section-title="Core Operations">
-  <h2>Core Operations</h2>
+<section id="core-operations" section-title="Core Operations and Implementation">
+  <h2>Core Operations and Implementation</h2>
 
   <p>
     A binary search tree supports operations for locating, adding, and removing keys.
@@ -398,7 +398,16 @@
     </tbody>
   </table>
 
+  <p>
+    The pseudocode below uses a linked-node representation. Each node stores a
+    <code>key</code> and references named <code>left</code>, <code>right</code>, and
+    <code>parent</code>. The tree stores a <code>root</code> reference and a
+    <code>size</code>. An empty reference is written as <code>null</code>. Parent
+    references are not required for search or insertion, but they make predecessor,
+    successor, and removal especially clear.
+  </p>
 
+  <section id="operation-search" section-title="Search">
   <h3>Search</h3>
 
   <div>
@@ -449,6 +458,27 @@
   </svg>
 </div>
 
+  <p>
+    The implementation keeps a reference to the current node and follows exactly one
+    child after each comparison. Returning the node, rather than only a Boolean,
+    allows other operations to reuse the search result.
+  </p>
+
+  <pre><code>search(key):
+    current &larr; root
+
+    while current &ne; null:
+        if key = current.key:
+            return current
+        else if key &lt; current.key:
+            current &larr; current.left
+        else:
+            current &larr; current.right
+
+    return null</code></pre>
+  </section>
+
+  <section id="operation-insertion" section-title="Insertion">
   <h3>Insertion</h3>
 
   <p>
@@ -507,6 +537,41 @@
     </svg>
   </div>
 
+  <p>
+    Insertion remembers the parent of the current node while searching for an empty
+    position. Once the search reaches <code>null</code>, the final comparison determines
+    whether the new node becomes the parent's left or right child. The method returns
+    <code>false</code> when the key is already present.
+  </p>
+
+  <pre><code>insert(key):
+    parent &larr; null
+    current &larr; root
+
+    while current &ne; null:
+        parent &larr; current
+        if key = current.key:
+            return false
+        else if key &lt; current.key:
+            current &larr; current.left
+        else:
+            current &larr; current.right
+
+    node &larr; new Node(key)
+    node.parent &larr; parent
+
+    if parent = null:
+        root &larr; node
+    else if key &lt; parent.key:
+        parent.left &larr; node
+    else:
+        parent.right &larr; node
+
+    size &larr; size + 1
+    return true</code></pre>
+  </section>
+
+  <section id="operation-minimum-maximum" section-title="Minimum and Maximum">
   <h3>Minimum and Maximum</h3>
   <p>
   DRAFT! The minimum
@@ -540,7 +605,31 @@
          aria-labelledby="bst-extreme-demo-title bst-extreme-demo-desc">
     </svg>
   </div>
+
+  <p>
+    These helpers accept a subtree root so that other operations can reuse them.
+    Calling either helper with the tree's root finds the extreme key in the entire
+    tree. Passing <code>null</code> represents an empty subtree and produces no result.
+  </p>
+
+  <pre><code>minimum(node):
+    if node = null:
+        return null
+
+    while node.left &ne; null:
+        node &larr; node.left
+    return node
+
+maximum(node):
+    if node = null:
+        return null
+
+    while node.right &ne; null:
+        node &larr; node.right
+    return node</code></pre>
+  </section>
   
+  <section id="operation-successor-predecessor" section-title="Successor and Predecessor">
   <h3>Successor and Predecessor</h3>
   <p>DRAFT! 
   The <strong>predecessor</strong> of a key is the largest stored key smaller than
@@ -593,7 +682,42 @@
     </svg>
   </div>
 
-    <h3>Removal</h3>
+  <p>
+    The subtree cases reduce to the minimum or maximum helpers. When the needed
+    subtree is absent, the algorithm follows parent references until it first moves
+    up from the side that makes the ancestor the next key in sorted order. These
+    versions require <code>key</code> to be stored in the tree.
+  </p>
+
+  <pre><code>successor(key):
+    node &larr; search(key)
+    if node = null:
+        return null
+    if node.right &ne; null:
+        return minimum(node.right)
+
+    parent &larr; node.parent
+    while parent &ne; null and node = parent.right:
+        node &larr; parent
+        parent &larr; parent.parent
+    return parent
+
+predecessor(key):
+    node &larr; search(key)
+    if node = null:
+        return null
+    if node.left &ne; null:
+        return maximum(node.left)
+
+    parent &larr; node.parent
+    while parent &ne; null and node = parent.left:
+        node &larr; parent
+        parent &larr; parent.parent
+    return parent</code></pre>
+  </section>
+
+  <section id="operation-removal" section-title="Removal">
+  <h3>Removal</h3>
 <p>
   Removal begins by searching for the key. If the key is absent, the tree does not
   change. If the key is found, the way it is removed depends on the number of
@@ -617,8 +741,7 @@
 <p>
   The first two cases require only a small change to the tree. The two-child case
   requires an additional step because removing the node directly would disconnect
-  both of its subtrees. The implementation section will examine all three cases in
-  detail.
+  both of its subtrees. The pseudocode following the example handles all three cases.
 </p>
   <div class="example-box">
     <strong class="example-title">Example: Removing a Key</strong>
@@ -660,6 +783,100 @@
     </svg>
   </div>
 
+  <p>
+    The <code>replaceSubtree</code> helper reconnects a replacement subtree at the
+    position formerly occupied by another node. In the two-child case,
+    <code>minimum(node.right)</code> finds the node's successor. That successor has no
+    left child, so it can be detached using the same replacement helper before it
+    takes the removed node's place.
+  </p>
+
+  <pre><code>replaceSubtree(oldRoot, newRoot):
+    if oldRoot.parent = null:
+        root &larr; newRoot
+    else if oldRoot = oldRoot.parent.left:
+        oldRoot.parent.left &larr; newRoot
+    else:
+        oldRoot.parent.right &larr; newRoot
+
+    if newRoot &ne; null:
+        newRoot.parent &larr; oldRoot.parent
+
+remove(key):
+    node &larr; search(key)
+    if node = null:
+        return false
+
+    if node.left = null:
+        replaceSubtree(node, node.right)
+    else if node.right = null:
+        replaceSubtree(node, node.left)
+    else:
+        successor &larr; minimum(node.right)
+
+        if successor.parent &ne; node:
+            replaceSubtree(successor, successor.right)
+            successor.right &larr; node.right
+            successor.right.parent &larr; successor
+
+        replaceSubtree(node, successor)
+        successor.left &larr; node.left
+        successor.left.parent &larr; successor
+
+    size &larr; size - 1
+    return true</code></pre>
+  </section>
+
+  <section id="analysis" section-title="Analysis">
+    <h3>Analysis</h3>
+    <p>
+      Let \(h\) be the number of edges on the longest path from the root to a leaf.
+      Search and every update follow a constant number of root-to-leaf or
+      ancestor-to-root paths, so their running times are \(O(h)\). Minimum, maximum,
+      predecessor, and successor also follow at most one such path and take
+      \(O(h)\) time.
+    </p>
+
+    <table class="example-table">
+      <thead>
+        <tr>
+          <th>Operation</th>
+          <th>Time in Terms of Height</th>
+          <th>Balanced Tree</th>
+          <th>Degenerate Tree</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>search</code>, <code>insert</code>, or <code>remove</code></td>
+          <td>\(O(h)\)</td>
+          <td>\(O(\log n)\)</td>
+          <td>\(O(n)\)</td>
+        </tr>
+        <tr>
+          <td><code>minimum</code> or <code>maximum</code></td>
+          <td>\(O(h)\)</td>
+          <td>\(O(\log n)\)</td>
+          <td>\(O(n)\)</td>
+        </tr>
+        <tr>
+          <td><code>predecessor</code> or <code>successor</code></td>
+          <td>\(O(h)\)</td>
+          <td>\(O(\log n)\)</td>
+          <td>\(O(n)\)</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p>
+      A balanced tree has height \(\Theta(\log n)\), while a degenerate tree created
+      by an unfortunate insertion order can have height \(n - 1\). A plain BST does
+      not guarantee balance. The nodes use \(\Theta(n)\) total storage, and the
+      iterative algorithms above use \(O(1)\) additional working space. Parent references add one
+      reference per node but do not change the asymptotic storage bound.
+    </p>
+  </section>
+
 </section>
 
 
@@ -677,219 +894,6 @@
       </iframe>
     </div>
   </section>
-
-  <section id="implementation" section-title="Implementation">
-    <h2>Implementation</h2>
-    <p>
-      [Introduce the linked-node representation and the fields maintained by the tree.
-      State whether nodes store keys only or key-value pairs, whether parent references
-      are used, and whether the implementation maintains a size field.]
-    </p>
-
-    <section id="implementation-representation" section-title="Node and Tree Representation">
-      <h3>Node and Tree Representation</h3>
-      <p>
-        [Describe the node fields and the tree's root reference. Include an empty-tree
-        invariant and any class invariants used by the implementations.]
-      </p>
-      <!-- Add a node-and-pointer SVG here. -->
-    </section>
-
-    <section id="implementation-search" section-title="Search">
-      <h3>Search</h3>
-      <p>[Walk through iterative search and explain the role of the current reference.]</p>
-      <pre><code>search(key):
-    [pseudocode placeholder]</code></pre>
-    </section>
-
-    <section id="implementation-insert" section-title="Insertion">
-      <h3>Insertion</h3>
-      <p>
-        [Explain how to retain the parent of the final empty position, attach the new
-        node on the correct side, handle an empty tree, and apply the duplicate policy.]
-      </p>
-      <pre><code>insert(key):
-    [pseudocode placeholder]</code></pre>
-    </section>
-
-    <section id="implementation-min-max" section-title="Minimum and Maximum">
-      <h3>Minimum and Maximum</h3>
-      <p>
-        [Explain why repeatedly following left references finds the minimum and repeatedly
-        following right references finds the maximum.]
-      </p>
-      <pre><code>minimum(node):
-    [pseudocode placeholder]
-
-maximum(node):
-    [pseudocode placeholder]</code></pre>
-    </section>
-
-    <section id="implementation-predecessor-successor" section-title="Predecessor and Successor">
-      <h3>Predecessor and Successor</h3>
-      <p>
-        [Explain the subtree case and ancestor case for successor and predecessor.
-        Decide whether the main implementation uses parent references or tracks the
-        candidate ancestor during a root-to-node search.]
-      </p>
-      <pre><code>successor(key):
-    [pseudocode placeholder]
-
-predecessor(key):
-    [pseudocode placeholder]</code></pre>
-    </section>
-
-    <section id="implementation-remove" section-title="Removal">
-      <h3>Removal</h3>
-      <p>[Introduce a helper such as replaceSubtree or transplant if one will be used.]</p>
-
-      <h4>Case 1: Leaf</h4>
-      <p>[Explain how a leaf is disconnected.]</p>
-
-      <h4>Case 2: One Child</h4>
-      <p>[Explain how the node is replaced by its only child.]</p>
-
-      <h4>Case 3: Two Children</h4>
-      <p>
-        [Explain replacement by the in-order successor or predecessor, including why the
-        replacement node has at most one child in the direction that matters.]
-      </p>
-
-      <pre><code>remove(key):
-    [pseudocode placeholder]</code></pre>
-    </section>
-
-      <section id="analysis" section-title="Analysis">
-    <h3>Analysis</h3>
-    <p>
-      [Define the tree height convention used on this page and explain why path-based
-      operations take time proportional to the height.]
-    </p>
-    <table class="example-table">
-      <thead>
-        <tr>
-          <th>Operation</th>
-          <th>Time in Terms of Height</th>
-          <th>Balanced Tree</th>
-          <th>Degenerate Tree</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><code>search</code></td>
-          <td>[placeholder]</td>
-          <td>[placeholder]</td>
-          <td>[placeholder]</td>
-        </tr>
-        <tr>
-          <td><code>insert</code></td>
-          <td>[placeholder]</td>
-          <td>[placeholder]</td>
-          <td>[placeholder]</td>
-        </tr>
-        <tr>
-          <td><code>remove</code></td>
-          <td>[placeholder]</td>
-          <td>[placeholder]</td>
-          <td>[placeholder]</td>
-        </tr>
-        <tr>
-          <td><code>minimum</code> / <code>maximum</code></td>
-          <td>[placeholder]</td>
-          <td>[placeholder]</td>
-          <td>[placeholder]</td>
-        </tr>
-        <tr>
-          <td><code>predecessor</code> / <code>successor</code></td>
-          <td>[placeholder]</td>
-          <td>[placeholder]</td>
-          <td>[placeholder]</td>
-        </tr>
-        <tr>
-          <td>in-order traversal</td>
-          <td>[placeholder]</td>
-          <td>[placeholder]</td>
-          <td>[placeholder]</td>
-        </tr>
-      </tbody>
-    </table>
-    <p>
-      [Discuss extra space for iterative versus recursive implementations, the storage
-      used by the nodes, and the effect of maintaining parent references or a size field.]
-    </p>
-    <p>
-      [Discuss expected height under an explicitly stated random-insertion assumption,
-      while emphasizing that a plain BST provides no worst-case balance guarantee.]
-    </p>
-  </section>
-
-    <section id="implementation-code" section-title="Implementation in Java, C++, Python">
-      <h3>Implementation in Java, C++, Python</h3>
-      <p>
-        [State the shared design choices used in all three implementations: duplicate
-        policy, return values, parent references, maintained size, and deletion strategy.]
-      </p>
-      <div class="tab-group scrollable-code-tabs">
-        <div class="tabs" role="tablist">
-          <button id="tab-java-bst" class="tablink active" data-lang="java-bst" role="tab" aria-controls="java-bst" aria-selected="true">Java</button>
-          <button id="tab-cpp-bst" class="tablink" data-lang="cpp-bst" role="tab" aria-controls="cpp-bst" aria-selected="false">C++</button>
-          <button id="tab-python-bst" class="tablink" data-lang="python-bst" role="tab" aria-controls="python-bst" aria-selected="false">Python</button>
-        </div>
-        <div id="java-bst" class="code-container active copyable-code" role="tabpanel" aria-labelledby="tab-java-bst">
-          <pre><code class="language-java">// Java BST implementation placeholder</code></pre>
-        </div>
-        <div id="cpp-bst" class="code-container copyable-code" role="tabpanel" aria-labelledby="tab-cpp-bst">
-          <pre><code class="language-cpp">// C++ BST implementation placeholder</code></pre>
-        </div>
-        <div id="python-bst" class="code-container copyable-code" role="tabpanel" aria-labelledby="tab-python-bst">
-          <pre><code class="language-python"># Python BST implementation placeholder</code></pre>
-        </div>
-      </div>
-    </section>
-
-  <section id="library-implementations" section-title="Library Implementations">
-    <h3>Library Implementations</h3>
-    <p>
-      [Explain that standard libraries generally expose ordered sets and maps rather than
-      a plain unbalanced BST class, and that their internal tree type may be balanced or
-      otherwise unspecified.]
-    </p>
-    <table class="example-table left-align">
-      <thead>
-        <tr>
-          <th>Language</th>
-          <th>Ordered Set or Map</th>
-          <th>Relevant Operations</th>
-          <th>Notes</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><strong>Java</strong></td>
-          <td>[placeholder]</td>
-          <td>[placeholder]</td>
-          <td>[placeholder]</td>
-        </tr>
-        <tr>
-          <td><strong>C++</strong></td>
-          <td>[placeholder]</td>
-          <td>[placeholder]</td>
-          <td>[placeholder]</td>
-        </tr>
-        <tr>
-          <td><strong>Python</strong></td>
-          <td>[placeholder]</td>
-          <td>[placeholder]</td>
-          <td>[placeholder]</td>
-        </tr>
-      </tbody>
-    </table>
-  </section>
-
-
-  </section>
-
-
 
   <section id="applications" section-title="Applications">
     <h2>Applications</h2>

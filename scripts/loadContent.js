@@ -45,6 +45,17 @@ const NUMBERED_CHILD_SECTIONS = new Set([
   'Analysis',
   'Data Structures',
   'Techniques',
+  'Algorithms',
+  'Appendix',
+  'Problems',
+  'Demos',
+  'More'
+]);
+const NUMBERED_PAGE_SECTION_HEADINGS = new Set([
+  'Foundations',
+  'Analysis',
+  'Data Structures',
+  'Techniques',
   'Algorithms'
 ]);
 const PROBLEMS_ORDER = [
@@ -267,6 +278,29 @@ const buildMenuNumbering = (chapters) => {
   const entries = new Map();
   const pages = new Map();
 
+  const numberEntries = (items, pathPrefix, parentNumber) => {
+    const orderedItems = sortEntries(
+      items,
+      getOrderListForPath(pathPrefix),
+      'default'
+    );
+
+    orderedItems.forEach((item, index) => {
+      const number = `${parentNumber}.${index + 1}`;
+      const key = getKey(item);
+
+      if (typeof item === 'string') {
+        pages.set(`${pathPrefix}${key}`, number);
+        return;
+      }
+
+      const childItems = item[key];
+      const childPath = `${pathPrefix}${key}/`;
+      entries.set(childPath, number);
+      numberEntries(childItems, childPath, number);
+    });
+  };
+
   TOP_LEVEL_ORDER.forEach((sectionName) => {
     const contents = chapters[sectionName];
     const topNumber = TOP_LEVEL_NUMBER_LABELS[sectionName];
@@ -277,24 +311,7 @@ const buildMenuNumbering = (chapters) => {
     if (!NUMBERED_CHILD_SECTIONS.has(sectionName)) return;
 
     const sectionPath = `${sectionName}/`;
-    const orderedItems = sortEntries(
-      contents,
-      getOrderListForPath(sectionPath),
-      'default'
-    );
-
-    let entryIndex = 0;
-    orderedItems.forEach((item) => {
-      entryIndex += 1;
-      const entryNumber = `${topNumber}.${entryIndex}`;
-      const key = getKey(item);
-
-      if (typeof item === 'string') {
-        pages.set(`${sectionPath}${key}`, entryNumber);
-      } else {
-        entries.set(`${sectionPath}${key}/`, entryNumber);
-      }
-    });
+    numberEntries(contents, sectionPath, topNumber);
   });
 
   return { topLevel, entries, pages };
@@ -304,7 +321,7 @@ const applyPageNumber = (doc, path) => {
   const number = menuNumbering.pages.get(path);
   if (!number) return;
 
-  const title = doc.querySelector('h1');
+  const title = doc.querySelector('h1') || doc.querySelector('h2');
   if (
     title &&
     title.dataset.menuNumber !== number &&
@@ -730,6 +747,29 @@ function hookIframeContent(iframe) {
 
       const registry = [];
       const defaultOpenSlugs = new Set(['problem-solved','design-and-strategy']);
+      const initiallyCollapsed = doc.body.hasAttribute('data-sections-initially-collapsed');
+      const currentPath = getCurrentPath();
+      const topLevelSection = currentPath.split('/')[0];
+      const pageNumber = NUMBERED_PAGE_SECTION_HEADINGS.has(topLevelSection)
+        ? menuNumbering.pages.get(currentPath)
+        : null;
+      const sectionNumbers = new Map();
+      const childCounts = new Map();
+
+      if (pageNumber) {
+        sections.forEach((section) => {
+          const parentSection = section.parentElement?.closest(selector) || null;
+          const childIndex = (childCounts.get(parentSection) || 0) + 1;
+          childCounts.set(parentSection, childIndex);
+          const parentNumber = parentSection
+            ? sectionNumbers.get(parentSection)
+            : pageNumber;
+          if (parentNumber) {
+            sectionNumbers.set(section, `${parentNumber}.${childIndex}`);
+          }
+        });
+      }
+
       sections.forEach((section, index) => {
         const titleAttr = section.getAttribute('section-title') || section.getAttribute('data-section-title') || '';
         let id = (section.getAttribute('id') || '').trim();
@@ -774,8 +814,10 @@ function hookIframeContent(iframe) {
         btn.type = 'button';
         btn.className = 'section-toggle';
         const label = titleAttr || header.textContent || id || 'Section';
+        const sectionNumber = sectionNumbers.get(section);
         btn.innerHTML = `<span class="chev" aria-hidden="true">▸</span><span class="label"></span>`;
-        btn.querySelector('.label').textContent = label;
+        btn.querySelector('.label').textContent = prefixNumber(sectionNumber, label);
+        if (sectionNumber) section.dataset.sectionNumber = sectionNumber;
         header.textContent = '';
         header.appendChild(btn);
 
@@ -823,6 +865,8 @@ function hookIframeContent(iframe) {
           const idKey = id.toLowerCase();
           if (idKey && openTargets.has(idKey)) open = true;
           else if (slug && openTargets.has(slug)) open = true;
+        } else if (initiallyCollapsed) {
+          open = false;
         } else {
           // Default: open key intro sections if present; otherwise open first top-level only
           const idKey = id.toLowerCase();
