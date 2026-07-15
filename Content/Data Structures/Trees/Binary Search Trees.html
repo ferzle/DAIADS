@@ -508,7 +508,7 @@
     while current != null:
         if key == current.key:
             return current
-        if key < current.key:
+        if key &lt; current.key:
             current = current.left
         else:
             current = current.right
@@ -655,15 +655,15 @@
 </svg>
   </div>
 
-  <p>
-    The algorithms accept the root of a subtree rather than always beginning at the
-    root of the entire tree. Thus, <code>minimum(root)</code> and
-    <code>maximum(root)</code> find the minimum and maximum nodes in the full tree,
-    while passing another node finds the corresponding result within that node's
-    subtree. This flexibility will be useful when finding predecessors, successors,
-    and replacement nodes during removal. If the given subtree is empty, the
-    algorithm returns <code>null</code>.
-  </p>
+<p>
+  The public operations <code>minimum()</code> and <code>maximum()</code> begin at
+  <code>root</code>, but the helper algorithms below accept the root of any subtree.
+  Thus, <code>minimum(root)</code> and <code>maximum(root)</code> find the extreme
+  nodes in the full tree, while passing another node finds the minimum or maximum
+  within that node's subtree. This flexibility is useful when finding predecessors,
+  successors, and replacement keys during removal. If the given subtree is empty,
+  the algorithm returns <code>null</code>.
+</p>
 
   <pre><code>minimum(node):
     if node == null:
@@ -815,26 +815,24 @@ maximum(node):
       root.
     </li>
     <li>
-      <strong>Two children:</strong> Neither subtree can simply be discarded, so a
-      different node must take the removed node's position. This implementation uses
-      the removed node's successor, which is the minimum node in its right subtree.
+      <strong>Two children:</strong> The node cannot be removed directly without
+      disconnecting one of its subtrees. Instead, its key is replaced by the key of
+      its successor, which is the minimum node in its right subtree. The successor
+      is then removed from its original position.
     </li>
   </ul>
 
-  <p>
-    The two-child case works because the successor is the smallest key larger than the
-    removed key. It is larger than every key in the removed node's left subtree, but no
-    other key in the right subtree is smaller than it. Placing the successor in the
-    removed node's position therefore preserves the ordering of both subtrees.
-  </p>
+    <p>
+      The two-child case works because the successor contains the smallest key larger
+      than the key being removed. Replacing the original key with the successor's key
+      therefore preserves the ordering between the node's left and right subtrees.
+    </p>
 
-  <p>
-    Since the successor is the minimum node in the right subtree, it cannot have a left
-    child. It may have a right child, however. If the successor is not already the
-    removed node's right child, the successor is first detached from its original
-    position and replaced there by its right child. The successor can then take the
-    removed node's position and adopt both of its subtrees.
-  </p>
+    <p>
+      Since the successor is the minimum node in the right subtree, it cannot have a
+      left child. It may have a right child, but this means that removing the successor
+      reduces to the simpler case of removing a node with at most one child.
+    </p>
 
   <div class="example-box">
     <strong class="example-title">Example: Removing a Key</strong>
@@ -894,7 +892,7 @@ maximum(node):
   The <code>remove</code> algorithm first handles nodes with at most one child. If the
   node has no left child, it is replaced by its right subtree, which may be
   <code>null</code>. Otherwise, if it has no right child, it is replaced by its left
-  subtree (which might be null, but that is not a problem).
+  subtree.
 </p>
 
 <p>
@@ -991,7 +989,8 @@ remove(key):
       The demo below allows you to experiment with search, insertion, removal, 
       predecessor, and successor. Use it to compare how the different operations
       follow paths through the tree and how insertion and removal change the tree's
-      structure. Minimum and maximum are not included since they are not that interesting.
+      structure. Minimum and maximum are not included since they are not that interesting
+      and the earlier demo should be enough to get the idea.
     </p>
 
     <div class="embeddedDemoContainer">
@@ -1003,114 +1002,1715 @@ remove(key):
     </div>
   </section>
 
-  <section id="applications" section-title="Applications">
-    <h2>Applications</h2>
-    <p>[Explain situations that need a dynamic ordered set or ordered map.]</p>
-    <ul>
-      <li>[Maintaining a changing collection with search, insertion, and deletion.]</li>
-      <li>[Reporting keys in sorted order.]</li>
-      <li>[Range queries and nearest-key queries.]</li>
-      <li>[Implementing ordered sets, maps, symbol tables, and indexes.]</li>
-    </ul>
-    <!-- Add one concrete worked application if it contributes new understanding. -->
-  </section>
+ <section id="applications" section-title="Applications">
+  <h2>Applications</h2>
 
-  <section id="connections" section-title="Connections and Comparisons">
-    <h2>Connections and Comparisons</h2>
-    <ul>
-      <li>[BST versus arbitrary binary tree.]</li>
-      <li>[BST versus sorted array.]</li>
-      <li>[BST versus hash table.]</li>
-      <li>[Plain BST versus AVL tree and red-black tree.]</li>
-      <li>[In-order traversal and sorted order.]</li>
-    </ul>
-  </section>
+  <p>
+    Binary search trees are useful when a collection changes over time and its keys
+    must remain ordered. Unlike a sorted array, a BST can insert and remove keys
+    without shifting many other entries. Unlike a hash table, it can efficiently
+    answer questions that depend on the ordering of the keys.
+  </p>
 
-  <section id="variations" section-title="Variations and Extensions">
-    <h2>Variations and Extensions</h2>
-    <ul>
-      <li>[Key-value binary search trees and ordered maps.]</li>
-      <li>[Policies for duplicate keys: reject, replace, count, or consistently place.]</li>
-      <li>[Parent references versus no parent references.]</li>
-      <li>[Augmented BSTs that store subtree size, sums, or interval information.]</li>
-      <li>[Self-balancing BSTs: AVL trees, red-black trees, and related structures.]</li>
-      <li>[Randomized BST variants, if appropriate for the scope of the chapter.]</li>
-    </ul>
-  </section>
+  <ul>
+    <li>
+      <strong>Ordered sets and maps:</strong> A BST can store a changing set of
+      distinct keys or associate each key with a value. Search, insertion, and removal
+      support updates, while an inorder traversal reports the entries in sorted order.
+    </li>
+    <li>
+      <strong>Predecessor and successor queries:</strong> Applications can quickly
+      locate the stored key immediately before or after a given key. For example, a
+      scheduling system can find the events immediately before and after a particular
+      time.
+    </li>
+    <li>
+      <strong>Range queries:</strong> A BST can report all keys between two bounds
+      without examining too many keys that lie outside the range. This is useful for retrieving
+      records with dates, prices, scores, or other ordered values in a specified
+      interval.
+    </li>
+    <li>
+      <strong>Symbol tables and indexes:</strong> Compilers, databases, and other
+      systems use ordered search structures to associate names or keys with stored
+      information while supporting both updates and ordered queries.
+    </li>
+  </ul>
 
-  <section id="pitfalls" section-title="Common Pitfalls">
-    <h2>Common Pitfalls</h2>
-    <ul>
-      <li>[Checking only immediate children instead of entire subtrees.]</li>
-      <li>[Losing a subtree while changing references during insertion or deletion.]</li>
-      <li>[Forgetting the empty-tree and root-removal cases.]</li>
-      <li>[Mishandling duplicates or leaving the duplicate policy unspecified.]</li>
-      <li>[Assuming a plain BST remains balanced.]</li>
-      <li>[Confusing a node's successor with its right child.]</li>
-      <li>[Copying a replacement key without completing the corresponding deletion.]</li>
-    </ul>
-  </section>
+  <p>
+    In practice, these applications usually use a self-balancing BST rather than a
+    plain BST. Balanced trees preserve the same ordering and operations while
+    guaranteeing that the tree remains short enough for efficient searches and
+    updates.
+  </p>
+</section>
 
-  <section id="summary" section-title="Summary">
-    <h2>Summary</h2>
-    <p>[Summarize the invariant, core operations, height-dependent cost, and balance issue.]</p>
-  </section>
+<section id="connections" section-title="Connections and Comparisons">
+  <h2>Connections and Comparisons</h2>
 
-  <section id="links" section-title="Helpful Links and Resources">
-    <h2>Helpful Links and Resources</h2>
-    <ul>
-      <li><a href="URL1" target="_blank">[Resource title]</a>: [Short description.]</li>
-      <li><a href="URL2" target="_blank">[Resource title]</a>: [Short description.]</li>
-      <li><a href="URL3" target="_blank">[Resource title]</a>: [Short description.]</li>
-    </ul>
-  </section>
+  <p>
+  Binary search trees combine hierarchical structure with sorted order. Comparing them
+  with other data structures helps clarify both when a BST is especially useful and
+  when another structure may provide better support for the operations that matter
+  most in a given situation.
+</p>
 
-  <section id="reading-questions" section-title="Reading Comprehension Questions">
-    <h2>Reading Comprehension Questions</h2>
+
+  <ul>
+    <li>
+      <strong>Ordinary binary trees:</strong> A binary search tree is a binary tree
+      with an additional ordering rule. In an ordinary binary tree, the position of a
+      key provides no information about where other keys are stored, so searching may
+      require visiting every node. In a BST, each comparison determines which subtree
+      can still contain the target.
+    </li>
+    <li>
+      <strong>Sorted arrays:</strong> A sorted array supports binary search in
+      \(O(\log n)\) time and uses memory efficiently. However, inserting or removing
+      an entry may require shifting \(O(n)\) entries. A BST does not require entries
+      to be shifted; its search, insertion, and removal operations instead take
+      \(O(h)\) time, where \(h\) is the height of the tree.
+    </li>
+
+    <li>
+      <strong>Ordered linked lists:</strong> An ordered linked list also keeps its keys in
+      sorted order, but searching for a position takes \(O(n)\) time because nodes must be
+      examined sequentially. Once the position is known, insertion or removal requires
+      only a few link changes. A well-shaped BST improves the search for that position to
+      \(O(\log n)\).
+    </li>
+
+    <li>
+      <strong>Hash tables:</strong> A hash table typically provides faster expected
+      time for searching, inserting, and removing a key when only exact-key operations
+      are needed. However, hash tables do not maintain their keys in sorted order.
+      BSTs naturally support minimum, maximum, predecessor, successor, inorder
+      traversal, and range queries.
+    </li>
+
+    <li>
+      <strong>Balanced search trees:</strong> A plain BST does not control its shape
+      and can become a chain with height \(n - 1\). AVL trees, red-black trees, and
+      other self-balancing BSTs preserve the same search tree property while using
+      additional rules and restructuring operations to guarantee height
+      \(O(\log n)\).
+    </li>
+
+    <li>
+      <strong>Inorder traversal:</strong> An inorder traversal visits the keys of a
+      BST in increasing order. This connects the tree structure to sorting and allows
+      all stored keys to be reported in \(\Theta(n)\) time without performing a
+      separate sorting step.
+    </li>
+    <li>
+      <strong>Heaps:</strong> A heap also stores keys in a binary tree, but its ordering
+      rule is weaker. In a min-heap, each node is no larger than its children, but there is
+      no ordering relationship between the left and right subtrees. This makes finding the
+      minimum especially efficient, but searching for an arbitrary key, finding a
+      predecessor or successor, and reporting all keys in sorted order are not as natural
+      as they are in a BST.
+    </li>
+  </ul>
+</section>
+<section id="variations" section-title="Variations and Extensions">
+  <h2>Variations and Extensions</h2>
+
+  <p>
+    Binary search trees can be adapted in several ways depending on what information
+    must be stored, which operations must be supported, and whether the tree must
+    guarantee good performance.
+  </p>
+
+  <ul>
+    <li>
+      <strong>Key-value trees:</strong> Instead of storing only keys, each node can
+      associate a key with a value. This produces an ordered map rather than an
+      ordered set.
+    </li>
+    <li>
+      <strong>Duplicate-key policies:</strong> An implementation may reject duplicate
+      keys, replace the value associated with an existing key, store a count or collection
+      of items associated with the key, or use a consistent rule for placing repeated keys.
+    </li>
+  <li>
+    <strong>Parent references:</strong> Some implementations store a parent reference
+    in every node, as we have done here. Others omit it and instead retain ancestor
+    information during an operation or use recursion.
+  </li>
+
+  <li>
+    <strong>Augmented BSTs:</strong> Nodes can store additional information about
+    their subtrees, such as the number of nodes, a sum of values, or interval
+    endpoints. These additions can support operations such as rank queries,
+    selection by position, range sums, and interval searches.
+  </li>
+
+  <li>
+    <strong>Self-balancing BSTs:</strong> AVL trees, red-black trees, and related
+    structures preserve the binary search tree property while using rotations and
+    additional balance information to keep the height \(O(\log n)\).
+  </li>
+
+  <li>
+    <strong>Randomized BSTs:</strong> Structures such as treaps use randomness to
+    reduce the likelihood of highly unbalanced trees and provide good expected
+    performance.
+  </li>
+
+  <li>
+    <strong>Multiway search trees:</strong> 2-3 trees and B-trees extend the ordered
+    search-tree idea by allowing a node to contain more than one key and to have
+    more than two children. They are therefore more distant relatives of BSTs than
+    AVL or red-black trees, since they are not binary trees. Their broader nodes can
+    keep the tree very short, which is especially important for data stored on disks
+    or other external storage.
+  </li>
+  </ul>
+</section>
+
+<section id="pitfalls" section-title="Common Pitfalls">
+  <h2>Common Pitfalls</h2>
+
+  <p>
+    Binary search tree algorithms are often short, but small mistakes in the ordering
+    logic or link updates can corrupt the tree or produce incorrect results.
+  </p>
+
+  <ul>
+    <li>
+      <strong>Checking only immediate children:</strong> The search tree property
+      applies to entire subtrees, not just to a node and its children. Every key in the
+      left subtree must be smaller than the node's key, and every key in the right
+      subtree must be larger.
+    </li>
+    <li>
+      <strong>Losing a subtree:</strong> During insertion or removal, changing a child
+      reference before saving the subtree currently attached there can make part of the
+      tree unreachable.
+    </li>
+
+    <li>
+      <strong>Forgetting parent references:</strong> Whenever a node is attached in a
+      new position, its parent reference must also be updated. The root is the one
+      exception: its parent must remain <code>null</code>.
+    </li>
+
+    <li>
+      <strong>Ignoring special root cases:</strong> Inserting into an empty tree or
+      removing the root may require changing the tree's <code>root</code> reference
+      rather than a left or right child reference.
+    </li>
+
+    <li>
+      <strong>Mishandling duplicate keys:</strong> The implementation must use a clear
+      duplicate policy. On this page, inserting a key already in the tree leaves the
+      tree unchanged.
+    </li>
+
+    <li>
+      <strong>Assuming the tree remains balanced:</strong> A plain BST can become highly
+      unbalanced, even if it begins with a balanced shape. Its height, and therefore its
+      performance, depends on the order in which keys are inserted and removed. To
+      guarantee that the height remains \(O(\log n)\), the implementation must use a
+      self-balancing strategy, such as an AVL tree or a red-black tree.
+    </li>
+
+    <li>
+      <strong>Confusing a successor with a right child:</strong> A node's successor is
+      the next node in sorted order. If the node has a right subtree, the successor is
+      the minimum node in that subtree, which is not necessarily the immediate right
+      child.
+    </li>
+
+    <li>
+      <strong>Copying a successor key without removing the successor:</strong> In the
+      two-child removal case, copying the successor's key creates a duplicate unless
+      the original successor node is also removed from its old position.
+    </li>
+
+    <li>
+      <strong>Updating <code>size</code> incorrectly:</strong> The size should change
+      only when a new node is inserted or an existing node is removed. An unsuccessful
+      search, duplicate insertion, or unsuccessful removal must not change it.
+    </li>
+  </ul>
+</section>
+
+<section id="summary" section-title="Summary">
+  <h2>Summary</h2>
+
+  <p>
+    A binary search tree stores keys according to the search tree property: every key
+    in a node's left subtree is smaller than the node's key, and every key in its right
+    subtree is larger. This ordering allows search, insertion, removal, minimum,
+    maximum, predecessor, and successor operations to follow paths through the tree
+    rather than examining every node. An inorder traversal visits the keys in increasing
+    order.
+  </p>
+
+  <p>
+    BSTs are normally implemented using linked nodes because their shape changes as
+    keys are inserted and removed. In the implementation on this page, each node stores
+    left, right, and parent references, and the tree maintains references to its root
+    and its current size. Parent references simplify upward-moving operations such as
+    successor, predecessor, and removal.
+  </p>
+
+  <p>
+    Search and insertion follow comparisons downward from the root. Minimum and maximum
+    follow left or right references as far as possible. Successor and predecessor may
+    search within a subtree or move upward through ancestors. Removal has separate cases
+    for nodes with zero, one, or two children; in the two-child case, the node's key can
+    be replaced by its successor's key before the successor is removed from its original
+    position.
+  </p>
+
+  <p>
+    The running time of these operations is \(O(h)\), where \(h\) is the height of the
+    tree. A well-shaped tree has height \(\Theta(\log n)\), but a plain BST can become
+    degenerate and have height \(n - 1\), producing \(O(n)\) worst-case operations.
+    Self-balancing search trees such as AVL and red-black trees preserve the BST ordering
+    while guaranteeing logarithmic height.
+  </p>
+</section>
+<section id="links" section-title="Helpful Links and Resources">
+  <h2>Helpful Links and Resources</h2>
+
+  <ul>
+    <li>
+      <a href="https://en.wikipedia.org/wiki/Binary_search_tree"
+         target="_blank">
+        Wikipedia: Binary Search Tree
+      </a>:
+      An overview of binary search tree properties, operations, applications, and
+      variations.
+    </li>
+    <li>
+      <a href="https://opendsa-server.cs.vt.edu/ODSA/Books/Everything/html/BST.html"
+        target="_blank">
+        OpenDSA: Binary Search Trees
+      </a>:
+      A detailed introduction to BST definitions, search, insertion, removal, and
+      implementation.
+    </li>
+
+    <li>
+      <a href="https://visualgo.net/en/bst"
+        target="_blank">
+        VisuAlgo: Binary Search Tree and AVL Tree
+      </a>:
+      Interactive visualizations of BST operations and the effects of balancing.
+    </li>
+
+    <li>
+      <a href="https://www.cs.usfca.edu/~galles/visualization/BST.html"
+        target="_blank">
+        University of San Francisco: Binary Search Tree Visualization
+      </a>:
+      An interactive animation for constructing a BST and performing search,
+      insertion, and removal operations.
+    </li>
+  </ul>
+</section>
+
+<section id="reading-questions" section-title="Reading Comprehension Questions">
+  <h2>Reading Comprehension Questions</h2>
+
+  <ol>
+    <li>
+      <strong>Search Tree Property:</strong>
+      What must be true of every key in the left and right subtrees of every node in a
+      binary search tree? 
+    </li>
+    <li>
+      <strong>Following a Search Path:</strong>
+      Suppose a search is currently at a node containing \(50\). Which child should
+      the algorithm follow when searching for \(37\)? Which child should it follow
+      when searching for \(68\)? What does it mean if the required child reference is
+      <code>null</code>?
+    </li>
+
+    <li>
+      <strong>Insertion and Duplicates:</strong>
+      How does insertion determine where to attach a new node? What does the
+      implementation on this page do if the key is already present?
+    </li>
+
+    <li>
+      <strong>Minimum and Maximum:</strong>
+      Why does repeatedly following left-child references find the minimum node in a
+      subtree? Why do the helper algorithms accept a subtree root rather than always
+      beginning at the root of the entire tree?
+    </li>
+
+    <li>
+      <strong>Two Successor Cases:</strong>
+      Describe how to find the successor of a node when it has a right subtree. Then
+      describe how to find its successor when it has no right subtree.
+    </li>
+
+    <li>
+      <strong>Successor and Predecessor Children:</strong>
+      Suppose a node has two children. Explain why its successor has at most one child
+      and why its predecessor also has at most one child.
+    </li>
+
+    <li>
+      <strong>Removal Cases:</strong>
+      Explain how removal handles a node with no children, one child, and two children.
+      In the two-child case, why must the successor node still be removed after its key
+      is copied?
+    </li>
+
+    <li>
+      <strong>Height and Running Time:</strong>
+      Why do the main BST operations take \(O(h)\) time, where \(h\) is the height of
+      the tree? What running times does this give for a balanced tree and for a
+      degenerate tree?
+    </li>
+    <li> 
+      <strong>Inorder Traversal:</strong> 
+      Why does an inorder traversal of a binary search tree visit its keys in increasing order? 
+    </li>
+    <li>
+      <strong>Choosing a Data Structure:</strong> 
+      How does a binary search tree compare with a sorted array and a hash table? 
+      Give one operation or type of query for which each structure is especially suitable. 
+    </li>
+  </ol>
+
+  <button id="toggleAnswers" class="show-answer" aria-expanded="false">
+    Show Answers
+  </button>
+
+  <div id="answers" class="answer" hidden>
     <ol>
-      <li><strong>[Short Title]:</strong> [Question about the invariant.]</li>
-      <li><strong>[Short Title]:</strong> [Question tracing search or insertion.]</li>
-      <li><strong>[Short Title]:</strong> [Question about a deletion case.]</li>
-      <li><strong>[Short Title]:</strong> [Question about predecessor or successor.]</li>
-      <li><strong>[Short Title]:</strong> [Question about height-dependent analysis.]</li>
-      <li><strong>[Short Title]:</strong> [Question comparing a BST with another structure.]</li>
+      <li>
+        <strong>Answer:</strong>
+        Every key in the left subtree must be smaller than the node's key, and every
+        key in the right subtree must be larger.
+      </li>
+      <li>
+        <strong>Answer:</strong>
+        Since \(37 &lt; 50\), the algorithm follows the left child. Since
+        \(68 &gt; 50\), it follows the right child. If the required child reference is
+        <code>null</code>, there is no node in that direction, so the key is not in
+        the tree.
+      </li>
+
+      <li>
+        <strong>Answer:</strong>
+        Insertion follows the same comparisons as search until it reaches a
+        <code>null</code> child reference. The new node is attached there as the
+        appropriate left or right child. If the key is already present, this
+        implementation leaves the tree unchanged and returns the existing node.
+      </li>
+
+      <li>
+        <strong>Answer:</strong>
+        Each left child has a smaller key than its parent. Therefore, as long as a
+        left child exists, a smaller key remains in the subtree. The first node with
+        no left child is the minimum. Accepting a subtree root allows the same helper
+        to find the minimum or maximum of the entire tree or of a particular subtree,
+        as required by successor, predecessor, and removal.
+      </li>
+
+      <li>
+        <strong>Answer:</strong>
+        If the node has a right subtree, its successor is the minimum node in that
+        subtree. If it has no right subtree, move upward through parent references
+        while the current node is a right child. The first parent reached from a left
+        child is the successor. If no such parent exists, the node has no successor.
+      </li>
+
+      <li>
+        <strong>Answer:</strong>
+        The successor is the minimum node in the node's right subtree, so it cannot
+        have a left child. It may have a right child, giving it at most one child.
+        Similarly, the predecessor is the maximum node in the left subtree, so it
+        cannot have a right child. It may have a left child, again giving it at most
+        one child.
+      </li>
+
+      <li>
+        <strong>Answer:</strong>
+        A leaf is disconnected from its parent. A node with one child is replaced by
+        that child. For a node with two children, the implementation copies the key
+        of its successor into the node and then removes the successor from its old
+        position. The original successor must be removed or the tree would contain
+        the same key twice.
+      </li>
+
+      <li>
+        <strong>Answer:</strong>
+        Each operation follows at most a constant number of paths whose lengths are
+        bounded by the height of the tree. Therefore, each takes \(O(h)\) time. In a
+        balanced tree, \(h = \Theta(\log n)\), giving \(O(\log n)\) operations. In a
+        degenerate tree, \(h = n - 1\), giving \(O(n)\) operations.
+      </li>
+      <li> 
+        <strong>Answer:</strong> 
+        An inorder traversal first visits the left subtree, whose keys are smaller than 
+        the current key. It then visits the current node, followed by the right subtree, 
+        whose keys are larger. Because the same property holds recursively in both subtrees, 
+        the complete traversal visits the keys in increasing order. 
+      </li>
+      <li> <strong>Answer:</strong> A sorted array supports \(O(\log n)\) binary search and 
+        compact storage, but insertion and removal may require \(O(n)\) shifts. 
+        A hash table usually provides \(O(1)\) expected time for exact-key operations, 
+        but it does not maintain sorted order. A well-shaped BST supports search and 
+        updates in \(O(\log n)\) time while also supporting minimum, maximum, predecessor, 
+        successor, sorted traversal, and range queries. 
+      </li>
+
     </ol>
-    <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
-    <div id="answers" class="answer" hidden>
-      <ol>
-        <li><strong>Answer:</strong> [Answer placeholder.]</li>
-        <li><strong>Answer:</strong> [Answer placeholder.]</li>
-        <li><strong>Answer:</strong> [Answer placeholder.]</li>
-        <li><strong>Answer:</strong> [Answer placeholder.]</li>
-        <li><strong>Answer:</strong> [Answer placeholder.]</li>
-        <li><strong>Answer:</strong> [Answer placeholder.]</li>
+  </div>
+</section>
+
+<section id="activities" section-title="In-Class Activities">
+  <h2>In-Class Activities</h2>
+
+  <ol>
+    <li>
+  <strong>Classify Three Binary Trees:</strong>
+  For each tree below, determine whether it is a binary search tree. If it is not,
+  identify every node whose position violates the search tree property and explain
+  why.
+
+<svg viewBox="0 0 900 250"
+    role="img"
+    aria-labelledby="bstActivityTitle bstActivityDesc"
+    style="display:block; width:100%; max-width:900px; height:auto; margin:1em 0;">
+<title id="bstActivityTitle">
+  Three binary trees to classify as binary search trees or non-binary search trees
+</title>
+
+<desc id="bstActivityDesc">
+  Tree A has root 50 with children 25 and 75 and correctly ordered descendants.
+  Tree B has root 50 with children 70 and 30. Tree C has root 50 with children
+  30 and 70, but node 60 appears in the left subtree of 50.
+</desc>
+
+<text x="150" y="28" class="bst-heading">Tree A</text>
+<text x="450" y="28" class="bst-heading">Tree B</text>
+<text x="750" y="28" class="bst-heading">Tree C</text>
+
+<!-- Tree A edges -->
+<line x1="150" y1="70" x2="90" y2="140" class="bst-edge" />
+<line x1="150" y1="70" x2="210" y2="140" class="bst-edge" />
+<line x1="90" y1="140" x2="55" y2="225" class="bst-edge" />
+<line x1="90" y1="140" x2="125" y2="225" class="bst-edge" />
+<line x1="210" y1="140" x2="175" y2="225" class="bst-edge" />
+<line x1="210" y1="140" x2="245" y2="225" class="bst-edge" />
+
+<!-- Tree A nodes -->
+<circle cx="150" cy="70" r="20" class="bst-node" />
+<circle cx="90" cy="140" r="20" class="bst-node" />
+<circle cx="210" cy="140" r="20" class="bst-node" />
+<circle cx="55" cy="225" r="20" class="bst-node" />
+<circle cx="125" cy="225" r="20" class="bst-node" />
+<circle cx="175" cy="225" r="20" class="bst-node" />
+<circle cx="245" cy="225" r="20" class="bst-node" />
+
+<!-- Tree A values -->
+<text x="150" y="70" class="bst-value">50</text>
+<text x="90" y="140" class="bst-value">25</text>
+<text x="210" y="140" class="bst-value">75</text>
+<text x="55" y="225" class="bst-value">10</text>
+<text x="125" y="225" class="bst-value">40</text>
+<text x="175" y="225" class="bst-value">60</text>
+<text x="245" y="225" class="bst-value">90</text>
+
+<!-- Tree B edges -->
+<line x1="450" y1="70" x2="390" y2="140" class="bst-edge" />
+<line x1="450" y1="70" x2="510" y2="140" class="bst-edge" />
+<line x1="390" y1="140" x2="355" y2="225" class="bst-edge" />
+<line x1="390" y1="140" x2="425" y2="225" class="bst-edge" />
+<line x1="510" y1="140" x2="475" y2="225" class="bst-edge" />
+<line x1="510" y1="140" x2="545" y2="225" class="bst-edge" />
+
+<!-- Tree B nodes -->
+<circle cx="450" cy="70" r="20" class="bst-node" />
+<circle cx="390" cy="140" r="20" class="bst-node" />
+<circle cx="510" cy="140" r="20" class="bst-node" />
+<circle cx="355" cy="225" r="20" class="bst-node" />
+<circle cx="425" cy="225" r="20" class="bst-node" />
+<circle cx="475" cy="225" r="20" class="bst-node" />
+<circle cx="545" cy="225" r="20" class="bst-node" />
+
+<!-- Tree B values -->
+<text x="450" y="70" class="bst-value">50</text>
+<text x="390" y="140" class="bst-value">70</text>
+<text x="510" y="140" class="bst-value">30</text>
+<text x="355" y="225" class="bst-value">20</text>
+<text x="425" y="225" class="bst-value">80</text>
+<text x="475" y="225" class="bst-value">10</text>
+<text x="545" y="225" class="bst-value">40</text>
+
+<!-- Tree C edges -->
+<line x1="750" y1="70" x2="690" y2="140" class="bst-edge" />
+<line x1="750" y1="70" x2="810" y2="140" class="bst-edge" />
+<line x1="690" y1="140" x2="655" y2="225" class="bst-edge" />
+<line x1="690" y1="140" x2="725" y2="225" class="bst-edge" />
+<line x1="810" y1="140" x2="775" y2="225" class="bst-edge" />
+<line x1="810" y1="140" x2="845" y2="225" class="bst-edge" />
+
+<!-- Tree C nodes -->
+<circle cx="750" cy="70" r="20" class="bst-node" />
+<circle cx="690" cy="140" r="20" class="bst-node" />
+<circle cx="810" cy="140" r="20" class="bst-node" />
+<circle cx="655" cy="225" r="20" class="bst-node" />
+<circle cx="725" cy="225" r="20" class="bst-node" />
+<circle cx="775" cy="225" r="20" class="bst-node" />
+<circle cx="845" cy="225" r="20" class="bst-node" />
+
+<!-- Tree C values -->
+<text x="750" y="70" class="bst-value">50</text>
+<text x="690" y="140" class="bst-value">30</text>
+<text x="810" y="140" class="bst-value">70</text>
+<text x="655" y="225" class="bst-value">20</text>
+<text x="725" y="225" class="bst-value">60</text>
+<text x="775" y="225" class="bst-value">65</text>
+<text x="845" y="225" class="bst-value">80</text>
+  </svg>
+
+  <ol type="a">
+    <li>Which of the three trees are binary search trees?</li>
+    <li>
+      For each tree that is not a BST, identify every node whose position violates
+      the search tree property.
+    </li>
+    <li>
+      In which tree would checking only each node and its immediate children give an
+      incorrect conclusion? Explain why.
+    </li>
+    <li>
+      Give the inorder traversal of each tree. How can these traversals help confirm
+      your classifications?
+    </li>
+  </ol>
+</li>
+
+    <li>
+      <strong>Trace Search and Insertion:</strong>
+      Begin with the tree used in the search example. Trace a search for \(34\), listing
+      every comparison and child reference followed. Then insert \(34\), draw the
+      resulting tree, and trace a second search for it. Finally, attempt to insert
+      \(62\) and explain why the tree does not change.
+    </li>
+
+    <li>
+      <strong>Develop the Predecessor Algorithm:</strong>
+      Use the successor description and pseudocode as a model.
+      <ol type="a">
+        <li>
+          Describe how to find the predecessor when the node has a left subtree.
+        </li>
+        <li>
+          Describe how to find the predecessor when the node has no left subtree.
+        </li>
+        <li>
+          Write pseudocode for <code>predecessor(node)</code> using parent references.
+        </li>
+        <li>
+          Test the algorithm by finding the predecessors of \(75\), \(37\), and \(6\)
+          in the page's example tree.
+        </li>
       </ol>
-    </div>
-  </section>
+    </li>
 
-  <section id="activities" section-title="In-Class Activities">
-    <h2>In-Class Activities</h2>
-    <ol>
-      <li><strong>[Activity Title]:</strong> [Trace searches and insertions on a fixed tree.]</li>
-      <li><strong>[Activity Title]:</strong> [Classify several trees as BSTs or non-BSTs.]</li>
-      <li><strong>[Activity Title]:</strong> [Perform each deletion case by hand.]</li>
-      <li><strong>[Activity Title]:</strong> [Use the operations demo with a specified sequence.]</li>
-      <li><strong>[Activity Title]:</strong> [Implement or complete one BST operation.]</li>
-      <li><strong>[Activity Title]:</strong> [Compare insertion orders and resulting heights.]</li>
-    </ol>
-  </section>
+    <li>
+      <strong>Perform All Three Removal Cases:</strong>
+      Starting with the removal-demo tree, remove \(18\), \(12\), and \(25\), in that
+      order. After each operation:
+      <ol type="a">
+        <li>Identify whether the node has zero, one, or two children.</li>
+        <li>Draw the resulting tree.</li>
+        <li>List every child or parent reference that changes.</li>
+        <li>Verify that an inorder traversal still gives increasing order.</li>
+      </ol>
+    </li>
 
-  <section id="problems" section-title="Homework Problems">
-    <h2>Homework Problems</h2>
-    <ol>
-      <li><strong>[Problem Title]:</strong> [Trace a specified operation sequence.]</li>
-      <li><strong>[Problem Title]:</strong> [Implement search and insertion.]</li>
-      <li><strong>[Problem Title]:</strong> [Implement deletion.]</li>
-      <li><strong>[Problem Title]:</strong> [Add predecessor and successor.]</li>
-      <li><strong>[Problem Title]:</strong> [Analyze trees produced by specific insertion orders.]</li>
-      <li><strong>[Problem Title]:</strong> [Augment nodes with subtree sizes or another field.]</li>
-    </ol>
-  </section>
+    <li>
+      <strong>Trace a Two-Child Removal:</strong>
+      Remove \(50\) from the original example tree using the implementation from this
+      page.
+      <ol type="a">
+        <li>Find the successor of \(50\).</li>
+        <li>Show which key is copied and where it is copied.</li>
+        <li>Remove the original successor node from its old position.</li>
+        <li>Explain why the successor has at most one child.</li>
+        <li>Draw the final tree and verify the search tree property.</li>
+      </ol>
+    </li>
+
+    <li>
+      <strong>Compare Insertion Orders:</strong>
+      Insert the keys
+      \[
+        10,20,30,40,50,60,70
+      \]
+      into an empty BST in the order shown. Then build a second BST from the same keys
+      using the order
+      \[
+        40,20,60,10,30,50,70.
+      \]
+      Draw both trees, compute their heights, and compare the paths followed when
+      searching for \(70\). Explain what this demonstrates about the performance of a
+      plain BST.
+    </li>
+
+    <li>
+      <strong>Validate a Binary Search Tree:</strong>
+      Design a recursive algorithm that determines whether a binary tree satisfies the
+      search tree property. You may need to pass some information to recursive calls
+      beyond just the current node. 
+      Give pseudocode and test it on the trees from the first activity.
+    </li>
+<li>
+  <strong>Show Keys in a Range:</strong>
+  Design a recursive algorithm
+  <code>showInRange(node, low, high)</code> that displays, in increasing order,
+  every key \(k\) in the subtree rooted at <code>node</code> satisfying
+  \[
+    low \leq k \leq high.
+  \]
+  Hint: You algorithm should be based on the appropriate traversal, 
+  but should skip subtrees that are irrelevant.
+
+  <ol type="a">
+    <li>
+      Explain why the left subtree does not need to be visited when
+      <code>node.key &lt;= low</code>.
+    </li>
+    <li>
+      Explain why the right subtree does not need to be visited when
+      <code>node.key &gt;= high</code>.
+    </li>
+    <li>
+      Write pseudocode for <code>showInRange(node, low, high)</code>.
+    </li>
+    <li>
+      Explain how the public operation <code>showInRange(low, high)</code> can call
+      this helper to get the answer for the whole tree.
+    </li>
+    <li>
+      Trace the algorithm on the tree in the search section with
+      <code>low = 25</code> and <code>high = 77</code>. List the keys displayed and
+      identify the subtrees that are skipped.
+    </li>
+  </ol>
+</li>
+  </ol>
+</section>
+
+<section id="problems" section-title="Homework Problems">
+  <h2>Homework Problems</h2>
+
+  <ol>
+    <li>
+      <strong>Build and Modify a BST:</strong>
+      Begin with an empty binary search tree and perform the following operations in
+      order:
+      <blockquote>
+      <ul>
+      <li><code>insert(45)</code></li>
+      <li><code>insert(20)</code></li>
+      <li><code>insert(70)</code></li>
+      <li><code>insert(10)</code></li>
+      <li><code>insert(30)</code></li>
+      <li><code>insert(60)</code></li>
+      <li><code>insert(80)</code></li>
+      <li><code>insert(25)</code></li>
+      <li><code>remove(10)</code></li>
+      <li><code>remove(30)</code></li>
+      <li><code>remove(45)</code></li>
+    </ul></blockquote>
+
+      <ol type="a">
+        <li>Draw the tree after all eight insertions.</li>
+        <li>
+          For each removal, identify whether the node has zero, one, or two children
+          immediately before it is removed.
+        </li>
+        <li>Draw the tree after each removal.</li>
+        <li>Give the inorder traversal of the final tree.</li>
+      </ol>
+    </li>
+
+   <li>
+  <strong>Recursive Search and Insertion:</strong>
+  The implementations on this page are iterative. Develop recursive versions of
+  search and insertion that use the same linked-node representation and duplicate
+  policy.
+
+  <ol type="a">
+    <li>
+      Write a recursive algorithm <code>search(node, key)</code> that searches the
+      subtree rooted at <code>node</code> and returns the node containing
+      <code>key</code>, or <code>null</code> if the key is not present.
+    </li>
+    <li>
+      Write a recursive insertion algorithm. It must attach a newly created node in
+      the correct position, set its parent reference, and leave the tree unchanged
+      when the key is already present. Clearly state the parameters and return value
+      of your algorithm.
+    </li>
+    <li>
+      Explain how the public operations begin the recursive search or insertion at
+      the root and how insertion updates <code>root</code> and <code>size</code> when
+      necessary.
+    </li>
+    <li>
+      Analyze the time and additional space used by each recursive operation in terms
+      of the tree height \(h\).
+    </li>
+    <li>Compare the recursive and iterative versions of each. Is one clearly better? Explain.</li>
+  </ol>
+</li>
+
+    <li>
+      <strong>A Two-Child Removal with a Nonleaf Successor:</strong>
+      Insert the following keys into an empty BST in the order shown:
+      \[
+        50,30,70,20,40,60,80,55,65,57.
+      \]
+      Then remove \(50\) using the algorithm from this page.
+      <ol type="a">
+        <li>Draw the tree before the removal.</li>
+        <li>Identify the successor of \(50\).</li>
+        <li>
+          Explain why the successor is not a leaf even though it has no left child.
+        </li>
+        <li>
+          List the key copy and every child or parent reference that must be changed.
+        </li>
+        <li>Draw the final tree and verify its inorder traversal.</li>
+      </ol>
+    </li>
+
+    <li>
+      <strong>Insertion Order and Tree Shape:</strong>
+      For each of the following insertion orders, construct the resulting BST and
+      determine its height:
+      \[
+      \begin{aligned}
+        A&: 1,2,3,4,5,6,7,\\
+        B&: 4,2,6,1,3,5,7,\\
+        C&: 2,1,4,3,6,5,7.
+      \end{aligned}
+      \]
+      <ol type="a">
+        <li>Draw all three trees.</li>
+        <li>Give the search path for \(7\) in each tree.</li>
+        <li>
+          Compare the number of comparisons required by the three searches.
+        </li>
+        <li>
+          Explain why storing the same set of keys does not determine the height of a
+          plain BST.
+        </li>
+      </ol>
+    </li>
+
+    <li>
+      <strong>Construct a Minimum-Height BST:</strong>
+      Let <code>values</code> be an array of \(n\) distinct keys stored in increasing
+      order. Design a recursive algorithm
+      <code>buildBalanced(values, low, high, parent)</code> that constructs a BST of
+      minimum possible height from the portion of the array between indices
+      <code>low</code> and <code>high</code>.
+      <ol type="a">
+        <li>Give pseudocode for the algorithm.</li>
+        <li>Explain why choosing a middle element as the root keeps the tree short.</li>
+        <li>
+          Draw the tree produced from
+          \[
+            [5,10,15,20,25,30,35,40,45].
+          \]
+        </li>
+        <li>
+          Give and solve a recurrence for the running time of the algorithm.
+        </li>
+        <li>Determine the additional space used by the recursion.</li>
+      </ol>
+    </li>
+
+    <li>
+      <strong>Subtree Sizes and Selection:</strong>
+      Augment each node with a variable <code>subtreeSize</code> containing the number
+      of nodes in the subtree rooted at that node.
+      <ol type="a">
+        <li>
+          Give a formula for computing <code>node.subtreeSize</code> from the sizes of
+          its children.
+        </li>
+        <li>
+          Explain which nodes may require updated sizes after an insertion or removal.
+        </li>
+        <li>
+          Write pseudocode for <code>select(node, k)</code>, which returns the node
+          containing the \(k\)-th smallest key in the subtree rooted at
+          <code>node</code>. Use \(k=1\) for the smallest key.
+        </li>
+        <li>
+          Prove that <code>select</code> takes \(O(h)\) time.
+        </li>
+        <li>
+          State its running time in balanced and degenerate trees.
+        </li>
+      </ol>
+    </li>
+
+    <li>
+      <strong>Rank and Range Counting:</strong>
+      Assume that every node stores its subtree size as in the previous problem.
+      Define the rank of a key as the number of stored keys smaller than it.
+      <ol type="a">
+        <li>
+          Write pseudocode for <code>rank(node, key)</code>. If the key is absent,
+          return the number of stored keys smaller than the requested key.
+        </li>
+        <li>
+          Explain how the size of a left subtree contributes to the rank when the
+          search moves right.
+        </li>
+        <li>
+          Use <code>rank</code> to design
+          <code>countInRange(low, high)</code>, which returns the number of keys \(k\)
+          satisfying
+          \[
+            low \leq k \leq high.
+          \]
+        </li>
+        <li>
+          Analyze the running time of both operations in terms of \(h\).
+        </li>
+      </ol>
+    </li>
+
+    <li>
+      <strong>Inorder Traversal and the Search Tree Property:</strong>
+      Assume that all keys in a binary tree are distinct.
+      <ol type="a">
+        <li>
+          Prove that an inorder traversal of a BST lists its keys in increasing order.
+        </li>
+        <li>
+          Prove the converse: if an inorder traversal of a binary tree lists all of
+          its keys in increasing order, then the tree satisfies the search tree
+          property.
+        </li>
+        <li>
+          Explain how this observation could be used to test whether a binary tree is
+          a BST.
+        </li>
+        <li>
+          Give the running time and additional space complexity of such a test.
+        </li>
+      </ol>
+    </li>
+
+
+    <li>
+  <strong>Implement a Binary Search Tree:</strong>
+  Complete the missing methods in the binary search tree implementation below and
+  run the provided tests. In addition to completing the given methods, add the
+  appropriate public operations and private helpers for finding the maximum and the
+  predecessor of a key. The tree stores distinct integer keys and uses parent
+  references.
+
+  <p>
+    Your implementation should include the following operations:
+  </p>
+
+  <ul>
+    <li>
+      <code>contains</code> should report whether a key is stored in the tree.
+    </li>
+    <li>
+      <code>insert</code> should return <code>true</code> when a new node is added.
+      Inserting a duplicate should leave the tree unchanged and return
+      <code>false</code>.
+    </li>
+    <li>
+      <code>minimum</code> and <code>maximum</code> should find the smallest and largest
+      keys, respectively. In Java and Python, return <code>null</code> or
+      <code>None</code> when the tree is empty. In C++, return <code>false</code> when
+      the tree is empty; otherwise, store the answer in the reference parameter and
+      return <code>true</code>.
+    </li>
+    <li>
+      <code>successor</code> and <code>predecessor</code> should find the next larger
+      and next smaller stored keys, respectively. In Java and Python, return
+      <code>null</code> or <code>None</code> when the given key is absent or the
+      requested neighbor does not exist. In C++, return <code>false</code> in those
+      cases; otherwise, store the answer in the reference parameter and return
+      <code>true</code>.
+    </li>
+    <li>
+      <code>remove</code> should return <code>true</code> when a key is removed.
+      Removing an absent key should leave the tree unchanged and return
+      <code>false</code>.
+    </li>
+    <li>
+      Complete the provided helper methods for search, minimum, successor, and
+      subtree replacement.
+    </li>
+    <li>
+      Add helper methods for maximum and predecessor that parallel the provided
+      helpers for minimum and successor.
+    </li>
+    <li>
+      When removing a node with two children, copy the successor's key into the node
+      and then remove the original successor node.
+    </li>
+    <li>
+      Every insertion and removal must correctly update <code>root</code>,
+      <code>size</code>, child references, and parent references.
+    </li>
+    <li>
+      The operations should run in \(O(h)\) time, where \(h\) is the height of the
+      tree, and use \(O(1)\) additional working space.
+    </li>
+  </ul>
+
+  <p>
+    Several completed methods are included only to support testing. The inorder
+    traversal methods allow the tests to verify the contents and ordering of the
+    tree, while <code>hasCorrectParentReferences</code> verifies that insertion and
+    removal maintain the parent references correctly. You do not need to modify
+    these testing methods.
+  </p>
+  <p>
+    Finally, do not forget to insert tests in the test class for the maximum and predecessor methods you add. 
+  </p>
+
+  <div class="tab-group scrollable-code-tabs">
+    <div class="tabs" role="tablist">
+      <button id="tab-java-bst-implementation-problem"
+              class="tablink active"
+              data-lang="java-bst-implementation-problem"
+              role="tab"
+              aria-controls="java-bst-implementation-problem"
+              aria-selected="true">Java</button>
+  <button id="tab-cpp-bst-implementation-problem"
+          class="tablink"
+          data-lang="cpp-bst-implementation-problem"
+          role="tab"
+          aria-controls="cpp-bst-implementation-problem"
+          aria-selected="false">C++</button>
+
+  <button id="tab-python-bst-implementation-problem"
+          class="tablink"
+          data-lang="python-bst-implementation-problem"
+          role="tab"
+          aria-controls="python-bst-implementation-problem"
+          aria-selected="false">Python</button>
+</div>
+
+<div id="java-bst-implementation-problem"
+     class="code-container active copyable-code"
+     role="tabpanel"
+     aria-labelledby="tab-java-bst-implementation-problem">
+  <pre><code class="language-java">public class BinarySearchTreeExercise {
+  private static class Node {
+      int key;
+      Node left;
+      Node right;
+      Node parent;
+
+      Node(int key) {
+          this.key = key;
+          this.left = null;
+          this.right = null;
+          this.parent = null;
+      }
+  }
+
+  private Node root;
+  private int size;
+
+  public BinarySearchTreeExercise() {
+      root = null;
+      size = 0;
+  }
+
+  public int size() {
+      return size;
+  }
+
+  public boolean isEmpty() {
+      return size == 0;
+  }
+
+  private Node searchNode(int key) {
+      // TODO
+      return null;
+  }
+
+  public boolean contains(int key) {
+      return searchNode(key) != null;
+  }
+
+  public boolean insert(int key) {
+      // TODO
+      return false;
+  }
+
+  private Node minimumNode(Node node) {
+      // TODO
+      return null;
+  }
+
+  public Integer minimum() {
+      Node node = minimumNode(root);
+
+      if (node == null) {
+          return null;
+      }
+
+      return node.key;
+  }
+
+  private Node successorNode(Node node) {
+      // TODO
+      return null;
+  }
+
+  public Integer successor(int key) {
+      Node node = searchNode(key);
+
+      if (node == null) {
+          return null;
+      }
+
+      Node result = successorNode(node);
+
+      if (result == null) {
+          return null;
+      }
+
+      return result.key;
+  }
+
+  private void replaceSubtree(Node oldRoot, Node newRoot) {
+      // TODO
+  }
+
+  public boolean remove(int key) {
+      // TODO
+      return false;
+  }
+
+  //--------------------------------------------------
+  // The rest of the methods are helpers for the tests
+  //--------------------------------------------------
+
+  public String inorderString() {
+      StringBuilder result = new StringBuilder();
+      appendInorder(root, result);
+      return result.toString().trim();
+  }
+
+  private void appendInorder(Node node, StringBuilder result) {
+      if (node == null) {
+          return;
+      }
+
+      appendInorder(node.left, result);
+      result.append(node.key).append(" ");
+      appendInorder(node.right, result);
+  }
+
+  public boolean hasCorrectParentReferences() {
+      if (root != null &amp;&amp; root.parent != null) {
+          return false;
+      }
+
+      return hasCorrectParentReferences(root);
+  }
+
+  private boolean hasCorrectParentReferences(Node node) {
+      if (node == null) {
+          return true;
+      }
+
+      if (node.left != null &amp;&amp; node.left.parent != node) {
+          return false;
+      }
+
+      if (node.right != null &amp;&amp; node.right.parent != node) {
+          return false;
+      }
+
+      return hasCorrectParentReferences(node.left)
+          &amp;&amp; hasCorrectParentReferences(node.right);
+  }
+
+  private static void check(boolean condition, String description) {
+      if (condition) {
+          System.out.println("pass: " + description);
+      } else {
+          System.out.println("fail: " + description);
+      }
+  }
+
+  private static void testBinarySearchTree() {
+      BinarySearchTreeExercise tree = new BinarySearchTreeExercise();
+
+      check(tree.isEmpty(), "a new tree is empty");
+      check(tree.size() == 0, "a new tree has size 0");
+      check(tree.minimum() == null, "an empty tree has no minimum");
+      check(!tree.contains(50), "an empty tree does not contain 50");
+      check(!tree.remove(50), "an absent key cannot be removed");
+
+      int[] keys = {50, 30, 70, 20, 40, 60, 80, 55, 65, 57};
+
+      for (int key : keys) {
+          check(tree.insert(key), "insert " + key);
+          check(
+              tree.hasCorrectParentReferences(),
+              "parent references after inserting " + key
+          );
+      }
+
+      check(tree.size() == 10, "the tree has size 10");
+      check(!tree.isEmpty(), "the tree is not empty");
+      check(tree.contains(57), "the tree contains 57");
+      check(!tree.contains(58), "the tree does not contain 58");
+
+      check(tree.inorderString().equals("20 30 40 50 55 57 60 65 70 80"),
+          "inorder traversal after insertion");
+
+      check(!tree.insert(60), "duplicate insertion fails");
+      check(tree.size() == 10, "duplicate insertion does not change size");
+
+      check(Integer.valueOf(20).equals(tree.minimum()),
+          "the minimum is 20");
+      check(Integer.valueOf(50).equals(tree.successor(40)),
+          "the successor of 40 is 50");
+      check(Integer.valueOf(57).equals(tree.successor(55)),
+          "the successor of 55 is 57");
+      check(Integer.valueOf(70).equals(tree.successor(65)),
+          "the successor of 65 is 70");
+      check(tree.successor(80) == null, "80 has no successor");
+      check(tree.successor(58) == null, "an absent key has no successor");
+
+      check(tree.remove(20), "remove the leaf 20");
+      check(tree.inorderString().equals("30 40 50 55 57 60 65 70 80"),
+          "inorder traversal after removing 20");
+      check(tree.hasCorrectParentReferences(),
+          "parent references after removing 20");
+
+      check(tree.remove(55), "remove the one-child node 55");
+      check(tree.inorderString().equals("30 40 50 57 60 65 70 80"),
+          "inorder traversal after removing 55");
+      check(tree.hasCorrectParentReferences(),
+          "parent references after removing 55");
+
+      check(tree.remove(50), "remove the two-child root 50");
+      check(tree.inorderString().equals("30 40 57 60 65 70 80"),
+          "inorder traversal after removing 50");
+      check(tree.hasCorrectParentReferences(),
+          "parent references after removing 50");
+
+      check(tree.size() == 7, "the final size is 7");
+      check(!tree.remove(50), "removing 50 again fails");
+      check(tree.size() == 7, "an unsuccessful removal does not change size");
+
+      BinarySearchTreeExercise oneNodeTree =
+          new BinarySearchTreeExercise();
+
+      check(oneNodeTree.insert(10), "insert into an empty tree");
+      check(oneNodeTree.remove(10), "remove the only node");
+      check(oneNodeTree.isEmpty(), "the one-node tree becomes empty");
+      check(oneNodeTree.hasCorrectParentReferences(),
+          "the empty tree has valid parent references");
+  }
+
+  public static void main(String[] args) {
+      testBinarySearchTree();
+  }
+}</code></pre> </div>
+
+<div id="cpp-bst-implementation-problem"
+     class="code-container copyable-code"
+     role="tabpanel"
+     aria-labelledby="tab-cpp-bst-implementation-problem">
+  <pre><code class="language-cpp">#include &lt;iostream&gt;
+
+using namespace std;
+
+class BinarySearchTree {
+private:
+  struct Node {
+    int key;
+    Node* left;
+    Node* right;
+    Node* parent;
+
+    Node(int value) {
+        key = value;
+        left = nullptr;
+        right = nullptr;
+        parent = nullptr;
+    }
+  };
+
+  Node* root;
+  int nodeCount;
+
+  Node* searchNode(int key) {
+      // TODO
+      return nullptr;
+  }
+
+  Node* minimumNode(Node* node) {
+      // TODO
+      return nullptr;
+  }
+
+  Node* successorNode(Node* node) {
+      // TODO
+      return nullptr;
+  }
+
+  void replaceSubtree(Node* oldRoot, Node* newRoot) {
+      // TODO
+  }
+
+  //--------------------------------------------------
+  // The next few methods are helpers for the tests
+  //--------------------------------------------------
+  
+  void appendInorder(Node* node, int values[], int&amp; index) {
+      if (node == nullptr) {
+          return;
+      }
+
+      appendInorder(node-&gt;left, values, index);
+      values[index] = node-&gt;key;
+      index++;
+      appendInorder(node-&gt;right, values, index);
+  }
+
+  bool hasCorrectParentReferences(Node* node) {
+      if (node == nullptr) {
+          return true;
+      }
+
+      if (node-&gt;left != nullptr &amp;&amp; node-&gt;left-&gt;parent != node) {
+          return false;
+      }
+
+      if (node-&gt;right != nullptr &amp;&amp; node-&gt;right-&gt;parent != node) {
+          return false;
+      }
+
+      return hasCorrectParentReferences(node-&gt;left)
+          &amp;&amp; hasCorrectParentReferences(node-&gt;right);
+  }
+
+  // Necessary memory management for C++ implementation
+  void destroyTree(Node* node) {
+      if (node == nullptr) {
+          return;
+      }
+
+      destroyTree(node-&gt;left);
+      destroyTree(node-&gt;right);
+      delete node;
+  }
+
+//--------------------------------------------------
+// More stuff to implement
+//--------------------------------------------------
+public:
+  BinarySearchTree() {
+    root = nullptr;
+    nodeCount = 0;
+  }
+
+  ~BinarySearchTree() {
+      destroyTree(root);
+  }
+
+  int size() {
+      return nodeCount;
+  }
+
+  bool isEmpty() {
+      return nodeCount == 0;
+  }
+
+  bool contains(int key) {
+      return searchNode(key) != nullptr;
+  }
+
+  bool insert(int key) {
+      // TODO
+      return false;
+  }
+
+  // C++ cannot return nullptr in place of an int, so this method
+  // returns whether a result exists and stores the key in result.
+  bool minimum(int&amp; result) {
+      Node* node = minimumNode(root);
+
+      if (node == nullptr) {
+          return false;
+      }
+
+      result = node-&gt;key;
+      return true;
+  }
+
+  // C++ cannot return nullptr in place of an int, so this method
+  // returns whether a result exists and stores the key in result.
+  bool successor(int key, int&amp; result) {
+      Node* node = searchNode(key);
+
+      if (node == nullptr) {
+          return false;
+      }
+
+      Node* next = successorNode(node);
+
+      if (next == nullptr) {
+          return false;
+      }
+
+      result = next-&gt;key;
+      return true;
+  }
+
+  bool remove(int key) {
+      // TODO
+      return false;
+  }
+
+  
+  //--------------------------------------------------
+  // The rest of the code is for the tests
+  //--------------------------------------------------
+  int inorder(int values[]) {
+      int index = 0;
+      appendInorder(root, values, index);
+      return index;
+  }
+
+  bool hasCorrectParentReferences() {
+      if (root != nullptr &amp;&amp; root-&gt;parent != nullptr) {
+          return false;
+      }
+
+      return hasCorrectParentReferences(root);
+  }
+
+};
+
+  void check(bool condition, const char* description) {
+    if (condition) {
+      cout &lt;&lt; "pass: " &lt;&lt; description &lt;&lt; endl;
+    } else {
+      cout &lt;&lt; "fail: " &lt;&lt; description &lt;&lt; endl;
+    }
+  }
+
+  bool sameArray(int actual[],int actualLength,int expected[],int expectedLength) {
+    if (actualLength != expectedLength) {
+      return false;
+    }
+
+    for (int i = 0; i &lt; actualLength; i++) {
+        if (actual[i] != expected[i]) {
+            return false;
+        }
+    }
+   return true;
+  }
+
+  void testBinarySearchTree() {
+    BinarySearchTree tree;
+    int result = 0;
+
+    check(tree.isEmpty(), "a new tree is empty");
+    check(tree.size() == 0, "a new tree has size 0");
+    check(!tree.minimum(result), "an empty tree has no minimum");
+    check(!tree.contains(50), "an empty tree does not contain 50");
+    check(!tree.remove(50), "an absent key cannot be removed");
+
+    int keys[] = { 50, 30, 70, 20, 40, 60, 80, 55, 65, 57 };
+
+    for (int i = 0; i &lt; 10; i++) {
+        check(tree.insert(keys[i]), "insert a distinct key");
+        check(tree.hasCorrectParentReferences(),
+            "parent references after insertion");
+    }
+
+    check(tree.size() == 10, "the tree has size 10");
+    check(!tree.isEmpty(), "the tree is not empty");
+    check(tree.contains(57), "the tree contains 57");
+    check(!tree.contains(58), "the tree does not contain 58");
+
+    int actual[10] = {0};
+    int actualLength = tree.inorder(actual);
+    int expected1[] = {
+        20, 30, 40, 50, 55, 57, 60, 65, 70, 80
+    };
+
+    check(sameArray(actual, actualLength, expected1, 10),
+        "inorder traversal after insertion");
+
+    check(!tree.insert(60), "duplicate insertion fails");
+    check(tree.size() == 10, "duplicate insertion does not change size");
+
+    check(tree.minimum(result) &amp;&amp; result == 20, "the minimum is 20");
+
+    check(tree.successor(40, result) &amp;&amp; result == 50,
+        "the successor of 40 is 50");
+    check(tree.successor(55, result) &amp;&amp; result == 57,
+        "the successor of 55 is 57");
+    check(tree.successor(65, result) &amp;&amp; result == 70,
+        "the successor of 65 is 70");
+    check(!tree.successor(80, result), "80 has no successor");
+    check(!tree.successor(58, result), "an absent key has no successor");
+
+    check(tree.remove(20), "remove the leaf 20");
+
+    int expected2[] = {
+        30, 40, 50, 55, 57, 60, 65, 70, 80
+    };
+
+    actualLength = tree.inorder(actual);
+
+    check(sameArray(actual, actualLength, expected2, 9),
+        "inorder traversal after removing 20");
+    check(tree.hasCorrectParentReferences(),
+        "parent references after removing 20");
+
+    check(tree.remove(55), "remove the one-child node 55");
+
+    int expected3[] = {
+        30, 40, 50, 57, 60, 65, 70, 80
+    };
+
+    actualLength = tree.inorder(actual);
+
+    check(sameArray(actual, actualLength, expected3, 8),
+        "inorder traversal after removing 55");
+    check(tree.hasCorrectParentReferences(),
+        "parent references after removing 55");
+
+    check(tree.remove(50), "remove the two-child root 50");
+
+    int expected4[] = {30, 40, 57, 60, 65, 70, 80};
+
+    actualLength = tree.inorder(actual);
+
+    check(sameArray(actual, actualLength, expected4, 7),
+        "inorder traversal after removing 50");
+    check(tree.hasCorrectParentReferences(),
+        "parent references after removing 50");
+
+    check(tree.size() == 7, "the final size is 7");
+    check(!tree.remove(50), "removing 50 again fails");
+    check(tree.size() == 7,
+        "an unsuccessful removal does not change size");
+
+    BinarySearchTree oneNodeTree;
+
+    check(oneNodeTree.insert(10), "insert into an empty tree");
+    check(oneNodeTree.remove(10), "remove the only node");
+    check(oneNodeTree.isEmpty(), "the one-node tree becomes empty");
+    check(oneNodeTree.hasCorrectParentReferences(),
+        "the empty tree has valid parent references");
+  }
+
+int main() {
+  testBinarySearchTree();
+  return 0;
+}</code></pre> </div>
+
+<div id="python-bst-implementation-problem"
+     class="code-container copyable-code"
+     role="tabpanel"
+     aria-labelledby="tab-python-bst-implementation-problem">
+  <pre><code class="language-python">class BinarySearchTree:
+  class Node:
+    def __init__(self, key):
+        self.key = key
+        self.left = None
+        self.right = None
+        self.parent = None
+
+  def __init__(self):
+      self.root = None
+      self.size = 0
+
+  def is_empty(self):
+      return self.size == 0
+
+  def search_node(self, key):
+      # TODO
+      return None
+
+  def contains(self, key):
+      return self.search_node(key) is not None
+
+  def insert(self, key):
+      # TODO
+      return False
+
+  def minimum_node(self, node):
+      # TODO
+      return None
+
+  def minimum(self):
+      node = self.minimum_node(self.root)
+
+      if node is None:
+          return None
+
+      return node.key
+
+  def successor_node(self, node):
+      # TODO
+      return None
+
+  def successor(self, key):
+      node = self.search_node(key)
+
+      if node is None:
+          return None
+
+      result = self.successor_node(node)
+
+      if result is None:
+          return None
+
+      return result.key
+
+  def replace_subtree(self, old_root, new_root):
+      # TODO
+      pass
+
+  def remove(self, key):
+      # TODO
+      return False
+
+  ###################################
+  # The rest is testing-related code
+  ###################################
+  def inorder_list(self):
+      result = []
+      self.append_inorder(self.root, result)
+      return result
+
+  def append_inorder(self, node, result):
+      if node is None:
+          return
+
+      self.append_inorder(node.left, result)
+      result.append(node.key)
+      self.append_inorder(node.right, result)
+
+  def has_correct_parent_references(self):
+      if self.root is not None and self.root.parent is not None:
+          return False
+
+      return self.check_parent_references(self.root)
+
+  def check_parent_references(self, node):
+      if node is None:
+          return True
+
+      if node.left is not None and node.left.parent is not node:
+          return False
+
+      if node.right is not None and node.right.parent is not node:
+          return False
+
+      return (self.check_parent_references(node.left)
+          and self.check_parent_references(node.right))
+
+def check(condition, description):
+  if condition:
+    print("pass:", description)
+  else:
+    print("fail:", description)
+
+def test_binary_search_tree():
+  tree = BinarySearchTree()
+
+  check(tree.is_empty(), "a new tree is empty")
+  check(tree.size == 0, "a new tree has size 0")
+  check(tree.minimum() is None, "an empty tree has no minimum")
+  check(not tree.contains(50), "an empty tree does not contain 50")
+  check(not tree.remove(50), "an absent key cannot be removed")
+
+  keys = [50, 30, 70, 20, 40, 60, 80, 55, 65, 57]
+
+  for key in keys:
+      check(tree.insert(key), "insert " + str(key))
+      check(tree.has_correct_parent_references(),
+          "parent references after inserting " + str(key))
+
+  check(tree.size == 10, "the tree has size 10")
+  check(not tree.is_empty(), "the tree is not empty")
+  check(tree.contains(57), "the tree contains 57")
+  check(not tree.contains(58), "the tree does not contain 58")
+
+  check(tree.inorder_list() == [20, 30, 40, 50, 55, 57, 60, 65, 70, 80],
+      "inorder traversal after insertion")
+
+  check(not tree.insert(60), "duplicate insertion fails")
+  check(tree.size == 10, "duplicate insertion does not change size")
+
+  check(tree.minimum() == 20, "the minimum is 20")
+  check(tree.successor(40) == 50, "the successor of 40 is 50")
+  check(tree.successor(55) == 57, "the successor of 55 is 57")
+  check(tree.successor(65) == 70, "the successor of 65 is 70")
+  check(tree.successor(80) is None, "80 has no successor")
+  check(tree.successor(58) is None, "an absent key has no successor")
+
+  check(tree.remove(20), "remove the leaf 20")
+  check(tree.inorder_list() == [30, 40, 50, 55, 57, 60, 65, 70, 80],
+      "inorder traversal after removing 20")
+  check( tree.has_correct_parent_references(),
+      "parent references after removing 20")
+
+  check(tree.remove(55), "remove the one-child node 55")
+  check( tree.inorder_list() == [30, 40, 50, 57, 60, 65, 70, 80],
+      "inorder traversal after removing 55")
+  check( tree.has_correct_parent_references(),
+      "parent references after removing 55")
+
+  check(tree.remove(50), "remove the two-child root 50")
+  check(tree.inorder_list() == [30, 40, 57, 60, 65, 70, 80],
+      "inorder traversal after removing 50")
+  check(tree.has_correct_parent_references(),
+      "parent references after removing 50")
+
+  check(tree.size == 7, "the final size is 7")
+  check(not tree.remove(50), "removing 50 again fails")
+  check(tree.size == 7, "an unsuccessful removal does not change size")
+
+  one_node_tree = BinarySearchTree()
+
+  check(one_node_tree.insert(10), "insert into an empty tree")
+  check(one_node_tree.remove(10), "remove the only node")
+  check(one_node_tree.is_empty(), "the one-node tree becomes empty")
+  check(one_node_tree.has_correct_parent_references(),
+      "the empty tree has valid parent references")
+
+test_binary_search_tree()</code></pre> </div>
+
+  </div>
+</li>
+  </ol>
+</section>
 
 
 <script>
@@ -1996,6 +3596,12 @@ remove(key):
       demo.render();
 
       const trace = demo.trace(target);
+      if (trace.visits.length === 0) {
+        demo.setStatus(
+          "The tree is empty, so " + target + " cannot be removed."
+        );
+        return;
+      }
 
       trace.visits.forEach(function (visit, index) {
         demo.schedule(function () {
