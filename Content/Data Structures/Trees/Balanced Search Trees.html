@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -18,10 +19,1042 @@
     gtag('js', new Date());
     gtag('config', 'G-DQ5LVZVFDC');
   </script>
-  </head>
+</head>
 <body>
   <h1>Balanced Search Trees</h1>
 
+  <section id="overview" section-title="Overview">
+  <h2>Overview</h2>
+
+  <p>
+    A <strong>balanced search tree</strong> is a search tree that maintains additional
+    structural rules to keep its height \(O(\log n)\), where \(n\) is the number of
+    stored keys. Since searching, inserting, and removing keys require following paths
+    through the tree, controlling the height guarantees that these operations remain
+    efficient even as the collection changes.
+  </p>
+
+  <p>
+    A plain binary search tree preserves the ordering of its keys but places no
+    restriction on its shape. An unfavorable sequence of insertions or removals can
+    therefore produce a long, nearly linear tree. Balanced search trees prevent this
+    degeneration by detecting when their structural rules have been violated and
+    repairing the tree after an update. Different tree families use different balance
+    rules and different repair operations.
+  </p>
+
+  <p>
+  AVL trees and red-black trees are <strong>balanced binary search trees</strong>.
+  They retain the ordinary binary search tree structure and use rotations, together
+  with height or color information, to control the shape of the tree.
+  <strong>Multiway search trees</strong>, such as 2-3 trees and B-trees, allow nodes
+  to contain multiple keys and have more than two children. They maintain balance
+  through operations such as splitting, promotion, redistribution, and merging.
+</p>
+
+  <div class="remark-box">
+    <strong>Balanced does not mean perfect:</strong>
+    A balanced search tree does not necessarily have every level filled, nor must the
+    two subtrees of every node have exactly the same height. The word
+    <em>balanced</em> refers to the particular structural conditions imposed by the
+    tree family. What these definitions have in common is that they prevent the height
+    from growing faster than \(O(\log n)\).
+  </div>
+</section>
+
+
+<section id="why-balance-matters" section-title="Why Balance Matters">
+  <h2>Why Balance Matters</h2>
+
+  <p>
+    The running time of the main binary search tree operations depends on the height
+    \(h\) of the tree. Search and insertion follow a single path from the root, and
+    removal follows only a constant number of such paths. Therefore,
+    search, insert, and remove are all \(O(h\)).
+  </p>
+  <p>
+    When a tree is balanced, its height is \(\Theta(\log n)\), so these operations
+    take \(O(\log n)\) time. A plain binary search tree, however, can become
+    degenerate, with each node having only one child. Such a tree has height
+    \(n-1\), and its operations may take \(O(n)\) time. Thus, the same set of keys
+    can support very different performance depending on the shape of the tree.
+  </p>
+
+  <div class="example-box">
+    <strong class="example-title">
+      Example 1: The Same Keys in Different Shapes
+    </strong>
+
+<p>
+  The two trees below contain the same seven keys. The balanced tree results from
+  inserting the keys in the order
+  \[
+    40,20,60,10,30,50,70,
+  \]
+  while the degenerate tree results from inserting them in increasing order.
+</p>
+
+<svg viewBox="0 0 900 390"
+     role="img"
+     aria-labelledby="balanceComparisonTitle balanceComparisonDesc"
+     style="display:block; width:100%; max-width:900px; height:auto; margin:1em 0;">
+  <title id="balanceComparisonTitle">
+    Comparison of balanced and degenerate binary search trees
+  </title>
+
+  <desc id="balanceComparisonDesc">
+    Two binary search trees contain the keys 10 through 70 by tens. The balanced
+    tree has height 2, while the degenerate tree is a right-child chain with
+    height 6.
+  </desc>
+
+  <text x="225" y="28"
+        text-anchor="middle"
+        font-family="Verdana, sans-serif"
+        font-size="18"
+        font-weight="700"
+        fill="#0f264a">
+    Balanced Shape
+  </text>
+
+  <text x="675" y="28"
+        text-anchor="middle"
+        font-family="Verdana, sans-serif"
+        font-size="18"
+        font-weight="700"
+        fill="#0f264a">
+    Degenerate Shape
+  </text>
+
+  <!-- Balanced tree edges -->
+  <line x1="225" y1="70" x2="135" y2="145"
+        stroke="#0a3974" stroke-width="2" />
+  <line x1="225" y1="70" x2="315" y2="145"
+        stroke="#0a3974" stroke-width="2" />
+  <line x1="135" y1="145" x2="85" y2="235"
+        stroke="#0a3974" stroke-width="2" />
+  <line x1="135" y1="145" x2="185" y2="235"
+        stroke="#0a3974" stroke-width="2" />
+  <line x1="315" y1="145" x2="265" y2="235"
+        stroke="#0a3974" stroke-width="2" />
+  <line x1="315" y1="145" x2="365" y2="235"
+        stroke="#d9822b" stroke-width="4" />
+
+  <!-- Balanced tree nodes -->
+  <circle cx="225" cy="70" r="24"
+          fill="#fff3d9" stroke="#d9822b" stroke-width="3" />
+  <circle cx="135" cy="145" r="24"
+          fill="#ffffff" stroke="#0a3974" stroke-width="2" />
+  <circle cx="315" cy="145" r="24"
+          fill="#fff3d9" stroke="#d9822b" stroke-width="3" />
+  <circle cx="85" cy="235" r="24"
+          fill="#ffffff" stroke="#0a3974" stroke-width="2" />
+  <circle cx="185" cy="235" r="24"
+          fill="#ffffff" stroke="#0a3974" stroke-width="2" />
+  <circle cx="265" cy="235" r="24"
+          fill="#ffffff" stroke="#0a3974" stroke-width="2" />
+  <circle cx="365" cy="235" r="24"
+          fill="#e8f7ed" stroke="#2f855a" stroke-width="3" />
+
+  <!-- Balanced tree values -->
+  <g text-anchor="middle"
+     dominant-baseline="middle"
+     font-family="Verdana, sans-serif"
+     font-size="16"
+     font-weight="700"
+     fill="#0f264a">
+    <text x="225" y="70">40</text>
+    <text x="135" y="145">20</text>
+    <text x="315" y="145">60</text>
+    <text x="85" y="235">10</text>
+    <text x="185" y="235">30</text>
+    <text x="265" y="235">50</text>
+    <text x="365" y="235">70</text>
+  </g>
+
+  <text x="225" y="300"
+        text-anchor="middle"
+        font-family="Verdana, sans-serif"
+        font-size="16"
+        fill="#0f264a">
+    Height: 2
+  </text>
+
+  <text x="225" y="328"
+        text-anchor="middle"
+        font-family="Verdana, sans-serif"
+        font-size="16"
+        fill="#0f264a">
+    Search for 70: 40, 60, 70
+  </text>
+
+  <!-- Degenerate tree edges -->
+  <line x1="530" y1="60" x2="580" y2="105"
+        stroke="#d9822b" stroke-width="4" />
+  <line x1="580" y1="105" x2="630" y2="150"
+        stroke="#d9822b" stroke-width="4" />
+  <line x1="630" y1="150" x2="680" y2="195"
+        stroke="#d9822b" stroke-width="4" />
+  <line x1="680" y1="195" x2="730" y2="240"
+        stroke="#d9822b" stroke-width="4" />
+  <line x1="730" y1="240" x2="780" y2="285"
+        stroke="#d9822b" stroke-width="4" />
+  <line x1="780" y1="285" x2="830" y2="330"
+        stroke="#d9822b" stroke-width="4" />
+
+  <!-- Degenerate tree nodes -->
+  <circle cx="530" cy="60" r="21"
+          fill="#fff3d9" stroke="#d9822b" stroke-width="3" />
+  <circle cx="580" cy="105" r="21"
+          fill="#fff3d9" stroke="#d9822b" stroke-width="3" />
+  <circle cx="630" cy="150" r="21"
+          fill="#fff3d9" stroke="#d9822b" stroke-width="3" />
+  <circle cx="680" cy="195" r="21"
+          fill="#fff3d9" stroke="#d9822b" stroke-width="3" />
+  <circle cx="730" cy="240" r="21"
+          fill="#fff3d9" stroke="#d9822b" stroke-width="3" />
+  <circle cx="780" cy="285" r="21"
+          fill="#fff3d9" stroke="#d9822b" stroke-width="3" />
+  <circle cx="830" cy="330" r="21"
+          fill="#e8f7ed" stroke="#2f855a" stroke-width="3" />
+
+  <!-- Degenerate tree values -->
+  <g text-anchor="middle"
+     dominant-baseline="middle"
+     font-family="Verdana, sans-serif"
+     font-size="15"
+     font-weight="700"
+     fill="#0f264a">
+    <text x="530" y="60">10</text>
+    <text x="580" y="105">20</text>
+    <text x="630" y="150">30</text>
+    <text x="680" y="195">40</text>
+    <text x="730" y="240">50</text>
+    <text x="780" y="285">60</text>
+    <text x="830" y="330">70</text>
+  </g>
+
+  <text x="620" y="300"
+        text-anchor="middle"
+        font-family="Verdana, sans-serif"
+        font-size="16"
+        fill="#0f264a">
+    Height: 6
+  </text>
+
+  <text x="650" y="365"
+        text-anchor="middle"
+        font-family="Verdana, sans-serif"
+        font-size="16"
+        fill="#0f264a">
+    Search for 70 visits every node
+  </text>
+</svg>
+
+<p>
+  Searching for \(70\) visits only three nodes in the balanced tree but all seven
+  nodes in the degenerate tree. As the number of keys grows, this difference
+  becomes much more significant: logarithmic paths grow slowly, while linear paths
+  grow in direct proportion to the number of stored keys.
+</p>
+
+  </div>
+
+  <p>
+    Maintaining balance adds work to insertion and removal because an update may need
+    to repair the tree's structure. These repairs are worthwhile because they preserve
+    logarithmic height, preventing later searches and updates from degrading to linear
+    time. Balanced search trees therefore trade a limited amount of additional update
+    work for a strong guarantee on the performance of every operation.
+  </p>
+</section>
+
+<section id="meanings-of-balance" section-title="What Does Balanced Mean?">
+  <h2>What Does Balanced Mean?</h2>
+
+  <p>
+    There is no single balance rule shared by all balanced search trees. Instead, each
+    tree family maintains its own <strong>balance invariant</strong>: a structural
+    condition strong enough to guarantee that the tree's height remains
+    \(O(\log n)\). Some invariants compare subtree heights, some constrain paths
+    using additional labels, and others allow each node to store several keys and
+    have several children. Here are some of the most common structures and the rules
+    they have.
+  </p>
+
+  <table class="example-table left-top-align">
+    <thead>
+      <tr>
+        <th>Structure</th>
+        <th>General Balance Rule</th>
+        <th>Primary Repair Operations</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>AVL tree</td>
+        <td>
+          At every node, the heights of the left and right subtrees differ by at most
+          one.
+        </td>
+        <td>Single and double rotations</td>
+      </tr>
+      <tr>
+        <td>Red-black tree</td>
+        <td>
+          Each node has a color, and rules involving those colors limit the difference
+          between the lengths of root-to-leaf paths.
+        </td>
+        <td>Recoloring and rotations</td>
+      </tr>
+      <tr>
+        <td>2-3 tree</td>
+        <td>
+          Each internal node has two or three children, and all leaves occur at the
+          same depth.
+        </td>
+        <td>Splitting, promotion, redistribution, and merging</td>
+      </tr>
+      <tr>
+        <td>B-tree</td>
+        <td>
+          Each node stores a bounded number of keys and children, subject to minimum
+          and maximum occupancy rules, and all leaves occur at the same depth.
+        </td>
+        <td>Splitting, promotion, redistribution, and merging</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>
+    These rules produce trees with different shapes and require different repair
+    procedures, but they serve the same purpose: no root-to-leaf path can become
+    disproportionately long as the number of stored keys grows. As a result, search
+    paths remain logarithmic even after an unfavorable sequence of insertions and
+    removals.
+  </p>
+</section>
+
+<section id="maintaining-balance" section-title="Maintaining Balance During Updates">
+  <h2>Maintaining Balance During Updates</h2>
+
+  <p>
+    Searching normally does not change the structure of a search tree, so it cannot
+    create a new balance violation. Insertion and removal are different: both modify
+    the tree, and the modified portion may no longer satisfy the balance invariant.
+    A balanced search tree must therefore check for violations after an update and
+    repair them before the operation is complete.
+  </p>
+
+  <p>
+    Although the details vary among tree families, balanced-tree updates usually
+    follow the same general pattern:
+  </p>
+
+  <ol>
+    <li>
+      Follow the search-tree ordering to locate the insertion or removal position.
+    </li>
+    <li>
+      Perform the ordinary search-tree update.
+    </li>
+    <li>
+      Determine whether the tree's balance invariant has been violated.
+    </li>
+    <li>
+      Repair the violation using the operations appropriate for that tree family.
+    </li>
+    <li>
+      Continue toward the root if the repair may have created or exposed another
+      violation.
+    </li>
+  </ol>
+
+  <p>
+    Balanced binary search trees usually repair their structure with
+    <strong>rotations</strong>, which change a small collection of parent-child
+    relationships while preserving the search tree property. AVL trees use height
+    information to choose among single and double rotations. Red-black trees use
+    colors to guide a combination of recoloring and rotations.
+  </p>
+
+  <p>
+    Multiway search trees use different repair operations because a node may contain
+    several keys and have more than two children. A node that becomes too full may be
+    split, with one of its keys promoted to its parent. During removal, keys may be
+    redistributed between neighboring nodes, or underfull nodes may be merged.
+    Despite these differences, the goal is the same: restore the tree's balance
+    invariant while preserving the sorted order of its keys.
+  </p>
+</section>
+
+
+<font size="+5" color="cyan">I AM HERE!</font>
+<section id="rotations" section-title="Rotations in Balanced Binary Search Trees">
+  <h2>Rotations in Balanced Binary Search Trees</h2>
+
+  <section id="rotation-purpose" section-title="Purpose and Anatomy of a Rotation">
+    <h3>Purpose and Anatomy of a Rotation</h3>
+
+<p>
+  A <strong>rotation</strong> is a local transformation that changes the shape of
+  a binary search tree without changing the keys it stores or their sorted order.
+  Rotations are used by balanced binary search trees to shorten one side of a
+  subtree and lengthen the other.
+</p>
+
+<p>
+  A rotation changes only a small number of parent-child relationships. Most of
+  the tree is unaffected, and the subtrees attached to the rotated nodes retain
+  their internal structure. However, one of those subtrees may need to be
+  transferred from one rotated node to the other.
+</p>
+
+<ul>
+  <li>A <strong>left rotation</strong> moves a right child above its parent.</li>
+  <li>A <strong>right rotation</strong> moves a left child above its parent.</li>
+  <li>
+    The node that moves upward is sometimes called the
+    <strong>pivot</strong>.
+  </li>
+  <li>
+    The root of the rotated subtree may change, but its connection to the rest of
+    the tree is preserved.
+  </li>
+</ul>
+
+<div class="remark-box">
+  <strong>A rotation is not a complete balancing algorithm:</strong>
+  A rotation can improve, preserve, or worsen the balance of a tree. A particular
+  balanced-tree algorithm must determine when a rotation is necessary, where it
+  should occur, and which direction should be used.
+</div>
+
+  </section>
+
+  <section id="single-rotations" section-title="Left and Right Rotations">
+    <h3>Left and Right Rotations</h3>
+
+<p>
+  Left and right rotations are mirror images of one another. The pseudocode below
+  assumes that each node stores <code>left</code>, <code>right</code>, and
+  <code>parent</code> references and that the tree stores a <code>root</code>
+  reference.
+</p>
+
+<h4>Left Rotation</h4>
+
+<p>
+  Consider a node <code>x</code> whose right child is <code>y</code>. A left
+  rotation moves <code>y</code> into <code>x</code>'s former position and makes
+  <code>x</code> the left child of <code>y</code>. The left subtree of
+  <code>y</code>, labeled \(B\), becomes the right subtree of <code>x</code>.
+</p>
+
+<div class="example-box">
+  <strong class="example-title">Left Rotation</strong>
+
+  <!--
+    Add a before-and-after diagram with the following structure:
+
+           x                             y
+          / \                           / \
+         A   y       becomes           x   C
+            / \                       / \
+           B   C                     A   B
+  -->
+</div>
+
+<pre><code>rotateLeft(x):
+y = x.right
+
+if y == null:
+    return
+
+x.right = y.left
+
+if y.left != null:
+    y.left.parent = x
+
+y.parent = x.parent
+
+if x.parent == null:
+    root = y
+else if x == x.parent.left:
+    x.parent.left = y
+else:
+    x.parent.right = y
+
+y.left = x
+x.parent = y</code></pre>
+
+<p>
+  The transferred subtree \(B\) must be placed between <code>x</code> and
+  <code>y</code>. Its keys are greater than the key at <code>x</code> but less
+  than the key at <code>y</code>, so it becomes the right subtree of
+  <code>x</code>.
+</p>
+
+<h4>Right Rotation</h4>
+
+<p>
+  A right rotation is symmetric. If <code>y</code> has a left child
+  <code>x</code>, the rotation moves <code>x</code> into <code>y</code>'s former
+  position and makes <code>y</code> the right child of <code>x</code>. The right
+  subtree of <code>x</code>, labeled \(B\), becomes the left subtree of
+  <code>y</code>.
+</p>
+
+<div class="example-box">
+  <strong class="example-title">Right Rotation</strong>
+
+  <!--
+    Add a before-and-after diagram with the following structure:
+
+             y                         x
+            / \                       / \
+           x   C       becomes       A   y
+          / \                           / \
+         A   B                         B   C
+  -->
+</div>
+
+<pre><code>rotateRight(y):
+x = y.left
+
+if x == null:
+    return
+
+y.left = x.right
+
+if x.right != null:
+    x.right.parent = y
+
+x.parent = y.parent
+
+if y.parent == null:
+    root = x
+else if y == y.parent.left:
+    y.parent.left = x
+else:
+    y.parent.right = x
+
+x.right = y
+y.parent = x</code></pre>
+
+  </section>
+
+  <section id="rotation-preservation" section-title="What Rotations Preserve">
+    <h3>What Rotations Preserve</h3>
+
+<div class="remark-box">
+  <strong>Rotation Preservation Theorem:</strong>
+  A left or right rotation preserves the set of stored keys and their inorder
+  sequence. Therefore, if the tree satisfies the binary search tree property
+  before the rotation, it also satisfies the property afterward.
+</div>
+
+<p>
+  To see why, consider a left rotation involving nodes \(x\) and \(y\) and
+  subtrees \(A\), \(B\), and \(C\). Because the original tree is a binary search
+  tree, every key in these groups satisfies
+</p>
+
+\[
+  A < x < B < y < C.
+\]
+
+<p>
+  Here, \(A < x\), for example, means that every key in subtree \(A\) is less
+  than the key at \(x\). Before the rotation, an inorder traversal visits the
+  keys in the order
+</p>
+
+\[
+  A,\ x,\ B,\ y,\ C.
+\]
+
+<p>
+  After the rotation, \(y\) is above \(x\), but the inorder sequence is still
+</p>
+
+\[
+  A,\ x,\ B,\ y,\ C.
+\]
+
+<p>
+  The rotation therefore changes the shape of the tree but not the relative order
+  of its keys. The same argument, reflected left to right, applies to a right
+  rotation.
+</p>
+
+<div class="example-box">
+  <strong class="example-title">
+    Example: Inorder Order Before and After a Rotation
+  </strong>
+
+  <!-- Add a labeled diagram or small worked example here. -->
+</div>
+
+  </section>
+
+  <section id="rotation-height" section-title="How Rotations Change Depth and Height">
+    <h3>How Rotations Change Depth and Height</h3>
+
+<p>
+  A rotation affects depths only within the rotated subtree. Consider again a
+  left rotation at <code>x</code>, with right child <code>y</code> and subtrees
+  \(A\), \(B\), and \(C\).
+</p>
+
+<ul>
+  <li>
+    <code>y</code> and every node in \(C\) move up by one level.
+  </li>
+  <li>
+    <code>x</code> and every node in \(A\) move down by one level.
+  </li>
+  <li>
+    Every node in \(B\) remains at the same depth.
+  </li>
+  <li>
+    Every node outside the rotated subtree remains at the same depth.
+  </li>
+</ul>
+
+<div class="remark-box">
+  <strong>Rotation Locality Lemma:</strong>
+  A single rotation changes the depth of each node by at most one. Consequently,
+  the height of the rotated subtree changes by at most one.
+</div>
+
+<p>
+  The internal structures and heights of \(A\), \(B\), and \(C\) do not change.
+  Only their attachment points change. If a balanced tree stores height or other
+  balance information in its nodes, the information at the two rotated nodes must
+  be recomputed. Information stored at their ancestors may also need to be
+  updated.
+</p>
+
+<p>
+  A rotation does not necessarily reduce the height of the entire tree. It changes
+  height in a controlled local way, and the balancing algorithm chooses rotations
+  that repair a particular violation.
+</p>
+
+  </section>
+
+  <section id="double-rotations" section-title="Double Rotations">
+  <h3>Double Rotations</h3>
+
+  <p>
+    Sometimes a single rotation is sufficient to repair the shape of a subtree. In
+    other cases, the path through the affected nodes changes direction, and two
+    rotations are needed. A <strong>double rotation</strong> is not a separate
+    primitive operation; it is a sequence of two left or right rotations.
+  </p>
+
+  <h4>Left-Right Rotation</h4>
+
+  <p>
+    A left-right rotation first performs a left rotation on the left child and then
+    performs a right rotation on the original subtree root.
+  </p>
+
+  <pre><code>rotateLeftRight(z):
+    rotateLeft(z.left)
+    rotateRight(z)</code></pre>
+
+  <!-- Add a three-stage diagram for the left-right rotation here. -->
+
+  <h4>Right-Left Rotation</h4>
+
+  <p>
+    A right-left rotation first performs a right rotation on the right child and then
+    performs a left rotation on the original subtree root.
+  </p>
+
+  <pre><code>rotateRightLeft(z):
+    rotateRight(z.right)
+    rotateLeft(z)</code></pre>
+
+  <!-- Add a three-stage diagram for the right-left rotation here. -->
+
+  <p>
+    The AVL-tree page will show how subtree heights determine whether an imbalance
+    requires a single rotation or a double rotation. Red-black trees use the same
+    rotation operations but select them according to different rules.
+  </p>
+</section>
+
+
+  <section id="rotation-demo" section-title="Rotation Demo">
+    <h3>Rotation Demo</h3>
+
+<p>
+  Use the demo to perform left, right, left-right, and right-left rotations.
+  Before each rotation, identify the node that will move upward and the subtree
+  that will be transferred. Afterward, verify that the inorder sequence has not
+  changed.
+</p>
+
+<p>
+  Also compare the depths of the affected nodes and the height of the rotated
+  subtree before and after each operation. Notice that a rotation changes the
+  shape locally but leaves the remainder of the tree unchanged.
+</p>
+
+<!-- Add the interactive rotation demo here. -->
+
+  </section>
+
+  <section id="rotation-cost" section-title="Cost of Rotations">
+    <h3>Cost of Rotations</h3>
+
+<p>
+  A single rotation changes only a constant number of references, so it takes
+  \(O(1)\) time. A double rotation consists of two single rotations and therefore
+  also takes \(O(1)\) time. Updating balance information at the rotated nodes also
+  takes constant time when that information can be computed from their children.
+</p>
+
+<p>
+  The complete repair process may take longer because the algorithm must first
+  locate the violation and may need to continue checking ancestors after the
+  rotation. Those costs depend on the particular balanced-tree structure and will
+  be analyzed on the pages for AVL trees, red-black trees, and other balanced
+  search trees.
+</p>
+
+  </section>
+</section>
+
+
+  <section id="multiway-balancing" section-title="Balancing Multiway Search Trees">
+    <h2>Balancing Multiway Search Trees</h2>
+
+<p>
+  [Explain that 2-3 trees and B-trees are not binary trees and therefore do not use
+  binary-tree rotations as their main repair mechanism.]
+</p>
+
+<ul>
+  <li>
+    <strong>Splitting:</strong>
+    [A node containing too many keys is divided into smaller nodes.]
+  </li>
+  <li>
+    <strong>Promotion:</strong>
+    [A middle key is moved from a split node into its parent.]
+  </li>
+  <li>
+    <strong>Redistribution:</strong>
+    [Keys may be moved between neighboring nodes while preserving order.]
+  </li>
+  <li>
+    <strong>Merging:</strong>
+    [Underfull neighboring nodes may be combined during removal.]
+  </li>
+</ul>
+
+<div class="example-box">
+  <strong class="example-title">Example: Splitting a Multiway Node</strong>
+
+  <!-- Add a small 2-3-tree split diagram here. -->
+</div>
+
+<p>
+  [Explain that these operations preserve equal leaf depth and keep the tree
+  logarithmically short.]
+</p>
+
+  </section>
+
+  <section id="comparison" section-title="Comparing Balanced Search Trees">
+    <h2>Comparing Balanced Search Trees</h2>
+
+<p>
+  [Explain that balanced search-tree families make different tradeoffs involving
+  search height, update complexity, node width, and storage environment.]
+</p>
+
+<table class="example-table left-top-align">
+  <thead>
+    <tr>
+      <th>Structure</th>
+      <th>Node Type</th>
+      <th>Balance Approach</th>
+      <th>Main Strength</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>AVL tree</td>
+      <td>Binary</td>
+      <td>Strict height balance</td>
+      <td>Very short search paths</td>
+    </tr>
+    <tr>
+      <td>Red-black tree</td>
+      <td>Binary</td>
+      <td>Color-based path constraints</td>
+      <td>Efficient updates with guaranteed logarithmic height</td>
+    </tr>
+    <tr>
+      <td>2-3 tree</td>
+      <td>Multiway</td>
+      <td>All leaves at the same depth</td>
+      <td>Conceptually clean splitting and merging</td>
+    </tr>
+    <tr>
+      <td>B-tree</td>
+      <td>Multiway</td>
+      <td>All leaves at the same depth with broad nodes</td>
+      <td>Efficient access to external storage</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>
+  [Provide links or transitions to the separate pages for each structure.]
+</p>
+
+  </section>
+
+  <section id="connections" section-title="Connections and Comparisons">
+    <h2>Connections and Comparisons</h2>
+
+<ul>
+  <li>
+    <strong>Plain binary search trees:</strong>
+    [Balanced BSTs preserve the same search tree property and operations but add
+    rules that prevent linear height.]
+  </li>
+  <li>
+    <strong>Heaps:</strong>
+    [Heaps maintain a different ordering rule and are optimized for finding one
+    extreme key rather than arbitrary ordered queries.]
+  </li>
+  <li>
+    <strong>Sorted arrays:</strong>
+    [Sorted arrays provide logarithmic search but may require linear-time shifting
+    for updates.]
+  </li>
+  <li>
+    <strong>Hash tables:</strong>
+    [Hash tables provide fast expected exact-key operations but do not preserve
+    sorted order.]
+  </li>
+</ul>
+
+  </section>
+
+  <section id="pitfalls" section-title="Common Pitfalls">
+    <h2>Common Pitfalls</h2>
+
+<ul>
+  <li>
+    <strong>Assuming balanced means perfect:</strong>
+    [Explain the distinction.]
+  </li>
+  <li>
+    <strong>Treating a rotation as a complete balancing algorithm:</strong>
+    [Explain that a tree-specific invariant determines when and where rotations
+    are used.]
+  </li>
+  <li>
+    <strong>Forgetting the transferred subtree:</strong>
+    [Explain how a subtree between the pivot keys must be reattached.]
+  </li>
+  <li>
+    <strong>Failing to update the root:</strong>
+    [Explain the special case when the rotated node was the root.]
+  </li>
+  <li>
+    <strong>Failing to update parent references:</strong>
+    [Explain that all changed parent-child relationships must agree.]
+  </li>
+  <li>
+    <strong>Forgetting balance metadata:</strong>
+    [Explain that heights, balance factors, colors, or other stored information may
+    require updates.]
+  </li>
+  <li>
+    <strong>Assuming all balanced search trees use rotations:</strong>
+    [Explain that multiway trees use splitting, redistribution, and merging.]
+  </li>
+</ul>
+
+  </section>
+
+  <section id="summary" section-title="Summary">
+    <h2>Summary</h2>
+
+<p>
+  [Summarize why logarithmic height is important and how balanced search trees add
+  structural rules to prevent degeneration.]
+</p>
+
+<p>
+  [Summarize rotations as constant-time binary-search-tree transformations that
+  preserve inorder order.]
+</p>
+
+<p>
+  [Contrast balancing in binary and multiway search trees and preview the separate
+  AVL, red-black, 2-3-tree, and B-tree pages.]
+</p>
+
+  </section>
+
+  <section id="links" section-title="Helpful Links and Resources">
+    <h2>Helpful Links and Resources</h2>
+
+<ul>
+  <li>
+    <a href="URL1" target="_blank">[Resource title]</a>:
+    [Short description.]
+  </li>
+  <li>
+    <a href="URL2" target="_blank">[Resource title]</a>:
+    [Short description.]
+  </li>
+  <li>
+    <a href="URL3" target="_blank">[Resource title]</a>:
+    [Short description.]
+  </li>
+</ul>
+
+  </section>
+
+  <section id="reading-questions" section-title="Reading Comprehension Questions">
+    <h2>Reading Comprehension Questions</h2>
+
+<ol>
+  <li>
+    <strong>Why Balance Matters:</strong>
+    [Question about height-dependent operation costs.]
+  </li>
+  <li>
+    <strong>Meaning of Balance:</strong>
+    [Question explaining why different tree families use different balance rules.]
+  </li>
+  <li>
+    <strong>Left Rotation:</strong>
+    [Question identifying the pivot and transferred subtree.]
+  </li>
+  <li>
+    <strong>Preserving Order:</strong>
+    [Question explaining why a rotation preserves the search tree property.]
+  </li>
+  <li>
+    <strong>Double Rotations:</strong>
+    [Question describing a left-right or right-left rotation.]
+  </li>
+  <li>
+    <strong>Binary and Multiway Trees:</strong>
+    [Question comparing rotations with splitting and merging.]
+  </li>
+  <li>
+    <strong>Analysis:</strong>
+    [Question explaining why updates remain \(O(\log n)\).]
+  </li>
+</ol>
+
+<button id="toggleAnswers"
+        class="show-answer"
+        aria-expanded="false">
+  Show Answers
+</button>
+
+<div id="answers" class="answer" hidden>
+  <ol>
+    <li><strong>Answer:</strong> [Answer placeholder.]</li>
+    <li><strong>Answer:</strong> [Answer placeholder.]</li>
+    <li><strong>Answer:</strong> [Answer placeholder.]</li>
+    <li><strong>Answer:</strong> [Answer placeholder.]</li>
+    <li><strong>Answer:</strong> [Answer placeholder.]</li>
+    <li><strong>Answer:</strong> [Answer placeholder.]</li>
+    <li><strong>Answer:</strong> [Answer placeholder.]</li>
+  </ol>
+</div>
+
+  </section>
+
+  <section id="activities" section-title="In-Class Activities">
+    <h2>In-Class Activities</h2>
+
+<ol>
+  <li>
+    <strong>Compare Tree Heights:</strong>
+    [Construct balanced and degenerate BSTs from specified insertion orders.]
+  </li>
+  <li>
+    <strong>Perform a Left Rotation:</strong>
+    [Trace all link changes on a specified tree.]
+  </li>
+  <li>
+    <strong>Perform a Right Rotation:</strong>
+    [Trace all link changes on a specified tree.]
+  </li>
+  <li>
+    <strong>Verify the Inorder Sequence:</strong>
+    [List inorder traversals before and after several rotations.]
+  </li>
+  <li>
+    <strong>Build Double Rotations:</strong>
+    [Express left-right and right-left rotations as sequences of single rotations.]
+  </li>
+  <li>
+    <strong>Classify Balance Rules:</strong>
+    [Match AVL, red-black, 2-3, and B-tree descriptions with their repair methods.]
+  </li>
+  <li>
+    <strong>Explore the Rotation Demo:</strong>
+    [Use specified examples to identify pivots, transferred subtrees, and root
+    changes.]
+  </li>
+</ol>
+
+  </section>
+
+  <section id="problems" section-title="Homework Problems">
+    <h2>Homework Problems</h2>
+
+<ol>
+  <li>
+    <strong>Trace Rotations:</strong>
+    [Perform a specified sequence of left and right rotations.]
+  </li>
+  <li>
+    <strong>Implement Left Rotation:</strong>
+    [Complete code with child, parent, and root-reference updates.]
+  </li>
+  <li>
+    <strong>Implement Right Rotation:</strong>
+    [Develop the symmetric operation.]
+  </li>
+  <li>
+    <strong>Prove Rotation Correctness:</strong>
+    [Prove that rotations preserve the search tree property.]
+  </li>
+  <li>
+    <strong>Analyze Repair Costs:</strong>
+    [Show why a logarithmic number of constant-time repairs remains
+    \(O(\log n)\).]
+  </li>
+  <li>
+    <strong>Compare Balance Strategies:</strong>
+    [Compare binary rotations with multiway splitting and merging.]
+  </li>
+  <li>
+    <strong>Design a Rotation Test Suite:</strong>
+    [Test root rotations, transferred subtrees, missing children, and parent
+    references.]
+  </li>
+</ol>
+
+  </section>
 
 </body>
 </html>
