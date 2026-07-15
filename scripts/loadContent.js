@@ -1118,6 +1118,11 @@ async function loadContent(relativePath) {
     err.style.display = 'none';
     iframe.style.display = 'block';
 
+    // A genuinely empty document may occasionally be the result of a transient
+    // iframe navigation failure. Retry that case once, but do not let a page whose
+    // source is intentionally empty enter an endless load/retry cycle.
+    let emptyRetryAttempted = false;
+
     // Load into iframe without adding to its session history (use replace)
     const target = `${url}?_=${Date.now()}`;
     try {
@@ -1132,8 +1137,6 @@ async function loadContent(relativePath) {
     }
 
     iframe.onload = () => {
-      hookIframeContent(iframe);
-
       let firstResize = true;
       const resizeIframe = () => {
         const prevY = window.pageYOffset;
@@ -1152,25 +1155,40 @@ async function loadContent(relativePath) {
         }
       };
 
-      // If the frame loaded into an empty document, re-navigate once defensively
+      // Check before injecting page helpers. Otherwise every retry injects a fresh,
+      // cache-busted glossary module and makes an empty page appear to be repeatedly
+      // processing glossary terms.
       try {
         const dtest = getIframeDocument(iframe);
-        const isEmpty = !dtest || !dtest.body || dtest.body.childElementCount === 0;
+        const body = dtest && dtest.body;
+        const hasElements = !!body && body.childElementCount > 0;
+        const hasText = !!body && body.textContent.trim().length > 0;
+        const isEmpty = !body || (!hasElements && !hasText);
+
         if (isEmpty) {
-          const retry = `${url}?__retry__=${Date.now()}`;
-          try {
-            if (iframe.contentWindow && iframe.contentWindow.location) {
-              iframe.contentWindow.location.replace(retry);
-            } else {
+          if (!emptyRetryAttempted) {
+            emptyRetryAttempted = true;
+            const retry = `${url}?__retry__=${Date.now()}`;
+            try {
+              if (iframe.contentWindow && iframe.contentWindow.location) {
+                iframe.contentWindow.location.replace(retry);
+              } else {
+                iframe.src = retry;
+              }
+            } catch {
               iframe.src = retry;
             }
-          } catch {
-            iframe.src = retry;
+            return; // wait for the one defensive retry
           }
-          return; // wait for next onload
+
+          // The retry also produced an empty document, so the source is most likely
+          // intentionally empty. Size it once and leave it alone.
+          resizeIframe();
+          return;
         }
       } catch {}
 
+      hookIframeContent(iframe);
       resizeIframe();
       const d = getIframeDocument(iframe);
       if (d) {

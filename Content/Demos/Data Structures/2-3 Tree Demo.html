@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2–3 Tree Demo</title>
+  <script src="/DAIADS/scripts/demoScripts.js"></script>
+  <link rel="stylesheet" href="/DAIADS/css/style.css">
+  <link rel="stylesheet" href="/DAIADS/css/demo.css">
+  <style>
+    * { box-sizing: border-box; }
+    #demoContainer { max-width: 1050px; margin: 0 auto; }
+    .controls { display:flex; flex-wrap:wrap; gap:0.45rem; align-items:center; margin:0.5rem 0; }
+    .controls input { width:6rem; font:inherit; }
+    .controls button { font:inherit; cursor:pointer; }
+    .controls button:disabled { cursor:not-allowed; opacity:0.55; }
+    .secondary { border-top:1px solid #ccd6df; padding-top:0.35rem; }
+    #status { min-height:3.25rem; padding:0.65rem 0.8rem; margin:0.6rem 0; border-left:5px solid #0a3974; background:#f0f7ff; line-height:1.4; }
+    .meta { display:flex; flex-wrap:wrap; justify-content:space-between; gap:0.5rem 1rem; color:#334e68; margin:0.35rem 0; }
+    #validity.valid { color:#176b3a; font-weight:700; }
+    #validity.invalid { color:#a61b1b; font-weight:700; }
+    .tree-viewport { width:100%; overflow-x:auto; border:1px solid #9fb3c8; border-radius:5px; background:linear-gradient(#fbfdff,#f5f9fc); }
+    #treeSvg { display:block; width:100%; min-width:600px; height:auto; }
+    .edge { stroke:#627d98; stroke-width:2.4; }
+    .node rect { fill:#fff; stroke:#0a3974; stroke-width:2.5; rx:7; transition:fill 0.2s,stroke 0.2s; }
+    .node line { stroke:#0a3974; stroke-width:2; }
+    .node text { fill:#102a43; font:700 16px Verdana,sans-serif; text-anchor:middle; dominant-baseline:middle; }
+    .node.current rect { fill:#fff3cd; stroke:#d9822b; stroke-width:4; }
+    .node.changed rect { fill:#e6f6ec; stroke:#2f855a; stroke-width:4; }
+    .node.split rect { fill:#eee8ff; stroke:#6b46c1; stroke-width:4; }
+    .node.underflow rect { fill:#fde8e8; stroke:#b83232; stroke-width:4; stroke-dasharray:6 4; }
+    .node.found rect { fill:#c9f3d7; stroke:#176b3a; stroke-width:5; }
+    .empty-label { fill:#829ab1; font:italic 15px Verdana,sans-serif; text-anchor:middle; }
+    .legend { display:flex; flex-wrap:wrap; align-items:center; gap:0.45rem 0.8rem; margin:0.55rem 0; }
+    .legend-item { display:inline-flex; align-items:center; gap:0.25rem; white-space:nowrap; }
+    .swatch { width:1.1rem; height:1.1rem; border:2px solid; border-radius:3px; display:inline-block; }
+    .swatch.current { background:#fff3cd; border-color:#d9822b; }
+    .swatch.changed { background:#e6f6ec; border-color:#2f855a; }
+    .swatch.split { background:#eee8ff; border-color:#6b46c1; }
+    .swatch.underflow { background:#fde8e8; border-color:#b83232; }
+    .help { color:#486581; font-size:0.92rem; margin:0.45rem 0 0; }
+    @media (max-width:650px) { .controls { align-items:stretch; } .controls label { width:100%; } .controls input { width:8rem; } }
+  </style>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-DQ5LVZVFDC');
+  </script>
+</head>
+<body class="no-tooltips">
+  <main id="demoContainer">
+    <h2>2–3 Tree Operations</h2>
+    <div class="controls" aria-label="Tree operations">
+      <label for="valueInput"><strong>Key</strong></label>
+      <input id="valueInput" type="number" min="-999" max="999" value="35" aria-describedby="inputHelp">
+      <button id="searchBtn">Search</button>
+      <button id="insertBtn">Insert</button>
+      <button id="deleteBtn">Delete</button>
+    </div>
+    <div class="controls secondary" aria-label="Playback and tree controls">
+      <button id="prevBtn">Previous Step</button>
+      <button id="nextBtn">Next Step</button>
+      <button id="resetBtn">Reset Example</button>
+      <button id="randomBtn">Random Tree</button>
+      <button id="clearBtn">Clear</button>
+    </div>
+    <p id="inputHelp" class="help">Operations use distinct integer keys. Duplicate insertions leave the tree unchanged.</p>
+
+    <div class="legend" aria-label="Color legend">
+      <strong>Legend:</strong>
+      <span class="legend-item"><span class="swatch current"></span>examining</span>
+      <span class="legend-item"><span class="swatch changed"></span>changed/found</span>
+      <span class="legend-item"><span class="swatch split"></span>split/promotion</span>
+      <span class="legend-item"><span class="swatch underflow"></span>underflow</span>
+    </div>
+
+    <div id="status" role="status" aria-live="polite">Choose an operation to begin.</div>
+    <div class="meta">
+      <span id="stepCount">Step 1 of 1</span>
+      <span id="treeStats"></span>
+      <span id="validity" class="valid">Valid 2–3 tree</span>
+    </div>
+    <div class="tree-viewport">
+      <svg id="treeSvg" viewBox="0 0 900 330" preserveAspectRatio="xMidYMin meet" role="img" aria-label="Current 2–3 tree state"></svg>
+    </div>
+  </main>
+
+  <script>
+    const SVG_NS = 'http://www.w3.org/2000/svg';
+    const initialValues = [50, 20, 70, 10, 30, 60, 80, 25, 40, 65];
+    let nextId = 1;
+    let root = null;
+    let size = 0;
+    let steps = [];
+    let stepIndex = 0;
+    let recording = true;
+
+    class Node23 {
+      constructor(keys = [], children = []) {
+        this.id = nextId++;
+        this.keys = keys.slice();
+        this.children = children.slice();
+        this.parent = null;
+        this.children.forEach((child) => { child.parent = this; });
+      }
+      get isLeaf() { return this.children.length === 0; }
+    }
+
+    function cloneForDisplay(node) {
+      if (!node) return null;
+      return { id:node.id, keys:node.keys.slice(), children:node.children.map(cloneForDisplay) };
+    }
+
+    function record(message, marks = {}) {
+      if (!recording) return;
+      steps.push({ tree:cloneForDisplay(root), size, message, marks });
+    }
+
+    function lowerBound(keys, value) {
+      let i = 0;
+      while (i < keys.length && keys[i] < value) i++;
+      return i;
+    }
+
+    function findNode(value, showSteps = false) {
+      let node = root;
+      while (node) {
+        const i = lowerBound(node.keys, value);
+        if (showSteps) {
+          const relation = node.keys.length === 1 ? `[${node.keys[0]}]` : `[${node.keys.join(' | ')}]`;
+          record(`Compare ${value} with node ${relation}.`, { current:[node.id] });
+        }
+        if (i < node.keys.length && node.keys[i] === value) return { node, index:i };
+        if (node.isLeaf) return null;
+        if (showSteps) {
+          const names = node.keys.length === 1 ? ['left','right'] : ['left','middle','right'];
+          record(`${value} must be in the ${names[i]} child range.`, { current:[node.children[i].id] });
+        }
+        node = node.children[i];
+      }
+      return null;
+    }
+
+    function insertValue(value, showSteps = true) {
+      if (!root) {
+        root = new Node23([value]);
+        size = 1;
+        if (showSteps) record(`The tree was empty, so ${value} becomes the root.`, { changed:[root.id] });
+        return true;
+      }
+      const existing = findNode(value, showSteps);
+      if (existing) {
+        if (showSteps) record(`${value} is already present. This demo stores distinct keys, so nothing changes.`, { found:[existing.node.id] });
+        return false;
+      }
+      let node = root;
+      while (!node.isLeaf) node = node.children[lowerBound(node.keys, value)];
+      node.keys.splice(lowerBound(node.keys, value), 0, value);
+      size++;
+      if (showSteps) record(`Insert ${value} into the reached leaf in sorted position.`, { changed:[node.id] });
+
+      while (node.keys.length === 3) {
+        const [low, median, high] = node.keys;
+        const oldChildren = node.children.slice();
+        node.keys = [low];
+        node.children = oldChildren.slice(0, 2);
+        node.children.forEach((child) => { child.parent = node; });
+        const right = new Node23([high], oldChildren.slice(2));
+        if (!node.parent) {
+          root = new Node23([median], [node, right]);
+          if (showSteps) record(`Split [${low}, ${median}, ${high}] around its median. Promote ${median} into a new root; every leaf is now one level deeper.`, { split:[root.id], changed:[node.id, right.id] });
+          return true;
+        }
+
+        const parent = node.parent;
+        const childIndex = parent.children.indexOf(node);
+        parent.keys.splice(childIndex, 0, median);
+        parent.children.splice(childIndex + 1, 0, right);
+        right.parent = parent;
+        if (showSteps) record(`Split [${low}, ${median}, ${high}] and promote median ${median} into the parent. Attach the two split pieces on either side of its new range.`, { split:[parent.id], changed:[node.id, right.id] });
+        node = parent;
+      }
+      return true;
+    }
+
+    function deleteValue(value, showSteps = true) {
+      const found = findNode(value, showSteps);
+      if (!found) {
+        if (showSteps) record(`${value} is not in the tree, so deletion makes no change.`);
+        return false;
+      }
+      let node = found.node;
+      let index = found.index;
+      if (showSteps) record(`Found ${value}.`, { found:[node.id] });
+
+      if (!node.isLeaf) {
+        let predecessor = node.children[index];
+        if (showSteps) record(`${value} is internal. Find its predecessor in the child immediately to its left.`, { current:[predecessor.id] });
+        while (!predecessor.isLeaf) {
+          predecessor = predecessor.children[predecessor.children.length - 1];
+          if (showSteps) record('Follow the rightmost child to continue toward the predecessor.', { current:[predecessor.id] });
+        }
+        const predIndex = predecessor.keys.length - 1;
+        const predKey = predecessor.keys[predIndex];
+        node.keys[index] = predKey;
+        if (showSteps) record(`Replace internal key ${value} with predecessor ${predKey}. Now remove ${predKey} from its leaf.`, { changed:[node.id], current:[predecessor.id] });
+        node = predecessor;
+        index = predIndex;
+      }
+
+      const removed = node.keys[index];
+      node.keys.splice(index, 1);
+      size--;
+      if (showSteps) record(`Remove ${removed} from the leaf${node.keys.length ? '; the leaf still has a key, so no repair is needed.' : ', creating an underflow.'}`, node.keys.length ? { changed:[node.id] } : { underflow:[node.id] });
+
+      while (node !== root && node.keys.length === 0) {
+        const parent = node.parent;
+        const i = parent.children.indexOf(node);
+        const left = i > 0 ? parent.children[i - 1] : null;
+        const right = i + 1 < parent.children.length ? parent.children[i + 1] : null;
+
+        if (left && left.keys.length === 2) {
+          const separator = parent.keys[i - 1];
+          node.keys.unshift(separator);
+          parent.keys[i - 1] = left.keys.pop();
+          if (!left.isLeaf) {
+            const movedChild = left.children.pop();
+            node.children.unshift(movedChild);
+            movedChild.parent = node;
+          }
+          if (showSteps) record(`Borrow from the left sibling: parent key ${separator} moves down, and the sibling's largest key moves up.`, { changed:[left.id, parent.id, node.id] });
+          return true;
+        }
+
+        if (right && right.keys.length === 2) {
+          const separator = parent.keys[i];
+          node.keys.push(separator);
+          parent.keys[i] = right.keys.shift();
+          if (!right.isLeaf) {
+            const movedChild = right.children.shift();
+            node.children.push(movedChild);
+            movedChild.parent = node;
+          }
+          if (showSteps) record(`Borrow from the right sibling: parent key ${separator} moves down, and the sibling's smallest key moves up.`, { changed:[right.id, parent.id, node.id] });
+          return true;
+        }
+
+        if (left) {
+          const separator = parent.keys.splice(i - 1, 1)[0];
+          left.keys.push(separator, ...node.keys);
+          node.children.forEach((child) => { child.parent = left; });
+          left.children.push(...node.children);
+          parent.children.splice(i, 1);
+          if (showSteps) record(`Neither sibling can lend. Merge with the left sibling and pull parent key ${separator} down.`, parent.keys.length ? { changed:[left.id, parent.id] } : { changed:[left.id], underflow:[parent.id] });
+        } else {
+          const separator = parent.keys.splice(i, 1)[0];
+          node.keys.push(separator, ...right.keys);
+          right.children.forEach((child) => { child.parent = node; });
+          node.children.push(...right.children);
+          parent.children.splice(i + 1, 1);
+          if (showSteps) record(`Neither sibling can lend. Merge with the right sibling and pull parent key ${separator} down.`, parent.keys.length ? { changed:[node.id, parent.id] } : { changed:[node.id], underflow:[parent.id] });
+        }
+        node = parent;
+      }
+
+      if (root && root.keys.length === 0) {
+        if (root.children.length) {
+          root = root.children[0];
+          root.parent = null;
+          if (showSteps) record('The root is empty, so its only child becomes the new root. The height decreases by one.', { changed:[root.id] });
+        } else {
+          root = null;
+          if (showSteps) record('The final key was removed; the tree is now empty.');
+        }
+      }
+      return true;
+    }
+
+    function beginOperation(kind) {
+      const input = document.getElementById('valueInput');
+      const value = Number(input.value);
+      if (!Number.isInteger(value) || value < -999 || value > 999) {
+        document.getElementById('status').textContent = 'Enter an integer from -999 through 999.';
+        input.focus();
+        return;
+      }
+      steps = [];
+      record(`Starting ${kind}(${value}).`);
+      if (kind === 'search') {
+        const result = findNode(value, true);
+        record(result ? `Search succeeds: ${value} is in the highlighted node.` : `Search ends at a leaf: ${value} is not in the tree.`, result ? { found:[result.node.id] } : {});
+      } else if (kind === 'insert') {
+        insertValue(value, true);
+      } else {
+        deleteValue(value, true);
+      }
+      const check = validateTree();
+      if (!check.ok) record(`Internal validation failed: ${check.message}`);
+      stepIndex = 0;
+      renderStep();
+    }
+
+    function buildTree(values) {
+      nextId = 1;
+      root = null;
+      size = 0;
+      recording = false;
+      values.forEach((value) => insertValue(value, false));
+      recording = true;
+      steps = [];
+      record(values.length ? `Ready with keys: ${values.slice().sort((a,b) => a-b).join(', ')}.` : 'The tree is empty. Insert a key to begin.');
+      stepIndex = 0;
+      renderStep();
+    }
+
+    function validateTree() {
+      if (!root) return size === 0 ? {ok:true} : {ok:false, message:'empty root with nonzero size'};
+      let leafDepth = null;
+      let count = 0;
+      function visit(node, min, max, depth, isRoot) {
+        if ((!isRoot && (node.keys.length < 1 || node.keys.length > 2)) || (isRoot && (node.keys.length < 1 || node.keys.length > 2))) return 'illegal key count';
+        if (node.keys.length === 2 && node.keys[0] >= node.keys[1]) return 'keys are not ordered';
+        for (const key of node.keys) if (key <= min || key >= max) return 'key outside its allowed range';
+        count += node.keys.length;
+        if (node.isLeaf) {
+          if (leafDepth === null) leafDepth = depth;
+          if (leafDepth !== depth) return 'leaves have different depths';
+          return null;
+        }
+        if (node.children.length !== node.keys.length + 1) return 'child count does not equal key count plus one';
+        for (let i = 0; i < node.children.length; i++) {
+          if (node.children[i].parent !== node) return 'incorrect parent reference';
+          const low = i === 0 ? min : node.keys[i - 1];
+          const high = i === node.keys.length ? max : node.keys[i];
+          const error = visit(node.children[i], low, high, depth + 1, false);
+          if (error) return error;
+        }
+        return null;
+      }
+      const error = visit(root, -Infinity, Infinity, 0, true);
+      if (error) return {ok:false, message:error};
+      if (count !== size) return {ok:false, message:`counted ${count} keys but size is ${size}`};
+      return {ok:true};
+    }
+
+    function treeHeight(node) {
+      let h = -1;
+      while (node) { h++; node = node.isLeaf ? null : node.children[0]; }
+      return h;
+    }
+
+    function layoutTree(displayRoot) {
+      const positions = new Map();
+      let nextLeaf = 0;
+      function place(node, depth) {
+        let x;
+        if (!node.children.length) {
+          x = nextLeaf++ * 120 + 70;
+        } else {
+          const childXs = node.children.map((child) => place(child, depth + 1));
+          x = (childXs[0] + childXs[childXs.length - 1]) / 2;
+        }
+        positions.set(node.id, {x, y:55 + depth * 105, node});
+        return x;
+      }
+      place(displayRoot, 0);
+      return { positions, width:Math.max(700, nextLeaf * 120 + 20) };
+    }
+
+    function svgElement(name, attrs = {}) {
+      const el = document.createElementNS(SVG_NS, name);
+      Object.entries(attrs).forEach(([key, value]) => el.setAttribute(key, value));
+      return el;
+    }
+
+    function renderTree(state) {
+      const svg = document.getElementById('treeSvg');
+      svg.innerHTML = '';
+      if (!state.tree) {
+        svg.setAttribute('viewBox', '0 0 900 230');
+        const text = svgElement('text', {x:450, y:115, class:'empty-label'});
+        text.textContent = 'empty 2–3 tree';
+        svg.appendChild(text);
+        return;
+      }
+      const {positions, width} = layoutTree(state.tree);
+      const depth = (() => { let d=0,n=state.tree; while(n.children.length){d++;n=n.children[0];} return d; })();
+      const height = Math.max(230, 115 + depth * 105);
+      svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+
+      positions.forEach(({x,y,node}) => {
+        node.children.forEach((child) => {
+          const childPos = positions.get(child.id);
+          svg.appendChild(svgElement('line', {x1:x, y1:y+28, x2:childPos.x, y2:childPos.y-28, class:'edge'}));
+        });
+      });
+
+      positions.forEach(({x,y,node}) => {
+        const group = svgElement('g', {class:'node'});
+        const markClass = ['found','underflow','split','changed','current'].find((kind) => (state.marks[kind] || []).includes(node.id));
+        if (markClass) group.classList.add(markClass);
+        const nodeWidth = node.keys.length === 2 ? 112 : 64;
+        group.appendChild(svgElement('rect', {x:x-nodeWidth/2, y:y-28, width:nodeWidth, height:56}));
+        if (node.keys.length === 2) group.appendChild(svgElement('line', {x1:x, y1:y-28, x2:x, y2:y+28}));
+        node.keys.forEach((key, i) => {
+          const text = svgElement('text', {x:node.keys.length === 1 ? x : x + (i === 0 ? -28 : 28), y});
+          text.textContent = key;
+          group.appendChild(text);
+        });
+        svg.appendChild(group);
+      });
+    }
+
+    function renderStep() {
+      const state = steps[stepIndex];
+      renderTree(state);
+      document.getElementById('status').textContent = state.message;
+      document.getElementById('stepCount').textContent = `Step ${stepIndex + 1} of ${steps.length}`;
+      document.getElementById('treeStats').textContent = `Keys: ${state.size} · Height: ${treeHeightFromDisplay(state.tree)}`;
+      document.getElementById('prevBtn').disabled = stepIndex === 0;
+      document.getElementById('nextBtn').disabled = stepIndex === steps.length - 1;
+      const check = validateTree();
+      const finished = stepIndex === steps.length - 1;
+      const validity = document.getElementById('validity');
+      validity.textContent = check.ok ? (finished ? 'Valid 2–3 tree' : 'Trace in progress · final tree valid') : `Invalid: ${check.message}`;
+      validity.className = check.ok ? 'valid' : 'invalid';
+      ['searchBtn','insertBtn','deleteBtn'].forEach((id) => {
+        document.getElementById(id).disabled = !finished;
+      });
+      window.parent.postMessage({type:'demoResize'}, '*');
+    }
+
+    function treeHeightFromDisplay(node) {
+      let h = -1;
+      while (node) { h++; node = node.children.length ? node.children[0] : null; }
+      return h;
+    }
+
+    document.getElementById('searchBtn').addEventListener('click', () => beginOperation('search'));
+    document.getElementById('insertBtn').addEventListener('click', () => beginOperation('insert'));
+    document.getElementById('deleteBtn').addEventListener('click', () => beginOperation('delete'));
+    document.getElementById('prevBtn').addEventListener('click', () => { if (stepIndex > 0) { stepIndex--; renderStep(); } });
+    document.getElementById('nextBtn').addEventListener('click', () => { if (stepIndex + 1 < steps.length) { stepIndex++; renderStep(); } });
+    document.getElementById('resetBtn').addEventListener('click', () => buildTree(initialValues));
+    document.getElementById('clearBtn').addEventListener('click', () => buildTree([]));
+    document.getElementById('randomBtn').addEventListener('click', () => {
+      const values = [];
+      while (values.length < 10) {
+        const value = Math.floor(Math.random() * 90) + 5;
+        if (!values.includes(value)) values.push(value);
+      }
+      buildTree(values);
+    });
+    document.getElementById('valueInput').addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') beginOperation('search');
+    });
+
+    buildTree(initialValues);
+  </script>
+</body>
+</html>
