@@ -961,21 +961,19 @@ function clampAllNodes() {
   const svgEl = document.getElementById('svg');
   const radius = /* your radius */ 30;
 
-  // build the inverse CTM and helper point
-  const pt     = svgEl.createSVGPoint();
-  const ctmInv = svgEl.getScreenCTM().inverse();
-
-  // compute the on-screen rect → SVG-space corners
-  const rect = svgEl.getBoundingClientRect();
-  const tl   = new DOMPoint(rect.left  + radius, rect.top    + radius)
-                   .matrixTransform(ctmInv);
-  const br   = new DOMPoint(rect.right - radius, rect.bottom - radius)
-                   .matrixTransform(ctmInv);
+  // Clamp in viewBox coordinates. Screen coordinates are unavailable while an
+  // embedded demo's collapsible section is hidden during page initialization.
+  const vb = svgEl.viewBox.baseVal;
+  const minX = vb.x + radius;
+  const maxX = vb.x + vb.width - radius;
+  const minY = vb.y + radius;
+  const maxY = vb.y + vb.height - radius;
 
   // clamp each node
   nodePositions.forEach((pos, i) => {
-    pos.x = Math.max(tl.x, Math.min(br.x, pos.x));
-    pos.y = Math.max(tl.y, Math.min(br.y, pos.y));
+    if (!Number.isFinite(pos.x) || !Number.isFinite(pos.y)) return;
+    pos.x = Math.max(minX, Math.min(maxX, pos.x));
+    pos.y = Math.max(minY, Math.min(maxY, pos.y));
     updateNode(i);
     updateEdges(i);
     updateLabels(i);
