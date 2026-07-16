@@ -39,17 +39,21 @@
     restriction on its shape. An unfavorable sequence of insertions or removals can
     therefore produce a long, nearly linear tree. Balanced search trees prevent this
     degeneration by detecting when their structural rules have been violated and
-    repairing the tree after an update. Different tree families use different balance
-    rules and different repair operations.
+    maintaining or restoring those rules during updates. 
+    Different tree families use different balance rules and different repair operations.
   </p>
 
   <p>
-  AVL trees and red-black trees are <strong>balanced binary search trees</strong>.
-  They retain the ordinary binary search tree structure and use rotations, together
-  with height or color information, to control the shape of the tree.
-  <strong>Multiway search trees</strong>, such as 2-3 trees and B-trees, allow nodes
-  to contain multiple keys and have more than two children. They maintain balance
-  through operations such as splitting, promotion, redistribution, and merging.
+  Balanced search trees use different strategies to control their height.
+  AVL trees and red-black trees are <strong>balanced binary search
+  trees</strong>. They retain the ordinary binary search tree structure and
+  use rotations, together with height or color information, to control the
+  shape of the tree. <strong>Multiway search trees</strong>, such as 2-3 trees
+  and B-trees, allow nodes to store multiple keys and have more than two
+  children. They maintain balance using operations such as splitting,
+  redistribution, and merging rather than binary-tree rotations. This page
+  briefly compares these approaches and then focuses on rotations. Multiway
+  balancing operations will be developed on the 2-3-tree and B-tree pages.
 </p>
 
   <div class="remark-box">
@@ -86,8 +90,9 @@
     </strong>
 
 <p>
-  The two trees below contain the same seven keys. The balanced tree results from
-  inserting the keys in the order
+  The two ordinary binary search trees below contain the same seven keys. 
+  The first happens to have a balanced shape, while the second is degenerate.
+  The balanced tree results from inserting the keys in the order
   \[
     40,20,60,10,30,50,70,
   \]
@@ -265,7 +270,7 @@
     to repair the tree's structure. These repairs are worthwhile because they preserve
     logarithmic height, preventing later searches and updates from degrading to linear
     time. Balanced search trees therefore trade a limited amount of additional update
-    work for a strong guarantee on the performance of every operation.
+    work for a strong guarantee on the performance of the main search-tree operations.
   </p>
 </section>
 
@@ -276,10 +281,10 @@
     There is no single balance rule shared by all balanced search trees. Instead, each
     tree family maintains its own <strong>balance invariant</strong>: a structural
     condition strong enough to guarantee that the tree's height remains
-    \(O(\log n)\). Some invariants compare subtree heights, some constrain paths
-    using additional labels, and others allow each node to store several keys and
-    have several children. Here are some of the most common structures and the rules
-    they have.
+    \(O(\log n)\). Some invariants compare subtree heights, 
+    some constrain paths using additional labels, 
+    and others constrain node occupancy and require all leaves to occur at the same depth. 
+    Here are some of the most common structures and the rules they have.
   </p>
 
   <table class="example-table left-top-align">
@@ -347,8 +352,8 @@
   </p>
 
   <p>
-    Although the details vary among tree families, balanced-tree updates usually
-    follow the same general pattern:
+    Although the exact order varies among implementations, 
+    balanced-tree updates generally involve the following tasks:
   </p>
 
   <ol>
@@ -356,7 +361,7 @@
       Follow the search-tree ordering to locate the insertion or removal position.
     </li>
     <li>
-      Perform the ordinary search-tree update.
+      Perform the update, making structural repairs during or after it as required.    
     </li>
     <li>
       Determine whether the tree's balance invariant has been violated.
@@ -371,7 +376,8 @@
   </ol>
 
   <p>
-    Balanced binary search trees usually repair their structure with
+    Many balanced binary search trees, including AVL and red-black trees, 
+    repair their structure with
     <strong>rotations</strong>, which change a small collection of parent-child
     relationships while preserving the search tree property. AVL trees use height
     information to choose among single and double rotations. Red-black trees use
@@ -449,7 +455,9 @@
 <ul>
   <li>moves <code>y</code> into <code>x</code>'s position,</li>
   <li>makes <code>x</code> the left child of <code>y</code>, and</li>
-  <li>makes the left subtree of <code>y</code>, if it exists, the right subtree of <code>x</code>.</li>
+  <li>makes the left subtree of <code>y</code>, labeled \(B\) in the diagram, the
+    right subtree of <code>x</code>.
+  </li>
 </ul>
 
 
@@ -760,35 +768,38 @@
 </div>
 
 <p>Here is pseudocode for the left rotation:</p>
-<pre><code>rotateLeft(x):
-y = x.right
+  <pre><code>rotateLeft(x):
+  y = x.right
 
-if y == null:
-    return
+  if y == null:
+      return
 
-x.right = y.left
+  x.right = y.left
 
-if y.left != null:
-    y.left.parent = x
+  if y.left != null:
+      y.left.parent = x
 
-y.parent = x.parent
+  y.parent = x.parent
 
-if x.parent == null:
-    root = y
-else if x == x.parent.left:
-    x.parent.left = y
-else:
-    x.parent.right = y
+  if x.parent == null:
+      root = y
+  else if x == x.parent.left:
+      x.parent.left = y
+  else:
+      x.parent.right = y
 
-y.left = x
-x.parent = y</code></pre>
+  y.left = x
+  x.parent = y</code></pre>
 
 <p>
-  The transferred subtree \(B\) must be placed between <code>x</code> and
-  <code>y</code>. Its keys are greater than the key at <code>x</code> but less
-  than the key at <code>y</code>, so it becomes the right subtree of
-  <code>x</code>.
+  Before the rotation, \(B\) is the left subtree of <code>y</code>, so every
+  key in \(B\) is less than the key at <code>y</code>. Because \(B\) lies in
+  the right subtree of <code>x</code>, every key in \(B\) is also greater than
+  the key at <code>x</code>. Therefore, when <code>y</code> moves above
+  <code>x</code>, \(B\) becomes the right subtree of <code>x</code>, preserving
+  the binary search tree property.
 </p>
+
 
 <h4>Right Rotation</h4>
 
@@ -799,7 +810,8 @@ x.parent = y</code></pre>
 <ul>
   <li>moves <code>x</code> into <code>y</code>'s position,</li>
   <li>makes <code>y</code> the right child of <code>x</code>, and</li>
-  <li>makes the right subtree of <code>x</code>, if it exists, the left subtree of <code>y</code>.</li>
+  <li>makes the right subtree of <code>x</code>, labeled \(B\) in the diagram,  
+    the left subtree of <code>y</code>.</li>
 </ul>
 
 
@@ -809,7 +821,7 @@ x.parent = y</code></pre>
     </strong>
     <p>
       The following diagram illustrates a right rotation. It is important to remember
-      that a left rotation at <code>y</code> requires that <code>y</code> have a left child,
+      that a right rotation at <code>y</code> requires that <code>y</code> have a left child,
       <code>x</code>.
     </p>
 
@@ -1107,33 +1119,39 @@ x.parent = y</code></pre>
 
 
 <pre><code>rotateRight(y):
-x = y.left
+  x = y.left
 
-if x == null:
-    return
+  if x == null:
+      return
 
-y.left = x.right
+  y.left = x.right
 
-if x.right != null:
-    x.right.parent = y
+  if x.right != null:
+      x.right.parent = y
 
-x.parent = y.parent
+  x.parent = y.parent
 
-if y.parent == null:
-    root = x
-else if y == y.parent.left:
-    y.parent.left = x
-else:
-    y.parent.right = x
+  if y.parent == null:
+      root = x
+  else if y == y.parent.left:
+      y.parent.left = x
+  else:
+      y.parent.right = x
 
-x.right = y
-y.parent = x</code></pre>
+  x.right = y
+  y.parent = x</code></pre>
+
+  <p>A symmetric argument to the one above shows that the 
+    right rotation preserves the binary search tree property.</p>
 
 <div class="example-box">
-  <strong class="example-title">Tree Rotation Animation</strong>
+  <strong class="example-title">Example 4: Tree Rotation Animation</strong>
   <p>
-    Use the following to see an animation that does both the left and right rotations. This should make it
-    abundantly clear that the left and right rotations are symmetric.
+    Use the animation to alternate between a left rotation at <code>x</code> 
+    and the inverse right rotation at <code>y</code>. 
+    Watch how <code>x</code>, <code>y</code>, and subtree <code>B</code> 
+    change positions while the internal structures of <code>A</code>, <code>B</code>, and <code>C</code>  
+    remain unchanged.
   </p>
   <div style="margin:10px 0 12px 0;">
     <button id="rotationToggleBtn"
@@ -1282,518 +1300,3572 @@ y.parent = x</code></pre>
 </div>
 
   </section>
+<section id="rotation-preservation" section-title="What Rotations Preserve">
+  <h3>What Rotations Preserve</h3>
 
-  <section id="rotation-preservation" section-title="What Rotations Preserve">
-    <h3>What Rotations Preserve</h3>
+  <p>
+    We have already argued informally that rotations preserve the binary search
+    tree property. We now justify this claim a little more formally.
+  </p>
 
-<div class="remark-box">
-  <strong>Rotation Preservation Theorem:</strong>
-  A left or right rotation preserves the set of stored keys and their inorder
-  sequence. Therefore, if the tree satisfies the binary search tree property
-  before the rotation, it also satisfies the property afterward.
-</div>
-
-<p>
-  To see why, consider a left rotation involving nodes \(x\) and \(y\) and
-  subtrees \(A\), \(B\), and \(C\). Because the original tree is a binary search
-  tree, every key in these groups satisfies
-</p>
-
-\[
-  A < x < B < y < C.
-\]
-
-<p>
-  Here, \(A < x\), for example, means that every key in subtree \(A\) is less
-  than the key at \(x\). Before the rotation, an inorder traversal visits the
-  keys in the order
-</p>
+  <div class="theorem">
+  <p class="box-title"><strong>Theorem 1: Rotations preserve the binary search tree property.</strong></p>
+    A left or right rotation preserves both the set of stored keys and their
+    inorder sequence. Therefore, if the tree satisfies the binary search tree
+    property before the rotation, it also satisfies the property afterward.
+    <div class="proof-block">
+<p class="box-title"><strong>Proof</strong></p>
+  <p>
+    Consider a left rotation involving nodes \(x\) and \(y\) and subtrees
+    \(A\), \(B\), and \(C\). Because the original tree is a binary search tree,
+    the keys occur in the following order:
+  </p>
 
 \[
-  A,\ x,\ B,\ y,\ C.
+A < x < B < y < C.
 \]
 
-<p>
-  After the rotation, \(y\) is above \(x\), but the inorder sequence is still
-</p>
+  <p>
+    Here, \(A < x\), for example, means that every key in subtree \(A\) is less
+    than the key stored at \(x\). The same notation applies to the other
+    subtrees. Before the rotation, an inorder traversal visits
+  </p>
 
 \[
-  A,\ x,\ B,\ y,\ C.
+A,\ x,\ B,\ y,\ C.
 \]
 
-<p>
-  The rotation therefore changes the shape of the tree but not the relative order
-  of its keys. The same argument, reflected left to right, applies to a right
-  rotation.
-</p>
+  <p>
+    After the rotation, \(y\) occupies the former position of \(x\),
+    \(x\) becomes the left child of \(y\), and \(B\) becomes the right subtree
+    of \(x\). An inorder traversal still visits
+  </p>
 
-<div class="example-box">
+\[
+A,\ x,\ B,\ y,\ C.
+\]
+
+  <p>
+    Thus, the rotation changes the shape of the tree without changing either
+    its keys or their relative order. Since the inorder sequence remains
+    increasing, the binary search tree property is preserved. The corresponding
+    argument for a right rotation is the same with left and right reversed.
+  </p>
+
+  </div>
+  </div>
+
+  <div class="example-box">
   <strong class="example-title">
-    Example: Inorder Order Before and After a Rotation
+    Example 5: Inorder Order Before and After a Rotation
   </strong>
 
-  <!-- Add a labeled diagram or small worked example here. -->
+  <p>
+    The following example performs a left rotation at node \(70\). Node \(80\)
+    moves into \(70\)'s former position, \(70\) becomes the left child of
+    \(80\), and the subtree rooted at \(75\) becomes the right subtree of
+    \(70\). The second arrow shows the inverse operation: a right rotation at
+    \(80\) returns the tree to its original shape. The rest of the tree is
+    unchanged.
+  </p>
+
+  <svg viewBox="0 0 1000 490"
+       role="img"
+       aria-labelledby="numericRotationTitle numericRotationDesc"
+       style="display:block; width:100%; max-width:1000px; height:auto; margin:1em auto;">
+    <title id="numericRotationTitle">
+      Numerical example of a left rotation within a binary search tree
+    </title>
+    <desc id="numericRotationDesc">
+      Before the rotation, 50 is the root and 70 is its right child. Node 70
+      has right child 80. A left rotation is performed at 70. After the
+      rotation, 80 is the right child of 50, 70 is the left child of 80, and
+      75 is the right child of 70. A right rotation at 80 restores the
+      original tree. The inorder sequence is unchanged.
+    </desc>
+
+    <defs>
+      <marker id="numericRotationArrow"
+              markerWidth="10"
+              markerHeight="10"
+              refX="9"
+              refY="5"
+              orient="auto">
+        <path d="M0,0 L10,5 L0,10 Z"
+              fill="#d9822b"/>
+      </marker>
+    </defs>
+
+    <!-- headings -->
+    <text x="250" y="28"
+          text-anchor="middle"
+          font-family="Verdana, sans-serif"
+          font-size="18"
+          font-weight="700"
+          fill="#0f264a">
+      Before
+    </text>
+
+    <text x="750" y="28"
+          text-anchor="middle"
+          font-family="Verdana, sans-serif"
+          font-size="18"
+          font-weight="700"
+          fill="#0f264a">
+      After
+    </text>
+
+    <!-- top arrow and label -->
+    <text x="500" y="78"
+          text-anchor="middle"
+          font-family="Verdana, sans-serif"
+          font-size="16"
+          fill="#0f264a">
+      Left rotation at 70
+    </text>
+
+    <line x1="445" y1="98"
+          x2="555" y2="98"
+          stroke="#d9822b"
+          stroke-width="3"
+          marker-end="url(#numericRotationArrow)"/>
+
+    <!-- bottom arrow and label -->
+    <line x1="555" y1="142"
+          x2="445" y2="142"
+          stroke="#d9822b"
+          stroke-width="3"
+          marker-end="url(#numericRotationArrow)"/>
+
+    <text x="500" y="170"
+          text-anchor="middle"
+          font-family="Verdana, sans-serif"
+          font-size="16"
+          fill="#0f264a">
+      Right rotation at 80
+    </text>
+
+    <!-- ===================== BEFORE ===================== -->
+
+    <!-- edges -->
+    <g stroke="#0a3974" stroke-width="2">
+      <line x1="250" y1="70" x2="145" y2="140"/>
+      <line x1="250" y1="70" x2="355" y2="140"/>
+
+      <line x1="145" y1="140" x2="90" y2="220"/>
+      <line x1="145" y1="140" x2="200" y2="220"/>
+
+      <line x1="355" y1="140" x2="300" y2="220"/>
+      <line x1="355" y1="140" x2="410" y2="220"/>
+
+      <line x1="300" y1="220" x2="270" y2="300"/>
+      <line x1="300" y1="220" x2="330" y2="300"/>
+
+      <line x1="410" y1="220" x2="385" y2="300"/>
+      <line x1="410" y1="220" x2="450" y2="300"/>
+    </g>
+
+    <!-- nodes -->
+    <g font-family="Verdana, sans-serif"
+       font-size="15"
+       font-weight="700"
+       text-anchor="middle"
+       dominant-baseline="middle">
+
+      <circle cx="250" cy="70" r="22"
+              fill="#ffffff" stroke="#0a3974" stroke-width="2"/>
+      <text x="250" y="70" fill="#0f264a">50</text>
+
+      <circle cx="145" cy="140" r="22"
+              fill="#ffffff" stroke="#0a3974" stroke-width="2"/>
+      <text x="145" y="140" fill="#0f264a">30</text>
+
+      <circle cx="355" cy="140" r="22"
+              fill="#fff4e6" stroke="#d9822b" stroke-width="2.5"/>
+      <text x="355" y="140" fill="#0f264a">70</text>
+
+      <circle cx="90" cy="220" r="22"
+              fill="#ffffff" stroke="#0a3974" stroke-width="2"/>
+      <text x="90" y="220" fill="#0f264a">20</text>
+
+      <circle cx="200" cy="220" r="22"
+              fill="#ffffff" stroke="#0a3974" stroke-width="2"/>
+      <text x="200" y="220" fill="#0f264a">40</text>
+
+      <circle cx="300" cy="220" r="22"
+              fill="#ffffff" stroke="#0a3974" stroke-width="2"/>
+      <text x="300" y="220" fill="#0f264a">60</text>
+
+      <circle cx="410" cy="220" r="22"
+              fill="#fff4e6" stroke="#d9822b" stroke-width="2.5"/>
+      <text x="410" y="220" fill="#0f264a">80</text>
+
+      <circle cx="270" cy="300" r="22"
+              fill="#ffffff" stroke="#0a3974" stroke-width="2"/>
+      <text x="270" y="300" fill="#0f264a">55</text>
+
+      <circle cx="330" cy="300" r="22"
+              fill="#ffffff" stroke="#0a3974" stroke-width="2"/>
+      <text x="330" y="300" fill="#0f264a">65</text>
+
+      <circle cx="385" cy="300" r="22"
+              fill="#eef6ff" stroke="#559ecb" stroke-width="2.5"/>
+      <text x="385" y="300" fill="#0f264a">75</text>
+
+      <circle cx="450" cy="300" r="22"
+              fill="#ffffff" stroke="#0a3974" stroke-width="2"/>
+      <text x="450" y="300" fill="#0f264a">90</text>
+    </g>
+
+    <!-- ===================== AFTER ===================== -->
+
+    <!-- edges -->
+    <g stroke="#0a3974" stroke-width="2">
+      <line x1="750" y1="70" x2="645" y2="140"/>
+      <line x1="750" y1="70" x2="855" y2="140"/>
+
+      <line x1="645" y1="140" x2="590" y2="220"/>
+      <line x1="645" y1="140" x2="700" y2="220"/>
+
+      <line x1="855" y1="140" x2="800" y2="220"/>
+      <line x1="855" y1="140" x2="910" y2="220"/>
+
+      <line x1="800" y1="220" x2="765" y2="300"/>
+      <line x1="800" y1="220" x2="835" y2="300"/>
+
+      <line x1="765" y1="300" x2="735" y2="380"/>
+      <line x1="765" y1="300" x2="795" y2="380"/>
+    </g>
+
+    <!-- nodes -->
+    <g font-family="Verdana, sans-serif"
+       font-size="15"
+       font-weight="700"
+       text-anchor="middle"
+       dominant-baseline="middle">
+
+      <circle cx="750" cy="70" r="22"
+              fill="#ffffff" stroke="#0a3974" stroke-width="2"/>
+      <text x="750" y="70" fill="#0f264a">50</text>
+
+      <circle cx="645" cy="140" r="22"
+              fill="#ffffff" stroke="#0a3974" stroke-width="2"/>
+      <text x="645" y="140" fill="#0f264a">30</text>
+
+      <circle cx="855" cy="140" r="22"
+              fill="#fff4e6" stroke="#d9822b" stroke-width="2.5"/>
+      <text x="855" y="140" fill="#0f264a">80</text>
+
+      <circle cx="590" cy="220" r="22"
+              fill="#ffffff" stroke="#0a3974" stroke-width="2"/>
+      <text x="590" y="220" fill="#0f264a">20</text>
+
+      <circle cx="700" cy="220" r="22"
+              fill="#ffffff" stroke="#0a3974" stroke-width="2"/>
+      <text x="700" y="220" fill="#0f264a">40</text>
+
+      <circle cx="800" cy="220" r="22"
+              fill="#fff4e6" stroke="#d9822b" stroke-width="2.5"/>
+      <text x="800" y="220" fill="#0f264a">70</text>
+
+      <circle cx="910" cy="220" r="22"
+              fill="#ffffff" stroke="#0a3974" stroke-width="2"/>
+      <text x="910" y="220" fill="#0f264a">90</text>
+
+      <circle cx="765" cy="300" r="22"
+              fill="#ffffff" stroke="#0a3974" stroke-width="2"/>
+      <text x="765" y="300" fill="#0f264a">60</text>
+
+      <circle cx="835" cy="300" r="22"
+              fill="#eef6ff" stroke="#559ecb" stroke-width="2.5"/>
+      <text x="835" y="300" fill="#0f264a">75</text>
+
+      <circle cx="735" cy="380" r="22"
+              fill="#ffffff" stroke="#0a3974" stroke-width="2"/>
+      <text x="735" y="380" fill="#0f264a">55</text>
+
+      <circle cx="795" cy="380" r="22"
+              fill="#ffffff" stroke="#0a3974" stroke-width="2"/>
+      <text x="795" y="380" fill="#0f264a">65</text>
+    </g>
+
+    <!-- inorder sequences -->
+    <text x="250" y="450"
+          text-anchor="middle"
+          font-family="Verdana, sans-serif"
+          font-size="13"
+          fill="#334e68">
+      Inorder: 20, 30, 40, 50, 55, 60, 65, 70, 75, 80, 90
+    </text>
+
+    <text x="750" y="450"
+          text-anchor="middle"
+          font-family="Verdana, sans-serif"
+          font-size="13"
+          fill="#334e68">
+      Inorder: 20, 30, 40, 50, 55, 60, 65, 70, 75, 80, 90
+    </text>
+  </svg>
+
+  <p>
+    The two arrows emphasize that these operations are inverses: a left
+    rotation at \(70\) transforms the tree on the left into the tree on the
+    right, and a right rotation at \(80\) transforms the tree on the right
+    back into the tree on the left.
+  </p>
+
+  <p>
+    Although the structure of the right subtree changes, both trees have the
+    same inorder sequence:
+  </p>
+
+  \[
+    20,\ 30,\ 40,\ 50,\ 55,\ 60,\ 65,\ 70,\ 75,\ 80,\ 90.
+  \]
+
+  <p>
+    Thus, the rotation preserves the relative order of every key, including
+    keys outside the rotated subtree.
+  </p>
+</div>
+</section>
+
+<section id="rotation-height" section-title="How Rotations Change Depth and Height">
+  <h3>How Rotations Change Depth and Height</h3>
+
+  <p>
+    The preceding example illustrates how a rotation changes node depths.
+    A rotation affects depths only within the rotated subtree. Consider a left
+    rotation at a node <code>x</code> with right child <code>y</code> and
+    subtrees \(A\), \(B\), and \(C\).
+  </p>
+  <div style="
+  display:flex;
+  align-items:flex-start;
+  gap:1.25em;
+  flex-wrap:wrap;
+">
+  <div style="flex:1 1 300px;">
+  <ul>
+    <li>
+      <code>y</code> and every node in \(C\) move up by one level.
+    </li>
+    <li>
+      <code>x</code> and every node in \(A\) move down by one level.
+    </li>
+    <li>
+      Every node in \(B\) remains at the same depth.
+    </li>
+    <li>
+      Every node outside the rotated subtree remains at the same depth.
+    </li>
+  </ul>
+  </div>
+<div style="
+  flex: 0 0 350px;
+  max-width: 350px;
+  border: 1px solid #b8c2cc;
+  background-color: #ffffff;
+  padding: 8px;
+  box-sizing: border-box;
+">
+  <svg viewBox="0 0 360 210"
+       role="img"
+       aria-labelledby="miniLeftRotationTitle miniLeftRotationDesc"
+       style="display:block; width:100%; height:auto;">
+    <title id="miniLeftRotationTitle">Compact left rotation diagram</title>
+    <desc id="miniLeftRotationDesc">
+      Before the rotation, x has right child y. After a left rotation at x,
+      y moves above x, and subtree B becomes the right subtree of x.
+    </desc>
+
+    <defs>
+      <pattern id="miniLeftRotationHatch"
+               patternUnits="userSpaceOnUse"
+               width="6"
+               height="6">
+        <path d="M-2,2 L2,-2
+                 M0,6 L6,0
+                 M4,8 L8,4"
+              fill="none"
+              stroke="#9fb3c8"
+              stroke-width="1"/>
+      </pattern>
+
+      <marker id="miniLeftRotationArrow"
+              markerWidth="7"
+              markerHeight="7"
+              refX="6"
+              refY="3.5"
+              orient="auto">
+        <path d="M0,0 L7,3.5 L0,7 Z"
+              fill="#d9822b"/>
+      </marker>
+    </defs>
+
+    <!-- labels -->
+    <text x="83" y="15"
+          text-anchor="middle"
+          font-family="Verdana, sans-serif"
+          font-size="11"
+          font-weight="700"
+          fill="#0f264a">
+      Before
+    </text>
+
+    <text x="277" y="15"
+          text-anchor="middle"
+          font-family="Verdana, sans-serif"
+          font-size="11"
+          font-weight="700"
+          fill="#0f264a">
+      After
+    </text>
+
+    <!-- rotation arrow -->
+    <line x1="155" y1="58"
+          x2="205" y2="58"
+          stroke="#d9822b"
+          stroke-width="2"
+          marker-end="url(#miniLeftRotationArrow)"/>
+
+    <!-- ================= BEFORE ================= -->
+
+    <!-- edges -->
+    <g stroke="#0a3974"
+       stroke-width="1.6"
+       stroke-linecap="round">
+      <line x1="82" y1="40" x2="43" y2="87"/>
+      <line x1="82" y1="40" x2="121" y2="87"/>
+      <line x1="121" y1="87" x2="91" y2="143"/>
+      <line x1="121" y1="87" x2="151" y2="143"/>
+    </g>
+
+    <!-- nodes -->
+    <circle cx="82" cy="40" r="14"
+            fill="#ffffff"
+            stroke="#0a3974"
+            stroke-width="1.6"/>
+
+    <text x="82" y="40"
+          text-anchor="middle"
+          dominant-baseline="middle"
+          font-family="Verdana, sans-serif"
+          font-size="12"
+          font-weight="700"
+          fill="#0f264a">
+      x
+    </text>
+
+    <circle cx="121" cy="87" r="14"
+            fill="#ffffff"
+            stroke="#0a3974"
+            stroke-width="1.6"/>
+
+    <text x="121" y="87"
+          text-anchor="middle"
+          dominant-baseline="middle"
+          font-family="Verdana, sans-serif"
+          font-size="12"
+          font-weight="700"
+          fill="#0f264a">
+      y
+    </text>
+
+    <!-- subtree A -->
+    <polygon points="43,87 31,126 55,126"
+             fill="url(#miniLeftRotationHatch)"
+             stroke="#0a3974"
+             stroke-width="1.5"
+             stroke-linejoin="round"/>
+
+    <text x="43" y="113"
+          text-anchor="middle"
+          dominant-baseline="middle"
+          font-family="Verdana, sans-serif"
+          font-size="11"
+          font-weight="700"
+          fill="#0f264a">
+      A
+    </text>
+
+    <!-- subtree B -->
+    <polygon points="91,143 79,184 103,184"
+             fill="url(#miniLeftRotationHatch)"
+             stroke="#0a3974"
+             stroke-width="1.5"
+             stroke-linejoin="round"/>
+
+    <text x="91" y="170"
+          text-anchor="middle"
+          dominant-baseline="middle"
+          font-family="Verdana, sans-serif"
+          font-size="11"
+          font-weight="700"
+          fill="#0f264a">
+      B
+    </text>
+
+    <!-- subtree C -->
+    <polygon points="151,143 139,184 163,184"
+             fill="url(#miniLeftRotationHatch)"
+             stroke="#0a3974"
+             stroke-width="1.5"
+             stroke-linejoin="round"/>
+
+    <text x="151" y="170"
+          text-anchor="middle"
+          dominant-baseline="middle"
+          font-family="Verdana, sans-serif"
+          font-size="11"
+          font-weight="700"
+          fill="#0f264a">
+      C
+    </text>
+
+    <!-- ================= AFTER ================= -->
+
+    <!-- edges -->
+    <g stroke="#0a3974"
+       stroke-width="1.6"
+       stroke-linecap="round">
+      <line x1="278" y1="40" x2="239" y2="87"/>
+      <line x1="278" y1="40" x2="317" y2="87"/>
+      <line x1="239" y1="87" x2="209" y2="143"/>
+      <line x1="239" y1="87" x2="269" y2="143"/>
+    </g>
+
+    <!-- nodes -->
+    <circle cx="278" cy="40" r="14"
+            fill="#ffffff"
+            stroke="#0a3974"
+            stroke-width="1.6"/>
+
+    <text x="278" y="40"
+          text-anchor="middle"
+          dominant-baseline="middle"
+          font-family="Verdana, sans-serif"
+          font-size="12"
+          font-weight="700"
+          fill="#0f264a">
+      y
+    </text>
+
+    <circle cx="239" cy="87" r="14"
+            fill="#ffffff"
+            stroke="#0a3974"
+            stroke-width="1.6"/>
+
+    <text x="239" y="87"
+          text-anchor="middle"
+          dominant-baseline="middle"
+          font-family="Verdana, sans-serif"
+          font-size="12"
+          font-weight="700"
+          fill="#0f264a">
+      x
+    </text>
+
+    <!-- subtree A -->
+    <polygon points="209,143 197,184 221,184"
+             fill="url(#miniLeftRotationHatch)"
+             stroke="#0a3974"
+             stroke-width="1.5"
+             stroke-linejoin="round"/>
+
+    <text x="209" y="170"
+          text-anchor="middle"
+          dominant-baseline="middle"
+          font-family="Verdana, sans-serif"
+          font-size="11"
+          font-weight="700"
+          fill="#0f264a">
+      A
+    </text>
+
+    <!-- subtree B -->
+    <polygon points="269,143 257,184 281,184"
+             fill="url(#miniLeftRotationHatch)"
+             stroke="#0a3974"
+             stroke-width="1.5"
+             stroke-linejoin="round"/>
+
+    <text x="269" y="170"
+          text-anchor="middle"
+          dominant-baseline="middle"
+          font-family="Verdana, sans-serif"
+          font-size="11"
+          font-weight="700"
+          fill="#0f264a">
+      B
+    </text>
+
+    <!-- subtree C -->
+    <polygon points="317,87 305,126 329,126"
+             fill="url(#miniLeftRotationHatch)"
+             stroke="#0a3974"
+             stroke-width="1.5"
+             stroke-linejoin="round"/>
+
+    <text x="317" y="113"
+          text-anchor="middle"
+          dominant-baseline="middle"
+          font-family="Verdana, sans-serif"
+          font-size="11"
+          font-weight="700"
+          fill="#0f264a">
+      C
+    </text>
+  </svg>
+</div>
 </div>
 
-  </section>
 
-  <section id="rotation-height" section-title="How Rotations Change Depth and Height">
-    <h3>How Rotations Change Depth and Height</h3>
+  <p>
+    In the preceding example, after the left rotation at \(70\), nodes \(80\) and
+    \(90\) move up one level, while \(70\) and the subtree rooted at \(60\)
+    move down one level. Node \(75\), whose subtree is transferred from
+    \(80\) to \(70\), remains at the same depth.
+  </p>
 
-<p>
-  A rotation affects depths only within the rotated subtree. Consider again a
-  left rotation at <code>x</code>, with right child <code>y</code> and subtrees
-  \(A\), \(B\), and \(C\).
-</p>
+  <div class="lemma">
+    <strong>Rotation Locality.</strong>
+    A single rotation changes the depth of each node by at most one. It also
+    changes the height of the rotated subtree by at most one and, consequently,
+    changes the height of the entire tree by at most one.
+  </div>
 
-<ul>
-  <li>
-    <code>y</code> and every node in \(C\) move up by one level.
-  </li>
-  <li>
-    <code>x</code> and every node in \(A\) move down by one level.
-  </li>
-  <li>
-    Every node in \(B\) remains at the same depth.
-  </li>
-  <li>
-    Every node outside the rotated subtree remains at the same depth.
-  </li>
-</ul>
+  <p>
+    The height of a subtree is determined by the maximum depth of one of its
+    nodes relative to the subtree root. Since every node in the rotated subtree
+    moves up one level, moves down one level, or remains at the same level, the
+    height of that subtree can decrease by one, remain unchanged, or increase
+    by one. The rotated subtree remains attached at the same position in the
+    larger tree, so the height of the entire tree can also change by at most
+    one.
+  </p>
 
-<div class="remark-box">
-  <strong>Rotation Locality Lemma:</strong>
-  A single rotation changes the depth of each node by at most one. Consequently,
-  the height of the rotated subtree changes by at most one.
-</div>
+  <p>
+    The internal structures and heights of \(A\), \(B\), and \(C\) do not
+    change; only their attachment points change. However, the heights stored at
+    <code>x</code> and <code>y</code> may change and must be recomputed.
+    Height information stored at their ancestors may also need to be updated.
+  </p>
 
-<p>
-  The internal structures and heights of \(A\), \(B\), and \(C\) do not change.
-  Only their attachment points change. If a balanced tree stores height or other
-  balance information in its nodes, the information at the two rotated nodes must
-  be recomputed. Information stored at their ancestors may also need to be
-  updated.
-</p>
+  <p>
+    A rotation does not necessarily reduce the height of either the rotated
+    subtree or the entire tree. A balancing algorithm chooses a rotation whose
+    particular effect repairs a detected imbalance.
+  </p>
+</section>
 
-<p>
-  A rotation does not necessarily reduce the height of the entire tree. It changes
-  height in a controlled local way, and the balancing algorithm chooses rotations
-  that repair a particular violation.
-</p>
-
-  </section>
-
-  <section id="double-rotations" section-title="Double Rotations">
+<section id="double-rotations" section-title="Double Rotations">
   <h3>Double Rotations</h3>
 
   <p>
-    Sometimes a single rotation is sufficient to repair the shape of a subtree. In
-    other cases, the path through the affected nodes changes direction, and two
-    rotations are needed. A <strong>double rotation</strong> is not a separate
-    primitive operation; it is a sequence of two left or right rotations.
+    Sometimes a single rotation is enough to repair the shape of a subtree. In
+    other cases, the path through the affected nodes changes direction, so one
+    rotation is not enough. A <strong>double rotation</strong> is not a separate
+    primitive operation. Instead, it is a sequence consisting of 
+    one left rotation and one right rotation.
+  </p>
+
+  <p>
+    Conceptually, the first rotation straightens the "bend" in the subtree, and
+    the second rotation completes the restructuring.
   </p>
 
   <h4>Left-Right Rotation</h4>
 
   <p>
-    A left-right rotation first performs a left rotation on the left child and then
-    performs a right rotation on the original subtree root.
+    A left-right rotation applies when a subtree rooted at <code>z</code> has a
+    left child <code>y</code>, and <code>y</code> has a right child
+    <code>x</code>. First perform a left rotation at <code>y</code>. Then
+    perform a right rotation at <code>z</code>. This leads to the following pseudocode:
   </p>
 
   <pre><code>rotateLeftRight(z):
     rotateLeft(z.left)
     rotateRight(z)</code></pre>
 
-  <!-- Add a three-stage diagram for the left-right rotation here. -->
+    <div class="example-box" style="display:block;">
+  <strong class="example-title">Example 6: Left-Right Rotation as Two Single Rotations
+  </strong>
+
+  <p>
+    The initial path from <code>z</code> to <code>y</code> to <code>x</code>
+    turns left and then right. A left rotation at <code>y</code> first
+    straightens this path. A right rotation at <code>z</code> then completes
+    the double rotation.
+  </p>
+
+  <svg viewBox="0 0 1000 360"
+       role="img"
+       aria-labelledby="lrRotationTitle lrRotationDesc"
+       style="display:block; width:100%; max-width:1000px; height:auto; margin:1em auto;">
+    <title id="lrRotationTitle">
+      Left-right rotation shown as two single rotations
+    </title>
+    <desc id="lrRotationDesc">
+      A left-right rotation is shown in three stages. Initially, z has left
+      child y, and y has right child x. A left rotation at y produces the
+      middle tree. A right rotation at z produces the final tree.
+    </desc>
+
+    <defs>
+      <pattern id="lrRotationHatch"
+               patternUnits="userSpaceOnUse"
+               width="8"
+               height="8">
+        <path d="M-2,2 L2,-2
+                 M0,8 L8,0
+                 M6,10 L10,6"
+              fill="none"
+              stroke="#9fb3c8"
+              stroke-width="1.4"/>
+      </pattern>
+
+      <marker id="lrRotationArrow"
+              markerWidth="10"
+              markerHeight="10"
+              refX="9"
+              refY="5"
+              orient="auto">
+        <path d="M0,0 L10,5 L0,10 Z"
+              fill="#d9822b"/>
+      </marker>
+    </defs>
+
+    <!-- stage labels -->
+    <text x="150" y="25"
+          text-anchor="middle"
+          font-family="Verdana, sans-serif"
+          font-size="17"
+          font-weight="700"
+          fill="#0f264a">
+      Start
+    </text>
+
+    <text x="500" y="25"
+          text-anchor="middle"
+          font-family="Verdana, sans-serif"
+          font-size="17"
+          font-weight="700"
+          fill="#0f264a">
+      After rotateLeft(y)
+    </text>
+
+    <text x="850" y="25"
+          text-anchor="middle"
+          font-family="Verdana, sans-serif"
+          font-size="17"
+          font-weight="700"
+          fill="#0f264a">
+      After rotateRight(z)
+    </text>
+
+    <!-- arrows -->
+    <text x="315" y="70"
+          text-anchor="middle"
+          font-family="Verdana, sans-serif"
+          font-size="14"
+          fill="#0f264a">
+      Left rotation at y
+    </text>
+
+    <line x1="275" y1="90"
+          x2="355" y2="90"
+          stroke="#d9822b"
+          stroke-width="3"
+          marker-end="url(#lrRotationArrow)"/>
+
+    <text x="665" y="70"
+          text-anchor="middle"
+          font-family="Verdana, sans-serif"
+          font-size="14"
+          fill="#0f264a">
+      Right rotation at z
+    </text>
+
+    <line x1="625" y1="90"
+          x2="705" y2="90"
+          stroke="#d9822b"
+          stroke-width="3"
+          marker-end="url(#lrRotationArrow)"/>
+
+    <!-- ===================== STAGE 1 ===================== -->
+
+    <!-- edges -->
+    <g stroke="#0a3974"
+       stroke-width="2"
+       stroke-linecap="round">
+      <line x1="150" y1="55" x2="95" y2="115"/>
+      <line x1="150" y1="55" x2="205" y2="115"/>
+
+      <line x1="95" y1="115" x2="55" y2="175"/>
+      <line x1="95" y1="115" x2="135" y2="175"/>
+
+      <line x1="135" y1="175" x2="105" y2="245"/>
+      <line x1="135" y1="175" x2="165" y2="245"/>
+    </g>
+
+    <!-- nodes -->
+    <g font-family="Verdana, sans-serif"
+       font-size="16"
+       font-weight="700"
+       text-anchor="middle"
+       dominant-baseline="middle"
+       fill="#0f264a">
+
+      <circle cx="150" cy="55" r="22"
+              fill="#ffffff"
+              stroke="#0a3974"
+              stroke-width="2"/>
+      <text x="150" y="55">z</text>
+
+      <circle cx="95" cy="115" r="22"
+              fill="#ffffff"
+              stroke="#0a3974"
+              stroke-width="2"/>
+      <text x="95" y="115">y</text>
+
+      <circle cx="135" cy="175" r="22"
+              fill="#ffffff"
+              stroke="#0a3974"
+              stroke-width="2"/>
+      <text x="135" y="175">x</text>
+    </g>
+
+    <!-- subtrees -->
+    <polygon points="205,115 181,185 229,185"
+             fill="url(#lrRotationHatch)"
+             stroke="#0a3974"
+             stroke-width="2"
+             stroke-linejoin="round"/>
+
+    <text x="205" y="160"
+          text-anchor="middle"
+          dominant-baseline="middle"
+          font-family="Verdana, sans-serif"
+          font-size="16"
+          font-weight="700"
+          fill="#0f264a">
+      D
+    </text>
+
+    <polygon points="55,175 31,245 79,245"
+             fill="url(#lrRotationHatch)"
+             stroke="#0a3974"
+             stroke-width="2"
+             stroke-linejoin="round"/>
+
+    <text x="55" y="220"
+          text-anchor="middle"
+          dominant-baseline="middle"
+          font-family="Verdana, sans-serif"
+          font-size="16"
+          font-weight="700"
+          fill="#0f264a">
+      A
+    </text>
+
+    <polygon points="105,245 81,315 129,315"
+             fill="url(#lrRotationHatch)"
+             stroke="#0a3974"
+             stroke-width="2"
+             stroke-linejoin="round"/>
+
+    <text x="105" y="290"
+          text-anchor="middle"
+          dominant-baseline="middle"
+          font-family="Verdana, sans-serif"
+          font-size="16"
+          font-weight="700"
+          fill="#0f264a">
+      B
+    </text>
+
+    <polygon points="165,245 141,315 189,315"
+             fill="url(#lrRotationHatch)"
+             stroke="#0a3974"
+             stroke-width="2"
+             stroke-linejoin="round"/>
+
+    <text x="165" y="290"
+          text-anchor="middle"
+          dominant-baseline="middle"
+          font-family="Verdana, sans-serif"
+          font-size="16"
+          font-weight="700"
+          fill="#0f264a">
+      C
+    </text>
+
+    <!-- ===================== STAGE 2 ===================== -->
+
+    <!-- edges -->
+    <g stroke="#0a3974"
+       stroke-width="2"
+       stroke-linecap="round">
+      <line x1="500" y1="55" x2="445" y2="115"/>
+      <line x1="500" y1="55" x2="555" y2="115"/>
+
+      <line x1="445" y1="115" x2="405" y2="175"/>
+      <line x1="445" y1="115" x2="485" y2="175"/>
+
+      <line x1="405" y1="175" x2="365" y2="245"/>
+      <line x1="405" y1="175" x2="445" y2="245"/>
+    </g>
+
+    <!-- nodes -->
+    <g font-family="Verdana, sans-serif"
+       font-size="16"
+       font-weight="700"
+       text-anchor="middle"
+       dominant-baseline="middle"
+       fill="#0f264a">
+
+      <circle cx="500" cy="55" r="22"
+              fill="#ffffff"
+              stroke="#0a3974"
+              stroke-width="2"/>
+      <text x="500" y="55">z</text>
+
+      <circle cx="445" cy="115" r="22"
+              fill="#ffffff"
+              stroke="#0a3974"
+              stroke-width="2"/>
+      <text x="445" y="115">x</text>
+
+      <circle cx="405" cy="175" r="22"
+              fill="#ffffff"
+              stroke="#0a3974"
+              stroke-width="2"/>
+      <text x="405" y="175">y</text>
+    </g>
+
+    <!-- subtrees -->
+    <polygon points="555,115 531,185 579,185"
+             fill="url(#lrRotationHatch)"
+             stroke="#0a3974"
+             stroke-width="2"
+             stroke-linejoin="round"/>
+
+    <text x="555" y="160"
+          text-anchor="middle"
+          dominant-baseline="middle"
+          font-family="Verdana, sans-serif"
+          font-size="16"
+          font-weight="700"
+          fill="#0f264a">
+      D
+    </text>
+
+    <polygon points="485,175 461,245 509,245"
+             fill="url(#lrRotationHatch)"
+             stroke="#0a3974"
+             stroke-width="2"
+             stroke-linejoin="round"/>
+
+    <text x="485" y="220"
+          text-anchor="middle"
+          dominant-baseline="middle"
+          font-family="Verdana, sans-serif"
+          font-size="16"
+          font-weight="700"
+          fill="#0f264a">
+      C
+    </text>
+
+    <polygon points="365,245 341,315 389,315"
+             fill="url(#lrRotationHatch)"
+             stroke="#0a3974"
+             stroke-width="2"
+             stroke-linejoin="round"/>
+
+    <text x="365" y="290"
+          text-anchor="middle"
+          dominant-baseline="middle"
+          font-family="Verdana, sans-serif"
+          font-size="16"
+          font-weight="700"
+          fill="#0f264a">
+      A
+    </text>
+
+    <polygon points="445,245 421,315 469,315"
+             fill="url(#lrRotationHatch)"
+             stroke="#0a3974"
+             stroke-width="2"
+             stroke-linejoin="round"/>
+
+    <text x="445" y="290"
+          text-anchor="middle"
+          dominant-baseline="middle"
+          font-family="Verdana, sans-serif"
+          font-size="16"
+          font-weight="700"
+          fill="#0f264a">
+      B
+    </text>
+
+    <!-- ===================== STAGE 3 ===================== -->
+
+    <!-- edges -->
+    <g stroke="#0a3974"
+       stroke-width="2"
+       stroke-linecap="round">
+      <line x1="850" y1="55" x2="770" y2="115"/>
+      <line x1="850" y1="55" x2="930" y2="115"/>
+
+      <line x1="770" y1="115" x2="730" y2="185"/>
+      <line x1="770" y1="115" x2="810" y2="185"/>
+
+      <line x1="930" y1="115" x2="890" y2="185"/>
+      <line x1="930" y1="115" x2="970" y2="185"/>
+    </g>
+
+    <!-- nodes -->
+    <g font-family="Verdana, sans-serif"
+       font-size="16"
+       font-weight="700"
+       text-anchor="middle"
+       dominant-baseline="middle"
+       fill="#0f264a">
+
+      <circle cx="850" cy="55" r="22"
+              fill="#ffffff"
+              stroke="#0a3974"
+              stroke-width="2"/>
+      <text x="850" y="55">x</text>
+
+      <circle cx="770" cy="115" r="22"
+              fill="#ffffff"
+              stroke="#0a3974"
+              stroke-width="2"/>
+      <text x="770" y="115">y</text>
+
+      <circle cx="930" cy="115" r="22"
+              fill="#ffffff"
+              stroke="#0a3974"
+              stroke-width="2"/>
+      <text x="930" y="115">z</text>
+    </g>
+
+    <!-- final subtrees -->
+    <polygon points="730,185 706,255 754,255"
+             fill="url(#lrRotationHatch)"
+             stroke="#0a3974"
+             stroke-width="2"
+             stroke-linejoin="round"/>
+
+    <text x="730" y="230"
+          text-anchor="middle"
+          dominant-baseline="middle"
+          font-family="Verdana, sans-serif"
+          font-size="16"
+          font-weight="700"
+          fill="#0f264a">
+      A
+    </text>
+
+    <polygon points="810,185 786,255 834,255"
+             fill="url(#lrRotationHatch)"
+             stroke="#0a3974"
+             stroke-width="2"
+             stroke-linejoin="round"/>
+
+    <text x="810" y="230"
+          text-anchor="middle"
+          dominant-baseline="middle"
+          font-family="Verdana, sans-serif"
+          font-size="16"
+          font-weight="700"
+          fill="#0f264a">
+      B
+    </text>
+
+    <polygon points="890,185 866,255 914,255"
+             fill="url(#lrRotationHatch)"
+             stroke="#0a3974"
+             stroke-width="2"
+             stroke-linejoin="round"/>
+
+    <text x="890" y="230"
+          text-anchor="middle"
+          dominant-baseline="middle"
+          font-family="Verdana, sans-serif"
+          font-size="16"
+          font-weight="700"
+          fill="#0f264a">
+      C
+    </text>
+
+    <polygon points="970,185 946,255 994,255"
+             fill="url(#lrRotationHatch)"
+             stroke="#0a3974"
+             stroke-width="2"
+             stroke-linejoin="round"/>
+
+    <text x="970" y="230"
+          text-anchor="middle"
+          dominant-baseline="middle"
+          font-family="Verdana, sans-serif"
+          font-size="16"
+          font-weight="700"
+          fill="#0f264a">
+      D
+    </text>
+
+    <!-- note -->
+    <text x="500" y="345"
+          text-anchor="middle"
+          font-family="Verdana, sans-serif"
+          font-size="14"
+          fill="#334e68">
+      A, B, C, and D represent subtrees and may be empty.
+    </text>
+  </svg>
+
+  <p>
+    After the first rotation, <code>x</code> becomes the left child of
+    <code>z</code>, with <code>y</code> as its left child. The second rotation
+    moves <code>x</code> to the root of the local subtree. The subtrees remain
+    in the inorder sequence \(A, y, B, x, C, z, D\).
+  </p>
+</div>
 
   <h4>Right-Left Rotation</h4>
 
   <p>
-    A right-left rotation first performs a right rotation on the right child and then
-    performs a left rotation on the original subtree root.
+    A right-left rotation is the mirror-image case. It applies when a subtree
+    rooted at <code>z</code> has a right child <code>y</code>, and
+    <code>y</code> has a left child <code>x</code>. First perform a right
+    rotation at <code>y</code>. Then perform a left rotation at <code>z</code>.
+    The mirror-image sequence gives the following pseudocode:
   </p>
 
   <pre><code>rotateRightLeft(z):
     rotateRight(z.right)
     rotateLeft(z)</code></pre>
 
-  <!-- Add a three-stage diagram for the right-left rotation here. -->
+    <div class="example-box" style="display:block;">
+  <strong class="example-title">Example 7: Right-Left Rotation as Two Single Rotations
+  </strong>
 
   <p>
-    The AVL-tree page will show how subtree heights determine whether an imbalance
-    requires a single rotation or a double rotation. Red-black trees use the same
-    rotation operations but select them according to different rules.
+    The initial path from <code>z</code> to <code>y</code> to <code>x</code>
+    turns right and then left. A right rotation at <code>y</code> first
+    straightens this path. A left rotation at <code>z</code> then completes
+    the double rotation.
+  </p>
+
+  <svg viewBox="0 0 1000 360"
+       role="img"
+       aria-labelledby="rlRotationTitle rlRotationDesc"
+       style="display:block; width:100%; max-width:1000px; height:auto; margin:1em auto;">
+    <title id="rlRotationTitle">
+      Right-left rotation shown as two single rotations
+    </title>
+    <desc id="rlRotationDesc">
+      A right-left rotation is shown in three stages. Initially, z has right
+      child y, and y has left child x. A right rotation at y produces the
+      middle tree. A left rotation at z produces the final tree.
+    </desc>
+
+    <defs>
+      <pattern id="rlRotationHatch"
+               patternUnits="userSpaceOnUse"
+               width="8"
+               height="8">
+        <path d="M-2,2 L2,-2
+                 M0,8 L8,0
+                 M6,10 L10,6"
+              fill="none"
+              stroke="#9fb3c8"
+              stroke-width="1.4"/>
+      </pattern>
+
+      <marker id="rlRotationArrow"
+              markerWidth="10"
+              markerHeight="10"
+              refX="9"
+              refY="5"
+              orient="auto">
+        <path d="M0,0 L10,5 L0,10 Z"
+              fill="#d9822b"/>
+      </marker>
+    </defs>
+
+    <!-- stage labels -->
+    <text x="150" y="25"
+          text-anchor="middle"
+          font-family="Verdana, sans-serif"
+          font-size="17"
+          font-weight="700"
+          fill="#0f264a">
+      Start
+    </text>
+
+    <text x="500" y="25"
+          text-anchor="middle"
+          font-family="Verdana, sans-serif"
+          font-size="17"
+          font-weight="700"
+          fill="#0f264a">
+      After rotateRight(y)
+    </text>
+
+    <text x="850" y="25"
+          text-anchor="middle"
+          font-family="Verdana, sans-serif"
+          font-size="17"
+          font-weight="700"
+          fill="#0f264a">
+      After rotateLeft(z)
+    </text>
+
+    <!-- arrows -->
+    <text x="315" y="70"
+          text-anchor="middle"
+          font-family="Verdana, sans-serif"
+          font-size="14"
+          fill="#0f264a">
+      Right rotation at y
+    </text>
+
+    <line x1="275" y1="90"
+          x2="355" y2="90"
+          stroke="#d9822b"
+          stroke-width="3"
+          marker-end="url(#rlRotationArrow)"/>
+
+    <text x="665" y="70"
+          text-anchor="middle"
+          font-family="Verdana, sans-serif"
+          font-size="14"
+          fill="#0f264a">
+      Left rotation at z
+    </text>
+
+    <line x1="625" y1="90"
+          x2="705" y2="90"
+          stroke="#d9822b"
+          stroke-width="3"
+          marker-end="url(#rlRotationArrow)"/>
+
+    <!-- ===================== STAGE 1 ===================== -->
+
+    <!-- edges -->
+    <g stroke="#0a3974"
+       stroke-width="2"
+       stroke-linecap="round">
+      <line x1="150" y1="55" x2="95" y2="115"/>
+      <line x1="150" y1="55" x2="205" y2="115"/>
+
+      <line x1="205" y1="115" x2="165" y2="175"/>
+      <line x1="205" y1="115" x2="245" y2="175"/>
+
+      <line x1="165" y1="175" x2="135" y2="245"/>
+      <line x1="165" y1="175" x2="195" y2="245"/>
+    </g>
+
+    <!-- nodes -->
+    <g font-family="Verdana, sans-serif"
+       font-size="16"
+       font-weight="700"
+       text-anchor="middle"
+       dominant-baseline="middle"
+       fill="#0f264a">
+
+      <circle cx="150" cy="55" r="22"
+              fill="#ffffff"
+              stroke="#0a3974"
+              stroke-width="2"/>
+      <text x="150" y="55">z</text>
+
+      <circle cx="205" cy="115" r="22"
+              fill="#ffffff"
+              stroke="#0a3974"
+              stroke-width="2"/>
+      <text x="205" y="115">y</text>
+
+      <circle cx="165" cy="175" r="22"
+              fill="#ffffff"
+              stroke="#0a3974"
+              stroke-width="2"/>
+      <text x="165" y="175">x</text>
+    </g>
+
+    <!-- subtrees -->
+    <polygon points="95,115 71,185 119,185"
+             fill="url(#rlRotationHatch)"
+             stroke="#0a3974"
+             stroke-width="2"
+             stroke-linejoin="round"/>
+
+    <text x="95" y="160"
+          text-anchor="middle"
+          dominant-baseline="middle"
+          font-family="Verdana, sans-serif"
+          font-size="16"
+          font-weight="700"
+          fill="#0f264a">
+      A
+    </text>
+
+    <polygon points="245,175 221,245 269,245"
+             fill="url(#rlRotationHatch)"
+             stroke="#0a3974"
+             stroke-width="2"
+             stroke-linejoin="round"/>
+
+    <text x="245" y="220"
+          text-anchor="middle"
+          dominant-baseline="middle"
+          font-family="Verdana, sans-serif"
+          font-size="16"
+          font-weight="700"
+          fill="#0f264a">
+      D
+    </text>
+
+    <polygon points="135,245 111,315 159,315"
+             fill="url(#rlRotationHatch)"
+             stroke="#0a3974"
+             stroke-width="2"
+             stroke-linejoin="round"/>
+
+    <text x="135" y="290"
+          text-anchor="middle"
+          dominant-baseline="middle"
+          font-family="Verdana, sans-serif"
+          font-size="16"
+          font-weight="700"
+          fill="#0f264a">
+      B
+    </text>
+
+    <polygon points="195,245 171,315 219,315"
+             fill="url(#rlRotationHatch)"
+             stroke="#0a3974"
+             stroke-width="2"
+             stroke-linejoin="round"/>
+
+    <text x="195" y="290"
+          text-anchor="middle"
+          dominant-baseline="middle"
+          font-family="Verdana, sans-serif"
+          font-size="16"
+          font-weight="700"
+          fill="#0f264a">
+      C
+    </text>
+
+    <!-- ===================== STAGE 2 ===================== -->
+
+    <!-- edges -->
+    <g stroke="#0a3974"
+       stroke-width="2"
+       stroke-linecap="round">
+      <line x1="500" y1="55" x2="445" y2="115"/>
+      <line x1="500" y1="55" x2="555" y2="115"/>
+
+      <line x1="555" y1="115" x2="515" y2="175"/>
+      <line x1="555" y1="115" x2="595" y2="175"/>
+
+      <line x1="595" y1="175" x2="555" y2="245"/>
+      <line x1="595" y1="175" x2="635" y2="245"/>
+    </g>
+
+    <!-- nodes -->
+    <g font-family="Verdana, sans-serif"
+       font-size="16"
+       font-weight="700"
+       text-anchor="middle"
+       dominant-baseline="middle"
+       fill="#0f264a">
+
+      <circle cx="500" cy="55" r="22"
+              fill="#ffffff"
+              stroke="#0a3974"
+              stroke-width="2"/>
+      <text x="500" y="55">z</text>
+
+      <circle cx="555" cy="115" r="22"
+              fill="#ffffff"
+              stroke="#0a3974"
+              stroke-width="2"/>
+      <text x="555" y="115">x</text>
+
+      <circle cx="595" cy="175" r="22"
+              fill="#ffffff"
+              stroke="#0a3974"
+              stroke-width="2"/>
+      <text x="595" y="175">y</text>
+    </g>
+
+    <!-- subtrees -->
+    <polygon points="445,115 421,185 469,185"
+             fill="url(#rlRotationHatch)"
+             stroke="#0a3974"
+             stroke-width="2"
+             stroke-linejoin="round"/>
+
+    <text x="445" y="160"
+          text-anchor="middle"
+          dominant-baseline="middle"
+          font-family="Verdana, sans-serif"
+          font-size="16"
+          font-weight="700"
+          fill="#0f264a">
+      A
+    </text>
+
+    <polygon points="515,175 491,245 539,245"
+             fill="url(#rlRotationHatch)"
+             stroke="#0a3974"
+             stroke-width="2"
+             stroke-linejoin="round"/>
+
+    <text x="515" y="220"
+          text-anchor="middle"
+          dominant-baseline="middle"
+          font-family="Verdana, sans-serif"
+          font-size="16"
+          font-weight="700"
+          fill="#0f264a">
+      B
+    </text>
+
+    <polygon points="555,245 531,315 579,315"
+             fill="url(#rlRotationHatch)"
+             stroke="#0a3974"
+             stroke-width="2"
+             stroke-linejoin="round"/>
+
+    <text x="555" y="290"
+          text-anchor="middle"
+          dominant-baseline="middle"
+          font-family="Verdana, sans-serif"
+          font-size="16"
+          font-weight="700"
+          fill="#0f264a">
+      C
+    </text>
+
+    <polygon points="635,245 611,315 659,315"
+             fill="url(#rlRotationHatch)"
+             stroke="#0a3974"
+             stroke-width="2"
+             stroke-linejoin="round"/>
+
+    <text x="635" y="290"
+          text-anchor="middle"
+          dominant-baseline="middle"
+          font-family="Verdana, sans-serif"
+          font-size="16"
+          font-weight="700"
+          fill="#0f264a">
+      D
+    </text>
+
+    <!-- ===================== STAGE 3 ===================== -->
+
+    <!-- edges -->
+    <g stroke="#0a3974"
+       stroke-width="2"
+       stroke-linecap="round">
+      <line x1="850" y1="55" x2="770" y2="115"/>
+      <line x1="850" y1="55" x2="930" y2="115"/>
+
+      <line x1="770" y1="115" x2="730" y2="185"/>
+      <line x1="770" y1="115" x2="810" y2="185"/>
+
+      <line x1="930" y1="115" x2="890" y2="185"/>
+      <line x1="930" y1="115" x2="970" y2="185"/>
+    </g>
+
+    <!-- nodes -->
+    <g font-family="Verdana, sans-serif"
+       font-size="16"
+       font-weight="700"
+       text-anchor="middle"
+       dominant-baseline="middle"
+       fill="#0f264a">
+
+      <circle cx="850" cy="55" r="22"
+              fill="#ffffff"
+              stroke="#0a3974"
+              stroke-width="2"/>
+      <text x="850" y="55">x</text>
+
+      <circle cx="770" cy="115" r="22"
+              fill="#ffffff"
+              stroke="#0a3974"
+              stroke-width="2"/>
+      <text x="770" y="115">z</text>
+
+      <circle cx="930" cy="115" r="22"
+              fill="#ffffff"
+              stroke="#0a3974"
+              stroke-width="2"/>
+      <text x="930" y="115">y</text>
+    </g>
+
+    <!-- final subtrees -->
+    <polygon points="730,185 706,255 754,255"
+             fill="url(#rlRotationHatch)"
+             stroke="#0a3974"
+             stroke-width="2"
+             stroke-linejoin="round"/>
+
+    <text x="730" y="230"
+          text-anchor="middle"
+          dominant-baseline="middle"
+          font-family="Verdana, sans-serif"
+          font-size="16"
+          font-weight="700"
+          fill="#0f264a">
+      A
+    </text>
+
+    <polygon points="810,185 786,255 834,255"
+             fill="url(#rlRotationHatch)"
+             stroke="#0a3974"
+             stroke-width="2"
+             stroke-linejoin="round"/>
+
+    <text x="810" y="230"
+          text-anchor="middle"
+          dominant-baseline="middle"
+          font-family="Verdana, sans-serif"
+          font-size="16"
+          font-weight="700"
+          fill="#0f264a">
+      B
+    </text>
+
+    <polygon points="890,185 866,255 914,255"
+             fill="url(#rlRotationHatch)"
+             stroke="#0a3974"
+             stroke-width="2"
+             stroke-linejoin="round"/>
+
+    <text x="890" y="230"
+          text-anchor="middle"
+          dominant-baseline="middle"
+          font-family="Verdana, sans-serif"
+          font-size="16"
+          font-weight="700"
+          fill="#0f264a">
+      C
+    </text>
+
+    <polygon points="970,185 946,255 994,255"
+             fill="url(#rlRotationHatch)"
+             stroke="#0a3974"
+             stroke-width="2"
+             stroke-linejoin="round"/>
+
+    <text x="970" y="230"
+          text-anchor="middle"
+          dominant-baseline="middle"
+          font-family="Verdana, sans-serif"
+          font-size="16"
+          font-weight="700"
+          fill="#0f264a">
+      D
+    </text>
+
+    <!-- note -->
+    <text x="500" y="345"
+          text-anchor="middle"
+          font-family="Verdana, sans-serif"
+          font-size="14"
+          fill="#334e68">
+      A, B, C, and D represent subtrees and may be empty.
+    </text>
+  </svg>
+
+  <p>
+    After the first rotation, <code>x</code> becomes the right child of
+    <code>z</code>, with <code>y</code> as its right child. The second rotation
+    moves <code>x</code> to the root of the local subtree. The subtrees remain
+    in the inorder sequence \(A, z, B, x, C, y, D\).
+  </p>
+</div>
+
+ <p>
+  In the activities, we will explore a slightly more efficient implementation
+  that performs each double rotation directly rather than calling two separate
+  rotation methods. We will study double rotations in more detail on the
+  AVL-tree page, where subtree heights determine when they are needed.
+  Red-black trees also sometimes use two rotations in succession, although
+  they select rotations according to color and structural conditions rather
+  than height balance.
+</p>
+
+</section>
+
+
+<section id="rotation-demo" section-title="Rotation Demo">
+  <h3>Rotation Demo</h3>
+
+  <p>
+    The demo presents the same left, right, left-right, and right-left
+    rotations shown in the preceding diagrams, but allows you to move through
+    each transformation dynamically. Before performing a rotation, identify
+    the node that will move upward and any subtree whose attachment point will
+    change.
+  </p>
+
+  <p>
+    After each rotation, verify that the inorder sequence is unchanged. Also
+    compare the depths of the affected nodes and the height of the rotated
+    subtree before and after the operation. The animation emphasizes that a
+    rotation changes only a local part of the tree.
+  </p>
+
+  <p>
+    Later, on the AVL-tree page, we will apply these rotations within larger
+    search trees and see how an imbalance determines which rotation or sequence
+    of rotations is needed.
+  </p>
+
+  <div class="embeddedDemoContainer">
+    <iframe class="embeddedDemo"
+            src="/DAIADS/Content/Demos/Data Structures/Binary Search Tree/BST Rotation Demo.html"
+            allow="fullscreen"
+            name="bst-operations-demo">
+    </iframe>
+  </div>
+</section>
+
+<section id="rotation-cost" section-title="Complexity of Rotations">
+  <h3>Complexity of Rotations</h3>
+
+  <p>
+    The rotation algorithms may appear somewhat long because they must carefully
+    update the affected child and parent references, including the reference to
+    the transferred subtree. However, none of these steps traverses the tree or
+    depends on the number of stored nodes. A single rotation reads or changes
+    only a constant number of references and therefore takes \(O(1)\) time.
+  </p>
+
+  <p>
+    A double rotation performs two single rotations, so it also takes
+    \(O(1)\) time. If the nodes store height, balance factor, or similar information
+    that can be recomputed from their children, updating that information at
+    the rotated nodes also takes constant time. Both single and double
+    rotations use \(O(1)\) extra space.
   </p>
 </section>
 
+</section>
 
-  <section id="rotation-demo" section-title="Rotation Demo">
-    <h3>Rotation Demo</h3>
+<section id="comparison" section-title="Comparing Balanced Search Trees">
+  <h2>Comparing Balanced Search Trees</h2>
 
-<p>
-  Use the demo to perform left, right, left-right, and right-left rotations.
-  Before each rotation, identify the node that will move upward and the subtree
-  that will be transferred. Afterward, verify that the inorder sequence has not
-  changed.
-</p>
+  <p>
+    Balanced search-tree families achieve the same broad goal in different
+    ways. Each maintains \(O(\log n)\) height, but the trees differ in how
+    strictly they control their shape, what information is stored at each node,
+    and which operations are used to maintain balance. These differences affect
+    the lengths of search paths, the amount of restructuring required during
+    updates, and the environments in which each structure is most useful.
+  </p>
 
-<p>
-  Also compare the depths of the affected nodes and the height of the rotated
-  subtree before and after each operation. Notice that a rotation changes the
-  shape locally but leaves the remainder of the tree unchanged.
-</p>
+  <table class="example-table left-top-align">
+    <thead>
+      <tr>
+        <th>Structure</th>
+        <th>Node Type</th>
+        <th>Balance Approach</th>
+        <th>Typical Advantage</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>AVL tree</td>
+        <td>Binary</td>
+        <td>
+          The heights of the two child subtrees of every node differ by at most
+          one.
+        </td>
+        <td>
+          Strict balance keeps search paths especially short.
+        </td>
+      </tr>
+      <tr>
+        <td>Red-black tree</td>
+        <td>Binary</td>
+        <td>
+          Color rules limit how much root-to-leaf path lengths can differ.
+        </td>
+        <td>
+          Looser balance often requires less restructuring during updates than
+          an AVL tree.
+        </td>
+      </tr>
+      <tr>
+        <td>2-3 tree</td>
+        <td>Multiway</td>
+        <td>
+          Internal nodes have two or three children, and all leaves occur at
+          the same depth.
+        </td>
+        <td>
+          Provides a conceptually clean model of balancing through splitting,
+          promotion, redistribution, and merging.
+        </td>
+      </tr>
+      <tr>
+        <td>B-tree</td>
+        <td>Multiway</td>
+        <td>
+          Nodes store many keys and children within occupancy limits, and all
+          leaves occur at the same depth.
+        </td>
+        <td>
+          Broad nodes reduce the number of storage accesses needed to follow a
+          search path.
+        </td>
+      </tr>
+    </tbody>
+  </table>
 
-<!-- Add the interactive rotation demo here. -->
+  <p>
+    No one structure is best in every setting. AVL trees favor shorter search
+    paths, while red-black trees allow more flexibility during updates. The
+    2-3 tree provides a simple introduction to multiway balancing, and the
+    B-tree extends the same general ideas to nodes designed for external
+    storage. The following pages examine some of these in more detail,
+    including their balance rules and the operations used to maintain them.
+  </p>
+</section>
 
-  </section>
+<section id="pitfalls" section-title="Common Rotation Pitfalls">
+  <h2>Common Rotation Pitfalls</h2>
 
-  <section id="rotation-cost" section-title="Cost of Rotations">
-    <h3>Cost of Rotations</h3>
+  <ul>
+    <li>
+      <strong>Treating a rotation as a complete balancing algorithm:</strong>
+      A rotation only changes the local shape of a tree. The balance rules of
+      the particular tree family determine whether a rotation is needed, where
+      it should occur, and which direction to use.
+    </li>
 
-<p>
-  A single rotation changes only a constant number of references, so it takes
-  \(O(1)\) time. A double rotation consists of two single rotations and therefore
-  also takes \(O(1)\) time. Updating balance information at the rotated nodes also
-  takes constant time when that information can be computed from their children.
-</p>
+    <li>
+      <strong>Confusing the direction of a rotation:</strong>
+      A left rotation moves a right child upward, while a right rotation moves
+      a left child upward. The direction names the way the original subtree
+      root moves, not the direction from which the new root comes.
+    </li>
 
-<p>
-  The complete repair process may take longer because the algorithm must first
-  locate the violation and may need to continue checking ancestors after the
-  rotation. Those costs depend on the particular balanced-tree structure and will
-  be analyzed on the pages for AVL trees, red-black trees, and other balanced
-  search trees.
-</p>
+    <li>
+      <strong>Forgetting the transferred subtree:</strong>
+      During a left rotation, the left subtree of the node moving upward must
+      become the right subtree of the node moving downward. A right rotation
+      performs the symmetric transfer. Omitting this step can lose an entire
+      subtree or violate the binary search tree property.
+    </li>
 
-  </section>
+    <li>
+      <strong>Updating only the two rotated nodes:</strong>
+      The parent of the original subtree root must point to the new subtree
+      root. If the rotation occurs at the root of the entire tree, the tree's
+      <code>root</code> reference must be updated instead. All affected parent
+      references must agree with the corresponding child references.
+    </li>
+
+    <li>
+      <strong>Forgetting stored balance information:</strong>
+      If nodes store heights, balance factors, colors, or other information
+      used by the balancing algorithm, that information may need to be updated
+      after the references change.
+    </li>
+  </ul>
+</section>
+
+<section id="summary" section-title="Summary">
+  <h2>Summary</h2>
+
+  <p>
+    Balanced search trees maintain structural rules that keep their height
+    \(O(\log n)\). This prevents the long paths that can occur in an ordinary
+    binary search tree and guarantees logarithmic-time search, insertion, and
+    removal. Different tree families use different balance invariants, but all
+    are designed to prevent the tree from becoming too tall.
+  </p>
+
+  <p>
+    Balanced binary search trees such as AVL and red-black trees use
+    <strong>rotations</strong> to change the local shape of a tree. A rotation
+    preserves the stored keys, their inorder sequence, and therefore the binary
+    search tree property. A single rotation changes only a constant number of
+    references and takes \(O(1)\) time. Left-right and right-left rotations are
+    sequences of two single rotations and also take \(O(1)\) time.
+  </p>
+
+  <p>
+    Rotations are only repair operations; the balance rules of a particular
+    tree determine when and where they are used. AVL trees make these decisions
+    using subtree heights, while red-black trees use color-based rules.
+    Multiway search trees, including 2-3 trees and B-trees, maintain logarithmic
+    height using operations such as splitting, redistribution, and merging
+    rather than binary-tree rotations. The following pages develop these tree
+    families and their balancing procedures in more detail.
+  </p>
+</section>
+
+<section id="links" section-title="Helpful Links and Resources">
+  <h2>Helpful Links and Resources</h2>
+
+  <p>
+    The following resources provide additional background on balanced search
+    trees and more detailed explanations and visualizations of binary-tree
+    rotations.
+  </p>
+
+  <ul>
+    <li>
+      <a href="https://en.wikipedia.org/wiki/Self-balancing_binary_search_tree"
+         target="_blank">
+        Wikipedia: Self-Balancing Binary Search Tree
+      </a>:
+      An overview of search trees that maintain logarithmic height, including
+      several common balancing strategies.
+    </li>
+
+    <li>
+      <a href="https://en.wikipedia.org/wiki/Tree_rotation"
+        target="_blank">
+        Wikipedia: Tree Rotation
+      </a>:
+      A detailed explanation of left and right rotations, the relationships
+      they change, and the ordering they preserve.
+    </li>
+
+    <li>
+      <a href="https://visualgo.net/en/bst"
+        target="_blank">
+        VisuAlgo: Binary Search Tree and AVL Tree
+      </a>:
+      An interactive visualization of binary search tree operations and the
+      rotations used to maintain an AVL tree.
+    </li>
+
+    <li>
+      <a href="https://algs4.cs.princeton.edu/33balanced/"
+        target="_blank">
+        Algorithms, 4th Edition: Balanced Search Trees
+      </a>:
+      A discussion of 2-3 trees and red-black binary search trees that
+      illustrates the relationship between binary and multiway balancing.
+    </li>
+  </ul>
+</section>
+
+<section id="reading-questions" section-title="Reading Comprehension Questions">
+  <h2>Reading Comprehension Questions</h2>
+
+  <ol>
+    <li>
+      <strong>Why Balance Matters:</strong>
+      How does the height of a search tree affect the running times of search,
+      insertion, and removal? Compare the bounds for a balanced tree and a
+      degenerate binary search tree.
+    </li>
+    <li>
+      <strong>Balance Invariants:</strong>
+      Why does <em>balanced</em> not mean <em>perfect</em>? Describe one balance
+      rule used by a balanced binary search tree and one used by a multiway
+      search tree.
+    </li>
+
+    <li>
+      <strong>Maintaining Balance:</strong>
+      Why can insertion and removal create balance violations while an ordinary
+      search cannot? What determines which repair operation should be used?
+    </li>
+
+    <li>
+      <strong>Rotation Anatomy:</strong>
+      In a left rotation at a node <code>x</code> with right child
+      <code>y</code>, which node moves upward, which node moves downward, and
+      what happens to the left subtree of <code>y</code>?
+    </li>
+
+    <li>
+      <strong>Preserving the Search Tree Property:</strong>
+      Suppose a left rotation involves nodes \(x\) and \(y\) and subtrees
+      \(A\), \(B\), and \(C\). What is the inorder sequence before and after
+      the rotation, and why does this prove that the binary search tree
+      property is preserved?
+    </li>
+
+    <li>
+      <strong>Depth and Height:</strong>
+      During a left rotation, which nodes move up one level, which move down
+      one level, and which remain at the same depth? By how much can one
+      rotation change the height of the rotated subtree?
+    </li>
+
+    <li>
+      <strong>Double Rotations:</strong>
+      What two single rotations form a left-right rotation? Why is the first
+      rotation described as straightening a bend in the path?
+    </li>
+
+    <li>
+      <strong>Complexity of Rotations:</strong>
+      Why does a single rotation take \(O(1)\) time and \(O(1)\) extra space
+      even though its pseudocode contains several steps? Why does the same
+      asymptotic bound apply to a double rotation?
+    </li>
+  </ol>
+
+<button id="toggleAnswers"
+       class="show-answer"
+       aria-expanded="false">
+Show Answers </button>
+
+  <div id="answers" class="answer" hidden>
+    <ol>
+      <li>
+        <strong>Answer:</strong>
+        The main search-tree operations follow a constant number of paths, so
+        their running times are \(O(h)\), where \(h\) is the tree height. A
+        balanced tree has height \(O(\log n)\), giving \(O(\log n)\) operations.
+        A degenerate binary search tree can have height \(n-1\), giving
+        \(O(n)\) operations.
+      </li>
+      <li>
+        <strong>Answer:</strong>
+        A balanced tree need not have every level filled or have child
+        subtrees of equal height. It must satisfy the particular balance
+        invariant defined for its family. For example, an AVL tree requires
+        the heights of two child subtrees to differ by at most one. A 2-3 tree
+        allows internal nodes to have two or three children and requires all
+        leaves to occur at the same depth.
+      </li>
+
+      <li>
+        <strong>Answer:</strong>
+        An ordinary search does not change the tree, so it cannot create a new
+        structural violation. Insertion and removal change nodes or
+        relationships and may violate the balance invariant. The invariant of
+        the particular tree family determines whether a repair is needed and
+        which operation should be used.
+      </li>
+
+      <li>
+        <strong>Answer:</strong>
+        Node <code>y</code> moves upward into the former position of
+        <code>x</code>, and <code>x</code> moves downward to become the left
+        child of <code>y</code>. The left subtree of <code>y</code> becomes
+        the right subtree of <code>x</code>.
+      </li>
+
+      <li>
+        <strong>Answer:</strong>
+        Before the rotation, the inorder sequence is
+        \(A, x, B, y, C\). After the rotation, it is still
+        \(A, x, B, y, C\). Since the rotation preserves the relative order of
+        all keys, the inorder sequence remains increasing and the binary search
+        tree property is preserved.
+      </li>
+
+      <li>
+        <strong>Answer:</strong>
+        Node <code>y</code> and every node in \(C\) move up one level.
+        Node <code>x</code> and every node in \(A\) move down one level.
+        Every node in \(B\) remains at the same depth. Nodes outside the
+        rotated subtree are unaffected. The height of the rotated subtree can
+        decrease by one, remain unchanged, or increase by one.
+      </li>
+
+      <li>
+        <strong>Answer:</strong>
+        A left-right rotation first performs a left rotation at the left child
+        of the subtree root and then a right rotation at the subtree root. The
+        relevant path initially goes left and then right. The first rotation
+        changes this bent path into a one-direction path so that the second
+        rotation can complete the restructuring.
+      </li>
+
+      <li>
+        <strong>Answer:</strong>
+        A single rotation reads or changes only a fixed number of child,
+        parent, and root references. It does not traverse the tree, so the
+        amount of work does not depend on \(n\). It therefore takes \(O(1)\)
+        time and uses \(O(1)\) extra space. A double rotation performs two
+        constant-time single rotations, so it has the same asymptotic bounds.
+      </li>
+    </ol>
+  </div>
 </section>
 
 
-  <section id="multiway-balancing" section-title="Balancing Multiway Search Trees">
-    <h2>Balancing Multiway Search Trees</h2>
+<section id="activities" section-title="In-Class Activities">
+  <h2>In-Class Activities</h2>
 
-<p>
-  [Explain that 2-3 trees and B-trees are not binary trees and therefore do not use
-  binary-tree rotations as their main repair mechanism.]
-</p>
-
-<ul>
-  <li>
-    <strong>Splitting:</strong>
-    [A node containing too many keys is divided into smaller nodes.]
-  </li>
-  <li>
-    <strong>Promotion:</strong>
-    [A middle key is moved from a split node into its parent.]
-  </li>
-  <li>
-    <strong>Redistribution:</strong>
-    [Keys may be moved between neighboring nodes while preserving order.]
-  </li>
-  <li>
-    <strong>Merging:</strong>
-    [Underfull neighboring nodes may be combined during removal.]
-  </li>
-</ul>
-
-<div class="example-box">
-  <strong class="example-title">Example: Splitting a Multiway Node</strong>
-
-  <!-- Add a small 2-3-tree split diagram here. -->
-</div>
-
-<p>
-  [Explain that these operations preserve equal leaf depth and keep the tree
-  logarithmically short.]
-</p>
-
-  </section>
-
-  <section id="comparison" section-title="Comparing Balanced Search Trees">
-    <h2>Comparing Balanced Search Trees</h2>
-
-<p>
-  [Explain that balanced search-tree families make different tradeoffs involving
-  search height, update complexity, node width, and storage environment.]
-</p>
-
-<table class="example-table left-top-align">
-  <thead>
-    <tr>
-      <th>Structure</th>
-      <th>Node Type</th>
-      <th>Balance Approach</th>
-      <th>Main Strength</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>AVL tree</td>
-      <td>Binary</td>
-      <td>Strict height balance</td>
-      <td>Very short search paths</td>
-    </tr>
-    <tr>
-      <td>Red-black tree</td>
-      <td>Binary</td>
-      <td>Color-based path constraints</td>
-      <td>Efficient updates with guaranteed logarithmic height</td>
-    </tr>
-    <tr>
-      <td>2-3 tree</td>
-      <td>Multiway</td>
-      <td>All leaves at the same depth</td>
-      <td>Conceptually clean splitting and merging</td>
-    </tr>
-    <tr>
-      <td>B-tree</td>
-      <td>Multiway</td>
-      <td>All leaves at the same depth with broad nodes</td>
-      <td>Efficient access to external storage</td>
-    </tr>
-  </tbody>
-</table>
-
-<p>
-  [Provide links or transitions to the separate pages for each structure.]
-</p>
-
-  </section>
-
-  <section id="connections" section-title="Connections and Comparisons">
-    <h2>Connections and Comparisons</h2>
-
-<ul>
-  <li>
-    <strong>Plain binary search trees:</strong>
-    [Balanced BSTs preserve the same search tree property and operations but add
-    rules that prevent linear height.]
-  </li>
-  <li>
-    <strong>Heaps:</strong>
-    [Heaps maintain a different ordering rule and are optimized for finding one
-    extreme key rather than arbitrary ordered queries.]
-  </li>
-  <li>
-    <strong>Sorted arrays:</strong>
-    [Sorted arrays provide logarithmic search but may require linear-time shifting
-    for updates.]
-  </li>
-  <li>
-    <strong>Hash tables:</strong>
-    [Hash tables provide fast expected exact-key operations but do not preserve
-    sorted order.]
-  </li>
-</ul>
-
-  </section>
-
-  <section id="pitfalls" section-title="Common Pitfalls">
-    <h2>Common Pitfalls</h2>
-
-<ul>
-  <li>
-    <strong>Assuming balanced means perfect:</strong>
-    [Explain the distinction.]
-  </li>
-  <li>
-    <strong>Treating a rotation as a complete balancing algorithm:</strong>
-    [Explain that a tree-specific invariant determines when and where rotations
-    are used.]
-  </li>
-  <li>
-    <strong>Forgetting the transferred subtree:</strong>
-    [Explain how a subtree between the pivot keys must be reattached.]
-  </li>
-  <li>
-    <strong>Failing to update the root:</strong>
-    [Explain the special case when the rotated node was the root.]
-  </li>
-  <li>
-    <strong>Failing to update parent references:</strong>
-    [Explain that all changed parent-child relationships must agree.]
-  </li>
-  <li>
-    <strong>Forgetting balance metadata:</strong>
-    [Explain that heights, balance factors, colors, or other stored information may
-    require updates.]
-  </li>
-  <li>
-    <strong>Assuming all balanced search trees use rotations:</strong>
-    [Explain that multiway trees use splitting, redistribution, and merging.]
-  </li>
-</ul>
-
-  </section>
-
-  <section id="summary" section-title="Summary">
-    <h2>Summary</h2>
-
-<p>
-  [Summarize why logarithmic height is important and how balanced search trees add
-  structural rules to prevent degeneration.]
-</p>
-
-<p>
-  [Summarize rotations as constant-time binary-search-tree transformations that
-  preserve inorder order.]
-</p>
-
-<p>
-  [Contrast balancing in binary and multiway search trees and preview the separate
-  AVL, red-black, 2-3-tree, and B-tree pages.]
-</p>
-
-  </section>
-
-  <section id="links" section-title="Helpful Links and Resources">
-    <h2>Helpful Links and Resources</h2>
-
-<ul>
-  <li>
-    <a href="URL1" target="_blank">[Resource title]</a>:
-    [Short description.]
-  </li>
-  <li>
-    <a href="URL2" target="_blank">[Resource title]</a>:
-    [Short description.]
-  </li>
-  <li>
-    <a href="URL3" target="_blank">[Resource title]</a>:
-    [Short description.]
-  </li>
-</ul>
-
-  </section>
-
-  <section id="reading-questions" section-title="Reading Comprehension Questions">
-    <h2>Reading Comprehension Questions</h2>
-
-<ol>
-  <li>
-    <strong>Why Balance Matters:</strong>
-    [Question about height-dependent operation costs.]
-  </li>
-  <li>
-    <strong>Meaning of Balance:</strong>
-    [Question explaining why different tree families use different balance rules.]
-  </li>
-  <li>
-    <strong>Left Rotation:</strong>
-    [Question identifying the pivot and transferred subtree.]
-  </li>
-  <li>
-    <strong>Preserving Order:</strong>
-    [Question explaining why a rotation preserves the search tree property.]
-  </li>
-  <li>
-    <strong>Double Rotations:</strong>
-    [Question describing a left-right or right-left rotation.]
-  </li>
-  <li>
-    <strong>Binary and Multiway Trees:</strong>
-    [Question comparing rotations with splitting and merging.]
-  </li>
-  <li>
-    <strong>Analysis:</strong>
-    [Question explaining why updates remain \(O(\log n)\).]
-  </li>
-</ol>
-
-<button id="toggleAnswers"
-        class="show-answer"
-        aria-expanded="false">
-  Show Answers
-</button>
-
-<div id="answers" class="answer" hidden>
   <ol>
-    <li><strong>Answer:</strong> [Answer placeholder.]</li>
-    <li><strong>Answer:</strong> [Answer placeholder.]</li>
-    <li><strong>Answer:</strong> [Answer placeholder.]</li>
-    <li><strong>Answer:</strong> [Answer placeholder.]</li>
-    <li><strong>Answer:</strong> [Answer placeholder.]</li>
-    <li><strong>Answer:</strong> [Answer placeholder.]</li>
-    <li><strong>Answer:</strong> [Answer placeholder.]</li>
+    <li>
+  <strong>Compare Search Costs in Two Tree Shapes:</strong>
+  Insert the keys
+  \[
+    42,18,67,9,31,54,73,26,60
+  \]
+  into an ordinary binary search tree in the order shown. Then construct a
+  second binary search tree containing the same keys by inserting them in the
+  order
+  \[
+    9,18,31,26,42,54,67,60,73.
+  \]
+
+  <ol type="a">
+    <li>Draw both trees and determine their heights.</li>
+    <li>
+      Explain why the first tree has a reasonably balanced shape even though
+      it is not perfect.
+    </li>
+    <li>List the nodes visited when searching for \(60\) in each tree.</li>
+    <li>
+      List the nodes visited during an unsuccessful search for \(65\) in each
+      tree.
+    </li>
+    <li>
+      Explain how the example illustrates the relationship between tree shape,
+      height, and search cost.
+    </li>
+    <li>
+      Give a different insertion order for these keys that produces a tree
+      with smaller height than the second tree but greater height than the
+      first.
+    </li>
   </ol>
-</div>
+</li>
 
-  </section>
+<li>
+  <strong>Perform Several Rotations on One Tree:</strong>
+  Use the following tree for every part. Begin each part again with the
+  original tree rather than using the result of the preceding part.
 
-  <section id="activities" section-title="In-Class Activities">
-    <h2>In-Class Activities</h2>
+  <svg viewBox="0 20 900 360"
+       role="img"
+       aria-labelledby="activityRotationTreeTitle activityRotationTreeDesc"
+       style="display:block; width:100%; max-width:900px; height:auto; margin:1em auto;">
+    <title id="activityRotationTreeTitle">
+      Binary search tree for practicing rotations
+    </title>
+    <desc id="activityRotationTreeDesc">
+      The root is 50. Its left child is 30, with children 20 and 40.
+      Its right child is 70. Node 70 has left child 60 and right child 80.
+      Node 60 has children 55 and 65. Node 80 has children 75 and 90.
+    </desc>
 
-<ol>
-  <li>
-    <strong>Compare Tree Heights:</strong>
-    [Construct balanced and degenerate BSTs from specified insertion orders.]
-  </li>
-  <li>
-    <strong>Perform a Left Rotation:</strong>
-    [Trace all link changes on a specified tree.]
-  </li>
-  <li>
-    <strong>Perform a Right Rotation:</strong>
-    [Trace all link changes on a specified tree.]
-  </li>
-  <li>
-    <strong>Verify the Inorder Sequence:</strong>
-    [List inorder traversals before and after several rotations.]
-  </li>
-  <li>
-    <strong>Build Double Rotations:</strong>
-    [Express left-right and right-left rotations as sequences of single rotations.]
-  </li>
-  <li>
-    <strong>Classify Balance Rules:</strong>
-    [Match AVL, red-black, 2-3, and B-tree descriptions with their repair methods.]
-  </li>
-  <li>
-    <strong>Explore the Rotation Demo:</strong>
-    [Use specified examples to identify pivots, transferred subtrees, and root
-    changes.]
-  </li>
-</ol>
+    <g stroke="#0a3974"
+       stroke-width="2.5"
+       stroke-linecap="round">
+      <line x1="450" y1="55" x2="260" y2="140"/>
+      <line x1="450" y1="55" x2="640" y2="140"/>
 
-  </section>
+      <line x1="260" y1="140" x2="170" y2="235"/>
+      <line x1="260" y1="140" x2="350" y2="235"/>
 
-  <section id="problems" section-title="Homework Problems">
-    <h2>Homework Problems</h2>
+      <line x1="640" y1="140" x2="550" y2="235"/>
+      <line x1="640" y1="140" x2="730" y2="235"/>
 
-<ol>
-  <li>
-    <strong>Trace Rotations:</strong>
-    [Perform a specified sequence of left and right rotations.]
-  </li>
-  <li>
-    <strong>Implement Left Rotation:</strong>
-    [Complete code with child, parent, and root-reference updates.]
-  </li>
-  <li>
-    <strong>Implement Right Rotation:</strong>
-    [Develop the symmetric operation.]
-  </li>
-  <li>
-    <strong>Prove Rotation Correctness:</strong>
-    [Prove that rotations preserve the search tree property.]
-  </li>
-  <li>
-    <strong>Analyze Repair Costs:</strong>
-    [Show why a logarithmic number of constant-time repairs remains
-    \(O(\log n)\).]
-  </li>
-  <li>
-    <strong>Compare Balance Strategies:</strong>
-    [Compare binary rotations with multiway splitting and merging.]
-  </li>
-  <li>
-    <strong>Design a Rotation Test Suite:</strong>
-    [Test root rotations, transferred subtrees, missing children, and parent
-    references.]
-  </li>
-</ol>
+      <line x1="550" y1="235" x2="500" y2="330"/>
+      <line x1="550" y1="235" x2="600" y2="330"/>
 
-  </section>
+      <line x1="730" y1="235" x2="680" y2="330"/>
+      <line x1="730" y1="235" x2="780" y2="330"/>
+    </g>
+
+    <g font-family="Verdana, sans-serif"
+       font-size="17"
+       font-weight="700"
+       text-anchor="middle"
+       dominant-baseline="middle"
+       fill="#0f264a">
+
+      <circle cx="450" cy="55" r="25"
+              fill="#ffffff"
+              stroke="#0a3974"
+              stroke-width="2.5"/>
+      <text x="450" y="55">50</text>
+
+      <circle cx="260" cy="140" r="25"
+              fill="#ffffff"
+              stroke="#0a3974"
+              stroke-width="2.5"/>
+      <text x="260" y="140">30</text>
+
+      <circle cx="640" cy="140" r="25"
+              fill="#ffffff"
+              stroke="#0a3974"
+              stroke-width="2.5"/>
+      <text x="640" y="140">70</text>
+
+      <circle cx="170" cy="235" r="25"
+              fill="#ffffff"
+              stroke="#0a3974"
+              stroke-width="2.5"/>
+      <text x="170" y="235">20</text>
+
+      <circle cx="350" cy="235" r="25"
+              fill="#ffffff"
+              stroke="#0a3974"
+              stroke-width="2.5"/>
+      <text x="350" y="235">40</text>
+
+      <circle cx="550" cy="235" r="25"
+              fill="#ffffff"
+              stroke="#0a3974"
+              stroke-width="2.5"/>
+      <text x="550" y="235">60</text>
+
+      <circle cx="730" cy="235" r="25"
+              fill="#ffffff"
+              stroke="#0a3974"
+              stroke-width="2.5"/>
+      <text x="730" y="235">80</text>
+
+      <circle cx="500" cy="330" r="25"
+              fill="#ffffff"
+              stroke="#0a3974"
+              stroke-width="2.5"/>
+      <text x="500" y="330">55</text>
+
+      <circle cx="600" cy="330" r="25"
+              fill="#ffffff"
+              stroke="#0a3974"
+              stroke-width="2.5"/>
+      <text x="600" y="330">65</text>
+
+      <circle cx="680" cy="330" r="25"
+              fill="#ffffff"
+              stroke="#0a3974"
+              stroke-width="2.5"/>
+      <text x="680" y="330">75</text>
+
+      <circle cx="780" cy="330" r="25"
+              fill="#ffffff"
+              stroke="#0a3974"
+              stroke-width="2.5"/>
+      <text x="780" y="330">90</text>
+    </g>
+  </svg>
+
+  Draw the resulting tree after each of the following independent
+  operations:
+  <ol type="a">
+    <li>Perform a left rotation at \(30\).</li>
+    <li>Perform a right rotation at \(70\).</li>
+    <li>Perform a left rotation at \(50\).</li>
+    <li>
+      Perform a left-right rotation at \(70\): first rotate left at
+      \(60\), and then rotate right at \(70\).
+    </li>
+    <li>
+      Perform a right-left rotation at \(50\): first rotate right at
+      \(70\), and then rotate left at \(50\).
+    </li>
+  </ol>
+
+  For each part, identify the new root of the rotated subtree and any
+  subtree that changes attachment points. Verify the result by listing its
+  inorder traversal. Finally, discuss how the height/depth of the nodes changed
+  and how the rotation affected the height of the tree.
+</li>
+<li>
+  <strong>Which Rotations Actually Help?</strong>
+  Use the tree from the previous activity.
+
+  <ol type="a">
+    <li>
+      List every node at which a left rotation can legally be performed.
+    </li>
+    <li>
+      List every node at which a right rotation can legally be performed.
+    </li>
+    <li>
+      For each legal rotation, determine the height of the resulting tree.
+    </li>
+    <li>
+      Classify each rotation as improving, preserving, or worsening the height
+      of the tree.
+    </li>
+    <li>
+      Explain why knowing that a rotation is legal is not enough to determine
+      whether it should be performed.
+    </li>
+    <li>If time permits, repeat for the left-right and right-left rotations.</li>
+  </ol>
+</li>
+
+<li>
+  <strong>Choose a Rotation to Restore Balance:</strong>
+  For this activity, call a node <em>unbalanced</em> when the heights of its
+  left and right subtrees differ by more than one. Treat each tree independently.
+
+  <p>
+    For each tree:
+  </p>
+
+  <ol type="a">
+    <li>
+      Identify the lowest unbalanced node, or state that no node is unbalanced.
+    </li>
+    <li>
+      Choose one of the following repairs: a left rotation, a right rotation,
+      a left-right rotation, a right-left rotation, or no rotation.
+    </li>
+    <li>
+      State the node at which each rotation should be performed and why it is
+      the best rotation to use in the situation.
+    </li>
+    <li>Draw the resulting tree.</li>
+    <li>
+      Compare the height of the affected subtree before and after the repair.
+    </li>
+  </ol>
+
+<svg viewBox="0 0 1080 560"
+    role="img"
+    aria-labelledby="chooseRotationTitle chooseRotationDesc"
+    style="display:block; width:100%; max-width:1080px; height:auto; margin:1em auto;"> <title id="chooseRotationTitle">
+Six binary search trees for choosing balancing rotations </title> <desc id="chooseRotationDesc">
+Six labeled binary search trees are arranged in two rows of three.
+The trees include left-left, right-right, left-right, right-left,
+already balanced, and lower-subtree imbalance cases. </desc>
+<!-- panel labels -->
+<g font-family="Verdana, sans-serif"
+   font-size="18"
+   font-weight="700"
+   text-anchor="middle"
+   fill="#0f264a">
+  <text x="170" y="28">Tree A</text>
+  <text x="525" y="28">Tree B</text>
+  <text x="880" y="28">Tree C</text>
+
+  <text x="170" y="300">Tree D</text>
+  <text x="525" y="300">Tree E</text>
+  <text x="880" y="300">Tree F</text>
+</g>
+
+<!-- panel separators -->
+<g fill="none"
+   stroke="#b8c2cc"
+   stroke-width="1.5"
+   stroke-dasharray="6 5">
+  <rect x="10" y="8" width="320" height="245" rx="8"/>
+  <rect x="365" y="8" width="320" height="245" rx="8"/>
+  <rect x="720" y="8" width="350" height="245" rx="8"/>
+
+  <rect x="10" y="280" width="320" height="265" rx="8"/>
+  <rect x="365" y="280" width="320" height="265" rx="8"/>
+  <rect x="720" y="280" width="350" height="265" rx="8"/>
+</g>
+
+<!-- ==================== TREE A ==================== -->
+
+<g stroke="#0a3974"
+   stroke-width="2.5"
+   stroke-linecap="round">
+  <line x1="170" y1="70" x2="125" y2="130"/>
+  <line x1="125" y1="130" x2="80" y2="195"/>
+</g>
+
+<!-- ==================== TREE B ==================== -->
+
+<g stroke="#0a3974"
+   stroke-width="2.5"
+   stroke-linecap="round">
+  <line x1="525" y1="70" x2="570" y2="130"/>
+  <line x1="570" y1="130" x2="615" y2="195"/>
+</g>
+
+<!-- ==================== TREE C ==================== -->
+
+<g stroke="#0a3974"
+   stroke-width="2.5"
+   stroke-linecap="round">
+  <line x1="880" y1="70" x2="825" y2="130"/>
+  <line x1="825" y1="130" x2="875" y2="195"/>
+</g>
+
+<!-- ==================== TREE D ==================== -->
+
+<g stroke="#0a3974"
+   stroke-width="2.5"
+   stroke-linecap="round">
+  <line x1="170" y1="340" x2="225" y2="400"/>
+  <line x1="225" y1="400" x2="175" y2="465"/>
+</g>
+
+<!-- ==================== TREE E ==================== -->
+
+<g stroke="#0a3974"
+   stroke-width="2.5"
+   stroke-linecap="round">
+  <line x1="525" y1="340" x2="465" y2="400"/>
+  <line x1="525" y1="340" x2="585" y2="400"/>
+  <line x1="465" y1="400" x2="505" y2="465"/>
+  <line x1="585" y1="400" x2="545" y2="465"/>
+</g>
+
+<!-- ==================== TREE F ==================== -->
+
+<g stroke="#0a3974"
+   stroke-width="2.5"
+   stroke-linecap="round">
+  <line x1="880" y1="330" x2="790" y2="385"/>
+  <line x1="880" y1="330" x2="970" y2="385"/>
+  <line x1="790" y1="385" x2="840" y2="445"/>
+  <line x1="840" y1="445" x2="800" y2="510"/>
+</g>
+
+<!-- nodes and values -->
+<g font-family="Verdana, sans-serif"
+   font-size="16"
+   font-weight="700"
+   text-anchor="middle"
+   dominant-baseline="middle"
+   fill="#0f264a">
+
+  <!-- Tree A -->
+  <circle cx="170" cy="70" r="23"
+          fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+  <text x="170" y="70">50</text>
+
+  <circle cx="125" cy="130" r="23"
+          fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+  <text x="125" y="130">30</text>
+
+  <circle cx="80" cy="195" r="23"
+          fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+  <text x="80" y="195">20</text>
+
+  <!-- Tree B -->
+  <circle cx="525" cy="70" r="23"
+          fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+  <text x="525" y="70">20</text>
+
+  <circle cx="570" cy="130" r="23"
+          fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+  <text x="570" y="130">40</text>
+
+  <circle cx="615" cy="195" r="23"
+          fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+  <text x="615" y="195">50</text>
+
+  <!-- Tree C -->
+  <circle cx="880" cy="70" r="23"
+          fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+  <text x="880" y="70">50</text>
+
+  <circle cx="825" cy="130" r="23"
+          fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+  <text x="825" y="130">20</text>
+
+  <circle cx="875" cy="195" r="23"
+          fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+  <text x="875" y="195">40</text>
+
+  <!-- Tree D -->
+  <circle cx="170" cy="340" r="23"
+          fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+  <text x="170" y="340">20</text>
+
+  <circle cx="225" cy="400" r="23"
+          fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+  <text x="225" y="400">50</text>
+
+  <circle cx="175" cy="465" r="23"
+          fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+  <text x="175" y="465">40</text>
+
+  <!-- Tree E -->
+  <circle cx="525" cy="340" r="23"
+          fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+  <text x="525" y="340">40</text>
+
+  <circle cx="465" cy="400" r="23"
+          fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+  <text x="465" y="400">20</text>
+
+  <circle cx="585" cy="400" r="23"
+          fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+  <text x="585" y="400">60</text>
+
+  <circle cx="495" cy="465" r="23"
+          fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+  <text x="495" y="465">30</text>
+
+  <circle cx="555" cy="465" r="23"
+          fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+  <text x="555" y="465">50</text>
+
+  <!-- Tree F -->
+  <circle cx="880" cy="330" r="23"
+          fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+  <text x="880" y="330">60</text>
+
+  <circle cx="790" cy="385" r="23"
+          fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+  <text x="790" y="385">30</text>
+
+  <circle cx="970" cy="385" r="23"
+          fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+  <text x="970" y="385">90</text>
+
+  <circle cx="840" cy="445" r="23"
+          fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+  <text x="840" y="445">50</text>
+
+  <circle cx="800" cy="510" r="23"
+          fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+  <text x="800" y="510">40</text>
+</g>
+  </svg>
+</li>
+
+<li>
+  <strong>Debug an Incorrect Rotation:</strong>
+  The following method attempts a left rotation but contains several
+  errors.<br>
+
+  <pre><code>brokenRotateLeft(x):
+y = x.right
+x.right = y.left
+y.left = x
+y.parent = x.parent</code></pre>
+
+  <p>Test the method on a tree in which:</p>
+  <ul>
+    <li><code>x</code> is the root,</li>
+    <li><code>y.left</code> is not <code>null</code>,</li>
+    <li><code>y.left</code> has at least one child, and </li>
+    <li><code>y.right</code> is <code>null</code>.</li>
+  </ul>
+
+  Identify every missing reference update. For each omission, explain
+  whether it causes a lost subtree, an incorrect parent reference, an
+  incorrect root reference, or disagreement between parent and child
+  references. Without looking at the page above, rewrite the method correctly.
+</li>
+
+
+<li>
+  <strong>Implement a Direct Left-Right Rotation:</strong>
+  The page defines a left-right rotation by calling
+  <code>rotateLeft(z.left)</code> followed by
+  <code>rotateRight(z)</code>. Write a method
+  <code>rotateLeftRight(z)</code> that performs the same transformation
+  directly, without calling either single-rotation method.
+
+  <p>
+    Use the left-right rotation diagram to determine how the affected child,
+    parent, and root references must change.
+  </p>
+
+  <ol type="a">
+    <li>State the assumptions that must hold about the subtree rooted at <code>z</code> 
+    before a left-right rotation can be performed. </li>
+    <li>Give pseudocode for the direct implementation.</li>
+    <li>
+      Count the number of comparisons and reference assignments performed by
+      your method.
+    </li>
+    <li>
+      Count the corresponding operations performed when the two general
+      rotation methods are called.
+    </li>
+    <li>
+      Compare the two implementations. Identify which operations the direct
+      implementation avoids and explain why both methods still take
+      \(O(1)\) time.
+    </li>
+    <li>Which one do you prefer conceptually? Which one is a better implementation and why?</li>
+  </ol>
+</li>
+
+<li>
+  <strong>Predict and Check Rotations:</strong>
+  Use the rotation demo for each of the four rotation types. Before starting
+  each animation, predict:
+  <ol type="a">
+    <li>which node will become the root of the displayed subtree,</li>
+    <li>which subtree or subtrees will change attachment points, and</li>
+    <li>whether the height of the displayed subtree will change.</li>
+  </ol>
+
+Run the animation and check each prediction. For the left-right and
+right-left rotations, pause after the first rotation and explain how it
+prepares the subtree for the second rotation.
+</li>
+<li>
+  <strong>Transform One Tree into Another:</strong>
+  The two binary search trees below contain the same keys. Transform the
+  starting tree into the target tree using rotations.
+
+<svg viewBox="0 0 1000 410"
+    role="img"
+    aria-labelledby="rotationSequenceTitle rotationSequenceDesc"
+    style="display:block; width:100%; max-width:1000px; height:auto; margin:1em auto;"> <title id="rotationSequenceTitle">
+Starting and target binary search trees for a rotation sequence </title> <desc id="rotationSequenceDesc">
+The starting tree has root 80, with left child 50 and right child 90.
+Node 50 has children 30 and 60. Node 30 has left child 10, which has
+right child 20. Node 60 has right child 70. The target tree has root 50,
+with left child 20 and right child 80. Node 20 has children 10 and 30.
+Node 80 has children 70 and 90, and node 70 has left child 60. </desc>
+
+<!-- headings -->
+<g font-family="Verdana, sans-serif"
+   font-size="19"
+   font-weight="700"
+   text-anchor="middle"
+   fill="#0f264a">
+  <text x="250" y="28">Starting Tree</text>
+  <text x="750" y="28">Target Tree</text>
+</g>
+
+<!-- divider -->
+<line x1="500" y1="20" x2="500" y2="385"
+      stroke="#b8c2cc"
+      stroke-width="1.5"
+      stroke-dasharray="7 6"/>
+
+<!-- ==================== STARTING TREE ==================== -->
+
+<g stroke="#0a3974"
+   stroke-width="2.5"
+   stroke-linecap="round">
+  <line x1="250" y1="65" x2="165" y2="135"/>
+  <line x1="250" y1="65" x2="335" y2="135"/>
+
+  <line x1="165" y1="135" x2="100" y2="210"/>
+  <line x1="165" y1="135" x2="230" y2="210"/>
+
+  <line x1="100" y1="210" x2="60" y2="285"/>
+  <line x1="60" y1="285" x2="105" y2="355"/>
+
+  <line x1="230" y1="210" x2="285" y2="285"/>
+</g>
+
+<!-- ==================== TARGET TREE ==================== -->
+
+<g stroke="#0a3974"
+   stroke-width="2.5"
+   stroke-linecap="round">
+  <line x1="750" y1="65" x2="645" y2="145"/>
+  <line x1="750" y1="65" x2="855" y2="145"/>
+
+  <line x1="645" y1="145" x2="590" y2="230"/>
+  <line x1="645" y1="145" x2="700" y2="230"/>
+
+  <line x1="855" y1="145" x2="800" y2="230"/>
+  <line x1="855" y1="145" x2="910" y2="230"/>
+
+  <line x1="800" y1="230" x2="750" y2="315"/>
+</g>
+
+<!-- nodes and values -->
+<g font-family="Verdana, sans-serif"
+   font-size="16"
+   font-weight="700"
+   text-anchor="middle"
+   dominant-baseline="middle"
+   fill="#0f264a">
+
+  <!-- starting tree -->
+  <circle cx="250" cy="65" r="23"
+          fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+  <text x="250" y="65">80</text>
+
+  <circle cx="165" cy="135" r="23"
+          fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+  <text x="165" y="135">50</text>
+
+  <circle cx="335" cy="135" r="23"
+          fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+  <text x="335" y="135">90</text>
+
+  <circle cx="100" cy="210" r="23"
+          fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+  <text x="100" y="210">30</text>
+
+  <circle cx="230" cy="210" r="23"
+          fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+  <text x="230" y="210">60</text>
+
+  <circle cx="60" cy="285" r="23"
+          fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+  <text x="60" y="285">10</text>
+
+  <circle cx="285" cy="285" r="23"
+          fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+  <text x="285" y="285">70</text>
+
+  <circle cx="105" cy="355" r="23"
+          fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+  <text x="105" y="355">20</text>
+
+  <!-- target tree -->
+  <circle cx="750" cy="65" r="23"
+          fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+  <text x="750" y="65">50</text>
+
+  <circle cx="645" cy="145" r="23"
+          fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+  <text x="645" y="145">20</text>
+
+  <circle cx="855" cy="145" r="23"
+          fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+  <text x="855" y="145">80</text>
+
+  <circle cx="590" cy="230" r="23"
+          fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+  <text x="590" y="230">10</text>
+
+  <circle cx="700" cy="230" r="23"
+          fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+  <text x="700" y="230">30</text>
+
+  <circle cx="800" cy="230" r="23"
+          fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+  <text x="800" y="230">70</text>
+
+  <circle cx="910" cy="230" r="23"
+          fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+  <text x="910" y="230">90</text>
+
+  <circle cx="750" cy="315" r="23"
+          fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+  <text x="750" y="315">60</text>
+</g>
+  </svg>
+
+  <ol type="a">
+    <li>
+      Verify that the two trees have the same inorder sequence.
+    </li>
+    <li>
+      Find a sequence of rotations that transforms the starting tree into the
+      target tree. For each rotation, state its direction and the node at which
+      it is performed.
+    </li>
+    <li>
+      Draw the tree after each individual rotation. Treat a double rotation as
+      two separate rotations.
+    </li>
+    <li>
+      Identify two consecutive rotations in your sequence that form a named
+      double rotation.
+    </li>
+    <li>
+      Compare your sequence with another group's sequence. Which rotations can
+      be performed in a different order without changing the final result?
+      Explain why.
+    </li>
+    <li>
+      Find a sequence using as few individual rotations as possible.
+    </li>
+  </ol>
+</li>
+  </ol>
+</section>
+
+<section id="problems" section-title="Homework Problems">
+  <h2>Homework Problems</h2>
+
+  <ol>
+    <li>
+      <strong>Trace a Sequence of Rotations:</strong>
+      <p>Consider the following binary search tree.</p>
+
+  <svg viewBox="0 0 800 390"
+       role="img"
+       aria-labelledby="homeworkTraceTitle homeworkTraceDesc"
+       style="display:block; width:100%; max-width:800px; height:auto; margin:1em auto;">
+    <title id="homeworkTraceTitle">
+      Binary search tree for tracing a sequence of rotations
+    </title>
+    <desc id="homeworkTraceDesc">
+      The root is 50, with children 25 and 80. Node 25 has children 10
+      and 40, and node 40 has left child 30. Node 80 has children 65 and
+      90, and node 65 has children 60 and 70.
+    </desc>
+
+    <g stroke="#0a3974"
+       stroke-width="2.5"
+       stroke-linecap="round">
+      <line x1="400" y1="50" x2="235" y2="130"/>
+      <line x1="400" y1="50" x2="565" y2="130"/>
+
+      <line x1="235" y1="130" x2="145" y2="220"/>
+      <line x1="235" y1="130" x2="325" y2="220"/>
+
+      <line x1="325" y1="220" x2="275" y2="315"/>
+
+      <line x1="565" y1="130" x2="475" y2="220"/>
+      <line x1="565" y1="130" x2="655" y2="220"/>
+
+      <line x1="475" y1="220" x2="425" y2="315"/>
+      <line x1="475" y1="220" x2="525" y2="315"/>
+    </g>
+
+    <g font-family="Verdana, sans-serif"
+       font-size="17"
+       font-weight="700"
+       text-anchor="middle"
+       dominant-baseline="middle"
+       fill="#0f264a">
+
+      <circle cx="400" cy="50" r="24"
+              fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+      <text x="400" y="50">50</text>
+
+      <circle cx="235" cy="130" r="24"
+              fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+      <text x="235" y="130">25</text>
+
+      <circle cx="565" cy="130" r="24"
+              fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+      <text x="565" y="130">80</text>
+
+      <circle cx="145" cy="220" r="24"
+              fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+      <text x="145" y="220">10</text>
+
+      <circle cx="325" cy="220" r="24"
+              fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+      <text x="325" y="220">40</text>
+
+      <circle cx="475" cy="220" r="24"
+              fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+      <text x="475" y="220">65</text>
+
+      <circle cx="655" cy="220" r="24"
+              fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+      <text x="655" y="220">90</text>
+
+      <circle cx="275" cy="315" r="24"
+              fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+      <text x="275" y="315">30</text>
+
+      <circle cx="425" cy="315" r="24"
+              fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+      <text x="425" y="315">60</text>
+
+      <circle cx="525" cy="315" r="24"
+              fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+      <text x="525" y="315">70</text>
+    </g>
+  </svg>
+
+  Perform the following rotations in order:
+  <ol type="a">
+    <li>Perform a left rotation at \(25\).</li>
+    <li>Perform a right rotation at \(80\).</li>
+    <li>Perform a left rotation at \(50\).</li>
+    <li>Draw the tree after each rotation.</li>
+    <li>
+      For each rotation, identify the new root of the rotated subtree and
+      any subtree whose attachment point changes.
+    </li>
+    <li>Determine the height of the entire tree after each rotation.</li>
+    <li>
+      List the inorder traversal of the original and final trees and verify
+      that they are the same.
+    </li>
+  </ol>
+</li>
+
+<li>
+  <strong>What a Sequence of Rotations Preserves:</strong>
+  The page proves that one rotation preserves the inorder sequence of a
+  binary search tree.
+
+  <ol type="a">
+    <li>
+      Use induction on \(k\) to prove that any sequence of \(k\) rotations
+      preserves the inorder sequence.
+    </li>
+    <li>
+      Explain why a sequence of rotations cannot change the set of keys
+      stored in the tree.
+    </li>
+    <li>
+      Suppose a binary tree has an inorder sequence that is not increasing.
+      Prove that rotations alone cannot transform it into a binary search
+      tree unless keys are also moved between nodes.
+    </li>
+  </ol>
+</li>
+
+<li>
+  <strong>Height Changes After Several Rotations:</strong>
+  A single rotation changes the height of a tree by at most one. Consider
+  the following tree.
+
+  <svg viewBox="0 0 620 330"
+       role="img"
+       aria-labelledby="homeworkHeightTitle homeworkHeightDesc"
+       style="display:block; width:100%; max-width:620px; height:auto; margin:1em auto;">
+    <title id="homeworkHeightTitle">
+      Binary search tree for studying height increases
+    </title>
+    <desc id="homeworkHeightDesc">
+      The root is 30. Its left child is 20 and its right child is 40.
+      Node 20 has left child 10, and node 40 has right child 50.
+    </desc>
+
+    <g stroke="#0a3974"
+       stroke-width="2.5"
+       stroke-linecap="round">
+      <line x1="310" y1="55" x2="205" y2="145"/>
+      <line x1="310" y1="55" x2="415" y2="145"/>
+      <line x1="205" y1="145" x2="135" y2="245"/>
+      <line x1="415" y1="145" x2="485" y2="245"/>
+    </g>
+
+    <g font-family="Verdana, sans-serif"
+       font-size="18"
+       font-weight="700"
+       text-anchor="middle"
+       dominant-baseline="middle"
+       fill="#0f264a">
+      <circle cx="310" cy="55" r="25"
+              fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+      <text x="310" y="55">30</text>
+
+      <circle cx="205" cy="145" r="25"
+              fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+      <text x="205" y="145">20</text>
+
+      <circle cx="415" cy="145" r="25"
+              fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+      <text x="415" y="145">40</text>
+
+      <circle cx="135" cy="245" r="25"
+              fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+      <text x="135" y="245">10</text>
+
+      <circle cx="485" cy="245" r="25"
+              fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+      <text x="485" y="245">50</text>
+    </g>
+  </svg>
+
+  <ol type="a">
+    <li>
+      Prove that a sequence of \(k\) rotations can change the height of a
+      tree by at most \(k\).
+    </li>
+    <li>Perform a left rotation at \(30\) and draw the resulting tree.</li>
+    <li>
+      In the resulting tree, perform a left rotation at \(40\) and draw
+      the new tree.
+    </li>
+    <li>Determine the height after each rotation.</li>
+    <li>
+      Show that each rotation increases the height by one. Explain why
+      this demonstrates that the bound in part (a) can be attained.
+    </li>
+  </ol>
+</li>
+
+<li>
+  <strong>Rotations in Disjoint Subtrees:</strong>
+  Consider the following binary search tree.
+
+  <svg viewBox="0 0 760 390"
+       role="img"
+       aria-labelledby="homeworkDisjointTitle homeworkDisjointDesc"
+       style="display:block; width:100%; max-width:760px; height:auto; margin:1em auto;">
+    <title id="homeworkDisjointTitle">
+      Binary search tree with rotations possible in disjoint subtrees
+    </title>
+    <desc id="homeworkDisjointDesc">
+      The root is 50. Its left child is 20 and its right child is 80.
+      Node 20 has children 10 and 30, and node 30 has right child 40.
+      Node 80 has children 70 and 90, and node 70 has left child 60.
+    </desc>
+
+    <g stroke="#0a3974"
+       stroke-width="2.5"
+       stroke-linecap="round">
+      <line x1="380" y1="50" x2="230" y2="135"/>
+      <line x1="380" y1="50" x2="530" y2="135"/>
+
+      <line x1="230" y1="135" x2="145" y2="225"/>
+      <line x1="230" y1="135" x2="315" y2="225"/>
+      <line x1="315" y1="225" x2="365" y2="320"/>
+
+      <line x1="530" y1="135" x2="445" y2="225"/>
+      <line x1="530" y1="135" x2="615" y2="225"/>
+      <line x1="445" y1="225" x2="395" y2="320"/>
+    </g>
+
+    <g font-family="Verdana, sans-serif"
+       font-size="17"
+       font-weight="700"
+       text-anchor="middle"
+       dominant-baseline="middle"
+       fill="#0f264a">
+      <circle cx="380" cy="50" r="24"
+              fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+      <text x="380" y="50">50</text>
+
+      <circle cx="230" cy="135" r="24"
+              fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+      <text x="230" y="135">20</text>
+
+      <circle cx="530" cy="135" r="24"
+              fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+      <text x="530" y="135">80</text>
+
+      <circle cx="145" cy="225" r="24"
+              fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+      <text x="145" y="225">10</text>
+
+      <circle cx="315" cy="225" r="24"
+              fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+      <text x="315" y="225">30</text>
+
+      <circle cx="445" cy="225" r="24"
+              fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+      <text x="445" y="225">70</text>
+
+      <circle cx="615" cy="225" r="24"
+              fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+      <text x="615" y="225">90</text>
+
+      <circle cx="365" cy="320" r="24"
+              fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+      <text x="365" y="320">40</text>
+
+      <circle cx="395" cy="320" r="24"
+              fill="#ffffff" stroke="#0a3974" stroke-width="2.5"/>
+      <text x="395" y="320">60</text>
+    </g>
+  </svg>
+
+  <ol type="a">
+    <li>
+      Perform a left rotation at \(20\), followed by a right rotation at
+      \(80\). Draw the final tree.
+    </li>
+    <li>
+      Return to the original tree. Perform the right rotation at \(80\)
+      first, followed by the left rotation at \(20\). Draw the final tree.
+    </li>
+    <li>Compare the two resulting trees.</li>
+    <li>
+      Explain how the locality of rotations accounts for your result.
+    </li>
+    <li>
+      Would the order necessarily be irrelevant if one rotation occurred
+      inside the subtree affected by the other? Explain.
+    </li>
+  </ol>
+</li>
+
+<li>
+  <strong>Choose Rotations in Larger Trees:</strong>
+  Assume that an empty subtree has height \(-1\) and that a node is balanced
+  when the heights of its left and right subtrees differ by at most one.
+  Treat the four trees independently.
+
+  <p>For each tree:</p>
+
+  <ol type="a">
+    <li>Compute the height of each node on the path from the deepest leaf to the root.</li>
+    <li>Identify the lowest unbalanced node.</li>
+    <li>
+      Determine whether the tree requires a left rotation, right rotation,
+      left-right rotation, or right-left rotation.
+    </li>
+    <li>
+      State the node at which each rotation should be performed.
+    </li>
+    <li>Draw the tree after the repair.</li>
+    <li>
+      Verify that every node in the repaired tree is balanced and that the
+      inorder sequence is unchanged.
+    </li>
+    <li>
+      Compare the height of the repaired subtree and the entire tree before
+      and after the rotation or rotations.
+    </li>
+  </ol>
+
+  <svg viewBox="0 0 1100 820"
+     role="img"
+     aria-labelledby="largerRotationTreesTitle largerRotationTreesDesc"
+     style="display:block; width:100%; max-width:1100px; height:auto; margin:1em auto;">
+  <title id="largerRotationTreesTitle">
+    Four larger binary search trees requiring different rotations
+  </title>
+  <desc id="largerRotationTreesDesc">
+    Four binary search trees are arranged in two rows of two. Each contains
+    one lowest unbalanced node. The trees represent left-right, right,
+    left, and right-left repair cases.
+  </desc>
+
+  <!-- Panel borders -->
+  <g fill="none"
+     stroke="#b8c2cc"
+     stroke-width="1.5"
+     stroke-dasharray="7 6">
+    <rect x="10" y="8" width="530" height="390" rx="8"/>
+    <rect x="560" y="8" width="530" height="390" rx="8"/>
+    <rect x="10" y="415" width="530" height="395" rx="8"/>
+    <rect x="560" y="415" width="530" height="395" rx="8"/>
+  </g>
+
+  <!-- Panel labels -->
+  <g font-family="Verdana, sans-serif"
+     font-size="19"
+     font-weight="700"
+     text-anchor="middle"
+     fill="#0f264a">
+    <text x="275" y="32">Tree A</text>
+    <text x="825" y="32">Tree B</text>
+    <text x="275" y="439">Tree C</text>
+    <text x="825" y="439">Tree D</text>
+  </g>
+
+  <!-- ==================== TREE A ==================== -->
+  <!-- old Tree C moved to top-left -->
+
+  <g stroke="#0a3974"
+     stroke-width="2.3"
+     stroke-linecap="round">
+    <line x1="275" y1="65" x2="155" y2="130"/>
+    <line x1="275" y1="65" x2="410" y2="130"/>
+
+    <line x1="155" y1="130" x2="85" y2="200"/>
+    <line x1="155" y1="130" x2="225" y2="200"/>
+
+    <line x1="85" y1="200" x2="50" y2="275"/>
+    <line x1="85" y1="200" x2="120" y2="275"/>
+
+    <line x1="225" y1="200" x2="185" y2="275"/>
+    <line x1="225" y1="200" x2="265" y2="275"/>
+
+    <line x1="185" y1="275" x2="155" y2="350"/>
+    <line x1="185" y1="275" x2="215" y2="350"/>
+
+    <line x1="410" y1="130" x2="365" y2="200"/>
+    <line x1="410" y1="130" x2="465" y2="200"/>
+  </g>
+
+  <!-- ==================== TREE B ==================== -->
+  <!-- old Tree A moved to top-right -->
+
+  <g stroke="#0a3974"
+     stroke-width="2.3"
+     stroke-linecap="round">
+    <line x1="825" y1="65" x2="705" y2="125"/>
+    <line x1="825" y1="65" x2="945" y2="125"/>
+
+    <line x1="705" y1="125" x2="650" y2="195"/>
+    <line x1="705" y1="125" x2="760" y2="195"/>
+
+    <line x1="650" y1="195" x2="615" y2="270"/>
+    <line x1="650" y1="195" x2="685" y2="270"/>
+
+    <line x1="945" y1="125" x2="890" y2="195"/>
+    <line x1="945" y1="125" x2="1015" y2="195"/>
+
+    <line x1="890" y1="195" x2="845" y2="270"/>
+    <line x1="890" y1="195" x2="935" y2="270"/>
+
+    <line x1="845" y1="270" x2="810" y2="345"/>
+    <line x1="845" y1="270" x2="880" y2="345"/>
+  </g>
+
+  <!-- ==================== TREE C ==================== -->
+  <!-- old Tree B moved to bottom-left -->
+
+  <g stroke="#0a3974"
+     stroke-width="2.3"
+     stroke-linecap="round">
+    <line x1="275" y1="470" x2="155" y2="530"/>
+    <line x1="275" y1="470" x2="395" y2="530"/>
+
+    <line x1="155" y1="530" x2="95" y2="600"/>
+    <line x1="155" y1="530" x2="215" y2="600"/>
+
+    <line x1="215" y1="600" x2="180" y2="675"/>
+    <line x1="215" y1="600" x2="250" y2="675"/>
+
+    <line x1="250" y1="675" x2="290" y2="750"/>
+
+    <line x1="395" y1="530" x2="350" y2="600"/>
+    <line x1="395" y1="530" x2="450" y2="600"/>
+
+    <line x1="350" y1="600" x2="320" y2="675"/>
+    <line x1="450" y1="600" x2="480" y2="675"/>
+  </g>
+
+  <!-- ==================== TREE D ==================== -->
+  <!-- old Tree D stays bottom-right -->
+
+  <g stroke="#0a3974"
+     stroke-width="2.3"
+     stroke-linecap="round">
+    <line x1="825" y1="470" x2="690" y2="535"/>
+    <line x1="825" y1="470" x2="960" y2="535"/>
+
+    <line x1="690" y1="535" x2="620" y2="605"/>
+    <line x1="690" y1="535" x2="760" y2="605"/>
+
+    <line x1="760" y1="605" x2="715" y2="680"/>
+    <line x1="760" y1="605" x2="825" y2="680"/>
+
+    <line x1="715" y1="680" x2="680" y2="755"/>
+    <line x1="715" y1="680" x2="750" y2="755"/>
+
+    <line x1="960" y1="535" x2="915" y2="605"/>
+    <line x1="960" y1="535" x2="1015" y2="605"/>
+
+    <line x1="1015" y1="605" x2="1045" y2="680"/>
+  </g>
+
+  <!-- Nodes and values -->
+  <g font-family="Verdana, sans-serif"
+     font-size="15"
+     font-weight="700"
+     text-anchor="middle"
+     dominant-baseline="middle"
+     fill="#0f264a">
+
+    <!-- Tree A -->
+    <circle cx="275" cy="65" r="21"
+            fill="#ffffff" stroke="#0a3974" stroke-width="2.3"/>
+    <text x="275" y="65">70</text>
+
+    <circle cx="155" cy="130" r="21"
+            fill="#ffffff" stroke="#0a3974" stroke-width="2.3"/>
+    <text x="155" y="130">40</text>
+
+    <circle cx="410" cy="130" r="21"
+            fill="#ffffff" stroke="#0a3974" stroke-width="2.3"/>
+    <text x="410" y="130">90</text>
+
+    <circle cx="85" cy="200" r="21"
+            fill="#ffffff" stroke="#0a3974" stroke-width="2.3"/>
+    <text x="85" y="200">20</text>
+
+    <circle cx="225" cy="200" r="21"
+            fill="#ffffff" stroke="#0a3974" stroke-width="2.3"/>
+    <text x="225" y="200">60</text>
+
+    <circle cx="50" cy="275" r="21"
+            fill="#ffffff" stroke="#0a3974" stroke-width="2.3"/>
+    <text x="50" y="275">10</text>
+
+    <circle cx="120" cy="275" r="21"
+            fill="#ffffff" stroke="#0a3974" stroke-width="2.3"/>
+    <text x="120" y="275">30</text>
+
+    <circle cx="185" cy="275" r="21"
+            fill="#ffffff" stroke="#0a3974" stroke-width="2.3"/>
+    <text x="185" y="275">50</text>
+
+    <circle cx="265" cy="275" r="21"
+            fill="#ffffff" stroke="#0a3974" stroke-width="2.3"/>
+    <text x="265" y="275">65</text>
+
+    <circle cx="155" cy="350" r="21"
+            fill="#ffffff" stroke="#0a3974" stroke-width="2.3"/>
+    <text x="155" y="350">45</text>
+
+    <circle cx="215" cy="350" r="21"
+            fill="#ffffff" stroke="#0a3974" stroke-width="2.3"/>
+    <text x="215" y="350">55</text>
+
+    <circle cx="365" cy="200" r="21"
+            fill="#ffffff" stroke="#0a3974" stroke-width="2.3"/>
+    <text x="365" y="200">80</text>
+
+    <circle cx="465" cy="200" r="21"
+            fill="#ffffff" stroke="#0a3974" stroke-width="2.3"/>
+    <text x="465" y="200">100</text>
+
+    <!-- Tree B -->
+    <circle cx="825" cy="65" r="21"
+            fill="#ffffff" stroke="#0a3974" stroke-width="2.3"/>
+    <text x="825" y="65">50</text>
+
+    <circle cx="705" cy="125" r="21"
+            fill="#ffffff" stroke="#0a3974" stroke-width="2.3"/>
+    <text x="705" y="125">30</text>
+
+    <circle cx="945" cy="125" r="21"
+            fill="#ffffff" stroke="#0a3974" stroke-width="2.3"/>
+    <text x="945" y="125">80</text>
+
+    <circle cx="650" cy="195" r="21"
+            fill="#ffffff" stroke="#0a3974" stroke-width="2.3"/>
+    <text x="650" y="195">20</text>
+
+    <circle cx="760" cy="195" r="21"
+            fill="#ffffff" stroke="#0a3974" stroke-width="2.3"/>
+    <text x="760" y="195">40</text>
+
+    <circle cx="615" cy="270" r="21"
+            fill="#ffffff" stroke="#0a3974" stroke-width="2.3"/>
+    <text x="615" y="270">10</text>
+
+    <circle cx="685" cy="270" r="21"
+            fill="#ffffff" stroke="#0a3974" stroke-width="2.3"/>
+    <text x="685" y="270">25</text>
+
+    <circle cx="890" cy="195" r="21"
+            fill="#ffffff" stroke="#0a3974" stroke-width="2.3"/>
+    <text x="890" y="195">70</text>
+
+    <circle cx="1015" cy="195" r="21"
+            fill="#ffffff" stroke="#0a3974" stroke-width="2.3"/>
+    <text x="1015" y="195">90</text>
+
+    <circle cx="845" cy="270" r="21"
+            fill="#ffffff" stroke="#0a3974" stroke-width="2.3"/>
+    <text x="845" y="270">60</text>
+
+    <circle cx="935" cy="270" r="21"
+            fill="#ffffff" stroke="#0a3974" stroke-width="2.3"/>
+    <text x="935" y="270">75</text>
+
+    <circle cx="810" cy="345" r="21"
+            fill="#ffffff" stroke="#0a3974" stroke-width="2.3"/>
+    <text x="810" y="345">55</text>
+
+    <circle cx="880" cy="345" r="21"
+            fill="#ffffff" stroke="#0a3974" stroke-width="2.3"/>
+    <text x="880" y="345">65</text>
+
+    <!-- Tree C -->
+    <circle cx="275" cy="470" r="21"
+            fill="#ffffff" stroke="#0a3974" stroke-width="2.3"/>
+    <text x="275" y="470">60</text>
+
+    <circle cx="155" cy="530" r="21"
+            fill="#ffffff" stroke="#0a3974" stroke-width="2.3"/>
+    <text x="155" y="530">30</text>
+
+    <circle cx="395" cy="530" r="21"
+            fill="#ffffff" stroke="#0a3974" stroke-width="2.3"/>
+    <text x="395" y="530">80</text>
+
+    <circle cx="95" cy="600" r="21"
+            fill="#ffffff" stroke="#0a3974" stroke-width="2.3"/>
+    <text x="95" y="600">20</text>
+
+    <circle cx="215" cy="600" r="21"
+            fill="#ffffff" stroke="#0a3974" stroke-width="2.3"/>
+    <text x="215" y="600">40</text>
+
+    <circle cx="180" cy="675" r="21"
+            fill="#ffffff" stroke="#0a3974" stroke-width="2.3"/>
+    <text x="180" y="675">35</text>
+
+    <circle cx="250" cy="675" r="21"
+            fill="#ffffff" stroke="#0a3974" stroke-width="2.3"/>
+    <text x="250" y="675">50</text>
+
+    <circle cx="290" cy="750" r="21"
+            fill="#ffffff" stroke="#0a3974" stroke-width="2.3"/>
+    <text x="290" y="750">55</text>
+
+    <circle cx="350" cy="600" r="21"
+            fill="#ffffff" stroke="#0a3974" stroke-width="2.3"/>
+    <text x="350" y="600">70</text>
+
+    <circle cx="450" cy="600" r="21"
+            fill="#ffffff" stroke="#0a3974" stroke-width="2.3"/>
+    <text x="450" y="600">90</text>
+
+    <circle cx="320" cy="675" r="21"
+            fill="#ffffff" stroke="#0a3974" stroke-width="2.3"/>
+    <text x="320" y="675">65</text>
+
+    <circle cx="480" cy="675" r="21"
+            fill="#ffffff" stroke="#0a3974" stroke-width="2.3"/>
+    <text x="480" y="675">95</text>
+
+    <!-- Tree D -->
+    <circle cx="825" cy="470" r="21"
+            fill="#ffffff" stroke="#0a3974" stroke-width="2.3"/>
+    <text x="825" y="470">70</text>
+
+    <circle cx="690" cy="535" r="21"
+            fill="#ffffff" stroke="#0a3974" stroke-width="2.3"/>
+    <text x="690" y="535">30</text>
+
+    <circle cx="960" cy="535" r="21"
+            fill="#ffffff" stroke="#0a3974" stroke-width="2.3"/>
+    <text x="960" y="535">90</text>
+
+    <circle cx="620" cy="605" r="21"
+            fill="#ffffff" stroke="#0a3974" stroke-width="2.3"/>
+    <text x="620" y="605">10</text>
+
+    <circle cx="760" cy="605" r="21"
+            fill="#ffffff" stroke="#0a3974" stroke-width="2.3"/>
+    <text x="760" y="605">50</text>
+
+    <circle cx="715" cy="680" r="21"
+            fill="#ffffff" stroke="#0a3974" stroke-width="2.3"/>
+    <text x="715" y="680">40</text>
+
+    <circle cx="825" cy="680" r="21"
+            fill="#ffffff" stroke="#0a3974" stroke-width="2.3"/>
+    <text x="825" y="680">60</text>
+
+    <circle cx="680" cy="755" r="21"
+            fill="#ffffff" stroke="#0a3974" stroke-width="2.3"/>
+    <text x="680" y="755">35</text>
+
+    <circle cx="750" cy="755" r="21"
+            fill="#ffffff" stroke="#0a3974" stroke-width="2.3"/>
+    <text x="750" y="755">45</text>
+
+    <circle cx="915" cy="605" r="21"
+            fill="#ffffff" stroke="#0a3974" stroke-width="2.3"/>
+    <text x="915" y="605">80</text>
+
+    <circle cx="1015" cy="605" r="21"
+            fill="#ffffff" stroke="#0a3974" stroke-width="2.3"/>
+    <text x="1015" y="605">100</text>
+
+    <circle cx="1045" cy="680" r="21"
+            fill="#ffffff" stroke="#0a3974" stroke-width="2.3"/>
+    <text x="1045" y="680">110</text>
+  </g>
+</svg>
+</li>
+
+
+<li>
+  <strong>Updating Stored Subtree Sizes:</strong>
+  Suppose every node stores the number of nodes in the subtree rooted at
+  that node. Use the left-rotation diagram from Problem 2. Let the sizes of
+  \(A\), \(B\), and \(C\) be \(a\), \(b\), and \(c\), respectively.
+
+  <ol type="a">
+    <li>
+      Give formulas for the stored sizes of \(x\) and \(y\) before the
+      rotation.
+    </li>
+    <li>
+      Give formulas for their stored sizes after the rotation.
+    </li>
+    <li>
+      Which of the two stored sizes must be updated first? Explain why.
+    </li>
+    <li>
+      Explain why the stored sizes at the roots of \(A\), \(B\), and \(C\)
+      do not change.
+    </li>
+    <li>
+      Explain why updating all affected subtree-size information still
+      takes \(O(1)\) time.
+    </li>
+  </ol>
+</li>
+
+<li>
+  <strong>How a Left Rotation Changes Height:</strong>
+  Consider the left rotation shown here. 
+  
+  <svg viewBox="0 0 760 315"
+       role="img"
+       aria-labelledby="homeworkDepthTitle homeworkDepthDesc"
+       style="display:block; width:100%; max-width:760px; height:auto; margin:1em auto;">
+    <title id="homeworkDepthTitle">
+      Symbolic left rotation for analyzing node depths
+    </title>
+    <desc id="homeworkDepthDesc">
+      Before the rotation, x has left subtree A and right child y. Node y
+      has subtrees B and C. After the rotation, y is above x, and B becomes
+      the right subtree of x.
+    </desc>
+
+    <defs>
+      <pattern id="homeworkDepthHatch"
+               patternUnits="userSpaceOnUse"
+               width="8"
+               height="8">
+        <path d="M-2,2 L2,-2
+                 M0,8 L8,0
+                 M6,10 L10,6"
+              fill="none"
+              stroke="#9fb3c8"
+              stroke-width="1.3"/>
+      </pattern>
+
+      <marker id="homeworkDepthArrow"
+              markerWidth="9"
+              markerHeight="9"
+              refX="8"
+              refY="4.5"
+              orient="auto">
+        <path d="M0,0 L9,4.5 L0,9 Z"
+              fill="#d9822b"/>
+      </marker>
+    </defs>
+
+    <text x="170" y="25"
+          text-anchor="middle"
+          font-family="Verdana, sans-serif"
+          font-size="17"
+          font-weight="700"
+          fill="#0f264a">
+      Before
+    </text>
+
+    <text x="590" y="25"
+          text-anchor="middle"
+          font-family="Verdana, sans-serif"
+          font-size="17"
+          font-weight="700"
+          fill="#0f264a">
+      After
+    </text>
+
+    <line x1="335" y1="75"
+          x2="425" y2="75"
+          stroke="#d9822b"
+          stroke-width="3"
+          marker-end="url(#homeworkDepthArrow)"/>
+
+    <!-- Before edges -->
+    <g stroke="#0a3974" stroke-width="2">
+      <line x1="170" y1="60" x2="105" y2="135"/>
+      <line x1="170" y1="60" x2="235" y2="135"/>
+      <line x1="235" y1="135" x2="195" y2="220"/>
+      <line x1="235" y1="135" x2="275" y2="220"/>
+    </g>
+
+    <!-- After edges -->
+    <g stroke="#0a3974" stroke-width="2">
+      <line x1="590" y1="60" x2="525" y2="135"/>
+      <line x1="590" y1="60" x2="655" y2="135"/>
+      <line x1="525" y1="135" x2="485" y2="220"/>
+      <line x1="525" y1="135" x2="565" y2="220"/>
+    </g>
+
+    <!-- Nodes -->
+    <g font-family="Verdana, sans-serif"
+       font-size="17"
+       font-weight="700"
+       text-anchor="middle"
+       dominant-baseline="middle"
+       fill="#0f264a">
+      <circle cx="170" cy="60" r="23"
+              fill="#ffffff" stroke="#0a3974" stroke-width="2"/>
+      <text x="170" y="60">x</text>
+
+      <circle cx="235" cy="135" r="23"
+              fill="#ffffff" stroke="#0a3974" stroke-width="2"/>
+      <text x="235" y="135">y</text>
+
+      <circle cx="590" cy="60" r="23"
+              fill="#ffffff" stroke="#0a3974" stroke-width="2"/>
+      <text x="590" y="60">y</text>
+
+      <circle cx="525" cy="135" r="23"
+              fill="#ffffff" stroke="#0a3974" stroke-width="2"/>
+      <text x="525" y="135">x</text>
+    </g>
+
+    <!-- Subtrees -->
+    <g stroke="#0a3974"
+       stroke-width="2"
+       stroke-linejoin="round"
+       fill="url(#homeworkDepthHatch)">
+      <polygon points="105,135 80,205 130,205"/>
+      <polygon points="195,220 170,290 220,290"/>
+      <polygon points="275,220 250,290 300,290"/>
+
+      <polygon points="485,220 460,290 510,290"/>
+      <polygon points="565,220 540,290 590,290"/>
+      <polygon points="655,135 630,205 680,205"/>
+    </g>
+
+    <g font-family="Verdana, sans-serif"
+       font-size="16"
+       font-weight="700"
+       text-anchor="middle"
+       dominant-baseline="middle"
+       fill="#0f264a">
+      <text x="105" y="180">A</text>
+      <text x="195" y="265">B</text>
+      <text x="275" y="265">C</text>
+
+      <text x="485" y="265">A</text>
+      <text x="565" y="265">B</text>
+      <text x="655" y="180">C</text>
+    </g>
+  </svg>
+
+  Let \(a\), \(b\), and \(c\) be the heights of \(A\), \(B\), and \(C\), respectively.
+  Recall that the height of an empty subtree is \(-1\). Let
+  \(H_{\text{before}}\) and \(H_{\text{after}}\) denote the height of the
+  rotated subtree before and after the rotation.
+
+  <ol type="a">
+    <li>
+      Before the rotation, derive formulas for the height of \(y\) and
+      \(H_{\text{before}}\) in terms of \(a\), \(b\), and \(c\).
+    </li>
+    <li>
+      After the rotation, derive formulas for the new height of \(x\) and for
+      \(H_{\text{after}}\).
+    </li>
+    <li>
+      Suppose
+      \[
+        b=a \qquad\text{and}\qquad c=a+1.
+      \]
+      Compute \(H_{\text{before}}\) and \(H_{\text{after}}\). Show that the
+      rotation decreases the height of the subtree by one and leaves both
+      \(x\) and \(y\) balanced.
+    </li>
+    <li>
+      Suppose instead that
+      \[
+        b=c=a+1.
+      \]
+      Compute \(H_{\text{before}}\) and \(H_{\text{after}}\). Show that the
+      rotation restores balance but does not change the height of the rotated
+      subtree.
+    </li>
+    <li>
+      Finally, suppose
+      \[
+        b=a+1 \qquad\text{and}\qquad c=a.
+      \]
+      Compute the heights after the rotation and show that the rotated subtree
+      is still unbalanced.
+    </li>
+    <li>
+      Explain why the final case suggests that a right-left double rotation is
+      needed instead of a single left rotation.
+    </li>
+  </ol>
+</li>
+  </ol>
+</section>
 
   
 
