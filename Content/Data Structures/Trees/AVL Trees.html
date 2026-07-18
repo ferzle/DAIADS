@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AVL Trees</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
   <script src="/DAIADS/scripts/chapterScripts.js"></script>
   <link rel="stylesheet" href="/DAIADS/css/style.css">
   <link rel="stylesheet" href="/DAIADS/css/chapter.css">
@@ -15,13 +18,853 @@
     gtag('js', new Date());
     gtag('config', 'G-DQ5LVZVFDC');
   </script>
+  <style>
+    .avl-figure { display:block; width:100%; max-width:920px; height:auto; margin:1em auto; }
+    .avl-edge { stroke:#627d98; stroke-width:2.5; fill:none; }
+    .avl-node { fill:#fff; stroke:#0a3974; stroke-width:2.5; }
+    .avl-node.good { fill:#e6f6ec; stroke:#2f855a; }
+    .avl-node.warn { fill:#fff3cd; stroke:#d9822b; }
+    .avl-node.bad { fill:#fde8e8; stroke:#b83232; }
+    .avl-node.active { fill:#eee8ff; stroke:#6b46c1; stroke-width:4; }
+    .avl-key { fill:#102a43; font:700 17px Verdana,sans-serif; text-anchor:middle; dominant-baseline:middle; }
+    .avl-bf { fill:#486581; font:13px Verdana,sans-serif; text-anchor:middle; }
+    .avl-label { fill:#243b53; font:15px Verdana,sans-serif; text-anchor:middle; }
+    .avl-small { fill:#486581; font:13px Verdana,sans-serif; text-anchor:middle; }
+    .avl-arrow { stroke:#6b46c1; stroke-width:3; fill:none; }
+    .figure-caption { max-width:860px; margin:-0.35em auto 1.2em; color:#486581; font-size:0.95em; }
+    .concept-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:1em; margin:1em 0; }
+    .concept-card { border:1px solid #9fb3c8; border-top:4px solid #0a3974; border-radius:6px; padding:0.85em; background:#f8fbff; }
+    .concept-card h3, .concept-card h4 { margin-top:0; color:#0a3974; }
+    .key-idea { border-left:5px solid #2f855a; background:#eefaf2; padding:0.8em 1em; margin:1em 0; }
+    .warning { border-left:5px solid #d9822b; background:#fff8e8; padding:0.8em 1em; margin:1em 0; }
+    .trace-table { border-collapse:collapse; width:100%; max-width:920px; margin:1em 0; }
+    .trace-table th, .trace-table td { border:1px solid #cbd5e1; padding:0.55em; text-align:left; vertical-align:top; }
+    .trace-table th { background:#eaf2f8; color:#102a43; }
+    .repair-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(390px,1fr)); gap:1em; margin:1em 0; }
+    .repair-card { border:1px solid #9fb3c8; border-radius:7px; padding:0.8em; background:#fbfdff; }
+    .repair-card h4 { margin:0 0 0.35em; color:#0a3974; }
+    .repair-card .avl-figure { margin:0.4em auto; }
+    .starter-download-panel { margin:1.25em 0; padding:1em; border:1px solid #9fb3c8; border-radius:7px; background:#f8fbff; }
+    .starter-downloads { display:flex; flex-wrap:wrap; gap:0.75em; margin:0.9em 0; }
+    .starter-download { display:inline-flex; flex:1 1 125px; max-width:150px; min-height:2.8em; align-items:center; justify-content:center; gap:0.45em; padding:0.65em 1em; border:2px solid #0a3974; border-radius:6px; background:#0a3974; color:#fff !important; font-weight:700; text-align:center; text-decoration:none; }
+    .starter-download:hover { background:#fff; color:#0a3974 !important; }
+    .starter-download .file-type { font-size:0.85em; font-weight:400; opacity:0.9; }
+    .example-box > .example-title { display:block; }
+    .example-box > .example-title + p { margin-top:0.5em; }
+    @media (max-width:620px) {
+      .avl-key { font-size:15px; }
+      .avl-label { font-size:13px; }
+      .repair-grid { grid-template-columns:1fr; }
+    }
+  </style>
 </head>
 <body>
   <h1>AVL Trees</h1>
 
   <section id="overview" section-title="Overview">
     <h2>Overview</h2>
-    <p>This page is coming soon.</p>
+    <div class="remark-box">
+      <strong>Prerequisites:</strong> This page assumes familiarity with
+      <a href="?path=Data%20Structures%2FTrees%2FBinary%20Search%20Trees">Binary Search Trees</a>
+      and the single and double rotations introduced on the
+      <a href="?path=Data%20Structures%2FTrees%2FBalanced%20Search%20Trees">Balanced Search Trees</a>
+      page.
+    </div>
+    <p>
+      An <strong>AVL tree</strong> is a binary search tree that automatically keeps its height under
+      control. It preserves the ordinary BST ordering rule, so search still decides between the left
+      and right subtree by comparing keys. In addition, the left and right subtrees at every node
+      must have heights that differ by at most one.
+    </p>
+    <p>
+      That local rule prevents a long chain from forming. After an insertion or removal, an AVL tree
+      walks back toward the root, updates height information, and uses a small rotation when it finds
+      an imbalance. A rotation changes local parent-child relationships without changing the sorted
+      order of the keys. The result is a worst-case height of \(O(\log n)\), rather than the
+      \(O(n)\) height possible in an ordinary BST.
+    </p>
+    <div class="concept-grid">
+      <div class="concept-card"><h3>Same ordered-set behavior</h3><p>Search, minimum, maximum, predecessor, successor, traversal, and range queries mean exactly what they mean in a BST.</p></div>
+      <div class="concept-card"><h3>One extra invariant</h3><p>At every node, the heights of the two child subtrees differ by no more than one.</p></div>
+      <div class="concept-card"><h3>Local update repair</h3><p>Insertion and removal may update heights and rotate a small subtree; the rest of the ordering remains intact.</p></div>
+    </div>
+    <svg class="avl-figure" viewBox="0 0 900 315" role="img" aria-labelledby="overviewTitle overviewDesc">
+      <title id="overviewTitle">A balanced AVL tree and an unbalanced binary search tree</title>
+      <desc id="overviewDesc">The left tree is an AVL tree rooted at 30. The right tree is a binary search tree rooted at 10 whose root has balance factor negative three.</desc>
+      <text x="220" y="28" class="avl-label">AVL tree</text><text x="670" y="28" class="avl-label">BST, but not AVL</text>
+      <line x1="220" y1="72" x2="130" y2="155" class="avl-edge"/><line x1="220" y1="72" x2="310" y2="155" class="avl-edge"/>
+      <line x1="130" y1="155" x2="75" y2="238" class="avl-edge"/><line x1="130" y1="155" x2="175" y2="238" class="avl-edge"/><line x1="310" y1="155" x2="265" y2="238" class="avl-edge"/><line x1="310" y1="155" x2="355" y2="238" class="avl-edge"/>
+      <circle cx="220" cy="72" r="25" class="avl-node good"/><text x="220" y="72" class="avl-key">30</text><text x="220" y="112" class="avl-bf">BF = 0</text>
+      <circle cx="130" cy="155" r="25" class="avl-node"/><text x="130" y="155" class="avl-key">20</text><circle cx="310" cy="155" r="25" class="avl-node"/><text x="310" y="155" class="avl-key">50</text>
+      <circle cx="75" cy="238" r="25" class="avl-node"/><text x="75" y="238" class="avl-key">10</text><circle cx="175" cy="238" r="25" class="avl-node"/><text x="175" y="238" class="avl-key">25</text><circle cx="265" cy="238" r="25" class="avl-node"/><text x="265" y="238" class="avl-key">40</text><circle cx="355" cy="238" r="25" class="avl-node"/><text x="355" y="238" class="avl-key">60</text>
+      <line x1="560" y1="72" x2="630" y2="130" class="avl-edge"/><line x1="630" y1="130" x2="700" y2="188" class="avl-edge"/><line x1="700" y1="188" x2="770" y2="246" class="avl-edge"/>
+      <line x1="700" y1="188" x2="655" y2="246" class="avl-edge"/><line x1="630" y1="130" x2="585" y2="188" class="avl-edge"/>
+      <circle cx="560" cy="72" r="25" class="avl-node bad"/><text x="560" y="72" class="avl-key">10</text><text x="560" y="112" class="avl-bf">BF = −3</text>
+      <circle cx="630" cy="130" r="25" class="avl-node"/><text x="630" y="130" class="avl-key">20</text><circle cx="700" cy="188" r="25" class="avl-node"/><text x="700" y="188" class="avl-key">40</text><circle cx="770" cy="246" r="25" class="avl-node"/><text x="770" y="246" class="avl-key">60</text><circle cx="655" cy="246" r="25" class="avl-node"/><text x="655" y="246" class="avl-key">30</text><circle cx="585" cy="188" r="25" class="avl-node"/><text x="585" y="188" class="avl-key">25</text>
+    </svg>
+    <p class="figure-caption">Both trees satisfy BST ordering. Only the left tree also satisfies the AVL height rule at every node.</p>
+    <p>This page treats an AVL tree as an ordered set of distinct keys. A map stores a value with each key; a multiset can store a count. Neither extension changes the balancing mechanism.</p>
+  </section>
+
+  <section id="balance-condition" section-title="The AVL Balance Condition">
+    <h2>The AVL Balance Condition</h2>
+    <section id="height-and-balance-factor" section-title="Height and Balance Factor">
+      <h3>Height and Balance Factor</h3>
+      <p>We use the same height convention as the Binary Trees page: an empty subtree has height \(-1\), a leaf has height \(0\), and a nonleaf has one plus the larger child height. For a node \(v\), define</p>
+      \[
+        \operatorname{balanceFactor}(v)=\operatorname{height}(v.left)-\operatorname{height}(v.right).
+      \]
+      <p>
+        A positive balance factor means the node leans left; a negative factor means it leans right.
+        A node is AVL-balanced exactly when its factor is \(-1\), \(0\), or \(1\). The following
+        table is a set of <strong>examples</strong>, not an exhaustive list of height combinations.
+        The actual rule is simply \(|BF(v)|\leq 1\): the two child heights may be any nonnegative
+        values (or \(-1\) for an empty child) as long as their difference is at most one.
+      </p>
+      <table class="trace-table">
+        <caption>Representative balance-factor calculations</caption>
+        <thead><tr><th>Left height</th><th>Right height</th><th>Balance factor</th><th>What this example shows</th></tr></thead>
+        <tbody>
+          <tr><td>2</td><td>1</td><td>\(1\)</td><td>Balanced; left subtree is one level taller.</td></tr>
+          <tr><td>2</td><td>2</td><td>\(0\)</td><td>Balanced; child heights are equal.</td></tr>
+          <tr><td>1</td><td>2</td><td>\(-1\)</td><td>Balanced; right subtree is one level taller.</td></tr>
+          <tr><td>2</td><td>0</td><td>\(2\)</td><td>Not balanced; a repair is required after an update.</td></tr>
+        </tbody>
+      </table>
+      <div class="warning"><strong>Sign conventions vary.</strong> Some books compute right height minus left height. That convention is valid too, but it reverses every sign and case test. Always identify the definition before reading rotation code.</div>
+      <h4>What an AVL node stores</h4>
+      <p>
+        In the representation used on this page, every node stores its <code>key</code>,
+        <code>left</code> child, <code>right</code> child, optional <code>parent</code>, and one
+        integer <code>height</code>. A new leaf initializes <code>height = 0</code>. The tree object
+        separately stores <code>root</code> and <code>size</code>. Balance factor does not need its
+        own field because it can be calculated from the two child heights in constant time.
+      </p>
+      <pre><code>class Node:
+    key
+    left = null
+    right = null
+    parent = null       // optional if recursion reconnects subtrees
+    height = 0          // a newly created node is a leaf</code></pre>
+      <p>
+        Without stored heights, finding a node's balance factor could require traversing both of its
+        subtrees. With stored heights, <code>updateHeight(node)</code> and
+        <code>balanceFactor(node)</code> each take \(O(1)\) time. Only nodes on the update path and
+        nodes touched by rotations can have stale heights, so an insertion or removal never needs
+        to recompute every height in the tree.
+      </p>
+    </section>
+
+    <section id="valid-avl-trees" section-title="Recognizing AVL Trees">
+      <h3>Recognizing AVL Trees</h3>
+      <p>A tree is an AVL tree only if it satisfies two independent requirements: it is a binary search tree, and every node satisfies the AVL balance condition. Checking only whether the root looks balanced is not enough.</p>
+      <div class="example-box">
+        <strong class="example-title">Example: Which Trees Are AVL Trees?</strong>
+        <svg class="avl-figure" viewBox="0 0 900 350" role="img" aria-labelledby="recognizeTitle recognizeDesc">
+          <title id="recognizeTitle">Three trees to classify</title><desc id="recognizeDesc">Tree A is a valid AVL tree. Tree B is balanced in shape but violates BST order because 35 is left of 30. Tree C is a BST whose node 20 has balance factor two.</desc>
+          <text x="145" y="28" class="avl-label">A</text><text x="450" y="28" class="avl-label">B</text><text x="755" y="28" class="avl-label">C</text>
+          <line x1="145" y1="72" x2="85" y2="150" class="avl-edge"/><line x1="145" y1="72" x2="205" y2="150" class="avl-edge"/><line x1="85" y1="150" x2="55" y2="228" class="avl-edge"/><line x1="85" y1="150" x2="115" y2="228" class="avl-edge"/>
+          <circle cx="145" cy="72" r="23" class="avl-node good"/><text x="145" y="72" class="avl-key">30</text><circle cx="85" cy="150" r="23" class="avl-node"/><text x="85" y="150" class="avl-key">20</text><circle cx="205" cy="150" r="23" class="avl-node"/><text x="205" y="150" class="avl-key">40</text><circle cx="55" cy="228" r="23" class="avl-node"/><text x="55" y="228" class="avl-key">10</text><circle cx="115" cy="228" r="23" class="avl-node"/><text x="115" y="228" class="avl-key">25</text>
+          <text x="145" y="310" class="avl-small">AVL: order and balance both hold</text>
+          <line x1="450" y1="72" x2="390" y2="150" class="avl-edge"/><line x1="450" y1="72" x2="510" y2="150" class="avl-edge"/>
+          <circle cx="450" cy="72" r="23" class="avl-node bad"/><text x="450" y="72" class="avl-key">30</text><circle cx="390" cy="150" r="23" class="avl-node bad"/><text x="390" y="150" class="avl-key">35</text><circle cx="510" cy="150" r="23" class="avl-node"/><text x="510" y="150" class="avl-key">40</text>
+          <text x="450" y="310" class="avl-small">not a BST: 35 is left of 30</text>
+          <line x1="755" y1="72" x2="695" y2="150" class="avl-edge"/><line x1="755" y1="72" x2="815" y2="150" class="avl-edge"/><line x1="695" y1="150" x2="650" y2="228" class="avl-edge"/><line x1="650" y1="228" x2="620" y2="290" class="avl-edge"/>
+          <line x1="815" y1="150" x2="780" y2="228" class="avl-edge"/><line x1="815" y1="150" x2="850" y2="228" class="avl-edge"/><line x1="850" y1="228" x2="875" y2="290" class="avl-edge"/>
+          <circle cx="755" cy="72" r="23" class="avl-node good"/><text x="755" y="72" class="avl-key">40</text><text x="755" y="110" class="avl-bf">BF = 0</text><circle cx="695" cy="150" r="23" class="avl-node bad"/><text x="695" y="150" class="avl-key">20</text><text x="695" y="188" class="avl-bf">BF = 2</text><circle cx="815" cy="150" r="23" class="avl-node"/><text x="815" y="150" class="avl-key">60</text><circle cx="650" cy="228" r="23" class="avl-node"/><text x="650" y="228" class="avl-key">10</text><circle cx="620" cy="290" r="23" class="avl-node"/><text x="620" y="290" class="avl-key">5</text><circle cx="780" cy="228" r="23" class="avl-node"/><text x="780" y="228" class="avl-key">50</text><circle cx="850" cy="228" r="23" class="avl-node"/><text x="850" y="228" class="avl-key">70</text><circle cx="875" cy="290" r="23" class="avl-node"/><text x="875" y="290" class="avl-key">80</text>
+          <text x="770" y="330" class="avl-small">root is balanced; node 20 is not</text>
+        </svg>
+        <p>Tree A is AVL. Tree B has a balanced shape but fails BST ordering. Tree C is a BST and its root is balanced, but the lower violation at 20 makes the whole tree non-AVL.</p>
+      </div>
+    </section>
+
+    <section id="why-logarithmic-height" section-title="Why AVL Trees Stay Short">
+      <h3>Why AVL Trees Stay Short</h3>
+      <p>To make an AVL tree of a fixed height as sparse as possible, make one child as short as the rule permits. If the whole tree has height \(h\), its taller child must have height \(h-1\), and the other child can have height \(h-2\). Let \(N(h)\) be the minimum number of nodes in an AVL tree of height \(h\). Then</p>
+      \[
+        N(-1)=0,\qquad N(0)=1,\qquad
+        N(h)=1+N(h-1)+N(h-2).
+      \]
+      <table class="trace-table"><thead><tr><th>\(h\)</th><th>−1</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th></tr></thead><tbody><tr><th>\(N(h)\)</th><td>0</td><td>1</td><td>2</td><td>4</td><td>7</td><td>12</td><td>20</td></tr></tbody></table>
+      <p>
+        In fact, \(N(h)=F_{h+3}-1\), where \(F_k\) is the \(k\)-th Fibonacci number with
+        \(F_0=0\) and \(F_1=1\). Since \(F_k\geq\varphi^{k-2}\) for \(k\geq2\), where
+        \(\varphi=(1+\sqrt5)/2\), an AVL tree with \(n\) nodes satisfies
+      </p>
+      \[
+        n+1\geq\varphi^{h+1}
+        \quad\Longrightarrow\quad
+        h\leq\log_\varphi(n+1)-1
+        \approx 1.4405\log_2(n+1)-1.
+      \]
+      <div class="theorem">
+        <p class="box-title"><strong>Theorem: An AVL tree with \(n\) nodes has height \(O(\log n)\).</strong></p>
+        <p>
+          The explicit inequality gives more information than the asymptotic notation: under this
+          page's convention that a leaf has height 0, the height is at most approximately
+          \(1.4405\log_2(n+1)-1\). The bound is an upper bound on the worst legal AVL shape, not a
+          claim that every AVL tree reaches that height. A perfectly balanced tree is shorter,
+          with height close to \(\log_2(n+1)-1\).
+        </p>
+      </div>
+      <p>
+        For example, \(n=1{,}000\) gives \(h\leq13.36\), so the integer height is at most 13 by this
+        bound. A plain BST containing the same 1,000 keys could have height 999. The strict local
+        balance rule is therefore strong enough to give a useful numerical guarantee, not merely
+        an abstract logarithmic classification.
+      </p>
+    </section>
+  </section>
+
+  <section id="core-operations" section-title="Core Operations and Implementation">
+    <h2>Core Operations and Implementation</h2>
+    <section id="core-intro" section-title="Core Operations">
+      <h3>Core Operations</h3>
+      <p>An AVL tree presents the same public interface as an ordinary BST. Clients do not need to know whether an update caused a rotation.</p>
+      <table class="example-table left-top-align"><thead><tr><th>Operation</th><th>Relationship to the BST Version</th></tr></thead><tbody>
+        <tr><td><code>search</code>, <code>minimum</code>, <code>maximum</code></td><td>Unchanged; AVL balance does not alter key ordering.</td></tr>
+        <tr><td><code>predecessor</code>, <code>successor</code>, traversal, range query</td><td>Unchanged; these operations use BST relationships.</td></tr>
+        <tr><td><code>isEmpty</code>, <code>size</code></td><td>Unchanged; these read tree-level state and do not inspect balance.</td></tr>
+        <tr><td><code>insert</code></td><td>Perform BST insertion, then update heights and repair the first unbalanced ancestor.</td></tr>
+        <tr><td><code>remove</code></td><td>Perform BST removal, then update heights and repair every imbalance encountered toward the root.</td></tr>
+      </tbody></table>
+      <p>A typical node stores <code>key</code>, <code>left</code>, <code>right</code>, an optional <code>parent</code> reference, and <code>height</code>. The tree stores <code>root</code> and <code>size</code>. Parent links allow iterative upward repair; recursive code can instead return each repaired subtree root to its caller.</p>
+      <h4>Internal helpers</h4>
+      <p>
+        The table below is not introducing a completely new collection of algorithms. It organizes
+        operations that have already appeared on this page or on the prerequisite BST and rotation
+        pages into a possible implementation interface. The names are suggestions; the important
+        part is keeping ordinary BST structure changes separate from AVL height repair.
+      </p>
+      <table class="trace-table">
+        <thead><tr><th>Helper group</th><th>Connection to the discussion</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><code>height</code>, <code>updateHeight</code>, <code>balanceFactor</code></td>
+            <td>These are the constant-time metadata operations defined in “Height and Balance Factor” and written as pseudocode in the next subsection.</td>
+          </tr>
+          <tr>
+            <td><code>rotateLeft</code>, <code>rotateRight</code>, and <code>replaceSubtree</code></td>
+            <td>The first two are the single rotations from the Balanced Search Trees page. <code>replaceSubtree</code> is the small link-management helper they can use to reconnect the new local root to its former parent.</td>
+          </tr>
+          <tr>
+            <td><code>rotateLeftRight</code>, <code>rotateRightLeft</code> (optional wrappers)</td>
+            <td>Each wrapper performs two single rotations. Keeping them as wrappers makes the intermediate state explicit: left-right means left at the child and then right at the unbalanced node; right-left is symmetric.</td>
+          </tr>
+          <tr>
+            <td><code>bstInsert</code>, <code>bstRemove</code></td>
+            <td>These are the ordinary BST <code>insert</code> and <code>remove</code> procedures already studied, renamed here to emphasize that they perform only the structural BST phase and do not repair AVL balance.</td>
+          </tr>
+          <tr>
+            <td><code>rebalance</code>, <code>fixAfterInsert</code>, <code>fixAfterRemove</code></td>
+            <td>These are the AVL-specific helpers developed below. <code>rebalance</code> repairs one local subtree; the two fix-up methods decide how far to continue toward the root.</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        Public methods such as <code>insert</code> remain short coordinators: call the BST-phase
+        helper, update <code>size</code> once if the set changed, and then call the appropriate AVL
+        fix-up helper. Search and ordered-query helpers are unchanged from the BST page, so they are
+        not repeated in this AVL-specific table. A structural validator is valuable while testing
+        an implementation, but it is development support rather than part of the operation itself.
+      </p>
+    </section>
+
+    <section id="maintaining-heights" section-title="Maintaining Heights">
+      <h3>Maintaining Heights</h3>
+      <p>Stored heights make a balance check constant-time. They must be derived from current child links, never adjusted by guesswork.</p>
+      <pre><code>height(node):
+    if node == null:
+        return -1
+    return node.height
+
+updateHeight(node):
+    node.height = 1 + max(height(node.left), height(node.right))
+
+balanceFactor(node):
+    return height(node.left) - height(node.right)</code></pre>
+      <p>Work upward because a parent's height depends on its children. After a rotation, update the node that moved <em>down</em> first, then the node that moved <em>up</em>. The new local root's formula may depend on the first result.</p>
+      <div class="key-idea"><strong>Local information is enough.</strong> If both child heights are correct, one call to <code>updateHeight</code> makes the parent's height correct. This bottom-up dependency is why insertion and removal repair follows the search path in reverse.</div>
+    </section>
+
+    <section id="avl-rotations" section-title="Choosing a Rotation">
+      <h3>Choosing a Rotation</h3>
+      <p>
+        Let \(z\) be the first unbalanced node encountered while moving upward. Its balance factor
+        is \(+2\) or \(-2\). Let \(y\) be its taller child. The ordered pair
+        \((BF(z),BF(y))\) determines the repair. This numeric form is more precise than names such
+        as “left-heavy,” and it is the form an implementation can test directly.
+      </p>
+      <div class="warning">
+        <strong>What the case names mean:</strong> LL, LR, RR, and RL are standard AVL
+        abbreviations for the two directions along the heavy path beginning at \(z\). They do
+        <em>not</em> name the rotation that will be performed. An LL shape is repaired by a
+        <em>right</em> rotation, and an RR shape is repaired by a <em>left</em> rotation. LR and RL
+        name bent shapes and require two rotations.
+      </div>
+      <table class="trace-table">
+        <caption>Complete AVL rotation-selection rules using \(BF(v)=height(v.left)-height(v.right)\)</caption>
+        <thead><tr><th>\(BF(z)\)</th><th>\(BF(y)\)</th><th>Case</th><th>Repair</th></tr></thead><tbody>
+          <tr><td>\(+2\)</td><td>\(+1\) during insertion; \(+1\) or \(0\) during removal</td><td>Left-left (LL)</td><td>Rotate right at \(z\).</td></tr>
+          <tr><td>\(+2\)</td><td>\(-1\)</td><td>Left-right (LR)</td><td>Rotate left at \(y=z.left\), then right at \(z\).</td></tr>
+          <tr><td>\(-2\)</td><td>\(-1\) during insertion; \(-1\) or \(0\) during removal</td><td>Right-right (RR)</td><td>Rotate left at \(z\).</td></tr>
+          <tr><td>\(-2\)</td><td>\(+1\)</td><td>Right-left (RL)</td><td>Rotate right at \(y=z.right\), then left at \(z\).</td></tr>
+        </tbody>
+      </table>
+      <p>
+        During insertion, the newly lengthened path makes the heavy child lean in one direction, so
+        its factor at the first violation is \(+1\) or \(-1\), never 0. During removal, the sibling
+        subtree may become too short while the heavy child remains perfectly balanced. That is why
+        the numeric pairs \((+2,0)\) and \((-2,0)\) occur only in removal and use a single rotation.
+      </p>
+
+      <div class="repair-grid">
+        <div class="repair-card">
+          <h4>LL: \((+2,+1)\) — rotate right</h4>
+          <svg class="avl-figure" viewBox="0 0 440 210" role="img" aria-label="Left-left case before and after a right rotation">
+            <text x="90" y="20" class="avl-small">before</text><text x="350" y="20" class="avl-small">after</text><text x="220" y="105" class="avl-label">→</text>
+            <line x1="110" y1="52" x2="75" y2="110" class="avl-edge"/><line x1="75" y1="110" x2="45" y2="168" class="avl-edge"/>
+            <circle cx="110" cy="52" r="22" class="avl-node bad"/><text x="110" y="52" class="avl-key">30</text><text x="145" y="50" class="avl-bf">+2</text>
+            <circle cx="75" cy="110" r="22" class="avl-node warn"/><text x="75" y="110" class="avl-key">20</text><text x="110" y="112" class="avl-bf">+1</text>
+            <circle cx="45" cy="168" r="22" class="avl-node"/><text x="45" y="168" class="avl-key">10</text>
+            <line x1="350" y1="52" x2="310" y2="125" class="avl-edge"/><line x1="350" y1="52" x2="390" y2="125" class="avl-edge"/>
+            <circle cx="350" cy="52" r="22" class="avl-node active"/><text x="350" y="52" class="avl-key">20</text><circle cx="310" cy="125" r="22" class="avl-node"/><text x="310" y="125" class="avl-key">10</text><circle cx="390" cy="125" r="22" class="avl-node"/><text x="390" y="125" class="avl-key">30</text>
+          </svg>
+          <p>The heavy path goes left from 30 and left again from 20. One right rotation promotes 20.</p>
+        </div>
+        <div class="repair-card">
+          <h4>RR: \((-2,-1)\) — rotate left</h4>
+          <svg class="avl-figure" viewBox="0 0 440 210" role="img" aria-label="Right-right case before and after a left rotation">
+            <text x="90" y="20" class="avl-small">before</text><text x="350" y="20" class="avl-small">after</text><text x="220" y="105" class="avl-label">→</text>
+            <line x1="45" y1="52" x2="80" y2="110" class="avl-edge"/><line x1="80" y1="110" x2="110" y2="168" class="avl-edge"/>
+            <circle cx="45" cy="52" r="22" class="avl-node bad"/><text x="45" y="52" class="avl-key">10</text><text x="78" y="50" class="avl-bf">−2</text>
+            <circle cx="80" cy="110" r="22" class="avl-node warn"/><text x="80" y="110" class="avl-key">20</text><text x="113" y="112" class="avl-bf">−1</text>
+            <circle cx="110" cy="168" r="22" class="avl-node"/><text x="110" y="168" class="avl-key">30</text>
+            <line x1="350" y1="52" x2="310" y2="125" class="avl-edge"/><line x1="350" y1="52" x2="390" y2="125" class="avl-edge"/>
+            <circle cx="350" cy="52" r="22" class="avl-node active"/><text x="350" y="52" class="avl-key">20</text><circle cx="310" cy="125" r="22" class="avl-node"/><text x="310" y="125" class="avl-key">10</text><circle cx="390" cy="125" r="22" class="avl-node"/><text x="390" y="125" class="avl-key">30</text>
+          </svg>
+          <p>The heavy path goes right twice. One left rotation promotes 20.</p>
+        </div>
+        <div class="repair-card">
+          <h4>LR: \((+2,-1)\) — left, then right</h4>
+          <svg class="avl-figure" viewBox="0 0 440 210" role="img" aria-label="Left-right case before and after a double rotation">
+            <text x="90" y="20" class="avl-small">before</text><text x="350" y="20" class="avl-small">after two rotations</text><text x="220" y="105" class="avl-label">→</text>
+            <line x1="110" y1="52" x2="60" y2="110" class="avl-edge"/><line x1="60" y1="110" x2="100" y2="168" class="avl-edge"/>
+            <circle cx="110" cy="52" r="22" class="avl-node bad"/><text x="110" y="52" class="avl-key">30</text><text x="145" y="50" class="avl-bf">+2</text>
+            <circle cx="60" cy="110" r="22" class="avl-node warn"/><text x="60" y="110" class="avl-key">10</text><text x="95" y="108" class="avl-bf">−1</text>
+            <circle cx="100" cy="168" r="22" class="avl-node active"/><text x="100" y="168" class="avl-key">20</text>
+            <line x1="350" y1="52" x2="310" y2="125" class="avl-edge"/><line x1="350" y1="52" x2="390" y2="125" class="avl-edge"/>
+            <circle cx="350" cy="52" r="22" class="avl-node active"/><text x="350" y="52" class="avl-key">20</text><circle cx="310" cy="125" r="22" class="avl-node"/><text x="310" y="125" class="avl-key">10</text><circle cx="390" cy="125" r="22" class="avl-node"/><text x="390" y="125" class="avl-key">30</text>
+          </svg>
+          <p>Rotate left at 10 to make an LL shape, then rotate right at 30. The middle key becomes the local root.</p>
+        </div>
+        <div class="repair-card">
+          <h4>RL: \((-2,+1)\) — right, then left</h4>
+          <svg class="avl-figure" viewBox="0 0 440 210" role="img" aria-label="Right-left case before and after a double rotation">
+            <text x="90" y="20" class="avl-small">before</text><text x="350" y="20" class="avl-small">after two rotations</text><text x="220" y="105" class="avl-label">→</text>
+            <line x1="45" y1="52" x2="100" y2="110" class="avl-edge"/><line x1="100" y1="110" x2="60" y2="168" class="avl-edge"/>
+            <circle cx="45" cy="52" r="22" class="avl-node bad"/><text x="45" y="52" class="avl-key">10</text><text x="78" y="50" class="avl-bf">−2</text>
+            <circle cx="100" cy="110" r="22" class="avl-node warn"/><text x="100" y="110" class="avl-key">30</text><text x="135" y="108" class="avl-bf">+1</text>
+            <circle cx="60" cy="168" r="22" class="avl-node active"/><text x="60" y="168" class="avl-key">20</text>
+            <line x1="350" y1="52" x2="310" y2="125" class="avl-edge"/><line x1="350" y1="52" x2="390" y2="125" class="avl-edge"/>
+            <circle cx="350" cy="52" r="22" class="avl-node active"/><text x="350" y="52" class="avl-key">20</text><circle cx="310" cy="125" r="22" class="avl-node"/><text x="310" y="125" class="avl-key">10</text><circle cx="390" cy="125" r="22" class="avl-node"/><text x="390" y="125" class="avl-key">30</text>
+          </svg>
+          <p>Rotate right at 30 to make an RR shape, then rotate left at 10.</p>
+        </div>
+      </div>
+      <p>A double rotation is not an indivisible action. In a left-right repair, the first rotation converts the bent shape into a left-left shape; the second resolves that straight shape. Right-left repair is symmetric. Seeing the intermediate tree is useful for understanding which middle subtree is transferred, so the demo on this page records the two rotations as separate steps.</p>
+      <p>
+        An implementation may give those two-call sequences names, but the wrappers should not hide
+        what happens:
+      </p>
+      <pre><code>rotateLeftRight(z):
+    rotateLeft(z.left)
+    return rotateRight(z)
+
+rotateRightLeft(z):
+    rotateRight(z.right)
+    return rotateLeft(z)</code></pre>
+      <p>
+        The main <code>rebalance</code> pseudocode below spells out the two calls directly so the
+        numeric case test and the order of the single rotations remain visible.
+      </p>
+      <pre><code>rebalance(node):
+    updateHeight(node)
+
+    if balanceFactor(node) == 2:
+        if balanceFactor(node.left) &lt; 0:
+            node.left = rotateLeft(node.left)       // first LR step
+        return rotateRight(node)                    // second LR step, or LL repair
+
+    if balanceFactor(node) == -2:
+        if balanceFactor(node.right) &gt; 0:
+            node.right = rotateRight(node.right)    // first RL step
+        return rotateLeft(node)                     // second RL step, or RR repair
+
+    return node</code></pre>
+      <div class="warning"><strong>Removal includes a child balance factor of zero.</strong> A left-heavy node with a balanced left child still uses a single right rotation; a right-heavy node with a balanced right child uses a single left rotation. Choosing from subtree factors handles insertion and removal correctly.</div>
+    </section>
+
+    <section id="operation-search" section-title="Search and Ordered Queries">
+      <h3>Search and Ordered Queries</h3>
+      <p>Search, minimum, maximum, predecessor, successor, inorder traversal, and range queries use the ordinary <a href="?path=Data%20Structures%2FTrees%2FBinary%20Search%20Trees">BST algorithms</a>. Rotations preserve inorder order, so no AVL-specific search case exists. The improvement is the height guarantee: a single root-to-leaf walk is \(O(\log n)\) in the worst case.</p>
+    </section>
+
+    <section id="operation-insertion" section-title="Insertion">
+      <h3>Insertion</h3>
+      <p>
+        Treat insertion as two phases. <code>bstInsert</code> performs the familiar search and
+        attaches a height-0 leaf without doing any rotations. If a new node was created,
+        <code>fixAfterInsert</code> walks back over that search path. This separation keeps BST
+        placement and AVL maintenance independently understandable and testable.
+      </p>
+      <ol class="spaced"><li>Search for the key. If it is already present, leave the set unchanged.</li><li>Attach a new leaf exactly as in a BST.</li><li>Move upward from the new leaf's parent, updating each height.</li><li>If a node is unbalanced, perform the appropriate single or double rotation.</li><li>Reconnect the returned local root to its former parent or make it the tree root.</li></ol>
+      <div class="example-box">
+        <strong class="example-title">Worked example: inserting 25 creates a left-right case</strong>
+        <p>Start with keys 30, 10, and 40, then insert 20 and 25. The new key follows the BST path \(30\to10\to20\). Node 30 becomes left-heavy, while its left child 10 is right-heavy.</p>
+        <svg class="avl-figure" viewBox="0 0 900 355" role="img" aria-labelledby="insertTitle insertDesc">
+          <title id="insertTitle">Left-right insertion repair in two rotations</title><desc id="insertDesc">Three states show insertion of 25, a left rotation at 10, and then a right rotation at 30.</desc>
+          <text x="145" y="28" class="avl-label">after inserting 25</text><text x="450" y="28" class="avl-label">1. rotate left at 10</text><text x="755" y="28" class="avl-label">2. rotate right at 30</text>
+          <line x1="145" y1="70" x2="90" y2="145" class="avl-edge"/><line x1="145" y1="70" x2="200" y2="145" class="avl-edge"/><line x1="90" y1="145" x2="120" y2="220" class="avl-edge"/><line x1="120" y1="220" x2="145" y2="290" class="avl-edge"/>
+          <circle cx="145" cy="70" r="23" class="avl-node bad"/><text x="145" y="70" class="avl-key">30</text><text x="145" y="108" class="avl-bf">BF = 2</text><circle cx="90" cy="145" r="23" class="avl-node warn"/><text x="90" y="145" class="avl-key">10</text><circle cx="200" cy="145" r="23" class="avl-node"/><text x="200" y="145" class="avl-key">40</text><circle cx="120" cy="220" r="23" class="avl-node"/><text x="120" y="220" class="avl-key">20</text><circle cx="145" cy="290" r="23" class="avl-node active"/><text x="145" y="290" class="avl-key">25</text>
+          <line x1="450" y1="70" x2="395" y2="145" class="avl-edge"/><line x1="450" y1="70" x2="505" y2="145" class="avl-edge"/><line x1="395" y1="145" x2="355" y2="220" class="avl-edge"/><line x1="395" y1="145" x2="430" y2="220" class="avl-edge"/>
+          <circle cx="450" cy="70" r="23" class="avl-node bad"/><text x="450" y="70" class="avl-key">30</text><circle cx="395" cy="145" r="23" class="avl-node active"/><text x="395" y="145" class="avl-key">20</text><circle cx="505" cy="145" r="23" class="avl-node"/><text x="505" y="145" class="avl-key">40</text><circle cx="355" cy="220" r="23" class="avl-node"/><text x="355" y="220" class="avl-key">10</text><circle cx="430" cy="220" r="23" class="avl-node"/><text x="430" y="220" class="avl-key">25</text>
+          <line x1="755" y1="70" x2="695" y2="155" class="avl-edge"/><line x1="755" y1="70" x2="815" y2="155" class="avl-edge"/><line x1="815" y1="155" x2="785" y2="235" class="avl-edge"/><line x1="815" y1="155" x2="850" y2="235" class="avl-edge"/>
+          <circle cx="755" cy="70" r="23" class="avl-node good"/><text x="755" y="70" class="avl-key">20</text><circle cx="695" cy="155" r="23" class="avl-node"/><text x="695" y="155" class="avl-key">10</text><circle cx="815" cy="155" r="23" class="avl-node"/><text x="815" y="155" class="avl-key">30</text><circle cx="785" cy="235" r="23" class="avl-node"/><text x="785" y="235" class="avl-key">25</text><circle cx="850" cy="235" r="23" class="avl-node"/><text x="850" y="235" class="avl-key">40</text>
+        </svg>
+        <p>The intermediate tree is still unbalanced, but it has become a left-left shape. The second rotation promotes 20 and restores balance while preserving the inorder sequence \(10,20,25,30,40\).</p>
+      </div>
+      <pre><code>insert(key):
+    newLeaf = bstInsert(key)
+    if newLeaf == null:                 // key was already present
+        return false
+
+    size = size + 1
+    fixAfterInsert(newLeaf)
+    return true
+
+fixAfterInsert(newLeaf):
+    node = newLeaf.parent
+
+    while node != null:
+        repairedRoot = rebalance(node)  // also updates node.height
+
+        if repairedRoot != node:        // one or two rotations occurred
+            return                     // no higher insertion repair is needed
+
+        node = node.parent</code></pre>
+      <div class="key-idea">
+        <strong>How far does insertion fix-up continue?</strong> It must keep moving upward while
+        nodes remain balanced because the new leaf may have increased the height seen by the next
+        ancestor. It stops when it reaches the root or when it performs the first repair. Immediately
+        before insertion, the repaired subtree had height \(h\). Insertion temporarily raised it to
+        \(h+1\), and the rotation restores it to \(h\). Higher ancestors therefore see the same child
+        height they saw before insertion and cannot become newly unbalanced. An optimized
+        implementation may also stop early when updating a node does not change its height.
+      </div>
+    </section>
+
+    <section id="operation-removal" section-title="Removal">
+      <h3>Removal</h3>
+      <p>Removal begins with the three ordinary BST cases. A leaf is detached. A node with one child is replaced by that child. A node with two children exchanges its key-value entry with its inorder successor (or predecessor), after which the successor is physically removed from a position with at most one child.</p>
+      <p>
+        As with insertion, separate the ordinary BST phase from the AVL phase. <code>bstRemove</code>
+        returns both whether it succeeded and the parent of the position that physically lost a
+        node. <code>fixAfterRemove</code> begins there. Unlike insertion fix-up, it continues after a
+        rotation because the repaired subtree may be shorter than it was before removal.
+      </p>
+      <pre><code>remove(key):
+    (removed, repairStart) = bstRemove(key)
+    if not removed:
+        return false
+
+    size = size - 1
+    fixAfterRemove(repairStart)
+    return true
+
+fixAfterRemove(node):
+    while node != null:
+        repairedRoot = rebalance(node)
+        node = repairedRoot.parent        // continue above the repaired subtree</code></pre>
+
+      <div class="warning"><strong>Track the physical removal site.</strong> When removing a two-child node, copying the successor key does not change the original node's child structure. Height repair starts where the successor node was detached, not where the requested key was first found.</div>
+      <div class="example-box">
+        <strong class="example-title">Example: one removal can cause two repairs</strong>
+        <p>
+          Consider a root 100 whose left subtree is rooted at 50 and has height 3. Node 50 has
+          children 30 and 70; node 30 has children 20 and 40; node 20 has left child 10; and node 70
+          has children 60 and 80. The right subtree of 100 is rooted at 150 and has height 2:
+          150 has left child 140, right child 160, and 140 has left child 135. Thus
+          \(BF(50)=1\) and \(BF(100)=1\), and every node is initially AVL-balanced.
+        </p>
+        <ol class="spaced">
+          <li>Remove 160. Node 150 changes from balanced to \(BF(150)=2\), with \(BF(140)=1\). A right rotation at 150 repairs that subtree and lowers its height from 2 to 1.</li>
+          <li>Root 100 now sees child heights 3 and 1, so \(BF(100)=2\). A second right rotation, this time at 100, is required.</li>
+        </ol>
+        <p>
+          The first rotation repaired every node in the right subtree, but its height decrease was
+          visible to an ancestor outside that subtree. This is the reason the removal loop resumes at
+          <code>repairedRoot.parent</code> rather than returning after one rotation.
+        </p>
+      </div>
+    </section>
+
+    <section id="analysis" section-title="Analysis">
+      <h3>Analysis</h3>
+      <table class="trace-table"><thead><tr><th>Operation</th><th>Worst-case time</th><th>Reason</th></tr></thead><tbody>
+        <tr><td>Search, minimum, maximum, predecessor, successor</td><td>\(O(\log n)\)</td><td>Each follows at most one path in a logarithmic-height tree.</td></tr>
+        <tr><td>Single or double rotation</td><td>\(O(1)\)</td><td>Only a fixed number of links and height fields change.</td></tr>
+        <tr><td>Insertion</td><td>\(O(\log n)\)</td><td>BST search and upward height updates dominate; at most one single or double repair occurs.</td></tr>
+        <tr><td>Removal</td><td>\(O(\log n)\)</td><td>There are \(O(\log n)\) ancestors; each may require only constant work.</td></tr>
+        <tr><td>Full traversal</td><td>\(\Theta(n)\)</td><td>Every stored node is visited once.</td></tr>
+      </tbody></table>
+      <p>The nodes occupy \(\Theta(n)\) space, including one height or balance field per node. An iterative implementation with parent links uses \(O(1)\) auxiliary working space. A recursive implementation, or one that records an ancestor stack, uses \(O(\log n)\) auxiliary space because the tree height is logarithmic.</p>
+    </section>
+  </section>
+
+  <section id="demo" section-title="Interactive Demo">
+    <h2>Interactive Demo</h2>
+    <p>
+      Insert, remove, or search for distinct integer keys. Use Previous Step and Next Step to inspect
+      the BST search path, height checks, detected numeric case, and every individual rotation. In
+      particular, left-right and right-left repairs show their intermediate tree before performing
+      the second rotation.
+    </p>
+    <p>
+      AVL rotations are not different pointer operations from ordinary BST rotations. What is
+      AVL-specific is deciding <em>when</em> a rotation is required, selecting it from balance
+      factors, updating height metadata, and deciding whether fix-up continues. For isolated
+      practice with the pointer transformation itself, use the rotation material on the
+      <a href="?path=Data%20Structures%2FTrees%2FBalanced%20Search%20Trees">Balanced Search Trees</a>
+      page.
+    </p>
+    <div class="embeddedDemoContainer"><iframe class="embeddedDemo" src="/DAIADS/Content/Demos/Data Structures/AVL Tree/AVL Tree Demo.html" allow="fullscreen" name="avl-tree-demo"></iframe></div>
+  </section>
+
+  <section id="applications" section-title="Applications">
+    <h2>Applications</h2>
+    <p>AVL trees are useful for in-memory ordered sets and maps when worst-case guarantees matter and lookup operations are frequent. Unlike a hash table, an AVL tree supports predecessor, successor, sorted traversal, and range reporting directly. Its relatively strict balance also makes its search paths short.</p>
+    <ul class="spaced"><li><strong>Ordered indexes:</strong> maintain records by a comparable key while supporting neighbors and ranges.</li><li><strong>Lookup-heavy dictionaries:</strong> provide predictable searches when keys are inserted in an uncontrolled order.</li><li><strong>Augmented search trees:</strong> store subtree sizes, interval endpoints, or aggregates to support rank, selection, overlap, or range queries.</li></ul>
+    <p>AVL trees are usually an in-memory structure. Storage systems often prefer multiway B-trees because one disk or cache-line access can examine many keys at once.</p>
+  </section>
+
+  <section id="connections" section-title="Connections and Comparisons">
+    <h2>Connections and Comparisons</h2>
+    <table class="trace-table"><thead><tr><th>Structure</th><th>Balance approach</th><th>Useful comparison</th></tr></thead><tbody>
+      <tr><td>Ordinary BST</td><td>No shape invariant</td><td>Simpler updates, but a poor key order can produce height \(\Theta(n)\).</td></tr>
+      <tr><td>AVL tree</td><td>Child heights differ by at most one</td><td>Strict balance gives guaranteed logarithmic operations and especially short search paths.</td></tr>
+      <tr><td>Red-black tree</td><td>Color rules impose a looser path-length bound</td><td>Usually performs fewer rotations during update, while allowing somewhat taller trees.</td></tr>
+      <tr><td>2–3 tree / B-tree</td><td>Multiway nodes split, borrow, and merge</td><td>Keeps all leaves at one depth and is well suited to block-oriented storage.</td></tr>
+    </tbody></table>
+    <p>The AVL height recurrence is also a concrete algorithmic appearance of Fibonacci growth: restricting how slowly a tree can gain nodes restricts how quickly its height can grow.</p>
+  </section>
+
+  <section id="variations" section-title="Variations and Extensions">
+    <h2>Variations and Extensions</h2>
+    <ul class="spaced">
+      <li><strong>Store height or balance factor:</strong> stored height makes formulas direct; a carefully maintained balance factor can use a smaller field.</li>
+      <li><strong>Parent links or returned subtree roots:</strong> iterative code often uses parents, while recursive code reconnects the root returned by each call.</li>
+      <li><strong>Maps and duplicate policies:</strong> store values with keys, or store a multiplicity count. Sending equal keys consistently to one side alone can interfere with the intended height bound.</li>
+      <li><strong>Augmentation:</strong> recompute metadata such as subtree size or range aggregate in the same bottom-up order used for heights, including after rotations.</li>
+      <li><strong>Persistent AVL trees:</strong> copy the nodes along an update path and reuse unchanged subtrees to preserve earlier versions.</li>
+    </ul>
+  </section>
+
+  <section id="pitfalls" section-title="Common Pitfalls">
+    <h2>Common Pitfalls</h2>
+    <ul class="spaced">
+      <li><strong>Checking only the root:</strong> BST order and the AVL height condition must hold at every node.</li>
+      <li><strong>Mixing height conventions:</strong> if an empty subtree has height \(-1\), a leaf has height \(0\). Every formula and initialization must agree.</li>
+      <li><strong>Reversing the balance-factor sign:</strong> either subtraction order works, but its rotation tests are different.</li>
+      <li><strong>Updating heights top-down:</strong> a parent cannot receive its final height until both child heights are current.</li>
+      <li><strong>Updating rotated nodes in the wrong order:</strong> recompute the node moved downward before the node moved upward.</li>
+      <li><strong>Choosing removal cases from the removed key:</strong> use current balance factors; the key is no longer a reliable guide and a heavy child can be balanced.</li>
+      <li><strong>Stopping after one removal repair:</strong> removal can shorten the repaired subtree and trigger another violation above it.</li>
+      <li><strong>Losing the transferred middle subtree:</strong> a rotation must preserve all child subtrees and reconnect the new local root to its former parent.</li>
+    </ul>
+  </section>
+
+  <section id="summary" section-title="Summary">
+    <h2>Summary</h2>
+    <p>
+      An AVL tree is a binary search tree that stores enough height information to enforce a local
+      balance rule at every node. With \(BF(v)=height(v.left)-height(v.right)\), every completed
+      operation must leave each balance factor in \(\{-1,0,1\}\). A node's stored height is
+      recomputed in constant time from its two children, so only the update path and rotated nodes
+      need attention.
+    </p>
+    <p>
+      When a factor reaches \(+2\) or \(-2\), the factor of the heavy child distinguishes LL, RR,
+      LR, and RL. Straight cases use one rotation; bent cases use two single rotations and have a
+      meaningful intermediate state. Insertion walks upward until it reaches the root or repairs
+      its first imbalance, then stops because that subtree returns to its old height. Removal must
+      continue toward the root because a repaired subtree may remain shorter and unbalance another
+      ancestor.
+    </p>
+    <p>
+      The minimum-node recurrence follows Fibonacci growth, giving
+      \(h\leq\log_\varphi(n+1)-1\approx1.4405\log_2(n+1)-1\). Consequently, search, insertion, and
+      removal all take \(O(\log n)\) worst-case time while rotations themselves take \(O(1)\).
+      AVL trees therefore implement ordered sets and maps with predictable search paths, at the
+      cost of one metadata field per node and additional update logic.
+    </p>
+  </section>
+
+  <section id="links" section-title="Helpful Links and Resources">
+    <h2>Helpful Links and Resources</h2>
+    <ul><li><a href="https://en.wikipedia.org/wiki/AVL_tree" target="_blank">Wikipedia: AVL Tree</a>: balance definitions, operations, and height bounds.</li><li><a href="https://visualgo.net/en/bst" target="_blank">VisuAlgo: BST and AVL Tree</a>: interactive insertion, removal, and rotation traces.</li><li><a href="https://opendsa-server.cs.vt.edu/ODSA/Books/Everything/html/AVL.html" target="_blank">OpenDSA: AVL Trees</a>: additional explanations and visualizations.</li></ul>
+  </section>
+
+  <section id="reading-questions" section-title="Reading Comprehension Questions">
+    <h2>Reading Comprehension Questions</h2>
+    <ol class="spaced">
+      <li><strong>Definition and scope:</strong> What two independent invariants must hold at every node of an AVL tree, and why does a balanced shape alone not guarantee that a tree is AVL?</li>
+      <li><strong>Stored information:</strong> Which fields does the node representation on this page store? Which value is calculated rather than stored, and why can it be calculated in \(O(1)\) time?</li>
+      <li><strong>Height convention:</strong> What heights are assigned to an empty subtree and a leaf? Under this convention, compute the height and balance factor of a node whose left child has height 3 and right child has height 1.</li>
+      <li><strong>Numeric case selection:</strong> Using this page's sign convention, what repairs are selected by the pairs \((+2,+1)\), \((+2,-1)\), \((-2,-1)\), and \((-2,+1)\)?</li>
+      <li><strong>The zero-child-factor case:</strong> Why can \((+2,0)\) or \((-2,0)\) occur during removal but not at the first unbalanced ancestor during insertion? Which repair does each pair use?</li>
+      <li><strong>Rotation metadata:</strong> After a single rotation, why must the node that moved downward have its height updated before the node that moved upward?</li>
+      <li><strong>Insertion fix-up:</strong> How far does <code>fixAfterInsert</code> travel when no rotation occurs, and why may it stop immediately after its first rotation?</li>
+      <li><strong>Removal fix-up:</strong> Where does <code>fixAfterRemove</code> begin after a two-child removal, and why does it continue after performing a rotation?</li>
+      <li><strong>Height bound:</strong> What does \(N(h)\) measure? Explain how \(N(h)=F_{h+3}-1\) leads to \(h\leq\log_\varphi(n+1)-1\).</li>
+      <li><strong>Interface versus implementation:</strong> Which ordered-set operations are unchanged from an ordinary BST, and which operations require AVL-specific maintenance?</li>
+    </ol>
+    <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
+    <div id="answers" class="answer" hidden><ol class="spaced">
+      <li><strong>Answer:</strong> All descendants must satisfy strict BST key ranges, and the two child-subtree heights at every node must differ by at most one. A shape can be height-balanced while placing a larger key in a left subtree or a smaller key in a right subtree.</li>
+      <li><strong>Answer:</strong> A node stores key, left, right, optional parent, and height. Balance factor is calculated as the stored left-child height minus the stored right-child height. Reading two fields and subtracting takes constant time.</li>
+      <li><strong>Answer:</strong> Empty height is \(-1\) and leaf height is 0. The node has height \(1+\max(3,1)=4\) and balance factor \(3-1=2\), so it is unbalanced.</li>
+      <li><strong>Answer:</strong> \((+2,+1)\) is LL and uses a right rotation; \((+2,-1)\) is LR and uses left at the child then right at the node; \((-2,-1)\) is RR and uses a left rotation; \((-2,+1)\) is RL and uses right at the child then left at the node.</li>
+      <li><strong>Answer:</strong> Insertion lengthens one path through the heavy child, so that child leans toward the changed path. Removal can shorten the opposite sibling while the heavy child remains balanced. \((+2,0)\) uses one right rotation and \((-2,0)\) uses one left rotation.</li>
+      <li><strong>Answer:</strong> The promoted node's new height depends on the demoted node's new height. Updating the promoted node first would read stale metadata from its child.</li>
+      <li><strong>Answer:</strong> With no rotation it continues toward the root because each updated height may change its parent. A rotation at the first insertion violation restores the subtree's pre-insertion height, so higher ancestors see no new height change.</li>
+      <li><strong>Answer:</strong> It begins at the parent of the physically detached node—often the successor's former parent. A rotation can repair local balance while leaving the subtree shorter, and that decrease can create a second violation above it.</li>
+      <li><strong>Answer:</strong> \(N(h)\) is the fewest nodes in any height-\(h\) AVL tree. The recurrence equals a shifted Fibonacci sequence, which grows at least as \(\varphi^{h+1}\). Thus \(n+1\geq\varphi^{h+1}\), and taking logarithms gives the bound.</li>
+      <li><strong>Answer:</strong> Search, minimum, maximum, predecessor, successor, inorder traversal, and range queries use ordinary BST navigation. Insertion and removal add bottom-up height maintenance and possible rotations.</li>
+    </ol></div>
+  </section>
+
+  <section id="activities" section-title="In-Class Activities">
+    <h2>In-Class Activities</h2>
+    <ol>
+      <li>
+        <strong>Audit an AVL Tree:</strong> Draw the BST with root 40; children 20 and 60;
+        grandchildren 10, 30, 50, and 70; and node 5 as the left child of 10.
+        <ol type="a">
+          <li>Label every null subtree with height \(-1\), then compute all node heights bottom-up.</li>
+          <li>Write the balance factor beside every node and verify the BST ranges separately.</li>
+          <li>Predict which stored heights change if 5 is removed.</li>
+          <li>Predict which stored heights change if 2 is inserted instead. Does a rotation occur?</li>
+        </ol>
+      </li>
+      <li>
+        <strong>Classify Counterexamples:</strong> In small groups, draw three trees: a valid AVL
+        tree, a height-balanced binary tree that is not a BST, and a BST whose root is balanced but
+        a descendant is not.
+        <ol type="a">
+          <li>Exchange drawings with another group without identifying the categories.</li>
+          <li>For each drawing, check key ranges and balance factors independently.</li>
+          <li>Identify every violation rather than stopping after the first.</li>
+          <li>Propose one smallest change that would make each invalid tree valid.</li>
+        </ol>
+      </li>
+      <li>
+        <strong>Act Out the Four Numeric Cases:</strong> Use cards labeled 10, 20, and 30.
+        Construct the pre-rotation trees produced by the sequences
+        \(30,20,10\), \(10,20,30\), \(30,10,20\), and \(10,30,20\).
+        <ol type="a">
+          <li>For each tree, identify \(z\), its heavy child \(y\), and the pair \((BF(z),BF(y))\).</li>
+          <li>Name the case only after writing the numeric pair.</li>
+          <li>Move the cards through each individual rotation, pausing between the two LR/RL steps.</li>
+          <li>Verify that the inorder sequence remains 10, 20, 30 after every single rotation.</li>
+        </ol>
+      </li>
+      <li>
+        <strong>Trace Insertion Fix-Up:</strong> Insert
+        \[50,30,70,20,40,60,80,10,5\]
+        into an empty AVL tree.
+        <ol type="a">
+          <li>Draw the ordinary BST insertion path for each key before doing height work.</li>
+          <li>List the nodes visited by <code>fixAfterInsert</code> in order.</li>
+          <li>At the first violation, record the numeric balance-factor pair and rotation.</li>
+          <li>Use subtree heights to justify why fix-up stops at that point.</li>
+        </ol>
+      </li>
+      <li>
+        <strong>Debug a Rotation:</strong> A right-rotation implementation changes all pointers
+        correctly but updates the promoted node before the node that moved downward.
+        <ol type="a">
+          <li>Use keys 30, 20, and 10 to calculate the stale value the promoted node reads.</li>
+          <li>Explain how the wrong height can cause a later balance-factor test to choose the wrong case.</li>
+          <li>Write the correct two-line height-update order.</li>
+          <li>Add a fourth key and describe a test that exposes the defect.</li>
+        </ol>
+      </li>
+      <li>
+        <strong>Insertion versus Removal Fix-Up:</strong> Divide into two teams. One team explains
+        why insertion stops after one repair; the other explains why removal may continue.
+        <ol type="a">
+          <li>Use \(h\) for the affected subtree's height before the operation.</li>
+          <li>State its height immediately before and after the first repair.</li>
+          <li>Identify exactly what the parent of the repaired subtree observes.</li>
+          <li>Challenge the other team's explanation with a counterexample attempt.</li>
+        </ol>
+      </li>
+      <li>
+        <strong>Compare Plain BST and AVL Behavior:</strong> Insert keys 1 through 15 in increasing
+        order into both structures.
+        <ol type="a">
+          <li>Record the height after each insertion.</li>
+          <li>For the AVL tree, record every numeric case and rotation.</li>
+          <li>Compare searches for 1, 8, and 15 in the final trees.</li>
+          <li>Explain what extra update work buys the worst-case search guarantee.</li>
+        </ol>
+      </li>
+    </ol>
+  </section>
+
+  <section id="problems" section-title="Homework Problems">
+    <h2>Homework Problems</h2>
+    <ol>
+      <li>
+        <strong>Verify All AVL Invariants:</strong> Consider the linked tree with root 50; children
+        25 and 75; children 10 and 40 under 25; left child 5 under 10; and left child 2 under 5.
+        <ol type="a">
+          <li>Give the inorder traversal and verify all BST key ranges.</li>
+          <li>Compute every node height and balance factor bottom-up.</li>
+          <li>List every unbalanced node, not only the first one encountered from the root.</li>
+          <li>Determine whether one local rotation is enough to make the entire structure AVL. Justify your answer.</li>
+          <li>State which stored height fields must change after your proposed repair.</li>
+        </ol>
+      </li>
+      <li>
+        <strong>Complete Insertion Trace:</strong> Insert
+        \[50,30,70,20,40,35,37\]
+        into an empty AVL tree.
+        <ol type="a">
+          <li>Draw the tree immediately after each ordinary BST insertion.</li>
+          <li>List the ancestors examined by <code>fixAfterInsert</code> and their updated factors.</li>
+          <li>For every violation, write the pair \((BF(z),BF(y))\) before naming the case.</li>
+          <li>Show the intermediate tree between the two rotations of every double repair.</li>
+          <li>After each repair, compare the subtree height with its height before insertion and explain why fix-up stops.</li>
+        </ol>
+      </li>
+      <li>
+        <strong>Removal and Cascading Repair:</strong> Construct the AVL tree described in the
+        “one removal can cause two repairs” example in the removal section, including the left
+        subtree rooted at 50 and right subtree rooted at 150.
+        <ol type="a">
+          <li>Draw the complete starting tree from the listed child relationships and label its heights.</li>
+          <li>Verify every balance factor before removal.</li>
+          <li>Remove 160 and show the physical detachment separately from height repair.</li>
+          <li>Draw the tree after the rotation at 150 and explain why its subtree height decreases.</li>
+          <li>Draw the second repair at 100 and verify the final heights, factors, and inorder traversal.</li>
+        </ol>
+      </li>
+      <li>
+        <strong>Specify the Rotation Helpers:</strong> Write pseudocode for
+        <code>replaceSubtree</code>, <code>rotateLeft</code>, and <code>rotateRight</code>.
+        <ol type="a">
+          <li>State each helper's preconditions and return value.</li>
+          <li>Handle rotation at the overall root and below an ordinary parent.</li>
+          <li>Reconnect the transferred middle subtree and all affected parent references.</li>
+          <li>Give the exact height-update order.</li>
+          <li>Explain why each helper takes \(O(1)\) time.</li>
+        </ol>
+      </li>
+      <li>
+        <strong>Complete <code>rebalance</code>:</strong> Use
+        \(BF(v)=height(v.left)-height(v.right)\).
+        <ol type="a">
+          <li>Write all four numeric case tests, including the zero child-factor removal cases.</li>
+          <li>Call only <code>rotateLeft</code> and <code>rotateRight</code>; do not hide double rotations in a separate shortcut.</li>
+          <li>Show what local root is returned in each case.</li>
+          <li>Trace the method on \((+2,-1)\), including the factors after the first rotation.</li>
+          <li>Explain how the same helper serves both insertion and removal even though their outer fix-up loops stop differently.</li>
+        </ol>
+      </li>
+      <li>
+        <strong>Height Bound and Capacity:</strong>
+        <ol type="a">
+          <li>Compute \(N(h)\) for heights \(-1\) through 10.</li>
+          <li>Verify \(N(h)=F_{h+3}-1\) for your table.</li>
+          <li>Use the table to find the greatest possible height for exactly 10, 100, 1,000, and 1,000,000 nodes.</li>
+          <li>Compare the table results with \(1.4405\log_2(n+1)-1\).</li>
+          <li>Explain why the formula is an upper bound and not the height of every AVL tree.</li>
+        </ol>
+      </li>
+      <li>
+        <strong>Design an Invariant Checker and Test Plan:</strong>
+        <ol type="a">
+          <li>Specify a recursive return value that includes computed height and node count.</li>
+          <li>Pass lower and upper key bounds so a deep BST violation cannot be missed.</li>
+          <li>Check parent references, stored heights, balance factors, and the tree's stored size.</li>
+          <li>Construct separate targeted insertion tests for LL, RR, LR, and RL.</li>
+          <li>Add tests for duplicate insertion, absent removal, root removal, two-child removal, child factor 0, and multiple removal repairs.</li>
+          <li>Explain why checking only inorder order and final size would miss some implementation defects.</li>
+        </ol>
+      </li>
+      <li>
+        <strong>Augment an AVL Tree for Rank and Selection:</strong> Add
+        <code>subtreeSize</code> to each node.
+        <ol type="a">
+          <li>Give the constant-time formula for recomputing it.</li>
+          <li>State the order for updating height and subtree size during rotations.</li>
+          <li>Design <code>select(k)</code> for the \(k\)-th smallest key.</li>
+          <li>Design <code>rank(key)</code> to count stored keys smaller than a target.</li>
+          <li>Prove both queries take \(O(\log n)\) time and updates remain \(O(\log n)\).</li>
+        </ol>
+      </li>
+      <li>
+        <strong>Compare Balanced Search Trees:</strong> Consider a symbol table used by a compiler,
+        an event schedule with frequent cancellations, and an on-disk database index.
+        <ol type="a">
+          <li>Compare plain BST, AVL, red-black, and B-tree height guarantees.</li>
+          <li>Discuss lookup path length, update rotations or repairs, locality, and implementation complexity.</li>
+          <li>Recommend a structure for each workload and justify the recommendation.</li>
+          <li>Separate asymptotic guarantees from constant-factor expectations.</li>
+        </ol>
+      </li>
+      <li>
+        <strong>Implement an AVL Ordered Set:</strong> Complete one of the starter programs below.
+        Each starter supplies a runnable class, node representation, public interface, helper
+        contracts, invariant checker, and targeted driver while leaving the AVL update logic for
+        you to implement.
+        <p>Your implementation must:</p>
+        <ul class="spaced">
+          <li>store distinct integer keys and return whether each insertion or removal changes the set;</li>
+          <li>maintain child, parent, root, size, and height fields exactly;</li>
+          <li>implement <code>rotateLeft</code>, <code>rotateRight</code>, and numeric-pair <code>rebalance</code> helpers;</li>
+          <li>separate ordinary BST placement/removal from <code>fixAfterInsert</code> and <code>fixAfterRemove</code>;</li>
+          <li>preserve BST ranges and \(|BF(v)|\leq1\) after every completed operation; and</li>
+          <li>avoid using a library map or set to implement the tree itself.</li>
+        </ul>
+        <p>Recommended development order:</p>
+        <ol type="a">
+          <li>Complete search and ordinary BST leaf insertion.</li>
+          <li>Implement height helpers and both single rotations; use the invariant checker after each targeted case.</li>
+          <li>Complete insertion fix-up for LL and RR, then LR and RL.</li>
+          <li>Complete the three structural BST removal cases and identify the physical repair start.</li>
+          <li>Complete removal fix-up, including child-factor 0 and repairs at multiple ancestors.</li>
+          <li>Add focused tests before trying longer mixed update sequences.</li>
+          <li>Analyze public operation time, auxiliary space, and validator time.</li>
+        </ol>
+        <div class="starter-download-panel">
+          <p><strong>Choose a language and download the starter:</strong></p>
+          <div class="starter-downloads" role="list" aria-label="AVL tree starter downloads">
+            <a class="starter-download" role="listitem" href="/DAIADS/Content/Code/avl-trees/java/AVLTreeStarter.java" download>Java <span class="file-type">.java</span></a>
+            <a class="starter-download" role="listitem" href="/DAIADS/Content/Code/avl-trees/cpp/avl_tree_starter.cpp" download>C++ <span class="file-type">.cpp</span></a>
+            <a class="starter-download" role="listitem" href="/DAIADS/Content/Code/avl-trees/python/avl_tree_starter.py" download>Python <span class="file-type">.py</span></a>
+          </div>
+          <p>Each file runs independently and includes a small driver plus a completed structural validator.</p>
+          <ul class="spaced">
+            <li><strong>Java:</strong> <code>javac AVLTreeStarter.java</code>, then <code>java AVLTreeStarter</code>.</li>
+            <li><strong>C++:</strong> <code>g++ -std=c++17 -Wall -Wextra -pedantic avl_tree_starter.cpp -o avl_tree_starter</code>, then <code>./avl_tree_starter</code>.</li>
+            <li><strong>Python:</strong> <code>python3 avl_tree_starter.py</code>.</li>
+          </ul>
+        </div>
+      </li>
+    </ol>
   </section>
 </body>
 </html>

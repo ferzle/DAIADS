@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AVL Tree Demo</title>
+  <script src="/DAIADS/scripts/demoScripts.js"></script>
+  <link rel="stylesheet" href="/DAIADS/css/style.css">
+  <link rel="stylesheet" href="/DAIADS/css/demo.css">
+  <style>
+    * { box-sizing:border-box; }
+    #demoContainer { max-width:1080px; margin:0 auto; }
+    .avl-controls { display:flex; flex-direction:column; gap:6px; align-items:flex-start; margin-bottom:8px; }
+    .control-row { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+    .avl-controls label { display:inline-flex; align-items:center; gap:4px; }
+    .avl-controls input { width:80px; }
+    .avl-controls button:disabled { cursor:not-allowed; opacity:0.55; }
+    #status { min-height:3.5rem; padding:0.65rem 0.8rem; margin:0.6rem 0; border-left:5px solid #0a3974; background:#f0f7ff; line-height:1.45; }
+    .meta { display:flex; flex-wrap:wrap; justify-content:space-between; gap:0.4rem 1rem; color:#334e68; margin:0.35rem 0; }
+    #validity.valid { color:#176b3a; font-weight:700; }
+    #validity.invalid { color:#a61b1b; font-weight:700; }
+    .tree-viewport { width:100%; overflow-x:auto; border:1px solid #9fb3c8; border-radius:5px; background:linear-gradient(#fbfdff,#f5f9fc); }
+    #treeSvg { display:block; width:100%; min-width:620px; height:auto; }
+    .edge { stroke:#627d98; stroke-width:2.5; }
+    .node circle { fill:#fff; stroke:#0a3974; stroke-width:2.5; }
+    .node .key { fill:#102a43; font:700 16px Verdana,sans-serif; text-anchor:middle; dominant-baseline:middle; }
+    .node .height { fill:#486581; font:10px Verdana,sans-serif; text-anchor:middle; dominant-baseline:middle; }
+    .node .balance { font:700 15px Verdana,sans-serif; text-anchor:middle; }
+    .node .balance.positive { fill:#176b3a; }
+    .node .balance.negative { fill:#6b46c1; }
+    .node .balance.zero { fill:#486581; }
+    .node .balance.critical { fill:#b83232; font-size:17px; }
+    .node.examining circle { fill:#fff3cd; stroke:#d9822b; stroke-width:4; }
+    .node.changed circle { fill:#e6f6ec; stroke:#2f855a; stroke-width:4; }
+    .node.unbalanced circle { fill:#fde8e8; stroke:#b83232; stroke-width:4; }
+    .node.rotating circle { fill:#eee8ff; stroke:#6b46c1; stroke-width:4; }
+    .node.found circle { fill:#c9f3d7; stroke:#176b3a; stroke-width:5; }
+    .empty-label { fill:#829ab1; font:italic 16px Verdana,sans-serif; text-anchor:middle; }
+    .legend { display:flex; flex-wrap:wrap; align-items:center; gap:0.45rem 0.8rem; margin:0.55rem 0; }
+    .legend-item { display:inline-flex; align-items:center; gap:0.25rem; white-space:nowrap; }
+    .swatch { width:1.1rem; height:1.1rem; border:2px solid; border-radius:50%; display:inline-block; }
+    .swatch.examining { background:#fff3cd; border-color:#d9822b; }
+    .swatch.changed { background:#e6f6ec; border-color:#2f855a; }
+    .swatch.unbalanced { background:#fde8e8; border-color:#b83232; }
+    .swatch.rotating { background:#eee8ff; border-color:#6b46c1; }
+    .balance-sample { min-width:1.7em; font-weight:700; text-align:center; }
+    .balance-sample.positive { color:#176b3a; }
+    .balance-sample.negative { color:#6b46c1; }
+    .balance-sample.critical { color:#b83232; }
+    .help { color:#486581; font-size:0.92rem; margin:0.4rem 0; }
+    @media (max-width:650px) { .control-row { align-items:stretch; } .avl-controls label { width:100%; } }
+  </style>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-DQ5LVZVFDC');
+  </script>
+</head>
+<body class="no-tooltips">
+  <main id="demoContainer">
+    <h2>AVL Tree Operations</h2>
+    <div class="avl-controls">
+      <div class="control-row" aria-label="AVL tree operations">
+        <label>Value <input id="valueInput" type="number" min="-999" max="999" value="35" aria-describedby="inputHelp"></label>
+        <button id="searchBtn">Search</button>
+        <button id="insertBtn">Insert</button>
+        <button id="deleteBtn">Remove</button>
+      </div>
+      <div class="control-row" aria-label="Playback and tree controls">
+        <button id="prevBtn">Previous Step</button>
+        <button id="nextBtn">Next Step</button>
+        <button id="resetBtn">Reset Tree</button>
+        <button id="randomBtn">Random Tree</button>
+        <button id="clearBtn">Clear Tree</button>
+      </div>
+    </div>
+    <p id="inputHelp" class="help">Keys are distinct integers from −999 through 999. Choose an operation, then use Previous Step and Next Step to follow its search, height updates, and any rotations.</p>
+
+    <div class="legend" aria-label="Color legend">
+      <strong>Legend:</strong>
+      <span class="legend-item"><span class="swatch examining"></span>examining</span>
+      <span class="legend-item"><span class="swatch changed"></span>inserted/changed</span>
+      <span class="legend-item"><span class="swatch unbalanced"></span>unbalanced</span>
+      <span class="legend-item"><span class="swatch rotating"></span>rotated nodes</span>
+      <span class="legend-item"><span class="balance-sample positive">+1</span>computed left-heavy</span>
+      <span class="legend-item"><span class="balance-sample negative">−1</span>computed right-heavy</span>
+      <span class="legend-item"><span class="balance-sample critical">±2</span>computed imbalance</span>
+    </div>
+
+    <p class="help">Every node displays its stored height inside the circle. A balance factor appears below a node only on steps that compute or use it.</p>
+    <div id="status" role="status" aria-live="polite">Choose an operation to begin.</div>
+    <div class="meta">
+      <span id="stepCount">Step 1 of 1</span>
+      <span id="treeStats"></span>
+      <span id="validity" class="valid">Valid AVL tree</span>
+    </div>
+    <div class="tree-viewport">
+      <svg id="treeSvg" viewBox="0 0 900 330" preserveAspectRatio="xMidYMin meet" role="img" aria-label="Current AVL tree state"></svg>
+    </div>
+  </main>
+
+  <script>
+    const SVG_NS = 'http://www.w3.org/2000/svg';
+    const initialValues = [40, 20, 60, 10, 30, 50, 70, 25];
+    let nextId = 1;
+    let root = null;
+    let size = 0;
+    let steps = [];
+    let stepIndex = 0;
+    let recording = true;
+
+    class AVLNode {
+      constructor(key) {
+        this.id = nextId++;
+        this.key = key;
+        this.left = null;
+        this.right = null;
+        this.parent = null;
+        this.height = 0;
+      }
+    }
+
+    function nodeHeight(node) { return node ? node.height : -1; }
+    function balanceFactor(node) { return node ? nodeHeight(node.left) - nodeHeight(node.right) : 0; }
+    function updateHeight(node) { node.height = 1 + Math.max(nodeHeight(node.left), nodeHeight(node.right)); }
+
+    function cloneForDisplay(node) {
+      if (!node) return null;
+      return {
+        id:node.id, key:node.key, height:node.height, bf:balanceFactor(node),
+        left:cloneForDisplay(node.left), right:cloneForDisplay(node.right)
+      };
+    }
+
+    function record(message, marks = {}, phase = '') {
+      if (!recording) return;
+      steps.push({ tree:cloneForDisplay(root), size, message, marks, phase });
+    }
+
+    function replaceParentLink(oldRoot, newRoot) {
+      const parent = oldRoot.parent;
+      newRoot.parent = parent;
+      if (!parent) root = newRoot;
+      else if (parent.left === oldRoot) parent.left = newRoot;
+      else parent.right = newRoot;
+    }
+
+    function rotateLeft(x, showSteps = true, label = 'left rotation', extraBalance = []) {
+      const y = x.right;
+      const middle = y.left;
+      replaceParentLink(x, y);
+      y.left = x;
+      x.parent = y;
+      x.right = middle;
+      if (middle) middle.parent = x;
+      updateHeight(x);
+      updateHeight(y);
+      if (showSteps) record(`Perform a left rotation at ${x.key}: ${y.key} moves up, ${x.key} moves down to the left, and the middle subtree transfers to ${x.key}.`, { rotating:[x.id,y.id], balance:[x.id,y.id,...extraBalance] }, label);
+      return y;
+    }
+
+    function rotateRight(y, showSteps = true, label = 'right rotation', extraBalance = []) {
+      const x = y.left;
+      const middle = x.right;
+      replaceParentLink(y, x);
+      x.right = y;
+      y.parent = x;
+      y.left = middle;
+      if (middle) middle.parent = y;
+      updateHeight(y);
+      updateHeight(x);
+      if (showSteps) record(`Perform a right rotation at ${y.key}: ${x.key} moves up, ${y.key} moves down to the right, and the middle subtree transfers to ${y.key}.`, { rotating:[x.id,y.id], balance:[x.id,y.id,...extraBalance] }, label);
+      return x;
+    }
+
+    function rebalance(node, showSteps = true) {
+      updateHeight(node);
+      const factor = balanceFactor(node);
+      if (showSteps) record(`Update ${node.key}: stored height becomes ${node.height}; its computed balance factor is ${factor}.`, factor < -1 || factor > 1 ? { unbalanced:[node.id], balance:[node.id] } : { examining:[node.id], balance:[node.id] }, 'height check');
+
+      if (factor > 1) {
+        const childFactor = balanceFactor(node.left);
+        if (childFactor < 0) {
+          if (showSteps) record(`${node.key} is left-heavy and child ${node.left.key} is right-heavy: this is a left-right case. It requires two rotations.`, { unbalanced:[node.id], examining:[node.left.id], balance:[node.id,node.left.id] }, 'LR case');
+          rotateLeft(node.left, showSteps, 'LR step 1 of 2', [node.id]);
+          return rotateRight(node, showSteps, 'LR step 2 of 2');
+        }
+        if (showSteps) record(`${node.key} is left-heavy and child ${node.left.key} is ${childFactor === 0 ? 'balanced' : 'left-heavy'}: use one right rotation.`, { unbalanced:[node.id], examining:[node.left.id], balance:[node.id,node.left.id] }, 'LL case');
+        return rotateRight(node, showSteps, 'LL rotation');
+      }
+
+      if (factor < -1) {
+        const childFactor = balanceFactor(node.right);
+        if (childFactor > 0) {
+          if (showSteps) record(`${node.key} is right-heavy and child ${node.right.key} is left-heavy: this is a right-left case. It requires two rotations.`, { unbalanced:[node.id], examining:[node.right.id], balance:[node.id,node.right.id] }, 'RL case');
+          rotateRight(node.right, showSteps, 'RL step 1 of 2', [node.id]);
+          return rotateLeft(node, showSteps, 'RL step 2 of 2');
+        }
+        if (showSteps) record(`${node.key} is right-heavy and child ${node.right.key} is ${childFactor === 0 ? 'balanced' : 'right-heavy'}: use one left rotation.`, { unbalanced:[node.id], examining:[node.right.id], balance:[node.id,node.right.id] }, 'RR case');
+        return rotateLeft(node, showSteps, 'RR rotation');
+      }
+      return node;
+    }
+
+    function findNode(value, showSteps = false) {
+      let node = root;
+      while (node) {
+        if (showSteps) record(`Compare ${value} with ${node.key}.`, { examining:[node.id] }, 'BST search');
+        if (value === node.key) return node;
+        const direction = value < node.key ? 'left' : 'right';
+        if (showSteps) record(`${value} is ${value < node.key ? 'smaller' : 'larger'} than ${node.key}, so follow the ${direction} child.`, { examining:[node.id] }, 'BST search');
+        node = node[direction];
+      }
+      return null;
+    }
+
+    function insertValue(value, showSteps = true) {
+      if (!root) {
+        root = new AVLNode(value);
+        size = 1;
+        if (showSteps) record(`The tree is empty, so ${value} becomes the root with height 0.`, { changed:[root.id] }, 'insert leaf');
+        return true;
+      }
+
+      let parent = null;
+      let node = root;
+      while (node) {
+        parent = node;
+        if (showSteps) record(`Compare ${value} with ${node.key}.`, { examining:[node.id] }, 'BST insertion path');
+        if (value === node.key) {
+          if (showSteps) record(`${value} is already present. This tree stores distinct keys, so nothing changes.`, { found:[node.id] }, 'duplicate');
+          return false;
+        }
+        node = value < node.key ? node.left : node.right;
+      }
+
+      const inserted = new AVLNode(value);
+      inserted.parent = parent;
+      if (value < parent.key) parent.left = inserted;
+      else parent.right = inserted;
+      size++;
+      if (showSteps) record(`Attach ${value} as a new ${value < parent.key ? 'left' : 'right'} child of ${parent.key}.`, { changed:[inserted.id] }, 'insert leaf');
+
+      node = parent;
+      while (node) {
+        const repairedRoot = rebalance(node, showSteps);
+        if (repairedRoot !== node) {
+          if (showSteps) record('The first unbalanced insertion ancestor is repaired. Its subtree has returned to its previous height, so insertion repair is complete.', { changed:[repairedRoot.id] }, 'insertion complete');
+          return true;
+        }
+        node = node.parent;
+      }
+      if (showSteps) record('All ancestors are balanced; no rotation is needed.', {}, 'insertion complete');
+      return true;
+    }
+
+    function minimumNode(node) { while (node && node.left) node = node.left; return node; }
+
+    function replaceNode(node, child) {
+      if (!node.parent) root = child;
+      else if (node.parent.left === node) node.parent.left = child;
+      else node.parent.right = child;
+      if (child) child.parent = node.parent;
+    }
+
+    function removeValue(value, showSteps = true) {
+      let target = findNode(value, showSteps);
+      if (!target) {
+        if (showSteps) record(`${value} is absent, so removal makes no change.`, {}, 'not found');
+        return false;
+      }
+      if (showSteps) record(`Found ${value}.`, { found:[target.id] }, 'found');
+
+      if (target.left && target.right) {
+        const successor = minimumNode(target.right);
+        if (showSteps) record(`${target.key} has two children. Its successor is ${successor.key}; copy that entry, then physically remove the successor.`, { examining:[successor.id], changed:[target.id] }, 'two-child removal');
+        target.key = successor.key;
+        target = successor;
+      }
+
+      const child = target.left || target.right;
+      const repairStart = target.parent;
+      const removedKey = target.key;
+      replaceNode(target, child);
+      size--;
+      if (showSteps) record(`Detach the node containing ${removedKey}${child ? ` and promote its child ${child.key}` : ''}. Height repair begins at its former parent.`, child ? { changed:[child.id] } : {}, 'physical removal');
+
+      let node = repairStart;
+      while (node) {
+        const repairedRoot = rebalance(node, showSteps);
+        node = repairedRoot.parent;
+      }
+      if (root) updateHeight(root);
+      if (showSteps) record('Removal repair has reached the root. The AVL and BST invariants hold.', root ? { changed:[root.id] } : {}, 'removal complete');
+      return true;
+    }
+
+    function beginOperation(message) {
+      steps = [];
+      stepIndex = 0;
+      record(message, {}, 'start');
+    }
+
+    function parseInput() {
+      const input = document.getElementById('valueInput');
+      const value = Number(input.value);
+      if (!Number.isInteger(value) || value < -999 || value > 999) {
+        beginOperation('Enter an integer from −999 through 999.');
+        render();
+        return null;
+      }
+      return value;
+    }
+
+    function runOperation(kind) {
+      const value = parseInput();
+      if (value === null) return;
+      beginOperation(`Begin ${kind}(${value}) from the current AVL tree.`);
+      if (kind === 'search') {
+        const found = findNode(value, true);
+        record(found ? `Search succeeds: ${value} is in the tree.` : `Search reaches an empty child: ${value} is not in the tree.`, found ? { found:[found.id] } : {}, 'search result');
+      } else if (kind === 'insert') insertValue(value, true);
+      else removeValue(value, true);
+      stepIndex = 0;
+      render();
+    }
+
+    function rebuild(values) {
+      root = null;
+      size = 0;
+      nextId = 1;
+      const wasRecording = recording;
+      recording = false;
+      values.forEach(value => insertValue(value, false));
+      recording = wasRecording;
+    }
+
+    function resetExample() {
+      rebuild(initialValues);
+      steps = [];
+      record('Example restored. Choose an operation; try inserting 27 or removing 70.', {}, 'ready');
+      stepIndex = 0;
+      render();
+    }
+
+    function randomTree() {
+      const pool = [];
+      while (pool.length < 9) {
+        const value = Math.floor(Math.random() * 91) + 5;
+        if (!pool.includes(value)) pool.push(value);
+      }
+      rebuild(pool);
+      steps = [];
+      record(`Built a valid AVL tree from the shuffled insertion sequence ${pool.join(', ')}.`, {}, 'ready');
+      stepIndex = 0;
+      render();
+    }
+
+    function validateTree() {
+      const seen = new Set();
+      function visit(node, low, high, parent) {
+        if (!node) return { ok:true, height:-1, count:0 };
+        if (seen.has(node) || node.parent !== parent || node.key <= low || node.key >= high) return { ok:false, height:0, count:0 };
+        seen.add(node);
+        const left = visit(node.left, low, node.key, node);
+        const right = visit(node.right, node.key, high, node);
+        const expected = 1 + Math.max(left.height, right.height);
+        return { ok:left.ok && right.ok && node.height === expected && Math.abs(left.height-right.height) <= 1, height:expected, count:1+left.count+right.count };
+      }
+      const result = visit(root, -Infinity, Infinity, null);
+      result.ok = result.ok && result.count === size;
+      return result;
+    }
+
+    function displayValidation(tree, expectedSize) {
+      function visit(node, low, high) {
+        if (!node) return { ok:true, height:-1, count:0 };
+        const left = visit(node.left, low, node.key);
+        const right = visit(node.right, node.key, high);
+        const expected = 1 + Math.max(left.height, right.height);
+        return { ok:left.ok && right.ok && node.key > low && node.key < high && node.height === expected && node.bf === left.height-right.height && Math.abs(left.height-right.height) <= 1, height:expected, count:1+left.count+right.count };
+      }
+      const result = visit(tree, -Infinity, Infinity);
+      result.ok = result.ok && result.count === expectedSize;
+      return result;
+    }
+
+    function svgElement(name, attributes = {}) {
+      const element = document.createElementNS(SVG_NS, name);
+      Object.entries(attributes).forEach(([key,value]) => element.setAttribute(key,value));
+      return element;
+    }
+
+    function layoutTree(tree) {
+      const nodes = [];
+      let index = 0;
+      let maxDepth = 0;
+      function visit(node, depth) {
+        if (!node) return;
+        visit(node.left, depth+1);
+        nodes.push({ node, order:index++, depth });
+        maxDepth = Math.max(maxDepth, depth);
+        visit(node.right, depth+1);
+      }
+      visit(tree, 0);
+      const width = Math.max(760, nodes.length * 82 + 100);
+      const gap = nodes.length > 1 ? (width-100)/(nodes.length-1) : 0;
+      const positions = new Map();
+      nodes.forEach(item => positions.set(item.node.id, { x:nodes.length === 1 ? width/2 : 50+item.order*gap, y:58+item.depth*92, node:item.node }));
+      return { positions, width, height:Math.max(300, 115+maxDepth*92) };
+    }
+
+    function renderTree(step) {
+      const svg = document.getElementById('treeSvg');
+      svg.innerHTML = '';
+      if (!step.tree) {
+        svg.setAttribute('viewBox','0 0 900 300');
+        const label = svgElement('text',{x:450,y:150,class:'empty-label'});
+        label.textContent = 'empty AVL tree';
+        svg.appendChild(label);
+        return;
+      }
+      const layout = layoutTree(step.tree);
+      svg.setAttribute('viewBox',`0 0 ${layout.width} ${layout.height}`);
+      const marks = step.marks || {};
+      const classes = new Map();
+      ['examining','changed','unbalanced','rotating','found'].forEach(name => (marks[name] || []).forEach(id => classes.set(id,name)));
+      const balanceIds = new Set(marks.balance || []);
+
+      function edges(node) {
+        if (!node) return;
+        const from = layout.positions.get(node.id);
+        [node.left,node.right].forEach(child => {
+          if (!child) return;
+          const to = layout.positions.get(child.id);
+          svg.appendChild(svgElement('line',{x1:from.x,y1:from.y,x2:to.x,y2:to.y,class:'edge'}));
+          edges(child);
+        });
+      }
+      edges(step.tree);
+      layout.positions.forEach(({x,y,node}) => {
+        const group = svgElement('g',{class:`node ${classes.get(node.id) || ''}`,transform:`translate(${x} ${y})`});
+        group.appendChild(svgElement('circle',{cx:0,cy:0,r:28}));
+        const key = svgElement('text',{x:0,y:-7,class:'key'}); key.textContent=node.key; group.appendChild(key);
+        const height = svgElement('text',{x:0,y:11,class:'height'}); height.textContent=`height ${node.height}`; group.appendChild(height);
+        if (balanceIds.has(node.id)) {
+          const value = node.bf > 0 ? `+${node.bf}` : node.bf < 0 ? `−${Math.abs(node.bf)}` : '0';
+          const tone = Math.abs(node.bf) >= 2 ? 'critical' : node.bf > 0 ? 'positive' : node.bf < 0 ? 'negative' : 'zero';
+          const balance = svgElement('text',{x:0,y:49,class:`balance ${tone}`});
+          balance.textContent=value;
+          group.appendChild(balance);
+        }
+        svg.appendChild(group);
+      });
+    }
+
+    function render() {
+      const step = steps[stepIndex] || { tree:cloneForDisplay(root), size, message:'Ready.', marks:{}, phase:'ready' };
+      document.getElementById('status').textContent = `${step.phase ? `${step.phase}: ` : ''}${step.message}`;
+      document.getElementById('stepCount').textContent = `Step ${stepIndex+1} of ${Math.max(steps.length,1)}`;
+      document.getElementById('treeStats').textContent = `Size: ${step.size} · Height: ${step.tree ? step.tree.height : -1}`;
+      const check = displayValidation(step.tree, step.size);
+      const validity = document.getElementById('validity');
+      validity.textContent = check.ok ? 'Valid AVL tree' : 'Intermediate/non-AVL state';
+      validity.className = check.ok ? 'valid' : 'invalid';
+      document.getElementById('prevBtn').disabled = stepIndex === 0;
+      document.getElementById('nextBtn').disabled = stepIndex >= steps.length-1;
+      renderTree(step);
+    }
+
+    document.getElementById('searchBtn').addEventListener('click',()=>runOperation('search'));
+    document.getElementById('insertBtn').addEventListener('click',()=>runOperation('insert'));
+    document.getElementById('deleteBtn').addEventListener('click',()=>runOperation('remove'));
+    document.getElementById('prevBtn').addEventListener('click',()=>{ if(stepIndex>0){stepIndex--;render();} });
+    document.getElementById('nextBtn').addEventListener('click',()=>{ if(stepIndex<steps.length-1){stepIndex++;render();} });
+    document.getElementById('resetBtn').addEventListener('click',resetExample);
+    document.getElementById('randomBtn').addEventListener('click',randomTree);
+    document.getElementById('clearBtn').addEventListener('click',()=>{ rebuild([]); steps=[]; record('The tree is empty. Insert a key to begin.',{},'ready'); stepIndex=0; render(); });
+    document.getElementById('valueInput').addEventListener('keydown',event=>{ if(event.key==='Enter') runOperation('insert'); });
+
+    resetExample();
+    if (!validateTree().ok) console.error('Initial AVL tree failed validation.');
+  </script>
+</body>
+</html>

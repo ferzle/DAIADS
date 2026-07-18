@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BST Rotation 2 Demo</title>
+  <script src="/DAIADS/scripts/demoScripts.js"></script>
+  <link rel="stylesheet" href="/DAIADS/css/style.css">
+  <link rel="stylesheet" href="/DAIADS/css/demo.css">
+  <style>
+    * { box-sizing:border-box; }
+    #demoContainer { max-width:1080px; margin:0 auto; }
+    .rotation-controls { display:flex; flex-direction:column; gap:6px; align-items:flex-start; margin-bottom:8px; }
+    .control-row { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+    button.selected { outline:3px solid #0a3974; outline-offset:1px; }
+    button:disabled { cursor:not-allowed; opacity:0.55; }
+    #status { min-height:3.5rem; padding:0.65rem 0.8rem; margin:0.6rem 0; border-left:5px solid #0a3974; background:#f0f7ff; line-height:1.45; }
+    .meta { display:flex; flex-wrap:wrap; justify-content:space-between; gap:0.4rem 1rem; color:#334e68; margin:0.35rem 0; }
+    .tree-viewport { width:100%; overflow-x:auto; border:1px solid #9fb3c8; border-radius:5px; background:linear-gradient(#fbfdff,#f5f9fc); }
+    #treeSvg { display:block; width:100%; min-width:650px; height:auto; }
+    .edge { stroke:#627d98; stroke-width:2.5; }
+    .node circle { fill:#fff; stroke:#0a3974; stroke-width:2.5; }
+    .node .key { fill:#102a43; font:700 16px Verdana,sans-serif; text-anchor:middle; dominant-baseline:middle; }
+    .node .role { fill:#486581; font:12px Verdana,sans-serif; text-anchor:middle; }
+    .node.rotating circle { fill:#eee8ff; stroke:#6b46c1; stroke-width:4; }
+    .node.pivot circle { fill:#fff3cd; stroke:#d9822b; stroke-width:4; }
+    .subtree rect { fill:#f6f6f6; stroke:#829ab1; stroke-width:2; stroke-dasharray:5 4; rx:5; }
+    .subtree text { fill:#486581; font:700 14px Verdana,sans-serif; text-anchor:middle; dominant-baseline:middle; }
+    .legend { display:flex; flex-wrap:wrap; align-items:center; gap:0.45rem 0.8rem; margin:0.55rem 0; }
+    .legend-item { display:inline-flex; align-items:center; gap:0.25rem; white-space:nowrap; }
+    .swatch { width:1.1rem; height:1.1rem; border:2px solid; display:inline-block; }
+    .swatch.pivot { border-radius:50%; background:#fff3cd; border-color:#d9822b; }
+    .swatch.rotating { border-radius:50%; background:#eee8ff; border-color:#6b46c1; }
+    .swatch.subtree { border-radius:3px; background:#f6f6f6; border-color:#829ab1; border-style:dashed; }
+    .inorder { padding:0.55rem 0.7rem; border:1px solid #9fb3c8; border-radius:4px; background:#fff; font-family:monospace; }
+  </style>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-DQ5LVZVFDC');
+  </script>
+</head>
+<body class="no-tooltips">
+  <main id="demoContainer">
+    <h2>BST Rotation 2 Demo</h2>
+    <div class="rotation-controls">
+      <div class="control-row" aria-label="Choose a rotation">
+        <button data-case="left">Left Rotation</button>
+        <button data-case="right">Right Rotation</button>
+        <button data-case="leftRight">Left-Right Rotation</button>
+        <button data-case="rightLeft">Right-Left Rotation</button>
+      </div>
+      <div class="control-row" aria-label="Playback controls">
+        <button id="prevBtn">Previous Step</button>
+        <button id="nextBtn">Next Step</button>
+        <button id="resetBtn">Reset Rotation</button>
+      </div>
+    </div>
+    <div class="legend" aria-label="Color legend">
+      <strong>Legend:</strong>
+      <span class="legend-item"><span class="swatch pivot"></span>rotation root</span>
+      <span class="legend-item"><span class="swatch rotating"></span>node moved by this step</span>
+      <span class="legend-item"><span class="swatch subtree"></span>unchanged internal subtree</span>
+    </div>
+    <div id="status" role="status" aria-live="polite"></div>
+    <div class="meta">
+      <span><strong id="caseTitle"></strong></span>
+      <span id="stepCount"></span>
+      <span>Inorder order is unchanged</span>
+    </div>
+    <div class="tree-viewport">
+      <svg id="treeSvg" viewBox="0 0 900 360" preserveAspectRatio="xMidYMin meet" role="img" aria-label="Binary search tree rotation state"></svg>
+    </div>
+    <p class="inorder"><strong>Inorder:</strong> <span id="inorder"></span></p>
+  </main>
+  <script>
+    const SVG_NS = 'http://www.w3.org/2000/svg';
+    function node(id,key,role,left=null,right=null) { return {id,key,role,left,right,subtree:false}; }
+    function subtree(id) { return {id,key:id,role:'',left:null,right:null,subtree:true}; }
+    const builders = {
+      left: () => [
+        { title:'Left rotation', message:'Before: z = 10 has right child y = 20. T2 contains keys between 10 and 20 and must be transferred, not discarded.', pivot:['z'], moving:[], inorder:'T1, 10, T2, 20, T3', tree:node('z',10,'z',subtree('T1'),node('y',20,'y',subtree('T2'),subtree('T3'))) },
+        { title:'Left rotation', message:'Rotate left at z: y moves up, z becomes its left child, and T2 becomes the right subtree of z.', pivot:[], moving:['z','y'], inorder:'T1, 10, T2, 20, T3', tree:node('y',20,'y',node('z',10,'z',subtree('T1'),subtree('T2')),subtree('T3')) }
+      ],
+      right: () => [
+        { title:'Right rotation', message:'Before: z = 20 has left child y = 10. T2 contains keys between 10 and 20.', pivot:['z'], moving:[], inorder:'T1, 10, T2, 20, T3', tree:node('z',20,'z',node('y',10,'y',subtree('T1'),subtree('T2')),subtree('T3')) },
+        { title:'Right rotation', message:'Rotate right at z: y moves up, z becomes its right child, and T2 becomes the left subtree of z.', pivot:[], moving:['z','y'], inorder:'T1, 10, T2, 20, T3', tree:node('y',10,'y',subtree('T1'),node('z',20,'z',subtree('T2'),subtree('T3'))) }
+      ],
+      leftRight: () => [
+        { title:'Left-right rotation', message:'The path bends left then right: z = 30 has left child y = 10, whose right child x = 20 is the middle key.', pivot:['z'], moving:[], inorder:'T1, 10, T2, 20, T3, 30, T4', tree:node('z',30,'z',node('y',10,'y',subtree('T1'),node('x',20,'x',subtree('T2'),subtree('T3'))),subtree('T4')) },
+        { title:'Left-right rotation', message:'Step 1 of 2: rotate left at y = 10. The bent configuration becomes a straight left-left configuration at z = 30.', pivot:['z'], moving:['y','x'], inorder:'T1, 10, T2, 20, T3, 30, T4', tree:node('z',30,'z',node('x',20,'x',node('y',10,'y',subtree('T1'),subtree('T2')),subtree('T3')),subtree('T4')) },
+        { title:'Left-right rotation', message:'Step 2 of 2: rotate right at z = 30. The middle key x = 20 becomes the new local root.', pivot:[], moving:['x','z'], inorder:'T1, 10, T2, 20, T3, 30, T4', tree:node('x',20,'x',node('y',10,'y',subtree('T1'),subtree('T2')),node('z',30,'z',subtree('T3'),subtree('T4'))) }
+      ],
+      rightLeft: () => [
+        { title:'Right-left rotation', message:'The path bends right then left: z = 10 has right child y = 30, whose left child x = 20 is the middle key.', pivot:['z'], moving:[], inorder:'T1, 10, T2, 20, T3, 30, T4', tree:node('z',10,'z',subtree('T1'),node('y',30,'y',node('x',20,'x',subtree('T2'),subtree('T3')),subtree('T4'))) },
+        { title:'Right-left rotation', message:'Step 1 of 2: rotate right at y = 30. The bent configuration becomes a straight right-right configuration at z = 10.', pivot:['z'], moving:['y','x'], inorder:'T1, 10, T2, 20, T3, 30, T4', tree:node('z',10,'z',subtree('T1'),node('x',20,'x',subtree('T2'),node('y',30,'y',subtree('T3'),subtree('T4')))) },
+        { title:'Right-left rotation', message:'Step 2 of 2: rotate left at z = 10. The middle key x = 20 becomes the new local root.', pivot:[], moving:['z','x'], inorder:'T1, 10, T2, 20, T3, 30, T4', tree:node('x',20,'x',node('z',10,'z',subtree('T1'),subtree('T2')),node('y',30,'y',subtree('T3'),subtree('T4'))) }
+      ]
+    };
+    let currentCase = 'left';
+    let steps = builders.left();
+    let stepIndex = 0;
+    let renderedLayout = null;
+    let animationFrame = null;
+    let isAnimating = false;
+    const DRAW_WIDTH = 900;
+    const ROOT_X = DRAW_WIDTH / 2;
+    const ROOT_Y = 58;
+    const ROOT_GAP = 190;
+    const MIN_GAP = 58;
+    const LEVEL_GAP = 86;
+    const ANIMATION_MS = 800;
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    function svgElement(name,attrs={}) {
+      const element=document.createElementNS(SVG_NS,name);
+      Object.entries(attrs).forEach(([key,value])=>element.setAttribute(key,value));
+      return element;
+    }
+    function layoutTree(tree) {
+      const positions=new Map();
+      const edges=[];
+      let maxDepth=0;
+      function visit(current,depth,x) {
+        if(!current)return;
+        maxDepth=Math.max(maxDepth,depth);
+        positions.set(current.id,{x,y:ROOT_Y+depth*LEVEL_GAP,node:current});
+        const gap=Math.max(MIN_GAP,ROOT_GAP/Math.pow(2,depth));
+        if(current.left) {
+          edges.push([current.id,current.left.id]);
+          visit(current.left,depth+1,x-gap);
+        }
+        if(current.right) {
+          edges.push([current.id,current.right.id]);
+          visit(current.right,depth+1,x+gap);
+        }
+      }
+      visit(tree,0,ROOT_X);
+      return {positions,edges,width:DRAW_WIDTH,height:Math.max(340,120+maxDepth*LEVEL_GAP)};
+    }
+
+    function nodeGroup(current,step) {
+      const classes=current.subtree?'subtree':'node '+(step.pivot.includes(current.id)?'pivot ':'')+(step.moving.includes(current.id)?'rotating':'');
+      const group=svgElement('g',{class:classes});
+      if(current.subtree) {
+        group.appendChild(svgElement('rect',{x:-24,y:-17,width:48,height:34}));
+        const label=svgElement('text',{x:0,y:1}); label.textContent=current.key; group.appendChild(label);
+      } else {
+        group.appendChild(svgElement('circle',{cx:0,cy:0,r:25}));
+        const key=svgElement('text',{x:0,y:1,class:'key'}); key.textContent=current.key; group.appendChild(key);
+        const role=svgElement('text',{x:0,y:42,class:'role'}); role.textContent='node '+current.role; group.appendChild(role);
+      }
+      return group;
+    }
+
+    function setGroupPosition(group,point) {
+      group.setAttribute('transform','translate('+point.x+' '+point.y+')');
+    }
+
+    function setLinePosition(line,a,b) {
+      line.setAttribute('x1',a.x);
+      line.setAttribute('y1',a.y);
+      line.setAttribute('x2',b.x);
+      line.setAttribute('y2',b.y);
+    }
+
+    function drawStatic(step,layout) {
+      const svg=document.getElementById('treeSvg');
+      svg.innerHTML='';
+      svg.setAttribute('viewBox','0 0 '+layout.width+' '+layout.height);
+      layout.edges.forEach(edge=>{
+        const line=svgElement('line',{class:'edge'});
+        setLinePosition(line,layout.positions.get(edge[0]),layout.positions.get(edge[1]));
+        svg.appendChild(line);
+      });
+      layout.positions.forEach((position,id)=>{
+        const group=nodeGroup(position.node,step);
+        setGroupPosition(group,position);
+        svg.appendChild(group);
+      });
+    }
+
+    function between(from,to,progress) {
+      return {x:from.x+(to.x-from.x)*progress,y:from.y+(to.y-from.y)*progress};
+    }
+
+    function ease(progress) {
+      return progress<0.5?4*progress*progress*progress:1-Math.pow(-2*progress+2,3)/2;
+    }
+
+    function drawAnimated(step,fromLayout,toLayout) {
+      const svg=document.getElementById('treeSvg');
+      svg.innerHTML='';
+      svg.setAttribute('viewBox','0 0 '+toLayout.width+' '+toLayout.height);
+      const lines=toLayout.edges.map(edge=>{
+        const line=svgElement('line',{class:'edge'});
+        svg.appendChild(line);
+        return {line,edge};
+      });
+      const groups=new Map();
+      toLayout.positions.forEach((position,id)=>{
+        const group=nodeGroup(position.node,step);
+        svg.appendChild(group);
+        groups.set(id,group);
+      });
+      const pointAt=(id,progress)=>{
+        const end=toLayout.positions.get(id);
+        const start=fromLayout.positions.get(id)||end;
+        return between(start,end,progress);
+      };
+      isAnimating=true;
+      updateControls();
+      const startTime=performance.now();
+      function frame(now) {
+        const raw=Math.min(1,(now-startTime)/ANIMATION_MS);
+        const progress=ease(raw);
+        lines.forEach(item=>setLinePosition(item.line,pointAt(item.edge[0],progress),pointAt(item.edge[1],progress)));
+        groups.forEach((group,id)=>setGroupPosition(group,pointAt(id,progress)));
+        if(raw<1) {
+          animationFrame=requestAnimationFrame(frame);
+        } else {
+          animationFrame=null;
+          isAnimating=false;
+          renderedLayout=toLayout;
+          drawStatic(step,toLayout);
+          updateControls();
+        }
+      }
+      animationFrame=requestAnimationFrame(frame);
+    }
+
+    function updateControls() {
+      document.getElementById('prevBtn').disabled=isAnimating||stepIndex===0;
+      document.getElementById('nextBtn').disabled=isAnimating||stepIndex===steps.length-1;
+      document.getElementById('resetBtn').disabled=isAnimating;
+      document.querySelectorAll('[data-case]').forEach(button=>{
+        button.disabled=isAnimating;
+        button.classList.toggle('selected',button.dataset.case===currentCase);
+      });
+    }
+
+    function render(animate=true) {
+      const step=steps[stepIndex];
+      document.getElementById('status').textContent=step.message;
+      document.getElementById('caseTitle').textContent=step.title;
+      document.getElementById('stepCount').textContent='Step '+(stepIndex+1)+' of '+steps.length;
+      document.getElementById('inorder').textContent=step.inorder;
+      updateControls();
+      const nextLayout=layoutTree(step.tree);
+      if(animationFrame!==null) cancelAnimationFrame(animationFrame);
+      if(!animate||!renderedLayout||reducedMotion) {
+        renderedLayout=nextLayout;
+        drawStatic(step,nextLayout);
+        isAnimating=false;
+        updateControls();
+      } else {
+        drawAnimated(step,renderedLayout,nextLayout);
+      }
+    }
+    function chooseCase(name) {
+      currentCase=name;
+      steps=builders[name]();
+      stepIndex=0;
+      renderedLayout=null;
+      render(false);
+    }
+    document.querySelectorAll('[data-case]').forEach(button=>button.addEventListener('click',()=>chooseCase(button.dataset.case)));
+    document.getElementById('prevBtn').addEventListener('click',()=>{if(!isAnimating&&stepIndex>0){stepIndex--;render(true);}});
+    document.getElementById('nextBtn').addEventListener('click',()=>{if(!isAnimating&&stepIndex<steps.length-1){stepIndex++;render(true);}});
+    document.getElementById('resetBtn').addEventListener('click',()=>chooseCase(currentCase));
+    chooseCase('left');
+  </script>
+</body>
+</html>
