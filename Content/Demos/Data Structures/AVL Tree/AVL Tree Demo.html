@@ -22,6 +22,8 @@
     .tree-viewport { width:100%; overflow-x:auto; border:1px solid #9fb3c8; border-radius:5px; background:linear-gradient(#fbfdff,#f5f9fc); }
     #treeSvg { display:block; width:100%; min-width:620px; height:auto; }
     .edge { stroke:#627d98; stroke-width:2.5; }
+    .missing-edge { stroke:#d4a600; stroke-width:2.5; stroke-dasharray:6 5; stroke-linecap:round; marker-end:url(#missingArrowhead); }
+    .missing-node { fill:url(#missingNodeFill); stroke:#d4a600; stroke-width:3; stroke-dasharray:5 4; }
     .node circle { fill:#fff; stroke:#0a3974; stroke-width:2.5; }
     .node .key { fill:#102a43; font:700 16px Verdana,sans-serif; text-anchor:middle; dominant-baseline:middle; }
     .node .height { fill:#486581; font:10px Verdana,sans-serif; text-anchor:middle; dominant-baseline:middle; }
@@ -48,7 +50,7 @@
     .balance-sample.negative { color:#6b46c1; }
     .balance-sample.critical { color:#b83232; }
     .help { color:#486581; font-size:0.92rem; margin:0.4rem 0; }
-    @media (max-width:650px) { .control-row { align-items:stretch; } .avl-controls label { width:100%; } }
+    @media (max-width:650px) { .control-row { align-items:stretch; } }
   </style>
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
@@ -64,21 +66,19 @@
     <h2>AVL Tree Operations</h2>
     <div class="avl-controls">
       <div class="control-row" aria-label="AVL tree operations">
-        <label>Value <input id="valueInput" type="number" min="-999" max="999" value="35" aria-describedby="inputHelp"></label>
+        <label>Value <input id="valueInput" type="number" min="-999" max="999" value="35"></label>
         <button id="searchBtn">Search</button>
         <button id="insertBtn">Insert</button>
         <button id="deleteBtn">Remove</button>
       </div>
       <div class="control-row" aria-label="Playback and tree controls">
-        <button id="prevBtn">Previous Step</button>
-        <button id="nextBtn">Next Step</button>
+        <button id="prevBtn">Previous</button>
+        <button id="nextBtn">Next</button>
         <button id="resetBtn">Reset Tree</button>
         <button id="randomBtn">Random Tree</button>
         <button id="clearBtn">Clear Tree</button>
       </div>
     </div>
-    <p id="inputHelp" class="help">Keys are distinct integers from −999 through 999. Choose an operation, then use Previous Step and Next Step to follow its search, height updates, and any rotations.</p>
-
     <div class="legend" aria-label="Color legend">
       <strong>Legend:</strong>
       <span class="legend-item"><span class="swatch examining"></span>examining</span>
@@ -90,7 +90,6 @@
       <span class="legend-item"><span class="balance-sample critical">±2</span>computed imbalance</span>
     </div>
 
-    <p class="help">Every node displays its stored height inside the circle. A balance factor appears below a node only on steps that compute or use it.</p>
     <div id="status" role="status" aria-live="polite">Choose an operation to begin.</div>
     <div class="meta">
       <span id="stepCount">Step 1 of 1</span>
@@ -205,13 +204,18 @@
       return node;
     }
 
-    function findNode(value, showSteps = false) {
+    function findNode(value, showSteps = false, missingEndpoint = null) {
       let node = root;
+      if (!node && missingEndpoint) missingEndpoint.root = true;
       while (node) {
         if (showSteps) record(`Compare ${value} with ${node.key}.`, { examining:[node.id] }, 'BST search');
         if (value === node.key) return node;
         const direction = value < node.key ? 'left' : 'right';
         if (showSteps) record(`${value} is ${value < node.key ? 'smaller' : 'larger'} than ${node.key}, so follow the ${direction} child.`, { examining:[node.id] }, 'BST search');
+        if (!node[direction] && missingEndpoint) {
+          missingEndpoint.parentId = node.id;
+          missingEndpoint.side = direction;
+        }
         node = node[direction];
       }
       return null;
@@ -320,8 +324,14 @@
       if (value === null) return;
       beginOperation(`Begin ${kind}(${value}) from the current AVL tree.`);
       if (kind === 'search') {
-        const found = findNode(value, true);
-        record(found ? `Search succeeds: ${value} is in the tree.` : `Search reaches an empty child: ${value} is not in the tree.`, found ? { found:[found.id] } : {}, 'search result');
+        const missingEndpoint = {};
+        const found = findNode(value, true, missingEndpoint);
+        const marks = found
+          ? { found:[found.id] }
+          : missingEndpoint.root
+            ? { missingRoot:true }
+            : { missingParentId:missingEndpoint.parentId, missingSide:missingEndpoint.side };
+        record(found ? `Search succeeds: ${value} is in the tree.` : `Search reaches an empty child: ${value} is not in the tree.`, marks, 'search result');
       } else if (kind === 'insert') insertValue(value, true);
       else removeValue(value, true);
       stepIndex = 0;
@@ -410,17 +420,65 @@
       const gap = nodes.length > 1 ? (width-100)/(nodes.length-1) : 0;
       const positions = new Map();
       nodes.forEach(item => positions.set(item.node.id, { x:nodes.length === 1 ? width/2 : 50+item.order*gap, y:58+item.depth*92, node:item.node }));
-      return { positions, width, height:Math.max(300, 115+maxDepth*92) };
+      return { positions, width, height:Math.max(370, 184+maxDepth*92), childOffset:Math.max(70,gap), verticalGap:92 };
+    }
+
+    function renderDefs(svg) {
+      const defs = svgElement('defs');
+      const pattern = svgElement('pattern',{id:'missingNodeFill',patternUnits:'userSpaceOnUse',width:8,height:8,patternTransform:'rotate(45)'});
+      pattern.appendChild(svgElement('rect',{width:8,height:8,fill:'#fff3a6'}));
+      pattern.appendChild(svgElement('line',{x1:0,y1:0,x2:0,y2:8,stroke:'#d4a600','stroke-width':2}));
+      defs.appendChild(pattern);
+      const marker = svgElement('marker',{id:'missingArrowhead',markerWidth:8,markerHeight:8,refX:7,refY:4,orient:'auto',markerUnits:'strokeWidth'});
+      marker.appendChild(svgElement('path',{d:'M 0 0 L 8 4 L 0 8 z',fill:'#d4a600'}));
+      defs.appendChild(marker);
+      svg.appendChild(defs);
+    }
+
+    function missingChildPosition(parentPos, side, layout) {
+      let offset = layout.childOffset;
+      if (side === 'left' && parentPos.node.right) {
+        const sibling = layout.positions.get(parentPos.node.right.id);
+        if (sibling) offset = Math.abs(sibling.x-parentPos.x);
+      }
+      if (side === 'right' && parentPos.node.left) {
+        const sibling = layout.positions.get(parentPos.node.left.id);
+        if (sibling) offset = Math.abs(parentPos.x-sibling.x);
+      }
+      const naturalX=parentPos.x+(side === 'right'?offset:-offset);
+      return {x:Math.max(30,Math.min(layout.width-30,naturalX)),y:parentPos.y+layout.verticalGap};
+    }
+
+    function drawMissingEdge(svg,from,to) {
+      const dx=to.x-from.x;
+      const dy=to.y-from.y;
+      const length=Math.hypot(dx,dy)||1;
+      const endPadding=29;
+      svg.appendChild(svgElement('line',{
+        x1:from.x,y1:from.y,
+        x2:to.x-(dx/length)*endPadding,
+        y2:to.y-(dy/length)*endPadding,
+        class:'missing-edge'
+      }));
+    }
+
+    function drawMissingNode(svg,x,y) {
+      svg.appendChild(svgElement('circle',{cx:x,cy:y,r:24,class:'missing-node'}));
     }
 
     function renderTree(step) {
       const svg = document.getElementById('treeSvg');
       svg.innerHTML = '';
+      renderDefs(svg);
       if (!step.tree) {
-        svg.setAttribute('viewBox','0 0 900 300');
-        const label = svgElement('text',{x:450,y:150,class:'empty-label'});
-        label.textContent = 'empty AVL tree';
-        svg.appendChild(label);
+        svg.setAttribute('viewBox','0 0 900 320');
+        if (step.marks && step.marks.missingRoot) {
+          drawMissingNode(svg,450,150);
+        } else {
+          const label = svgElement('text',{x:450,y:150,class:'empty-label'});
+          label.textContent = 'empty AVL tree';
+          svg.appendChild(label);
+        }
         return;
       }
       const layout = layoutTree(step.tree);
@@ -441,6 +499,14 @@
         });
       }
       edges(step.tree);
+      let missingPos = null;
+      if (marks.missingParentId && marks.missingSide) {
+        const parentPos = layout.positions.get(marks.missingParentId);
+        if (parentPos) {
+          missingPos = missingChildPosition(parentPos,marks.missingSide,layout);
+          drawMissingEdge(svg,parentPos,missingPos);
+        }
+      }
       layout.positions.forEach(({x,y,node}) => {
         const group = svgElement('g',{class:`node ${classes.get(node.id) || ''}`,transform:`translate(${x} ${y})`});
         group.appendChild(svgElement('circle',{cx:0,cy:0,r:28}));
@@ -455,6 +521,7 @@
         }
         svg.appendChild(group);
       });
+      if (missingPos) drawMissingNode(svg,missingPos.x,missingPos.y);
     }
 
     function render() {

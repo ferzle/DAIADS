@@ -2,86 +2,46 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>BST Rotation Demo</title>
   <script src="/DAIADS/scripts/demoScripts.js"></script>
   <link rel="stylesheet" href="/DAIADS/css/style.css">
   <link rel="stylesheet" href="/DAIADS/css/demo.css">
   <style>
-    .rotation-controls {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      align-items: center;
-      margin-bottom: 8px;
-    }
-    #status {
-      min-height: 42px;
-      margin: 8px 0;
-      padding: 6px 8px;
-      border-left: 4px solid #4a768b;
-      background: #f7fbfd;
-    }
-    .rotation-layout {
-      display: grid;
-      grid-template-columns: minmax(360px, 720px) minmax(240px, 1fr);
-      gap: 16px;
-      align-items: start;
-      margin-top: 12px;
-    }
-    svg {
-      width: 100%;
-      max-width: 720px;
-      min-height: 360px;
-      border: 1px solid #ccc;
-      background: #fff;
-      box-sizing: border-box;
-    }
-    .tree-edge {
-      stroke: #777;
-      stroke-width: 2;
-      stroke-linecap: round;
-    }
-    .rotation-node circle {
-      fill: #cce3ff;
-      stroke: #333;
-      stroke-width: 1.5;
-    }
-    .rotation-node.focus circle {
-      fill: #ffe16a;
-      stroke-width: 3;
-    }
-    .rotation-node.root circle {
-      stroke-width: 3;
-    }
-    .rotation-node text {
-      text-anchor: middle;
-      dominant-baseline: middle;
-      font-weight: bold;
-      fill: #111;
-    }
-    .subtree rect {
-      fill: #f6f6f6;
-      stroke: #777;
-      stroke-dasharray: 4 3;
-    }
-    .subtree text {
-      text-anchor: middle;
-      dominant-baseline: middle;
-      fill: #555;
-      font-weight: bold;
-    }
-    .rotation-panel {
-      line-height: 1.5;
-    }
-    .inorder-box {
-      min-height: 36px;
-      margin: 8px 0;
-      padding: 8px;
-      border: 1px solid #777;
-      background: #f6f6f6;
-      font-family: monospace;
-      font-size: 15px;
-    }
+    #demoContainer { max-width:1080px; margin:0 auto; }
+    .rotation-controls { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:8px; }
+    .rotation-picker { display:inline-flex; align-items:center; gap:0.25rem; }
+    .detail-toggle { display:inline-flex; align-items:center; }
+    .rotation-note { margin:0.4rem 0; color:#334e68; }
+    button:disabled { cursor:not-allowed; opacity:0.55; }
+    #status { min-height:4.5rem; padding:0.65rem 0.8rem; margin:0.6rem 0; border-left:5px solid #0a3974; background:#f0f7ff; line-height:1.45; }
+    #pointerTrace { padding:0.55rem 0.7rem; margin:0.4rem 0; border:1px solid #9fb3c8; border-radius:4px; background:#fff; }
+    .trace-row { display:flex; flex-wrap:wrap; align-items:center; gap:0.35rem 0.65rem; }
+    #assignment { padding:0.15rem 0.35rem; border-radius:3px; background:#e6f0fa; font-weight:700; }
+    .meta { display:flex; flex-wrap:wrap; justify-content:space-between; gap:0.4rem 1rem; color:#334e68; margin:0.35rem 0; }
+    .tree-viewport { width:100%; overflow-x:auto; border:1px solid #9fb3c8; border-radius:5px; background:linear-gradient(#fbfdff,#f5f9fc); }
+    #treeSvg { display:block; width:100%; min-width:650px; height:auto; }
+    .edge { stroke:#627d98; stroke-width:2.5; }
+    .node circle { fill:#fff; stroke:#0a3974; stroke-width:2.5; }
+    .node .key { fill:#102a43; font:700 16px Verdana,sans-serif; text-anchor:middle; dominant-baseline:middle; }
+    .node .role { fill:#486581; font:12px Verdana,sans-serif; text-anchor:middle; }
+    .node.rotating circle { fill:#eee8ff; stroke:#6b46c1; stroke-width:4; }
+    .node.pivot circle { fill:#fff3cd; stroke:#d9822b; stroke-width:4; }
+    .reference-arrow { fill:none; stroke:#6b46c1; stroke-width:2; stroke-dasharray:5 4; marker-end:url(#referenceArrowhead); }
+    .reference-arrow.root-reference-arrow { stroke:#d9822b; marker-end:url(#rootReferenceArrowhead); }
+    .reference-box rect { fill:#f8f5ff; stroke:#6b46c1; stroke-width:2; rx:5; }
+    .reference-box text { fill:#3f2b72; font:700 14px monospace; text-anchor:middle; dominant-baseline:middle; }
+    .reference-box.root-reference rect { fill:#fff8e8; stroke:#d9822b; }
+    .reference-box.root-reference text { fill:#7a3e00; }
+    .subtree polygon { fill:url(#subtreeHatch); stroke:#0a3974; stroke-width:2; stroke-linejoin:round; }
+    .subtree text { fill:#0f264a; font:700 17px Verdana,sans-serif; text-anchor:middle; dominant-baseline:middle; }
+    .legend-item { display:inline-flex; align-items:center; gap:0.25rem; white-space:nowrap; }
+    .swatch { width:1.1rem; height:1.1rem; border:2px solid; display:inline-block; }
+    .swatch.pivot { border-radius:50%; background:#fff3cd; border-color:#d9822b; }
+    .swatch.rotating { border-radius:50%; background:#eee8ff; border-color:#6b46c1; }
+    .subtree-swatch { width:1.2rem; height:1.2rem; display:inline-block; }
+    .subtree-swatch polygon { fill:#eef3f8; stroke:#0a3974; stroke-width:1.5; stroke-linejoin:round; }
+    .inorder { padding:0.55rem 0.7rem; border:1px solid #9fb3c8; border-radius:4px; background:#fff; font-family:monospace; }
   </style>
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
@@ -93,504 +53,416 @@
   </script>
 </head>
 <body class="no-tooltips">
-  <div id="demoContainer">
+  <main id="demoContainer">
     <h2>BST Rotation Demo</h2>
-
-    <div class="rotation-controls">
-      <button data-case="left">Left Rotation</button>
-      <button data-case="right">Right Rotation</button>
-      <button data-case="leftRight">Left-Right Rotation</button>
-      <button data-case="rightLeft">Right-Left Rotation</button>
-      <button id="prevBtn">Previous Step</button>
-      <button id="nextBtn">Next Step</button>
+    <div class="rotation-controls" aria-label="Rotation and playback controls">
+      <label class="rotation-picker">Rotation:
+        <select id="rotationCase">
+          <option value="left">Left Rotation</option>
+          <option value="right">Right Rotation</option>
+          <option value="leftRight">Left-Right Rotation</option>
+          <option value="rightLeft">Right-Left Rotation</option>
+        </select>
+      </label>
+      <button id="prevBtn">Previous</button>
+      <button id="nextBtn">Next</button>
+      <button id="resetBtn">Reset</button>
+      <label class="detail-toggle"><input id="detailedMode" type="checkbox"> Detailed pointer steps</label>
     </div>
-
-    <div class="legend">
-      <strong>Legend:</strong>
-      <span class="legend-box" style="background:#ffe16a;"></span>Nodes being rotated
-      <span class="legend-box" style="background:#cce3ff;"></span>Tree node
-      <span class="legend-box" style="background:#f6f6f6;"></span>Subtree whose internal shape is unchanged
+    <p class="rotation-note"><strong>Note:</strong> This demo shows only child-pointer updates. If nodes store parent pointers, those references must also be updated during each rotation.</p>
+    <div class="legend" aria-label="Color legend">
+      <span class="legend-label"><strong>Legend:</strong></span>
+      <span class="legend-items">
+        <span class="legend-item"><span class="swatch pivot"></span>rotation root</span>
+        <span class="legend-item"><span class="swatch rotating"></span>node moved by this step</span>
+        <span class="legend-item"><svg class="subtree-swatch" viewBox="0 0 20 20" aria-hidden="true"><polygon points="10,1 1,19 19,19"></polygon></svg>unchanged internal subtree</span>
+      </span>
     </div>
-
-    <div id="status"></div>
-    <div class="rotation-layout">
-      <svg id="rotationSvg" preserveAspectRatio="xMidYMid meet"></svg>
-      <div class="rotation-panel">
-        <div><strong>Case:</strong> <span id="caseTitle"></span></div>
-        <div><strong>Step:</strong> <span id="stepCount"></span></div>
-        <div><strong>In-order sequence:</strong></div>
-        <div id="inorderBox" class="inorder-box"></div>
-        <div><strong>Key idea:</strong> rotations change parent-child relationships locally but preserve the in-order order of the values.</div>
-      </div>
+    <div id="status" role="status" aria-live="polite"></div>
+    <div id="pointerTrace" hidden>
+      <div class="trace-row"><strong>Pointer assignment:</strong> <code id="assignment"></code></div>
     </div>
-  </div>
-
+    <div class="meta">
+      <span><strong id="caseTitle"></strong></span>
+      <span id="stepCount"></span>
+      <span>Inorder order is unchanged</span>
+    </div>
+    <div class="tree-viewport">
+      <svg id="treeSvg" viewBox="0 0 900 360" preserveAspectRatio="xMidYMin meet" role="img" aria-label="Binary search tree rotation state"></svg>
+    </div>
+    <p class="inorder"><strong>Inorder:</strong> <span id="inorder"></span></p>
+  </main>
   <script>
-    function n(id, label, left = null, right = null) {
-      return { id, label, left, right, subtree: false };
-    }
-
-    function t(id) {
-      return { id, label: id, left: null, right: null, subtree: true };
-    }
-
-    function leftRotationSteps() {
-      return [
-        {
-          title: 'Left rotation',
-          message: 'Before rotating left: 10 has a right child, 20. The middle subtree T2 must stay between 10 and 20.',
-          focus: ['A', 'B'],
-          inorder: 'T1, 10, T2, 20, T3',
-          tree: n('A', '10', t('T1'), n('B', '20', t('T2'), t('T3')))
-        },
-        {
-          title: 'Left rotation',
-          message: 'After rotating left: 20 moves up, 10 becomes its left child, and T2 becomes the right subtree of 10.',
-          focus: ['A', 'B'],
-          motionFocus: ['A', 'B'],
-          inorder: 'T1, 10, T2, 20, T3',
-          tree: n('B', '20', n('A', '10', t('T1'), t('T2')), t('T3'))
-        }
-      ];
-    }
-
-    function rightRotationSteps() {
-      return [
-        {
-          title: 'Right rotation',
-          message: 'Before rotating right: 20 has a left child, 10. The middle subtree T2 must stay between 10 and 20.',
-          focus: ['A', 'B'],
-          inorder: 'T1, 10, T2, 20, T3',
-          tree: n('B', '20', n('A', '10', t('T1'), t('T2')), t('T3'))
-        },
-        {
-          title: 'Right rotation',
-          message: 'After rotating right: 10 moves up, 20 becomes its right child, and T2 becomes the left subtree of 20.',
-          focus: ['A', 'B'],
-          motionFocus: ['A', 'B'],
-          inorder: 'T1, 10, T2, 20, T3',
-          tree: n('A', '10', t('T1'), n('B', '20', t('T2'), t('T3')))
-        }
-      ];
-    }
-
-    function leftRightSteps() {
-      return [
-        {
-          title: 'Left-right rotation',
-          message: 'Start with a left-right shape: 30 leans left, but the heavy child 10 leans right.',
-          focus: ['Y', 'X', 'Z'],
-          inorder: 'T1, 10, T2, 20, T3, 30, T4',
-          tree: n('Z', '30', n('Y', '10', t('T1'), n('X', '20', t('T2'), t('T3'))), t('T4'))
-        },
-        {
-          title: 'Left-right rotation',
-          message: 'Step 1: rotate left at 10. This converts the shape into a simple left-heavy case at 30.',
-          focus: ['Y', 'X'],
-          motionFocus: ['Y', 'X'],
-          inorder: 'T1, 10, T2, 20, T3, 30, T4',
-          tree: n('Z', '30', n('X', '20', n('Y', '10', t('T1'), t('T2')), t('T3')), t('T4'))
-        },
-        {
-          title: 'Left-right rotation',
-          message: 'Step 2: rotate right at 30. The middle value, 20, becomes the root of this local subtree.',
-          focus: ['X', 'Z'],
-          motionFocus: ['X', 'Z'],
-          inorder: 'T1, 10, T2, 20, T3, 30, T4',
-          tree: n('X', '20', n('Y', '10', t('T1'), t('T2')), n('Z', '30', t('T3'), t('T4')))
-        }
-      ];
-    }
-
-    function rightLeftSteps() {
-      return [
-        {
-          title: 'Right-left rotation',
-          message: 'Start with a right-left shape: 10 leans right, but the heavy child 30 leans left.',
-          focus: ['Z', 'X', 'Y'],
-          inorder: 'T1, 10, T2, 20, T3, 30, T4',
-          tree: n('Z', '10', t('T1'), n('Y', '30', n('X', '20', t('T2'), t('T3')), t('T4')))
-        },
-        {
-          title: 'Right-left rotation',
-          message: 'Step 1: rotate right at 30. This converts the shape into a simple right-heavy case at 10.',
-          focus: ['X', 'Y'],
-          motionFocus: ['X', 'Y'],
-          inorder: 'T1, 10, T2, 20, T3, 30, T4',
-          tree: n('Z', '10', t('T1'), n('X', '20', t('T2'), n('Y', '30', t('T3'), t('T4'))))
-        },
-        {
-          title: 'Right-left rotation',
-          message: 'Step 2: rotate left at 10. The middle value, 20, becomes the root of this local subtree.',
-          focus: ['Z', 'X'],
-          motionFocus: ['Z', 'X'],
-          inorder: 'T1, 10, T2, 20, T3, 30, T4',
-          tree: n('X', '20', n('Z', '10', t('T1'), t('T2')), n('Y', '30', t('T3'), t('T4')))
-        }
-      ];
-    }
-
-    const caseBuilders = {
-      left: leftRotationSteps,
-      right: rightRotationSteps,
-      leftRight: leftRightSteps,
-      rightLeft: rightLeftSteps
+    const SVG_NS = 'http://www.w3.org/2000/svg';
+    function node(id,key,role,left=null,right=null) { return {id,key,role,left,right,subtree:false}; }
+    function subtree(id) { return {id,key:id,role:'',left:null,right:null,subtree:true}; }
+    const builders = {
+      left: () => [
+        { title:'Left rotation', message:'Before: z = 10 has right child y = 20. B contains keys between 10 and 20 and must be transferred, not discarded.', pivot:['z'], moving:[], inorder:'A, 10, B, 20, C', tree:node('z',10,'z',subtree('A'),node('y',20,'y',subtree('B'),subtree('C'))) },
+        { title:'Left rotation', message:'Rotate left at z: y moves up, z becomes its left child, and B becomes the right subtree of z.', pivot:[], moving:['z','y'], inorder:'A, 10, B, 20, C', tree:node('y',20,'y',node('z',10,'z',subtree('A'),subtree('B')),subtree('C')) }
+      ],
+      right: () => [
+        { title:'Right rotation', message:'Before: z = 20 has left child y = 10. B contains keys between 10 and 20.', pivot:['z'], moving:[], inorder:'A, 10, B, 20, C', tree:node('z',20,'z',node('y',10,'y',subtree('A'),subtree('B')),subtree('C')) },
+        { title:'Right rotation', message:'Rotate right at z: y moves up, z becomes its right child, and B becomes the left subtree of z.', pivot:[], moving:['z','y'], inorder:'A, 10, B, 20, C', tree:node('y',10,'y',subtree('A'),node('z',20,'z',subtree('B'),subtree('C'))) }
+      ],
+      leftRight: () => [
+        { title:'Left-right rotation', message:'The path bends left then right: z = 30 has left child y = 10, whose right child x = 20 is the middle key.', pivot:['z'], moving:[], inorder:'A, 10, B, 20, C, 30, D', tree:node('z',30,'z',node('y',10,'y',subtree('A'),node('x',20,'x',subtree('B'),subtree('C'))),subtree('D')) },
+        { title:'Left-right rotation', message:'Step 1 of 2: rotate left at y = 10. The bent configuration becomes a straight left-left configuration at z = 30.', pivot:['z'], moving:['y','x'], inorder:'A, 10, B, 20, C, 30, D', tree:node('z',30,'z',node('x',20,'x',node('y',10,'y',subtree('A'),subtree('B')),subtree('C')),subtree('D')) },
+        { title:'Left-right rotation', message:'Step 2 of 2: rotate right at z = 30. The middle key x = 20 becomes the new local root.', pivot:[], moving:['x','z'], inorder:'A, 10, B, 20, C, 30, D', tree:node('x',20,'x',node('y',10,'y',subtree('A'),subtree('B')),node('z',30,'z',subtree('C'),subtree('D'))) }
+      ],
+      rightLeft: () => [
+        { title:'Right-left rotation', message:'The path bends right then left: z = 10 has right child y = 30, whose left child x = 20 is the middle key.', pivot:['z'], moving:[], inorder:'A, 10, B, 20, C, 30, D', tree:node('z',10,'z',subtree('A'),node('y',30,'y',node('x',20,'x',subtree('B'),subtree('C')),subtree('D'))) },
+        { title:'Right-left rotation', message:'Step 1 of 2: rotate right at y = 30. The bent configuration becomes a straight right-right configuration at z = 10.', pivot:['z'], moving:['y','x'], inorder:'A, 10, B, 20, C, 30, D', tree:node('z',10,'z',subtree('A'),node('x',20,'x',subtree('B'),node('y',30,'y',subtree('C'),subtree('D')))) },
+        { title:'Right-left rotation', message:'Step 2 of 2: rotate left at z = 10. The middle key x = 20 becomes the new local root.', pivot:[], moving:['z','x'], inorder:'A, 10, B, 20, C, 30, D', tree:node('x',20,'x',node('z',10,'z',subtree('A'),subtree('B')),node('y',30,'y',subtree('C'),subtree('D'))) }
+      ]
     };
-
-    const NODE_RADIUS = 22;
-    const SUBTREE_WIDTH = 44;
-    const SUBTREE_HEIGHT = 32;
-    const LAYOUT_WIDTH = 720;
-    const LAYOUT_HEIGHT = 360;
-    const ROOT_X = LAYOUT_WIDTH / 2;
-    const ROOT_Y = 44;
-    const ROOT_CHILD_GAP = 180;
-    const MIN_CHILD_GAP = 58;
-    const LEVEL_GAP = 76;
-    const ANIMATION_MS = 900;
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
+    const detailedBuilders = {
+      left: () => {
+        const before=()=>node('z',10,'z',subtree('A'),node('y',20,'y',subtree('B'),subtree('C')));
+        const after=()=>node('y',20,'y',node('z',10,'z',subtree('A'),subtree('B')),subtree('C'));
+        const inorder='A, 10, B, 20, C';
+        return [
+          { title:'Left rotation — pointer trace', message:'Begin with z as the root of the subtree being rotated.', assignment:'rotateLeft(z)', references:[['root','z'],['z','z']], pivot:['z'], moving:[], inorder, tree:before() },
+          { title:'Left rotation — pointer trace', message:'Save z’s right child in y. This reference keeps the node available while child pointers change.', assignment:'y = z.right', references:[['root','z'],['z','z'],['y','y']], pivot:['z'], moving:[], inorder, tree:before() },
+          { title:'Left rotation — pointer trace', message:'Move B to become z’s right subtree. At this instant, both z.right and y.left refer to B.', assignment:'z.right = y.left', references:[['root','z'],['z','z'],['y','y']], edges:[['z','A'],['z','B'],['y','B'],['y','C']], pivot:['z'], moving:['z'], inorder, tree:before() },
+          { title:'Left rotation — pointer trace', message:'Make z the left child of y. This replaces y’s old pointer to B; z already owns that subtree.', assignment:'y.left = z', references:[['root','z'],['z','z'],['y','y']], pivot:[], moving:['z','y'], inorder, tree:after() },
+          { title:'Left rotation — pointer trace', message:'Return y so the caller can make it the new root of this subtree.', assignment:'return y', references:[['root','y'],['z','z'],['y','y']], pivot:[], moving:['y'], inorder, tree:after() }
+        ];
+      },
+      right: () => {
+        const before=()=>node('z',20,'z',node('y',10,'y',subtree('A'),subtree('B')),subtree('C'));
+        const after=()=>node('y',10,'y',subtree('A'),node('z',20,'z',subtree('B'),subtree('C')));
+        const inorder='A, 10, B, 20, C';
+        return [
+          { title:'Right rotation — pointer trace', message:'Begin with z as the root of the subtree being rotated.', assignment:'rotateRight(z)', references:[['root','z'],['z','z']], pivot:['z'], moving:[], inorder, tree:before() },
+          { title:'Right rotation — pointer trace', message:'Save z’s left child in y. This reference keeps the node available while child pointers change.', assignment:'y = z.left', references:[['root','z'],['z','z'],['y','y']], pivot:['z'], moving:[], inorder, tree:before() },
+          { title:'Right rotation — pointer trace', message:'Move B to become z’s left subtree. At this instant, both z.left and y.right refer to B.', assignment:'z.left = y.right', references:[['root','z'],['z','z'],['y','y']], edges:[['z','B'],['z','C'],['y','A'],['y','B']], pivot:['z'], moving:['z'], inorder, tree:before() },
+          { title:'Right rotation — pointer trace', message:'Make z the right child of y. This replaces y’s old pointer to B; z already owns that subtree.', assignment:'y.right = z', references:[['root','z'],['z','z'],['y','y']], pivot:[], moving:['z','y'], inorder, tree:after() },
+          { title:'Right rotation — pointer trace', message:'Return y so the caller can make it the new root of this subtree.', assignment:'return y', references:[['root','y'],['z','z'],['y','y']], pivot:[], moving:['y'], inorder, tree:after() }
+        ];
+      },
+      leftRight: () => {
+        const before=()=>node('z',30,'z',node('y',10,'y',subtree('A'),node('x',20,'x',subtree('B'),subtree('C'))),subtree('D'));
+        const middle=()=>node('z',30,'z',node('x',20,'x',node('y',10,'y',subtree('A'),subtree('B')),subtree('C')),subtree('D'));
+        const after=()=>node('x',20,'x',node('y',10,'y',subtree('A'),subtree('B')),node('z',30,'z',subtree('C'),subtree('D')));
+        const inorder='A, 10, B, 20, C, 30, D';
+        return [
+          { title:'Left-right rotation — pointer trace', message:'A left-right rotation first rotates left at y, then rotates right at z.', assignment:'rotateLeftRight(z)', references:[['root','z'],['z','z'],['y','y']], pivot:['z'], moving:[], inorder, tree:before() },
+          { title:'Left-right rotation — pointer trace', message:'For the first rotation, save y’s right child in x.', assignment:'x = y.right', references:[['root','z'],['z','z'],['y','y'],['x','x']], pivot:['y'], moving:[], inorder, tree:before() },
+          { title:'Left-right rotation — pointer trace', message:'Transfer B to y.right. Both y.right and x.left briefly refer to B.', assignment:'y.right = x.left', references:[['root','z'],['z','z'],['y','y'],['x','x']], edges:[['z','y'],['z','D'],['y','A'],['y','B'],['x','B'],['x','C']], pivot:['y'], moving:['y'], inorder, tree:before() },
+          { title:'Left-right rotation — pointer trace', message:'Make y the left child of x. The caller still reaches this part of the tree through z.left.', assignment:'x.left = y', references:[['root','z'],['z','z'],['y','y'],['x','x']], edges:[['z','y'],['z','D'],['x','y'],['x','C'],['y','A'],['y','B']], pivot:[], moving:['x','y'], inorder, tree:middle() },
+          { title:'Left-right rotation — pointer trace', message:'Attach the returned node x as z’s new left child. The first rotation is complete.', assignment:'z.left = x', references:[['root','z'],['z','z'],['x','x']], pivot:['z'], moving:['x'], inorder, tree:middle() },
+          { title:'Left-right rotation — pointer trace', message:'For the second rotation, z.left is already saved in x.', assignment:'x = z.left', references:[['root','z'],['z','z'],['x','x']], pivot:['z'], moving:[], inorder, tree:middle() },
+          { title:'Left-right rotation — pointer trace', message:'Transfer C to z.left. Both z.left and x.right briefly refer to C.', assignment:'z.left = x.right', references:[['root','z'],['z','z'],['x','x']], edges:[['x','y'],['y','A'],['y','B'],['x','C'],['z','C'],['z','D']], pivot:['z'], moving:['z'], inorder, tree:middle() },
+          { title:'Left-right rotation — pointer trace', message:'Make z the right child of x. The middle key now has both outer nodes as children.', assignment:'x.right = z', references:[['root','z'],['z','z'],['x','x']], pivot:[], moving:['x','z'], inorder, tree:after() },
+          { title:'Left-right rotation — pointer trace', message:'Return x as the new root of the rotated subtree.', assignment:'return x', references:[['root','x'],['z','z'],['x','x']], pivot:[], moving:['x'], inorder, tree:after() }
+        ];
+      },
+      rightLeft: () => {
+        const before=()=>node('z',10,'z',subtree('A'),node('y',30,'y',node('x',20,'x',subtree('B'),subtree('C')),subtree('D')));
+        const middle=()=>node('z',10,'z',subtree('A'),node('x',20,'x',subtree('B'),node('y',30,'y',subtree('C'),subtree('D'))));
+        const after=()=>node('x',20,'x',node('z',10,'z',subtree('A'),subtree('B')),node('y',30,'y',subtree('C'),subtree('D')));
+        const inorder='A, 10, B, 20, C, 30, D';
+        return [
+          { title:'Right-left rotation — pointer trace', message:'A right-left rotation first rotates right at y, then rotates left at z.', assignment:'rotateRightLeft(z)', references:[['root','z'],['z','z'],['y','y']], pivot:['z'], moving:[], inorder, tree:before() },
+          { title:'Right-left rotation — pointer trace', message:'For the first rotation, save y’s left child in x.', assignment:'x = y.left', references:[['root','z'],['z','z'],['y','y'],['x','x']], pivot:['y'], moving:[], inorder, tree:before() },
+          { title:'Right-left rotation — pointer trace', message:'Transfer C to y.left. Both y.left and x.right briefly refer to C.', assignment:'y.left = x.right', references:[['root','z'],['z','z'],['y','y'],['x','x']], edges:[['z','A'],['z','y'],['y','C'],['y','D'],['x','B'],['x','C']], pivot:['y'], moving:['y'], inorder, tree:before() },
+          { title:'Right-left rotation — pointer trace', message:'Make y the right child of x. The caller still reaches this part of the tree through z.right.', assignment:'x.right = y', references:[['root','z'],['z','z'],['y','y'],['x','x']], edges:[['z','A'],['z','y'],['x','B'],['x','y'],['y','C'],['y','D']], pivot:[], moving:['x','y'], inorder, tree:middle() },
+          { title:'Right-left rotation — pointer trace', message:'Attach the returned node x as z’s new right child. The first rotation is complete.', assignment:'z.right = x', references:[['root','z'],['z','z'],['x','x']], pivot:['z'], moving:['x'], inorder, tree:middle() },
+          { title:'Right-left rotation — pointer trace', message:'For the second rotation, z.right is already saved in x.', assignment:'x = z.right', references:[['root','z'],['z','z'],['x','x']], pivot:['z'], moving:[], inorder, tree:middle() },
+          { title:'Right-left rotation — pointer trace', message:'Transfer B to z.right. Both z.right and x.left briefly refer to B.', assignment:'z.right = x.left', references:[['root','z'],['z','z'],['x','x']], edges:[['z','A'],['z','B'],['x','B'],['x','y'],['y','C'],['y','D']], pivot:['z'], moving:['z'], inorder, tree:middle() },
+          { title:'Right-left rotation — pointer trace', message:'Make z the left child of x. The middle key now has both outer nodes as children.', assignment:'x.left = z', references:[['root','z'],['z','z'],['x','x']], pivot:[], moving:['x','z'], inorder, tree:after() },
+          { title:'Right-left rotation — pointer trace', message:'Return x as the new root of the rotated subtree.', assignment:'return x', references:[['root','x'],['z','z'],['x','x']], pivot:[], moving:['x'], inorder, tree:after() }
+        ];
+      }
+    };
     let currentCase = 'left';
-    let steps = [];
+    let steps = builders.left();
     let stepIndex = 0;
     let renderedLayout = null;
-    let animationFrameId = null;
+    let animationFrame = null;
     let isAnimating = false;
-
-    function svgElement(name) {
-      return document.createElementNS('http://www.w3.org/2000/svg', name);
+    const DRAW_WIDTH = 900;
+    const ROOT_X = DRAW_WIDTH / 2;
+    const ROOT_Y = 58;
+    const ROOT_GAP = 190;
+    const MIN_GAP = 58;
+    const LEVEL_GAP = 86;
+    const ANIMATION_MS = 800;
+    const REFERENCE_X = [225,375,525,675];
+    const REFERENCE_ORDERS = {
+      left:['z','root','y','x'],
+      right:['y','root','z','x'],
+      leftRight:['y','x','root','z'],
+      rightLeft:['z','root','x','y']
+    };
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    function svgElement(name,attrs={}) {
+      const element=document.createElementNS(SVG_NS,name);
+      Object.entries(attrs).forEach(([key,value])=>element.setAttribute(key,value));
+      return element;
     }
-
-    function layoutTree(root) {
-      const positions = new Map();
-      const edges = [];
-      const parents = new Map();
-      let maxDepth = 0;
-
-      function assign(node, depth, x) {
-        if (!node) return;
-        maxDepth = Math.max(maxDepth, depth);
-        positions.set(node.id, {
-          x,
-          y: ROOT_Y + depth * LEVEL_GAP,
-          node
-        });
-
-        const childGap = Math.max(MIN_CHILD_GAP, ROOT_CHILD_GAP / Math.pow(2, depth));
-        if (node.left) {
-          edges.push([node.id, node.left.id]);
-          parents.set(node.left.id, node.id);
-          assign(node.left, depth + 1, x - childGap);
+    function layoutTree(tree) {
+      const positions=new Map();
+      const edges=[];
+      let maxDepth=0;
+      function visit(current,depth,x) {
+        if(!current)return;
+        maxDepth=Math.max(maxDepth,depth);
+        positions.set(current.id,{x,y:ROOT_Y+depth*LEVEL_GAP,node:current});
+        const gap=Math.max(MIN_GAP,ROOT_GAP/Math.pow(2,depth));
+        if(current.left) {
+          edges.push([current.id,current.left.id]);
+          visit(current.left,depth+1,x-gap);
         }
-        if (node.right) {
-          edges.push([node.id, node.right.id]);
-          parents.set(node.right.id, node.id);
-          assign(node.right, depth + 1, x + childGap);
+        if(current.right) {
+          edges.push([current.id,current.right.id]);
+          visit(current.right,depth+1,x+gap);
         }
       }
-
-      assign(root, 0, ROOT_X);
-      return {
-        positions,
-        edges,
-        parents,
-        width: LAYOUT_WIDTH,
-        height: Math.max(LAYOUT_HEIGHT, ROOT_Y + (maxDepth + 1) * LEVEL_GAP)
-      };
+      visit(tree,0,ROOT_X);
+      return {positions,edges,width:DRAW_WIDTH,height:Math.max(340,ROOT_Y+maxDepth*LEVEL_GAP+82)};
     }
 
-    function setAnimationBusy(busy) {
-      isAnimating = busy;
-      updateButtonStates();
-    }
-
-    function updateButtonStates() {
-      document.querySelectorAll('[data-case]').forEach((button) => {
-        button.disabled = isAnimating;
-      });
-      document.getElementById('prevBtn').disabled = isAnimating || stepIndex === 0;
-      document.getElementById('nextBtn').disabled = isAnimating || stepIndex === steps.length - 1;
-    }
-
-    function edgeKey(edge) {
-      return edge.slice().sort().join('|');
-    }
-
-    function easeInOutCubic(t) {
-      return t < 0.5
-        ? 4 * t * t * t
-        : 1 - Math.pow(-2 * t + 2, 3) / 2;
-    }
-
-    function interpolatePoint(a, b, progress) {
-      return {
-        x: a.x + (b.x - a.x) * progress,
-        y: a.y + (b.y - a.y) * progress
-      };
-    }
-
-    function distance(a, b) {
-      return Math.hypot(b.x - a.x, b.y - a.y);
-    }
-
-    function pointAlongPath(path, progress) {
-      if (path.length <= 1) return path[0];
-
-      const segmentLengths = [];
-      let totalLength = 0;
-      for (let i = 1; i < path.length; i += 1) {
-        const length = distance(path[i - 1], path[i]);
-        segmentLengths.push(length);
-        totalLength += length;
+    function layoutForStep(step) {
+      const layout=layoutTree(step.tree);
+      if(step.edges) layout.edges=step.edges;
+      if(step.assignment) {
+        layout.positions.forEach(position=>{position.y+=72;});
+        layout.height+=72;
       }
-
-      if (totalLength === 0) return path[path.length - 1];
-
-      let remaining = totalLength * progress;
-      for (let i = 0; i < segmentLengths.length; i += 1) {
-        if (remaining <= segmentLengths[i]) {
-          const localProgress = segmentLengths[i] === 0 ? 1 : remaining / segmentLengths[i];
-          return interpolatePoint(path[i], path[i + 1], localProgress);
-        }
-        remaining -= segmentLengths[i];
-      }
-
-      return path[path.length - 1];
+      return layout;
     }
 
-    function buildMotionPaths(fromLayout, toLayout, focusIds) {
-      const paths = new Map();
-      const focusSet = new Set(focusIds);
-      const nodeIds = new Set([...fromLayout.positions.keys(), ...toLayout.positions.keys()]);
-
-      nodeIds.forEach((id) => {
-        const start = fromLayout.positions.get(id) || toLayout.positions.get(id);
-        const end = toLayout.positions.get(id) || start;
-        const path = [start];
-        const oldParentId = fromLayout.parents.get(id);
-        const newParentId = toLayout.parents.get(id);
-
-        if (oldParentId && newParentId && oldParentId !== newParentId
-            && focusSet.has(oldParentId) && focusSet.has(newParentId)) {
-          const oldParent = fromLayout.positions.get(oldParentId);
-          const newParent = toLayout.positions.get(newParentId);
-          if (oldParent && newParent) {
-            path.push({
-              x: (oldParent.x + newParent.x) / 2,
-              y: (oldParent.y + newParent.y) / 2
-            });
-          }
-        }
-
-        path.push(end);
-        paths.set(id, path);
-      });
-
-      return paths;
-    }
-
-    function positionAt(id, motionPaths, progress) {
-      const path = motionPaths.get(id);
-      if (!path) return { x: 0, y: 0 };
-      return pointAlongPath(path, progress);
-    }
-
-    function setLinePosition(line, a, b) {
-      line.setAttribute('x1', a.x);
-      line.setAttribute('y1', a.y);
-      line.setAttribute('x2', b.x);
-      line.setAttribute('y2', b.y);
-    }
-
-    function setNodePosition(group, point) {
-      group.setAttribute('transform', `translate(${point.x} ${point.y})`);
-    }
-
-    function buildNodeGroup(pos, id, step) {
-      const group = svgElement('g');
-      group.setAttribute('class', pos.node.subtree ? 'subtree' : 'rotation-node');
-      if (!pos.node.subtree && step.focus.includes(id)) group.classList.add('focus');
-      if (id === step.tree.id) group.classList.add('root');
-
-      if (pos.node.subtree) {
-        const rect = svgElement('rect');
-        rect.setAttribute('x', -SUBTREE_WIDTH / 2);
-        rect.setAttribute('y', -SUBTREE_HEIGHT / 2);
-        rect.setAttribute('width', SUBTREE_WIDTH);
-        rect.setAttribute('height', SUBTREE_HEIGHT);
-        rect.setAttribute('rx', 4);
-
-        const text = svgElement('text');
-        text.setAttribute('x', 0);
-        text.setAttribute('y', 1);
-        text.textContent = pos.node.label;
-
-        group.appendChild(rect);
-        group.appendChild(text);
+    function nodeGroup(current,step) {
+      const classes=current.subtree?'subtree':'node '+(step.pivot.includes(current.id)?'pivot ':'')+(step.moving.includes(current.id)?'rotating':'');
+      const group=svgElement('g',{class:classes});
+      if(current.subtree) {
+        group.appendChild(svgElement('polygon',{points:'0,0 -24,72 24,72'}));
+        const label=svgElement('text',{x:0,y:47}); label.textContent=current.key; group.appendChild(label);
       } else {
-        const circle = svgElement('circle');
-        circle.setAttribute('cx', 0);
-        circle.setAttribute('cy', 0);
-        circle.setAttribute('r', NODE_RADIUS);
-
-        const text = svgElement('text');
-        text.setAttribute('x', 0);
-        text.setAttribute('y', 1);
-        text.textContent = pos.node.label;
-
-        group.appendChild(circle);
-        group.appendChild(text);
+        group.appendChild(svgElement('circle',{cx:0,cy:0,r:25}));
+        const key=svgElement('text',{x:0,y:1,class:'key'}); key.textContent=current.key; group.appendChild(key);
+        const role=svgElement('text',{x:0,y:42,class:'role'}); role.textContent='node '+current.role; group.appendChild(role);
       }
-
       return group;
     }
 
-    function drawStaticTree(svg, step, layout) {
-      svg.innerHTML = '';
-      svg.setAttribute('viewBox', `0 0 ${layout.width} ${layout.height}`);
+    function setGroupPosition(group,point) {
+      group.setAttribute('transform','translate('+point.x+' '+point.y+')');
+    }
 
-      layout.edges.forEach(([from, to]) => {
-        const a = layout.positions.get(from);
-        const b = layout.positions.get(to);
-        const line = svgElement('line');
-        setLinePosition(line, a, b);
-        line.setAttribute('class', 'tree-edge');
-        svg.appendChild(line);
+    function setLinePosition(line,a,b) {
+      line.setAttribute('x1',a.x);
+      line.setAttribute('y1',a.y);
+      line.setAttribute('x2',b.x);
+      line.setAttribute('y2',b.y);
+    }
+
+    function appendSvgDefinitions(svg,includeReferences) {
+      const defs=svgElement('defs');
+      const hatch=svgElement('pattern',{id:'subtreeHatch',patternUnits:'userSpaceOnUse',width:8,height:8});
+      hatch.appendChild(svgElement('path',{d:'M -2 2 L 2 -2 M 0 8 L 8 0 M 6 10 L 10 6',fill:'none',stroke:'#9fb3c8','stroke-width':1.4}));
+      defs.appendChild(hatch);
+      if(includeReferences) {
+        const marker=svgElement('marker',{id:'referenceArrowhead',viewBox:'0 0 8 8',refX:8,refY:4,markerWidth:7,markerHeight:7,orient:'auto'});
+        marker.appendChild(svgElement('path',{d:'M 0 0 L 8 4 L 0 8 z',fill:'#6b46c1'}));
+        defs.appendChild(marker);
+        const rootMarker=svgElement('marker',{id:'rootReferenceArrowhead',viewBox:'0 0 8 8',refX:8,refY:4,markerWidth:7,markerHeight:7,orient:'auto'});
+        rootMarker.appendChild(svgElement('path',{d:'M 0 0 L 8 4 L 0 8 z',fill:'#d9822b'}));
+        defs.appendChild(rootMarker);
+      }
+      svg.appendChild(defs);
+    }
+
+    function createReferenceVisuals(svg,step) {
+      if(!step.references)return {items:[],labels:[]};
+      const targetTotals=new Map();
+      step.references.forEach(reference=>targetTotals.set(reference[1],(targetTotals.get(reference[1])||0)+1));
+      const targetIndexes=new Map();
+      const labels=[];
+      const items=step.references.map(reference=>{
+        const [name,target]=reference;
+        const slot=REFERENCE_ORDERS[currentCase].indexOf(name);
+        const x=slot>=0?REFERENCE_X[slot]:ROOT_X;
+        const width=name==='root'?64:48;
+        const path=svgElement('path',{class:'reference-arrow '+(name==='root'?'root-reference-arrow':'')});
+        svg.appendChild(path);
+        const group=svgElement('g',{class:'reference-box '+(name==='root'?'root-reference':'')});
+        group.setAttribute('transform','translate('+x+' 24)');
+        group.appendChild(svgElement('rect',{x:-width/2,y:-14,width,height:28}));
+        const text=svgElement('text',{x:0,y:1});
+        text.textContent=name;
+        group.appendChild(text);
+        labels.push(group);
+        const targetIndex=targetIndexes.get(target)||0;
+        targetIndexes.set(target,targetIndex+1);
+        const offset=(targetIndex-(targetTotals.get(target)-1)/2)*14;
+        return {path,target,start:{x,y:40},offset};
       });
+      return {items,labels};
+    }
 
-      layout.positions.forEach((pos, id) => {
-        const group = buildNodeGroup(pos, id, step);
-        setNodePosition(group, pos);
-        svg.appendChild(group);
+    function updateReferencePaths(visuals,pointFor) {
+      visuals.items.forEach(item=>{
+        const target=pointFor(item.target);
+        const toCenter={x:target.x-item.start.x,y:target.y-item.start.y};
+        const centerDistance=Math.hypot(toCenter.x,toCenter.y)||1;
+        const centerUnit={x:toCenter.x/centerDistance,y:toCenter.y/centerDistance};
+        const perpendicular={x:-centerUnit.y,y:centerUnit.x};
+        const end={
+          x:target.x-centerUnit.x*29+perpendicular.x*item.offset,
+          y:target.y-centerUnit.y*29+perpendicular.y*item.offset
+        };
+        const toEnd={x:end.x-item.start.x,y:end.y-item.start.y};
+        const endDistance=Math.hypot(toEnd.x,toEnd.y)||1;
+        const endUnit={x:toEnd.x/endDistance,y:toEnd.y/endDistance};
+        const firstControl={x:item.start.x,y:item.start.y+Math.min(42,endDistance*0.35)};
+        const secondControl={x:end.x-endUnit.x*38,y:end.y-endUnit.y*38};
+        item.path.setAttribute('d','M '+item.start.x+' '+item.start.y+' C '+firstControl.x+' '+firstControl.y+', '+secondControl.x+' '+secondControl.y+', '+end.x+' '+end.y);
       });
     }
 
-    function drawAnimatedTree(svg, step, fromLayout, toLayout, motionFocus) {
-      if (animationFrameId !== null) cancelAnimationFrame(animationFrameId);
+    function appendReferenceLabels(svg,visuals) {
+      visuals.labels.forEach(label=>svg.appendChild(label));
+    }
 
-      svg.innerHTML = '';
-      svg.setAttribute('viewBox', `0 0 ${toLayout.width} ${toLayout.height}`);
-
-      const oldEdges = new Map(fromLayout.edges.map(edge => [edgeKey(edge), edge]));
-      const newEdges = new Map(toLayout.edges.map(edge => [edgeKey(edge), edge]));
-      const motionPaths = buildMotionPaths(fromLayout, toLayout, motionFocus);
-      const edgeMorphs = [];
-
-      new Set([...oldEdges.keys(), ...newEdges.keys()]).forEach((key) => {
-        const oldEdge = oldEdges.get(key);
-        const newEdge = newEdges.get(key);
-        const startEdge = oldEdge || newEdge;
-        const endEdge = newEdge || oldEdge;
-        const line = svgElement('line');
-        line.setAttribute('class', 'tree-edge');
-        line.style.opacity = oldEdge ? '1' : '0';
+    function drawStatic(step,layout) {
+      const svg=document.getElementById('treeSvg');
+      svg.innerHTML='';
+      svg.setAttribute('viewBox','0 0 '+layout.width+' '+layout.height);
+      appendSvgDefinitions(svg,Boolean(step.references));
+      layout.edges.forEach(edge=>{
+        const line=svgElement('line',{class:'edge'});
+        setLinePosition(line,layout.positions.get(edge[0]),layout.positions.get(edge[1]));
         svg.appendChild(line);
-        edgeMorphs.push({
-          line,
-          start: startEdge,
-          end: endEdge,
-          fromOpacity: oldEdge ? 1 : 0,
-          toOpacity: newEdge ? 1 : 0
-        });
       });
-
-      const nodeGroups = new Map();
-      toLayout.positions.forEach((pos, id) => {
-        const group = buildNodeGroup(pos, id, step);
+      const referenceVisuals=createReferenceVisuals(svg,step);
+      updateReferencePaths(referenceVisuals,id=>layout.positions.get(id));
+      layout.positions.forEach((position,id)=>{
+        const group=nodeGroup(position.node,step);
+        setGroupPosition(group,position);
         svg.appendChild(group);
-        nodeGroups.set(id, group);
       });
+      appendReferenceLabels(svg,referenceVisuals);
+    }
 
-      setAnimationBusy(true);
-      const startTime = performance.now();
+    function between(from,to,progress) {
+      return {x:from.x+(to.x-from.x)*progress,y:from.y+(to.y-from.y)*progress};
+    }
 
-      function animate(now) {
-        const raw = Math.min(1, (now - startTime) / ANIMATION_MS);
-        const progress = easeInOutCubic(raw);
+    function ease(progress) {
+      return progress<0.5?4*progress*progress*progress:1-Math.pow(-2*progress+2,3)/2;
+    }
 
-        edgeMorphs.forEach((morph) => {
-          const edge = morph.toOpacity > morph.fromOpacity ? morph.end : morph.start;
-          const a = positionAt(edge[0], motionPaths, progress);
-          const b = positionAt(edge[1], motionPaths, progress);
-          setLinePosition(morph.line, a, b);
-          morph.line.style.opacity = morph.fromOpacity + (morph.toOpacity - morph.fromOpacity) * progress;
+    function edgeKey(edge) {
+      return edge[0]<edge[1]?edge[0]+'|'+edge[1]:edge[1]+'|'+edge[0];
+    }
+
+    function drawAnimated(step,fromLayout,toLayout) {
+      const svg=document.getElementById('treeSvg');
+      svg.innerHTML='';
+      const animationWidth=Math.max(fromLayout.width,toLayout.width);
+      const animationHeight=Math.max(fromLayout.height,toLayout.height);
+      svg.setAttribute('viewBox','0 0 '+animationWidth+' '+animationHeight);
+      appendSvgDefinitions(svg,Boolean(step.references));
+      const fromEdges=new Map(fromLayout.edges.map(edge=>[edgeKey(edge),edge]));
+      const toEdges=new Map(toLayout.edges.map(edge=>[edgeKey(edge),edge]));
+      const edgeKeys=new Set([...fromEdges.keys(),...toEdges.keys()]);
+      const lines=Array.from(edgeKeys,key=>{
+        const kind=fromEdges.has(key)&&toEdges.has(key)?'unchanged':toEdges.has(key)?'added':'removed';
+        const edge=toEdges.get(key)||fromEdges.get(key);
+        const line=svgElement('line',{class:'edge'});
+        svg.appendChild(line);
+        return {line,edge,kind};
+      });
+      const referenceVisuals=createReferenceVisuals(svg,step);
+      const groups=new Map();
+      toLayout.positions.forEach((position,id)=>{
+        const group=nodeGroup(position.node,step);
+        svg.appendChild(group);
+        groups.set(id,group);
+      });
+      appendReferenceLabels(svg,referenceVisuals);
+      const pointAt=(id,progress)=>{
+        const end=toLayout.positions.get(id);
+        const start=fromLayout.positions.get(id)||end;
+        return between(start,end,progress);
+      };
+      isAnimating=true;
+      updateControls();
+      const startTime=performance.now();
+      function frame(now) {
+        const raw=Math.min(1,(now-startTime)/ANIMATION_MS);
+        const progress=ease(raw);
+        lines.forEach(item=>{
+          setLinePosition(item.line,pointAt(item.edge[0],progress),pointAt(item.edge[1],progress));
+          if(item.kind==='removed') item.line.setAttribute('opacity',Math.max(0,1-raw/0.38));
+          if(item.kind==='added') item.line.setAttribute('opacity',Math.max(0,Math.min(1,(raw-0.55)/0.35)));
         });
-
-        nodeGroups.forEach((group, id) => {
-          setNodePosition(group, positionAt(id, motionPaths, progress));
-        });
-
-        if (raw < 1) {
-          animationFrameId = requestAnimationFrame(animate);
-          return;
+        updateReferencePaths(referenceVisuals,id=>pointAt(id,progress));
+        groups.forEach((group,id)=>setGroupPosition(group,pointAt(id,progress)));
+        if(raw<1) {
+          animationFrame=requestAnimationFrame(frame);
+        } else {
+          animationFrame=null;
+          isAnimating=false;
+          renderedLayout=toLayout;
+          drawStatic(step,toLayout);
+          updateControls();
         }
-
-        animationFrameId = null;
-        renderedLayout = toLayout;
-        drawStaticTree(svg, step, toLayout);
-        setAnimationBusy(false);
       }
-
-      animationFrameId = requestAnimationFrame(animate);
+      animationFrame=requestAnimationFrame(frame);
     }
 
-    function renderTree(step, animate = true, motionFocus = step.focus || []) {
-      const svg = document.getElementById('rotationSvg');
-      const layout = layoutTree(step.tree);
-
-      if (!renderedLayout || !animate || prefersReducedMotion) {
-        if (animationFrameId !== null) cancelAnimationFrame(animationFrameId);
-        animationFrameId = null;
-        renderedLayout = layout;
-        drawStaticTree(svg, step, layout);
-        setAnimationBusy(false);
-        return;
-      }
-
-      drawAnimatedTree(svg, step, renderedLayout, layout, motionFocus);
+    function updateControls() {
+      document.getElementById('prevBtn').disabled=isAnimating||stepIndex===0;
+      document.getElementById('nextBtn').disabled=isAnimating||stepIndex===steps.length-1;
+      document.getElementById('resetBtn').disabled=isAnimating;
+      document.getElementById('detailedMode').disabled=isAnimating;
+      const selector=document.getElementById('rotationCase');
+      selector.disabled=isAnimating;
+      selector.value=currentCase;
     }
 
-    function render(options = {}) {
-      const { animate = true } = options;
-      const step = steps[stepIndex];
-      const motionFocus = options.motionFocus || step.motionFocus || step.focus || [];
-      document.getElementById('caseTitle').textContent = step.title;
-      document.getElementById('stepCount').textContent = `${stepIndex + 1} of ${steps.length}`;
-      document.getElementById('status').textContent = step.message;
-      document.getElementById('inorderBox').textContent = step.inorder;
-      updateButtonStates();
-      renderTree(step, animate, motionFocus);
+    function renderPointerTrace(step) {
+      const trace=document.getElementById('pointerTrace');
+      trace.hidden=!step.assignment;
+      if(!step.assignment)return;
+      document.getElementById('assignment').textContent=step.assignment;
     }
 
-    function chooseCase(caseName) {
-      currentCase = caseName;
-      steps = caseBuilders[currentCase]();
-      stepIndex = 0;
-      renderedLayout = null;
-      render({ animate: false });
+    function render(animate=true) {
+      const step=steps[stepIndex];
+      document.getElementById('status').textContent=step.message;
+      document.getElementById('caseTitle').textContent=step.title;
+      document.getElementById('stepCount').textContent='Step '+(stepIndex+1)+' of '+steps.length;
+      document.getElementById('inorder').textContent=step.inorder;
+      updateControls();
+      const nextLayout=layoutForStep(step);
+      renderPointerTrace(step);
+      if(animationFrame!==null) cancelAnimationFrame(animationFrame);
+      if(!animate||!renderedLayout||reducedMotion) {
+        renderedLayout=nextLayout;
+        drawStatic(step,nextLayout);
+        isAnimating=false;
+        updateControls();
+      } else {
+        drawAnimated(step,renderedLayout,nextLayout);
+      }
     }
-
-    document.querySelectorAll('[data-case]').forEach((button) => {
-      button.addEventListener('click', () => {
-        if (!isAnimating) chooseCase(button.dataset.case);
-      });
-    });
-
-    document.getElementById('prevBtn').addEventListener('click', () => {
-      if (!isAnimating && stepIndex > 0) {
-        const previousStep = steps[stepIndex];
-        stepIndex--;
-        render({ motionFocus: previousStep.motionFocus || previousStep.focus || [] });
-      }
-    });
-
-    document.getElementById('nextBtn').addEventListener('click', () => {
-      if (!isAnimating && stepIndex < steps.length - 1) {
-        stepIndex++;
-        render({ motionFocus: steps[stepIndex].motionFocus || steps[stepIndex].focus || [] });
-      }
-    });
-
+    function chooseCase(name) {
+      currentCase=name;
+      steps=(document.getElementById('detailedMode').checked?detailedBuilders:builders)[name]();
+      stepIndex=0;
+      renderedLayout=null;
+      render(false);
+    }
+    document.getElementById('rotationCase').addEventListener('change',event=>chooseCase(event.target.value));
+    document.getElementById('prevBtn').addEventListener('click',()=>{if(!isAnimating&&stepIndex>0){stepIndex--;render(true);}});
+    document.getElementById('nextBtn').addEventListener('click',()=>{if(!isAnimating&&stepIndex<steps.length-1){stepIndex++;render(true);}});
+    document.getElementById('resetBtn').addEventListener('click',()=>chooseCase(currentCase));
+    document.getElementById('detailedMode').addEventListener('change',()=>chooseCase(currentCase));
     chooseCase('left');
   </script>
 </body>

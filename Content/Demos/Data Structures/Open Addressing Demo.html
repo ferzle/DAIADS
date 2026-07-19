@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Open Addressing Operations Demo</title>
+  <script src="/DAIADS/scripts/demoScripts.js"></script>
+  <link rel="stylesheet" href="/DAIADS/css/style.css">
+  <link rel="stylesheet" href="/DAIADS/css/demo.css">
+  <style>
+    * { box-sizing:border-box; }
+    #demoContainer { max-width:1080px; margin:0 auto; }
+    .oa-controls { display:flex; flex-direction:column; gap:7px; align-items:flex-start; margin-bottom:8px; }
+    .control-row { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+    .oa-controls label { display:inline-flex; align-items:center; gap:4px; }
+    .oa-controls input { width:82px; }
+    .oa-controls select { max-width:100%; }
+    .oa-controls button:disabled { cursor:not-allowed; opacity:0.55; }
+    .strategy-info { width:100%; padding:0.55rem 0.7rem; border:1px solid #9fb3c8; border-radius:5px; background:#f7fbff; color:#243b53; line-height:1.4; }
+    .strategy-title, .formula-line, .strategy-note { display:block; }
+    .formula-line { margin-top:0.18rem; }
+    .strategy-note { margin-top:0.28rem; }
+    .strategy-info code { white-space:normal; overflow-wrap:anywhere; }
+    #status { height:4.5rem; overflow-y:auto; padding:0.65rem 0.8rem; margin:0.6rem 0; border-left:5px solid #0a3974; background:#f0f7ff; line-height:1.45; }
+    .meta { display:flex; flex-wrap:wrap; justify-content:space-between; gap:0.4rem 1rem; color:#334e68; margin:0.35rem 0 0.65rem; }
+    #validity.valid { color:#176b3a; font-weight:700; }
+    #validity.invalid { color:#a61b1b; font-weight:700; }
+    .legend { display:flex; flex-wrap:wrap; align-items:center; gap:0.45rem 0.8rem; margin:0.55rem 0; }
+    .legend-item { display:inline-flex; align-items:center; gap:0.25rem; white-space:nowrap; }
+    .swatch { width:1.15rem; height:1.15rem; display:inline-block; border:2px solid #52667a; border-radius:3px; }
+    .swatch.empty { background:#f7f9fb; border-style:dashed; }
+    .swatch.occupied { background:#cce3ff; }
+    .swatch.deleted { background:#f8d7da; border-color:#a61b1b; }
+    .swatch.current { background:#fff3a6; border-color:#d9822b; border-width:3px; }
+    .swatch.remembered { background:#eee8ff; border-color:#6b46c1; border-width:3px; }
+    .swatch.changed { background:#d7f2df; border-color:#23834b; border-width:3px; }
+    .state-code { display:inline-flex; width:1.35rem; height:1.35rem; align-items:center; justify-content:center; border:2px solid #52667a; border-radius:3px; font-weight:700; font-size:0.75rem; background:#fff; }
+    .state-code.empty { border-style:dashed; background:#f7f9fb; }
+    .state-code.occupied { background:#cce3ff; }
+    .state-code.deleted { background:#f8d7da; border-color:#a61b1b; color:#7a1717; }
+    .table-grid { display:grid; grid-template-columns:repeat(var(--table-size),32px); justify-content:center; gap:2px; width:100%; padding:4px; border:1px solid #9fb3c8; border-radius:5px; background:#fbfdff; overflow-x:auto; }
+    .slot { position:relative; min-width:0; }
+    .slot-index { text-align:center; color:#486581; font-size:0.68rem; margin-top:2px; }
+    .slot-cell { position:relative; height:42px; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:1px; border:2px solid #52667a; border-radius:4px; background:#cce3ff; overflow:hidden; }
+    .slot.empty .slot-cell { background:#f7f9fb; border-style:dashed; color:#6b7c8f; }
+    .slot.deleted .slot-cell { background:#f8d7da; border-color:#a61b1b; color:#7a1717; }
+    .slot.current .slot-cell { background:#fff3a6; border-color:#d9822b; border-width:4px; }
+    .slot.remembered .slot-cell { box-shadow:0 0 0 4px #8e72c7 inset; }
+    .slot.found .slot-cell { background:#c9f3d7; border-color:#176b3a; border-width:4px; }
+    .slot.changed .slot-cell { background:#d7f2df; border-color:#23834b; border-width:4px; }
+    .slot.newly-deleted .slot-cell { background:#f8d7da; border-color:#a61b1b; border-width:4px; }
+    .slot-key { font-weight:700; font-size:0.78rem; color:#102a43; }
+    .slot-state { font-size:0.58rem; line-height:1; text-transform:uppercase; letter-spacing:0.01em; }
+    .probe-marker { height:28px; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; color:#334e68; }
+    .probe-badge { min-width:1.65rem; padding:1px 3px; border-radius:7px; background:#334e68; color:#fff; font-size:0.56rem; line-height:1.15; text-align:center; }
+    .probe-arrow { height:11px; font-size:0.78rem; line-height:11px; font-weight:700; }
+    .probe-sequence { margin:0.65rem 0 0; color:#334e68; line-height:1.45; }
+    .probe-sequence code { overflow-wrap:anywhere; }
+    @media (max-width:650px) {
+      .control-row { align-items:stretch; }
+      .oa-controls label { max-width:100%; flex-wrap:wrap; }
+      .table-grid { grid-template-columns:repeat(var(--table-size),32px); }
+    }
+  </style>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-DQ5LVZVFDC');
+  </script>
+</head>
+<body class="no-tooltips">
+  <main id="demoContainer">
+    <h2>Open Addressing Operations</h2>
+    <div class="oa-controls">
+      <div class="control-row">
+        <label>Probing
+          <select id="strategySelect" aria-label="Probing strategy">
+            <option value="linear">Linear probing</option>
+            <option value="quadratic">Quadratic probing</option>
+            <option value="doubleA">Double hashing: variable step</option>
+            <option value="doubleB">Double hashing: prime-minus step</option>
+          </select>
+        </label>
+      </div>
+      <div class="control-row" aria-label="Hash table operations">
+        <label>Key <input id="keyInput" type="number" min="-999" max="999" value="85"></label>
+        <button id="searchBtn">Search</button>
+        <button id="insertBtn">Insert</button>
+        <button id="deleteBtn">Delete</button>
+      </div>
+      <div class="control-row" aria-label="Playback and table controls">
+        <button id="prevBtn">Previous</button>
+        <button id="nextBtn">Next</button>
+        <button id="resetBtn">Reset Table</button>
+        <button id="randomBtn">Random Table</button>
+        <button id="clearBtn">Clear Table</button>
+      </div>
+    </div>
+
+    <div id="strategyInfo" class="strategy-info"></div>
+    <div class="legend" aria-label="Hash table legend">
+      <strong>Legend:</strong>
+      <span class="legend-item"><span class="state-code empty">E</span>empty (never used)</span>
+      <span class="legend-item"><span class="state-code occupied">O</span>occupied</span>
+      <span class="legend-item"><span class="state-code deleted">D</span>deleted (tombstone; no key)</span>
+      <span class="legend-item"><span class="swatch current"></span>current probe</span>
+      <span class="legend-item"><span class="swatch remembered"></span>remembered tombstone</span>
+      <span class="legend-item"><span class="swatch changed"></span>changed/found</span>
+    </div>
+
+    <div id="status" role="status" aria-live="polite">Choose an operation to begin.</div>
+    <div class="meta">
+      <span id="stepCount">Step 1 of 1</span>
+      <span id="tableStats"></span>
+      <span id="validity" class="valid">Valid table</span>
+    </div>
+    <div id="tableGrid" class="table-grid" role="img" aria-label="Open-addressed hash table"></div>
+    <p id="probeSequence" class="probe-sequence"></p>
+  </main>
+
+  <script>
+    const EMPTY = 'empty';
+    const OCCUPIED = 'occupied';
+    const DELETED = 'deleted';
+
+    const strategies = {
+      linear: {
+        name:'Linear probing',
+        size:16,
+        indexFormula:'index(i) = (h(k) + i) mod 16',
+        secondFormula:null,
+        note:'Each collision moves one slot to the right. The sequence visits all 16 slots.',
+        initial:[5,21,37,53,69,10,26,42],
+        index(key,i) { return mod(mod(key,16)+i,16); },
+        details(key) { return `h(${key}) = ${mod(key,16)}; step = 1`; }
+      },
+      quadratic: {
+        name:'Quadratic probing',
+        size:16,
+        indexFormula:'index(i) = (h(k) + i(i + 1)/2) mod 16',
+        secondFormula:null,
+        note:'Triangular quadratic offsets with a power-of-two table visit all 16 slots.',
+        initial:[5,21,37,53,69,10,26,42],
+        index(key,i) { return mod(mod(key,16)+(i*(i+1))/2,16); },
+        details(key) { return `h(${key}) = ${mod(key,16)}; offsets = 0, 1, 3, 6, 10, ...`; }
+      },
+      doubleA: {
+        name:'Double hashing: variable step',
+        size:17,
+        indexFormula:'index(i) = (h₁(k) + i·h₂(k)) mod 17',
+        secondFormula:'h₂(k) = 1 + (k mod 16)',
+        note:'Because 17 is prime, every step from 1 through 16 visits all 17 slots.',
+        initial:[5,22,39,56,73,10,27,44],
+        index(key,i) { return mod(mod(key,17)+i*(1+mod(key,16)),17); },
+        details(key) { return `h₁(${key}) = ${mod(key,17)}; h₂(${key}) = ${1+mod(key,16)}`; }
+      },
+      doubleB: {
+        name:'Double hashing: prime-minus step',
+        size:19,
+        indexFormula:'index(i) = (h₁(k) + i·h₂(k)) mod 19',
+        secondFormula:'h₂(k) = 17 − (k mod 17)',
+        note:'The table size 19 is prime; the second hash uses the smaller prime 17.',
+        initial:[5,24,43,62,81,10,29,48],
+        index(key,i) { return mod(mod(key,19)+i*(17-mod(key,17)),19); },
+        details(key) { return `h₁(${key}) = ${mod(key,19)}; h₂(${key}) = ${17-mod(key,17)}`; }
+      }
+    };
+
+    let table = [];
+    let size = 0;
+    let tombstones = 0;
+    let steps = [];
+    let stepIndex = 0;
+
+    function mod(value, divisor) {
+      return ((value % divisor) + divisor) % divisor;
+    }
+
+    function config() {
+      return strategies[document.getElementById('strategySelect').value];
+    }
+
+    function emptyTable(length) {
+      return Array.from({ length },()=>({ state:EMPTY, key:null }));
+    }
+
+    function cloneTable(source = table) {
+      return source.map(slot=>({ state:slot.state, key:slot.key }));
+    }
+
+    function record(message, marks = {}, phase = '') {
+      steps.push({ table:cloneTable(), size, tombstones, message, marks:{ ...marks }, phase });
+    }
+
+    function beginOperation(message) {
+      steps = [];
+      stepIndex = 0;
+      record(message,{},'start');
+    }
+
+    function probeIndices(key) {
+      const current = config();
+      return Array.from({ length:current.size },(_,i)=>current.index(key,i));
+    }
+
+    function probeLabel(key, probeNumber, index) {
+      return `Probe i = ${probeNumber}: index(${probeNumber}) = ${index}.`;
+    }
+
+    function marksFor(probed, current, extra = {}) {
+      return { probed:probed.slice(), current, ...extra };
+    }
+
+    function parseKey() {
+      const input = document.getElementById('keyInput');
+      const key = Number(input.value);
+      if (!Number.isInteger(key) || key < -999 || key > 999) {
+        beginOperation('Enter an integer key from −999 through 999.');
+        render();
+        return null;
+      }
+      return key;
+    }
+
+    function runOperation(kind) {
+      const key = parseKey();
+      if (key === null) return;
+      beginOperation(`Begin ${kind}(${key}). ${config().details(key)}.`);
+      if (kind === 'insert') insertKey(key,true);
+      else scanForKey(key,kind,true);
+      stepIndex = 0;
+      render();
+    }
+
+    function insertKey(key, showSteps = true) {
+      const sequence = probeIndices(key);
+      const probed = [];
+      let firstDeleted = -1;
+
+      for (let i=0; i<sequence.length; i++) {
+        const index = sequence[i];
+        const slot = table[index];
+        probed.push(index);
+
+        if (slot.state === OCCUPIED && slot.key === key) {
+          if (showSteps) record(`${probeLabel(key,i,index)} The slot already contains ${key}, so insertion makes no change.`,marksFor(probed,index,{ found:index, remembered:firstDeleted }),'insert: duplicate key');
+          return false;
+        }
+
+        if (slot.state === OCCUPIED) {
+          if (showSteps) record(`${probeLabel(key,i,index)} Slot ${index} contains ${slot.key}, so this is a collision. Continue along the same probe sequence.`,marksFor(probed,index,{ remembered:firstDeleted }),'insert: collision');
+          continue;
+        }
+
+        if (slot.state === DELETED) {
+          if (firstDeleted < 0) firstDeleted = index;
+          if (showSteps) record(`${probeLabel(key,i,index)} Slot ${index} is a tombstone. Remember it for possible reuse, but keep probing in case ${key} already appears later in the sequence.`,marksFor(probed,index,{ remembered:firstDeleted }),'insert: remember tombstone');
+          continue;
+        }
+
+        const destination = firstDeleted >= 0 ? firstDeleted : index;
+        if (showSteps) {
+          const reason = firstDeleted >= 0
+            ? `Slot ${index} is empty, proving ${key} is not farther along the sequence. Next, reuse the first tombstone at slot ${firstDeleted}.`
+            : `Slot ${index} is empty and has never been used. Next, place ${key} here.`;
+          record(`${probeLabel(key,i,index)} ${reason}`,marksFor(probed,index,{ remembered:firstDeleted }),'insert: choose destination');
+        }
+        occupy(destination,key);
+        if (showSteps) record(`${key} is now stored in slot ${destination}.`,marksFor(probed,destination,{ changed:destination }),'insert complete');
+        return true;
+      }
+
+      if (firstDeleted >= 0) {
+        if (showSteps) record(`Every slot in the probe sequence has been checked. The key is absent, and tombstone ${firstDeleted} can be reused next.`,marksFor(probed,firstDeleted,{ remembered:firstDeleted }),'insert: reuse after full scan');
+        occupy(firstDeleted,key);
+        if (showSteps) record(`${key} is now stored in former tombstone slot ${firstDeleted}.`,marksFor(probed,firstDeleted,{ changed:firstDeleted }),'insert complete');
+        return true;
+      }
+
+      if (showSteps) record('All table slots are occupied, so insertion fails. A real implementation would resize and rehash.',{ probed:probed.slice() },'insert failed: table full');
+      return false;
+    }
+
+    function scanForKey(key, kind, showSteps = true) {
+      const sequence = probeIndices(key);
+      const probed = [];
+      for (let i=0; i<sequence.length; i++) {
+        const index = sequence[i];
+        const slot = table[index];
+        probed.push(index);
+
+        if (slot.state === EMPTY) {
+          if (showSteps) record(`${probeLabel(key,i,index)} Slot ${index} is empty and has never been used. The probe sequence can stop, so ${key} is not in the table.`,marksFor(probed,index),`${kind}: stop at empty slot`);
+          return -1;
+        }
+
+        if (slot.state === DELETED) {
+          if (showSteps) record(`${probeLabel(key,i,index)} Slot ${index} is a tombstone, not a never-used empty slot. ${key} may lie farther along this probe sequence, so continue.`,marksFor(probed,index),`${kind}: continue past tombstone`);
+          continue;
+        }
+
+        if (slot.key === key) {
+          if (kind === 'search') {
+            if (showSteps) record(`${probeLabel(key,i,index)} Slot ${index} contains ${key}; the search succeeds.`,marksFor(probed,index,{ found:index }),'search complete');
+          } else {
+            if (showSteps) record(`${probeLabel(key,i,index)} Slot ${index} contains ${key}. Next, replace it with a tombstone so later searches will continue past this position.`,marksFor(probed,index,{ found:index }),'delete: found key');
+            markDeleted(index);
+            if (showSteps) record(`The key has been removed from slot ${index}, and the slot now contains only the D tombstone state. D is not empty, so later searches continue past it.`,marksFor(probed,index,{ deleted:index }),'delete complete');
+          }
+          return index;
+        }
+
+        if (showSteps) record(`${probeLabel(key,i,index)} Slot ${index} contains ${slot.key}, not ${key}. Continue probing.`,marksFor(probed,index),`${kind}: collision`);
+      }
+
+      if (showSteps) record(`All ${sequence.length} slots have been probed without finding ${key}.`,{ probed:probed.slice() },`${kind} complete: full scan`);
+      return -1;
+    }
+
+    function occupy(index,key) {
+      if (table[index].state === DELETED) tombstones--;
+      if (table[index].state !== OCCUPIED) size++;
+      table[index] = { state:OCCUPIED, key };
+    }
+
+    function markDeleted(index) {
+      if (table[index].state !== OCCUPIED) return;
+      table[index] = { state:DELETED, key:null };
+      size--;
+      tombstones++;
+    }
+
+    function insertRaw(key) {
+      const sequence = probeIndices(key);
+      let firstDeleted = -1;
+      for (const index of sequence) {
+        const slot = table[index];
+        if (slot.state === OCCUPIED && slot.key === key) return false;
+        if (slot.state === DELETED && firstDeleted < 0) firstDeleted = index;
+        if (slot.state === EMPTY) {
+          occupy(firstDeleted >= 0 ? firstDeleted : index,key);
+          return true;
+        }
+      }
+      if (firstDeleted >= 0) {
+        occupy(firstDeleted,key);
+        return true;
+      }
+      return false;
+    }
+
+    function rebuild(values) {
+      table = emptyTable(config().size);
+      size = 0;
+      tombstones = 0;
+      values.forEach(insertRaw);
+    }
+
+    function resetTable() {
+      rebuild(config().initial);
+      steps = [];
+      record(`Example restored for ${config().name}. Try inserting 85, searching for 53, or deleting 21.`,{},'ready');
+      stepIndex = 0;
+      render();
+    }
+
+    function randomTable() {
+      const values = [];
+      const target = Math.min(10,config().size-3);
+      while (values.length < target) {
+        const key = Math.floor(Math.random()*181)-90;
+        if (!values.includes(key)) values.push(key);
+      }
+      rebuild(values);
+      steps = [];
+      record(`Built a valid ${config().size}-slot table from ${values.length} random keys.`,{},'ready');
+      stepIndex = 0;
+      render();
+    }
+
+    function clearTable() {
+      rebuild([]);
+      steps = [];
+      record('The table is empty. Every slot is in the never-used empty state.',{},'ready');
+      stepIndex = 0;
+      render();
+    }
+
+    function findWithoutRecording(key) {
+      for (const index of probeIndices(key)) {
+        const slot = table[index];
+        if (slot.state === EMPTY) return -1;
+        if (slot.state === OCCUPIED && slot.key === key) return index;
+      }
+      return -1;
+    }
+
+    function validateTable() {
+      if (table.length !== config().size) return { ok:false };
+      const keys = new Set();
+      let occupiedCount = 0;
+      let deletedCount = 0;
+      for (let i=0; i<table.length; i++) {
+        const slot = table[i];
+        if (![EMPTY,OCCUPIED,DELETED].includes(slot.state)) return { ok:false };
+        if (slot.state === OCCUPIED) {
+          occupiedCount++;
+          if (!Number.isInteger(slot.key) || keys.has(slot.key)) return { ok:false };
+          keys.add(slot.key);
+          if (findWithoutRecording(slot.key) !== i) return { ok:false };
+        } else if (slot.key !== null) return { ok:false };
+        if (slot.state === DELETED) deletedCount++;
+      }
+      return { ok:occupiedCount === size && deletedCount === tombstones, occupiedCount, deletedCount };
+    }
+
+    function render() {
+      const current = config();
+      const step = steps[stepIndex] || { table:cloneTable(), size, tombstones, message:'Ready.', marks:{}, phase:'ready' };
+      const marks = step.marks || {};
+      document.getElementById('strategyInfo').innerHTML = `
+        <strong class="strategy-title">${current.name} (m = ${current.size})</strong>
+        <span class="formula-line"><strong>Probe index (start with i = 0):</strong> <code>${current.indexFormula}</code></span>
+        ${current.secondFormula ? `<span class="formula-line"><strong>Second hash:</strong> <code>${current.secondFormula}</code></span>` : ''}
+        <span class="strategy-note">${current.note}</span>`;
+      document.getElementById('status').textContent = `${step.phase ? `${step.phase}: ` : ''}${step.message}`;
+      document.getElementById('stepCount').textContent = `Step ${stepIndex+1} of ${Math.max(steps.length,1)}`;
+      const load = step.table.length ? step.size/step.table.length : 0;
+      document.getElementById('tableStats').textContent = `Size: ${step.size}/${step.table.length} · Tombstones: ${step.tombstones} · Load factor: ${load.toFixed(2)}`;
+      const validity = document.getElementById('validity');
+      const check = validateSnapshot(step.table,step.size,step.tombstones);
+      validity.textContent = check ? 'Valid table' : 'Invalid table state';
+      validity.className = check ? 'valid' : 'invalid';
+      document.getElementById('prevBtn').disabled = stepIndex === 0;
+      document.getElementById('nextBtn').disabled = stepIndex >= steps.length-1;
+
+      const probeNumbers = new Map();
+      (marks.probed || []).forEach((index,i)=>{ if (!probeNumbers.has(index)) probeNumbers.set(index,i); });
+      const grid = document.getElementById('tableGrid');
+      grid.innerHTML = '';
+      grid.style.setProperty('--table-size',step.table.length);
+      step.table.forEach((slot,index)=>{
+        const wrapper = document.createElement('div');
+        wrapper.className = `slot ${slot.state}`;
+        if (marks.current === index) wrapper.classList.add('current');
+        if (marks.remembered === index) wrapper.classList.add('remembered');
+        if (marks.found === index) wrapper.classList.add('found');
+        if (marks.changed === index) wrapper.classList.add('changed');
+        if (marks.deleted === index) wrapper.classList.add('newly-deleted');
+        const indexLabel = document.createElement('div');
+        indexLabel.className = 'slot-index';
+        indexLabel.textContent = index;
+        const cell = document.createElement('div');
+        cell.className = 'slot-cell';
+        const marker = document.createElement('div');
+        marker.className = 'probe-marker';
+        const key = document.createElement('div');
+        key.className = 'slot-key';
+        key.textContent = slot.state === OCCUPIED ? slot.key : slot.state === DELETED ? 'D' : 'E';
+        if (slot.state !== OCCUPIED) key.classList.add('state-symbol');
+        const state = document.createElement('div');
+        state.className = 'slot-state';
+        state.textContent = slot.state === OCCUPIED ? 'O' : '';
+        cell.append(key,state);
+        if (probeNumbers.has(index)) {
+          const badge = document.createElement('span');
+          badge.className = 'probe-badge';
+          badge.textContent = `i=${probeNumbers.get(index)}`;
+          const arrow = document.createElement('span');
+          arrow.className = 'probe-arrow';
+          arrow.textContent = '↓';
+          marker.append(badge,arrow);
+        }
+        wrapper.append(marker,cell,indexLabel);
+        grid.appendChild(wrapper);
+      });
+      const shownSequence = marks.probed || [];
+      document.getElementById('probeSequence').innerHTML = shownSequence.length
+        ? `<strong>Probes so far:</strong> <code>${shownSequence.join(' → ')}</code>`
+        : '';
+    }
+
+    function validateSnapshot(snapshot, expectedSize, expectedTombstones) {
+      let occupied = 0;
+      let deleted = 0;
+      const keys = new Set();
+      for (const slot of snapshot) {
+        if (slot.state === OCCUPIED) {
+          occupied++;
+          if (keys.has(slot.key)) return false;
+          keys.add(slot.key);
+        } else if (slot.state === DELETED) deleted++;
+        else if (slot.state !== EMPTY) return false;
+      }
+      return occupied === expectedSize && deleted === expectedTombstones;
+    }
+
+    document.getElementById('strategySelect').addEventListener('change',resetTable);
+    document.getElementById('searchBtn').addEventListener('click',()=>runOperation('search'));
+    document.getElementById('insertBtn').addEventListener('click',()=>runOperation('insert'));
+    document.getElementById('deleteBtn').addEventListener('click',()=>runOperation('delete'));
+    document.getElementById('prevBtn').addEventListener('click',()=>{ if (stepIndex>0) { stepIndex--; render(); } });
+    document.getElementById('nextBtn').addEventListener('click',()=>{ if (stepIndex<steps.length-1) { stepIndex++; render(); } });
+    document.getElementById('resetBtn').addEventListener('click',resetTable);
+    document.getElementById('randomBtn').addEventListener('click',randomTable);
+    document.getElementById('clearBtn').addEventListener('click',clearTable);
+    document.getElementById('keyInput').addEventListener('keydown',event=>{ if (event.key === 'Enter') runOperation('insert'); });
+
+    resetTable();
+    if (!validateTable().ok) console.error('Initial open-addressing table failed validation.');
+  </script>
+</body>
+</html>

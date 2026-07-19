@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Red-Black Tree Operations Demo</title>
+  <script src="/DAIADS/scripts/demoScripts.js"></script>
+  <link rel="stylesheet" href="/DAIADS/css/style.css">
+  <link rel="stylesheet" href="/DAIADS/css/demo.css">
+  <style>
+    * { box-sizing:border-box; }
+    #demoContainer { max-width:1080px; margin:0 auto; }
+    .rb-controls { display:flex; flex-direction:column; gap:6px; align-items:flex-start; margin-bottom:8px; }
+    .control-row { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+    .rb-controls label { display:inline-flex; align-items:center; gap:4px; }
+    .rb-controls input { width:80px; }
+    .rb-controls button:disabled { cursor:not-allowed; opacity:0.55; }
+    #status { min-height:3.5rem; padding:0.65rem 0.8rem; margin:0.6rem 0; border-left:5px solid #0a3974; background:#f0f7ff; line-height:1.45; }
+    .meta { display:flex; flex-wrap:wrap; justify-content:space-between; gap:0.4rem 1rem; color:#334e68; margin:0.35rem 0; }
+    #validity.valid { color:#176b3a; font-weight:700; }
+    #validity.invalid { color:#a61b1b; font-weight:700; }
+    .tree-viewport { width:100%; overflow-x:auto; border:1px solid #9fb3c8; border-radius:5px; background:linear-gradient(#fbfdff,#f5f9fc); }
+    #treeSvg { display:block; width:100%; min-width:620px; height:auto; }
+    .edge { stroke:#627d98; stroke-width:2.5; }
+    .missing-edge { stroke:#d4a600; stroke-width:2.5; stroke-dasharray:6 5; stroke-linecap:round; marker-end:url(#missingArrowhead); }
+    .missing-node { fill:url(#missingNodeFill); stroke:#d4a600; stroke-width:3; stroke-dasharray:5 4; }
+    .node circle { stroke-width:3; }
+    .node.red circle { fill:#c62828; stroke:#841515; }
+    .node.black circle { fill:#263238; stroke:#050708; }
+    .node .key { fill:#fff; font:700 16px Verdana,sans-serif; text-anchor:middle; dominant-baseline:middle; }
+    .node.examining circle { stroke:#ffb300; stroke-width:6; }
+    .node.changed circle { stroke:#2e9d57; stroke-width:6; }
+    .node.rotating circle { stroke:#7e57c2; stroke-width:6; }
+    .node.found circle { stroke:#41d47a; stroke-width:7; }
+    .node.double-black circle { stroke:#00a6c8; stroke-width:8; }
+    .double-black-ring { fill:#fff; stroke:#00a6c8; stroke-width:6; }
+    .double-black-text { fill:#102a43; font:700 12px Verdana,sans-serif; text-anchor:middle; dominant-baseline:middle; }
+    .empty-label { fill:#829ab1; font:italic 16px Verdana,sans-serif; text-anchor:middle; }
+    .legend { display:flex; flex-wrap:wrap; align-items:center; gap:0.45rem 0.8rem; margin:0.55rem 0; }
+    .legend-item { display:inline-flex; align-items:center; gap:0.25rem; white-space:nowrap; }
+    .swatch { width:1.1rem; height:1.1rem; border:2px solid; border-radius:50%; display:inline-block; }
+    .swatch.red { background:#c62828; border-color:#841515; }
+    .swatch.black { background:#263238; border-color:#050708; }
+    .swatch.examining { background:#fff; border-color:#ffb300; border-width:3px; }
+    .swatch.changed { background:#fff; border-color:#2e9d57; border-width:3px; }
+    .swatch.rotating { background:#fff; border-color:#7e57c2; border-width:3px; }
+    .swatch.double-black { background:#fff; border-color:#00a6c8; border-width:4px; }
+    @media (max-width:650px) { .control-row { align-items:stretch; } }
+  </style>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-DQ5LVZVFDC');
+  </script>
+</head>
+<body class="no-tooltips">
+  <main id="demoContainer">
+    <h2>Red-Black Tree Operations</h2>
+    <div class="rb-controls">
+      <div class="control-row" aria-label="Red-black tree operations">
+        <label>Value <input id="valueInput" type="number" min="-999" max="999" value="27"></label>
+        <button id="searchBtn">Search</button>
+        <button id="insertBtn">Insert</button>
+        <button id="deleteBtn">Remove</button>
+      </div>
+      <div class="control-row" aria-label="Playback and tree controls">
+        <button id="prevBtn">Previous</button>
+        <button id="nextBtn">Next</button>
+        <button id="resetBtn">Reset Tree</button>
+        <button id="randomBtn">Random Tree</button>
+        <button id="clearBtn">Clear Tree</button>
+      </div>
+    </div>
+
+    <div class="legend" aria-label="Color legend">
+      <strong>Legend:</strong>
+      <span class="legend-item"><span class="swatch red"></span>red node</span>
+      <span class="legend-item"><span class="swatch black"></span>black node</span>
+      <span class="legend-item"><span class="swatch examining"></span>examining</span>
+      <span class="legend-item"><span class="swatch changed"></span>inserted/recolored</span>
+      <span class="legend-item"><span class="swatch rotating"></span>rotated nodes</span>
+      <span class="legend-item"><span class="swatch double-black"></span>temporary black deficit (DB)</span>
+    </div>
+
+    <div id="status" role="status" aria-live="polite">Choose an operation to begin.</div>
+    <div class="meta">
+      <span id="stepCount">Step 1 of 1</span>
+      <span id="treeStats"></span>
+      <span id="validity" class="valid">Valid red-black tree</span>
+    </div>
+    <div class="tree-viewport">
+      <svg id="treeSvg" viewBox="0 0 900 370" preserveAspectRatio="xMidYMin meet" role="img" aria-label="Current red-black tree state"></svg>
+    </div>
+  </main>
+
+  <script>
+    const SVG_NS = 'http://www.w3.org/2000/svg';
+    const RED = 'red';
+    const BLACK = 'black';
+    const initialValues = [40,20,60,10,30,50,70,5,15,25,35,45,55,65,80];
+    let root = null;
+    let size = 0;
+    let nextId = 1;
+    let steps = [];
+    let stepIndex = 0;
+    let recording = true;
+
+    class RBNode {
+      constructor(key, color = RED) {
+        this.key = key;
+        this.color = color;
+        this.left = null;
+        this.right = null;
+        this.parent = null;
+        this.id = nextId++;
+      }
+    }
+
+    function colorOf(node) { return node ? node.color : BLACK; }
+
+    function cloneForDisplay(node) {
+      if (!node) return null;
+      return {
+        id:node.id,
+        key:node.key,
+        color:node.color,
+        left:cloneForDisplay(node.left),
+        right:cloneForDisplay(node.right)
+      };
+    }
+
+    function record(message, marks = {}, phase = '') {
+      if (!recording) return;
+      steps.push({ tree:cloneForDisplay(root), size, message, marks, phase });
+    }
+
+    function setColor(node, color) {
+      if (node) node.color = color;
+    }
+
+    function replaceParentLink(oldRoot, newRoot) {
+      const parent = oldRoot.parent;
+      if (!parent) root = newRoot;
+      else if (parent.left === oldRoot) parent.left = newRoot;
+      else parent.right = newRoot;
+      if (newRoot) newRoot.parent = parent;
+    }
+
+    function rotateLeft(node, showSteps = true, phase = 'left rotation') {
+      const pivot = node.right;
+      if (!pivot) return node;
+      const middle = pivot.left;
+      replaceParentLink(node, pivot);
+      pivot.left = node;
+      node.parent = pivot;
+      node.right = middle;
+      if (middle) middle.parent = node;
+      if (showSteps) record(`Rotate left at ${node.key}: ${pivot.key} moves up, ${node.key} moves down to the left, and the middle subtree transfers to ${node.key}.`, { rotating:[node.id,pivot.id] }, phase);
+      return pivot;
+    }
+
+    function rotateRight(node, showSteps = true, phase = 'right rotation') {
+      const pivot = node.left;
+      if (!pivot) return node;
+      const middle = pivot.right;
+      replaceParentLink(node, pivot);
+      pivot.right = node;
+      node.parent = pivot;
+      node.left = middle;
+      if (middle) middle.parent = node;
+      if (showSteps) record(`Rotate right at ${node.key}: ${pivot.key} moves up, ${node.key} moves down to the right, and the middle subtree transfers to ${node.key}.`, { rotating:[node.id,pivot.id] }, phase);
+      return pivot;
+    }
+
+    function findNode(value, showSteps = false, missingEndpoint = null) {
+      let node = root;
+      if (!node && missingEndpoint) missingEndpoint.root = true;
+      while (node) {
+        if (showSteps) record(`Compare ${value} with ${node.key}.`, { examining:[node.id] }, 'BST search');
+        if (value === node.key) return node;
+        const side = value < node.key ? 'left' : 'right';
+        if (showSteps) record(`${value} is ${side === 'left' ? 'smaller' : 'larger'} than ${node.key}, so follow the ${side} child.`, { examining:[node.id] }, 'BST search');
+        if (!node[side] && missingEndpoint) {
+          missingEndpoint.parentId = node.id;
+          missingEndpoint.side = side;
+        }
+        node = node[side];
+      }
+      return null;
+    }
+
+    function insertValue(value, showSteps = true) {
+      let parent = null;
+      let node = root;
+      while (node) {
+        parent = node;
+        if (showSteps) record(`Compare ${value} with ${node.key}.`, { examining:[node.id] }, 'BST insertion path');
+        if (value === node.key) {
+          if (showSteps) record(`${value} is already present, so nothing changes.`, { found:[node.id] }, 'duplicate');
+          return false;
+        }
+        node = value < node.key ? node.left : node.right;
+      }
+
+      const inserted = new RBNode(value);
+      inserted.parent = parent;
+      if (!parent) root = inserted;
+      else if (value < parent.key) parent.left = inserted;
+      else parent.right = inserted;
+      size++;
+      if (showSteps) record(`${value} is attached as a red ${parent ? (value < parent.key ? 'left' : 'right') + ` child of ${parent.key}` : 'root'}. New nodes begin red so they do not change any root-to-leaf black count.`, { changed:[inserted.id] }, 'insert red node');
+      fixInsert(inserted, showSteps);
+      return true;
+    }
+
+    function fixInsert(node, showSteps) {
+      while (node.parent && node.parent.color === RED) {
+        const parent = node.parent;
+        const grandparent = parent.parent;
+        if (parent === grandparent.left) {
+          const uncle = grandparent.right;
+          if (colorOf(uncle) === RED) {
+            if (showSteps) record(`The red node ${node.key} has red parent ${parent.key}, so the red-red rule is violated. Uncle ${uncle.key} is also red. Next, recolor the parent and uncle black and the grandparent red; this moves the possible conflict upward without changing the black height.`, { changed:[node.id], examining:[parent.id,uncle.id], rotating:[grandparent.id] }, 'insertion: inspect red parent and uncle');
+            setColor(parent, BLACK);
+            setColor(uncle, BLACK);
+            setColor(grandparent, RED);
+            if (showSteps) record(`Parent ${parent.key} and uncle ${uncle.key} are now black, and grandparent ${grandparent.key} is now red. Continue checking from the grandparent.`, { changed:[parent.id,uncle.id,grandparent.id] }, 'insertion: apply red-uncle recoloring');
+            node = grandparent;
+          } else {
+            if (node === parent.right) {
+              node = parent;
+              if (showSteps) record(`The new path bends left-right and the uncle is black. First straighten it with a left rotation at ${node.key}.`, { examining:[node.id,grandparent.id] }, 'insertion: triangle case');
+              rotateLeft(node, showSteps, 'insertion: straighten triangle');
+            }
+            const newParent = node.parent;
+            const newGrandparent = newParent.parent;
+            if (showSteps) record(`The red-red path is now a left-left line, and the uncle is black. Next, recolor parent ${newParent.key} black and grandparent ${newGrandparent.key} red; after that, a right rotation at the grandparent will repair the red-red edge.`, { changed:[node.id], examining:[newParent.id], rotating:[newGrandparent.id] }, 'insertion: inspect line case');
+            setColor(newParent, BLACK);
+            setColor(newGrandparent, RED);
+            if (showSteps) record(`Parent ${newParent.key} is now black and grandparent ${newGrandparent.key} is now red. The colors are prepared; next, rotate right at the grandparent.`, { changed:[newParent.id,newGrandparent.id] }, 'insertion: apply line recoloring');
+            rotateRight(newGrandparent, showSteps, 'insertion: repair red-red edge');
+          }
+        } else {
+          const uncle = grandparent.left;
+          if (colorOf(uncle) === RED) {
+            if (showSteps) record(`The red node ${node.key} has red parent ${parent.key}, so the red-red rule is violated. Uncle ${uncle.key} is also red. Next, recolor the parent and uncle black and the grandparent red; this moves the possible conflict upward without changing the black height.`, { changed:[node.id], examining:[parent.id,uncle.id], rotating:[grandparent.id] }, 'insertion: inspect red parent and uncle');
+            setColor(parent, BLACK);
+            setColor(uncle, BLACK);
+            setColor(grandparent, RED);
+            if (showSteps) record(`Parent ${parent.key} and uncle ${uncle.key} are now black, and grandparent ${grandparent.key} is now red. Continue checking from the grandparent.`, { changed:[parent.id,uncle.id,grandparent.id] }, 'insertion: apply red-uncle recoloring');
+            node = grandparent;
+          } else {
+            if (node === parent.left) {
+              node = parent;
+              if (showSteps) record(`The new path bends right-left and the uncle is black. First straighten it with a right rotation at ${node.key}.`, { examining:[node.id,grandparent.id] }, 'insertion: triangle case');
+              rotateRight(node, showSteps, 'insertion: straighten triangle');
+            }
+            const newParent = node.parent;
+            const newGrandparent = newParent.parent;
+            if (showSteps) record(`The red-red path is now a right-right line, and the uncle is black. Next, recolor parent ${newParent.key} black and grandparent ${newGrandparent.key} red; after that, a left rotation at the grandparent will repair the red-red edge.`, { changed:[node.id], examining:[newParent.id], rotating:[newGrandparent.id] }, 'insertion: inspect line case');
+            setColor(newParent, BLACK);
+            setColor(newGrandparent, RED);
+            if (showSteps) record(`Parent ${newParent.key} is now black and grandparent ${newGrandparent.key} is now red. The colors are prepared; next, rotate left at the grandparent.`, { changed:[newParent.id,newGrandparent.id] }, 'insertion: apply line recoloring');
+            rotateLeft(newGrandparent, showSteps, 'insertion: repair red-red edge');
+          }
+        }
+      }
+      if (root && root.color !== BLACK) {
+        if (showSteps) record(`Repair has reached red root ${root.key}. A red-black tree's root must be black, so the next step recolors it.`, { examining:[root.id] }, 'insertion: inspect root');
+        root.color = BLACK;
+        if (showSteps) record(`Root ${root.key} is now black.`, { changed:[root.id] }, 'insertion: apply black root');
+      }
+      if (showSteps) record('Insertion repair is complete. The root is black, red nodes have black children, and every root-to-leaf path has the same black height.', root ? { changed:[root.id] } : {}, 'insertion complete');
+    }
+
+    function minimumNode(node) {
+      while (node && node.left) node = node.left;
+      return node;
+    }
+
+    function transplant(node, replacement) {
+      if (!node.parent) root = replacement;
+      else if (node === node.parent.left) node.parent.left = replacement;
+      else node.parent.right = replacement;
+      if (replacement) replacement.parent = node.parent;
+    }
+
+    function doubleBlackMarks(node, parent, extras = {}) {
+      const marks = { ...extras };
+      if (node) marks.doubleBlack = [node.id];
+      else if (!parent) marks.doubleBlackRoot = true;
+      else {
+        marks.doubleBlackParentId = parent.id;
+        marks.doubleBlackSide = node === parent.left ? 'left' : 'right';
+      }
+      return marks;
+    }
+
+    function removeValue(value, showSteps = true) {
+      let target = findNode(value, showSteps);
+      if (!target) {
+        if (showSteps) record(`${value} is absent, so removal makes no change.`, {}, 'not found');
+        return false;
+      }
+      if (showSteps) record(`Found ${value}.`, { found:[target.id] }, 'found');
+
+      let removed = target;
+      let removedColor = removed.color;
+      let child = null;
+      let childParent = null;
+      const targetKey = target.key;
+      const usesSuccessor = Boolean(target.left && target.right);
+
+      if (!target.left) {
+        child = target.right;
+        childParent = target.parent;
+        if (showSteps) record(`${target.key} has no left child. Next, detach this ${target.color} node${child ? ` and promote its right child ${child.key}` : ''}.`, { examining:[target.id], ...(child ? { changed:[child.id] } : {}) }, 'removal: plan physical removal');
+        transplant(target, target.right);
+      } else if (!target.right) {
+        child = target.left;
+        childParent = target.parent;
+        if (showSteps) record(`${target.key} has no right child. Next, detach this ${target.color} node and promote its left child ${child.key}.`, { examining:[target.id], changed:[child.id] }, 'removal: plan physical removal');
+        transplant(target, target.left);
+      } else {
+        removed = minimumNode(target.right);
+        removedColor = removed.color;
+        child = removed.right;
+        if (showSteps) record(`${target.key} has two children. Its successor is ${removed.key}; move that successor into the removed node's position.`, { examining:[removed.id], found:[target.id] }, 'two-child removal');
+        if (removed.parent === target) {
+          childParent = removed;
+          if (child) child.parent = removed;
+        } else {
+          childParent = removed.parent;
+          transplant(removed, removed.right);
+          removed.right = target.right;
+          removed.right.parent = removed;
+        }
+        transplant(target, removed);
+        removed.left = target.left;
+        removed.left.parent = removed;
+        removed.color = target.color;
+      }
+
+      size--;
+      if (showSteps) {
+        const message = usesSuccessor
+          ? `Successor ${removed.key} has moved into ${targetKey}'s former position. Its old position lost a ${removedColor} node.${child ? ` Child ${child.key} now occupies that old position.` : ''}`
+          : `${targetKey} is now detached. The removed node was ${removedColor}.${child ? ` Child ${child.key} now occupies its former position.` : ''}`;
+        record(message, child ? { changed:[child.id] } : {}, 'physical removal');
+      }
+
+      if (removedColor === BLACK) fixDelete(child, child ? child.parent : childParent, showSteps);
+      else if (showSteps) record('The physically removed node was red, so no root-to-leaf path lost a black node. No deletion fix-up is needed.', {}, 'removal complete');
+      return true;
+    }
+
+    function fixDelete(node, parent, showSteps) {
+      if (showSteps) {
+        const markerExplanation = node
+          ? `Replacement node ${node.key} temporarily carries the missing black.`
+          : 'The empty replacement position is shown with a DB marker.';
+        record(`Removing a black node makes this path one black node shorter than the others. ${markerExplanation} “Double black” is only a temporary bookkeeping idea—it is not another stored tree node.`, doubleBlackMarks(node,parent), 'deletion: explain black deficit');
+      }
+      while (node !== root && colorOf(node) === BLACK) {
+        if (!parent) break;
+        if (node === parent.left) {
+          let sibling = parent.right;
+          if (colorOf(sibling) === RED) {
+            if (showSteps) record(`The double-black position's sibling ${sibling.key} is red. Next, recolor the sibling black and parent ${parent.key} red; then rotate left at the parent to expose a black sibling.`, doubleBlackMarks(node,parent,{ examining:[sibling.id,parent.id] }), 'deletion case 1: inspect red sibling');
+            setColor(sibling, BLACK);
+            setColor(parent, RED);
+            if (showSteps) record(`Sibling ${sibling.key} is now black and parent ${parent.key} is now red. Next, rotate left at the parent.`, doubleBlackMarks(node,parent,{ changed:[sibling.id,parent.id] }), 'deletion case 1: apply recoloring');
+            rotateLeft(parent, showSteps, 'deletion case 1: rotate parent');
+            sibling = parent.right;
+          }
+          if (colorOf(sibling && sibling.left) === BLACK && colorOf(sibling && sibling.right) === BLACK) {
+            if (showSteps) record(`Sibling${sibling ? ` ${sibling.key}` : ''} is black and both of its children are black. Next, recolor the sibling red and move the black deficit up to parent ${parent.key}.`, doubleBlackMarks(node,parent,{ examining:sibling ? [sibling.id,parent.id] : [parent.id] }), 'deletion case 2: inspect black sibling');
+            setColor(sibling, RED);
+            node = parent;
+            parent = node.parent;
+            if (showSteps) record(`The sibling is now red, and ${node.key} now carries the black deficit.`, doubleBlackMarks(node,parent,{ changed:sibling ? [sibling.id] : [] }), 'deletion case 2: apply and push deficit');
+          } else {
+            if (colorOf(sibling && sibling.right) === BLACK) {
+              const near = sibling && sibling.left;
+              if (showSteps) record(`Sibling ${sibling.key} is black with a red near child ${near.key} and a black far child. Next, recolor the near child black and sibling red; then rotate right at the sibling to create a red far child.`, doubleBlackMarks(node,parent,{ examining:[sibling.id,near.id] }), 'deletion case 3: inspect near red child');
+              setColor(near, BLACK);
+              setColor(sibling, RED);
+              if (showSteps) record(`Near child ${near.key} is now black and sibling ${sibling.key} is now red. Next, rotate right at the sibling.`, doubleBlackMarks(node,parent,{ changed:[sibling.id,near.id] }), 'deletion case 3: apply recoloring');
+              rotateRight(sibling, showSteps, 'deletion case 3: rotate sibling');
+              sibling = parent.right;
+            }
+            if (showSteps) record(`Sibling ${sibling.key} is black and its far child ${sibling.right.key} is red. This is the final case. Next, copy the parent's color to the sibling, make the parent and far child black, and then rotate left at the parent.`, doubleBlackMarks(node,parent,{ examining:[parent.id,sibling.id,sibling.right.id] }), 'deletion case 4: inspect red far child');
+            setColor(sibling, colorOf(parent));
+            setColor(parent, BLACK);
+            setColor(sibling && sibling.right, BLACK);
+            if (showSteps) record(`The final colors are in place. Next, rotate left at parent ${parent.key} to eliminate the black deficit.`, doubleBlackMarks(node,parent,{ changed:[parent.id,sibling.id,sibling.right.id] }), 'deletion case 4: apply recoloring');
+            rotateLeft(parent, showSteps, 'deletion case 4: remove deficit');
+            node = root;
+            parent = null;
+          }
+        } else {
+          let sibling = parent.left;
+          if (colorOf(sibling) === RED) {
+            if (showSteps) record(`The double-black position's sibling ${sibling.key} is red. Next, recolor the sibling black and parent ${parent.key} red; then rotate right at the parent to expose a black sibling.`, doubleBlackMarks(node,parent,{ examining:[sibling.id,parent.id] }), 'deletion case 1: inspect red sibling');
+            setColor(sibling, BLACK);
+            setColor(parent, RED);
+            if (showSteps) record(`Sibling ${sibling.key} is now black and parent ${parent.key} is now red. Next, rotate right at the parent.`, doubleBlackMarks(node,parent,{ changed:[sibling.id,parent.id] }), 'deletion case 1: apply recoloring');
+            rotateRight(parent, showSteps, 'deletion case 1: rotate parent');
+            sibling = parent.left;
+          }
+          if (colorOf(sibling && sibling.left) === BLACK && colorOf(sibling && sibling.right) === BLACK) {
+            if (showSteps) record(`Sibling${sibling ? ` ${sibling.key}` : ''} is black and both of its children are black. Next, recolor the sibling red and move the black deficit up to parent ${parent.key}.`, doubleBlackMarks(node,parent,{ examining:sibling ? [sibling.id,parent.id] : [parent.id] }), 'deletion case 2: inspect black sibling');
+            setColor(sibling, RED);
+            node = parent;
+            parent = node.parent;
+            if (showSteps) record(`The sibling is now red, and ${node.key} now carries the black deficit.`, doubleBlackMarks(node,parent,{ changed:sibling ? [sibling.id] : [] }), 'deletion case 2: apply and push deficit');
+          } else {
+            if (colorOf(sibling && sibling.left) === BLACK) {
+              const near = sibling && sibling.right;
+              if (showSteps) record(`Sibling ${sibling.key} is black with a red near child ${near.key} and a black far child. Next, recolor the near child black and sibling red; then rotate left at the sibling to create a red far child.`, doubleBlackMarks(node,parent,{ examining:[sibling.id,near.id] }), 'deletion case 3: inspect near red child');
+              setColor(near, BLACK);
+              setColor(sibling, RED);
+              if (showSteps) record(`Near child ${near.key} is now black and sibling ${sibling.key} is now red. Next, rotate left at the sibling.`, doubleBlackMarks(node,parent,{ changed:[sibling.id,near.id] }), 'deletion case 3: apply recoloring');
+              rotateLeft(sibling, showSteps, 'deletion case 3: rotate sibling');
+              sibling = parent.left;
+            }
+            if (showSteps) record(`Sibling ${sibling.key} is black and its far child ${sibling.left.key} is red. This is the final case. Next, copy the parent's color to the sibling, make the parent and far child black, and then rotate right at the parent.`, doubleBlackMarks(node,parent,{ examining:[parent.id,sibling.id,sibling.left.id] }), 'deletion case 4: inspect red far child');
+            setColor(sibling, colorOf(parent));
+            setColor(parent, BLACK);
+            setColor(sibling && sibling.left, BLACK);
+            if (showSteps) record(`The final colors are in place. Next, rotate right at parent ${parent.key} to eliminate the black deficit.`, doubleBlackMarks(node,parent,{ changed:[parent.id,sibling.id,sibling.left.id] }), 'deletion case 4: apply recoloring');
+            rotateRight(parent, showSteps, 'deletion case 4: remove deficit');
+            node = root;
+            parent = null;
+          }
+        }
+      }
+      if (node && node.color !== BLACK) {
+        if (showSteps) record(`The black deficit has reached red node ${node.key}. The node can absorb the extra black; next, recolor it black.`, { doubleBlack:[node.id] }, 'deletion: inspect red absorber');
+        node.color = BLACK;
+        if (showSteps) record(`${node.key} is now black, so the black deficit is gone.`, { changed:[node.id] }, 'deletion: apply absorption');
+      }
+      if (showSteps) record('Deletion repair is complete. Every root-to-leaf path again has the same black height.', root ? { changed:[root.id] } : {}, 'removal complete');
+    }
+
+    function beginOperation(message) {
+      steps = [];
+      stepIndex = 0;
+      record(message, {}, 'start');
+    }
+
+    function parseInput() {
+      const input = document.getElementById('valueInput');
+      const value = Number(input.value);
+      if (!Number.isInteger(value) || value < -999 || value > 999) {
+        beginOperation('Enter an integer from −999 through 999.');
+        render();
+        return null;
+      }
+      return value;
+    }
+
+    function runOperation(kind) {
+      const value = parseInput();
+      if (value === null) return;
+      beginOperation(`Begin ${kind}(${value}) from the current red-black tree.`);
+      if (kind === 'search') {
+        const missingEndpoint = {};
+        const found = findNode(value, true, missingEndpoint);
+        const marks = found
+          ? { found:[found.id] }
+          : missingEndpoint.root
+            ? { missingRoot:true }
+            : { missingParentId:missingEndpoint.parentId, missingSide:missingEndpoint.side };
+        record(found ? `Search succeeds: ${value} is in the tree.` : `Search reaches an empty child: ${value} is not in the tree.`, marks, 'search result');
+      } else if (kind === 'insert') insertValue(value, true);
+      else removeValue(value, true);
+      stepIndex = 0;
+      render();
+    }
+
+    function rebuild(values) {
+      root = null;
+      size = 0;
+      nextId = 1;
+      const wasRecording = recording;
+      recording = false;
+      values.forEach(value => insertValue(value, false));
+      recording = wasRecording;
+    }
+
+    function resetExample() {
+      rebuild(initialValues);
+      steps = [];
+      record('Example restored. Choose an operation; try inserting 27 or removing 5.', {}, 'ready');
+      stepIndex = 0;
+      render();
+    }
+
+    function randomTree() {
+      const values = [];
+      while (values.length < 11) {
+        const value = Math.floor(Math.random() * 91) + 5;
+        if (!values.includes(value)) values.push(value);
+      }
+      rebuild(values);
+      steps = [];
+      record(`Built a valid red-black tree from the shuffled insertion sequence ${values.join(', ')}.`, {}, 'ready');
+      stepIndex = 0;
+      render();
+    }
+
+    function validateTree() {
+      const seen = new Set();
+      function visit(node, low, high, parent) {
+        if (!node) return { ok:true, blackHeight:1, height:-1, count:0 };
+        if (seen.has(node) || node.parent !== parent || node.key <= low || node.key >= high) return { ok:false, blackHeight:0, height:0, count:0 };
+        seen.add(node);
+        const left = visit(node.left, low, node.key, node);
+        const right = visit(node.right, node.key, high, node);
+        const redRule = node.color !== RED || (colorOf(node.left) === BLACK && colorOf(node.right) === BLACK);
+        return {
+          ok:left.ok && right.ok && redRule && left.blackHeight === right.blackHeight,
+          blackHeight:left.blackHeight + (node.color === BLACK ? 1 : 0),
+          height:1 + Math.max(left.height,right.height),
+          count:1 + left.count + right.count
+        };
+      }
+      const result = visit(root,-Infinity,Infinity,null);
+      result.ok = result.ok && (!root || root.color === BLACK) && result.count === size;
+      return result;
+    }
+
+    function displayValidation(tree, expectedSize) {
+      function visit(node, low, high) {
+        if (!node) return { ok:true, blackHeight:1, height:-1, count:0 };
+        const left = visit(node.left,low,node.key);
+        const right = visit(node.right,node.key,high);
+        const redRule = node.color !== RED || ((!node.left || node.left.color === BLACK) && (!node.right || node.right.color === BLACK));
+        return {
+          ok:left.ok && right.ok && node.key > low && node.key < high && redRule && left.blackHeight === right.blackHeight,
+          blackHeight:left.blackHeight + (node.color === BLACK ? 1 : 0),
+          height:1 + Math.max(left.height,right.height),
+          count:1 + left.count + right.count
+        };
+      }
+      const result = visit(tree,-Infinity,Infinity);
+      result.ok = result.ok && (!tree || tree.color === BLACK) && result.count === expectedSize;
+      return result;
+    }
+
+    function svgElement(name, attributes = {}) {
+      const element = document.createElementNS(SVG_NS,name);
+      Object.entries(attributes).forEach(([key,value]) => element.setAttribute(key,value));
+      return element;
+    }
+
+    function layoutTree(tree, virtualChild = null) {
+      const items = [];
+      let index = 0;
+      let maxDepth = 0;
+      function addVirtual(depth) {
+        items.push({ virtual:true, order:index++, depth });
+        maxDepth = Math.max(maxDepth,depth);
+      }
+      function visit(node, depth) {
+        if (!node) return;
+        if (node.left) visit(node.left,depth+1);
+        else if (virtualChild && virtualChild.parentId === node.id && virtualChild.side === 'left') addVirtual(depth+1);
+        items.push({ node, order:index++, depth });
+        maxDepth = Math.max(maxDepth,depth);
+        if (node.right) visit(node.right,depth+1);
+        else if (virtualChild && virtualChild.parentId === node.id && virtualChild.side === 'right') addVirtual(depth+1);
+      }
+      visit(tree,0);
+      const width = Math.max(760,items.length * 82 + 100);
+      const gap = items.length > 1 ? (width-100)/(items.length-1) : 0;
+      const positions = new Map();
+      let virtualPosition = null;
+      items.forEach(item => {
+        const position = { x:items.length === 1 ? width/2 : 50+item.order*gap, y:58+item.depth*92 };
+        if (item.virtual) virtualPosition = position;
+        else positions.set(item.node.id,{ ...position, node:item.node });
+      });
+      return { positions, virtualPosition, width, height:Math.max(370,184+maxDepth*92) };
+    }
+
+    function renderDefs(svg) {
+      const defs = svgElement('defs');
+      const pattern = svgElement('pattern',{ id:'missingNodeFill', patternUnits:'userSpaceOnUse', width:8, height:8, patternTransform:'rotate(45)' });
+      pattern.appendChild(svgElement('rect',{ width:8, height:8, fill:'#fff3a6' }));
+      pattern.appendChild(svgElement('line',{ x1:0, y1:0, x2:0, y2:8, stroke:'#d4a600', 'stroke-width':2 }));
+      defs.appendChild(pattern);
+      const marker = svgElement('marker',{ id:'missingArrowhead', markerWidth:8, markerHeight:8, refX:7, refY:4, orient:'auto', markerUnits:'strokeWidth' });
+      marker.appendChild(svgElement('path',{ d:'M 0 0 L 8 4 L 0 8 z', fill:'#d4a600' }));
+      defs.appendChild(marker);
+      svg.appendChild(defs);
+    }
+
+    function drawMissingEdge(svg, from, to, className = 'missing-edge') {
+      const dx = to.x-from.x;
+      const dy = to.y-from.y;
+      const length = Math.hypot(dx,dy) || 1;
+      svg.appendChild(svgElement('line',{ x1:from.x, y1:from.y, x2:to.x-(dx/length)*29, y2:to.y-(dy/length)*29, class:className }));
+    }
+
+    function drawMissingNode(svg, x, y) {
+      svg.appendChild(svgElement('circle',{ cx:x, cy:y, r:24, class:'missing-node' }));
+    }
+
+    function drawDoubleBlackNil(svg, x, y) {
+      svg.appendChild(svgElement('circle',{ cx:x, cy:y, r:24, class:'double-black-ring' }));
+      const text = svgElement('text',{ x, y, class:'double-black-text' });
+      text.textContent = 'DB';
+      svg.appendChild(text);
+    }
+
+    function renderTree(step) {
+      const svg = document.getElementById('treeSvg');
+      svg.innerHTML = '';
+      renderDefs(svg);
+      if (!step.tree) {
+        svg.setAttribute('viewBox','0 0 900 320');
+        if (step.marks && step.marks.missingRoot) drawMissingNode(svg,450,150);
+        else if (step.marks && step.marks.doubleBlackRoot) drawDoubleBlackNil(svg,450,150);
+        else {
+          const label = svgElement('text',{ x:450, y:150, class:'empty-label' });
+          label.textContent = 'empty red-black tree';
+          svg.appendChild(label);
+        }
+        return;
+      }
+
+      const marks = step.marks || {};
+      const virtualChild = marks.missingParentId
+        ? { parentId:marks.missingParentId, side:marks.missingSide }
+        : marks.doubleBlackParentId
+          ? { parentId:marks.doubleBlackParentId, side:marks.doubleBlackSide }
+          : null;
+      const layout = layoutTree(step.tree,virtualChild);
+      svg.setAttribute('viewBox',`0 0 ${layout.width} ${layout.height}`);
+      const classes = new Map();
+      ['examining','changed','rotating','found','doubleBlack'].forEach(name => (marks[name] || []).forEach(id => classes.set(id,name === 'doubleBlack' ? 'double-black' : name)));
+      function edges(node) {
+        if (!node) return;
+        const from = layout.positions.get(node.id);
+        [node.left,node.right].forEach(child => {
+          if (!child) return;
+          const to = layout.positions.get(child.id);
+          svg.appendChild(svgElement('line',{ x1:from.x, y1:from.y, x2:to.x, y2:to.y, class:'edge' }));
+          edges(child);
+        });
+      }
+      edges(step.tree);
+
+      let missingPos = null;
+      let doubleBlackPos = null;
+      if (marks.missingParentId && marks.missingSide) {
+        const parentPos = layout.positions.get(marks.missingParentId);
+        if (parentPos && layout.virtualPosition) {
+          missingPos = layout.virtualPosition;
+          drawMissingEdge(svg,parentPos,missingPos);
+        }
+      }
+      if (marks.doubleBlackParentId && marks.doubleBlackSide) {
+        const parentPos = layout.positions.get(marks.doubleBlackParentId);
+        if (parentPos && layout.virtualPosition) {
+          doubleBlackPos = layout.virtualPosition;
+          drawMissingEdge(svg,parentPos,doubleBlackPos,'edge');
+        }
+      }
+
+      layout.positions.forEach(({x,y,node}) => {
+        const group = svgElement('g',{ class:`node ${node.color} ${classes.get(node.id) || ''}`, transform:`translate(${x} ${y})` });
+        group.appendChild(svgElement('circle',{ cx:0, cy:0, r:28 }));
+        const key = svgElement('text',{ x:0, y:1, class:'key' });
+        key.textContent = node.key;
+        group.appendChild(key);
+        svg.appendChild(group);
+      });
+      if (missingPos) drawMissingNode(svg,missingPos.x,missingPos.y);
+      if (doubleBlackPos) drawDoubleBlackNil(svg,doubleBlackPos.x,doubleBlackPos.y);
+    }
+
+    function render() {
+      const step = steps[stepIndex] || { tree:cloneForDisplay(root), size, message:'Ready.', marks:{}, phase:'ready' };
+      document.getElementById('status').textContent = `${step.phase ? `${step.phase}: ` : ''}${step.message}`;
+      document.getElementById('stepCount').textContent = `Step ${stepIndex+1} of ${Math.max(steps.length,1)}`;
+      const check = displayValidation(step.tree,step.size);
+      document.getElementById('treeStats').textContent = `Size: ${step.size} · Height: ${check.height} · Black height: ${Math.max(0,check.blackHeight-1)}`;
+      const validity = document.getElementById('validity');
+      validity.textContent = check.ok ? 'Valid red-black tree' : 'Intermediate/non-red-black state';
+      validity.className = check.ok ? 'valid' : 'invalid';
+      document.getElementById('prevBtn').disabled = stepIndex === 0;
+      document.getElementById('nextBtn').disabled = stepIndex >= steps.length-1;
+      renderTree(step);
+    }
+
+    document.getElementById('searchBtn').addEventListener('click',()=>runOperation('search'));
+    document.getElementById('insertBtn').addEventListener('click',()=>runOperation('insert'));
+    document.getElementById('deleteBtn').addEventListener('click',()=>runOperation('remove'));
+    document.getElementById('prevBtn').addEventListener('click',()=>{ if (stepIndex > 0) { stepIndex--; render(); } });
+    document.getElementById('nextBtn').addEventListener('click',()=>{ if (stepIndex < steps.length-1) { stepIndex++; render(); } });
+    document.getElementById('resetBtn').addEventListener('click',resetExample);
+    document.getElementById('randomBtn').addEventListener('click',randomTree);
+    document.getElementById('clearBtn').addEventListener('click',()=>{ rebuild([]); steps=[]; record('The tree is empty. Insert a key to begin.',{},'ready'); stepIndex=0; render(); });
+    document.getElementById('valueInput').addEventListener('keydown',event=>{ if (event.key === 'Enter') runOperation('insert'); });
+
+    resetExample();
+    if (!validateTree().ok) console.error('Initial red-black tree failed validation.');
+  </script>
+</body>
+</html>
