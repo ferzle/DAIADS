@@ -1515,6 +1515,7 @@ balanceFactor(node):
     <strong>Perform the BST insertion:</strong>
     Search for the key. If it is already present, leave the set unchanged.
     Otherwise, attach a new height-0 leaf at the end of the search path.
+    Also increment size.
   </li>
   <li>
     <strong>Begin the AVL fix-up:</strong>
@@ -1812,13 +1813,13 @@ balanceFactor(node):
         </p>
       </div>
 
-       <p>
-        Here is the full pseudocode. We assume that <code>bstInsert</code> is
-        identical to the <code>insert</code> method from the Binary Search Trees
-        page, including updating <code>size</code>. It is renamed here so that
-        <code>insert</code> can refer to the public AVL insertion operation.
-        The helper returns the newly inserted leaf, or <code>null</code> if the key
-        was already present.
+      <p>
+        Here is the full pseudocode. The helper <code>bstInsert</code> performs
+        only ordinary BST placement and returns the newly inserted leaf, or
+        <code>null</code> if the key was already present. The public
+        <code>insert</code> operation updates <code>size</code> after a successful
+        placement, then begins the AVL fix-up. Keeping size maintenance in the
+        public operation ensures that it happens exactly once.
       </p>
 
       <pre><code>insert(key):
@@ -1827,6 +1828,7 @@ balanceFactor(node):
     if newLeaf == null:                 // key was already present
         return false
 
+    size = size + 1
     fixAfterInsert(newLeaf)
     return true
 
@@ -1863,11 +1865,13 @@ fixAfterInsert(newLeaf):                // Helper method
   <h3>Removal</h3>
 
   <p>
-    AVL removal also consists of two phases. First, remove the key using the
-    ordinary BST procedure. Then move upward from the location where a node was
-    physically detached, updating heights and repairing any imbalances that
-    result.
-  </p>
+  AVL removal also consists of two phases. First, remove the key using the
+  ordinary BST procedure. The removal helper returns the lowest remaining
+  ancestor of the physically detached node, which is the first node whose
+  height may have changed. The algorithm begins there and moves upward,
+  updating heights and repairing any imbalances that result.
+</p>
+
 
   <p>More precisely, AVL removal proceeds as follows:</p>
 
@@ -1875,7 +1879,8 @@ fixAfterInsert(newLeaf):                // Helper method
     <li>
       <strong>Perform the BST removal:</strong>
       Search for the key. If it is not present, leave the tree unchanged.
-      Otherwise, remove it using the appropriate BST case.
+      Otherwise, call <code>bstRemove</code> on the target node and decrement
+      <code>size</code>.
     </li>
     <li>
       <strong>Identify the physical removal site:</strong>
@@ -1883,9 +1888,9 @@ fixAfterInsert(newLeaf):                // Helper method
       inorder successor or predecessor. The node physically detached from the
       tree is then the successor or predecessor, which has at most one child.
     </li>
-    <li>
+   <li>
       <strong>Begin the AVL fix-up:</strong>
-      Start at the parent of the position that physically lost a node.
+      Begin at the repair-start node returned by <code>bstRemove</code>.
     </li>
     <li>
       <strong>Update each ancestor:</strong>
@@ -1903,33 +1908,44 @@ fixAfterInsert(newLeaf):                // Helper method
       not change, because no higher ancestor can then be affected.
     </li>
   </ol>
-
-  <p>
-  Here is the full pseudocode. The helper <code>bstRemove</code> performs the
-  ordinary BST removal, including updating <code>size</code>. However, its
-  return value is slightly nonstandard: it returns the node physically detached
-  from the tree, or <code>null</code> if the key was not present. The detached
-  node retains its former parent link so that AVL repair can begin at that
-  parent.
+<p>
+  Here is the full pseudocode. The public <code>remove</code> operation first
+  searches for the requested node and returns if the key is not present.
+  The helper <code>bstRemove</code> therefore receives a target node known to
+  be in the tree. It performs the ordinary BST structural removal and returns
+  the node where AVL fix-up should begin. The public operation then decrements
+  <code>size</code> and begins fix-up at that returned node.
 </p>
 
-<div class="warning">
-  <strong>This return value is subtle.</strong>
-  Many BST removal methods return a Boolean value, the removed key, or the new
-  root of the tree. This version instead returns the node that was physically
-  detached because that node identifies where a subtree may have become
-  shorter. When removing a node with two children, this is the successor or
-  predecessor node that is detached, not the node where the requested key was
-  originally found.
+<div class="key-idea">
+  <strong>What <code>bstRemove</code> returns:</strong>
+
+  <p>
+    If the target has at most one child, <code>bstRemove</code> returns the
+    target's former parent. If the target has two children, it copies the
+    inorder successor's key, physically detaches the successor, and returns
+    the successor's former parent. If the successor is the target's immediate
+    right child, that former parent is the target itself.
+  </p>
+
+  <p>
+    If the physically detached node was the root, <code>bstRemove</code>
+    returns <code>null</code>. This occurs when removing a root with zero or
+    one child. In either case, <code>fixAfterRemove</code> does nothing, which
+    is correct because there is no remaining ancestor whose height or balance
+    factor could have changed.
+  </p>
 </div>
 
 <pre><code>remove(key):
-    removedNode = bstRemove(key)
+    target = searchNode(key)
 
-    if removedNode == null:             // key was not present
+    if target == null:                  // key was not present
         return false
 
-    fixAfterRemove(removedNode.parent)
+    repairStart = bstRemove(target)
+    size = size - 1
+    fixAfterRemove(repairStart)
     return true
 
 fixAfterRemove(node):                   // helper method
@@ -2624,6 +2640,7 @@ Removing 160 causes separate repairs at 150 and 100 </title>
 </div>
 
 </section>
+
 </section>
 
 <section id="analysis"
@@ -3620,13 +3637,12 @@ N(h)=
     <li>Which key is copied into the original node containing 50?</li>
     <li>Which node is physically detached from the tree?</li>
     <li>Which child, if any, replaces the physically detached node?</li>
-    <li>
-      Which physical node should <code>bstRemove</code> return: the original root
-      whose key was replaced, or the successor node that was detached?
+    <li>Which node should <code>bstRemove</code> return as
+      <code>repairStart</code>? Explain why this is the lowest remaining node
+      whose height may have changed.
     </li>
-    <li>
-      At which node should <code>fixAfterRemove</code> begin, and which
-      stored heights must be recomputed?
+    <li>Beginning at <code>repairStart</code>, which stored heights must be
+      recomputed?
     </li>
     <li>Are any rotations required in this case? Explain.</li>
   </ol>
@@ -3761,6 +3777,155 @@ N(h)=
           <li>Draw the final AVL tree and verify its balance factors.</li>
         </ol>
       </li>
+      <li>
+  <strong>Complete Removal Trace:</strong>
+  Consider the following AVL tree.
+  <svg class="avl-figure"
+     viewBox="0 20 900 350"
+     role="img"
+     aria-labelledby="removalStartTreeTitle">
+  <title id="removalStartTreeTitle">
+    AVL tree obtained by inserting 50, 30, 70, 20, 40, 60, 80, 10, 25, 35, 45, 55, 65, 75, 90, 5
+  </title>
+
+  <!-- edges from root -->
+  <line x1="450" y1="45" x2="250" y2="115" class="avl-edge"/>
+  <line x1="450" y1="45" x2="650" y2="115" class="avl-edge"/>
+
+  <!-- edges level 2 -->
+  <line x1="250" y1="115" x2="150" y2="185" class="avl-edge"/>
+  <line x1="250" y1="115" x2="350" y2="185" class="avl-edge"/>
+
+  <line x1="650" y1="115" x2="550" y2="185" class="avl-edge"/>
+  <line x1="650" y1="115" x2="750" y2="185" class="avl-edge"/>
+
+  <!-- edges level 3 -->
+  <line x1="150" y1="185" x2="100" y2="255" class="avl-edge"/>
+  <line x1="150" y1="185" x2="200" y2="255" class="avl-edge"/>
+
+  <line x1="350" y1="185" x2="300" y2="255" class="avl-edge"/>
+  <line x1="350" y1="185" x2="400" y2="255" class="avl-edge"/>
+
+  <line x1="550" y1="185" x2="500" y2="255" class="avl-edge"/>
+  <line x1="550" y1="185" x2="600" y2="255" class="avl-edge"/>
+
+  <line x1="750" y1="185" x2="700" y2="255" class="avl-edge"/>
+  <line x1="750" y1="185" x2="800" y2="255" class="avl-edge"/>
+
+  <!-- extra edge for 5 -->
+  <line x1="100" y1="255" x2="70" y2="325" class="avl-edge"/>
+
+  <!-- nodes -->
+  <circle cx="450" cy="45" r="23" class="avl-node"/>
+  <text x="450" y="45" class="avl-key">50</text>
+
+  <circle cx="250" cy="115" r="23" class="avl-node"/>
+  <text x="250" y="115" class="avl-key">30</text>
+
+  <circle cx="650" cy="115" r="23" class="avl-node"/>
+  <text x="650" y="115" class="avl-key">70</text>
+
+  <circle cx="150" cy="185" r="23" class="avl-node"/>
+  <text x="150" y="185" class="avl-key">20</text>
+
+  <circle cx="350" cy="185" r="23" class="avl-node"/>
+  <text x="350" y="185" class="avl-key">40</text>
+
+  <circle cx="550" cy="185" r="23" class="avl-node"/>
+  <text x="550" y="185" class="avl-key">60</text>
+
+  <circle cx="750" cy="185" r="23" class="avl-node"/>
+  <text x="750" y="185" class="avl-key">80</text>
+
+  <circle cx="100" cy="255" r="23" class="avl-node"/>
+  <text x="100" y="255" class="avl-key">10</text>
+
+  <circle cx="200" cy="255" r="23" class="avl-node"/>
+  <text x="200" y="255" class="avl-key">25</text>
+
+  <circle cx="300" cy="255" r="23" class="avl-node"/>
+  <text x="300" y="255" class="avl-key">35</text>
+
+  <circle cx="400" cy="255" r="23" class="avl-node"/>
+  <text x="400" y="255" class="avl-key">45</text>
+
+  <circle cx="500" cy="255" r="23" class="avl-node"/>
+  <text x="500" y="255" class="avl-key">55</text>
+
+  <circle cx="600" cy="255" r="23" class="avl-node"/>
+  <text x="600" y="255" class="avl-key">65</text>
+
+  <circle cx="700" cy="255" r="23" class="avl-node"/>
+  <text x="700" y="255" class="avl-key">75</text>
+
+  <circle cx="800" cy="255" r="23" class="avl-node"/>
+  <text x="800" y="255" class="avl-key">90</text>
+
+  <circle cx="70" cy="325" r="23" class="avl-node"/>
+  <text x="70" y="325" class="avl-key">5</text>
+</svg>
+  <ol type="a">
+    <li>
+      Label every node's height and balance
+      factor.
+    </li>
+    <li>For the keys \(90\), \(80\), and \(70\), in that order
+      <ol type='i'>
+        <li>
+        Remove the key and identify the node that is physically detached.
+      </li>
+      <li>
+        State the repair-start node returned by <code>bstRemove</code>.
+      </li>
+      <li>
+        List the nodes examined by <code>fixAfterRemove</code>, in order, and
+        give their old and new heights.
+      </li>
+      <li>
+        At every unbalanced node, identify \(z\), its taller child \(y\), and
+        the pair \((BF(z),BF(y))\).
+      </li>
+      <li>
+        Draw the tree after every rotation and explain whether fix-up stops or
+        continues toward the root. (If the changes are small, you can draw just the relevant part of the tree.)
+      </li>
+      </ol>
+    </li>
+    <li>
+      Verify the BST ordering, stored heights, and AVL balance condition in
+      the final tree.
+    </li>
+  </ol>
+</li>
+<li>
+  <strong>How Many Rotations Can One Update Require?</strong>
+
+  <ol type="a">
+    <li>
+      Explain why one AVL insertion performs at most one local repair.
+    </li>
+    <li>
+      Explain why that repair uses at most two single rotations.
+    </li>
+    <li>
+      Explain why one removal may require repairs at several different
+      ancestors.
+    </li>
+    <li>
+      Use the AVL height bound to give an asymptotic upper bound on the number
+      of ancestors that may require repair after one removal.
+    </li>
+    <li>
+      Give an asymptotic upper bound on the total number of single rotations
+      performed during one removal.
+    </li>
+    <li>
+      Explain why these possible rotations do not increase removal beyond
+      \(O(\log n)\) time.
+    </li>
+  </ol>
+</li>
+
 
       <li>
         <strong>Height Bound and Capacity:</strong>
@@ -3854,6 +4019,11 @@ N(h)=
       \(O(\log n)\) time and that insertion and removal still take
       \(O(\log n)\) time.
     </li>
+    <li>
+    Design <code>countRange(low, high)</code> to return the number of stored
+    keys \(x\) satisfying \(low\leq x\leq high\). Express it using one or two
+    rank computations and analyze its running time.
+  </li>
   </ol>
 </li>
 

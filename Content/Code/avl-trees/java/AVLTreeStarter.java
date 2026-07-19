@@ -71,7 +71,7 @@ public class AVLTreeStarter {
     }
 
     private Node bstInsert(int key) {
-        // Perform only ordinary BST placement.
+        // Perform only ordinary BST placement; do not change size.
         // Return the new height-0 leaf, or null if key is already present.
         return null; // TODO
     }
@@ -83,7 +83,8 @@ public class AVLTreeStarter {
     }
 
     public boolean insert(int key) {
-        // Call bstInsert, update size once, and call fixAfterInsert.
+        // Call bstInsert. If it succeeds, increment size exactly once,
+        // then call fixAfterInsert on the returned leaf.
         return false; // TODO
     }
 
@@ -94,30 +95,24 @@ public class AVLTreeStarter {
         return node;
     }
 
-    private static class RemovalResult {
-        boolean removed;
-        Node repairStart;
-        RemovalResult(boolean removed, Node repairStart) {
-            this.removed = removed;
-            this.repairStart = repairStart;
-        }
-    }
-
-    private RemovalResult bstRemove(int key) {
-        // Perform ordinary BST removal, using successor substitution for a
-        // two-child node. Return whether removal occurred and the first
-        // ancestor whose height may have changed.
-        return new RemovalResult(false, null); // TODO
+    private Node bstRemove(Node target) {
+        // target is known to be in the tree. Perform ordinary BST removal,
+        // using successor-key substitution for a two-child node. Return the
+        // lowest node still in the tree whose height may have changed.
+        // This may be null after successfully removing the root.
+        return null; // TODO
     }
 
     private void fixAfterRemove(Node node) {
-        // Rebalance every affected ancestor through the root. After a
-        // rotation, continue at the repaired local root's parent.
+        // Rebalance upward while the repaired subtree's height decreases.
+        // Stop when its height is unchanged; after a rotation that does not
+        // stop the walk, continue at the repaired local root's parent.
         // TODO
     }
 
     public boolean remove(int key) {
-        // Handle absence, call bstRemove, update size once, then repair.
+        // Find the target first. If present, pass it to bstRemove, decrement
+        // size exactly once, and repair from the returned node.
         return false; // TODO
     }
 

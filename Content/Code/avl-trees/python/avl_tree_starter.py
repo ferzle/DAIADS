@@ -50,7 +50,7 @@ class AVLTree:
         return node  # TODO
 
     def bst_insert(self, key):
-        """Perform BST placement; return the new leaf or None for duplicate."""
+        """Place a BST leaf without changing size; return None for duplicate."""
         return None  # TODO
 
     def fix_after_insert(self, new_leaf):
@@ -58,7 +58,7 @@ class AVLTree:
         pass  # TODO
 
     def insert(self, key):
-        """Call bst_insert, change size once, and perform AVL fix-up."""
+        """Insert, increment size exactly once on success, and perform fix-up."""
         return False  # TODO
 
     def minimum_node(self, node):
@@ -66,19 +66,21 @@ class AVLTree:
             node = node.left
         return node
 
-    def bst_remove(self, key):
+    def bst_remove(self, target):
         """
-        Perform structural BST removal.
-        Return (removed, repair_start).
+        Remove target, which is known to be in the tree, using successor-key
+        substitution when it has two children. Return the lowest node still
+        in the tree whose height may have changed. A successful root removal
+        may return None.
         """
-        return False, None  # TODO
+        return None  # TODO
 
     def fix_after_remove(self, node):
-        """Rebalance every affected ancestor through the root."""
+        """Rebalance upward until the repaired subtree height is unchanged."""
         pass  # TODO
 
     def remove(self, key):
-        """Call bst_remove, change size once, and perform AVL fix-up."""
+        """Find the target, remove it, change size once, and perform fix-up."""
         return False  # TODO
 
     def inorder_values(self):

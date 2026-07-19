@@ -66,6 +66,7 @@ private:
     }
 
     Node* bstInsert(int key) {
+        // Perform only ordinary BST placement; do not change nodeCount.
         // Return the new leaf, or nullptr for a duplicate.
         return nullptr; // TODO
     }
@@ -80,15 +81,18 @@ private:
         return node;
     }
 
-    Node* bstRemove(int key, bool& removed) {
-        // Perform structural BST removal. Set removed and return the first
-        // ancestor whose height may have changed.
-        removed = false;
+    Node* bstRemove(Node* target) {
+        // target is known to be in the tree. Perform ordinary BST removal,
+        // using successor-key substitution for a two-child node. Return the
+        // lowest node still in the tree whose height may have changed.
+        // This may be nullptr after successfully removing the root.
         return nullptr; // TODO
     }
 
     void fixAfterRemove(Node* node) {
-        // Continue through the root, including after rotations.
+        // Continue upward while the repaired subtree's height decreases.
+        // Stop when its height is unchanged. After a continuing rotation,
+        // move to the repaired local root's parent.
         // TODO
     }
 
@@ -125,12 +129,14 @@ public:
     bool contains(int key) const { return searchNode(key) != nullptr; }
 
     bool insert(int key) {
-        // Call bstInsert, update nodeCount once, then fix.
+        // Call bstInsert. If it succeeds, increment nodeCount exactly once,
+        // then repair from the returned leaf.
         return false; // TODO
     }
 
     bool remove(int key) {
-        // Call bstRemove, update nodeCount once, then fix.
+        // Find the target first. If present, pass it to bstRemove, decrement
+        // nodeCount exactly once, and repair from the returned node.
         return false; // TODO
     }
 
