@@ -1067,7 +1067,7 @@
   <strong>Why the ancestor case works:</strong> For a predecessor, if the
   current node is its parent's leftmost child, every key in the parent is
   larger, so the search must continue upward. The first time the current node
-  is not the leftmost child, the parent separator immediately to its left is
+  is not the leftmost child, the separator key in the parent immediately to its left is
   the closest smaller key. Successor is symmetric: continue upward from a
   rightmost child, and return the separator immediately to the right of the
   first child that is not rightmost.
@@ -1134,11 +1134,11 @@
     <svg class="tree23-figure"
      viewBox="0 50 980 340"
      role="img"
-     aria-labelledby="neighborExampleTitle neighborExampleDesc">
-  <title id="neighborExampleTitle">
+     aria-labelledby="travExampleTitle travExampleDesc">
+  <title id="travExampleTitle">
     A 2-3 tree used for predecessor and successor examples
   </title>
-  <desc id="neighborExampleDesc">
+  <desc id="travExampleDesc">
     The root contains 40 and 70. Its internal children contain 20,
     50 and 60, and 85. The leaves contain 10, 30, 45, 55, 65,
     75 and 80, and 90 and 95.
@@ -2043,10 +2043,11 @@ nodes containing 40 and 70, and 55 is promoted into the grandparent. </desc>
     </li>
   </ol>
 
-  <p>Note that the subtree \(U\) is the same depth as the other subtrees, since that is
-    one of the requirements of a 2-3 tree. It is drawn as it is just to keep it out of 
-    the way of the focus of the example.
-  </p>
+  <p>
+  Subtree \(U\) has the same height as the other child subtrees, as required
+  in a 2-3 tree. It is drawn higher only to keep the main split-and-promote
+  operation visually clear.
+</p>
 </div>
 
 <p>
@@ -2163,8 +2164,8 @@ nodes containing 40 and 70, and 55 is promoted into the grandparent. </desc>
 
 <p>
   A deficient leaf contains no keys and has no children. If an adjacent
-  sibling is a 3-node, the parent separator moves down into the deficient
-  leaf, and the sibling key nearest that separator moves up into the parent.
+  sibling is a 3-node, the separator key between the deficient leaf and its sibling moves down
+  into the deficient leaf, and the sibling key nearest that separator moves up into the parent.
 </p>
 
   <div class="example-box">
@@ -2270,7 +2271,7 @@ nodes containing 40 and 70, and 55 is promoted into the grandparent. </desc>
 
 <ol class="spaced">
   <li>
-    Move the parent separator 40 down into the deficient leaf.
+    Move 40, the separator key in the parent, down into the deficient leaf.
   </li>
   <li>
     Move the sibling key nearest the separator, 60, up into the parent.
@@ -2514,8 +2515,9 @@ nodes containing 40 and 70, and 55 is promoted into the grandparent. </desc>
 
 <ol class="spaced">
   <li>
-    Move the parent separator 50 down into the deficient internal node.
-  </li>
+    Move 50, the separator key in the parent, down into the deficient
+    internal node.  
+</li>
   <li>
     Move the nearest sibling key, 70, up into the parent.
   </li>
@@ -2537,8 +2539,9 @@ nodes containing 40 and 70, and 55 is promoted into the grandparent. </desc>
   </p>
 
   <div class="remark-box">
-    <strong>General rule:</strong> Move the parent separator down into the
-    deficient node, move the sibling key nearest the separator up into the
+    <strong>General rule:</strong> Move the separator key between the deficient node 
+    and the chosen sibling down into the deficient node, 
+    move the sibling key nearest the separator up into the
     parent, and, for internal nodes, move the sibling child subtree nearest
     the separator along with it. Redistribution from a left sibling is
     symmetric.
@@ -2553,7 +2556,7 @@ nodes containing 40 and 70, and 55 is promoted into the grandparent. </desc>
 <p>
   Redistribution is sometimes described as <strong>borrowing from a
   sibling</strong>. The key does not move directly between siblings, however;
-  the sibling key and parent separator exchange roles through the parent.
+  the sibling key and the separator key in the parent exchange roles.
 </p>
 
 </section>
@@ -2578,8 +2581,8 @@ nodes containing 40 and 70, and 55 is promoted into the grandparent. </desc>
   <h5>Merge at a Leaf</h5>
 
   <p>
-    A deficient leaf has no keys. To repair it, move the parent separator
-    between the deficient leaf and the chosen sibling down and combine it
+    A deficient leaf has no keys. To repair it, move the separator key between 
+    the deficient leaf and the chosen sibling down and combine it
     with the sibling's key. The deficient leaf and the sibling are replaced
     by one legal 3-node leaf.
   </p>
@@ -2725,9 +2728,9 @@ nodes containing 40 and 70, and 55 is promoted into the grandparent. </desc>
 
   <p>
     A deficient internal node has no keys and one child subtree. An adjacent
-    2-node sibling has one key and two child subtrees. To merge them, move the
-    parent separator down and combine it with the sibling key. The two keys
-    and all three child subtrees form one legal 3-node.
+    2-node sibling has one key and two child subtrees. To merge them, 
+    move the separator key between the two nodes down and combine it with the sibling key. 
+    The two keys and all three child subtrees form one legal 3-node.
   </p>
 
   <div class="example-box">
@@ -2990,8 +2993,8 @@ nodes containing 40 and 70, and 55 is promoted into the grandparent. </desc>
 
 <ol class="spaced">
   <li>
-    Move the parent separator 50 down and combine it with the sibling key 30,
-    forming the merged 3-node \([30\mid50]\).
+    Move 50, the separator key in the parent, down and combine it with the
+    sibling key 30, forming the merged 3-node \([30\mid50]\).
   </li>
   <li>
     Combine the sibling's child subtrees \(A\) and \(B\) with the deficient
@@ -3279,19 +3282,1378 @@ nodes containing 40 and 70, and 55 is promoted into the grandparent. </desc>
 
 </section>
 
-    <section id="core-insertion" section-title="Insertion">
-      <h3>Insertion</h3>
-      </section>
+   <section id="core-insertion" section-title="Insertion">
+  <h3>Insertion</h3>
+
+  <p>
+    Insertion begins by following the same downward path used by search. If
+    the key is already present, the tree is unchanged because this page treats
+    a 2-3 tree as a set of distinct keys. Otherwise, the search ends at the
+    leaf where the new key belongs.
+  </p>
+
+  <p>
+    The new key is first inserted into that leaf in sorted order. Although the
+    key may later be promoted into an internal node, placing it first in a leaf
+    preserves the common depth of the existing leaves. What happens next
+    depends on how many keys the leaf contained before the insertion.
+  </p>
+
+  <ul class="spaced">
+    <li>
+      <strong>The tree is empty:</strong> Create a root leaf containing the
+      new key.
+    </li>
+    <li>
+      <strong>The leaf is a 2-node:</strong> Insert the new key in sorted
+      order. The leaf becomes a legal 3-node, so the insertion is complete.
+    </li>
+    <li>
+      <strong>The leaf is a 3-node:</strong> Inserting the new key temporarily
+      creates an overfull leaf with three keys. Split the leaf and promote its
+      middle key into the parent.
+    </li>
+  </ul>
+
+  <p>
+    A promotion may make the parent overfull. If so, split that internal node
+    and promote its middle key one level higher. The same process continues
+    until a promoted key enters a parent with room or an overfull root is
+    split. Thus the only possible remaining violation moves upward one level
+    at a time; each node below it has already been repaired.
+  </p>
+
+  <h4>High-Level Insertion Procedure</h4>
+
+  <ol class="spaced">
+    <li>
+      If the tree is empty, create a root leaf containing the new key and
+      finish.
+    </li>
+    <li>
+      Search for the key, following child ranges until either the key is found
+      or a leaf is reached.
+      <ol type="a">
+        <li>
+          If the key is found, report that it was already present and leave
+          the tree unchanged.
+        </li>
+        <li>
+          Otherwise, let the reached leaf be the current node.
+        </li>
+      </ol>
+    </li>
+    <li>
+      Insert the new key into the current leaf in sorted order.
+    </li>
+    <li>
+      If the current node now contains at most two keys, it is legal and the
+      insertion is complete.
+    </li>
+    <li>
+      While the current node is overfull:
+      <ol type="a">
+        <li>
+          Split its three ordered keys around the middle key. The smallest and
+          largest keys remain in two separate 2-nodes.
+        </li>
+        <li>
+          If the current node is the root, create a new root containing the
+          middle key, make the two split nodes its children, and finish.
+        </li>
+        <li>
+          Otherwise, promote the middle key into the parent. In the parent,
+          replace the one child position formerly occupied by the overfull
+          node with two consecutive child positions for the split nodes.
+        </li>
+        <li>
+          Make the parent the current node. If it is legal, the insertion is
+          complete. If it is overfull, repeat the split-and-promote process
+          one level higher.
+        </li>
+      </ol>
+    </li>
+  </ol>
+
+  <div class="example-box">
+  <strong class="example-title">
+    Example 14: An Insertion That Reaches the Root
+  </strong>
+
+  <p>
+    In this example, we show the result of inserting 55 into the following 2-3 tree. 
+    The search reaches the middle leaf. Inserting 55 there creates a temporary overflow. 
+    Splitting that leaf promotes 55 into the root, which then becomes overfull and must also be
+    split. 
+  </p>
+
+  <h5>Step 1: Insert into the leaf</h5>
+
+  <svg class="tree23-figure"
+       viewBox="0 0 1180 360"
+       role="img"
+       aria-labelledby="insertLeafTitle insertLeafDesc">
+    <title id="insertLeafTitle">
+      Inserting 55 creates an overfull leaf
+    </title>
+    <desc id="insertLeafDesc">
+      On the left is the original tree with root 40 and 80 and leaves 10 and
+      20, 50 and 60, and 90 and 100. On the right, inserting 55 into the
+      middle leaf creates the temporary overfull leaf 50, 55, and 60.
+    </desc>
+
+    <defs>
+      <marker id="stepArrow25"
+              viewBox="0 0 10 10"
+              refX="9"
+              refY="5"
+              markerWidth="8"
+              markerHeight="8"
+              orient="auto-start-reverse">
+        <path d="M 0 0 L 10 5 L 0 10 Z" fill="currentColor"/>
+      </marker>
+    </defs>
+
+    <text x="250" y="28"
+          text-anchor="middle"
+          class="tree23-labelb">Before insertion</text>
+    <text x="900" y="28"
+          text-anchor="middle"
+          class="tree23-labelb">After inserting 55</text>
+
+    <line x1="490" y1="115"
+          x2="660" y2="115"
+          stroke="currentColor"
+          stroke-width="3"
+          marker-end="url(#stepArrow25)"/>
+    <text x="575" y="145"
+          text-anchor="middle"
+          class="tree23-labelb">becomes</text>
+
+    <!-- Left diagram -->
+    <line x1="250" y1="95" x2="110" y2="205" class="tree23-edge"/>
+    <line x1="250" y1="95" x2="250" y2="205" class="tree23-edge"/>
+    <line x1="250" y1="95" x2="400" y2="205" class="tree23-edge"/>
+
+    <rect x="180" y="55" width="140" height="56" class="tree23-node"/>
+    <line x1="250" y1="55" x2="250" y2="111" class="tree23-key-line"/>
+    <text x="215" y="84" class="tree23-key">40</text>
+    <text x="285" y="84" class="tree23-key">80</text>
+
+    <rect x="60" y="205" width="100" height="54" class="tree23-node"/>
+    <line x1="110" y1="205" x2="110" y2="259" class="tree23-key-line"/>
+    <text x="85" y="233" class="tree23-key">10</text>
+    <text x="135" y="233" class="tree23-key">20</text>
+
+    <rect x="200" y="205" width="100" height="54"
+          class="tree23-node tree23-highlight"/>
+    <line x1="250" y1="205" x2="250" y2="259" class="tree23-key-line"/>
+    <text x="225" y="233" class="tree23-key">50</text>
+    <text x="275" y="233" class="tree23-key">60</text>
+
+    <rect x="340" y="205" width="120" height="54" class="tree23-node"/>
+    <line x1="400" y1="205" x2="400" y2="259" class="tree23-key-line"/>
+    <text x="370" y="233" class="tree23-key">90</text>
+    <text x="430" y="233" class="tree23-key">100</text>
+
+    <!-- Right diagram -->
+    <line x1="900" y1="95" x2="740" y2="205" class="tree23-edge"/>
+    <line x1="900" y1="95" x2="900" y2="205" class="tree23-edge"/>
+    <line x1="900" y1="95" x2="1060" y2="205" class="tree23-edge"/>
+
+    <rect x="830" y="55" width="140" height="56" class="tree23-node"/>
+    <line x1="900" y1="55" x2="900" y2="111" class="tree23-key-line"/>
+    <text x="865" y="84" class="tree23-key">40</text>
+    <text x="935" y="84" class="tree23-key">80</text>
+
+    <rect x="690" y="205" width="100" height="54" class="tree23-node"/>
+    <line x1="740" y1="205" x2="740" y2="259" class="tree23-key-line"/>
+    <text x="715" y="233" class="tree23-key">10</text>
+    <text x="765" y="233" class="tree23-key">20</text>
+
+    <rect x="820" y="205" width="160" height="54"
+          class="tree23-node"
+          style="stroke-dasharray:8 5; stroke-width:3;"/>
+    <line x1="873" y1="205" x2="873" y2="259" class="tree23-key-line"/>
+    <line x1="927" y1="205" x2="927" y2="259" class="tree23-key-line"/>
+    <text x="846" y="233" class="tree23-key">50</text>
+    <text x="900" y="233" class="tree23-key">55</text>
+    <text x="954" y="233" class="tree23-key">60</text>
+    <text x="900" y="292"
+          text-anchor="middle"
+          class="tree23-label">temporary overfull leaf</text>
+
+    <rect x="1010" y="205" width="120" height="54" class="tree23-node"/>
+    <line x1="1070" y1="205" x2="1070" y2="259" class="tree23-key-line"/>
+    <text x="1040" y="233" class="tree23-key">90</text>
+    <text x="1100" y="233" class="tree23-key">100</text>
+  </svg>
+
+  <p>
+    Since \(40&lt;55&lt;80\), the search follows the middle child and reaches
+    the leaf \([50\mid60]\). Inserting 55 in sorted order temporarily produces
+    the overfull leaf \([50\mid55\mid60]\).
+  </p>
+
+  <h5>Step 2: Promote into the root, then split the root</h5>
+
+  <svg class="tree23-figure"
+       viewBox="0 0 1280 460"
+       role="img"
+       aria-labelledby="insertRootTitle insertRootDesc">
+    <title id="insertRootTitle">
+      Splitting the overfull leaf promotes 55 into the root, which then splits
+    </title>
+    <desc id="insertRootDesc">
+      On the left, splitting the leaf containing 50, 55, and 60 promotes 55
+      into the root, temporarily making the root contain 40, 55, and 80. On
+      the right, splitting that root creates a new root 55 with children 40
+      and 80.
+    </desc>
+
+    <defs>
+      <marker id="stepArrow26"
+              viewBox="0 0 10 10"
+              refX="9"
+              refY="5"
+              markerWidth="8"
+              markerHeight="8"
+              orient="auto-start-reverse">
+        <path d="M 0 0 L 10 5 L 0 10 Z" fill="currentColor"/>
+      </marker>
+    </defs>
+
+    <text x="280" y="28"
+          text-anchor="middle"
+          class="tree23-labelb">After leaf split and promotion</text>
+    <text x="980" y="28"
+          text-anchor="middle"
+          class="tree23-labelb">After root split</text>
+
+    <line x1="535" y1="145"
+          x2="720" y2="145"
+          stroke="currentColor"
+          stroke-width="3"
+          marker-end="url(#stepArrow26)"/>
+    <text x="628" y="175"
+          text-anchor="middle"
+          class="tree23-labelb">becomes</text>
+
+    <!-- Left diagram: overfull root -->
+    <line x1="280" y1="95" x2="120" y2="205" class="tree23-edge"/>
+    <line x1="280" y1="95" x2="235" y2="205" class="tree23-edge"/>
+    <line x1="280" y1="95" x2="345" y2="205" class="tree23-edge"/>
+    <line x1="280" y1="95" x2="480" y2="205" class="tree23-edge"/>
+
+    <rect x="195" y="55" width="170" height="56"
+          class="tree23-node"
+          style="stroke-dasharray:8 5; stroke-width:3;"/>
+    <line x1="251" y1="55" x2="251" y2="111" class="tree23-key-line"/>
+    <line x1="308" y1="55" x2="308" y2="111" class="tree23-key-line"/>
+    <text x="223" y="84" class="tree23-key">40</text>
+    <text x="280" y="84" class="tree23-key">55</text>
+    <text x="337" y="84" class="tree23-key">80</text>
+    <text x="430" y="128"
+          text-anchor="middle"
+          class="tree23-label">root is now overfull</text>
+
+    <rect x="70" y="205" width="100" height="54" class="tree23-node"/>
+    <line x1="120" y1="205" x2="120" y2="259" class="tree23-key-line"/>
+    <text x="95" y="233" class="tree23-key">10</text>
+    <text x="145" y="233" class="tree23-key">20</text>
+
+    <rect x="195" y="205" width="80" height="54" class="tree23-node"/>
+    <text x="235" y="233" class="tree23-key">50</text>
+
+    <rect x="305" y="205" width="80" height="54" class="tree23-node"/>
+    <text x="345" y="233" class="tree23-key">60</text>
+
+    <rect x="420" y="205" width="120" height="54" class="tree23-node"/>
+    <line x1="480" y1="205" x2="480" y2="259" class="tree23-key-line"/>
+    <text x="450" y="233" class="tree23-key">90</text>
+    <text x="510" y="233" class="tree23-key">100</text>
+
+    <!-- Right diagram: final tree -->
+    <line x1="980" y1="95" x2="855" y2="185" class="tree23-edge"/>
+    <line x1="980" y1="95" x2="1105" y2="185" class="tree23-edge"/>
+
+    <line x1="855" y1="241" x2="770" y2="335" class="tree23-edge"/>
+    <line x1="855" y1="241" x2="930" y2="335" class="tree23-edge"/>
+
+    <line x1="1105" y1="241" x2="1030" y2="335" class="tree23-edge"/>
+    <line x1="1105" y1="241" x2="1175" y2="335" class="tree23-edge"/>
+
+    <rect x="935" y="55" width="90" height="56"
+          class="tree23-node tree23-success"/>
+    <text x="980" y="84" class="tree23-key">55</text>
+
+    <rect x="810" y="185" width="90" height="56" class="tree23-node"/>
+    <text x="855" y="214" class="tree23-key">40</text>
+
+    <rect x="1060" y="185" width="90" height="56" class="tree23-node"/>
+    <text x="1105" y="214" class="tree23-key">80</text>
+
+    <rect x="720" y="335" width="100" height="54" class="tree23-node"/>
+    <line x1="770" y1="335" x2="770" y2="389" class="tree23-key-line"/>
+    <text x="745" y="363" class="tree23-key">10</text>
+    <text x="795" y="363" class="tree23-key">20</text>
+
+    <rect x="890" y="335" width="80" height="54" class="tree23-node"/>
+    <text x="930" y="363" class="tree23-key">50</text>
+
+    <rect x="990" y="335" width="80" height="54" class="tree23-node"/>
+    <text x="1030" y="363" class="tree23-key">60</text>
+
+    <rect x="1115" y="335" width="120" height="54" class="tree23-node"/>
+    <line x1="1175" y1="335" x2="1175" y2="389" class="tree23-key-line"/>
+    <text x="1145" y="363" class="tree23-key">90</text>
+    <text x="1205" y="363" class="tree23-key">100</text>
+  </svg>
+
+  <p>
+    Splitting the overfull leaf leaves \([50]\) and \([60]\) below and
+    promotes 55 into the root. That makes the root temporarily overfull:
+    \([40\mid55\mid80]\). Splitting the root produces the new root
+    \([55]\), with children \([40]\) and \([80]\). The height increases by
+    one, but all leaves remain at the same depth.
+  </p>
+</div>
+
+  <h4>Why Insertion Preserves the 2-3 Tree Properties</h4>
+
+  <ul class="spaced">
+    <li>
+      <strong>Search order:</strong> The new key is inserted in sorted order.
+      Every split promotes the middle key, leaving smaller keys and child
+      ranges on one side and larger keys and child ranges on the other.
+    </li>
+    <li>
+      <strong>Legal node types:</strong> A successful insertion may
+      temporarily create overfull nodes, but each is split before the
+      operation finishes. Every completed node therefore contains one or two
+      keys.
+    </li>
+    <li>
+      <strong>Uniform leaf depth:</strong> A nonroot split replaces one node
+      with two nodes at the same depth. A root split adds one new level above
+      the entire tree, increasing the depth of every leaf together.
+    </li>
+  </ul>
+
+  <div class="key-idea">
+    <strong>Insertion repairs only overflow:</strong> Insertion may create
+    overfull nodes, so its structural repair is split and promote.
+    Redistribution and merging repair deficient nodes and are used only
+    during removal.
+  </div>
+
+  <p>
+    A successful insertion adds exactly one key to the collection, regardless
+    of how many nodes split. The implementation section later gives precise
+    pseudocode for searching to the leaf, inserting the key, and carrying
+    promotions upward.
+  </p>
+</section>
+
       
-    <section id="core-removal" section-title="Removal">
-      <h3>Removal</h3>
-      </section>
+<section id="core-removal" section-title="Removal">
+  <h3>Removal</h3>
+
+  <p>
+    As with insertion, removal begins by searching for the target key. If the key is absent, the
+    tree is unchanged. If the key occurs in a leaf, it can be removed there.
+    If it occurs in an internal node, however, removing it immediately would
+    leave two child ranges without the separator key between them. The
+    operation therefore first replaces the internal key with its predecessor
+    or successor and then removes that replacement key from its original leaf.
+  </p>
+
+  <h4>First Move an Internal-Key Removal to a Leaf</h4>
+
+  <p>
+    Suppose the target key \(x\) occurs in an internal node. Its predecessor is
+    the maximum key in the child subtree immediately to the left of \(x\).
+    Copy that predecessor into the position formerly occupied by \(x\), then
+    remove the original predecessor from its leaf. Alternatively, the successor,
+    which is the minimum key in the child subtree immediately to the right of
+    \(x\), can be used.
+  </p>
+
+
+  <p>
+    This substitution preserves the search order because the predecessor is
+    the largest key smaller than the removed key. The structural problem is
+    now confined to a leaf. During the substitution there may temporarily be
+    two copies of the predecessor, but the copy in the leaf is removed before
+    the operation finishes.
+  </p>
+
+  <h4>Removing a Key from a Leaf</h4>
+
+  <p>
+    Once the removal has been reduced to a leaf, there are three cases:
+  </p>
+
+  <ul class="spaced">
+    <li>
+      <strong>The leaf is a 3-node:</strong> Remove the key. The leaf retains
+      one key and becomes a legal 2-node, so the removal is complete.
+    </li>
+    <li>
+      <strong>The leaf is a 2-node and is not the root:</strong> Removing its
+      only key leaves a deficient leaf. Repair it by redistribution if an
+      adjacent sibling is a 3-node; otherwise, merge it with an adjacent
+      2-node sibling through the parent.
+    </li>
+    <li>
+      <strong>The leaf is the root:</strong> Removing its only key makes the
+      tree empty.
+    </li>
+  </ul>
+
+  <h4>Repairing a Deficient Node</h4>
+
+  <p>
+    A deficient nonroot node is repaired using the structural operations
+    introduced earlier:
+  </p>
+
+  <ol class="spaced">
+    <li>
+      If an adjacent sibling is a 3-node, redistribute through the parent.
+      Redistribution repairs the deficiency without changing the number of
+      keys or children in the parent, so the repair stops.
+    </li>
+    <li>
+      If no adjacent sibling is a 3-node, merge the deficient node with an
+      adjacent 2-node sibling and the separator key between them.
+      <ol type="a">
+        <li>
+          If the parent remains a legal 2-node or 3-node, the repair stops.
+        </li>
+        <li>
+          If the parent loses its only key, it becomes deficient, and the same
+          repair decision is repeated one level higher.
+        </li>
+      </ol>
+    </li>
+    <li>
+      If a deficient root has one child, remove the empty root and make its
+      child the new root. If it has no child, the tree becomes empty.
+    </li>
+  </ol>
+
+
+  <h4>High-Level Removal Procedure</h4>
+
+    <p>
+      As mentioned earlier, either the predecessor or successor may be used when
+      the key to be removed is in an internal node. For consistency, the procedure
+      below always uses the predecessor.
+    </p>
+
+  <ol class="spaced">
+    <li>
+      Search for the target key. If it is absent, report failure and leave the
+      tree unchanged.
+    </li>
+    <li>
+      If the target occurs in an internal node:
+      <ol type="a">
+        <li>
+          Find its predecessor in the child subtree immediately to its left.
+        </li>
+        <li>
+          Copy the predecessor into the target's position.
+        </li>
+        <li>
+          Continue the removal at the leaf containing the original
+          predecessor.
+        </li>
+      </ol>
+    </li>
+    <li>
+      Remove the key from the leaf.
+    </li>
+    <li>
+      If the leaf still contains one key, it is legal and the removal is
+      complete.
+    </li>
+    <li>
+      If the leaf is the root and now has no keys, make the tree empty and
+      finish.
+    </li>
+    <li>
+      Otherwise, let the deficient leaf be the current node.
+    </li>
+    <li>
+      While the current node is deficient:
+      <ol type="a">
+        <li>
+          If the current node is the root, replace it with its one remaining
+          child, or make the tree empty if it has no child. Then finish.
+        </li>
+        <li>
+          If an adjacent sibling is a 3-node, redistribute through the parent
+          and finish.
+        </li>
+        <li>
+          Otherwise, merge the current node with an adjacent 2-node sibling
+          through the parent.
+        </li>
+        <li>
+          Make the parent the current node. If it still contains a key, it is
+          legal and the removal is complete. If it has no keys, continue the
+          repair one level higher.
+        </li>
+      </ol>
+    </li>
+  </ol>
+
+  <div class="example-box">
+  <strong class="example-title">
+    Example 15: A Removal That Reaches the Root
+  </strong>
+
+  <p>
+    Remove 40 from the tree below. Because 40 is stored in the root, first
+    replace it with its predecessor, 30. Removing the original 30 then causes
+    a leaf merge, an internal-node merge through the root, and finally a root
+    contraction.
+  </p>
+
+  <h5>Step 1: Replace the Internal Key with Its Predecessor</h5>
+
+<svg class="tree23-figure"
+    viewBox="0 0 1180 390"
+    role="img"
+    aria-labelledby="removeSubstituteTitle removeSubstituteDesc"> <title id="removeSubstituteTitle">
+Replacing internal key 40 with predecessor 30 </title>
+<desc id="removeSubstituteDesc">
+  The original tree has root 40, internal children 20 and 60, and leaves
+  10, 30, 50, and 70. The predecessor 30 is copied into the root. The
+  original copy of 30 remains temporarily in its leaf.
+</desc>
+
+<defs>
+  <marker id="stepArrow7"
+          viewBox="0 0 10 10"
+          refX="9"
+          refY="5"
+          markerWidth="8"
+          markerHeight="8"
+          orient="auto">
+    <path d="M 0 0 L 10 5 L 0 10 Z"
+          fill="currentColor"/>
+  </marker>
+</defs>
+
+<text x="260" y="28"
+      text-anchor="middle"
+      class="tree23-labelb">Before removing 40</text>
+
+<text x="900" y="28"
+      text-anchor="middle"
+      class="tree23-labelb">After predecessor substitution</text>
+
+<line x1="520" y1="145"
+      x2="640" y2="145"
+      stroke="currentColor"
+      stroke-width="3"
+      marker-end="url(#stepArrow7)"/>
+
+<text x="580" y="175"
+      text-anchor="middle"
+      class="tree23-labelb">copy 30 into the root</text>
+
+<!-- Before: root edges -->
+<line x1="260" y1="111" x2="150" y2="170"
+      class="tree23-edge"/>
+<line x1="260" y1="111" x2="390" y2="170"
+      class="tree23-edge"/>
+
+<!-- Before: internal-node edges -->
+<line x1="150" y1="226" x2="90" y2="295"
+      class="tree23-edge"/>
+<line x1="150" y1="226" x2="210" y2="295"
+      class="tree23-edge"/>
+<line x1="390" y1="226" x2="330" y2="295"
+      class="tree23-edge"/>
+<line x1="390" y1="226" x2="450" y2="295"
+      class="tree23-edge"/>
+
+<!-- Before root -->
+<rect x="215" y="55" width="90" height="56"
+      class="tree23-node tree23-highlight"/>
+<text x="260" y="84"
+      class="tree23-key">40</text>
+
+<!-- Before internal nodes -->
+<rect x="105" y="170" width="90" height="56"
+      class="tree23-node"/>
+<text x="150" y="199"
+      class="tree23-key">20</text>
+
+<rect x="345" y="170" width="90" height="56"
+      class="tree23-node"/>
+<text x="390" y="199"
+      class="tree23-key">60</text>
+
+<!-- Before leaves -->
+<rect x="50" y="295" width="80" height="54"
+      class="tree23-node"/>
+<text x="90" y="323"
+      class="tree23-key">10</text>
+
+<rect x="170" y="295" width="80" height="54"
+      class="tree23-node tree23-success"/>
+<text x="210" y="323"
+      class="tree23-key">30</text>
+
+<rect x="290" y="295" width="80" height="54"
+      class="tree23-node"/>
+<text x="330" y="323"
+      class="tree23-key">50</text>
+
+<rect x="410" y="295" width="80" height="54"
+      class="tree23-node"/>
+<text x="450" y="323"
+      class="tree23-key">70</text>
+
+<!-- After: root edges -->
+<line x1="900" y1="111" x2="790" y2="170"
+      class="tree23-edge"/>
+<line x1="900" y1="111" x2="1030" y2="170"
+      class="tree23-edge"/>
+
+<!-- After: internal-node edges -->
+<line x1="790" y1="226" x2="730" y2="295"
+      class="tree23-edge"/>
+<line x1="790" y1="226" x2="850" y2="295"
+      class="tree23-edge"/>
+<line x1="1030" y1="226" x2="970" y2="295"
+      class="tree23-edge"/>
+<line x1="1030" y1="226" x2="1090" y2="295"
+      class="tree23-edge"/>
+
+<!-- After root -->
+<rect x="855" y="55" width="90" height="56"
+      class="tree23-node tree23-highlight"/>
+<text x="900" y="84"
+      class="tree23-key">30</text>
+
+<!-- After internal nodes -->
+<rect x="745" y="170" width="90" height="56"
+      class="tree23-node"/>
+<text x="790" y="199"
+      class="tree23-key">20</text>
+
+<rect x="985" y="170" width="90" height="56"
+      class="tree23-node"/>
+<text x="1030" y="199"
+      class="tree23-key">60</text>
+
+<!-- After leaves -->
+<rect x="690" y="295" width="80" height="54"
+      class="tree23-node"/>
+<text x="730" y="323"
+      class="tree23-key">10</text>
+
+<rect x="810" y="295" width="80" height="54"
+      class="tree23-node"
+      style="stroke-dasharray:8 5; stroke-width:3;"/>
+<text x="850" y="323"
+      class="tree23-key">30</text>
+
+<rect x="930" y="295" width="80" height="54"
+      class="tree23-node"/>
+<text x="970" y="323"
+      class="tree23-key">50</text>
+
+<rect x="1050" y="295" width="80" height="54"
+      class="tree23-node"/>
+<text x="1090" y="323"
+      class="tree23-key">70</text>
+  </svg>
+
+  <p>
+    The predecessor of 40 is the maximum key in its left child subtree,
+    which is 30. Copy 30 into the root. The original 30 must still be
+    removed from its leaf.
+  </p>
+
+  <h5>Step 2: Remove the Leaf Key and Merge the Leaves</h5>
+
+<svg class="tree23-figure"
+    viewBox="0 0 1180 430"
+    role="img"
+    aria-labelledby="removeLeafMergeTitle removeLeafMergeDesc"> <title id="removeLeafMergeTitle">
+Removing 30 creates a deficient leaf that merges with its sibling </title>
+<desc id="removeLeafMergeDesc">
+  Removing the original 30 leaves an empty right leaf below the internal
+  node containing 20. The empty leaf merges with sibling 10 and separator
+  key 20 to form a leaf containing 10 and 20. The former parent becomes
+  a deficient internal node with one child.
+</desc>
+
+<defs>
+  <marker id="stepArrow8"
+          viewBox="0 0 10 10"
+          refX="9"
+          refY="5"
+          markerWidth="8"
+          markerHeight="8"
+          orient="auto">
+    <path d="M 0 0 L 10 5 L 0 10 Z"
+          fill="currentColor"/>
+  </marker>
+</defs>
+
+<text x="260" y="28"
+      text-anchor="middle"
+      class="tree23-labelb">After removing the leaf copy of 30</text>
+
+<text x="900" y="28"
+      text-anchor="middle"
+      class="tree23-labelb">After merging the leaves</text>
+
+<line x1="520" y1="155"
+      x2="640" y2="155"
+      stroke="currentColor"
+      stroke-width="3"
+      marker-end="url(#stepArrow8)"/>
+
+<text x="580" y="185"
+      text-anchor="middle"
+      class="tree23-labelb">merge using 20</text>
+
+<!-- Before root edges -->
+<line x1="260" y1="111" x2="150" y2="170"
+      class="tree23-edge"/>
+<line x1="260" y1="111" x2="390" y2="170"
+      class="tree23-edge"/>
+
+<!-- Before internal-node edges -->
+<line x1="150" y1="226" x2="90" y2="305"
+      class="tree23-edge"/>
+<line x1="150" y1="226" x2="210" y2="305"
+      class="tree23-edge"/>
+<line x1="390" y1="226" x2="330" y2="305"
+      class="tree23-edge"/>
+<line x1="390" y1="226" x2="450" y2="305"
+      class="tree23-edge"/>
+
+<!-- Before root -->
+<rect x="215" y="55" width="90" height="56"
+      class="tree23-node"/>
+<text x="260" y="84"
+      class="tree23-key">30</text>
+
+<!-- Before internal nodes -->
+<rect x="105" y="170" width="90" height="56"
+      class="tree23-node tree23-highlight"/>
+<text x="150" y="199"
+      class="tree23-key">20</text>
+
+<rect x="345" y="170" width="90" height="56"
+      class="tree23-node"/>
+<text x="390" y="199"
+      class="tree23-key">60</text>
+
+<!-- Before leaves -->
+<rect x="50" y="305" width="80" height="54"
+      class="tree23-node"/>
+<text x="90" y="333"
+      class="tree23-key">10</text>
+
+<rect x="170" y="305" width="80" height="54"
+      class="tree23-node"
+      style="stroke-dasharray:8 5; stroke-width:3;"/>
+<text x="210" y="333"
+      class="tree23-key">no key</text>
+
+<rect x="290" y="305" width="80" height="54"
+      class="tree23-node"/>
+<text x="330" y="333"
+      class="tree23-key">50</text>
+
+<rect x="410" y="305" width="80" height="54"
+      class="tree23-node"/>
+<text x="450" y="333"
+      class="tree23-key">70</text>
+
+<!-- After root edges -->
+<line x1="900" y1="111" x2="780" y2="170"
+      class="tree23-edge"/>
+<line x1="900" y1="111" x2="1020" y2="170"
+      class="tree23-edge"/>
+
+<!-- After deficient-node edge -->
+<line x1="780" y1="226" x2="780" y2="305"
+      class="tree23-edge"/>
+
+<!-- After right-node edges -->
+<line x1="1020" y1="226" x2="960" y2="305"
+      class="tree23-edge"/>
+<line x1="1020" y1="226" x2="1080" y2="305"
+      class="tree23-edge"/>
+
+<!-- After root -->
+<rect x="855" y="55" width="90" height="56"
+      class="tree23-node"/>
+<text x="900" y="84"
+      class="tree23-key">30</text>
+
+<!-- After deficient internal node -->
+<rect x="735" y="170" width="90" height="56"
+      class="tree23-node"
+      style="stroke-dasharray:8 5; stroke-width:3;"/>
+<text x="780" y="199"
+      class="tree23-key">no key</text>
+
+<!-- After right internal node -->
+<rect x="975" y="170" width="90" height="56"
+      class="tree23-node"/>
+<text x="1020" y="199"
+      class="tree23-key">60</text>
+
+<!-- After merged leaf -->
+<rect x="720" y="305" width="120" height="54"
+      class="tree23-node tree23-success"/>
+<line x1="780" y1="305" x2="780" y2="359"
+      class="tree23-key-line"/>
+<text x="750" y="333"
+      class="tree23-key">10</text>
+<text x="810" y="333"
+      class="tree23-key">20</text>
+
+<!-- After right leaves -->
+<rect x="920" y="305" width="80" height="54"
+      class="tree23-node"/>
+<text x="960" y="333"
+      class="tree23-key">50</text>
+
+<rect x="1040" y="305" width="80" height="54"
+      class="tree23-node"/>
+<text x="1080" y="333"
+      class="tree23-key">70</text>
+  </svg>
+
+  <p>
+    Removing 30 leaves a deficient leaf. Its sibling \([10]\) is a 2-node,
+    so redistribution is impossible. Merge the leaves using the separator
+    key 20, producing \([10\mid20]\). The parent loses its only key and
+    becomes a deficient internal node with one child.
+  </p>
+
+  <h5>Step 3: Merge the Internal Nodes Through the Root</h5>
+
+<svg class="tree23-figure"
+    viewBox="0 0 1180 430"
+    role="img"
+    aria-labelledby="removeRootMergeTitle removeRootMergeDesc"> <title id="removeRootMergeTitle">
+Merging a deficient internal node through the root </title>
+<desc id="removeRootMergeDesc">
+  The root contains 30. Its deficient left child has one leaf child
+  containing 10 and 20. Its right child contains 60 with leaf children
+  50 and 70. The deficient node merges with the right sibling and root
+  key 30. The old root is then empty and has one merged child containing
+  30 and 60.
+</desc>
+
+<defs>
+  <marker id="stepArrow9"
+          viewBox="0 0 10 10"
+          refX="9"
+          refY="5"
+          markerWidth="8"
+          markerHeight="8"
+          orient="auto">
+    <path d="M 0 0 L 10 5 L 0 10 Z"
+          fill="currentColor"/>
+  </marker>
+</defs>
+
+<text x="270" y="28"
+      text-anchor="middle"
+      class="tree23-labelb">Deficiency has reached the root</text>
+
+<text x="900" y="28"
+      text-anchor="middle"
+      class="tree23-labelb">After merging through the root</text>
+
+<line x1="535" y1="155"
+      x2="660" y2="155"
+      stroke="currentColor"
+      stroke-width="3"
+      marker-end="url(#stepArrow9)"/>
+
+<text x="598" y="185"
+      text-anchor="middle"
+      class="tree23-labelb">merge using 30</text>
+
+<!-- Before root edges -->
+<line x1="270" y1="111" x2="150" y2="170"
+      class="tree23-edge"/>
+<line x1="270" y1="111" x2="390" y2="170"
+      class="tree23-edge"/>
+
+<!-- Before child edges -->
+<line x1="150" y1="226" x2="150" y2="305"
+      class="tree23-edge"/>
+<line x1="390" y1="226" x2="330" y2="305"
+      class="tree23-edge"/>
+<line x1="390" y1="226" x2="450" y2="305"
+      class="tree23-edge"/>
+
+<!-- Before root -->
+<rect x="225" y="55" width="90" height="56"
+      class="tree23-node tree23-highlight"/>
+<text x="270" y="84"
+      class="tree23-key">30</text>
+
+<!-- Before deficient child -->
+<rect x="105" y="170" width="90" height="56"
+      class="tree23-node"
+      style="stroke-dasharray:8 5; stroke-width:3;"/>
+<text x="150" y="199"
+      class="tree23-key">no key</text>
+
+<!-- Before sibling -->
+<rect x="345" y="170" width="90" height="56"
+      class="tree23-node"/>
+<text x="390" y="199"
+      class="tree23-key">60</text>
+
+<!-- Before leaves -->
+<rect x="90" y="305" width="120" height="54"
+      class="tree23-node"/>
+<line x1="150" y1="305" x2="150" y2="359"
+      class="tree23-key-line"/>
+<text x="120" y="333"
+      class="tree23-key">10</text>
+<text x="180" y="333"
+      class="tree23-key">20</text>
+
+<rect x="290" y="305" width="80" height="54"
+      class="tree23-node"/>
+<text x="330" y="333"
+      class="tree23-key">50</text>
+
+<rect x="410" y="305" width="80" height="54"
+      class="tree23-node"/>
+<text x="450" y="333"
+      class="tree23-key">70</text>
+
+<!-- After empty-root edge -->
+<line x1="900" y1="111" x2="900" y2="175"
+      class="tree23-edge"/>
+
+<!-- After merged-node edges -->
+<line x1="900" y1="231" x2="760" y2="315"
+      class="tree23-edge"/>
+<line x1="900" y1="231" x2="900" y2="315"
+      class="tree23-edge"/>
+<line x1="900" y1="231" x2="1040" y2="315"
+      class="tree23-edge"/>
+
+<!-- Empty root -->
+<rect x="855" y="55" width="90" height="56"
+      class="tree23-node"
+      style="stroke-dasharray:8 5; stroke-width:3;"/>
+<text x="900" y="84"
+      class="tree23-key">no key</text>
+
+<!-- Merged child -->
+<rect x="830" y="175" width="140" height="56"
+      class="tree23-node tree23-success"/>
+<line x1="900" y1="175" x2="900" y2="231"
+      class="tree23-key-line"/>
+<text x="865" y="204"
+      class="tree23-key">30</text>
+<text x="935" y="204"
+      class="tree23-key">60</text>
+
+<!-- After leaves -->
+<rect x="700" y="315" width="120" height="54"
+      class="tree23-node"/>
+<line x1="760" y1="315" x2="760" y2="369"
+      class="tree23-key-line"/>
+<text x="730" y="343"
+      class="tree23-key">10</text>
+<text x="790" y="343"
+      class="tree23-key">20</text>
+
+<rect x="860" y="315" width="80" height="54"
+      class="tree23-node"/>
+<text x="900" y="343"
+      class="tree23-key">50</text>
+
+<rect x="1000" y="315" width="80" height="54"
+      class="tree23-node"/>
+<text x="1040" y="343"
+      class="tree23-key">70</text>
+  </svg>
+
+  <p>
+    The deficient internal node has only one adjacent sibling,
+    \([60]\), which is a 2-node. Merge the two internal nodes using the
+    root key 30. The resulting 3-node \([30\mid60]\) receives the three
+    child subtrees in their existing order. The old root has lost its only
+    key and its two former child positions have been replaced by the one
+    merged child. It is therefore temporarily an empty root with one child.
+  </p>
+
+  <h5>Step 4: Contract the Empty Root</h5>
+
+<svg class="tree23-figure"
+    viewBox="0 0 1180 400"
+    role="img"
+    aria-labelledby="removeRootContractTitle removeRootContractDesc"> <title id="removeRootContractTitle">
+Contracting an empty root with one child </title>
+<desc id="removeRootContractDesc">
+  On the left, an empty root has one child containing 30 and 60, with
+  leaf children containing 10 and 20, 50, and 70. On the right, the empty
+  root has been removed and its only child has become the new root.
+</desc>
+
+<defs>
+  <marker id="stepArrow10"
+          viewBox="0 0 10 10"
+          refX="9"
+          refY="5"
+          markerWidth="8"
+          markerHeight="8"
+          orient="auto">
+    <path d="M 0 0 L 10 5 L 0 10 Z"
+          fill="currentColor"/>
+  </marker>
+</defs>
+
+<text x="300" y="28"
+      text-anchor="middle"
+      class="tree23-labelb">Empty root with one child</text>
+
+<text x="900" y="28"
+      text-anchor="middle"
+      class="tree23-labelb">Final tree</text>
+
+<line x1="535" y1="150"
+      x2="665" y2="150"
+      stroke="currentColor"
+      stroke-width="3"
+      marker-end="url(#stepArrow10)"/>
+
+<text x="600" y="180"
+      text-anchor="middle"
+      class="tree23-labelb">contract the root</text>
+
+<!-- Before empty-root edge -->
+<line x1="300" y1="111" x2="300" y2="170"
+      class="tree23-edge"/>
+
+<!-- Before merged-node edges -->
+<line x1="300" y1="226" x2="170" y2="305"
+      class="tree23-edge"/>
+<line x1="300" y1="226" x2="300" y2="305"
+      class="tree23-edge"/>
+<line x1="300" y1="226" x2="430" y2="305"
+      class="tree23-edge"/>
+
+<!-- Before empty root -->
+<rect x="255" y="55" width="90" height="56"
+      class="tree23-node"
+      style="stroke-dasharray:8 5; stroke-width:3;"/>
+<text x="300" y="84"
+      class="tree23-key">no key</text>
+
+<!-- Before only child -->
+<rect x="230" y="170" width="140" height="56"
+      class="tree23-node tree23-success"/>
+<line x1="300" y1="170" x2="300" y2="226"
+      class="tree23-key-line"/>
+<text x="265" y="199"
+      class="tree23-key">30</text>
+<text x="335" y="199"
+      class="tree23-key">60</text>
+
+<!-- Before leaves -->
+<rect x="110" y="305" width="120" height="54"
+      class="tree23-node"/>
+<line x1="170" y1="305" x2="170" y2="359"
+      class="tree23-key-line"/>
+<text x="140" y="333"
+      class="tree23-key">10</text>
+<text x="200" y="333"
+      class="tree23-key">20</text>
+
+<rect x="260" y="305" width="80" height="54"
+      class="tree23-node"/>
+<text x="300" y="333"
+      class="tree23-key">50</text>
+
+<rect x="390" y="305" width="80" height="54"
+      class="tree23-node"/>
+<text x="430" y="333"
+      class="tree23-key">70</text>
+
+<!-- Final root edges -->
+<line x1="900" y1="111" x2="770" y2="255"
+      class="tree23-edge"/>
+<line x1="900" y1="111" x2="900" y2="255"
+      class="tree23-edge"/>
+<line x1="900" y1="111" x2="1030" y2="255"
+      class="tree23-edge"/>
+
+<!-- Final root -->
+<rect x="830" y="55" width="140" height="56"
+      class="tree23-node tree23-success"/>
+<line x1="900" y1="55" x2="900" y2="111"
+      class="tree23-key-line"/>
+<text x="865" y="84"
+      class="tree23-key">30</text>
+<text x="935" y="84"
+      class="tree23-key">60</text>
+
+<!-- Final leaves -->
+<rect x="710" y="255" width="120" height="54"
+      class="tree23-node"/>
+<line x1="770" y1="255" x2="770" y2="309"
+      class="tree23-key-line"/>
+<text x="740" y="283"
+      class="tree23-key">10</text>
+<text x="800" y="283"
+      class="tree23-key">20</text>
+
+<rect x="860" y="255" width="80" height="54"
+      class="tree23-node"/>
+<text x="900" y="283"
+      class="tree23-key">50</text>
+
+<rect x="990" y="255" width="80" height="54"
+      class="tree23-node"/>
+<text x="1030" y="283"
+      class="tree23-key">70</text>
+  </svg>
+
+  <p>
+    Remove the empty root and make its only child, \([30\mid60]\), the new
+    root. The height decreases by one, and all leaves remain at the same
+    depth.
+  </p>
+</div>
+
+  <h4>Why Removal Preserves the 2-3 Tree Properties</h4>
+
+  <ul class="spaced">
+    <li>
+      <strong>Search order:</strong> An internal target is replaced by its
+      predecessor or successor, so it remains between the same neighboring
+      child ranges. Redistribution and merging move separator keys and child
+      subtrees without changing their left-to-right order.
+    </li>
+    <li>
+      <strong>Legal node types:</strong> Removing from a 3-node directly
+      produces a legal 2-node. Any deficient nonroot node is repaired by
+      redistribution or merging before the operation finishes.
+    </li>
+    <li>
+      <strong>Uniform leaf depth:</strong> Redistribution and nonroot merging
+      rearrange nodes at existing depths. A root contraction removes one
+      level above the entire tree, decreasing every leaf depth together.
+    </li>
+  </ul>
+
+  <div class="key-idea">
+    <strong>Removal repairs missing capacity:</strong> Redistribution repairs
+    a deficient node without affecting the parent, so it stops immediately.
+    Merging removes a key and child position from the parent, so the
+    deficiency may continue upward. Only an empty root ends the propagation
+    by contracting the tree or making it empty.
+  </div>
+
+  <p>
+    A successful removal deletes exactly one stored key, regardless of how
+    many keys move during substitution, redistribution, merging, or root
+    contraction. The implementation section later gives precise pseudocode
+    for locating the removable leaf and carrying any deficiency upward.
+  </p>
+</section>
+
 
 
 </section>
 
+<section id="implementation" section-title="Implementation">
+  <h2>Implementation</h2>
 
-  <section id="Implementation" section-title="Implementation">
+<section id="implementation-representation"
+         section-title="Representation">
+  <h3>Representation</h3>
+
+  <p>
+    We represent a 2-3 tree as a linked multiway tree. The tree stores a
+    reference to its <code>root</code> and a <code>size</code> equal to the
+    number of keys in the collection. The number of nodes is not tracked,
+    because that number is not relevant.
+  </p>
+
+  <p>
+    A single node type represents both 2-nodes and 3-nodes. Each node stores
+    fixed-size arrays with enough room for the temporary states created during
+    updates:
+  </p>
+
+  <div class="remark-box">
+    <strong>Why one flexible node type is used:</strong> Updates frequently
+    change a 2-node into a 3-node or a 3-node into a 2-node. In addition,
+    insertion may temporarily create a node with three keys and four children,
+    while removal may temporarily create a node with no keys. A single node
+    type with enough capacity for these temporary states avoids replacing and
+    reconnecting nodes whenever their contents change.
+  </div>
+
+
+  <pre><code>TwoThreeTree:
+    root = reference to a Node, initially null
+    size = 0
+
+Node:
+    keys = new array of length 3
+    keyCount = 0
+
+    children = new array of length 4, filled with null
+    childCount = 0
+
+    parent = null</code></pre>
+
+  <p>
+    The active keys occupy <code>keys[0]</code> through
+    <code>keys[keyCount - 1]</code> and are stored in strictly increasing
+    order. The active child references occupy <code>children[0]</code>
+    through <code>children[childCount - 1]</code>. Algorithms ignore all
+    array positions beyond the corresponding count.
+  </p>
+
+  <table class="example-table left-top-align">
+    <thead>
+      <tr>
+        <th>Node state</th>
+        <th><code>keyCount</code></th>
+        <th><code>childCount</code></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>2-node leaf</td>
+        <td>1</td>
+        <td>0</td>
+      </tr>
+      <tr>
+        <td>3-node leaf</td>
+        <td>2</td>
+        <td>0</td>
+      </tr>
+      <tr>
+        <td>2-node internal node</td>
+        <td>1</td>
+        <td>2</td>
+      </tr>
+      <tr>
+        <td>3-node internal node</td>
+        <td>2</td>
+        <td>3</td>
+      </tr>
+      <tr>
+        <td>Temporary overfull leaf</td>
+        <td>3</td>
+        <td>0</td>
+      </tr>
+      <tr>
+        <td>Temporary overfull internal node</td>
+        <td>3</td>
+        <td>4</td>
+      </tr>
+      <tr>
+        <td>Temporary deficient leaf</td>
+        <td>0</td>
+        <td>0</td>
+      </tr>
+      <tr>
+        <td>Temporary deficient internal node</td>
+        <td>0</td>
+        <td>1</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>
+    In a valid 2-3 tree, <code>keyCount</code> is 1 or 2. A node is either a
+    leaf with no children or an internal node with exactly one more child than
+    key. The additional array positions are used only while insertion repairs
+    an overflow or removal repairs a deficiency.
+  </p>
+
+  <p>
+    Child indexes correspond to the ranges separated by the keys. For a
+    2-node containing \(k_0\), child 0 contains keys smaller than \(k_0\), and
+    child 1 contains keys larger than \(k_0\). For a 3-node containing
+    \(k_0&lt;k_1\), child 0 contains keys smaller than \(k_0\), child 1
+    contains keys between \(k_0\) and \(k_1\), and child 2 contains keys
+    larger than \(k_1\).
+  </p>
+
+  <p>
+    The pseudocode uses <code>parent</code> references so that insertion and
+    removal can repair the tree while moving upward. Whenever a child
+    reference is inserted, moved, or removed, the corresponding parent
+    reference must also be updated. An implementation could instead store the
+    search path in a stack, but that alternative is not used here.
+  </p>
+
+  <div class="key-idea">
+    <strong>The counts define the current structure:</strong> The arrays
+    provide capacity, but <code>keyCount</code> and <code>childCount</code>
+    determine which positions are part of the node. This allows the same
+    representation to describe legal nodes and the temporary overflow or
+    deficiency states used during updates.
+  </div>
+</section>
+
+
+  <section id="implementation-helpers"
+           section-title="Node and Array Helpers">
+           <h3>Node and Array Helpers</h3>
+  </section>
+
+  <section id="implementation-queries"
+           section-title="Search and Ordered Queries">
+           <h3>Search and Ordered Queries</h3>
+  </section>
+
+  <section id="implementation-insertion"
+           section-title="Insertion">
+           <h3>Insertion</h3>
+  </section>
+
+  <section id="implementation-removal"
+           section-title="Removal">
+           <h3>Removal</h3>
+  </section>
+
+  <section id="implementation-validation"
+           section-title="Validation and Implementation Notes">
+           <h3>Validation and Implementation Notes</h3>
+  </section>
+</section>
+
+<section id="analysis" section-title="Analysis">
+  <h2>Analysis</h2>
+</section>
+
+OLD
+
+  <section id="old-Implementation" section-title="OLD Implementation">
     <h2>Core Operations and Implementation</h2>
 <section id="representation" section-title="Representation">
   <h3>Representation</h3>
@@ -3769,7 +5131,7 @@ search(target):
       For a node with keys \(k_0,k_1\), child 0 is below \(k_0\), child 1 lies between the keys,
       and child 2 is above \(k_1\). The lower-bound index introduced for search is useful throughout
       the implementation. It identifies where a new key belongs, which child produced a promoted
-      key, and which parent separator lies next to an underfull child.
+      key, and which separator key in the parent lies next to an underfull child.
     </p>
 
     <h4>Splitting an internal node</h4>
@@ -3805,8 +5167,10 @@ search(target):
     </p>
     <div class="callout">
       <strong>Validate after every test operation:</strong> keys are sorted; each internal node has
-      one more child than key; every child's ranges obey its parent separators; every nonroot node
-      has one or two keys; all leaves have the same depth; and the counted keys equal the tree size.
+      one more child than key; 
+      every child's key range is consistent with the separator keys in its parent; 
+      every nonroot node has one or two keys; 
+      all leaves have the same depth; and the counted keys equal the tree size.
       A recursive invariant checker turns difficult pointer bugs into failures near their cause.
     </div>
   </section>
@@ -3949,7 +5313,7 @@ search(target):
       <li><strong>Treating a 3-node as two unrelated BST nodes:</strong> both keys belong to one node at one depth. Search must consider both before choosing a child.</li>
       <li><strong>Promoting the wrong key during a split:</strong> only the median can separate the smaller and larger results correctly.</li>
       <li><strong>Attaching split children in the wrong order:</strong> the four old child ranges must remain T0, T1, T2, T3 from left to right.</li>
-      <li><strong>Borrowing directly from a sibling:</strong> redistribution rotates through the parent separator. Moving a sibling key straight across would cross a range boundary.</li>
+      <li><strong>Borrowing directly from a sibling:</strong> redistribution moves keys through a separator key in the parent. Moving a sibling key straight across would cross a range boundary.</li>
       <li><strong>Stopping after internal-key substitution:</strong> the predecessor or successor still has to be deleted from its original leaf.</li>
       <li><strong>Ignoring cascading repairs:</strong> a split can overflow the parent and a merge can underflow it. Continue toward the root until the node is legal.</li>
       <li><strong>Allowing leaves at different depths:</strong> local key order is not enough. Uniform leaf depth is the invariant that supplies the worst-case guarantee.</li>
@@ -3976,7 +5340,7 @@ search(target):
       Search follows one downward path. Insertion searches to a leaf, adds the key in sorted order,
       and splits any temporary three-key node around its median. The median is promoted, so a split
       may cascade toward the root. Removal first moves an internal target to a leaf by substituting
-      a predecessor or successor. An underfull node then borrows through a parent separator when a
+      a predecessor or successor. An underfull node then redistributes through a separator key in the parent when a
       sibling has two keys; otherwise, it merges with a sibling and pulls a separator down. A merge
       can make the parent underfull and continue the repair upward.
     </p>
@@ -4025,7 +5389,7 @@ search(target):
         <li><strong>Answer:</strong> Key 20 is promoted. It is the median, so the remaining key 10 can form the left result and 25 the right result. Promoting 10 or 25 would not correctly separate the two resulting ranges while leaving both nodes nonempty.</li>
         <li><strong>Answer:</strong> A promoted median increases the parent's key count. If the parent already had two keys, it temporarily overflows and must also split. Height increases only when the overflowing node is the root; its median becomes a new root above the two split pieces.</li>
         <li><strong>Answer:</strong> Replace the internal target with its predecessor or successor, found at a leaf, and then remove the original copy from that leaf. Substitution alone would leave the replacement key stored twice and would not reduce the tree's size.</li>
-        <li><strong>Answer:</strong> An adjacent 3-node sibling can lend one of its two keys. The parent separator moves into the underfull node and the sibling key nearest that separator moves up, preserving all range boundaries. If neither adjacent sibling has a spare key, the underfull node must merge with a sibling and a parent separator.</li>
+        <li><strong>Answer:</strong> An adjacent 3-node sibling can lend one of its two keys. The separator key between the underfull node and the chosen sibling moves down from the parent and the sibling key nearest that separator moves up, preserving all range boundaries. If neither adjacent sibling has a spare key, the underfull node must merge with a sibling and the separator key between them.</li>
         <li><strong>Answer:</strong> At depth \(h\), the least-branching tree has at least \(2^{h+1}-1\) keys and the fullest has at most \(3^{h+1}-1\). Thus height grows only logarithmically with the number of keys. Search, insertion, and removal each process at most a constant amount of work per level and take \(O(\log n)\) worst-case time.</li>
         <li><strong>Answer:</strong> A 2-3 tree is preferable when an application needs sorted iteration, predecessor/successor, or interval reporting in addition to updates—for example, a schedule indexed by time. A hash table may be preferable when the workload is dominated by exact-key lookup and updates and has no ordering queries, because it usually provides expected \(O(1)\) operations.</li>
       </ol>
@@ -4079,7 +5443,7 @@ search(target):
         merging.
         <ol type="a">
           <li>State why borrowing is or is not legal before moving any card.</li>
-          <li>Move the parent separator and sibling key in the required order.</li>
+          <li>Move the appropriate separator key and sibling key in the required order.</li>
           <li>For an internal-node example, move the child pointer that accompanies the rotated key.</li>
           <li>State the range of every affected child before and after the repair.</li>
         </ol>
