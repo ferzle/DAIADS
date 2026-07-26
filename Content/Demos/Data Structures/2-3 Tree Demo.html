@@ -19,19 +19,20 @@
     .meta { display:flex; flex-wrap:wrap; justify-content:space-between; gap:0.5rem 1rem; color:#334e68; margin:0.35rem 0; }
     #validity.valid { color:#176b3a; font-weight:700; }
     #validity.invalid { color:#a61b1b; font-weight:700; }
+    #validity.progress { color:#486581; font-weight:700; }
     .tree-viewport { width:100%; overflow-x:auto; border:1px solid #9fb3c8; border-radius:5px; background:linear-gradient(#fbfdff,#f5f9fc); }
     #treeSvg { display:block; width:100%; min-width:600px; height:auto; }
     .edge { stroke:#627d98; stroke-width:2.4; }
     .node rect { fill:#fff; stroke:#0a3974; stroke-width:2.5; rx:7; transition:fill 0.2s,stroke 0.2s; }
     .node line { stroke:#0a3974; stroke-width:2; }
-    .node text { fill:#102a43; font:700 16px Verdana,sans-serif; text-anchor:middle; dominant-baseline:middle; }
+    .node text { fill:#102a43; font:700 18px Verdana,sans-serif; text-anchor:middle; dominant-baseline:middle; }
     .node.current rect { fill:#fff3cd; stroke:#d9822b; stroke-width:4; }
     .node.changed rect { fill:#e6f6ec; stroke:#2f855a; stroke-width:4; }
     .node.split rect { fill:#eee8ff; stroke:#6b46c1; stroke-width:4; }
     .node.underflow rect { fill:#fde8e8; stroke:#b83232; stroke-width:4; stroke-dasharray:6 4; }
     .node.found rect { fill:#c9f3d7; stroke:#176b3a; stroke-width:5; }
     .empty-label { fill:#829ab1; font:italic 15px Verdana,sans-serif; text-anchor:middle; }
-    .legend { display:flex; flex-wrap:wrap; align-items:center; gap:0.45rem 0.8rem; margin:0.55rem 0; }
+    .legend { flex-wrap:wrap; align-items:center; row-gap:0.45rem; }
     .legend-item { display:inline-flex; align-items:center; gap:0.25rem; white-space:nowrap; }
     .swatch { width:1.1rem; height:1.1rem; border:2px solid; border-radius:3px; display:inline-block; }
     .swatch.current { background:#fff3cd; border-color:#d9822b; }
@@ -58,11 +59,11 @@
       <input id="valueInput" type="number" min="-999" max="999" value="35" aria-describedby="inputHelp">
       <button id="searchBtn">Search</button>
       <button id="insertBtn">Insert</button>
-      <button id="deleteBtn">Delete</button>
+      <button id="removeBtn">Remove</button>
     </div>
     <div class="controls secondary" aria-label="Playback and tree controls">
-      <button id="prevBtn">Previous Step</button>
-      <button id="nextBtn">Next Step</button>
+      <button id="prevBtn">Previous</button>
+      <button id="nextBtn">Next</button>
       <button id="resetBtn">Reset Example</button>
       <button id="randomBtn">Random Tree</button>
       <button id="clearBtn">Clear</button>
@@ -160,7 +161,13 @@
       while (!node.isLeaf) node = node.children[lowerBound(node.keys, value)];
       node.keys.splice(lowerBound(node.keys, value), 0, value);
       size++;
-      if (showSteps) record(`Insert ${value} into the reached leaf in sorted position.`, { changed:[node.id] });
+      if (showSteps) {
+        if (node.keys.length === 3) {
+          record(`Insert ${value} into the reached leaf in sorted position. The leaf now has three keys and is overfull. Next, split it around median ${node.keys[1]} and promote that median.`, { changed:[node.id] });
+        } else {
+          record(`Insert ${value} into the reached leaf in sorted position.`, { changed:[node.id] });
+        }
+      }
 
       while (node.keys.length === 3) {
         const [low, median, high] = node.keys;
@@ -171,7 +178,7 @@
         const right = new Node23([high], oldChildren.slice(2));
         if (!node.parent) {
           root = new Node23([median], [node, right]);
-          if (showSteps) record(`Split [${low}, ${median}, ${high}] around its median. Promote ${median} into a new root; every leaf is now one level deeper.`, { split:[root.id], changed:[node.id, right.id] });
+          if (showSteps) record(`Split [${low}, ${median}, ${high}] around its median and promote ${median} into a new root. Both split pieces become its children, every leaf moves one level deeper, and no further repair is needed.`, { split:[root.id], changed:[node.id, right.id] });
           return true;
         }
 
@@ -180,16 +187,21 @@
         parent.keys.splice(childIndex, 0, median);
         parent.children.splice(childIndex + 1, 0, right);
         right.parent = parent;
-        if (showSteps) record(`Split [${low}, ${median}, ${high}] and promote median ${median} into the parent. Attach the two split pieces on either side of its new range.`, { split:[parent.id], changed:[node.id, right.id] });
+        if (showSteps) {
+          const next = parent.keys.length === 3
+            ? `The parent now has three keys and is overfull. Next, split the parent and promote its median ${parent.keys[1]}.`
+            : 'The parent remains legal, so no further repair is needed.';
+          record(`Split [${low}, ${median}, ${high}] and promote median ${median} into the parent. Attach the two split pieces on either side of its new range. ${next}`, { split:[parent.id], changed:[node.id, right.id] });
+        }
         node = parent;
       }
       return true;
     }
 
-    function deleteValue(value, showSteps = true) {
+    function removeValue(value, showSteps = true) {
       const found = findNode(value, showSteps);
       if (!found) {
-        if (showSteps) record(`${value} is not in the tree, so deletion makes no change.`);
+        if (showSteps) record(`${value} is not in the tree, so removal makes no change.`);
         return false;
       }
       let node = found.node;
@@ -214,7 +226,7 @@
       const removed = node.keys[index];
       node.keys.splice(index, 1);
       size--;
-      if (showSteps) record(`Remove ${removed} from the leaf${node.keys.length ? '; the leaf still has a key, so no repair is needed.' : ', creating an underflow.'}`, node.keys.length ? { changed:[node.id] } : { underflow:[node.id] });
+      if (showSteps) record(`Remove ${removed} from the leaf${node.keys.length ? '; the leaf still has a key, so no repair is needed.' : '. The leaf is now empty and underflowing. Next, inspect its adjacent siblings: redistribute if one has a spare key; otherwise merge through the parent.'}`, node.keys.length ? { changed:[node.id] } : { underflow:[node.id] });
 
       while (node !== root && node.keys.length === 0) {
         const parent = node.parent;
@@ -231,7 +243,7 @@
             node.children.unshift(movedChild);
             movedChild.parent = node;
           }
-          if (showSteps) record(`Borrow from the left sibling: parent key ${separator} moves down, and the sibling's largest key moves up.`, { changed:[left.id, parent.id, node.id] });
+          if (showSteps) record(`Borrow from the left sibling: parent key ${separator} moves down, and the sibling's largest key moves up. The deficient node, sibling, and parent are now legal, so repair stops.`, { changed:[left.id, parent.id, node.id] });
           return true;
         }
 
@@ -244,7 +256,7 @@
             node.children.push(movedChild);
             movedChild.parent = node;
           }
-          if (showSteps) record(`Borrow from the right sibling: parent key ${separator} moves down, and the sibling's smallest key moves up.`, { changed:[right.id, parent.id, node.id] });
+          if (showSteps) record(`Borrow from the right sibling: parent key ${separator} moves down, and the sibling's smallest key moves up. The deficient node, sibling, and parent are now legal, so repair stops.`, { changed:[right.id, parent.id, node.id] });
           return true;
         }
 
@@ -254,14 +266,28 @@
           node.children.forEach((child) => { child.parent = left; });
           left.children.push(...node.children);
           parent.children.splice(i, 1);
-          if (showSteps) record(`Neither sibling can lend. Merge with the left sibling and pull parent key ${separator} down.`, parent.keys.length ? { changed:[left.id, parent.id] } : { changed:[left.id], underflow:[parent.id] });
+          if (showSteps) {
+            const next = parent.keys.length
+              ? 'The parent still has a key, so repair is complete.'
+              : parent === root
+                ? 'The parent is now an empty root. Next, replace it with its only child.'
+                : 'The parent is now underflowing. Next, repeat the repair one level higher.';
+            record(`Neither sibling can lend. Merge with the left sibling and pull parent key ${separator} down. ${next}`, parent.keys.length ? { changed:[left.id, parent.id] } : { changed:[left.id], underflow:[parent.id] });
+          }
         } else {
           const separator = parent.keys.splice(i, 1)[0];
           node.keys.push(separator, ...right.keys);
           right.children.forEach((child) => { child.parent = node; });
           node.children.push(...right.children);
           parent.children.splice(i + 1, 1);
-          if (showSteps) record(`Neither sibling can lend. Merge with the right sibling and pull parent key ${separator} down.`, parent.keys.length ? { changed:[node.id, parent.id] } : { changed:[node.id], underflow:[parent.id] });
+          if (showSteps) {
+            const next = parent.keys.length
+              ? 'The parent still has a key, so repair is complete.'
+              : parent === root
+                ? 'The parent is now an empty root. Next, replace it with its only child.'
+                : 'The parent is now underflowing. Next, repeat the repair one level higher.';
+            record(`Neither sibling can lend. Merge with the right sibling and pull parent key ${separator} down. ${next}`, parent.keys.length ? { changed:[node.id, parent.id] } : { changed:[node.id], underflow:[parent.id] });
+          }
         }
         node = parent;
       }
@@ -295,7 +321,7 @@
       } else if (kind === 'insert') {
         insertValue(value, true);
       } else {
-        deleteValue(value, true);
+        removeValue(value, true);
       }
       const check = validateTree();
       if (!check.ok) record(`Internal validation failed: ${check.message}`);
@@ -352,13 +378,18 @@
       return h;
     }
 
+    function nodeDisplayWidth(keyCount) {
+      return 64 + Math.max(0, keyCount - 1) * 48;
+    }
+
     function layoutTree(displayRoot) {
       const positions = new Map();
+      const leafSpacing = nodeDisplayWidth(3) + 32;
       let nextLeaf = 0;
       function place(node, depth) {
         let x;
         if (!node.children.length) {
-          x = nextLeaf++ * 120 + 70;
+          x = nextLeaf++ * leafSpacing + 80;
         } else {
           const childXs = node.children.map((child) => place(child, depth + 1));
           x = (childXs[0] + childXs[childXs.length - 1]) / 2;
@@ -367,7 +398,7 @@
         return x;
       }
       place(displayRoot, 0);
-      return { positions, width:Math.max(700, nextLeaf * 120 + 20) };
+      return { positions, width:Math.max(700, nextLeaf * leafSpacing + 32) };
     }
 
     function svgElement(name, attrs = {}) {
@@ -402,11 +433,15 @@
         const group = svgElement('g', {class:'node'});
         const markClass = ['found','underflow','split','changed','current'].find((kind) => (state.marks[kind] || []).includes(node.id));
         if (markClass) group.classList.add(markClass);
-        const nodeWidth = node.keys.length === 2 ? 112 : 64;
+        const nodeWidth = nodeDisplayWidth(node.keys.length);
         group.appendChild(svgElement('rect', {x:x-nodeWidth/2, y:y-28, width:nodeWidth, height:56}));
-        if (node.keys.length === 2) group.appendChild(svgElement('line', {x1:x, y1:y-28, x2:x, y2:y+28}));
+        for (let i = 1; i < node.keys.length; i++) {
+          const dividerX = x - nodeWidth / 2 + nodeWidth * i / node.keys.length;
+          group.appendChild(svgElement('line', {x1:dividerX, y1:y-28, x2:dividerX, y2:y+28}));
+        }
         node.keys.forEach((key, i) => {
-          const text = svgElement('text', {x:node.keys.length === 1 ? x : x + (i === 0 ? -28 : 28), y});
+          const keyX = x - nodeWidth / 2 + nodeWidth * (i + 0.5) / node.keys.length;
+          const text = svgElement('text', {x:keyX, y});
           text.textContent = key;
           group.appendChild(text);
         });
@@ -425,9 +460,14 @@
       const check = validateTree();
       const finished = stepIndex === steps.length - 1;
       const validity = document.getElementById('validity');
-      validity.textContent = check.ok ? (finished ? 'Valid 2–3 tree' : 'Trace in progress · final tree valid') : `Invalid: ${check.message}`;
-      validity.className = check.ok ? 'valid' : 'invalid';
-      ['searchBtn','insertBtn','deleteBtn'].forEach((id) => {
+      if (!finished) {
+        validity.textContent = 'Trace in progress';
+        validity.className = 'progress';
+      } else {
+        validity.textContent = check.ok ? 'Valid 2–3 tree' : `Invalid: ${check.message}`;
+        validity.className = check.ok ? 'valid' : 'invalid';
+      }
+      ['searchBtn','insertBtn','removeBtn'].forEach((id) => {
         document.getElementById(id).disabled = !finished;
       });
       window.parent.postMessage({type:'demoResize'}, '*');
@@ -441,7 +481,7 @@
 
     document.getElementById('searchBtn').addEventListener('click', () => beginOperation('search'));
     document.getElementById('insertBtn').addEventListener('click', () => beginOperation('insert'));
-    document.getElementById('deleteBtn').addEventListener('click', () => beginOperation('delete'));
+    document.getElementById('removeBtn').addEventListener('click', () => beginOperation('remove'));
     document.getElementById('prevBtn').addEventListener('click', () => { if (stepIndex > 0) { stepIndex--; renderStep(); } });
     document.getElementById('nextBtn').addEventListener('click', () => { if (stepIndex + 1 < steps.length) { stepIndex++; renderStep(); } });
     document.getElementById('resetBtn').addEventListener('click', () => buildTree(initialValues));
