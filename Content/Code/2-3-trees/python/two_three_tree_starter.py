@@ -14,19 +14,47 @@ from typing import Optional
 
 @dataclass
 class Node:
-    keys: list[int] = field(default_factory=list)
-    children: list["Node"] = field(default_factory=list)
+    # Valid nodes use only part of this fixed capacity. The extra key and
+    # child slots hold the temporary overflow created during insertion.
+    keys: list[int] = field(default_factory=lambda: [0, 0, 0])
+    children: list[Optional["Node"]] = field(
+        default_factory=lambda: [None, None, None, None]
+    )
+    key_count: int = 0
+    child_count: int = 0
     parent: Optional["Node"] = None
 
     @property
     def is_leaf(self) -> bool:
-        return not self.children
+        return self.child_count == 0
 
 
 @dataclass
 class Location:
-    node: Node
+    """Describe where a root-to-leaf search ended.
+
+    If ``found`` is true, ``node.keys[key_index]`` is the requested key. If
+    it is false and ``node`` is not None, the node is the leaf where the key
+    belongs and ``key_index`` is its insertion position. ``node is None``
+    represents an empty tree. This lets contains, insert, and remove share
+    one search.
+    """
+
+    node: Optional[Node]
     key_index: int
+    found: bool
+
+
+@dataclass
+class SplitResult:
+    """Values returned when an overfull node is split.
+
+    The original node becomes the left half. ``promoted_key`` moves into its
+    parent and ``right_node`` is attached immediately after the left half.
+    """
+
+    promoted_key: int
+    right_node: Node
 
 
 class TwoThreeTree:
@@ -37,6 +65,10 @@ class TwoThreeTree:
     def __len__(self) -> int:
         return self._size
 
+    def size(self) -> int:
+        """Return the number of stored keys, not the number of nodes."""
+        return self._size
+
     def is_empty(self) -> bool:
         return self._size == 0
 
@@ -44,17 +76,76 @@ class TwoThreeTree:
     def _find_position(node: Node, key: int) -> int:
         """Return the first index i for which node.keys[i] >= key."""
         i = 0
-        while i < len(node.keys) and node.keys[i] < key:
+        while i < node.key_count and node.keys[i] < key:
             i += 1
         return i
 
-    def _find_location(self, key: int) -> Optional[Location]:
-        """Return the node and position containing key, or None."""
-        # TODO: Follow exactly one child range at each internal node.
-        return None
+    def _locate(self, key: int) -> Location:
+        """Locate key, or the leaf position where it would be inserted."""
+        node = self.root
+        while node is not None:
+            index = self._find_position(node, key)
+            if index < node.key_count and node.keys[index] == key:
+                return Location(node, index, True)
+            if node.is_leaf:
+                return Location(node, index, False)
+            node = node.children[index]
+        return Location(None, 0, False)
+
+    def contains(self, key: int) -> bool:
+        return self._locate(key).found
 
     def __contains__(self, key: int) -> bool:
-        return self._find_location(key) is not None
+        return self.contains(key)
+
+    @staticmethod
+    def _child_index(parent: Node, child: Node) -> int:
+        """Return child's active index, or -1 for inconsistent references."""
+        for index in range(parent.child_count):
+            if parent.children[index] is child:
+                return index
+        return -1
+
+    @staticmethod
+    def _insert_key_at(node: Node, index: int, key: int) -> None:
+        """Insert into the active key prefix; the caller preserves order."""
+        for i in range(node.key_count, index, -1):
+            node.keys[i] = node.keys[i - 1]
+        node.keys[index] = key
+        node.key_count += 1
+
+    @staticmethod
+    def _remove_key_at(node: Node, index: int) -> int:
+        """Remove and return an active key, closing the array gap."""
+        removed = node.keys[index]
+        for i in range(index, node.key_count - 1):
+            node.keys[i] = node.keys[i + 1]
+        node.key_count -= 1
+        return removed
+
+    @staticmethod
+    def _insert_child_at(
+        node: Node, index: int, child: Optional[Node]
+    ) -> None:
+        """Insert a child and maintain its upward parent reference."""
+        for i in range(node.child_count, index, -1):
+            node.children[i] = node.children[i - 1]
+        node.children[index] = child
+        node.child_count += 1
+        if child is not None:
+            child.parent = node
+
+    @staticmethod
+    def _remove_child_at(node: Node, index: int) -> Optional[Node]:
+        """Remove a child, clear the stale slot, and detach its parent."""
+        removed = node.children[index]
+        for i in range(index, node.child_count - 1):
+            node.children[i] = node.children[i + 1]
+        node.child_count -= 1
+        node.children[node.child_count] = None
+        if removed is not None:
+            removed.parent = None
+        return removed
 
     def insert(self, key: int) -> bool:
         """Insert a distinct key; return False for a duplicate."""
@@ -66,52 +157,87 @@ class TwoThreeTree:
         # 5. Update _size exactly once.
         return False
 
-    def _split_overflow(self, node: Node) -> None:
-        """Split a temporary three-key node and promote its median."""
-        # TODO: Distribute four children as [T0,T1] and [T2,T3]
-        # and update every moved child's parent reference.
-        pass
+    def _split_overfull_node(self, node: Node) -> SplitResult:
+        """Split node into a left half, promoted key, and new right half."""
+        # TODO: Distribute four children as [T0,T1] and [T2,T3] and
+        # update every moved child's parent reference.
+        raise NotImplementedError
+
+    def _promote_to_parent(
+        self,
+        parent: Node,
+        left_index: int,
+        promoted_key: int,
+        right_child: Node,
+    ) -> None:
+        """Insert a child split; the left child is already at left_index."""
+        self._insert_key_at(parent, left_index, promoted_key)
+        self._insert_child_at(parent, left_index + 1, right_child)
+
+    @staticmethod
+    def _minimum_location(node: Node) -> Location:
+        """Return the leftmost leaf and its first key position."""
+        while not node.is_leaf:
+            child = node.children[0]
+            assert child is not None
+            node = child
+        return Location(node, 0, True)
 
     def minimum(self) -> Optional[int]:
         """Return the smallest key, or None when empty."""
-        # TODO: Follow first-child references to the leftmost leaf.
-        return None
+        if self.root is None:
+            return None
+        location = self._minimum_location(self.root)
+        assert location.node is not None
+        return location.node.keys[location.key_index]
 
     def maximum(self) -> Optional[int]:
         """Return the largest key, or None when empty."""
-        # TODO: Follow last-child references to the rightmost leaf.
+        # TODO: Implement symmetrically to minimum().
         return None
+
+    def predecessor(self, key: int) -> Optional[int]:
+        """Return the preceding key, or None if absent or first."""
+        # TODO
+        return None
+
+    def successor(self, key: int) -> Optional[int]:
+        """Return the following key, or None if absent or last."""
+        # TODO
+        return None
+
+    def values_in_range(self, low: int, high: int) -> list[int]:
+        """Return keys in the inclusive interval [low, high]."""
+        # TODO: Prune child ranges that cannot intersect the interval.
+        return []
 
     def remove(self, key: int) -> bool:
         """Remove key if present; return False if it is absent."""
         # TODO:
         # 1. If internal, replace the key with a predecessor/successor.
         # 2. Remove the key from its leaf.
-        # 3. Repair underflow by borrowing or merging upward.
+        # 3. Repair deficiency by redistribution or merging upward.
         # 4. Replace an empty root by its only child when needed.
         # 5. Update _size exactly once.
         return False
 
-    def _repair_underflow(self, node: Node) -> None:
+    def _repair_deficiency(self, node: Node) -> None:
         """Repair a zero-key nonroot node, possibly continuing upward."""
         # TODO
         pass
 
-    def _borrow_from_left(self, parent: Node, child_index: int) -> None:
+    def _redistribute_from_left(self, parent: Node, child_index: int) -> None:
         # TODO: Rotate a parent separator down and sibling maximum up.
         pass
 
-    def _borrow_from_right(self, parent: Node, child_index: int) -> None:
+    def _redistribute_from_right(self, parent: Node, child_index: int) -> None:
         # TODO: Rotate a parent separator down and sibling minimum up.
         pass
 
-    def _merge_with_left(self, parent: Node, child_index: int) -> Node:
-        # TODO: Return parent, which may now be underfull.
-        return parent
-
-    def _merge_with_right(self, parent: Node, child_index: int) -> Node:
-        # TODO: Return parent, which may now be underfull.
-        return parent
+    def _merge_children(self, parent: Node, separator_index: int) -> None:
+        """Merge adjacent children and their separator into the left child."""
+        # TODO: Removing the separator may leave parent deficient.
+        pass
 
     # -----------------------------------------------------------------
     # Completed traversal and validation helpers. Do not remove these;
@@ -124,12 +250,12 @@ class TwoThreeTree:
         def visit(node: Optional[Node]) -> None:
             if node is None:
                 return
-            for i, key in enumerate(node.keys):
+            for i in range(node.key_count):
                 if not node.is_leaf:
                     visit(node.children[i])
-                result.append(key)
+                result.append(node.keys[i])
             if not node.is_leaf:
-                visit(node.children[len(node.keys)])
+                visit(node.children[node.key_count])
 
         visit(self.root)
         return result
@@ -159,26 +285,33 @@ class TwoThreeTree:
         ) -> bool:
             nonlocal leaf_depth, counted_keys
 
-            if len(node.keys) not in (1, 2):
+            if node.key_count not in (1, 2):
                 return False
-            if len(node.keys) == 2 and node.keys[0] >= node.keys[1]:
+            if node.key_count == 2 and node.keys[0] >= node.keys[1]:
                 return False
-            if any(key <= lower or key >= upper for key in node.keys):
-                return False
-            counted_keys += len(node.keys)
+            for i in range(node.key_count):
+                if node.keys[i] <= lower or node.keys[i] >= upper:
+                    return False
+            counted_keys += node.key_count
 
             if node.is_leaf:
                 if leaf_depth is None:
                     leaf_depth = depth
                 return leaf_depth == depth
 
-            if len(node.children) != len(node.keys) + 1:
+            if node.child_count != node.key_count + 1:
                 return False
-            for i, child in enumerate(node.children):
+            if any(
+                child is not None
+                for child in node.children[node.child_count:]
+            ):
+                return False
+            for i in range(node.child_count):
+                child = node.children[i]
                 if child is None or child.parent is not node:
                     return False
                 child_lower = lower if i == 0 else node.keys[i - 1]
-                child_upper = upper if i == len(node.keys) else node.keys[i]
+                child_upper = upper if i == node.key_count else node.keys[i]
                 if not validate(child, child_lower, child_upper, depth + 1):
                     return False
             return True
@@ -217,8 +350,10 @@ def run_tests() -> None:
 
     check(tree.is_empty(), "new tree is empty")
     check(len(tree) == 0, "new tree has size zero")
+    check(tree.size() == 0, "named size operation agrees with len")
     check(tree.minimum() is None, "empty tree has no minimum")
     check(tree.maximum() is None, "empty tree has no maximum")
+    check(not tree.contains(10), "named contains operation reports absence")
     check(10 not in tree, "empty tree does not contain 10")
     check(not tree.remove(10), "cannot remove an absent key")
 
@@ -239,6 +374,16 @@ def run_tests() -> None:
     check_contents(tree, expected, "after duplicate insertion")
     check(tree.minimum() == 1, "minimum is 1")
     check(tree.maximum() == 75, "maximum is 75")
+    check(tree.predecessor(1) is None, "minimum has no predecessor")
+    check(tree.predecessor(40) == 35, "predecessor of 40 is 35")
+    check(tree.successor(40) == 45, "successor of 40 is 45")
+    check(tree.successor(75) is None, "maximum has no successor")
+    check(tree.predecessor(999) is None, "absent key has no predecessor")
+    check(
+        tree.values_in_range(18, 45) == [18, 20, 25, 30, 35, 40, 45],
+        "inclusive range from 18 through 45",
+    )
+    check(tree.values_in_range(45, 18) == [], "reversed range is empty")
 
     removals = [1, 8, 10, 20, 60, 75, 70, 65, 40, 5, 12]
     for value in removals:

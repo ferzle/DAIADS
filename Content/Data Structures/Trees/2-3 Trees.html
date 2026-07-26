@@ -370,7 +370,7 @@
     <tbody>
       <tr>
         <td><strong>Search</strong></td>
-        <td><code class="language-python">search(key)</code></td>
+        <td><code class="language-python">contains(key)</code></td>
         <td>Locate a stored key or determine that it is absent.</td>
       </tr>
       <tr>
@@ -385,7 +385,7 @@
       </tr>
       <tr>
         <td><strong>Ordered reporting</strong></td>
-        <td><code class="language-python">traverse()</code>, <code class="language-python">range(low, high)</code></td>
+        <td><code class="language-python">inorderValues()</code>, <code class="language-python">valuesInRange(low, high)</code></td>
         <td>Report all keys, or a requested interval, in increasing order.</td>
       </tr>
       <tr>
@@ -4880,18 +4880,15 @@ Node:
     </p>
   
   <p>
-    Given <code class="language-python">locate</code>, implementing <code class="language-python">search</code> is
-    straightforward. The version below returns the node containing the key and
-    the index at which the key is stored.
+    Given <code class="language-python">locate</code>, implementing the public
+    <code class="language-python">contains</code> operation is straightforward.
+    Operations that need the actual node and index call
+    <code class="language-python">locate</code> directly instead of repeating the search.
     </p>
 
-<pre><code class="language-python">search(key):
+<pre><code class="language-python">contains(key):
     (node, index, found) = locate(key)
-
-    if found:
-        return (node, index)
-
-    return (null, -1)</code></pre>
+    return found</code></pre>
 
   
 <div class="remark-box">
@@ -4999,9 +4996,9 @@ maximum():
 </p>
 
 <pre><code class="language-python">predecessor(key):
-    (node, index) = search(key)
+    (node, index, found) = locate(key)
 
-    if node == null:
+    if not found:
         return NOT_FOUND
 
     (node, index) = predecessorLocation(node, index)
@@ -5028,19 +5025,23 @@ maximum():
     reported, traverse the final child.
   </p>
 
-  <pre><code class="language-python">traverseNode(node):
+  <pre><code class="language-python">appendInorder(node, result):
     for index = 0 to node.keyCount - 1:
         if not isLeaf(node):
-            traverseNode(node.children[index])
+            appendInorder(node.children[index], result)
 
-        report node.keys[index]
+        result.append(node.keys[index])
 
     if not isLeaf(node):
-        traverseNode(node.children[node.keyCount])
+        appendInorder(node.children[node.keyCount], result)
 
-traverse():
+inorderValues():
+    result = new empty list
+
     if root != null:
-        traverseNode(root)</code></pre>
+        appendInorder(root, result)
+
+    return result</code></pre>
 
   <p>
     For a 2-node, this processes child 0, key 0, and child 1. For a 3-node,
@@ -5058,26 +5059,30 @@ traverse():
     \(\mathit{low}\leq\mathit{high}\).
   </p>
 
-  <pre><code class="language-python">rangeNode(node, low, high):
+  <pre><code class="language-python">appendRange(node, low, high, result):
     for index = 0 to node.keyCount - 1:
         key = node.keys[index]
 
         if not isLeaf(node) and low &lt; key and
            (index == 0 or node.keys[index - 1] &lt; high):
-            rangeNode(node.children[index], low, high)
+            appendRange(node.children[index], low, high, result)
 
         if low &lt;= key and key &lt;= high:
-            report key
+            result.append(key)
 
         if key >= high:
             return
 
     if not isLeaf(node) and node.keys[node.keyCount - 1] &lt; high:
-        rangeNode(node.children[node.keyCount], low, high)
+        appendRange(node.children[node.keyCount], low, high, result)
 
-range(low, high):
+valuesInRange(low, high):
+    result = new empty list
+
     if root != null and low &lt;= high:
-        rangeNode(root, low, high)</code></pre>
+        appendRange(root, low, high, result)
+
+    return result</code></pre>
 
   <p>
     Before key \(i\), child \(i\) contains keys between the preceding
@@ -5964,7 +5969,7 @@ keys. </desc>
         <td>\(\Theta(1)\)</td>
       </tr>
       <tr>
-        <td><code>search(key)</code>, <code>locate(key)</code></td>
+        <td><code>contains(key)</code>, <code>locate(key)</code></td>
         <td>\(\Theta(\log n)\)</td>
         <td>\(\Theta(1)\)</td>
       </tr>
@@ -5984,12 +5989,12 @@ keys. </desc>
         <td>\(\Theta(1)\)</td>
       </tr>
       <tr>
-        <td><code>traverse()</code></td>
+        <td><code>inorderValues()</code></td>
         <td>\(\Theta(n)\)</td>
         <td>\(O(\log n)\) recursion space</td>
       </tr>
       <tr>
-        <td><code>range(low, high)</code>, reporting \(k\) keys</td>
+        <td><code>valuesInRange(low, high)</code>, returning \(k\) keys</td>
         <td>\(O(\log n+k)\)</td>
         <td>\(O(\log n)\) recursion space</td>
       </tr>
@@ -7035,7 +7040,7 @@ Show Answers </button>
         Use a node representation with ordered arrays <code class="language-python">keys</code> and <code class="language-python">children</code>.
         <ol type="a">
           <li>Write <code class="language-python">findPosition(node, key)</code>, returning the first index whose key is not smaller than the target.</li>
-          <li>Use it to write iterative pseudocode for <code class="language-python">search(key)</code>.</li>
+          <li>Use it to write iterative pseudocode for <code class="language-python">contains(key)</code>.</li>
           <li>Write recursive pseudocode for generalized inorder traversal that works for both node sizes without duplicating the whole algorithm.</li>
           <li>Write <code class="language-python">minimum()</code> and <code class="language-python">maximum()</code>, including empty-tree behavior.</li>
           <li>Design <code class="language-python">successor(key)</code>. Account for a successor in the same node, in a child subtree, or above the current node.</li>
@@ -7124,23 +7129,29 @@ Show Answers </button>
       <li>
         <strong>Implement a 2-3 Tree:</strong>
         Complete one of the starter programs below to implement an ordered set of distinct integer
-        keys. Each starter is a runnable, one-file program containing the same node representation,
-        public operations, helper stubs, completed traversal and validation code, and an extensive
-        test driver.
+        keys. Each starter is a runnable, one-file program using the fixed-capacity representation
+        developed on this page: three key positions, four child positions, explicit active counts,
+        and a parent reference. The three versions provide the same operations and helper structure,
+        with only normal language-specific differences in naming and optional-value syntax.
 
         <p>Your implementation must provide the following behavior:</p>
         <ul class="spaced">
           <li><code class="language-python">contains(key)</code> follows one child range per level and reports whether the key is present.</li>
+          <li><code class="language-python">minimum()</code>, <code class="language-python">maximum()</code>, <code class="language-python">predecessor(key)</code>, and <code class="language-python">successor(key)</code> return an optional key. An extreme key has no neighbor on one side, and an absent target has neither neighbor.</li>
+          <li><code class="language-python">inorderValues()</code> and <code class="language-python">valuesInRange(low, high)</code> return new collections in increasing order. The range is inclusive; when <code class="language-python">low &gt; high</code>, the result is empty.</li>
           <li><code class="language-python">insert(key)</code> returns <code class="language-python">true</code> only when a new key is added. It must split temporary three-key nodes, promote medians, update parent references, and create a new root when required.</li>
           <li><code class="language-python">remove(key)</code> returns <code class="language-python">true</code> only when a key is removed. It must handle internal-key substitution, borrowing from either side, merging in either direction, cascading underflow, and root shrinkage.</li>
-          <li><code class="language-python">minimum()</code> and <code class="language-python">maximum()</code> return the extreme keys and report no result for an empty tree using the convention in the selected language.</li>
-          <li><code class="language-python">size</code> counts keys rather than nodes and changes exactly once after each successful update.</li>
+          <li><code class="language-python">size</code> counts keys rather than nodes and changes exactly once after each successful update. The Python starter also supports <code class="language-python">len(tree)</code> and <code class="language-python">key in tree</code>.</li>
           <li>Every completed operation preserves sorted keys, legal node capacity, correct child counts and parent references, valid child ranges, and equal leaf depth.</li>
         </ul>
 
         <p>
-          The completed <code class="language-python">inorderValues</code> and <code class="language-python">hasValidStructure</code> helpers are part
-          of the testing infrastructure; do not replace them with a library search tree. The test
+          Java uses <code class="language-java">OptionalInt</code>, C++ uses
+          <code class="language-cpp">std::optional&lt;int&gt;</code>, and Python uses
+          <code class="language-python">Optional[int]</code> for a query that may have no answer.
+          The completed array helpers, location search, inorder traversal, and
+          <code class="language-python">hasValidStructure</code> validator provide reference examples
+          and testing infrastructure; do not replace the tree with a library search tree. The test
           driver checks the invariants and sorted contents after every targeted update, performs
           sorted insertion to force cascading splits, compares 500 deterministic randomized updates
           with a trusted set, and finally removes every remaining key to exercise merges and root
@@ -7150,7 +7161,8 @@ Show Answers </button>
 
         <p>Recommended implementation order:</p>
         <ol type="a">
-          <li>Complete search, minimum, and maximum; run the empty-tree tests.</li>
+          <li>Read the completed node-array helpers and <code class="language-python">locate</code>. Then complete <code class="language-python">maximum</code>, using the provided <code class="language-python">minimum</code> as a symmetric example.</li>
+          <li>Complete predecessor, successor, and inclusive range reporting; test absent keys, extreme keys, two-key leaves, internal keys, and reversed range bounds.</li>
           <li>Complete leaf insertion, then splitting and promotion. Run the targeted and sorted-insertion tests.</li>
           <li>Complete leaf removal from a 3-node, then internal-key substitution.</li>
           <li>Add borrowing from the left and right, followed by merging and root replacement.</li>
