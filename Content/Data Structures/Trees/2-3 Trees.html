@@ -95,8 +95,8 @@
       Search still follows a single downward path, as it does in a BST, but insertion
       and removal may restructure nodes along that path.
       Insertion splits full nodes and promotes keys into their parent nodes;
-      removal borrows
-      keys or merges nodes when a node becomes too empty. The repairs preserve a logarithmic height,
+      removal redistributes keys or merges nodes when a node becomes deficient.
+      The repairs preserve a logarithmic height,
       so search, insertion, and removal are guaranteed to take \(O(\log n)\) time regardless of the
       order in which keys arrive.
     </p>
@@ -115,10 +115,9 @@
     and an internal 3-node has exactly three children.
   </li>
   <li>
-  <strong>Search order:</strong> The keys in a node separate the ranges
-  represented by its children. 
-  The keys in an internal node separate the ranges represented by its children, 
-  so we call them <strong>separator keys</strong>.
+  <strong>Search order:</strong> The keys in an internal node separate the
+  ranges represented by its children, so we call them
+  <strong>separator keys</strong>.
   <ol type="a">
     <li>
       For a 2-node containing \(a\), the left subtree contains keys less than
@@ -346,7 +345,7 @@
       Empty trees are allowed; a nonempty root may be either a 2-node or a 3-node.
     </p>
     <p>The remaining challenge is to design search and update operations that preserve all three properties; 
-      the next sections explain how 2-3 trees search, split, promote, borrow, and merge without violating them.</p>
+      the next sections explain how 2-3 trees search, split, promote, redistribute, and merge without violating them.</p>
   </section>
 
   <section id="core-operations" section-title="Core Operations">
@@ -1136,8 +1135,7 @@
      role="img"
      aria-labelledby="travExampleTitle travExampleDesc">
   <title id="travExampleTitle">
-    A 2-3 tree used for predecessor and successor examples
-  </title>
+    A 2-3 tree used for an increasing-order traversal  </title>
   <desc id="travExampleDesc">
     The root contains 40 and 70. Its internal children contain 20,
     50 and 60, and 85. The leaves contain 10, 30, 45, 55, 65,
@@ -1311,7 +1309,7 @@
   </strong>
 
   <p>
-    On the tree in Example 4, the range query \([48,78]\) reports:
+    On the tree in Example 5, the range query \([48,78]\) reports:
   </p>
 
   <p class="centered">
@@ -3630,8 +3628,8 @@ nodes containing 40 and 70, and 55 is promoted into the grandparent. </desc>
     <li>
       <strong>Legal node types:</strong> A successful insertion may
       temporarily create overfull nodes, but each is split before the
-      operation finishes. Every completed node therefore contains one or two
-      keys.
+      operation finishes. 
+      When the operation finishes, every node therefore contains one or two keys.
     </li>
     <li>
       <strong>Uniform leaf depth:</strong> A nonroot split replaces one node
@@ -4513,8 +4511,9 @@ Contracting an empty root with one child </title>
   <p>
     We represent a 2-3 tree as a linked multiway tree. The tree stores a
     reference to its <code class="language-python">root</code> and a <code class="language-python">size</code> equal to the
-    number of keys in the collection. The number of nodes is not tracked,
-    because that number is not relevant.
+    number of keys in the collection. 
+    The number of nodes is not tracked because the size of the represented
+    collection is the number of stored keys.
   </p>
 
   <p>
@@ -4608,8 +4607,8 @@ Node:
 
   <p>
     In a valid 2-3 tree, <code class="language-python">keyCount</code> is 1 or 2. A node is either a
-    leaf with no children or an internal node with exactly one more child than
-    key. The additional array positions are used only while insertion repairs
+    leaf with no children or an internal node with exactly one more child than it has keys. 
+    The additional array positions are used only while insertion repairs
     an overflow or removal repairs a deficiency.
   </p>
 
@@ -4709,12 +4708,12 @@ Node:
 
         index = index + 1
 
-    return NOT_FOUND</code></pre>
+    return -1</code></pre>
 
   <p>
-    When <code class="language-python">child.parent == parent</code>, this helper should always find
-    the child. A result of <code class="language-python">NOT_FOUND</code> therefore indicates that the
-    parent and child references are inconsistent.
+    When <code>child.parent == parent</code>, this helper should always find
+    the child. A result of <code>-1</code> therefore indicates that the parent
+    and child references are inconsistent.
   </p>
 
   <h4>Key-Array Helpers</h4>
@@ -5915,10 +5914,11 @@ keys. </desc>
 
   <p>
     Every node stores a constant-size key array, child array, counts, and a
-    parent reference. Since each valid node contains one or two keys, a tree
-    storing \(n\) keys contains \(\Theta(n)\) nodes in the worst case and uses
+    parent reference. 
+    Since every valid node contains one or two keys, a tree storing \(n\) keys
+    contains between \(\lceil n/2\rceil\) and \(n\) nodes. It therefore uses
     \(\Theta(n)\) total space.
-  </p>
+    </p>
 
   <p>
     The unused positions reserved for a temporary third key and fourth child
@@ -5975,12 +5975,12 @@ keys. </desc>
       </tr>
       <tr>
         <td><code>insert(key)</code></td>
-        <td>\(O(\log n)\)</td>
+        <td>\(\Theta(\log n)\)</td>
         <td>\(\Theta(1)\), excluding nodes added to the tree</td>
       </tr>
       <tr>
         <td><code>remove(key)</code></td>
-        <td>\(O(\log n)\)</td>
+        <td>\(\Theta(\log n)\)</td>
         <td>\(\Theta(1)\)</td>
       </tr>
       <tr>
@@ -6009,246 +6009,994 @@ keys. </desc>
   </div>
 </section>
 
- 
-  <section id="applications" section-title="Applications">
-    <h2>Applications</h2>
-    <p>
-      A 2-3 tree can implement any ordered set or ordered map operation supported by a BST while
-      adding a worst-case height guarantee. The structure is especially important as a clean model
-      for understanding how multiway search trees balance themselves.
-    </p>
-    <ul class="spaced">
-      <li><strong>Ordered sets and maps:</strong> Keys remain searchable and traversable in sorted order while insertions and removals retain worst-case logarithmic performance.</li>
-      <li><strong>Event and schedule indexes:</strong> Predecessor and successor locate the events immediately before and after a time, while range queries retrieve all events in an interval.</li>
-      <li><strong>In-memory indexes:</strong> Records can be indexed by names, identifiers, dates, scores, or other comparable keys when both updates and ordered reporting matter.</li>
-      <li><strong>Foundations for external-memory trees:</strong> The same ideas scale to B-trees and B+ trees, whose wider nodes reduce the number of storage blocks accessed by a search.</li>
-      <li><strong>Functional ordered collections:</strong> Immutable variants can create new versions by rebuilding only the search path and sharing untouched subtrees.</li>
-    </ul>
-    <p>
-      Strict 2-3 trees are more common in teaching than in standard mutable libraries because their
-      variable-size nodes and removal cases require careful implementation. The structure remains
-      practically important as a model: it exposes the balancing logic used by larger multiway
-      indexes and helps explain binary encodings such as red-black trees.
-    </p>
-  </section>
+<section id="applications" section-title="Applications">
+  <h2>Applications</h2>
 
-  <section id="connections" section-title="Connections and Comparisons">
-    <h2>Connections and Comparisons</h2>
-    <p>
-      A 2-3 tree belongs to the search-tree family, but its multi-key nodes give it a different way
-      to maintain balance. Comparing representations clarifies what the extra update work achieves.
-    </p>
-    <ul class="spaced">
-      <li><strong>Versus a plain BST:</strong> both preserve sorted order, but a plain BST may reach height \(n-1\). A 2-3 tree guarantees logarithmic height for every update order.</li>
-      <li><strong>Versus AVL and red-black trees:</strong> these use ordinary one-key binary nodes and repair balance with rotations or recoloring. A red-black tree can be interpreted as a binary encoding of a 2-3-4 tree; the multi-key view often makes the balancing logic easier to visualize.</li>
-      <li><strong>Versus a sorted array:</strong> both support logarithmic search, but an array may shift \(\Theta(n)\) entries per update. A 2-3 tree changes only a root-to-leaf path.</li>
-      <li><strong>Versus a hash table:</strong> hashing often gives expected \(O(1)\) exact-key operations, but it does not naturally support sorted traversal, predecessor/successor, or range reporting.</li>
-      <li><strong>Versus B-trees:</strong> a 2-3 tree is a small-order B-tree. Practical database and file-system B-trees use far more keys per node so each expensive storage access brings in a large block of useful separators and children.</li>
-    </ul>
-    <p>
-      A useful performance comparison needs both asymptotic cost and representation cost. A 2-3
-      tree guarantees short paths, but each node needs multiple key and child positions and each
-      update has more cases than a plain BST. Arrays are compact; hash tables often win for exact
-      lookup; wider B-trees reduce external-memory transfers. The right structure depends on the
-      complete operation mix, not on search time alone.
-    </p>
-  </section>
+  <p>
+    A 2-3 tree can implement an ordered set or ordered map with worst-case
+    logarithmic search, insertion, and removal. It is useful when updates must
+    remain efficient and keys must also be processed in sorted order.
+  </p>
 
-  <section id="variations" section-title="Variations and Extensions">
-    <h2>Variations and Extensions</h2>
-    <ul class="spaced">
-      <li><strong>2-3-4 trees:</strong> Allow nodes with one, two, or three keys and therefore two, three, or four children. The extra capacity makes top-down splitting and deletion strategies convenient.</li>
-      <li><strong>B-trees:</strong> Generalize the minimum and maximum node capacities. Large nodes are chosen to match disks, SSD pages, database pages, or cache behavior.</li>
-      <li><strong>B+ trees:</strong> Store records or record references in linked leaves while internal nodes serve mainly as routing indexes. This makes sequential and range access especially effective.</li>
-      <li><strong>Red-black encodings:</strong> Represent a multi-key node using linked binary nodes and colored edges or nodes. Rotations and recoloring simulate splitting, promotion, redistribution, and merging.</li>
-      <li><strong>Augmented trees:</strong> Store subtree key counts, interval summaries, or other metadata to support rank, selection, range counting, and application-specific queries.</li>
-      <li><strong>Persistent trees:</strong> Copy only nodes on an updated root-to-leaf path and share all other nodes, preserving access to older versions.</li>
-    </ul>
-    <p>
-      These structures differ in capacity rules and representation, but the central pattern remains:
-      separator keys divide ordered child ranges, updates repair local capacity violations, and the
-      repairs preserve a logarithmic-height search structure.
-    </p>
-  </section>
+  <ul class="spaced">
+    <li>
+      <strong>Ordered sets and maps:</strong> Keys remain searchable and
+      traversable in sorted order while updates retain worst-case
+      \(O(\log n)\) performance.
+    </li>
+    <li>
+      <strong>Indexes for ordered data:</strong> Records can be indexed by
+      names, identifiers, dates, scores, or other comparable keys. Range
+      queries can retrieve all records whose keys lie within a specified
+      interval.
+    </li>
+    <li>
+      <strong>Event and schedule indexes:</strong> Predecessor and successor
+      locate the events immediately before and after a given time, while a
+      range query retrieves all events during a specified period.
+    </li>
+    <li>
+      <strong>Persistent ordered collections:</strong> An immutable version
+      can create a new tree by rebuilding only the nodes on the modified
+      root-to-leaf path while sharing untouched subtrees with earlier
+      versions.
+    </li>
+  </ul>
+</section>
 
-  <section id="pitfalls" section-title="Common Pitfalls">
-    <h2>Common Pitfalls</h2>
-    <ul class="spaced">
-      <li><strong>Counting keys instead of children in the name:</strong> a 3-node has two keys and three child ranges.</li>
-      <li><strong>Treating a 3-node as two unrelated BST nodes:</strong> both keys belong to one node at one depth. Search must consider both before choosing a child.</li>
-      <li><strong>Promoting the wrong key during a split:</strong> only the median can separate the smaller and larger results correctly.</li>
-      <li><strong>Attaching split children in the wrong order:</strong> the four old child ranges must remain T0, T1, T2, T3 from left to right.</li>
-      <li><strong>Borrowing directly from a sibling:</strong> redistribution moves keys through a separator key in the parent. Moving a sibling key straight across would cross a range boundary.</li>
-      <li><strong>Stopping after internal-key substitution:</strong> the predecessor or successor still has to be deleted from its original leaf.</li>
-      <li><strong>Ignoring cascading repairs:</strong> a split can overflow the parent and a merge can underflow it. Continue toward the root until the node is legal.</li>
-      <li><strong>Allowing leaves at different depths:</strong> local key order is not enough. Uniform leaf depth is the invariant that supplies the worst-case guarantee.</li>
-      <li><strong>Measuring size by nodes:</strong> nodes contain different numbers of keys. The abstract set size is the total number of keys.</li>
-    </ul>
-  </section>
+<section id="connections" section-title="Connections and Comparisons">
+  <h2>Connections and Comparisons</h2>
 
-  <section id="summary" section-title="Summary">
-    <h2>Summary</h2>
-    <p>
-      A 2-3 tree implements the same kind of ordered set or map as a binary search tree. Search
-      comparisons identify one possible child range, and the ordering supports minimum, maximum,
-      predecessor, successor, sorted traversal, and range queries. The difference is structural: a
-      2-3 tree uses nodes with one or two keys so it can keep every leaf at the same depth instead
-      of allowing an unfavorable update order to create a long chain.
-    </p>
-    <p>
-      A 2-node contains one key and has two children when internal. A 3-node contains two ordered
-      keys and has three children when internal. In either case, the keys act as separators between
-      nonoverlapping child ranges. A valid node contains one or two keys, every internal node has
-      one more child than key, and every leaf lies at a common depth.
-    </p>
-    <p>
-      Search follows one downward path. Insertion searches to a leaf, adds the key in sorted order,
-      and splits any temporary three-key node around its median. The median is promoted, so a split
-      may cascade toward the root. Removal first moves an internal target to a leaf by substituting
-      a predecessor or successor. An underfull node then redistributes through a separator key in the parent when a
-      sibling has two keys; otherwise, it merges with a sibling and pulls a separator down. A merge
-      can make the parent underfull and continue the repair upward.
-    </p>
-    <p>
-      The height increases only when a full root splits and decreases only when an empty root is
-      replaced by its sole child. Both events affect every leaf together. Since each internal node
-      has at least two and at most three children, the number of keys grows exponentially with the
-      height, giving \(h=\Theta(\log n)\). Search, insertion, and removal therefore take worst-case
-      \(O(\log n)\) time, while a complete traversal takes \(\Theta(n)\) time and the structure uses
-      \(\Theta(n)\) space.
-    </p>
-  </section>
+  <p>
+    A 2-3 tree belongs to the search-tree family, but its multi-key nodes give
+    it a different way to maintain balance. Comparing it with other
+    structures clarifies both the advantages of this representation and the
+    additional work required by updates.
+  </p>
 
-  <section id="links" section-title="Helpful Links and Resources">
-    <h2>Helpful Links and Resources</h2>
-    <ul class="spaced">
-      <li><a href="https://opendsa-server.cs.vt.edu/ODSA/Books/Catalog/html/TwoThreeTree.html" target="_blank">OpenDSA: 2-3 Trees</a>: A detailed treatment of the defining properties, search, insertion, removal, and a linked-node implementation.</li>
-      <li><a href="https://mathcenter.oxford.emory.edu/site/cs171/23trees/" target="_blank">Emory Math Center: 2-3 Search Trees</a>: A visual explanation connecting 2-nodes, 3-nodes, perfect balance, and symmetric key order.</li>
-      <li><a href="https://www.cs.usfca.edu/~galles/visualization/BTree.html" target="_blank">University of San Francisco: B-Tree Visualization</a>: An interactive multiway-tree visualization that can be configured with small node capacities to study closely related split and merge behavior.</li>
-      <li><a href="https://opendsa-server.cs.vt.edu/OpenDSA/Books/Catalog/html/BTree.html" target="_blank">OpenDSA: B-Trees</a>: Extends the same separator, node-capacity, promotion, redistribution, and merging ideas to wider external-memory search trees.</li>
-    </ul>
-  </section>
+  <ul class="spaced">
+    <li>
+      <strong>Versus a plain BST:</strong> Both preserve sorted order, but a
+      plain BST may reach height \(n-1\). A 2-3 tree guarantees logarithmic
+      height for every sequence of updates.
+    </li>
+    <li>
+      <strong>Versus AVL trees:</strong> An AVL tree uses one-key binary nodes
+      and restores balance with rotations. A 2-3 tree instead changes the
+      number of keys and children stored in a node through splitting,
+      redistribution, and merging.
+    </li>
+    <li>
+      <strong>Versus red-black trees:</strong> A red-black tree uses colored
+      binary-tree nodes to represent a related multiway search tree. Standard
+      red-black trees correspond closely to 2-3-4 trees, while some variants
+      correspond to 2-3 trees. The multiway view can make the purpose of the
+      balancing rules easier to visualize.
+    </li>
+    <li>
+      <strong>Versus a sorted array:</strong> Both support logarithmic search,
+      but an array may shift \(\Theta(n)\) entries during an insertion or
+      removal. A 2-3 tree changes only nodes along a root-to-leaf path.
+    </li>
+    <li>
+      <strong>Versus a hash table:</strong> Hashing often gives expected
+      \(O(1)\) exact-key operations, but it does not naturally support sorted
+      traversal, predecessor, successor, or range queries.
+    </li>
+    <li>
+      <strong>Versus B-trees:</strong> A 2-3 tree is a restricted B-tree in
+      which every internal node has two or three children. Practical database
+      and file-system B-trees store many more keys and children per node so
+      that each storage access retrieves a large block of useful information.
+    </li>
+  </ul>
 
-  <section id="reading-questions" section-title="Reading Comprehension Questions">
-    <h2>Reading Comprehension Questions</h2>
+  <p>
+    Strict 2-3 trees are more common in teaching than as the direct
+    implementation of standard mutable collections. Their variable-size
+    nodes and removal cases require careful bookkeeping. Their ideas remain
+    practically important, however, because the same split, promotion,
+    redistribution, and merge operations appear in wider multiway search
+    trees, and closely related structures can be encoded using binary nodes.
+  </p>
+
+  <p>
+    A useful comparison must consider both asymptotic cost and representation
+    cost. A 2-3 tree guarantees short paths, but each node needs several key
+    and child positions and each update has more cases than in a plain BST.
+    Arrays are compact, hash tables often perform better for exact lookup, and
+    wider B-trees reduce external-memory transfers. The appropriate structure
+    depends on the complete operation mix.
+  </p>
+
+  <div class="key-idea">
+    <strong>Why 2-3 trees matter:</strong> They provide a direct and visual
+    model of the balancing ideas used by red-black trees and larger multiway
+    search trees.
+  </div>
+</section>
+
+<section id="variations" section-title="Variations and Extensions">
+  <h2>Variations and Extensions</h2>
+
+  <p>
+    Several related structures extend the 2-3 tree by allowing different
+    numbers of keys and children within each node.
+  </p>
+
+  <ul class="spaced">
+    <li>
+      <strong>2-3-4 trees:</strong> Allow nodes with one, two, or three keys
+      and therefore two, three, or four children. The additional legal node
+      size changes the available insertion and removal strategies.
+    </li>
+    <li>
+      <strong>B-trees:</strong> Generalize the minimum and maximum numbers of
+      keys and children allowed in a node. Practical implementations use much
+      wider nodes than a 2-3 tree.
+    </li>
+    <li>
+      <strong>B+ trees:</strong> Store records or record references in the
+      leaves while internal nodes mainly contain separator keys used for
+      routing. The leaves are commonly linked to support efficient sequential
+      and range access.
+    </li>
+  </ul>
+
+  <p>
+    Although their capacity rules differ, these structures use the same basic
+    ideas: separator keys divide ordered child ranges, and updates repair local
+    overflows or deficiencies while preserving logarithmic height.
+  </p>
+</section>
+
+<section id="pitfalls" section-title="Common Pitfalls">
+  <h2>Common Pitfalls</h2>
+
+  <ul class="spaced">
+    <li>
+      <strong>Confusing keys with children in the node names:</strong> A
+      3-node contains two keys and has three child ranges, not three keys.
+    </li>
+    <li>
+      <strong>Treating a 3-node as two unrelated BST nodes:</strong> Both keys
+      belong to one node at one depth. Search must compare against both keys
+      before choosing a child.
+    </li>
+    <li>
+      <strong>Promoting the wrong key during a split:</strong> Only the median
+      key correctly separates the smaller and larger halves.
+    </li>
+    <li>
+      <strong>Attaching split children in the wrong order:</strong> The four
+      original child ranges must remain in the same left-to-right order when
+      they are divided between the two resulting nodes.
+    </li>
+    <li>
+      <strong>Moving a key directly between siblings:</strong> Redistribution
+      moves a sibling key up to the parent and moves the separator key down
+      into the deficient node. Moving a key directly across would violate the
+      child-range boundaries.
+    </li>
+    <li>
+      <strong>Stopping after replacing an internal key:</strong> The
+      predecessor or successor copied into the internal node must still be
+      removed from its original leaf.
+    </li>
+    <li>
+      <strong>Ignoring cascading repairs:</strong> A split can make the parent
+      overfull, and a merge can make the parent deficient. Continue toward
+      the root until every node is valid.
+    </li>
+    <li>
+      <strong>Updating keys without coordinating children:</strong> Key-array
+      and child-array helpers operate separately. Splits, promotions,
+      redistributions, and merges must preserve the relationship between the
+      active keys and child ranges.
+    </li>
+    <li>
+      <strong>Allowing leaves at different depths:</strong> Correct key order
+      alone is not enough. Uniform leaf depth is the invariant that gives the
+      tree its worst-case height guarantee.
+    </li>
+    <li>
+      <strong>Measuring size by nodes:</strong> Nodes contain different
+      numbers of keys. The size of the represented set is the total number of
+      stored keys, not the number of nodes.
+    </li>
+  </ul>
+</section>
+
+<section id="summary" section-title="Summary">
+  <h2>Summary</h2>
+
+  <p>
+    A 2-3 tree implements the same kind of ordered set or ordered map as a
+    binary search tree. Comparisons within each node identify the only child
+    range that can contain a target key. The ordering also supports minimum,
+    maximum, predecessor, successor, increasing-order traversal, and range
+    queries. Unlike a plain BST, however, a 2-3 tree uses nodes of different
+    capacities to keep every leaf at the same depth.
+  </p>
+
+  <p>
+    A 2-node contains one key and, when internal, has two children. A 3-node
+    contains two ordered keys and, when internal, has three children. The keys
+    act as separators between nonoverlapping child ranges. In a valid 2-3
+    tree, every node contains one or two keys, every internal node has exactly
+    one more child than it has keys, and every leaf lies at the same depth.
+  </p>
+
+  <p>
+    Search follows one downward path. Insertion searches to a leaf, inserts
+    the new key in sorted order, and splits any temporary three-key node around
+    its middle key. The middle key is promoted into the parent, so splitting
+    may continue toward the root. Removal replaces an internal target with its
+    predecessor or successor and then removes that replacement key from its
+    original leaf. A deficient node is repaired by redistribution through the
+    parent when an adjacent sibling has two keys; otherwise, it is merged with
+    an adjacent 2-node sibling and a separator key from the parent. A merge
+    may make the parent deficient and continue the repair upward.
+  </p>
+
+  <p>
+    The height increases only when an overfull root splits and decreases only
+    when an empty root is replaced by its sole child. Both changes affect all
+    leaves together. Because each internal node has at least two and at most
+    three children, the number of keys grows exponentially with the height,
+    giving \(h=\Theta(\log n)\). Search, insertion, and removal therefore have
+    worst-case time \(\Theta(\log n)\). A complete traversal takes
+    \(\Theta(n)\) time, and the structure uses \(\Theta(n)\) total space.
+  </p>
+</section>
+
+<section id="links" section-title="Helpful Links and Resources">
+  <h2>Helpful Links and Resources</h2>
+
+  <ul class="spaced">
+    <li>
+      <a href="https://en.wikipedia.org/wiki/2%E2%80%933_tree"
+        target="_blank"
+        rel="noopener">
+        Wikipedia: 2-3 Tree
+      </a>:
+      An overview of the defining properties, search, insertion, removal, and
+      asymptotic performance of 2-3 trees.
+    </li>
+    <li>
+      <a href="https://opendsa-server.cs.vt.edu/OpenDSA/Books/Catalog/html/TwoThreeTree.html"
+         target="_blank"
+         rel="noopener">
+        OpenDSA: 2-3 Trees
+      </a>:
+      A detailed treatment of the defining properties, search, insertion,
+      height analysis, and a linked-node implementation. It also introduces
+      the main issues involved in removal.
+    </li>
+    <li>
+      <a href="https://mathcenter.oxford.emory.edu/site/cs171/23trees/"
+         target="_blank"
+         rel="noopener">
+        Emory Math Center: 2-3 Search Trees
+      </a>:
+      A visual introduction to 2-nodes, 3-nodes, search, insertion,
+      cascading splits, perfect balance, and logarithmic height.
+    </li>
+    <li>
+      <a href="https://www.cs.usfca.edu/~galles/visualization/BTree.html"
+         target="_blank"
+         rel="noopener">
+        University of San Francisco: B-Tree Visualization
+      </a>:
+      An interactive visualization of insertion and removal in multiway
+      search trees. Select <strong>Max Degree = 3</strong> to model a
+      2-3 tree.
+    </li>
+    <li>
+      <a href="https://www.cs.princeton.edu/courses/archive/fall25/cos226/lectures/33BalancedSearchTrees.pdf"
+         target="_blank"
+         rel="noopener">
+        Princeton Algorithms: Balanced Search Trees
+      </a>:
+      Lecture slides covering 2-3 tree structure, search, insertion, height
+      analysis, and the correspondence between 2-3 trees and left-leaning
+      red-black trees.
+    </li>
+  </ul>
+</section>
+
+<section id="reading-questions"
+         section-title="Reading Comprehension Questions">
+  <h2>Reading Comprehension Questions</h2>
+
+  <ol>
+    <li>
+      <strong>Relationship to Binary Search Trees:</strong>
+      What abstract problem do binary search trees and 2-3 trees both solve?
+      What additional guarantee does a 2-3 tree provide?
+    </li>
+<li>
+  <strong>Defining Properties:</strong>
+  How many keys and children does an internal 2-node have? What about an
+  internal 3-node? What two additional properties must the entire tree
+  satisfy?
+</li>
+
+<li>
+  <strong>Search Ranges:</strong>
+  At a node containing \([25\mid70]\), which child should search follow
+  for targets 12, 60, and 80? What happens when the target is 70?
+</li>
+
+<li>
+  <strong>Ordered Queries:</strong>
+  How are the minimum and maximum located? In what order are the children
+  and keys of a 3-node \([a\mid b]\) processed during an
+  increasing-order traversal?
+</li>
+
+<li>
+  <strong>Range Queries:</strong>
+  How does a range query differ from a complete traversal? Why can it
+  skip some child subtrees without examining them?
+</li>
+
+<li>
+  <strong>Splitting and Promotion:</strong>
+  If inserting 25 temporarily creates the keys
+  \([10\mid20\mid25]\), which key is promoted? Why must that key be
+  promoted?
+</li>
+
+<li>
+  <strong>Internal Splits:</strong>
+  An overfull internal node contains keys
+  \([40\mid55\mid70]\) and ordered child subtrees
+  \(A,B,C,D\). Which key is promoted, and how are the four child
+  subtrees divided between the two resulting nodes?
+</li>
+
+<li>
+  <strong>Cascading Insertion Repair:</strong>
+  What causes a split to continue into the parent? Under what condition
+  does insertion increase the height of the tree?
+</li>
+
+<li>
+  <strong>Removing an Internal Key:</strong>
+  How is removal of a key stored in an internal node reduced to removal
+  from a leaf? Why is replacing the internal key not enough by itself?
+</li>
+
+<li>
+  <strong>Redistribution:</strong>
+  When can a deficient node be repaired by redistribution? Describe how
+  the sibling key and the separator key in the parent move.
+</li>
+
+<li>
+  <strong>Redistribution Between Internal Nodes:</strong>
+  Why must redistribution between internal nodes move a child subtree as
+  well as keys? Which child subtree moves when redistributing from a right
+  sibling?
+</li>
+
+<li>
+  <strong>Merging and Upward Repair:</strong>
+  When is a merge required? Why can a merge make the parent deficient,
+  while redistribution cannot? What happens if the deficiency reaches
+  the root?
+</li>
+
+<li>
+  <strong>Height, Running Time, and Representation:</strong>
+  Why does a 2-3 tree have height \(\Theta(\log n)\)? What are the
+  worst-case running times of search, insertion, and removal? Why do the
+  implementation arrays have room for three keys and four children even
+  though valid nodes contain fewer?
+</li>
+  </ol>
+
+<button id="toggleAnswers"
+       class="show-answer"
+       aria-expanded="false">
+Show Answers </button>
+
+  <div id="answers" class="answer" hidden>
     <ol>
-      <li><strong>Relationship to Binary Search Trees:</strong> What abstract problem do BSTs and 2-3 trees both solve? What guarantee does a 2-3 tree add?</li>
-      <li><strong>Node Structure:</strong> How many keys and children does an internal 2-node have? What about an internal 3-node? How is a leaf different?</li>
-      <li><strong>Search Ranges:</strong> At a node \([25\mid70]\), which child should search follow for 12, 60, and 80? What happens when the target is 70?</li>
-      <li><strong>Ordered Queries:</strong> How are minimum and maximum found? How does an inorder traversal of a 3-node interleave its keys and children?</li>
-      <li><strong>Splitting and Promotion:</strong> If inserting 25 creates temporary keys \([10,20,25]\), which key is promoted and why must it be that key?</li>
-      <li><strong>Cascading Insertion Repair:</strong> What makes a split continue into the parent? Under what condition does insertion increase the tree's height?</li>
-      <li><strong>Removing an Internal Key:</strong> How can removal of an internal key be reduced to removal from a leaf? Why is substitution alone not enough?</li>
-      <li><strong>Borrowing and Merging:</strong> When can an underfull node borrow? Why does the key move through the parent? When is a merge required?</li>
-      <li><strong>Height and Cost:</strong> Why does uniform leaf depth together with two or three children per internal node force height \(\Theta(\log n)\)? What does that imply for search and updates?</li>
-      <li><strong>Choosing a Structure:</strong> Give one workload for which a 2-3 tree is more suitable than a hash table and one for which the hash table may be preferable.</li>
-    </ol>
+      <li>
+        <strong>Answer:</strong>
+        Both structures implement a dynamic ordered set or ordered map. They
+        support exact search, insertion, removal, minimum, maximum,
+        predecessor, successor, sorted traversal, and range queries. A plain
+        BST can become a chain of height \(n-1\), while a 2-3 tree
+        guarantees logarithmic height by keeping all leaves at the same
+        depth.
+      </li>
+  <li>
+    <strong>Answer:</strong>
+    An internal 2-node has one key and two children. An internal 3-node
+    has two ordered keys and three children. The keys must separate the
+    ordered ranges represented by the children, and every leaf in the
+    tree must occur at the same depth.
+  </li>
 
-    <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
-    <div id="answers" class="answer" hidden>
-      <ol>
-        <li><strong>Answer:</strong> Both maintain a dynamic ordered set or map and support exact search, updates, sorted traversal, neighbors, and ranges. A plain BST can become height \(n-1\); a 2-3 tree guarantees logarithmic height by keeping all leaves at the same depth.</li>
-        <li><strong>Answer:</strong> An internal 2-node has one key and two children. An internal 3-node has two ordered keys and three children. A leaf still has one or two keys but has no children.</li>
-        <li><strong>Answer:</strong> Search follows the left child for 12, the middle child for 60, and the right child for 80. A target equal to 70 is found in the current node, so search stops without following a child.</li>
-        <li><strong>Answer:</strong> Minimum repeatedly follows child 0 and returns the first key in the reached leaf. Maximum follows the last child and returns the last leaf key. For keys \([a\mid b]\), inorder traversal visits child 0, \(a\), child 1, \(b\), then child 2.</li>
-        <li><strong>Answer:</strong> Key 20 is promoted. It is the median, so the remaining key 10 can form the left result and 25 the right result. Promoting 10 or 25 would not correctly separate the two resulting ranges while leaving both nodes nonempty.</li>
-        <li><strong>Answer:</strong> A promoted median increases the parent's key count. If the parent already had two keys, it temporarily overflows and must also split. Height increases only when the overflowing node is the root; its median becomes a new root above the two split pieces.</li>
-        <li><strong>Answer:</strong> Replace the internal target with its predecessor or successor, found at a leaf, and then remove the original copy from that leaf. Substitution alone would leave the replacement key stored twice and would not reduce the tree's size.</li>
-        <li><strong>Answer:</strong> An adjacent 3-node sibling can lend one of its two keys. The separator key between the underfull node and the chosen sibling moves down from the parent and the sibling key nearest that separator moves up, preserving all range boundaries. If neither adjacent sibling has a spare key, the underfull node must merge with a sibling and the separator key between them.</li>
-        <li><strong>Answer:</strong> At depth \(h\), the least-branching tree has at least \(2^{h+1}-1\) keys and the fullest has at most \(3^{h+1}-1\). Thus height grows only logarithmically with the number of keys. Search, insertion, and removal each process at most a constant amount of work per level and take \(O(\log n)\) worst-case time.</li>
-        <li><strong>Answer:</strong> A 2-3 tree is preferable when an application needs sorted iteration, predecessor/successor, or interval reporting in addition to updates—for example, a schedule indexed by time. A hash table may be preferable when the workload is dominated by exact-key lookup and updates and has no ordering queries, because it usually provides expected \(O(1)\) operations.</li>
+  <li>
+    <strong>Answer:</strong>
+    Search follows the left child for 12, the middle child for 60, and
+    the right child for 80. A target equal to 70 is found in the current
+    node, so the search stops.
+  </li>
+
+  <li>
+    <strong>Answer:</strong>
+    To find the minimum, repeatedly follow child 0 and return the first
+    key in the reached leaf. To find the maximum, repeatedly follow the
+    rightmost child and return the last key in the reached leaf. A
+    traversal of \([a\mid b]\) processes child 0, \(a\), child 1,
+    \(b\), and child 2, in that order.
+  </li>
+
+  <li>
+    <strong>Answer:</strong>
+    A complete traversal processes every key and child subtree. A range
+    query uses the same increasing-order traversal but reports only keys
+    within the requested interval. It can skip a child subtree when the
+    separator keys show that every key in that subtree lies entirely
+    below or entirely above the interval.
+  </li>
+
+  <li>
+    <strong>Answer:</strong>
+    Key 20 is promoted because it is the middle key. The smaller key 10
+    remains in the left node and the larger key 25 remains in the right
+    node. Promoting either extreme key would not leave two nonempty nodes
+    correctly separated by the promoted key.
+  </li>
+
+  <li>
+    <strong>Answer:</strong>
+    Key 55 is promoted. The node containing 40 receives the first two
+    child subtrees, \(A\) and \(B\). The node containing 70 receives
+    the last two child subtrees, \(C\) and \(D\). Preserving this
+    left-to-right order preserves all of the search ranges.
+  </li>
+
+  <li>
+    <strong>Answer:</strong>
+    A promoted key increases the parent's number of keys. If the parent
+    already contains two keys, it becomes temporarily overfull and must
+    also split. The height increases only when the overfull node is the
+    root. Its middle key becomes a new root above the two split pieces.
+  </li>
+
+  <li>
+    <strong>Answer:</strong>
+    Replace the internal target with its predecessor or successor, then
+    remove the original copy of that replacement key from its leaf.
+    Substitution alone would leave the replacement key stored twice and
+    would not decrease the number of stored keys.
+  </li>
+
+  <li>
+    <strong>Answer:</strong>
+    Redistribution is possible when an adjacent sibling is a 3-node and
+    therefore has two keys. The separator key between the deficient node
+    and that sibling moves down into the deficient node. The sibling key
+    nearest the separator moves up into the parent to replace it. The key
+    does not move directly from one sibling to the other.
+  </li>
+
+  <li>
+    <strong>Answer:</strong>
+    Internal keys separate child-subtree ranges, so moving a separator
+    changes which node owns one of those ranges. When redistributing from
+    a right sibling, its leftmost child subtree moves to become the
+    rightmost child of the repaired node. That subtree contains the keys
+    between the key moved down from the parent and the key moved up from
+    the sibling.
+  </li>
+
+  <li>
+    <strong>Answer:</strong>
+    A merge is required when no adjacent sibling is a 3-node, so no
+    sibling has an extra key for redistribution. The deficient node, an
+    adjacent 2-node sibling, and their separator key are combined into
+    one 3-node. A merge removes one key and one child position from the
+    parent, so a parent that was a 2-node becomes deficient.
+    Redistribution replaces a parent key but does not change the
+    parent's number of keys or children. If the deficiency reaches an
+    empty root with one child, that child becomes the new root. If the
+    empty root has no child, the tree becomes empty.
+  </li>
+
+  <li>
+    <strong>Answer:</strong>
+    Every internal node has at least two and at most three children, and
+    every leaf occurs at the same depth. Thus a tree of height \(h\)
+    stores between \(2^{h+1}-1\) and \(3^{h+1}-1\) keys, which implies
+    \(h=\Theta(\log n)\). Search, insertion, and removal each perform
+    constant work per level and have worst-case running time
+    \(\Theta(\log n)\). The arrays have room for three keys and four
+    children because insertion may temporarily create an overfull node
+    before it is split.
+  </li>
+</ol>
+  </div>
+</section>
+
+
+<section id="activities" section-title="In-Class Activities">
+  <h2>In-Class Activities</h2>
+
+  <ol>
+    <li>
+      <strong>Classify Proposed 2-3 Trees:</strong>
+      In small groups, draw one valid 2-3 tree of height 2 and three invalid
+      trees: one with an out-of-range descendant, one with an invalid child
+      count, and one with leaves at different depths. 
+      Try to make the violations hard to spot.
+      Exchange drawings with another group.
+      <ol type="a">
+        <li>
+          Identify every violated invariant rather than stopping after the
+          first.
+        </li>
+        <li>
+          For each invalid tree, describe what would have to change to make
+          it valid.
+        </li>
       </ol>
-    </div>
-  </section>
+    </li>
 
-  <section id="activities" section-title="In-Class Activities">
-    <h2>In-Class Activities</h2>
-    <ol>
-      <li>
-        <strong>Classify Proposed 2-3 Trees:</strong>
-        In small groups, draw one valid 2-3 tree of height 2 and three invalid trees: one with an
-        out-of-range descendant, one with an illegal child count, and one with leaves at different
-        depths. Exchange drawings with another group.
-        <ol type="a">
-          <li>For each drawing, list the key range represented by every edge leaving the root.</li>
-          <li>Identify every violated invariant rather than stopping after the first.</li>
-          <li>Propose the smallest repair and check that it does not create a new violation.</li>
-        </ol>
-      </li>
+    <li>
+  <strong>Trace Search and Ordered Queries:</strong>
+  Use the following 2-3 tree.
 
-      <li>
-        <strong>Trace Search and Ordered Queries:</strong>
-        Use the tree in the overview figure.
-        <ol type="a">
-          <li>Trace searches for 50, 55, and 80, listing the keys compared and child range chosen at each node.</li>
-          <li>Identify the minimum, maximum, predecessor of 60, and successor of 50.</li>
-          <li>Write the generalized inorder traversal and confirm that it is increasing.</li>
-          <li>List exactly which keys and subtrees need to be examined to report the interval \([45,75]\).</li>
-        </ol>
-      </li>
+  <svg class="tree23-figure"
+       viewBox="0 0 920 410"
+       role="img"
+       aria-labelledby="activityQueriesTitle activityQueriesDesc">
+    <title id="activityQueriesTitle">
+      A 2-3 tree for search and ordered-query practice
+    </title>
+    <desc id="activityQueriesDesc">
+      The root contains 37 and 82. Its internal children contain 14 and 26,
+      53 and 68, and 101 and 127. The nine leaf nodes contain 4 and 9,
+      18 and 21, 31 and 34, 42 and 47, 57 and 63, 72 and 79, 88 and 96,
+      109 and 118, and 133 and 149.
+    </desc>
 
-      <li>
-        <strong>Human Insertion Trace:</strong>
-        Begin with an empty tree and insert
-        \[40,20,60,10,30,50,70,25,27.\]
-        Assign one group member to follow the search path, one to maintain keys and children, and one
-        to audit the invariants.
-        <ol type="a">
-          <li>Draw the tree after every insertion.</li>
-          <li>Circle each temporary three-key node and box its promoted median.</li>
-          <li>Identify every cascading split and the operation that changes the height.</li>
-          <li>Explain why all old leaves remain at a common depth after the root changes.</li>
-        </ol>
-      </li>
+    <!-- Root-to-internal edges -->
+    <line x1="460" y1="110" x2="160" y2="180"
+          class="tree23-edge"/>
+    <line x1="460" y1="110" x2="460" y2="180"
+          class="tree23-edge"/>
+    <line x1="460" y1="110" x2="760" y2="180"
+          class="tree23-edge"/>
 
-      <li>
-        <strong>Practice All Underflow Repairs:</strong>
-        Use index cards for keys and strips of paper for child subtrees. Construct one local
-        configuration for borrowing from the left, one for borrowing from the right, and one for
-        merging.
-        <ol type="a">
-          <li>State why borrowing is or is not legal before moving any card.</li>
-          <li>Move the appropriate separator key and sibling key in the required order.</li>
-          <li>For an internal-node example, move the child pointer that accompanies the rotated key.</li>
-          <li>State the range of every affected child before and after the repair.</li>
-        </ol>
-      </li>
+    <!-- Left internal-node edges -->
+    <line x1="160" y1="236" x2="60" y2="310"
+          class="tree23-edge"/>
+    <line x1="160" y1="236" x2="160" y2="310"
+          class="tree23-edge"/>
+    <line x1="160" y1="236" x2="260" y2="310"
+          class="tree23-edge"/>
 
-      <li>
-        <strong>Trace an Internal-Key Removal:</strong>
-        Build a tree by inserting 20, 40, 60, 10, 30, 50, 70, 25, and 35. Choose an internal key to
-        remove using predecessor substitution.
-        <ol type="a">
-          <li>Trace the path to the predecessor and identify its exact key position within its leaf.</li>
-          <li>Show the substitution separately from the leaf removal.</li>
-          <li>Complete any underflow repairs and record each separator that moves.</li>
-          <li>Verify key count, inorder order, and equal leaf depth in the final tree.</li>
-        </ol>
-      </li>
+    <!-- Middle internal-node edges -->
+    <line x1="460" y1="236" x2="360" y2="310"
+          class="tree23-edge"/>
+    <line x1="460" y1="236" x2="460" y2="310"
+          class="tree23-edge"/>
+    <line x1="460" y1="236" x2="560" y2="310"
+          class="tree23-edge"/>
 
-      <li>
-        <strong>Compare Sorted Insertions:</strong>
-        Insert keys 1 through 15, in increasing order, into both a plain BST and a 2-3 tree.
-        <ol type="a">
-          <li>Draw both final trees and compute their heights using edges.</li>
-          <li>Compare the search paths for 1, 8, and 15.</li>
-          <li>Count the 2-3 tree's splits and the BST's restructuring operations.</li>
-          <li>Explain what extra insertion work purchases the worst-case search guarantee.</li>
-        </ol>
-      </li>
+    <!-- Right internal-node edges -->
+    <line x1="760" y1="236" x2="660" y2="310"
+          class="tree23-edge"/>
+    <line x1="760" y1="236" x2="760" y2="310"
+          class="tree23-edge"/>
+    <line x1="760" y1="236" x2="860" y2="310"
+          class="tree23-edge"/>
 
-      <li>
-        <strong>Design an Invariant Checker:</strong>
-        Develop a class-wide specification for a recursive validation helper.
-        <ol type="a">
-          <li>Decide which lower and upper key bounds a recursive call must receive.</li>
-          <li>Decide what it must return about key count and leaf depth.</li>
-          <li>Write checks for node capacity, sorted keys, child count, parent references, ranges, and uniform leaf depth.</li>
-          <li>Create one small test tree that causes each check to fail independently.</li>
-        </ol>
-      </li>
-    </ol>
-  </section>
+    <!-- Root -->
+    <rect x="380" y="50" width="160" height="60"
+          class="tree23-node"/>
+    <line x1="460" y1="50" x2="460" y2="110"
+          class="tree23-key-line"/>
+    <text x="420" y="80" class="tree23-key">37</text>
+    <text x="500" y="80" class="tree23-key">82</text>
+
+    <!-- Internal nodes -->
+    <rect x="80" y="180" width="160" height="56"
+          class="tree23-node"/>
+    <line x1="160" y1="180" x2="160" y2="236"
+          class="tree23-key-line"/>
+    <text x="120" y="208" class="tree23-key">14</text>
+    <text x="200" y="208" class="tree23-key">26</text>
+
+    <rect x="380" y="180" width="160" height="56"
+          class="tree23-node"/>
+    <line x1="460" y1="180" x2="460" y2="236"
+          class="tree23-key-line"/>
+    <text x="420" y="208" class="tree23-key">53</text>
+    <text x="500" y="208" class="tree23-key">68</text>
+
+    <rect x="680" y="180" width="160" height="56"
+          class="tree23-node"/>
+    <line x1="760" y1="180" x2="760" y2="236"
+          class="tree23-key-line"/>
+    <text x="720" y="208" class="tree23-key">101</text>
+    <text x="800" y="208" class="tree23-key">127</text>
+
+    <!-- Leaves -->
+    <rect x="10" y="310" width="100" height="54"
+          class="tree23-node"/>
+    <line x1="60" y1="310" x2="60" y2="364"
+          class="tree23-key-line"/>
+    <text x="35" y="337" class="tree23-key">4</text>
+    <text x="85" y="337" class="tree23-key">9</text>
+
+    <rect x="110" y="310" width="100" height="54"
+          class="tree23-node"/>
+    <line x1="160" y1="310" x2="160" y2="364"
+          class="tree23-key-line"/>
+    <text x="135" y="337" class="tree23-key">18</text>
+    <text x="185" y="337" class="tree23-key">21</text>
+
+    <rect x="210" y="310" width="100" height="54"
+          class="tree23-node"/>
+    <line x1="260" y1="310" x2="260" y2="364"
+          class="tree23-key-line"/>
+    <text x="235" y="337" class="tree23-key">31</text>
+    <text x="285" y="337" class="tree23-key">34</text>
+
+    <rect x="310" y="310" width="100" height="54"
+          class="tree23-node"/>
+    <line x1="360" y1="310" x2="360" y2="364"
+          class="tree23-key-line"/>
+    <text x="335" y="337" class="tree23-key">42</text>
+    <text x="385" y="337" class="tree23-key">47</text>
+
+    <rect x="410" y="310" width="100" height="54"
+          class="tree23-node"/>
+    <line x1="460" y1="310" x2="460" y2="364"
+          class="tree23-key-line"/>
+    <text x="435" y="337" class="tree23-key">57</text>
+    <text x="485" y="337" class="tree23-key">63</text>
+
+    <rect x="510" y="310" width="100" height="54"
+          class="tree23-node"/>
+    <line x1="560" y1="310" x2="560" y2="364"
+          class="tree23-key-line"/>
+    <text x="535" y="337" class="tree23-key">72</text>
+    <text x="585" y="337" class="tree23-key">79</text>
+
+    <rect x="610" y="310" width="100" height="54"
+          class="tree23-node"/>
+    <line x1="660" y1="310" x2="660" y2="364"
+          class="tree23-key-line"/>
+    <text x="635" y="337" class="tree23-key">88</text>
+    <text x="685" y="337" class="tree23-key">96</text>
+
+    <rect x="710" y="310" width="100" height="54"
+          class="tree23-node"/>
+    <line x1="760" y1="310" x2="760" y2="364"
+          class="tree23-key-line"/>
+    <text x="735" y="337" class="tree23-key">109</text>
+    <text x="785" y="337" class="tree23-key">118</text>
+
+    <rect x="810" y="310" width="100" height="54"
+          class="tree23-node"/>
+    <line x1="860" y1="310" x2="860" y2="364"
+          class="tree23-key-line"/>
+    <text x="835" y="337" class="tree23-key">133</text>
+    <text x="885" y="337" class="tree23-key">149</text>
+  </svg>
+
+  <ol type="a">
+    <li>
+      Trace searches for 68, 63, 94, and 133. At each visited node,
+      list the keys compared, the child range selected, and whether the
+      search eventually succeeds or fails.
+    </li>
+    <li>
+      Identify the minimum and maximum. Then find the predecessor of 42,
+      the predecessor of 63, the successor of 68, and the successor of 79.
+      For each answer, state whether the neighboring key occurs in the same
+      node, in a child subtree, or in an ancestor.
+    </li>
+    <li>
+      Write the complete increasing-order traversal of the tree. Verify that
+      the keys are in increasing order by checking that each node's keys
+      occur between the traversals of the child ranges they separate.
+      Also verify that every key in the tree appears exactly once.
+    </li>
+    <li>
+      Perform the range query \([48,120]\). List the keys reported in
+      increasing order.
+    </li>
+    <li>
+      List every subtree that can be pruned during the range query. For each
+      one, explain which separator key or keys prove that every key in that
+      subtree lies outside \([48,120]\).
+    </li>
+    <li>
+      Identify any nodes that must be examined even though they contain no
+      reported key. Explain why the algorithm cannot prune those nodes before
+      inspecting their separator keys.
+    </li>
+  </ol>
+</li>
+
+<li>
+  <strong>Trace a Sequence of Insertions:</strong>
+  Begin with the following 2-3 tree and insert
+  \(30,55,70,65\), in that order. Each insertion is performed on the
+  tree produced by the preceding insertion.
+
+  <svg class="tree23-figure"
+       viewBox="0 0 760 280"
+       role="img"
+       aria-labelledby="activityInsertTitle activityInsertDesc">
+    <title id="activityInsertTitle">
+      Starting tree for the insertion activity
+    </title>
+    <desc id="activityInsertDesc">
+      The root contains 40 and 80. Its three leaf children contain
+      10 and 20, 50 and 60, and 90 and 100.
+    </desc>
+
+    <line x1="380" y1="115" x2="130" y2="195"
+          class="tree23-edge"/>
+    <line x1="380" y1="115" x2="380" y2="195"
+          class="tree23-edge"/>
+    <line x1="380" y1="115" x2="630" y2="195"
+          class="tree23-edge"/>
+
+    <rect x="300" y="55" width="160" height="60"
+          class="tree23-node"/>
+    <line x1="380" y1="55" x2="380" y2="115"
+          class="tree23-key-line"/>
+    <text x="340" y="85" class="tree23-key">40</text>
+    <text x="420" y="85" class="tree23-key">80</text>
+
+    <rect x="70" y="195" width="120" height="56"
+          class="tree23-node"/>
+    <line x1="130" y1="195" x2="130" y2="251"
+          class="tree23-key-line"/>
+    <text x="100" y="223" class="tree23-key">10</text>
+    <text x="160" y="223" class="tree23-key">20</text>
+
+    <rect x="320" y="195" width="120" height="56"
+          class="tree23-node"/>
+    <line x1="380" y1="195" x2="380" y2="251"
+          class="tree23-key-line"/>
+    <text x="350" y="223" class="tree23-key">50</text>
+    <text x="410" y="223" class="tree23-key">60</text>
+
+    <rect x="570" y="195" width="120" height="56"
+          class="tree23-node"/>
+    <line x1="630" y1="195" x2="630" y2="251"
+          class="tree23-key-line"/>
+    <text x="600" y="223" class="tree23-key">90</text>
+    <text x="660" y="223" class="tree23-key">100</text>
+  </svg>
+
+  <p class="figure-caption">
+    All four insertions are performed sequentially on this starting tree.
+  </p>
+
+  <ol type="a">
+    <li>
+      Draw the tree after each insertion. Show every temporary overfull
+      node before repairing it.
+    </li>
+    <li>
+      During the insertion of 30, identify the leaf split, the key
+      promoted into the root, and the root split. Explain why the height
+      increases.
+    </li>
+    <li>
+      During the insertion of 55, identify the leaf split and explain why
+      the parent can absorb the promoted key without splitting.
+    </li>
+    <li>
+      Explain why inserting 70 requires no structural repair.
+    </li>
+    <li>
+      During the insertion of 65, identify the leaf split and the
+      resulting internal-node split. Explain why this cascade does not
+      increase the height.
+    </li>
+    <li>
+      Give the increasing-order traversal of the final tree and verify
+      that all leaves have the same depth.
+    </li>
+    <li>
+      Determine whether any single additional insertion can increase the height
+      of the final tree. Justify your answer. Then find the smallest number of
+      keys that must be inserted to increase the height. Finally, give a sequence 
+      of additional keys that does increase the height, perform those
+      insertions, and show every split and promotion.
+    </li>
+  </ol>
+</li>
+
+<li>
+  <strong>Trace a Sequence of Removals:</strong>
+  Begin with the following 2-3 tree and remove
+  \(10,90,50,60\), in that order. Each removal is performed on the tree
+  produced by the preceding removal.
+
+  <svg class="tree23-figure"
+       viewBox="0 0 900 390"
+       role="img"
+       aria-labelledby="activityRemoveTitle activityRemoveDesc">
+    <title id="activityRemoveTitle">
+      Starting tree for the removal activity
+    </title>
+    <desc id="activityRemoveDesc">
+      The root contains 40 and 80. Its internal children contain 20,
+      60, and 100. Their leaf children contain 10, 30, 50, 70, 90,
+      and 110.
+    </desc>
+
+    <line x1="450" y1="110" x2="170" y2="170"
+          class="tree23-edge"/>
+    <line x1="450" y1="110" x2="450" y2="170"
+          class="tree23-edge"/>
+    <line x1="450" y1="110" x2="730" y2="170"
+          class="tree23-edge"/>
+
+    <line x1="170" y1="226" x2="90" y2="300"
+          class="tree23-edge"/>
+    <line x1="170" y1="226" x2="250" y2="300"
+          class="tree23-edge"/>
+
+    <line x1="450" y1="226" x2="370" y2="300"
+          class="tree23-edge"/>
+    <line x1="450" y1="226" x2="530" y2="300"
+          class="tree23-edge"/>
+
+    <line x1="730" y1="226" x2="650" y2="300"
+          class="tree23-edge"/>
+    <line x1="730" y1="226" x2="810" y2="300"
+          class="tree23-edge"/>
+
+    <rect x="370" y="50" width="160" height="60"
+          class="tree23-node"/>
+    <line x1="450" y1="50" x2="450" y2="110"
+          class="tree23-key-line"/>
+    <text x="410" y="80" class="tree23-key">40</text>
+    <text x="490" y="80" class="tree23-key">80</text>
+
+    <rect x="125" y="170" width="90" height="56"
+          class="tree23-node"/>
+    <text x="170" y="198" class="tree23-key">20</text>
+
+    <rect x="405" y="170" width="90" height="56"
+          class="tree23-node"/>
+    <text x="450" y="198" class="tree23-key">60</text>
+
+    <rect x="685" y="170" width="90" height="56"
+          class="tree23-node"/>
+    <text x="730" y="198" class="tree23-key">100</text>
+
+    <rect x="50" y="300" width="80" height="54"
+          class="tree23-node"/>
+    <text x="90" y="327" class="tree23-key">10</text>
+
+    <rect x="210" y="300" width="80" height="54"
+          class="tree23-node"/>
+    <text x="250" y="327" class="tree23-key">30</text>
+
+    <rect x="330" y="300" width="80" height="54"
+          class="tree23-node"/>
+    <text x="370" y="327" class="tree23-key">50</text>
+
+    <rect x="490" y="300" width="80" height="54"
+          class="tree23-node"/>
+    <text x="530" y="327" class="tree23-key">70</text>
+
+    <rect x="610" y="300" width="80" height="54"
+          class="tree23-node"/>
+    <text x="650" y="327" class="tree23-key">90</text>
+
+    <rect x="770" y="300" width="80" height="54"
+          class="tree23-node"/>
+    <text x="810" y="327" class="tree23-key">110</text>
+  </svg>
+
+  <p class="figure-caption">
+    The removals are sequential. Later operations use the tree produced by
+    the earlier ones.
+  </p>
+
+  <ol type="a">
+    <li>
+      Draw the tree after each removal. Show every temporary deficient
+      node before repairing it.
+    </li>
+    <li>
+      After each removal, verify that the number of stored keys has
+      decreased by exactly one and that all leaves remain at a common
+      depth.
+    </li>
+    <li>For each removal, verify that your attempt matches what is described below.
+      <ol type="i">
+    <li>
+      Removing 10 causes a leaf merge and then an internal-node merge.
+      Identify the two separator keys that move downward. Explain why the
+      root does not contract.
+    </li>
+    <li>
+      Removing 90 first causes a leaf merge. The resulting deficient
+      internal node can then redistribute with its left sibling. Identify
+      the key that moves down from the root, the key that moves up, and
+      the child subtree that changes parents.
+    </li>
+    <li>
+      Removing 50 causes redistribution between leaves. Identify the
+      sibling key that moves up and the separator key that moves down.
+    </li>
+    <li>
+      The final removal targets the internal key 60. Use predecessor
+      substitution, then complete the leaf merge, internal-node merge,
+      and root contraction.
+    </li>
+  </ol>
+    </li>
+  </ol>
+</li>
+
+<li>
+  <strong>Compare Increasing Insertions:</strong>
+  Insert the keys 1 through 15, in increasing order, into both an empty
+  plain BST and an empty 2-3 tree.
+  <ol type="a">
+    <li>
+      Draw both final trees and compute their heights using edges.
+    </li>
+    <li>
+      Compare the search paths for 1, 8, and 15.
+    </li>
+    <li>
+      Count the splits performed by the 2-3 tree. Note that the plain BST
+      performs no balancing work.
+    </li>
+    <li>
+      Explain what the additional insertion work in the 2-3 tree
+      accomplishes.
+    </li>
+  </ol>
+</li>
+
+<li>
+  <strong>Design an Invariant Checker:</strong>
+  Develop a class-wide specification for a recursive validation helper.
+  <ol type="a">
+    <li>
+      Decide which lower and upper key bounds each recursive call must
+      receive.
+    </li>
+    <li>
+      Decide what the helper must return about the number of keys and the
+      depth of the leaves.
+    </li>
+    <li>
+      Write checks for node capacity, increasing keys, child count,
+      parent references, child ranges, uniform leaf depth, and agreement
+      with the tree's stored size.
+    </li>
+    <li>
+      Create one small invalid tree that causes each check to fail
+      independently.
+    </li>
+  </ol>
+</li>
+  </ol>
+</section>
 
   <section id="problems" section-title="Homework Problems">
     <h2>Homework Problems</h2>
