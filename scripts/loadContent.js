@@ -1,4 +1,5 @@
 // File: scripts/loadContent.js
+// File: scripts/loadContent.js
 // NOTE: a-CLICK a link to copy a full HTML URL. 
 // E.g. <li><a href="?path=Algorithms%2FGreedy%2FMerge">Merge</a></li>
 // Documented here to remind me.
@@ -123,10 +124,10 @@ const DATA_STRUCTURES_ORDERS = {
     'Trees',
     'Priority Queues and Heaps',
     'Maps, Sets, and Hashing',
-    'Graph Structures',
-    'Disjoint Sets',
-    'String Structures',
-    'Advanced Structures'
+    //'Graph Structures',
+    //'Disjoint Sets',
+    //'String Structures',
+    //'Advanced Structures'
   ],
   'Data Structures/Linear Structures/': [
     'Representing Linear Structures',
@@ -134,7 +135,7 @@ const DATA_STRUCTURES_ORDERS = {
     'Queues',
     'Lists',
     'Deques',
-    'Dynamic Arrays',
+    //'Dynamic Arrays',
   ],
   'Data Structures/Trees/': [
     'Introduction to Trees',
@@ -144,13 +145,13 @@ const DATA_STRUCTURES_ORDERS = {
     'Balanced Search Trees',
     'AVL Trees',
     '2-3 Trees',
-    'Red-Black Trees',
-    'B-Trees'
+    //'Red-Black Trees',
+    //'B-Trees'
   ],
   'Data Structures/Priority Queues and Heaps/': [
-    'Priority Queue ADT',
+    'Priority Queues',
     'Binary Heaps',
-    'Heap Operations'
+    'Heap Construction and Heapsort'
   ],
   'Data Structures/Maps, Sets, and Hashing/': [
     'Introduction',
@@ -159,28 +160,29 @@ const DATA_STRUCTURES_ORDERS = {
     'Hash Tables',
     'Separate Chaining',
     'Open Addressing',
-    'Skip Lists'
-  ],
-  'Data Structures/Graph Structures/': [
-    'Graph ADT',
-    'Edge Lists',
-    'Adjacency Lists',
-    'Adjacency Matrices'
-  ],
-  'Data Structures/Disjoint Sets/': [
-    'Union-Find'
-  ],
-  'Data Structures/String Structures/': [
-    'Tries',
-    'Suffix Arrays',
-    'Suffix Trees'
-  ],
-  'Data Structures/Advanced Structures/': [
-    'Fenwick Trees',
-    'Segment Trees',
-    'Sparse Tables',
-    'k-d Trees'
+    //'Skip Lists'
   ]
+  //,
+  //'Data Structures/Graph Structures/': [
+  //  'Graph ADT',
+  //  'Edge Lists',
+  //  'Adjacency Lists',
+  //  'Adjacency Matrices'
+  //],
+  //'Data Structures/Disjoint Sets/': [
+  //  'Union-Find'
+  //],
+  //'Data Structures/String Structures/': [
+  //  'Tries',
+  //  'Suffix Arrays',
+  //  'Suffix Trees'
+  //],
+  //'Data Structures/Advanced Structures/': [
+  //  'Fenwick Trees',
+  //  'Segment Trees',
+  //  'Sparse Tables',
+  //  'k-d Trees'
+  //]
 };
 
 const APPENDIX_ORDERS = {
