@@ -86,21 +86,26 @@ int removeBack() {
 
 };
 
-void check(int actual, int expected) {
+void checkAtLine(int actual, int expected, int line, const char* expression) {
     if (actual == expected) {
         cout << "pass" << endl;
     } else {
-        cout << "fail: expected " << expected << " but got " << actual << endl;
+        cout << "fail at test line " << line << " (" << expression
+             << "): expected " << expected << " but got " << actual << endl;
     }
 }
 
-void check(bool actual, bool expected) {
+void checkAtLine(bool actual, bool expected, int line, const char* expression) {
     if (actual == expected) {
         cout << "pass" << endl;
     } else {
-        cout << "fail: expected " << expected << " but got " << actual << endl;
+        cout << "fail at test line " << line << " (" << expression
+             << "): expected " << (expected ? "true" : "false")
+             << " but got " << (actual ? "true" : "false") << endl;
     }
 }
+
+#define check(actual, expected) checkAtLine((actual), (expected), __LINE__, #actual)
 
 void testDeque() {
 IntDeque deque(3);

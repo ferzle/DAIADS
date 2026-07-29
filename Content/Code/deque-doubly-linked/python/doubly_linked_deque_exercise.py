@@ -1,3 +1,6 @@
+import inspect
+
+
 class Node:
     def __init__(self, value):
         self.value = value
@@ -52,7 +55,8 @@ def check(actual, expected):
     if actual == expected:
         print("pass")
     else:
-        print("fail: expected", expected, "but got", actual)
+        line = inspect.currentframe().f_back.f_lineno
+        print(f"fail at test line {line}: expected {expected!r} but got {actual!r}")
 
 
 def test_deque():

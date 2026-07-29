@@ -34,13 +34,16 @@
       return -1;
   }
 
-  void check(int actual, int expected) {
+  void checkAtLine(int actual, int expected, int line, const char* expression) {
       if (actual == expected) {
           cout << "pass" << endl;
       } else {
-      cout << "fail: expected " << expected << " but got " << actual << endl;
+      cout << "fail at test line " << line << " (" << expression
+           << "): expected " << expected << " but got " << actual << endl;
   }
 }
+
+#define check(actual, expected) checkAtLine((actual), (expected), __LINE__, #actual)
 
 BinaryNode* buildCompleteTree() {
   BinaryNode* root = new BinaryNode(1);

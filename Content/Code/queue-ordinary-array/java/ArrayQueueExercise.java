@@ -39,11 +39,16 @@ public class ArrayQueueExercise {
         }
     }
 
+    static String checkLocation() {
+        StackTraceElement caller = Thread.currentThread().getStackTrace()[3];
+        return caller.getMethodName() + "(), line " + caller.getLineNumber();
+    }
+
     static void check(int actual, int expected) {
         if (actual == expected) {
             System.out.println("pass");
         } else {
-            System.out.println("fail: expected " + expected + " but got " + actual);
+            System.out.println("fail at " + checkLocation() + ": expected " + expected + " but got " + actual);
         }
     }
 
@@ -51,7 +56,7 @@ public class ArrayQueueExercise {
         if (actual == expected) {
             System.out.println("pass");
         } else {
-            System.out.println("fail: expected " + expected + " but got " + actual);
+            System.out.println("fail at " + checkLocation() + ": expected " + expected + " but got " + actual);
         }
     }
 

@@ -1,3 +1,6 @@
+import inspect
+
+
 class BlockNode:
     def __init__(self, block_size):
         self.values = [0] * block_size
@@ -55,7 +58,8 @@ def check(actual, expected):
     if actual == expected:
         print("pass")
     else:
-        print("fail: expected", expected, "but got", actual)
+        line = inspect.currentframe().f_back.f_lineno
+        print(f"fail at test line {line}: expected {expected!r} but got {actual!r}")
 
 
 def test_deque():

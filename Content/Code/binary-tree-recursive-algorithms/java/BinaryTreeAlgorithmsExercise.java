@@ -31,12 +31,17 @@ public class BinaryTreeAlgorithmsExercise {
       return -1;
   }
 
+  static String checkLocation() {
+      StackTraceElement caller = Thread.currentThread().getStackTrace()[3];
+      return caller.getMethodName() + "(), line " + caller.getLineNumber();
+  }
+
   static void check(int actual, int expected) {
       if (actual == expected) {
           System.out.println("pass");
       } else {
           System.out.println(
-              "fail: expected " + expected + " but got " + actual
+              "fail at " + checkLocation() + ": expected " + expected + " but got " + actual
           );
       }
   }
