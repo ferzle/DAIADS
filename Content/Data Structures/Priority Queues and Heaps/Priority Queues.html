@@ -2027,17 +2027,186 @@ extract():
 </li>
 
 <li>
-  <strong>Sorted-Array Priority Queue:</strong> Implement a resizable sorted-array
-  min-priority queue with <code>insert</code>, <code>peek</code>,
-  <code>extract</code>, <code>isEmpty</code>, and <code>size</code>. Keep the best
-  entry at the used right end. Document the empty-queue policy and test insertions
-  at the beginning, middle, and end of the used range.
+  <strong>Sorted-Array Priority Queue:</strong>
+  Implement a stable, resizable, sorted-array min-priority queue. Each starter
+  is a complete runnable program containing an entry type, the priority-queue
+  class, method stubs, and tests. Complete the methods marked
+  <code>TODO</code>; do not replace the backing array with a library priority
+  queue or another data structure.
+
+  <p>Your implementation must satisfy the following requirements:</p>
+  <ul>
+    <li>
+      Each entry stores a string value and an integer priority key. Smaller
+      keys are better.
+    </li>
+    <li>
+      Store the used array range from <em>worst to best</em>, so the best entry
+      is always at index <code>size - 1</code>. Unused capacity must remain
+      outside the used range.
+    </li>
+    <li>
+      Preserve stability without sequence numbers. Insert a new entry on the
+      worse, left side of all existing entries with the same key. The earlier
+      tied entries then remain farther right and are extracted first.
+    </li>
+    <li>
+      <code>insert</code> must grow a full backing array by doubling its
+      capacity, locate the new entry's position, shift the necessary suffix,
+      and preserve the ordering invariant.
+    </li>
+    <li>
+      <code>peek</code> returns the best entry without changing the queue.
+      <code>extract</code> removes that entry from the used right end and clears
+      the vacated array cell.
+    </li>
+    <li>
+      Follow the starter's empty-queue policy:
+      <code>Optional.empty()</code> in Java, <code>std::nullopt</code> in C++,
+      and <code>None</code> in Python.
+    </li>
+  </ul>
+
+  <ol type="a">
+    <li>
+      Complete <code>isEmpty</code>, <code>size</code>, <code>insert</code>,
+      <code>peek</code>, <code>extract</code>, the entry-comparison helper, and
+      the capacity-growth helper.
+    </li>
+    <li>
+      Run the supplied tests. They exercise empty operations, resizing,
+      insertion at the beginning, middle, and end of the used range, stable
+      equal-key behavior, and repeated extraction.
+    </li>
+    <li>
+      Add at least two focused tests of your own, including one that uses
+      negative priority keys and one that inserts new entries after the queue
+      has become empty.
+    </li>
+    <li>
+      State and justify the worst-case time complexity of every operation and
+      the amortized time complexity of <code>insert</code>.
+    </li>
+  </ol>
+
+  <div class="starter-download-panel">
+    <p><strong>Choose a language and download the sorted-array starter:</strong></p>
+    <div class="starter-downloads" role="list"
+         aria-label="Sorted-array priority-queue starter downloads">
+      <a class="starter-download" role="listitem"
+         href="/DAIADS/Content/Code/priority-queue-sorted-array/java/SortedArrayPriorityQueueExercise.java"
+         download>
+        Java <span class="file-type">.java</span>
+      </a>
+      <a class="starter-download" role="listitem"
+         href="/DAIADS/Content/Code/priority-queue-sorted-array/cpp/sorted_array_priority_queue_exercise.cpp"
+         download>
+        C++ <span class="file-type">.cpp</span>
+      </a>
+      <a class="starter-download" role="listitem"
+         href="/DAIADS/Content/Code/priority-queue-sorted-array/python/sorted_array_priority_queue_exercise.py"
+         download>
+        Python <span class="file-type">.py</span>
+      </a>
+    </div>
+    <p>Each download is one runnable file containing the starter implementation and tests.</p>
+    <ul class="starter-run-instructions spaced">
+      <li><strong>Java:</strong> <code>javac SortedArrayPriorityQueueExercise.java</code>, then <code>java SortedArrayPriorityQueueExercise</code>.</li>
+      <li><strong>C++:</strong> <code>g++ -std=c++17 -Wall -Wextra -pedantic sorted_array_priority_queue_exercise.cpp -o sorted_array_priority_queue_exercise</code>, then <code>./sorted_array_priority_queue_exercise</code>.</li>
+      <li><strong>Python:</strong> <code>python3 sorted_array_priority_queue_exercise.py</code>.</li>
+    </ul>
+  </div>
 </li>
 <li>
-  <strong>Unsorted-Array Priority Queue:</strong> Implement the same interface with
-  an unsorted resizable array. Extraction must fill the removed entry's gap with
-  the final used entry rather than shifting a suffix. Test the case where the best
-  entry is already last.
+  <strong>Unsorted-Array Priority Queue:</strong>
+  Implement the same stable min-priority-queue interface with an unsorted,
+  resizable backing array. The public operations and empty-queue policy are
+  similar to those in the sorted-array exercise, but the representation shifts
+  the expensive work from insertion to <code>peek</code> and
+  <code>extract</code>.
+
+  <p>Your implementation must satisfy the following requirements:</p>
+  <ul>
+    <li>
+      Unlike the sorted representation, the unsorted representation cannot use
+      physical order to preserve stable ties after gap-filling extractions.
+      Each entry must therefore store an increasing sequence number in addition
+      to its value and priority key. Sequence numbers must never be reused.
+    </li>
+    <li>
+      <code>insert</code> appends the new entry at the end of the used range,
+      growing the backing array by doubling its capacity when necessary. It
+      must not scan for a sorted position.
+    </li>
+    <li>
+      The best-index helper scans every used entry and applies both parts of
+      the comparison rule: smaller priority key first, then smaller sequence
+      number.
+    </li>
+    <li>
+      <code>peek</code> returns the entry at the best index without modifying
+      the array.
+    </li>
+    <li>
+      <code>extract</code> saves the best entry, fills its gap with the final
+      used entry, reduces the size exactly once, and clears the old final cell.
+      It must not shift the remaining suffix.
+    </li>
+    <li>
+      The same extraction logic must work when the best entry is already the
+      final used entry. In that case, do not read outside the used range or
+      accidentally remove two entries.
+    </li>
+  </ul>
+
+  <ol type="a">
+    <li>
+      Complete the public operations, the best-index and comparison helpers,
+      and the capacity-growth helper.
+    </li>
+    <li>
+      Run the supplied tests. They exercise empty operations, resizing, stable
+      ties, filling an interior gap, finding entries after the array order has
+      changed, and extracting a best entry that is already last.
+    </li>
+    <li>
+      Add tests in which the best entry begins at index 0 and in which several
+      equal-key entries are moved by earlier extractions.
+    </li>
+    <li>
+      State and justify the worst-case time complexity of every operation and
+      the amortized time complexity of <code>insert</code>. Compare these
+      bounds with your sorted-array implementation.
+    </li>
+  </ol>
+
+  <div class="starter-download-panel">
+    <p><strong>Choose a language and download the unsorted-array starter:</strong></p>
+    <div class="starter-downloads" role="list"
+         aria-label="Unsorted-array priority-queue starter downloads">
+      <a class="starter-download" role="listitem"
+         href="/DAIADS/Content/Code/priority-queue-unsorted-array/java/UnsortedArrayPriorityQueueExercise.java"
+         download>
+        Java <span class="file-type">.java</span>
+      </a>
+      <a class="starter-download" role="listitem"
+         href="/DAIADS/Content/Code/priority-queue-unsorted-array/cpp/unsorted_array_priority_queue_exercise.cpp"
+         download>
+        C++ <span class="file-type">.cpp</span>
+      </a>
+      <a class="starter-download" role="listitem"
+         href="/DAIADS/Content/Code/priority-queue-unsorted-array/python/unsorted_array_priority_queue_exercise.py"
+         download>
+        Python <span class="file-type">.py</span>
+      </a>
+    </div>
+    <p>Each download is one runnable file containing the starter implementation and tests.</p>
+    <ul class="starter-run-instructions spaced">
+      <li><strong>Java:</strong> <code>javac UnsortedArrayPriorityQueueExercise.java</code>, then <code>java UnsortedArrayPriorityQueueExercise</code>.</li>
+      <li><strong>C++:</strong> <code>g++ -std=c++17 -Wall -Wextra -pedantic unsorted_array_priority_queue_exercise.cpp -o unsorted_array_priority_queue_exercise</code>, then <code>./unsorted_array_priority_queue_exercise</code>.</li>
+      <li><strong>Python:</strong> <code>python3 unsorted_array_priority_queue_exercise.py</code>.</li>
+    </ul>
+  </div>
 </li>
   </ol>
 </section>
