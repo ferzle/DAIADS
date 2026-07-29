@@ -160,10 +160,10 @@
     where each node is greater than or equal to its children (for a max-heap).  
     The primary heap operations needed by Heapsort are:
     <ul>
-      <li><code>heapify</code>: Restore the heap property at a given node in \(O(\log n)\) time.
-      It does so by "bubbling down" small elements to where they belong.</li>
+      <li><code>siftDown</code>: Restore the heap property at a given node in \(O(\log n)\) time.
+      It does so by moving a lower-priority element down toward where it belongs.</li>
       <li><code>buildMaxHeap</code>: Reorganize the elements of an array into a heap in \(O(n)\) time.
-      Briefly, it walks through the tree backwards calling heapify on each node.</li>
+      Briefly, it walks backward through the internal nodes, calling <code>siftDown</code> on each one.</li>
     </ul>
     If you are unfamiliar with heaps, you should read the <a href="?path=Data%20Structures%2FPriority%20Queues%20and%20Heaps%2FBinary%20Heaps">Binary Heaps</a> page
     before continuing.
@@ -172,9 +172,9 @@
   <p>
     Heapsort sorts an array in-place by first performing <code>buildMaxHeap</code>, 
     then repeatedly swapping the root (the maximum value) with the last element of the heap,
-    reduce the heap size by one (so it no longer considers the maximum value as part of the heap),
-    and calling <code>heapify</code> to restore the heap property on the smaller heap. 
-    Ignoring the details of <code>buildMaxHeap</code> and <code>heapify</code>, 
+    reducing the heap size by one (so it no longer considers the maximum value as part of the heap),
+    and calling <code>siftDown</code> to restore the heap property on the smaller heap.
+    Ignoring the details of <code>buildMaxHeap</code> and <code>siftDown</code>,
     the algorithm is very simple:  
   </p>
 
@@ -182,7 +182,7 @@
     buildMaxHeap(A,n)     // Transform the array into a heap
     for i from n-1 down to 1:
         swap A[0] with A[i]     // move max to end
-        heapify(A, 0, i-1)      // restore heap property
+        siftDown(A, 0, i)       // restore heap property in A[0..i-1]
     return A  </code></pre>
 
 
@@ -199,10 +199,10 @@
   <p>
     <strong>Time Complexity:</strong> 
     Building the heap takes \(O(n)\), and each of the \(n-1\) extractions costs \(O(\log n)\)
-    (constant time to swap, and \(O(\log n)\) time for <code>heapify</code>), 
+    (constant time to swap, and \(O(\log n)\) time for <code>siftDown</code>),
     for a total of \(O(n + (n-1)\log n) = O(n\log n)\). 
-    See the <a href="?path=Data%20Structures%2FPriority%20Queues%20and%20Heaps%2FBinary%20Heaps">Binary Heaps</a> page for a more detailed analysis of 
-    <code>buildMaxHeap</code> and <code>heapify</code>.<br>
+    See the <a href="?path=Data%20Structures%2FPriority%20Queues%20and%20Heaps%2FHeap%20Construction%20and%20Heapsort">Heap Construction and Heapsort</a>
+    page for a more detailed analysis of <code>buildMaxHeap</code> and <code>siftDown</code>.<br>
     <strong>Space Complexity:</strong> 
     Heapsort sorts in-place using only \(O(1)\) extra space.
   </p>
@@ -295,7 +295,7 @@
       <strong>Separate transformation from core logic:</strong> Keep preprocessing or representation-change code modular so it can be tested and reused independently of the main algorithm.
     </li>
     <li>
-      <strong>Use in-place operations when memory is limited:</strong> Favor algorithms that modify existing data structures (e.g., heapify in Heapsort) rather than allocating new arrays to reduce space overhead.
+      <strong>Use in-place operations when memory is limited:</strong> Favor algorithms that modify existing data structures (e.g., <code>siftDown</code> in Heapsort) rather than allocating new arrays to reduce space overhead.
     </li>
         <li>
       <strong>Isolate structural invariants:</strong> Factor out data-structure maintenance&mdash;such as BST rotations and balance checks&mdash;into dedicated routines; for example, separate all AVL or red-black tree rebalancing logic so that insertion and deletion code remains clear and you can validate height or color invariants separately.
@@ -427,12 +427,12 @@
       \]
     </li><li>
     <strong>Answer:</strong> 
-    Heapsort first performs a bottom-up heapify on the array: it runs heapify on every node from index
-    \(\lfloor n/2\rfloor -1\) down to \(0\).  
-    Although a single heapify can take \(O(\log n)\), the total cost of all these operations 
+    Heapsort first constructs a heap from the bottom up: it calls <code>siftDown</code> on every
+    internal node from index \(\lfloor n/2\rfloor -1\) down to \(0\).
+    Although a single <code>siftDown</code> can take \(O(\log n)\), the total cost of all these operations
     turns out to be  \(O(n)\) (the reason why was left as an exercise).  
-    This builds a valid max-heap in place.  Each swaps takes constant time, 
-    and the call to heapify on the new root takes \(O(\log n)\) time since the height of the heap is 
+    This builds a valid max-heap in place. Each swap takes constant time,
+    and the call to <code>siftDown</code> on the new root takes \(O(\log n)\) time since the height of the heap is
     \(\lfloor\log n\rfloor\).
   </li>
     <li>
@@ -458,7 +458,7 @@
         Think in terms of both time and space.
       <ol type='a'>
       <li>The one presented above.</li>
-      <li>One that replaces the <em>swap-then-heapify</em> step with <em>extractMin-and-copy-to-end</em>.</li>
+      <li>One that replaces the <em>swap-then-siftDown</em> step with <em>extractMin-and-copy-to-end</em>.</li>
       </ol>
     </li>
     <li><strong>Heapsort versus Others:</strong>

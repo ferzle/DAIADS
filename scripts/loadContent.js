@@ -49,7 +49,6 @@ const NUMBERED_CHILD_SECTIONS = new Set([
   'Algorithms',
   'Appendix',
   'Problems',
-  'Demos',
   'More'
 ]);
 const NUMBERED_PAGE_SECTION_HEADINGS = new Set([

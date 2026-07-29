@@ -34,7 +34,7 @@
       stroke: #666;
       stroke-width: 1.5px;
     }
-    .treeNode.array-heapify circle {
+    .treeNode.array-sift-down circle {
       fill: #FF9999;
       stroke: #666;
       stroke-width: 1.5px;
@@ -51,7 +51,7 @@
     }
 
     /*=== Color rules for array elements ===*/
-    .array-heapify {
+    .array-sift-down {
       background-color: #FF9999;
     }
     .heap {
@@ -166,7 +166,7 @@
   <div class="legend" style="margin-top: 10px;">
     <span class="legend-box comparing"></span><span class="legend-label">Comparing</span>
     <span class="legend-box swap"></span><span class="legend-label">Swap</span>
-    <span class="legend-box array-heapify"></span><span class="legend-label">Heapify</span>
+    <span class="legend-box array-sift-down"></span><span class="legend-label">Sift down</span>
     <span class="legend-box heap"></span><span class="legend-label">Heap</span>
     <span class="legend-box sorted"></span><span class="legend-label">Sorted</span>
   </div>
@@ -240,13 +240,13 @@
               `${arr[largest]} > ${arr[i]} → Swap values ${arr[i]} and ${arr[largest]} at indices ${i} and ${largest}<br>`);
             [arr[i], arr[largest]] = [arr[largest], arr[i]];
             recordEvent('swap', i, largest, `Swapped<br>`);
-            recordEvent('heapify', largest, null, `Continue heapify at index ${largest} (value now ${arr[largest]})<br>`);
+            recordEvent('siftDown', largest, null, `Continue siftDown at index ${largest} (value now ${arr[largest]})<br>`);
             i = largest;
           } else {
             if (2 * i + 1 >= heapSize) {
-              recordEvent('heapifyDone', i, null, `Index ${i} is a leaf; heapify complete<br>`);
+              recordEvent('siftDownDone', i, null, `Index ${i} is a leaf; siftDown is complete<br>`);
             } else {
-              recordEvent('heapifyDone', i, null, `Index ${i} is larger than its children; heapify complete<br>`);
+              recordEvent('siftDownDone', i, null, `Index ${i} is larger than its children; siftDown is complete<br>`);
             }
             break;
           }
@@ -254,7 +254,7 @@
       }
 
       for (let i = Math.floor(n / 2) - 1; i >= 0; i--) {
-        recordEvent('heapifyStart', i, null, `Heapify subtree rooted at index ${i} (value ${arr[i]}); heap size = ${heapSize}<br>Determining largest element between root and its children`);
+        recordEvent('siftDownStart', i, null, `Run siftDown on the subtree rooted at index ${i} (value ${arr[i]}); heap size = ${heapSize}<br>Determining the largest element among the root and its children`);
         siftDown(i);
         builtRoots.push(i);
         recordEvent('heapBuilt', i, null, `Subtree rooted at index ${i} is now a valid max-heap<br>`);
@@ -272,7 +272,7 @@
         // Step 2: remove node from heap
         heapSize--;
         recordEvent('remove', i, null, `Remove node at index ${i} (value ${arr[i]}) from heap and add to sorted region<br>`);
-        recordEvent('heapifyStart', 0, null, `Re-heapify root at index 0 (value ${arr[0]}) after removal; new heap size = ${heapSize}<br>Determining largest element between root and its children`);
+        recordEvent('siftDownStart', 0, null, `Run siftDown at the root (index 0, value ${arr[0]}) after moving the maximum; new heap size = ${heapSize}<br>Determining the largest element among the root and its children`);
         siftDown(0);
       }
       heapSize = 0;
@@ -322,9 +322,9 @@
         cell.textContent = event.array[idx];
 
         // Apply color‐coding exactly as before
-        if ((event.type === 'heapifyStart' || event.type === 'heapify') && idx === event.i) {
+        if ((event.type === 'siftDownStart' || event.type === 'siftDown') && idx === event.i) {
           cell.classList.remove('heap');
-          cell.classList.add('array-heapify');
+          cell.classList.add('array-sift-down');
         } else if (event.type === 'compare' && (idx === event.i || idx === event.j)) {
           cell.classList.add('comparing');
         } else if (event.type === 'swap' && (idx === event.i || idx === event.j)) {
@@ -400,8 +400,8 @@
           g.classList.add('comparing');
         } else if (event.type === 'swap' && (i === event.i || i === event.j)) {
           g.classList.add('swap');
-        } else if ((event.type === 'heapifyStart' || event.type === 'heapify') && i === event.i) {
-          g.classList.add('array-heapify');
+        } else if ((event.type === 'siftDownStart' || event.type === 'siftDown') && i === event.i) {
+          g.classList.add('array-sift-down');
         } else if (stepIndex < sortingStartIndex && event.builtRoots.includes(i)) {
           g.classList.add('heap');
         }

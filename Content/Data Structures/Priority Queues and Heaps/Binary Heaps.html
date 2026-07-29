@@ -25,56 +25,65 @@
   <section id="overview" section-title="Overview">
     <h2>Overview</h2>
     <p>
-      A <strong>binary heap</strong> is a compact tree-shaped structure used to implement priority queues. It stores
-      elements in a <em>complete binary tree</em> and maintains a simple parent-child ordering rule called the
-      <em>heap property</em>.
+      A <strong>binary heap</strong> is a tree-shaped data structure that keeps
+      one extreme entry—the minimum or maximum—easy to access. It combines two
+      rules: the tree has a complete shape, and every parent has at least as
+      much priority as its children. Those rules are weak enough to maintain
+      efficiently but strong enough to place the best entry at the root.
     </p>
     <p>
-      In a <strong>max-heap</strong>, every parent is at least as large as its children, so the maximum value is at
-      the root. In a <strong>min-heap</strong>, every parent is at most as large as its children, so the minimum value
-      is at the root. This page uses max-heaps as the default example; min-heaps reverse the comparisons.
+      It is helpful to separate interface from representation. A
+      <strong>priority queue</strong> is the abstract data type: it specifies
+      operations such as insertion, inspecting the best entry, and removing the
+      best entry. A binary heap is a concrete data structure that implements
+      that interface. People sometimes speak informally of the “heap ADT”
+      because a heap object exposes the same operations, but the important
+      distinction is that the priority queue describes <em>what</em> clients
+      may do while the binary heap describes <em>how</em> those operations are
+      represented and maintained.
     </p>
     <p>
-      Binary heaps are the standard introductory heap implementation because they are simple, array-based, and fast in
-      practice. They support efficient <code>insert</code>, <code>peekMax</code>, <code>extractMax</code>,
-      <code>heapify</code>, and <code>buildMaxHeap</code> operations. The detailed mechanics and code for those
-      operations are on the <a href="?path=Data%20Structures%2FPriority%20Queues%20and%20Heaps%2FHeap%20Construction%20and%20Heapsort">Heap Operations</a>
+      This page develops max-heaps, where larger keys have higher priority.
+      Min-heaps use exactly the same structure and algorithms with the
+      comparisons reversed. For the priority-queue interface and other
+      implementation choices, review the
+      <a href="?path=Data%20Structures%2FPriority%20Queues%20and%20Heaps%2FPriority%20Queues">Priority Queues</a>
       page.
     </p>
   </section>
 
-  <section id="relationship-to-priority-queues" section-title="Relationship to Priority Queues">
-    <h2>Relationship to Priority Queues</h2>
+  <section id="structure-and-invariants" section-title="Structure and Invariants">
+    <h2>Structure and Invariants</h2>
     <p>
-      A priority queue is an abstract data type: it says that entries are removed by priority. A binary heap is one
-      implementation of that ADT. The heap property guarantees that the next entry to remove is easy to find, while
-      the complete-tree shape keeps the structure compact.
+      Every valid binary heap satisfies a <strong>shape invariant</strong> and
+      an <strong>order invariant</strong>. An operation is not finished until
+      both are true.
     </p>
-    <p>
-      A heap does not keep all entries sorted. It keeps just enough order to make the best entry available at the
-      root. That weaker ordering is the reason heaps can insert and extract in \(O(\log n)\) time without paying the
-      full cost of maintaining a completely sorted list.
-    </p>
-    <p>
-      For the broader ADT view, including unsorted lists, sorted lists, balanced search trees, and specialized heap
-      families, see the <a href="?path=Data%20Structures%2FPriority%20Queues%20and%20Heaps%2FPriority%20Queues">Priority Queue ADT</a>
-      page.
-    </p>
-  </section>
 
-  <section id="heap-property" section-title="Heap Property">
-    <h2>Heap Property</h2>
+    <h3>Complete-tree shape</h3>
     <p>
-      The heap property is a local rule between each parent and its children.
+      The heap is a complete binary tree: every level is full except possibly
+      the last, and the last level is occupied from left to right. Consequently,
+      a heap with \(n\) entries has height \(\lfloor\log_2 n\rfloor\). There is
+      only one legal position for the next inserted entry and only one leaf
+      that can be removed without creating a gap.
     </p>
+
+    <h3>Heap order</h3>
     <ul>
-      <li><strong>Max-heap property:</strong> every parent is greater than or equal to each child.</li>
-      <li><strong>Min-heap property:</strong> every parent is less than or equal to each child.</li>
+      <li>
+        In a <strong>max-heap</strong>, each parent’s key is greater than or
+        equal to the keys of its children.
+      </li>
+      <li>
+        In a <strong>min-heap</strong>, each parent’s key is less than or equal
+        to the keys of its children.
+      </li>
     </ul>
     <p>
-      The rule is local, but it implies a useful global fact: the maximum value in a max-heap is at the root, and the
-      minimum value in a min-heap is at the root. It does <em>not</em> imply that siblings are ordered, that the left
-      child is smaller than the right child, or that an inorder traversal produces sorted output.
+      The rule is local, but it implies that the root is globally best. It does
+      not order siblings or entries in different branches, and a heap should
+      never be mistaken for a sorted array or a binary search tree.
     </p>
     <pre><code>        90
       /    \
@@ -82,268 +91,437 @@
    /  \    /  \
   31  60  40  10</code></pre>
     <p>
-      This is a valid max-heap. The root is the maximum. The left and right subtrees are not sorted lists; they only
-      obey the parent-child rule.
-    </p>
-  </section>
-
-  <section id="complete-tree-shape" section-title="Complete Binary Tree Shape">
-    <h2>Complete Binary Tree Shape</h2>
-    <p>
-      A binary heap is not just any binary tree. It is a <strong>complete binary tree</strong>: every level is full
-      except possibly the last, and the last level is filled from left to right.
-    </p>
-    <p>
-      Completeness matters because it keeps the height small. A complete binary tree with \(n\) nodes has height
-      \(\lfloor \log n \rfloor\), so operations that move one level at a time take \(O(\log n)\) steps in the worst
-      case.
-    </p>
-    <p>
-      Completeness also makes the array representation possible. Since there are no gaps before the final node in
-      level order, the heap can be stored compactly without explicit node objects or child references.
+      This is a valid max-heap. Every parent dominates its children, even
+      though values such as <code>72</code> and <code>85</code> do not appear
+      in sorted order from left to right.
     </p>
   </section>
 
   <section id="array-representation" section-title="Array Representation">
     <h2>Array Representation</h2>
     <p>
-      Binary heaps are usually stored in an array. The array lists the tree nodes in level-order: root first, then the
-      next level from left to right, and so on.
-    </p>
-    <p>
-      With zero-based indexing, the relatives of the node at index \(i\) are:
+      Completeness lets a binary heap use an array instead of linked tree
+      nodes. Store the nodes in level order: root first, then each level from
+      left to right. With zero-based indexing, the relatives of index \(i\)
+      are:
     </p>
     <ul>
-      <li>left child: \(2i + 1\)</li>
-      <li>right child: \(2i + 2\)</li>
-      <li>parent: \(\lfloor(i - 1)/2\rfloor\)</li>
+      <li>left child: \(2i+1\),</li>
+      <li>right child: \(2i+2\), and</li>
+      <li>parent, when \(i&gt;0\): \(\lfloor(i-1)/2\rfloor\).</li>
     </ul>
     <p>
-      These formulas are the main reason binary heaps are so compact. The implementation does not store
-      <code>left</code>, <code>right</code>, or <code>parent</code> references. It computes those positions from the
-      index.
+      For the example above, the array is
+      <code>[90, 72, 85, 31, 60, 40, 10]</code>. The children of index
+      <code>2</code> are at indices <code>5</code> and <code>6</code>, and its
+      parent is at index <code>0</code>.
     </p>
     <p>
-      In practice, a heap often stores a backing array and a separate <code>heapSize</code>. The physical array may
-      have extra capacity, but only indices <code>0</code> through <code>heapSize - 1</code> are currently part of
-      the heap. Every child-index calculation must be checked against <code>heapSize</code>, not just the physical
-      array length.
+      A resizable implementation stores both a backing array and a logical
+      <code>size</code>. Only indices <code>0</code> through
+      <code>size - 1</code> belong to the heap; later cells are unused capacity.
+      Child tests must therefore compare against <code>size</code>, not the
+      physical array length.
     </p>
     <div class="embeddedDemoContainer">
-      <iframe
-        class="embeddedDemo"
-        src="../../../Content/Demos/Data Structures/Heap/Heap Representation Demo.html"
-        allow="fullscreen"
-        name="heap-representation-demo">
+      <iframe class="embeddedDemo"
+              src="../../../Content/Demos/Data Structures/Heap/Heap Representation Demo.html"
+              allow="fullscreen"
+              name="heap-representation-demo">
       </iframe>
     </div>
   </section>
 
-  <section id="worked-example" section-title="Worked Example">
-    <h2>Worked Example</h2>
+  <section id="core-operations" section-title="Core Operations">
+    <h2>Core Operations</h2>
     <p>
-      Suppose the array representation is:
-    </p>
-    <pre><code>index:  0   1   2   3   4   5   6
-value: 90  72  85  31  60  40  10</code></pre>
-    <p>
-      The tree view is:
-    </p>
-    <pre><code>        90
-      /    \
-    72      85
-   /  \    /  \
-  31  60  40  10</code></pre>
-    <p>
-      For the value at index <code>2</code>, the left child is at \(2(2) + 1 = 5\), the right child is at
-      \(2(2) + 2 = 6\), and the parent is at \(\lfloor(2 - 1)/2\rfloor = 0\). In the array, those values are
-      <code>40</code>, <code>10</code>, and <code>90</code>.
-    </p>
-    <p>
-      The heap property holds because every parent is at least as large as its children. The array itself is not
-      sorted: <code>72</code> appears before <code>85</code>, but that is allowed because they are siblings in
-      different subtrees.
-    </p>
-  </section>
-
-  <section id="operation-overview" section-title="Operation Overview">
-    <h2>Operation Overview</h2>
-    <p>
-      Heap operations preserve two invariants: the tree must stay complete, and the heap property must hold. Updates
-      usually repair the heap by moving one value up or down a root-to-leaf path.
-    </p>
-    <ul>
-      <li><strong><code>peekMax</code>:</strong> return <code>A[0]</code> after checking that the heap is nonempty.</li>
-      <li><strong><code>heapify(A, i, heapSize)</code>:</strong> repair a local violation by moving a value downward.</li>
-      <li><strong><code>buildMaxHeap(A)</code>:</strong> turn an arbitrary array into a heap by heapifying internal nodes from bottom to top.</li>
-      <li><strong><code>insert(A, value, heapSize)</code>:</strong> add the value at the next open leaf position and bubble it upward.</li>
-      <li><strong><code>extractMax(A, heapSize)</code>:</strong> remove the root, move the last heap item to the root, shrink the heap, and heapify downward.</li>
-    </ul>
-    <p>
-      The <a href="?path=Data%20Structures%2FPriority%20Queues%20and%20Heaps%2FHeap%20Construction%20and%20Heapsort">Heap Operations</a>
-      page contains the operation demos, pseudocode, Java/C++/Python code, and per-operation time/space analysis.
-    </p>
-  </section>
-
-  <section id="costs" section-title="Operation Costs">
-    <h2>Operation Costs</h2>
-    <p>
-      The height of a binary heap with \(n\) elements is \(\lfloor \log n \rfloor\), which determines the worst-case
-      cost of the operations that move along one path.
+      The public operations match the priority-queue interface. The table uses
+      max-heap names to make the selected extreme explicit; a generic class
+      could instead use names such as <code>peekBest</code> and
+      <code>extractBest</code>.
     </p>
     <table class="example-table">
       <thead>
         <tr>
           <th>Operation</th>
-          <th>Binary Max-Heap Cost</th>
-          <th>Reason</th>
+          <th>Behavior</th>
+          <th>Worst-Case Time</th>
         </tr>
       </thead>
       <tbody>
         <tr>
-          <td><code>peekMax</code></td>
-          <td>\(O(1)\)</td>
-          <td>The maximum is always stored at the root.</td>
+          <td><code>isEmpty()</code></td>
+          <td>Report whether the logical size is zero.</td>
+          <td>\(\Theta(1)\)</td>
         </tr>
         <tr>
-          <td><code>insert</code></td>
+          <td><code>size()</code></td>
+          <td>Return the number of stored entries.</td>
+          <td>\(\Theta(1)\)</td>
+        </tr>
+        <tr>
+          <td><code>peekMax()</code></td>
+          <td>Return the root without removing it.</td>
+          <td>\(\Theta(1)\)</td>
+        </tr>
+        <tr>
+          <td><code>insert(entry)</code></td>
+          <td>Add one entry and repair upward.</td>
+          <td>\(O(n)\) on a resize; \(O(\log n)\) amortized</td>
+        </tr>
+        <tr>
+          <td><code>extractMax()</code></td>
+          <td>Remove the root and repair downward.</td>
           <td>\(O(\log n)\)</td>
-          <td>The new value may bubble from a leaf to the root.</td>
-        </tr>
-        <tr>
-          <td><code>extractMax</code></td>
-          <td>\(O(\log n)\)</td>
-          <td>The replacement root may move down one path.</td>
-        </tr>
-        <tr>
-          <td><code>heapify</code></td>
-          <td>\(O(\log n)\)</td>
-          <td>The repair travels downward through at most the heap height.</td>
-        </tr>
-        <tr>
-          <td><code>buildMaxHeap</code></td>
-          <td>\(O(n)\)</td>
-          <td>Most heapify calls occur near the bottom on small subtrees.</td>
-        </tr>
-        <tr>
-          <td>extra space</td>
-          <td>\(O(n)\) storage, \(O(1)\) auxiliary for iterative operations</td>
-          <td>The array stores the heap compactly without node references.</td>
         </tr>
       </tbody>
     </table>
+    <p>
+      Two private helpers do the structural repair.
+      <code>siftUp</code> moves a newly inserted entry toward the root, while
+      <code>siftDown</code> moves a replacement root toward the leaves.
+      These helpers are implementation mechanisms, not additional
+      priority-queue operations exposed to clients.
+    </p>
   </section>
 
-  <section id="heapsort" section-title="Heapsort Connection">
-    <h2>Heapsort Connection</h2>
+  <section id="operation-behavior" section-title="How the Operations Work">
+    <h2>How the Operations Work</h2>
+
+    <h3>Inspecting the maximum</h3>
     <p>
-      Heapsort is a sorting algorithm built directly from binary heap operations. First, build a max-heap from the
-      input array. Then repeatedly swap the root with the last item in the current heap, shrink the heap size, and
-      heapify the root. Each extraction places the next largest value into its final sorted position.
+      In a nonempty max-heap, the heap property guarantees that the maximum is
+      at index <code>0</code>. Inspection therefore requires no traversal.
+      The implementation must still define an empty-heap policy, such as
+      returning an optional result or raising an exception.
+    </p>
+
+    <h3>Insertion and upward repair</h3>
+    <p>
+      To preserve completeness, append the new entry at index
+      <code>size</code>. The old heap remains valid, so the only possible order
+      violation lies between the new leaf and its parent. Compare those two
+      entries and swap while the child has higher priority.
     </p>
     <p>
-      This is why <code>heapSize</code> is useful: during Heapsort, the same physical array contains a heap prefix and
-      a sorted suffix. The heap operations must treat only the prefix as active. See
-      <a href="?path=Algorithms%2FTransform-and-Conquer%2FHeapsort">Heapsort</a> for the full sorting algorithm.
+      For example, insert <code>88</code> into
+      <code>[90, 72, 85, 31, 60, 40, 10]</code>. It first occupies index
+      <code>7</code>. It swaps with <code>31</code>, then with
+      <code>72</code>, and stops below <code>90</code>:
+    </p>
+    <pre><code>[90, 72, 85, 31, 60, 40, 10, 88]
+[90, 72, 85, 88, 60, 40, 10, 31]
+[90, 88, 85, 72, 60, 40, 10, 31]</code></pre>
+    <div class="embeddedDemoContainer">
+      <iframe class="embeddedDemo"
+              src="../../../Content/Demos/Data Structures/Heap/Insert Demo.html"
+              allow="fullscreen"
+              name="heap-insert-demo">
+      </iframe>
+    </div>
+
+    <h3>Downward repair with <code>siftDown</code></h3>
+    <p>
+      Downward repair begins at an index whose left and right child subtrees
+      are already valid heaps. Only the entry at that index may violate heap
+      order. Compare it with both children, swap it with the higher-priority
+      child when necessary, and continue from that child's index. The process
+      stops at a leaf or when the entry already dominates both children.
+    </p>
+    <p>
+      This precondition matters: <code>siftDown</code> repairs one root-to-leaf
+      path, not arbitrary disorder throughout a subtree. The demo lets you
+      change one entry and follow each comparison and swap in the repair.
+    </p>
+    <div class="embeddedDemoContainer">
+      <iframe class="embeddedDemo"
+              src="../../../Content/Demos/Data Structures/Heap/SiftDown Demo.html"
+              allow="fullscreen"
+              name="heap-sift-down-demo">
+      </iframe>
+    </div>
+
+    <h3>Extraction and downward repair</h3>
+    <p>
+      Removing the root directly would leave a gap at the top. Instead, save
+      the root for return, move the final used entry to index <code>0</code>,
+      reduce the size, and repair downward. At each step, compare both children
+      and swap with the higher-priority child. Choosing merely the left child
+      can leave a violation with the right child.
+    </p>
+    <p>
+      Extracting <code>90</code> from
+      <code>[90, 72, 85, 31, 60, 40, 10]</code> moves <code>10</code> to the
+      root. It then swaps with <code>85</code> and finally with
+      <code>40</code>:
+    </p>
+    <pre><code>[10, 72, 85, 31, 60, 40]
+[85, 72, 10, 31, 60, 40]
+[85, 72, 40, 31, 60, 10]</code></pre>
+    <div class="embeddedDemoContainer">
+      <iframe class="embeddedDemo"
+              src="../../../Content/Demos/Data Structures/Heap/ExtractMax Demo.html"
+              allow="fullscreen"
+              name="heap-extract-demo">
+      </iframe>
+    </div>
+  </section>
+
+  <section id="implementation" section-title="Pseudocode Implementation">
+    <h2>Pseudocode Implementation</h2>
+    <p>
+      The following pseudocode describes a max-heap backed by a resizable
+      array. A min-heap changes only <code>higherPriority</code>. A stable
+      priority queue can compare entries first by key and then by an insertion
+      sequence number, as discussed on the
+      <a href="?path=Data%20Structures%2FPriority%20Queues%20and%20Heaps%2FPriority%20Queues">Priority Queues</a>
+      page.
+    </p>
+
+    <h3>Index and comparison helpers</h3>
+    <pre><code>parent(i):
+    return floor((i - 1) / 2)
+
+leftChild(i):
+    return 2 * i + 1
+
+rightChild(i):
+    return 2 * i + 2
+
+higherPriority(first, second):
+    return first.key &gt; second.key</code></pre>
+
+    <h3>Basic queries</h3>
+    <pre><code>isEmpty(H):
+    return H.size == 0
+
+size(H):
+    return H.size
+
+peekMax(H):
+    if H.size == 0:
+        signal EMPTY_HEAP
+    return H.A[0]</code></pre>
+
+    <h3>Insertion</h3>
+    <pre><code>insert(H, entry):
+    if H.size == length(H.A):
+        doubleCapacity(H.A)
+
+    H.A[H.size] = entry
+    H.size = H.size + 1
+    siftUp(H, H.size - 1)
+
+siftUp(H, i):
+    while i &gt; 0:
+        p = parent(i)
+        if not higherPriority(H.A[i], H.A[p]):
+            return
+        swap(H.A[i], H.A[p])
+        i = p</code></pre>
+
+    <h3>Downward repair</h3>
+    <pre><code>siftDown(H, i):
+    while true:
+        best = i
+        left = leftChild(i)
+        right = rightChild(i)
+
+        if left &lt; H.size and higherPriority(H.A[left], H.A[best]):
+            best = left
+        if right &lt; H.size and higherPriority(H.A[right], H.A[best]):
+            best = right
+
+        if best == i:
+            return
+
+        swap(H.A[i], H.A[best])
+        i = best</code></pre>
+
+    <h3>Extraction</h3>
+    <pre><code>extractMax(H):
+    if H.size == 0:
+        signal EMPTY_HEAP
+
+    best = H.A[0]
+    H.size = H.size - 1
+
+    if H.size &gt; 0:
+        H.A[0] = H.A[H.size]
+        H.A[H.size] = EMPTY
+        siftDown(H, 0)
+    else:
+        H.A[0] = EMPTY
+
+    return best</code></pre>
+  </section>
+
+  <section id="analysis" section-title="Time/Space Analysis">
+    <h2>Time/Space Analysis</h2>
+    <p>
+      A complete tree has logarithmic height. Both repair helpers follow only
+      one path, so insertion and extraction take \(O(\log n)\) time in the
+      worst case. Inspection, size, and emptiness checks use stored fields or
+      the root and therefore take \(\Theta(1)\) time.
+    </p>
+    <p>
+      The heap stores \(n\) entries in \(\Theta(n)\) array space. Iterative
+      repair uses \(\Theta(1)\) auxiliary space. A recursive downward repair
+      instead consumes \(O(\log n)\) call-stack space. Array growth makes an
+      occasional insertion take \(\Theta(n)\), but doubling capacity keeps
+      insertion \(O(\log n)\) amortized because the logarithmic repair already
+      dominates the constant amortized resizing cost.
+    </p>
+    <p>
+      Finding an arbitrary entry by value or key is still \(O(n)\). Heap order
+      tells us where the best entry is, not where a particular non-root entry
+      is. Applications needing fast arbitrary search often maintain a separate
+      map from identifiers to heap indices.
     </p>
   </section>
 
   <section id="applications" section-title="Applications">
     <h2>Applications</h2>
     <ul>
-      <li><strong>Priority queues:</strong> Binary heaps are the usual first implementation choice for repeated insert and extract operations.</li>
-      <li><strong>Graph algorithms:</strong> Dijkstra's algorithm and Prim's algorithm commonly use min-heaps to select the next vertex or edge.</li>
-      <li><strong>Selection problems:</strong> A heap can keep the top \(k\) or bottom \(k\) items seen so far.</li>
-      <li><strong>Event simulation:</strong> A min-heap can process future events in increasing time order.</li>
-      <li><strong>Huffman encoding:</strong> A min-heap repeatedly provides the two lowest-frequency trees.</li>
-      <li><strong>Heapsort:</strong> A max-heap supports in-place \(O(n \log n)\) sorting by repeated extraction.</li>
+      <li>
+        <strong>Scheduling:</strong> choose the most urgent waiting job while
+        allowing new jobs to arrive.
+      </li>
+      <li>
+        <strong>Graph algorithms:</strong> min-heaps commonly select the next
+        lowest-cost vertex in shortest-path and minimum-spanning-tree methods.
+      </li>
+      <li>
+        <strong>Event simulation:</strong> process the event with the earliest
+        scheduled time.
+      </li>
+      <li>
+        <strong>Top-\(k\) selection:</strong> keep a small heap of the best
+        values observed in a much larger stream.
+      </li>
+      <li>
+        <strong>Huffman encoding:</strong> repeatedly obtain the two
+        lowest-frequency trees from a min-priority queue.
+      </li>
     </ul>
   </section>
 
   <section id="comparison" section-title="Comparisons and Tradeoffs">
     <h2>Comparisons and Tradeoffs</h2>
     <ul>
-      <li><strong>Heap vs. sorted array:</strong> A sorted array gives easy access to the maximum or minimum, but inserting into sorted position can require shifting. A heap keeps insertion logarithmic.</li>
-      <li><strong>Heap vs. unsorted array:</strong> An unsorted array can insert cheaply, but finding the best item requires scanning. A heap makes extraction logarithmic.</li>
-      <li><strong>Heap vs. binary search tree:</strong> A heap gives fast access to the extreme value but does not support ordered search well. A balanced search tree supports ordered search and traversal, often with more overhead.</li>
-      <li><strong>Array heap vs. linked tree:</strong> Array heaps avoid pointer overhead and have good cache locality because elements are packed contiguously.</li>
-      <li><strong>Binary heap vs. specialized heaps:</strong> Binary heaps are simple and usually fast in practice. Binomial, Fibonacci, pairing, and d-ary heaps target more specialized operation mixes.</li>
+      <li>
+        <strong>Compared with a sorted array:</strong> both expose the best
+        entry in constant time, but the heap avoids linear shifting during
+        insertion.
+      </li>
+      <li>
+        <strong>Compared with an unsorted array:</strong> the heap spends more
+        time inserting but avoids a linear scan during inspection or removal.
+      </li>
+      <li>
+        <strong>Compared with a balanced search tree:</strong> the heap is
+        compact and specializes in an extreme entry; a search tree supports
+        arbitrary ordered search and traversal.
+      </li>
+      <li>
+        <strong>Compared with linked trees:</strong> the array representation
+        avoids child references and usually has good cache locality.
+      </li>
     </ul>
   </section>
 
   <section id="variations" section-title="Variations and Extensions">
     <h2>Variations and Extensions</h2>
     <ul>
-      <li><strong>Min-heaps:</strong> Reverse the comparisons so the minimum value is stored at the root.</li>
-      <li><strong>d-ary heaps:</strong> Give each node more than two children, reducing height but increasing the number of child comparisons during downward repair.</li>
-      <li><strong>Binomial heaps:</strong> Organize elements as a forest of heap-ordered trees and support efficient merging.</li>
-      <li><strong>Fibonacci heaps:</strong> Improve some theoretical bounds, especially for repeated decrease-key operations.</li>
-      <li><strong>Pairing heaps:</strong> A practical meldable heap family often discussed as a simpler alternative to Fibonacci heaps.</li>
+      <li><strong>Min-heaps:</strong> reverse the priority comparison.</li>
+      <li>
+        <strong>d-ary heaps:</strong> use more children per node, reducing
+        height while increasing child comparisons during downward repair.
+      </li>
+      <li>
+        <strong>Indexed heaps:</strong> maintain identifier-to-index mappings
+        to support priority changes efficiently.
+      </li>
+      <li>
+        <strong>Meldable heap families:</strong> binomial, Fibonacci, and
+        pairing heaps support different operation tradeoffs, especially when
+        merging is important.
+      </li>
     </ul>
   </section>
 
   <section id="pitfalls" section-title="Common Pitfalls">
     <h2>Common Pitfalls</h2>
     <ul>
-      <li><strong>Assuming the heap array is sorted:</strong> Only parent-child order is guaranteed.</li>
-      <li><strong>Using the wrong index formulas:</strong> The formulas on this page are for zero-based indexing; one-based heaps use different formulas.</li>
-      <li><strong>Checking against array length instead of <code>heapSize</code>:</strong> Extra capacity or a Heapsort suffix may exist outside the active heap.</li>
-      <li><strong>Confusing min-heaps and max-heaps:</strong> The direction of every comparison must match the priority convention.</li>
-      <li><strong>Forgetting empty-heap behavior:</strong> <code>peekMax</code> and <code>extractMax</code> need a defined policy when the heap has no elements.</li>
-      <li><strong>Breaking the shape invariant:</strong> Heap insertion must add at the next open leaf position, not at an arbitrary tree location.</li>
+      <li><strong>Assuming total order:</strong> only parent-child order is guaranteed.</li>
+      <li><strong>Mixing index conventions:</strong> zero-based and one-based heaps use different formulas.</li>
+      <li><strong>Using capacity as size:</strong> unused array cells are not heap entries.</li>
+      <li><strong>Choosing the wrong child:</strong> downward repair must compare both children.</li>
+      <li><strong>Repairing in the wrong direction:</strong> insertion repairs upward; root replacement repairs downward.</li>
+      <li><strong>Ignoring ties:</strong> a stable priority queue needs an explicit and consistently applied tie policy.</li>
+      <li><strong>Forgetting empty behavior:</strong> inspection and extraction need a documented empty-heap policy.</li>
     </ul>
   </section>
 
   <section id="summary" section-title="Summary">
     <h2>Summary</h2>
     <p>
-      A binary heap is a complete binary tree stored compactly in an array. The heap property puts the maximum or
-      minimum at the root without fully sorting the structure. This gives binary heaps their useful balance:
-      constant-time peek, logarithmic insertion and extraction, and linear-time heap construction.
+      A binary heap is a complete binary tree stored compactly in an array. Its
+      local heap-order rule places the best entry at the root without fully
+      ordering the remaining entries. As a priority-queue implementation, it
+      provides constant-time inspection and logarithmic insertion and
+      extraction using upward and downward path repairs.
     </p>
   </section>
 
   <section id="related-pages" section-title="Related Pages">
     <h2>Related Pages</h2>
     <ul>
-      <li><a href="?path=Data%20Structures%2FPriority%20Queues%20and%20Heaps%2FPriority%20Queues">Priority Queue ADT</a>, for the abstract interface and implementation alternatives.</li>
-      <li><a href="?path=Data%20Structures%2FPriority%20Queues%20and%20Heaps%2FHeap%20Construction%20and%20Heapsort">Heap Operations</a>, for detailed operation demos, code, and analysis.</li>
-      <li><a href="?path=Algorithms%2FTransform-and-Conquer%2FHeapsort">Heapsort</a>, which uses heap construction and repeated extraction to sort in place.</li>
-      <li><a href="?path=Data%20Structures%2FLinear%20Structures%2FRepresenting%20Linear%20Structures">Arrays</a>, the storage model used by binary heaps.</li>
+      <li>
+        <a href="?path=Data%20Structures%2FPriority%20Queues%20and%20Heaps%2FPriority%20Queues">Priority Queues</a>,
+        for the ADT, simple array implementations, and stability policies.
+      </li>
+      <li>
+        <a href="?path=Data%20Structures%2FLinear%20Structures%2FRepresenting%20Linear%20Structures">Representing Linear Structures</a>,
+        for array storage and resizing fundamentals.
+      </li>
+      <li>
+        <a href="?path=Data%20Structures%2FTrees%2FBinary%20Trees">Binary Trees</a>,
+        for binary-tree terminology and shape.
+      </li>
     </ul>
   </section>
 
   <section id="links" section-title="Helpful Links and Resources">
     <h2>Helpful Links and Resources</h2>
     <ul>
-      <li><a href="https://opendatastructures.org/ods-java/10_1_Implicit_Binary_Tree.html" target="_blank">Open Data Structures: BinaryHeap</a> Discusses the implicit binary tree representation.</li>
-      <li><a href="https://opendsa.cs.vt.edu/ODSA/Books/Everything/html/Heaps.html" target="_blank">OpenDSA: Heaps and Priority Queues</a> Connects priority queues with heap implementation details.</li>
-      <li><a href="https://en.wikipedia.org/wiki/Binary_heap" target="_blank">Binary Heap (Wikipedia)</a> General reference on binary heap structure, operations, and analysis.</li>
-      <li><a href="https://en.wikipedia.org/wiki/Binomial_heap" target="_blank">Binomial Heap (Wikipedia)</a> Useful for comparing binary heaps with merge-friendly heap variants.</li>
-      <li><a href="https://en.wikipedia.org/wiki/Fibonacci_heap" target="_blank">Fibonacci Heap (Wikipedia)</a> Useful for seeing how theoretical heap improvements change the tradeoffs.</li>
-      <li><a href="https://docs.python.org/3/library/heapq.html" target="_blank">Python <code>heapq</code></a> Shows a real standard-library heap interface.</li>
+      <li><a href="https://opendatastructures.org/ods-java/10_1_Implicit_Binary_Tree.html" target="_blank">Open Data Structures: BinaryHeap</a></li>
+      <li><a href="https://opendsa.cs.vt.edu/ODSA/Books/Everything/html/Heaps.html" target="_blank">OpenDSA: Heaps and Priority Queues</a></li>
+      <li><a href="https://docs.python.org/3/library/heapq.html" target="_blank">Python <code>heapq</code></a></li>
     </ul>
   </section>
 
   <section id="reading-questions" section-title="Reading Comprehension Questions">
     <h2>Reading Comprehension Questions</h2>
     <ol>
-      <li><strong>Shape vs. Order:</strong> Why does the completeness of the binary tree make an array implementation possible?</li>
-      <li><strong>Heap Property:</strong> What does a max-heap guarantee about each parent and its children?</li>
-      <li><strong>Not Fully Sorted:</strong> What ordering information does a max-heap guarantee, and what does it not guarantee?</li>
-      <li><strong>Index Formulas:</strong> In a zero-based heap array, where are the children of index <code>i</code>?</li>
-      <li><strong>Heap Size:</strong> Why might <code>heapSize</code> be smaller than the physical array length?</li>
-      <li><strong>Heapsort:</strong> Why is it useful for Heapsort to keep a heap prefix and a sorted suffix in the same array?</li>
+      <li>What is the difference between the priority-queue ADT and a binary heap?</li>
+      <li>Why does completeness allow a binary heap to omit child references?</li>
+      <li>What does max-heap order guarantee, and what does it leave unordered?</li>
+      <li>Why can inspection return the maximum in constant time?</li>
+      <li>Why does insertion repair upward rather than downward?</li>
+      <li>Why must extraction compare both children during downward repair?</li>
+      <li>Why is arbitrary search still linear in the worst case?</li>
     </ol>
     <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
     <div id="answers" class="answer" hidden>
       <ol>
-        <li><strong>Answer:</strong> A complete binary tree has no internal gaps, so its nodes can be listed level by level in a contiguous array while preserving fixed parent-child index formulas.</li>
-        <li><strong>Answer:</strong> Every parent is greater than or equal to each of its children.</li>
-        <li><strong>Answer:</strong> A max-heap guarantees that every parent is at least as large as its children, so the root is the maximum. It does not guarantee that siblings or nodes in different branches are in sorted order.</li>
-        <li><strong>Answer:</strong> The left child is at \(2i + 1\), and the right child is at \(2i + 2\).</li>
-        <li><strong>Answer:</strong> The array may have extra capacity, or part of the array may hold values outside the active heap, as in Heapsort.</li>
-        <li><strong>Answer:</strong> It lets the algorithm sort in place: the active heap shrinks while extracted maximum values accumulate in final sorted positions.</li>
+        <li>The ADT specifies priority-based behavior; the heap is one concrete representation that provides it.</li>
+        <li>A complete tree has no interior gaps, so level-order positions map to contiguous array indices.</li>
+        <li>Each parent dominates its children and the root is maximum; siblings and separate branches need not be ordered.</li>
+        <li>The maximum is always the root at index <code>0</code>.</li>
+        <li>The new entry is appended as a leaf, so only its ancestor path can contain a new violation.</li>
+        <li>Swapping with the lower-priority child could leave a violation with the other child.</li>
+        <li>Heap order identifies an extreme entry but provides no search direction for an arbitrary key.</li>
       </ol>
     </div>
   </section>
@@ -351,23 +529,23 @@ value: 90  72  85  31  60  40  10</code></pre>
   <section id="activities" section-title="In-Class Activities">
     <h2>In-Class Activities</h2>
     <ol>
-      <li><strong>Index Mapping Practice:</strong> Give students an array representation of a heap and ask them to label the parent, left child, and right child of selected indices.</li>
-      <li><strong>Heap or Not:</strong> Give several arrays and ask students which ones represent valid max-heaps.</li>
-      <li><strong>Tree-to-Array:</strong> Draw a complete binary tree and convert it into level-order array storage.</li>
-      <li><strong>Not Sorted:</strong> Ask students to construct two different valid max-heaps using the same set of values.</li>
-      <li><strong>Application Match:</strong> Decide whether a heap, sorted array, unsorted array, or balanced search tree fits several priority-queue workloads.</li>
+      <li><strong>Index Mapping:</strong> Translate a seven-entry heap between array and tree views, labeling every parent and child index.</li>
+      <li><strong>Validity Check:</strong> Decide whether several arrays represent max-heaps and identify the first violated edge in each invalid example.</li>
+      <li><strong>Insertion Trace:</strong> Insert values that move zero levels, one level, and all the way to the root.</li>
+      <li><strong>Extraction Trace:</strong> Remove the root and record both child comparisons at every downward step.</li>
+      <li><strong>Comparator Swap:</strong> Convert a max-heap trace into a min-heap trace by identifying exactly which comparisons reverse.</li>
     </ol>
   </section>
 
   <section id="problems" section-title="Homework Problems">
     <h2>Homework Problems</h2>
     <ol>
-      <li><strong>Min-Heap Conversion:</strong> Rewrite the heap property and index-based operation descriptions for a min-heap.</li>
-      <li><strong>Array Validation:</strong> Write an algorithm that determines whether an array represents a valid max-heap.</li>
-      <li><strong>Height Bound:</strong> Explain why a complete binary tree with \(n\) nodes has height \(\Theta(\log n)\).</li>
-      <li><strong>Heapsort Trace:</strong> Starting from an unsorted array, build a max-heap and then trace the repeated root swaps used by Heapsort.</li>
-      <li><strong>Implementation Comparison:</strong> Compare binary heaps, sorted arrays, and balanced search trees for a workload with many inserts, many extracts, and occasional searches by key.</li>
-      <li><strong>Variant Research:</strong> Choose binomial heaps, Fibonacci heaps, pairing heaps, or d-ary heaps and summarize what operation tradeoff motivates that structure.</li>
+      <li><strong>Representation:</strong> Derive the zero-based parent and child formulas from level-order positions.</li>
+      <li><strong>Pseudocode Implementation:</strong> Implement the public operations and both repair helpers from the pseudocode, including dynamic resizing and an empty-heap policy.</li>
+      <li><strong>Stable Entries:</strong> Extend heap entries with sequence numbers and demonstrate stable extraction for repeated keys.</li>
+      <li><strong>Iterative vs. Recursive Repair:</strong> Write a recursive downward repair and compare its auxiliary space with the iterative version.</li>
+      <li><strong>Indexed Heap Design:</strong> Explain how a map from identifiers to indices must be updated after every swap.</li>
+      <li><strong>Workload Comparison:</strong> Compare a binary heap with the sorted- and unsorted-array priority queues for \(n\) insertions and \(n\) extractions.</li>
     </ol>
   </section>
 </body>

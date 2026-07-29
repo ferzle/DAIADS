@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Heapify Demo</title>
+  <title>SiftDown Demo</title>
   <!-- absolute paths as requested -->
   <script src="/DAIADS/scripts/demoScripts.js"></script>
   <link rel="stylesheet" href="/DAIADS/css/style.css">
@@ -20,7 +20,7 @@
       stroke: #666;
       stroke-width: 1.5px;
     }
-    .treeNode.array-heapify circle {
+    .treeNode.array-sift-down circle {
       fill: #FF9999;
       stroke: #666;
       stroke-width: 1.5px;
@@ -51,7 +51,7 @@
     
     .largest  { background-color: #4287f5; color: white; }
     
-    .array-heapify {
+    .array-sift-down {
       background-color: #FF9999;
     }
     .heap {
@@ -137,7 +137,7 @@
 </head>
 
 <body class="no-tooltips">
-  <h2>Heapify Demo</h2>
+  <h2><code>siftDown</code> Demo</h2>
 
   <div id="controls">
     <label>Array size:
@@ -156,7 +156,7 @@
 
   <div class="legend" style="margin-top:10px;">
   <strong>Legend:</strong>
-    <span class="legend-box array-heapify"></span><span class="legend-label">Value changed</span>
+    <span class="legend-box array-sift-down"></span><span class="legend-label">Value changed</span>
     <span class="legend-box comparing"></span><span class="legend-label">Comparing</span>
     <span class="legend-box largest"></span><span class="legend-label">Largest so far</span>
     <span class="legend-box swap"></span><span class="legend-label">Swap</span>
@@ -211,11 +211,11 @@ function showInputAt(x, y, idx) {
     input.remove();     // safe now—only called once
     if (isNaN(newVal)) return;
 
-    // your existing heapify kick-off:
+    // Start siftDown from the changed position.
     originalArr = arr.slice();
     arr = originalArr.slice();
     arr[idx] = newVal;
-    buildHeapifySteps(arr, idx, +heapInput.value);
+    buildSiftDownSteps(arr, idx, +heapInput.value);
     stepIndex = 0;
     demoMode = true;
     renderStep();
@@ -241,12 +241,12 @@ function showInputAt(x, y, idx) {
       });
     }
 
-    // Build the heapify steps for one index
-    function buildHeapifySteps(inputArr, idx, hsize) {
+    // Build the siftDown steps for one index
+    function buildSiftDownSteps(inputArr, idx, hsize) {
       arr = inputArr.slice();
       steps = [];
       recordEvent('start', idx, null,
-        `Start heapify at index ${idx} (value ${arr[idx]})`);
+        `Start siftDown at index ${idx} (value ${arr[idx]})`);
 
       let i = idx;
       while (true) {
@@ -272,36 +272,36 @@ function showInputAt(x, y, idx) {
                   // swap
                   recordEvent('swap', i, largest,`Swapping ${arr[i]} (index ${i}) with right child ${arr[largest]} (index ${largest})`);
                   [arr[i], arr[largest]] = [arr[largest], arr[i]];
-                  recordEvent('swap', i, largest, `Swap done. Continuing heapify on right child.`);
+                  recordEvent('swap', i, largest, `Swap done. Continue siftDown at the right child.`);
                   i = largest;
                 } else {
                     if(largest=== i) { // parent largest
-                        recordEvent('done', largest, null, `Right child ${arr[right]} (index ${right}) is no larger.<br> Parent is largest, so heapify complete.<br>Click another array element or tree node to do it again.`);
+                        recordEvent('done', largest, null, `Right child ${arr[right]} (index ${right}) is no larger.<br>The parent is largest, so siftDown is complete.<br>Click another array element or tree node to do it again.`);
                            break;
                     } else { // left is largest
                         recordEvent('largest', largest, null, `Right child ${arr[right]} (index ${right}) is not larger, so left child is largest.`);
                          // swap
                         recordEvent('swap', i, largest,`Swapping ${arr[i]} (index ${i}) with left child ${arr[largest]} (index ${largest})`);
                         [arr[i], arr[largest]] = [arr[largest], arr[i]];
-                        recordEvent('swap', i, largest, `Swap done. Continuing heapify on left child.`);
+                        recordEvent('swap', i, largest, `Swap done. Continue siftDown at the left child.`);
                         i = largest;
                    }
                 }
             } else {
                 if(largest=== i) {
-                      recordEvent('done', largest, null,`No right child, parent was larger than left, so heapify complete.<br>Click another array element or tree node to do it again.`);
+                      recordEvent('done', largest, null,`There is no right child, and the parent is larger than the left child, so siftDown is complete.<br>Click another array element or tree node to do it again.`);
                          break;
                   } else { // left is largest
                       recordEvent('swap', i, largest, 
                          `No right child, left child is larger than parent.<br>Swap ${arr[i]} (index ${i}) with left child ${arr[largest]} (index ${largest})`);
                       [arr[i], arr[largest]] = [arr[largest], arr[i]];
-                      recordEvent('swap', i, largest, `Swap done. Continuing heapify on left child.`);
+                      recordEvent('swap', i, largest, `Swap done. Continue siftDown at the left child.`);
                       i = largest;
                  }
             }
         } else {
            // NO left, so must be a leaf.
-           recordEvent('done', i, null,`Node ${arr[i]} (index ${i}) is a leaf, so heapfiy complete.<br>Click another array element or tree node to do it again.`);
+           recordEvent('done', i, null,`Node ${arr[i]} (index ${i}) is a leaf, so siftDown is complete.<br>Click another array element or tree node to do it again.`);
            break;
         }
       }
@@ -332,7 +332,7 @@ function showInputAt(x, y, idx) {
         if (k >= evt.heapSize) cell.classList.add('blank');
 
         // apply classes
-        if (evt.type==='start'   && k===evt.i)      cell.classList.add('array-heapify');
+        if (evt.type==='start'   && k===evt.i)      cell.classList.add('array-sift-down');
         if (evt.type==='compare' && (k===evt.i||k===evt.j)) cell.classList.add('comparing');
         if (evt.type==='largest' && k===evt.i)      cell.classList.add('largest');
         if (evt.type==='swap'    && (k===evt.i||k===evt.j)) cell.classList.add('swap');
@@ -343,7 +343,7 @@ function showInputAt(x, y, idx) {
         lbl.textContent = k;
         w.appendChild(cell);
         w.appendChild(lbl);
-        // click handler to start heapify from here
+        // Click handler to start siftDown from here.
         w.onclick = e => {
           if (demoMode) return;
           showInputAt(e.pageX, e.pageY, k);
@@ -371,7 +371,7 @@ function showInputAt(x, y, idx) {
         const g = document.createElementNS('http://www.w3.org/2000/svg','g');
         g.classList.add('treeNode');
         // apply tree classes
-        if (evt.type==='start'   && k===evt.i)      g.classList.add('array-heapify');
+        if (evt.type==='start'   && k===evt.i)      g.classList.add('array-sift-down');
         if (evt.type==='compare' && (k===evt.i||k===evt.j)) g.classList.add('comparing');
         if (evt.type==='largest' && k===evt.i)      g.classList.add('largest');
         if (evt.type==='swap'    && (k===evt.i||k===evt.j)) g.classList.add('swap');
@@ -436,7 +436,7 @@ function showInputAt(x, y, idx) {
       prevBtn.disabled = true;
       nextBtn.disabled = true;
       // draw initial state
-      render({ array: arr, heapSize: h, type:null, i:null, j:null, description:'Click an array element or tree node to change its value and then run heapify.' });
+      render({ array: arr, heapSize: h, type:null, i:null, j:null, description:'Click an array element or tree node to change its value and then run siftDown.' });
     }
 
     // Wire up buttons

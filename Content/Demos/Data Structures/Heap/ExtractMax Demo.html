@@ -20,7 +20,7 @@
       stroke: #666;
       stroke-width: 1.5px;
     }
-    .treeNode.array-heapify circle {
+    .treeNode.array-sift-down circle {
       fill: #FF9999;
       stroke: #666;
       stroke-width: 1.5px;
@@ -47,7 +47,7 @@
 
     /*=== Color rules for array elements ===*/
     .largest  { background-color: #4287f5; color: white; }
-    .array-heapify { background-color: #FF9999; }
+    .array-sift-down { background-color: #FF9999; }
     .heap { background-color: #D8BFD8; }
     .element.comparing { background-color: yellow; }
     .element.swap { background-color: lightgreen; }
@@ -98,7 +98,7 @@
 
   <div class="legend" style="margin-top:10px;">
     <strong>Legend:</strong>
-    <span class="legend-box array-heapify"></span><span class="legend-label">Value changed</span>
+    <span class="legend-box array-sift-down"></span><span class="legend-label">Value changed</span>
     <span class="legend-box comparing"></span><span class="legend-label">Comparing</span>
     <span class="legend-box largest"></span><span class="legend-label">Largest so far</span>
     <span class="legend-box swap"></span><span class="legend-label">Swap</span>
@@ -159,33 +159,33 @@
               recordEvent('largest', largest, null, `Right child ${arr[largest]} (index ${largest}) is now largest`);
               recordEvent('swap', i, largest, `Swapping ${arr[i]} (index ${i}) with ${arr[largest]} (index ${largest})`);
               [arr[i], arr[largest]] = [arr[largest], arr[i]];
-              recordEvent('swap', i, largest, `Swap done. Continuing heapify.`);
+              recordEvent('swap', i, largest, `Swap done. Continue siftDown.`);
               i = largest;
             } else {
               if (largest === i) {
-                recordEvent('done', i, null, `Heapify complete. Extracted value <strong>${extractedValue}</strong> returned.<br>Click Extract Max to do it again.`);
+                recordEvent('done', i, null, `siftDown is complete. Extracted value <strong>${extractedValue}</strong> returned.<br>Click Extract Max to do it again.`);
                 break;
               } else {
                 recordEvent('largest', largest, null, `Right child ${arr[right]} (index ${right}) is not larger, so left child is largest.`);
                 recordEvent('swap', i, largest, `Swapping ${arr[i]} (index ${i}) with ${arr[largest]} (index ${largest})`);
                 [arr[i], arr[largest]] = [arr[largest], arr[i]];
-                recordEvent('swap', i, largest, `Swap done. Continuing heapify.`);
+                recordEvent('swap', i, largest, `Swap done. Continue siftDown.`);
                 i = largest;
               }
             }
           } else {
             if (largest === i) {
-              recordEvent('done', i, null, `Heapify complete. Extracted value <strong>${extractedValue}</strong> returned.<br>Click Extract Max to do it again.`);
+              recordEvent('done', i, null, `siftDown is complete. Extracted value <strong>${extractedValue}</strong> returned.<br>Click Extract Max to do it again.`);
               break;
             } else {
               recordEvent('swap', i, largest, `Swapping ${arr[i]} (index ${i}) with ${arr[largest]} (index ${largest})`);
               [arr[i], arr[largest]] = [arr[largest], arr[i]];
-              recordEvent('swap', i, largest, `Swap done. Continuing heapify.`);
+              recordEvent('swap', i, largest, `Swap done. Continue siftDown.`);
               i = largest;
             }
           }
         } else {
-          recordEvent('done', i, null, `Heapify complete. Extracted value <strong>${extractedValue}</strong> returned.<br>Click Extract Max to do it again.`);
+          recordEvent('done', i, null, `siftDown is complete. Extracted value <strong>${extractedValue}</strong> returned.<br>Click Extract Max to do it again.`);
           break;
         }
       }
@@ -204,8 +204,8 @@
         const w = document.createElement('div'); w.className = 'element-wrapper';
         const cell = document.createElement('div'); cell.className = 'element';
         if (k >= evt.heapSize) cell.classList.add('blank');
-        if (evt.type==='start'   && k===evt.i)      cell.classList.add('array-heapify');
-        if (evt.type==='afterMove' && k===0)    cell.classList.add('array-heapify');
+        if (evt.type==='start'   && k===evt.i)      cell.classList.add('array-sift-down');
+        if (evt.type==='afterMove' && k===0)    cell.classList.add('array-sift-down');
         if (evt.type==='compare' && (k===evt.i||k===evt.j)) cell.classList.add('comparing');
         if (evt.type==='largest' && k===evt.i)      cell.classList.add('largest');
         if (evt.type==='swap'    && (k===evt.i||k===evt.j)) cell.classList.add('swap');
@@ -224,7 +224,7 @@
         const movingNode = nodes[fromIdx];
         if (movingNode) {
           // mark node as violating heap property (reddish)
-          movingNode.classList.add('array-heapify');
+          movingNode.classList.add('array-sift-down');
           // Animate existing node to new root position
           const toPos = computeNodePosition(toIdx);
           // Ensure CSS transition is set
@@ -253,8 +253,8 @@
         }
         const g = document.createElementNS('http://www.w3.org/2000/svg','g');
         g.classList.add('treeNode'); g.setAttribute('transform', `translate(${pos.x},${pos.y})`);
-        if (evt.type==='start'   && k===evt.i)      g.classList.add('array-heapify');
-        if (evt.type==='afterMove' && k===0)    g.classList.add('array-heapify');
+        if (evt.type==='start'   && k===evt.i)      g.classList.add('array-sift-down');
+        if (evt.type==='afterMove' && k===0)    g.classList.add('array-sift-down');
         if (evt.type==='compare' && (k===evt.i||k===evt.j)) g.classList.add('comparing');
         if (evt.type==='largest' && k===evt.i)      g.classList.add('largest');
         if (evt.type==='swap'    && (k===evt.i||k===evt.j)) g.classList.add('swap');

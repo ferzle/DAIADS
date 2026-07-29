@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Heap Operations</title>
+  <title>Heap Construction and Heapsort</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
   <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
@@ -20,211 +20,107 @@
   </script>
 </head>
 <body>
-  <h1>Heap Operations</h1>
+  <h1>Heap Construction and Heapsort</h1>
 
   <section id="overview" section-title="Overview">
     <h2>Overview</h2>
     <p>
-      This page explains the operations that maintain and use a binary max-heap:
-      <code>peekMax</code>, <code>heapify</code>, <code>buildMaxHeap</code>, <code>insert</code>, and
-      <code>extractMax</code>. Each operation preserves the heap's two invariants: the tree remains complete, and
-      every parent is at least as large as its children.
+      Sometimes values arrive one at a time, making ordinary heap insertion the
+      natural update. In other situations, all values are already present in an
+      array. Repeated insertion will produce a valid heap, but a bottom-up
+      method can reorganize the entire array more efficiently.
     </p>
     <p>
-      The page assumes the representation from
-      <a href="?path=Data%20Structures%2FPriority%20Queues%20and%20Heaps%2FBinary%20Heaps">Binary Heaps</a>:
-      a complete binary tree stored in an array, with a separate <code>heapSize</code> marking how much of the array
-      belongs to the active heap.
-    </p>
-    <p>
-      We focus on max-heaps to keep the comparisons consistent. A min-heap uses the same structure and the same
-      movement patterns, but reverses the comparisons.
+      This page develops two algorithms:
+      <code>buildMaxHeap</code>, which converts an arbitrary array into a
+      max-heap in place, and <strong>Heapsort</strong>, which repeatedly uses
+      that heap to place values into sorted order. Both rely on the array
+      representation and downward repair from the
+      <a href="?path=Data%20Structures%2FPriority%20Queues%20and%20Heaps%2FBinary%20Heaps">Binary Heaps</a>
+      page.
     </p>
   </section>
 
-  <section id="representation-reminder" section-title="Representation Reminder">
-    <h2>Representation Reminder</h2>
+  <section id="sift-down-review" section-title="Downward Repair Review">
+    <h2>Downward Repair Review</h2>
     <p>
-      With zero-based indexing, the relatives of the node at index \(i\) are:
+      The helper <code>siftDown(A, i, heapSize)</code> assumes that the left
+      and right child subtrees of index <code>i</code> are already max-heaps.
+      Only <code>A[i]</code> may be too small. The helper repeatedly swaps that
+      value with its larger child until the max-heap property is restored.
     </p>
-    <ul>
-      <li>left child: \(2i + 1\)</li>
-      <li>right child: \(2i + 2\)</li>
-      <li>parent: \(\lfloor(i - 1)/2\rfloor\)</li>
-    </ul>
-    <p>
-      The active heap contains indices <code>0</code> through <code>heapSize - 1</code>. Any index greater than or
-      equal to <code>heapSize</code> is outside the heap, even if it is still inside the physical array.
-    </p>
-    <div class="embeddedDemoContainer">
-      <iframe
-        class="embeddedDemo"
-        src="../../../Content/Demos/Data Structures/Heap/Heap Representation Demo.html"
-        allow="fullscreen"
-        name="heap-operations-representation-demo">
-      </iframe>
-    </div>
-  </section>
+    <pre><code>siftDown(A, i, heapSize):
+    while true:
+        largest = i
+        left = 2 * i + 1
+        right = 2 * i + 2
 
-  <section id="operation-summary" section-title="Operation Summary">
-    <h2>Operation Summary</h2>
-    <p>
-      The operations differ in where a possible heap-property violation begins and which direction the repair moves.
-    </p>
-    <table class="example-table">
-      <thead>
-        <tr>
-          <th>Operation</th>
-          <th>Main Idea</th>
-          <th>Worst-Case Time</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><code>peekMax</code></td>
-          <td>Read the root.</td>
-          <td>\(O(1)\)</td>
-        </tr>
-        <tr>
-          <td><code>heapify</code></td>
-          <td>Move a too-small parent downward.</td>
-          <td>\(O(\log n)\)</td>
-        </tr>
-        <tr>
-          <td><code>buildMaxHeap</code></td>
-          <td>Call <code>heapify</code> bottom-up on internal nodes.</td>
-          <td>\(O(n)\)</td>
-        </tr>
-        <tr>
-          <td><code>insert</code></td>
-          <td>Add at the next leaf and bubble upward.</td>
-          <td>\(O(\log n)\)</td>
-        </tr>
-        <tr>
-          <td><code>extractMax</code></td>
-          <td>Remove the root, replace it with the last item, then heapify downward.</td>
-          <td>\(O(\log n)\)</td>
-        </tr>
-      </tbody>
-    </table>
-  </section>
+        if left &lt; heapSize and A[left] &gt; A[largest]:
+            largest = left
+        if right &lt; heapSize and A[right] &gt; A[largest]:
+            largest = right
 
-  <section id="peek-max" section-title="peekMax">
-    <h2>peekMax(A, heapSize)</h2>
-    <p>
-      The maximum value in a max-heap is always at the root, which is stored at index <code>0</code>. Therefore
-      <code>peekMax</code> only needs to check that the heap is nonempty and return <code>A[0]</code>.
-    </p>
-    <pre><code>peekMax(A, heapSize):
-    if heapSize == 0:
-        report underflow
-    return A[0]</code></pre>
-    <p>
-      <strong>Time and space analysis:</strong> The operation does constant work and uses constant extra space, so it
-      runs in \(O(1)\) time and uses \(O(1)\) auxiliary space.
-    </p>
-  </section>
+        if largest == i:
+            return
 
-  <section id="heapify" section-title="heapify">
-    <h2>heapify(A, i, heapSize)</h2>
+        swap(A[i], A[largest])
+        i = largest</code></pre>
     <p>
-      <code>heapify</code> restores the max-heap property at index \(i\), assuming both child subtrees are already
-      valid heaps. The value at \(i\) may be too small. The operation compares it with its children, swaps it with the
-      larger child if needed, and repeats from the child position.
+      A call can move through at most the height of the subtree rooted at
+      \(i\). Its cost is therefore \(O(h_i)\), where \(h_i\) is that subtree’s
+      height, and at most \(O(\log n)\) for the root.
     </p>
-    <ol>
-      <li>Compute the left and right child indices.</li>
-      <li>Find the largest value among the parent and the existing children.</li>
-      <li>If the parent is already largest, stop.</li>
-      <li>Otherwise, swap with the larger child and continue heapifying from that child.</li>
-    </ol>
     <div class="embeddedDemoContainer">
       <iframe class="embeddedDemo"
-              src="../../../Content/Demos/Data Structures/Heap/Heapify Demo.html"
+              src="../../../Content/Demos/Data Structures/Heap/SiftDown Demo.html"
               allow="fullscreen"
-              name="heapify-demo">
+              name="sift-down-review-demo">
       </iframe>
     </div>
-
-    <h3>Implementation in Java, C++, and Python</h3>
-    <p>
-      The Java and C++ snippets assume a helper named <code>swap</code>. The Python version swaps directly.
-    </p>
-    <div class="tab-group">
-      <div class="tabs" role="tablist">
-        <button id="tab-java-heapify-op" class="tablink active" data-lang="java-heapify-op" role="tab" aria-controls="java-heapify-op" aria-selected="true">Java</button>
-        <button id="tab-cpp-heapify-op" class="tablink" data-lang="cpp-heapify-op" role="tab" aria-controls="cpp-heapify-op" aria-selected="false">C++</button>
-        <button id="tab-python-heapify-op" class="tablink" data-lang="python-heapify-op" role="tab" aria-controls="python-heapify-op" aria-selected="false">Python</button>
-      </div>
-      <div id="java-heapify-op" class="code-container active" role="tabpanel" aria-labelledby="tab-java-heapify-op">
-        <pre><code class="language-java">public void heapify(int[] A, int i, int heapSize) {
-    int largest = i;
-    int left = 2 * i + 1;
-    int right = 2 * i + 2;
-
-    if (left < heapSize && A[left] > A[largest]) {
-        largest = left;
-    }
-    if (right < heapSize && A[right] > A[largest]) {
-        largest = right;
-    }
-
-    if (largest != i) {
-        swap(A, i, largest);
-        heapify(A, largest, heapSize);
-    }
-}</code></pre>
-      </div>
-      <div id="cpp-heapify-op" class="code-container" role="tabpanel" aria-labelledby="tab-cpp-heapify-op">
-        <pre><code class="language-cpp">void heapify(int A[], int i, int heapSize) {
-    int largest = i;
-    int left = 2 * i + 1;
-    int right = 2 * i + 2;
-
-    if (left < heapSize && A[left] > A[largest]) {
-        largest = left;
-    }
-    if (right < heapSize && A[right] > A[largest]) {
-        largest = right;
-    }
-
-    if (largest != i) {
-        swap(A, i, largest);
-        heapify(A, largest, heapSize);
-    }
-}</code></pre>
-      </div>
-      <div id="python-heapify-op" class="code-container" role="tabpanel" aria-labelledby="tab-python-heapify-op">
-        <pre><code class="language-python">def heapify(A, i, heapSize):
-    largest = i
-    left = 2 * i + 1
-    right = 2 * i + 2
-
-    if left < heapSize and A[left] > A[largest]:
-        largest = left
-    if right < heapSize and A[right] > A[largest]:
-        largest = right
-
-    if largest != i:
-        A[i], A[largest] = A[largest], A[i]
-        heapify(A, largest, heapSize)</code></pre>
-      </div>
-    </div>
-
-    <p>
-      <strong>Time and space analysis:</strong> Each recursive call moves one level down the heap. Since a complete
-      binary tree has height \(\lfloor \log n \rfloor\), <code>heapify</code> runs in \(O(\log n)\) time. The
-      recursive version uses \(O(\log n)\) call-stack space in the worst case; an iterative version uses \(O(1)\)
-      auxiliary space.
-    </p>
   </section>
 
-  <section id="build-max-heap" section-title="buildMaxHeap">
-    <h2>buildMaxHeap(A)</h2>
+  <section id="bottom-up-construction" section-title="Bottom-Up Heap Construction">
+    <h2>Bottom-Up Heap Construction</h2>
     <p>
-      <code>buildMaxHeap</code> converts an arbitrary array into a valid max-heap. It starts at the last internal
-      node, index \(\lfloor n/2 \rfloor - 1\), and calls <code>heapify</code> while moving backward to the root.
-      This order works because every child subtree is repaired before its parent is processed.
+      In an \(n\)-entry heap array, every index from
+      \(\lfloor n/2\rfloor\) through \(n-1\) is a leaf. A leaf is already a
+      valid one-node heap, so no work is needed there. The last possible
+      internal node is \(\lfloor n/2\rfloor-1\).
+    </p>
+    <p>
+      Starting at that node, process internal nodes from right to left toward
+      the root. When index \(i\) is reached, both child subtrees have already
+      been repaired, exactly satisfying the precondition of
+      <code>siftDown</code>. After the root is processed, the entire array is a
+      max-heap.
+    </p>
+    <pre><code>buildMaxHeap(A):
+    n = length(A)
+    for i = floor(n / 2) - 1 down to 0:
+        siftDown(A, i, n)</code></pre>
+
+    <h3>Worked example</h3>
+    <p>
+      Consider <code>[4, 10, 3, 5, 1]</code>. Indices <code>2</code> through
+      <code>4</code> are leaves, so processing begins at index <code>1</code>.
+    </p>
+    <ol>
+      <li>
+        Index <code>1</code> contains <code>10</code>; its children are
+        <code>5</code> and <code>1</code>, so no swap is needed.
+      </li>
+      <li>
+        Index <code>0</code> contains <code>4</code>. Swap it with the larger
+        child <code>10</code>, giving <code>[10, 4, 3, 5, 1]</code>.
+      </li>
+      <li>
+        Continue downward from index <code>1</code>. Swap <code>4</code> with
+        <code>5</code>, producing <code>[10, 5, 3, 4, 1]</code>.
+      </li>
+    </ol>
+    <p>
+      The final array is a max-heap. The algorithm changed values in place and
+      did not allocate tree nodes or a second array.
     </p>
     <div class="embeddedDemoContainer">
       <iframe class="embeddedDemo"
@@ -233,311 +129,260 @@
               name="build-max-heap-demo">
       </iframe>
     </div>
-
-    <h3>Implementation in Java, C++, and Python</h3>
-    <div class="tab-group" style="margin-top:10px;">
-      <div class="tabs" role="tablist">
-        <button id="tab-java-build-op" class="tablink active" data-lang="java-build-op" role="tab" aria-controls="java-build-op" aria-selected="true">Java</button>
-        <button id="tab-cpp-build-op" class="tablink" data-lang="cpp-build-op" role="tab" aria-controls="cpp-build-op" aria-selected="false">C++</button>
-        <button id="tab-python-build-op" class="tablink" data-lang="python-build-op" role="tab" aria-controls="python-build-op" aria-selected="false">Python</button>
-      </div>
-      <div id="java-build-op" class="code-container active" role="tabpanel" aria-labelledby="tab-java-build-op">
-        <pre><code class="language-java">public void buildMaxHeap(int[] A) {
-    int n = A.length;
-    for (int i = n / 2 - 1; i >= 0; i--) {
-        heapify(A, i, n);
-    }
-}</code></pre>
-      </div>
-      <div id="cpp-build-op" class="code-container" role="tabpanel" aria-labelledby="tab-cpp-build-op">
-        <pre><code class="language-cpp">void buildMaxHeap(int A[], int n) {
-    for (int i = n / 2 - 1; i >= 0; i--) {
-        heapify(A, i, n);
-    }
-}</code></pre>
-      </div>
-      <div id="python-build-op" class="code-container" role="tabpanel" aria-labelledby="tab-python-build-op">
-        <pre><code class="language-python">def build_max_heap(A):
-    n = len(A)
-    for i in range(n // 2 - 1, -1, -1):
-        heapify(A, i, n)</code></pre>
-      </div>
-    </div>
-
-    <p>
-      <strong>Time and space analysis:</strong> At first glance, <code>buildMaxHeap</code> looks like
-      \(O(n \log n)\), because it makes about \(n/2\) calls to <code>heapify</code>. The sharper bound is \(O(n)\):
-      most nodes are near the bottom of the heap, where <code>heapify</code> can move only a short distance. The
-      iterative loop uses \(O(1)\) auxiliary space, aside from any stack space used by <code>heapify</code>.
-    </p>
   </section>
 
-  <section id="insert" section-title="insert">
-    <h2>insert(A, value, heapSize)</h2>
+  <section id="heapsort" section-title="Heapsort">
+    <h2>Heapsort</h2>
     <p>
-      Insertion preserves the complete-tree shape by placing the new value at the next open leaf position, index
-      <code>heapSize</code>. The value may be larger than its parent, so the operation then <em>bubbles up</em>:
-      repeatedly swap the value with its parent until the parent is larger or the value reaches the root.
-    </p>
-    <div class="embeddedDemoContainer">
-      <iframe class="embeddedDemo"
-              src="../../../Content/Demos/Data Structures/Heap/Insert Demo.html"
-              allow="fullscreen"
-              name="insert-demo">
-      </iframe>
-    </div>
-
-    <h3>Implementation in Java, C++, and Python</h3>
-    <p>
-      These snippets show the operation core and return the updated <code>heapSize</code>. A full heap class would
-      usually store <code>heapSize</code> as a field and resize the backing array when it is full.
-    </p>
-    <div class="tab-group" style="margin-top:10px;">
-      <div class="tabs" role="tablist">
-        <button id="tab-java-insert-op" class="tablink active" data-lang="java-insert-op" role="tab" aria-controls="java-insert-op" aria-selected="true">Java</button>
-        <button id="tab-cpp-insert-op" class="tablink" data-lang="cpp-insert-op" role="tab" aria-controls="cpp-insert-op" aria-selected="false">C++</button>
-        <button id="tab-python-insert-op" class="tablink" data-lang="python-insert-op" role="tab" aria-controls="python-insert-op" aria-selected="false">Python</button>
-      </div>
-      <div id="java-insert-op" class="code-container active" role="tabpanel" aria-labelledby="tab-java-insert-op">
-        <pre><code class="language-java">public int insert(int[] A, int value, int heapSize) {
-    A[heapSize] = value;
-    heapSize++;
-    int i = heapSize - 1;
-
-    while (i > 0 && A[(i - 1) / 2] < A[i]) {
-        int parent = (i - 1) / 2;
-        swap(A, i, parent);
-        i = parent;
-    }
-    return heapSize;
-}</code></pre>
-      </div>
-      <div id="cpp-insert-op" class="code-container" role="tabpanel" aria-labelledby="tab-cpp-insert-op">
-        <pre><code class="language-cpp">int insert(int A[], int value, int heapSize) {
-    A[heapSize] = value;
-    heapSize++;
-    int i = heapSize - 1;
-
-    while (i > 0 && A[(i - 1) / 2] < A[i]) {
-        int parent = (i - 1) / 2;
-        swap(A, i, parent);
-        i = parent;
-    }
-    return heapSize;
-}</code></pre>
-      </div>
-      <div id="python-insert-op" class="code-container" role="tabpanel" aria-labelledby="tab-python-insert-op">
-        <pre><code class="language-python">def insert(A, value, heapSize):
-    A.append(value)
-    heapSize += 1
-    i = heapSize - 1
-
-    while i > 0:
-        parent = (i - 1) // 2
-        if A[parent] < A[i]:
-            A[i], A[parent] = A[parent], A[i]
-            i = parent
-        else:
-            break
-    return heapSize</code></pre>
-      </div>
-    </div>
-
-    <p>
-      <strong>Time and space analysis:</strong> In the worst case, the new value moves from a leaf to the root, one
-      level per swap. The running time is \(O(\log n)\). The operation uses \(O(1)\) auxiliary space.
-    </p>
-  </section>
-
-  <section id="extract-max" section-title="extractMax">
-    <h2>extractMax(A, heapSize)</h2>
-    <p>
-      <code>extractMax</code> removes and returns the root. Removing the root creates a hole at the top, but the heap
-      shape must stay complete. The standard fix is to move the last heap element into the root, decrement
-      <code>heapSize</code>, and call <code>heapify(A, 0, heapSize)</code>.
-    </p>
-    <ol>
-      <li>Save <code>A[0]</code> as the maximum value to return.</li>
-      <li>Move <code>A[heapSize - 1]</code> into <code>A[0]</code>.</li>
-      <li>Decrement <code>heapSize</code>.</li>
-      <li>Call <code>heapify</code> at the root to repair the heap property.</li>
-    </ol>
-    <div class="embeddedDemoContainer">
-      <iframe class="embeddedDemo"
-              src="../../../Content/Demos/Data Structures/Heap/ExtractMax Demo.html"
-              allow="fullscreen"
-              name="extract-max-demo">
-      </iframe>
-    </div>
-
-    <h3>Implementation in Java, C++, and Python</h3>
-    <p>
-      These snippets return both the extracted value and the updated heap size. A class-based implementation would
-      usually update a <code>heapSize</code> field directly.
-    </p>
-    <div class="tab-group" style="margin-top:10px;">
-      <div class="tabs" role="tablist">
-        <button id="tab-java-extract-op" class="tablink active" data-lang="java-extract-op" role="tab" aria-controls="java-extract-op" aria-selected="true">Java</button>
-        <button id="tab-cpp-extract-op" class="tablink" data-lang="cpp-extract-op" role="tab" aria-controls="cpp-extract-op" aria-selected="false">C++</button>
-        <button id="tab-python-extract-op" class="tablink" data-lang="python-extract-op" role="tab" aria-controls="python-extract-op" aria-selected="false">Python</button>
-      </div>
-      <div id="java-extract-op" class="code-container active" role="tabpanel" aria-labelledby="tab-java-extract-op">
-        <pre><code class="language-java">public static class ExtractResult {
-    public final int value;
-    public final int heapSize;
-
-    public ExtractResult(int value, int heapSize) {
-        this.value = value;
-        this.heapSize = heapSize;
-    }
-}
-
-public ExtractResult extractMax(int[] A, int heapSize) {
-    if (heapSize == 0) {
-        throw new IllegalStateException("empty heap");
-    }
-
-    int max = A[0];
-    A[0] = A[heapSize - 1];
-    heapSize--;
-    heapify(A, 0, heapSize);
-    return new ExtractResult(max, heapSize);
-}</code></pre>
-      </div>
-      <div id="cpp-extract-op" class="code-container" role="tabpanel" aria-labelledby="tab-cpp-extract-op">
-        <pre><code class="language-cpp">struct ExtractResult {
-    int value;
-    int heapSize;
-};
-
-ExtractResult extractMax(int A[], int heapSize) {
-    if (heapSize == 0) {
-        throw runtime_error("empty heap");
-    }
-
-    int maxValue = A[0];
-    A[0] = A[heapSize - 1];
-    heapSize--;
-    heapify(A, 0, heapSize);
-    return {maxValue, heapSize};
-}</code></pre>
-      </div>
-      <div id="python-extract-op" class="code-container" role="tabpanel" aria-labelledby="tab-python-extract-op">
-        <pre><code class="language-python">def extract_max(A, heapSize):
-    if heapSize == 0:
-        raise IndexError("empty heap")
-
-    max_value = A[0]
-    A[0] = A[heapSize - 1]
-    heapSize -= 1
-    heapify(A, 0, heapSize)
-    return max_value, heapSize</code></pre>
-      </div>
-    </div>
-
-    <p>
-      <strong>Time and space analysis:</strong> Moving the last value to the root is constant time. The repair call
-      may travel from the root to a leaf, so the running time is \(O(\log n)\). The operation uses \(O(1)\) auxiliary
-      space if <code>heapify</code> is iterative, or \(O(\log n)\) call-stack space with the recursive version above.
-    </p>
-  </section>
-
-  <section id="heapsort-connection" section-title="Heapsort Connection">
-    <h2>Heapsort Connection</h2>
-    <p>
-      Heapsort combines <code>buildMaxHeap</code> with repeated root removal. After building a max-heap, the algorithm
-      swaps the root with the last active heap element, decreases <code>heapSize</code>, and heapifies the root. The
-      removed maximum is now in its final sorted position at the end of the array.
+      Once an array is a max-heap, its largest value is at index
+      <code>0</code>. Swap that value with the final entry in the active heap.
+      The maximum is now in its final sorted position. Reduce
+      <code>heapSize</code> so the sorted suffix is no longer considered part
+      of the heap, then repair the new root.
     </p>
     <p>
-      This use of <code>heapSize</code> is important. During Heapsort, the same physical array holds two regions: an
-      active heap prefix and a sorted suffix. Child-index checks must use <code>heapSize</code> so the sorted suffix is
-      not pulled back into the heap.
+      Repeating this process moves maxima from right to left. When only one
+      active entry remains, the entire array is in nondecreasing order.
     </p>
-    <p>
-      See <a href="?path=Algorithms%2FTransform-and-Conquer%2FHeapsort">Heapsort</a> for the full sorting page.
-    </p>
-  </section>
+    <pre><code>heapsort(A):
+    buildMaxHeap(A)
+    heapSize = length(A)
 
-  <section id="min-heap-notes" section-title="Min-Heap Notes">
-    <h2>Min-Heap Notes</h2>
+    for end = length(A) - 1 down to 1:
+        swap(A[0], A[end])
+        heapSize = heapSize - 1
+        siftDown(A, 0, heapSize)</code></pre>
+
+    <h3>Heap prefix and sorted suffix</h3>
     <p>
-      To adapt these max-heap operations to a min-heap, reverse the comparisons:
+      During sorting, the same physical array represents two regions:
     </p>
     <ul>
-      <li><code>peekMin</code> returns the root.</li>
-      <li><code>heapify</code> swaps with the smaller child instead of the larger child.</li>
-      <li><code>insert</code> bubbles upward while the new value is smaller than its parent.</li>
-      <li><code>extractMin</code> removes the root, moves the last value to the root, and repairs downward.</li>
+      <li><code>A[0 .. heapSize-1]</code> is the active max-heap, and</li>
+      <li><code>A[heapSize .. n-1]</code> is a sorted suffix in final positions.</li>
     </ul>
     <p>
-      This is why priority-queue libraries often expose a comparator: the structural algorithm is the same, but the
-      meaning of "higher priority" changes.
+      Every child-bound check must use <code>heapSize</code>. Using the full
+      array length would pull completed values back into the heap.
+    </p>
+
+    <h3>Worked trace</h3>
+    <p>
+      Continue from the max-heap
+      <code>[10, 5, 3, 4, 1]</code>:
+    </p>
+    <table class="example-table">
+      <thead>
+        <tr>
+          <th>Active size after swap</th>
+          <th>Array after downward repair</th>
+          <th>Sorted suffix</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>4</td>
+          <td><code>[5, 4, 3, 1, 10]</code></td>
+          <td><code>[10]</code></td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td><code>[4, 1, 3, 5, 10]</code></td>
+          <td><code>[5, 10]</code></td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td><code>[3, 1, 4, 5, 10]</code></td>
+          <td><code>[4, 5, 10]</code></td>
+        </tr>
+        <tr>
+          <td>1</td>
+          <td><code>[1, 3, 4, 5, 10]</code></td>
+          <td><code>[3, 4, 5, 10]</code></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="embeddedDemoContainer">
+      <iframe class="embeddedDemo"
+              src="../../../Content/Demos/Transform-and-Conquer/Heapsort Demo.html"
+              allow="fullscreen"
+              name="heapsort-demo">
+      </iframe>
+    </div>
+  </section>
+
+  <section id="analysis" section-title="Time/Space Analysis">
+    <h2>Time/Space Analysis</h2>
+    <p>
+      Bottom-up heap construction runs in \(\Theta(n)\) time. This result is
+      sharper than multiplying the number of internal nodes by the maximum cost
+      of one downward repair; the next section explains why.
+    </p>
+    <p>
+      Heapsort performs the linear construction phase once. It then performs
+      \(n-1\) root swaps and downward repairs. Each repair costs at most
+      \(O(\log n)\), so the complete algorithm takes \(O(n\log n)\) time,
+      with a worst-case bound of \(\Theta(n\log n)\).
+    </p>
+    <p>
+      With iterative <code>siftDown</code>, both algorithms use
+      \(\Theta(1)\) auxiliary space beyond the input array. A recursive helper
+      adds \(O(\log n)\) call-stack space. Heapsort is in place, but it is not
+      stable: root swaps can reverse equal-key entries that were far apart.
+    </p>
+  </section>
+
+  <section id="advanced-analysis" section-title="Advanced Analysis">
+    <h2>Advanced Analysis</h2>
+
+    <h3>Why the obvious \(O(n\log n)\) bound is loose</h3>
+    <p>
+      There are about \(n/2\) internal nodes, and one call to
+      <code>siftDown</code> can cost \(O(\log n)\). Multiplying these values
+      gives \(O(n\log n)\), which is a valid upper bound but treats every call
+      as though it began at the root. Most calls begin much lower.
+    </p>
+    <p>
+      At most about \(n/2^{h+1}\) nodes have height \(h\). A node of height
+      \(h\) can move down at most \(h\) levels, so the total work is bounded by
+    </p>
+    <p>
+      \[
+      \sum_{h=1}^{\lfloor\log n\rfloor}
+        \frac{n}{2^{h+1}}\,O(h)
+      = O(n)\sum_{h=1}^{\infty}\frac{h}{2^{h+1}}
+      = O(n).
+      \]
+    </p>
+    <p>
+      The infinite series converges to a constant. Intuitively, half the nodes
+      are leaves and are skipped, about one quarter can move down only one
+      level, about one eighth can move two levels, and only a tiny number can
+      travel near the full height. The loop also examines
+      \(\Theta(n)\) internal nodes in total, so the complete running time is
+      \(\Theta(n)\).
+    </p>
+
+    <h3>Why \(n\) insertions do not receive the same bound</h3>
+    <p>
+      Inserting the values one at a time into an initially empty max-heap costs
+      at most
+      \[
+      \sum_{i=1}^{n} O(\log i)=O(\log(n!))=O(n\log n).
+      \]
+      Unlike the bottom-up method, this upper bound is tight in the worst case.
+      Insert keys in increasing order. Every new key is larger than all earlier
+      keys, so it rises from its new leaf position to the root. Its cost is
+      \(\Theta(\log i)\).
+    </p>
+    <p>
+      Even after accounting for the smaller early heaps, a constant fraction
+      of the insertions occur when \(i\) lies between \(n/2\) and \(n\). Each
+      of those heaps has height \(\Theta(\log n)\), and each insertion in this
+      input travels that height. Their total alone is
+      \(\Theta(n\log n)\).
+    </p>
+    <p>
+      The difference is where the work begins. Bottom-up repair charges each
+      existing node according to its <em>height</em>, and most nodes have very
+      small height. Insertion always begins at a new leaf and may travel
+      according to its <em>depth</em>; most later leaves have logarithmic
+      depth. Both methods produce a valid heap, but they distribute work very
+      differently.
+    </p>
+  </section>
+
+  <section id="correctness" section-title="Why the Algorithms Work">
+    <h2>Why the Algorithms Work</h2>
+    <p>
+      Bottom-up construction processes nodes in an order that maintains a
+      simple invariant: before index \(i\) is repaired, both of its child
+      subtrees are heaps. Downward repair then makes the subtree rooted at
+      \(i\) a heap without disturbing already processed descendants. After
+      index <code>0</code>, the whole array satisfies heap order.
+    </p>
+    <p>
+      During Heapsort, the active prefix is a max-heap and the suffix contains
+      the largest removed values in sorted order. Swapping the root with the
+      last active entry places the largest remaining value immediately before
+      that suffix. Downward repair restores the prefix invariant, so the
+      argument repeats until no unsorted entries remain.
     </p>
   </section>
 
   <section id="pitfalls" section-title="Common Pitfalls">
     <h2>Common Pitfalls</h2>
     <ul>
-      <li><strong>Using physical length instead of <code>heapSize</code>:</strong> Extra capacity or sorted Heapsort elements should not be treated as heap nodes.</li>
-      <li><strong>Forgetting to update size:</strong> A standalone insert or extract snippet must return the new size or update a field in a heap object.</li>
-      <li><strong>Choosing the wrong child in <code>heapify</code>:</strong> A max-heap must swap with the larger child, not just the left child.</li>
-      <li><strong>Calling <code>heapify</code> where bubble-up is needed:</strong> Insertion creates a possible violation between a new node and its parent, so the repair moves upward.</li>
-      <li><strong>Building a heap top-down:</strong> Repeated insertion works but costs \(O(n \log n)\). Bottom-up heap construction costs \(O(n)\).</li>
-      <li><strong>Ignoring empty heap cases:</strong> <code>peekMax</code> and <code>extractMax</code> need defined behavior when <code>heapSize == 0</code>.</li>
+      <li><strong>Starting at a leaf:</strong> leaves need no repair; begin at \(\lfloor n/2\rfloor-1\).</li>
+      <li><strong>Processing top-down:</strong> a parent cannot use downward repair safely until its child subtrees are heaps.</li>
+      <li><strong>Using array length during sorting:</strong> the sorted suffix is outside the active heap.</li>
+      <li><strong>Skipping the root repair:</strong> every root swap can violate heap order at index <code>0</code>.</li>
+      <li><strong>Claiming stability:</strong> in-place root swaps do not preserve the order of equal keys.</li>
+      <li><strong>Stopping at the loose bound:</strong> \(O(n\log n)\) is true for construction but fails to describe its tighter \(\Theta(n)\) cost.</li>
     </ul>
   </section>
 
   <section id="summary" section-title="Summary">
     <h2>Summary</h2>
     <p>
-      Heap operations maintain a complete-tree shape and the heap property. <code>peekMax</code> is constant time,
-      <code>insert</code> repairs upward, <code>extractMax</code> repairs downward, <code>heapify</code> fixes a local
-      downward violation, and <code>buildMaxHeap</code> uses bottom-up repair to construct a heap in linear time.
+      Bottom-up construction treats leaves as finished heaps and repairs
+      internal nodes toward the root, producing a heap in linear time.
+      Heapsort first performs that construction, then repeatedly moves the root
+      into a growing sorted suffix. It sorts in place in
+      \(\Theta(n\log n)\) time. The construction phase is linear because most
+      nodes can move only a short distance; repeated insertion has no matching
+      worst-case improvement because many inserted leaves may travel a
+      logarithmic distance.
     </p>
   </section>
 
   <section id="related-pages" section-title="Related Pages">
     <h2>Related Pages</h2>
     <ul>
-      <li><a href="?path=Data%20Structures%2FPriority%20Queues%20and%20Heaps%2FPriority%20Queues">Priority Queue ADT</a>, for the abstract interface and implementation choices.</li>
-      <li><a href="?path=Data%20Structures%2FPriority%20Queues%20and%20Heaps%2FBinary%20Heaps">Binary Heaps</a>, for heap representation and conceptual tradeoffs.</li>
-      <li><a href="?path=Algorithms%2FTransform-and-Conquer%2FHeapsort">Heapsort</a>, which uses build-heap and repeated extraction.</li>
+      <li>
+        <a href="?path=Data%20Structures%2FPriority%20Queues%20and%20Heaps%2FBinary%20Heaps">Binary Heaps</a>,
+        for heap representation, priority-queue operations, and repair helpers.
+      </li>
+      <li>
+        <a href="?path=Data%20Structures%2FPriority%20Queues%20and%20Heaps%2FPriority%20Queues">Priority Queues</a>,
+        for the ADT and alternative representations.
+      </li>
+      <li>
+        <a href="?path=Algorithms%2FTransform-and-Conquer%2FHeapsort">Heapsort</a>,
+        for the algorithm in the broader transform-and-conquer context.
+      </li>
     </ul>
   </section>
 
   <section id="links" section-title="Helpful Links and Resources">
     <h2>Helpful Links and Resources</h2>
     <ul>
-      <li><a href="https://opendsa.cs.vt.edu/ODSA/Books/Everything/html/Heaps.html" target="_blank">OpenDSA: Heaps and Priority Queues</a> Includes heap operations and priority queue motivation.</li>
-      <li><a href="https://opendatastructures.org/ods-java/10_1_Implicit_Binary_Tree.html" target="_blank">Open Data Structures: BinaryHeap</a> Gives another treatment of the implicit array representation.</li>
-      <li><a href="https://docs.python.org/3/library/heapq.html" target="_blank">Python <code>heapq</code></a> Shows production heap operations in Python's standard library.</li>
-      <li><a href="https://en.wikipedia.org/wiki/Binomial_heap" target="_blank">Binomial Heap (Wikipedia)</a> Background on a merge-friendly heap family.</li>
-      <li><a href="https://www.geeksforgeeks.org/dsa/binomial-heap-2/" target="_blank">GeeksforGeeks: Binomial Heap</a> Additional examples of binomial heap operations.</li>
-      <li><a href="https://en.wikipedia.org/wiki/Fibonacci_heap" target="_blank">Fibonacci Heap (Wikipedia)</a> Background on theoretical decrease-key tradeoffs.</li>
-      <li><a href="https://www.geeksforgeeks.org/dsa/fibonacci-heap-set-1-introduction/" target="_blank">GeeksforGeeks: Fibonacci Heap</a> Additional examples of Fibonacci heap structure.</li>
+      <li><a href="https://opendsa.cs.vt.edu/ODSA/Books/Everything/html/Heaps.html" target="_blank">OpenDSA: Heaps and Priority Queues</a></li>
+      <li><a href="https://opendatastructures.org/ods-java/10_1_Implicit_Binary_Tree.html" target="_blank">Open Data Structures: BinaryHeap</a></li>
     </ul>
   </section>
 
   <section id="reading-questions" section-title="Reading Comprehension Questions">
     <h2>Reading Comprehension Questions</h2>
     <ol>
-      <li><strong>Peek:</strong> Why is <code>peekMax</code> constant time?</li>
-      <li><strong>Heapify Direction:</strong> Why does <code>heapify</code> move downward rather than upward?</li>
-      <li><strong>Build Order:</strong> Why does <code>buildMaxHeap</code> start at the last internal node?</li>
-      <li><strong>Insertion:</strong> Why does insertion bubble upward?</li>
-      <li><strong>Extraction:</strong> Why is the last heap element moved to the root after removing the maximum?</li>
-      <li><strong>Heapsort:</strong> Why must Heapsort use <code>heapSize</code> instead of the full array length after the first extraction?</li>
+      <li>Why are leaves omitted from the bottom-up loop?</li>
+      <li>Why are internal nodes processed from right to left toward the root?</li>
+      <li>What do <code>heapSize</code> and the physical array length mean during Heapsort?</li>
+      <li>Why is \(O(n\log n)\) a valid but loose bound for bottom-up construction?</li>
+      <li>What property of the tree makes the sharper construction bound linear?</li>
+      <li>Why can increasing-order insertion into a max-heap require \(\Theta(n\log n)\) total time?</li>
+      <li>Why is Heapsort not stable?</li>
     </ol>
     <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
     <div id="answers" class="answer" hidden>
       <ol>
-        <li><strong>Answer:</strong> The max-heap property guarantees that the maximum is at the root, index <code>0</code>.</li>
-        <li><strong>Answer:</strong> Its precondition says the child subtrees are already heaps; only the value at the current root may need to move downward.</li>
-        <li><strong>Answer:</strong> Leaves are already heaps, so the first possible violations are at internal nodes. Processing bottom-up ensures child subtrees are fixed before their parent.</li>
-        <li><strong>Answer:</strong> The new item is added as a leaf, so the only possible violation is between it and its ancestors.</li>
-        <li><strong>Answer:</strong> Moving the last item preserves the complete-tree shape before the heap property is repaired.</li>
-        <li><strong>Answer:</strong> The end of the array begins holding sorted values that are no longer part of the active heap.</li>
+        <li>Every leaf is already a valid one-entry heap.</li>
+        <li>That order ensures both child subtrees are heaps before their parent is repaired.</li>
+        <li>The logical size ends at the active heap prefix; the physical array also includes the completed suffix.</li>
+        <li>It assigns the root’s maximum repair cost to every internal node, including nodes near the leaves.</li>
+        <li>The number of nodes decreases exponentially as subtree height increases.</li>
+        <li>Each new key is the largest so far and can rise from a deep leaf all the way to the root.</li>
+        <li>Long-distance root swaps can reverse the relative order of equal-key entries.</li>
       </ol>
     </div>
   </section>
@@ -545,24 +390,23 @@ ExtractResult extractMax(int A[], int heapSize) {
   <section id="activities" section-title="In-Class Activities">
     <h2>In-Class Activities</h2>
     <ol>
-      <li><strong>Manual Heapify:</strong> Start with one local heap-property violation and trace every comparison and swap.</li>
-      <li><strong>Build a Heap by Hand:</strong> Apply bottom-up <code>buildMaxHeap</code> to an unsorted array.</li>
-      <li><strong>Insert Trace:</strong> Insert a value that bubbles all the way to the root, then insert one that does not move.</li>
-      <li><strong>Extract Trace:</strong> Remove the maximum from a heap and trace the downward repair.</li>
-      <li><strong>Min-Heap Conversion:</strong> Rewrite one operation for a min-heap and identify every comparison that changes.</li>
-      <li><strong>Heapsort Regions:</strong> Draw an array during Heapsort and label the active heap prefix and sorted suffix after each extraction.</li>
+      <li><strong>Bottom-Up Trace:</strong> Mark leaves and internal nodes, then record the array after each downward repair.</li>
+      <li><strong>Two-Region Trace:</strong> During Heapsort, color the active heap prefix and sorted suffix after every iteration.</li>
+      <li><strong>Loose-Bound Diagnosis:</strong> Identify which calls in a small construction trace cannot possibly take logarithmic time.</li>
+      <li><strong>Method Comparison:</strong> Create the same heap by bottom-up repair and repeated insertion, then count comparisons and swaps.</li>
     </ol>
   </section>
 
   <section id="problems" section-title="Homework Problems">
     <h2>Homework Problems</h2>
     <ol>
-      <li><strong>Implement Max-Heap Operations:</strong> Implement <code>heapify</code>, <code>buildMaxHeap</code>, <code>insert</code>, <code>peekMax</code>, and <code>extractMax</code>.</li>
-      <li><strong>Iterative Heapify:</strong> Rewrite recursive <code>heapify</code> as an iterative loop and compare auxiliary space usage.</li>
-      <li><strong>Linear Build Proof:</strong> Prove that <code>buildMaxHeap</code> runs in \(O(n)\) time even though <code>heapify</code> can take \(O(\log n)\).</li>
-      <li><strong>Min-Heap Implementation:</strong> Convert the max-heap operations into min-heap operations and test them on the same input.</li>
-      <li><strong>Heapsort Trace:</strong> Use <code>buildMaxHeap</code> and repeated extraction to sort an array by hand.</li>
-      <li><strong>Operation Bug Hunt:</strong> Given a broken heap operation, identify whether it violates shape, heap order, or heap-size management.</li>
+      <li><strong>Construction Trace:</strong> Apply <code>buildMaxHeap</code> to <code>[7, 2, 9, 1, 6, 8, 3, 5, 4]</code>, showing every swap.</li>
+      <li><strong>Heapsort Trace:</strong> Continue from that heap and show the active prefix and sorted suffix after every pass.</li>
+      <li><strong>Correctness:</strong> State and justify the loop invariant for bottom-up construction.</li>
+      <li><strong>Linear Analysis:</strong> Derive the height-based summation and explain why replacing every height by \(\log n\) loses information.</li>
+      <li><strong>Insertion Lower Bound:</strong> Prove that increasing-order insertion into a max-heap takes \(\Theta(n\log n)\) total time.</li>
+      <li><strong>Min-Heap Variant:</strong> Modify the construction procedure for a min-heap and explain what order repeated root placement produces.</li>
+      <li><strong>Stability Investigation:</strong> Find a small input with duplicate keys whose relative order changes during Heapsort.</li>
     </ol>
   </section>
 </body>
