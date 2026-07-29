@@ -205,17 +205,6 @@ position. </desc> <defs> <marker id="pq-arrow" viewBox="0 0 10 10" refX="9" refY
     priority, depends on the application.
   </p>
 
-  
-  <h3>Choosing the Priority Convention</h3>
-  <p>
-    This page uses a <strong>min-priority queue</strong>: the entry with the
-    smallest priority key is considered best and is processed next. Other
-    applications use a <strong>max-priority queue</strong>, in which the
-    largest key is best. In either case, the selected entry may be described
-    as having the <em>highest priority</em>, so that phrase does not
-    necessarily refer to the largest numerical key.
-  </p>
-
 </section>
 
 <section id="core-operations" section-title="Core Operations">
@@ -270,13 +259,13 @@ position. </desc> <defs> <marker id="pq-arrow" viewBox="0 0 10 10" refX="9" refY
       </tr>
       <tr>
         <td><code>changePriority(entry, newKey)</code></td>
-       <td>
-        (Optional) Change the priority key of a particular stored entry.
-        Supporting this operation efficiently may require a handle or other way
-        to locate that entry. Care must be taken not to change the key directly,
-        since doing so may violate the internal ordering without allowing the
-        priority queue to repair its representation.
-      </td>
+        <td>
+          (Optional) Change the priority key of a particular stored entry.
+          Supporting this operation efficiently may require a handle or other way
+          to locate that entry. Care must be taken not to change the key directly,
+          since doing so may invalidate the representation's invariants or auxiliary
+          bookkeeping without allowing the priority queue to repair them.
+        </td>
       </tr>
     </tbody>
   </table>
@@ -327,9 +316,9 @@ position. </desc> <defs> <marker id="pq-arrow" viewBox="0 0 10 10" refX="9" refY
     Two entries may have the same priority key. When keys tie, the
     priority-queue specification may permit either entry to be returned, or it
     may define an additional tie-breaking rule. A <strong>stable priority
-    queue</strong> extracts equal-key entries in their insertion order.
-    Stability can be implemented by storing an increasing sequence number with
-    each entry and comparing sequence numbers only when priority keys tie.
+    queue</strong> extracts equal-key entries in their insertion order. One
+    general way to provide stability is to store an increasing sequence number
+    with each entry and compare sequence numbers when priority keys tie.
   </p>
 
   <div class="callout">
@@ -342,20 +331,21 @@ position. </desc> <defs> <marker id="pq-arrow" viewBox="0 0 10 10" refX="9" refY
     <strong class="example-title">Example 1: Trace of Priority Queue Operations</strong>
     <p>
       Start with an empty min-priority queue. Smaller keys are better, and
-      ties are resolved by insertion order. Perform:
+      ties are resolved by insertion order. We write <code>A:5</code> for
+      an entry with value A and priority key 5. Perform:
     </p>
-<span class="operation-sequence">
-  <code>extract()</code>,
-  <code>insert(A, 5)</code>,
-  <code>insert(B, 3)</code>,
-  <code>insert(C, 7)</code>,
-  <code>peek()</code>,
-  <code>insert(D, 2)</code>,
-  <code>insert(E, 3)</code>,
-  <code>extract()</code>,
-  <code>extract()</code>,
-  <code>extract()</code>.
-</span>
+    <span class="operation-sequence">
+      <code>extract()</code>,
+      <code>insert(A, 5)</code>,
+      <code>insert(B, 3)</code>,
+      <code>insert(C, 7)</code>,
+      <code>peek()</code>,
+      <code>insert(D, 2)</code>,
+      <code>insert(E, 3)</code>,
+      <code>extract()</code>,
+      <code>extract()</code>,
+      <code>extract()</code>.
+    </span>
 
 <table class="example-table">
   <thead>
@@ -419,10 +409,10 @@ position. </desc> <defs> <marker id="pq-arrow" viewBox="0 0 10 10" refX="9" refY
   </tbody>
 </table>
 <p>
-  The order of the entries in the second column is not significant. We use
-  set notation, \(\{\ \}\), to emphasize that the column shows only the
-  logical contents of the priority queue, not their physical order in any
-  particular implementation.
+  The order of the entries in the second column is not significant. The
+  braces indicate an unordered logical collection; they do not show the
+  physical order used by any particular implementation or imply that
+  duplicate entries are forbidden.
 </p>
 
 <p>
@@ -729,13 +719,13 @@ position. </desc> <defs> <marker id="pq-arrow" viewBox="0 0 10 10" refX="9" refY
 
 peek():
     if count == 0:
-    report underflow
+        report underflow
 
     return A[count - 1]
 
 extract():
     if count == 0:
-    report underflow
+        report underflow
 
     result = A[count - 1]
     A[count - 1] = empty
@@ -1041,7 +1031,7 @@ extract():
 
 findBestIndex():
     if count == 0:
-    report underflow
+        report underflow
 
     bestIndex = 0
 
@@ -1185,8 +1175,8 @@ extract():
     <tr>
       <th>Underlying Structure</th>
       <td>
-        A container adapter, usually backed by a <code>vector</code> maintained
-        as a binary heap.
+        A container adapter backed by a <code>vector</code> by default and
+        maintained as a binary heap.
       </td>
     </tr>
     <tr>
@@ -1221,7 +1211,7 @@ extract():
     </tr>
     <tr>
       <th>Underlying Structure</th>
-      <td>A Python <code>list</code> maintained as a binary min-heap.</td>
+      <td>A Python <code>list</code> maintained as a binary heap.</td>
     </tr>
     <tr>
       <th>Insert</th>
@@ -1255,9 +1245,10 @@ extract():
     <p>
       Library defaults matter. Java places the least element first under its
       default ordering, while C++ places the greatest element first. Python's
-      traditional <code>heapq</code> operations use a min-heap. Each language
-      also provides a way to reverse or customize the ordering, although the
-      syntax differs.
+      traditional <code>heapq</code> operations use a min-heap, while corresponding
+      <code>_max</code> operations support max-heaps. Java and C++ customize
+      ordering through comparators; in Python, a comparison key is typically
+      included in each stored entry.
     </p>
     <p>
       Where traversal is available, it does not necessarily visit entries in
@@ -1358,7 +1349,11 @@ extract():
     keeps the best entry in a known position while maintaining only enough
     order to repair the structure in \(O(\log n)\) time after an insertion or
     extraction. This balance makes binary heaps the most common
-    general-purpose implementation of priority queues.
+    general-purpose implementation of priority queues. The next page on
+    <a href="?path=Data%20Structures%2FPriority%20Queues%20and%20Heaps%2FBinary%20Heaps">Binary
+    Heaps</a> develops this representation in detail. It uses max-heaps to
+    demonstrate the max-oriented convention, although reversing the comparison
+    produces the min-priority queues used on this page.
   </p>
 
   <p>
@@ -1366,14 +1361,6 @@ extract():
     the same asymptotic operation bounds as their array counterparts. Their
     main differences involve memory layout, allocation overhead, unused array
     capacity, and the mechanics of insertion and removal.
-  </p>
-
-  <p>
-    The next page,
-    <a href="?path=Data%20Structures%2FPriority%20Queues%20and%20Heaps%2FBinary%20Heaps">Binary
-    Heaps</a>, develops this representation in detail. It uses max-heaps to
-    demonstrate the max-oriented convention, although reversing the comparison
-    produces the min-priority queues used on this page.
   </p>
 
   <p>
@@ -1387,331 +1374,673 @@ extract():
   </section>
 
   <section id="applications" section-title="Applications">
-    <h2>Applications</h2>
-    <p>
-      A priority queue is useful when a changing set of candidates must be processed one
-      at a time according to a rank, cost, time, or urgency. The structure does not decide
-      what “best” means; the application supplies that rule.
-    </p>
+  <h2>Applications</h2>
+  <p>
+    A priority queue is useful when a changing set of candidates must be
+    processed one at a time according to a rank, cost, time, or urgency. The
+    priority queue does not decide what "best" means; the application supplies
+    the comparison rule.
+  </p>
 
-    <h3>Event Simulation</h3>
-    <p>
-      A simulation may store future events with their scheduled times as priorities.
-      The next extraction returns the event with the smallest time. Processing that event
-      may insert new future events, so the schedule changes as the simulation runs.
-    </p>
+  <ul>
+    <li>
+      <strong>Event simulation:</strong>
+      Future events are stored using their scheduled times as priority keys.
+      The event with the earliest time is extracted next, and processing it
+      may insert additional future events.
+    </li>
+    <li>
+      <strong>Scheduling and service systems:</strong>
+      Jobs, requests, or patients may be prioritized by urgency, deadline,
+      estimated running time, or a combination of fields. A priority queue
+      implements the selection rule, although additional policies may be
+      needed to prevent low-priority entries from waiting indefinitely.
+    </li>
+    <li>
+      <strong>Graph and search algorithms:</strong>
+      Dijkstra's shortest-path algorithm selects the unsettled vertex with
+      the smallest known distance, Prim's algorithm selects a cheapest next
+      connection, and best-first search selects the most promising state.
+      These algorithms may need to update an entry's priority when better
+      information is discovered.
+    </li>
+    <li>
+      <strong>Building a Huffman code:</strong>
+      Huffman's algorithm repeatedly extracts the two items with the smallest
+      frequencies, combines them, and inserts the combined item with its new
+      frequency.
+    </li>
+    <li>
+      <strong>Merging sorted sequences:</strong>
+      To merge several sorted lists or streams, place the smallest unprocessed
+      item from each source in a min-priority queue. When an item is extracted,
+      add the next item from the source it came from. Repeating this process
+      produces all the items in sorted order.
+    </li>
 
-    <h3>Scheduling and Service Systems</h3>
-    <p>
-      Jobs may be prioritized by urgency, deadline, estimated running time, or a policy
-      that combines several fields. A priority queue makes the selection rule explicit,
-      but it does not by itself guarantee fairness. If high-priority work arrives
-      continuously, low-priority work may wait indefinitely unless the scheduler adjusts
-      priorities over time.
-    </p>
-
-    <h3>Graph and Search Algorithms</h3>
-    <p>
-      Dijkstra's shortest-path algorithm selects the unsettled vertex with the smallest
-      known distance. Prim's minimum-spanning-tree algorithm selects a cheapest next
-      connection, and best-first search selects the most promising state. In each case,
-      new information may improve an entry's priority after it has been inserted.
-    </p>
-
-    <h3>Building a Huffman Code</h3>
-    <p>
-      Huffman's algorithm repeatedly extracts the two items with the smallest frequencies,
-      combines them, and inserts the combined item with its new frequency. The algorithm
-      is a particularly clear example of repeated extraction followed by insertion.
-    </p>
-
-    <h3>Keeping a Small Set of Best Candidates</h3>
-    <p>
-      A bounded priority queue can retain the best \(k\) items seen in a stream without
-      storing the entire stream. The priority direction must be chosen carefully: to
-      retain the \(k\) largest values, the structure needs quick access to the smallest
+    <li>
+      <strong>Keeping the best \(k\) candidates:</strong>
+      A bounded priority queue can retain the best \(k\) items seen in a stream
+      without storing the entire stream. To retain the \(k\) largest values,
+      for example, a min-priority queue provides quick access to the smallest
       retained value so that a better incoming value can replace it.
-    </p>
-  </section>
+    </li>
+  </ul>
+</section>
+<section id="pitfalls" section-title="Common Pitfalls">
+  <h2>Common Pitfalls</h2>
+  <p>
+    Most priority-queue mistakes come from leaving the ordering rule implicit,
+    assuming guarantees the ADT does not provide, or confusing the ADT with a
+    particular representation.
+  </p>
+  <ul>
+    <li>
+      <strong>Mixing min and max conventions:</strong>
+      State whether smaller or larger keys represent better priority before
+      tracing operations or configuring a library comparison rule.
+    </li>
+    <li>
+      <strong>Assuming equal priorities are FIFO:</strong>
+      A priority queue is stable only if its specification or implementation
+      provides an appropriate tie-breaking rule. Do not assume equal-key
+      entries leave in insertion order.
+    </li>
+    <li>
+      <strong>Separating values from their keys:</strong>
+      Move or copy each complete entry. If values and priority keys are stored
+      in parallel arrays, every shift or replacement must update both arrays
+      consistently.
+    </li>
+    <li>
+      <strong>Removing from the wrong end of a sorted array:</strong>
+      In the layout used on this page, the best entry must be stored at the
+      right end so that extraction does not shift the remaining entries.
+      Storing it at the left end would make extraction linear.
+    </li>
+    <li>
+      <strong>Shifting an unsorted array unnecessarily:</strong>
+      Because the representation has no ordering invariant, fill an extracted
+      entry's gap with the final used entry instead of shifting all later
+      entries.
+    </li>
+    <li>
+      <strong>Forgetting underflow:</strong>
+      Both <code>peek</code> and <code>extract</code> need documented behavior
+      when the priority queue is empty.
+    </li>
+    <li>
+      <strong>Assuming iteration follows priority order:</strong>
+      A library priority queue may expose its entries without promising sorted
+      traversal. Repeated extraction is the operation that guarantees priority
+      order.
+    </li>
+    <li>
+      <strong>Changing a stored priority directly:</strong>
+      Mutating a field used by the comparison rule may invalidate the
+      representation's invariants or bookkeeping. Use a supported
+      priority-change operation, or remove and reinsert the entry.
+    </li>
+  </ul>
+</section>
 
-  <section id="pitfalls" section-title="Common Pitfalls">
-    <h2>Common Pitfalls</h2>
-    <p>
-      Most priority-queue mistakes come from leaving the ordering rule implicit or from
-      confusing the ADT with one representation.
-    </p>
-    <ul>
-      <li>
-        <strong>Mixing min and max conventions:</strong> State whether smaller or larger
-        keys represent better priority before tracing operations or configuring a library
-        comparator.
-      </li>
-      <li>
-        <strong>Separating values from the wrong priorities:</strong> Move or copy the
-        complete entry record. If values and priority keys are stored in parallel arrays,
-        every shift or replacement must update both arrays consistently.
-      </li>
-      <li>
-        <strong>Assuming equal priorities are FIFO:</strong> Stability requires an
-        explicit promise and usually an insertion sequence number.
-      </li>
-      <li>
-        <strong>Removing from the wrong end of a sorted array:</strong> The order should
-        place the best entry at the end that can be removed without shifting. Otherwise
-        the claimed constant-time extraction will actually be linear.
-      </li>
-      <li>
-        <strong>Shifting an unsorted array unnecessarily:</strong> Since order has no
-        meaning, fill a removed entry's gap with the final used entry instead of shifting
-        all later entries.
-      </li>
-      <li>
-        <strong>Forgetting underflow:</strong> Both <code>peek</code> and
-        <code>extract</code> need documented behavior on an empty priority queue.
-      </li>
-      <li>
-        <strong>Assuming iteration follows priority order:</strong> A library priority
-        queue may expose iteration without promising sorted traversal. Repeated
-        extraction is the ADT operation that guarantees priority order.
-      </li>
-      <li>
-        <strong>Mutating a stored priority behind the queue's back:</strong> Changing a
-        field used by the comparator may invalidate the representation's ordering.
-        Use a supported priority-change operation or remove and reinsert the entry.
-      </li>
-    </ul>
-  </section>
+<section id="summary" section-title="Summary">
+  <h2>Summary</h2>
+  <p>
+    A priority queue stores entries containing values and priority keys and
+    makes the best entry available next. A min-priority queue treats a smaller
+    key as better, while a max-priority queue treats a larger key as better.
+    The essential operations are <code>insert</code>, <code>peek</code>, and
+    <code>extract</code>.
+  </p>
+  <p>
+    A sorted array uses \(O(n)\) insertion to provide \(O(1)\)
+    <code>peek</code> and <code>extract</code>. An unsorted array provides
+    \(O(1)\) amortized insertion but requires \(O(n)\) time for
+    <code>peek</code> or <code>extract</code>. Linked-list versions make the
+    same broad time tradeoffs with different memory layouts and allocation
+    overhead. A binary heap provides a more balanced alternative, with
+    \(O(1)\) <code>peek</code> and \(O(\log n)\) insertion and extraction.
+  </p>
+  <p>
+    The examples on this page use min-priority queues, but the comparisons in
+    each implementation can be reversed to support max-priority queues. The
+    next page on
+    <a href="?path=Data%20Structures%2FPriority%20Queues%20and%20Heaps%2FBinary%20Heaps">Binary
+    Heaps</a> develops the heap representation in detail and uses max-heaps to
+    demonstrate the max-oriented convention.
+  </p>
+</section>
+<section id="links" section-title="Helpful Links and Resources">
+  <h2>Helpful Links and Resources</h2>
+  <ul>
+    <li>
+      <a href="https://en.wikipedia.org/wiki/Priority_queue"
+         target="_blank" rel="noopener">Priority queue on Wikipedia</a>:
+      an overview of the ADT, its operations, implementations, and
+      applications.
+    </li>
+    <li>
+      <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/PriorityQueue.html"
+         target="_blank" rel="noopener">Java
+         <code>PriorityQueue</code> documentation</a>:
+      ordering, operations, iteration behavior, and complexity guarantees for
+      Java's library class.
+    </li>
+    <li>
+      <a href="https://en.cppreference.com/cpp/container/priority_queue"
+         target="_blank" rel="noopener">C++
+         <code>std::priority_queue</code> reference</a>:
+      the max-oriented container adapter, its template parameters, and its
+      operations.
+    </li>
+    <li>
+      <a href="https://docs.python.org/3/library/heapq.html"
+         target="_blank" rel="noopener">Python
+         <code>heapq</code> documentation</a>:
+      heap and priority-queue operations provided as functions on Python
+      lists.
+    </li>
+  </ul>
+</section>
+<section id="reading-questions" section-title="Reading Comprehension Questions">
+  <h2>Reading Comprehension Questions</h2>
+  <ol>
+    <li>
+      <strong>Priority Rule:</strong>
+      How does a priority queue determine which entry to remove, and how does
+      this differ from a FIFO queue?
+    </li>
+    <li>
+      <strong>Min and Max Conventions:</strong>
+      What makes an entry best in a min-priority queue? What makes an entry
+      best in a max-priority queue?
+    </li>
+    <li>
+      <strong>Peek and Extract:</strong>
+      What do <code>peek</code> and <code>extract</code> have in common, and
+      how do they differ?
+    </li>
+    <li>
+      <strong>Stable Ties:</strong>
+      What does it mean for a priority queue to be stable? Give one general
+      way to implement stability.
+    </li>
+    <li>
+      <strong>Sorted-Array Layout:</strong>
+      Why does the sorted-array implementation on this page store the best
+      entry at the right end rather than the left end?
+    </li>
+    <li>
+      <strong>Sorted Insertion:</strong>
+      Why does using binary search to locate the insertion position not reduce
+      sorted-array insertion below \(O(n)\)?
+    </li>
+    <li>
+      <strong>Unsorted Extraction:</strong>
+      Why can the final used array entry be copied into the gap left by an
+      extracted entry?
+    </li>
+    <li>
+      <strong>Choosing an Implementation:</strong>
+      Which simple implementation is usually better for \(n\) insertions
+      followed by only one extraction? Why?
+    </li>
+    <li>
+      <strong>Binary-Heap Motivation:</strong>
+      How does a binary heap improve on the tradeoff between the sorted and
+      unsorted implementations?
+    </li>
+    <li>
+      <strong>Library Behavior:</strong>
+      Why does iterating through a library priority queue not necessarily
+      produce the entries from best to worst?
+    </li>
+  </ol>
 
-  <section id="summary" section-title="Summary">
-    <h2>Summary</h2>
-    <p>
-      A priority queue stores value-priority entries and makes the best-priority entry
-      available next. A min-priority queue treats a smaller key as better; a max-priority
-      queue treats a larger key as better. The essential operations are
-      <code>insert</code>, <code>peek</code>, and <code>extract</code>.
-    </p>
-    <p>
-      A sorted array spends \(O(n)\) time on insertion so that peek and extraction can be
-      \(O(1)\). An unsorted array appends in \(O(1)\) amortized time but scans in \(O(n)\)
-      for peek or extraction. Linked-list versions make the same broad time tradeoff with
-      different storage costs.
-    </p>
-    <p>
-      These simple implementations reveal the central design problem: frequent insertion
-      and frequent extraction should both be efficient. The next page on
-      <a href="?path=Data%20Structures%2FPriority%20Queues%20and%20Heaps%2FBinary%20Heaps">Binary
-      Heaps</a> develops an implementation that gives constant-time peek and logarithmic
-      insertion and extraction without fully sorting the entries.
-    </p>
-
-    ADDED: 
-    <p>
-  The examples on this page use min-priority queues, but the same implementations
-  can be reversed to support max-priority queues. The Binary Heaps page uses a
-  max-oriented convention to demonstrate the other choice.
-</p>
-
-  </section>
-
-  <section id="related-pages" section-title="Related Pages">
-    <h2>Related Pages</h2>
-    <ul>
-      <li>
-        <a href="?path=Data%20Structures%2FPriority%20Queues%20and%20Heaps%2FBinary%20Heaps">Binary
-        Heaps</a>, the next implementation option for priority queues.
-      </li>
-      <li>
-        <a href="?path=Data%20Structures%2FLinear%20Structures%2FQueues">Queues</a>,
-        which remove by arrival order instead of priority.
-      </li>
-      <li>
-        <a href="?path=Algorithms%2FGreedy%2FHuffman%20Encoding">Huffman Encoding</a>,
-        which repeatedly extracts two minimum-frequency entries.
-      </li>
-    </ul>
-  </section>
-
-  <section id="links" section-title="Helpful Links and Resources">
-    <h2>Helpful Links and Resources</h2>
-    <ul>
-      <li>
-        <a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/PriorityQueue.html"
-           target="_blank">Java <code>PriorityQueue</code> documentation</a>:
-        ordering, operations, and complexity guarantees for Java's library class.
-      </li>
-      <li>
-        <a href="https://en.cppreference.com/w/cpp/container/priority_queue"
-           target="_blank">C++ <code>std::priority_queue</code> reference</a>:
-        the max-oriented container adapter and its operations.
-      </li>
-      <li>
-        <a href="https://docs.python.org/3/library/heapq.html"
-           target="_blank">Python <code>heapq</code> documentation</a>:
-        priority-queue operations provided as functions on Python lists.
-      </li>
-    </ul>
-  </section>
-
-  <section id="reading-questions" section-title="Reading Comprehension Questions">
-    <h2>Reading Comprehension Questions</h2>
+  <button id="toggleAnswers" class="show-answer" aria-expanded="false">
+    Show Answers
+  </button>
+  <div id="answers" class="answer" hidden>
     <ol>
       <li>
-        <strong>Queue Comparison:</strong> How does a priority queue's removal rule differ
-        from the removal rule of a FIFO queue?
+        <strong>Answer:</strong>
+        A priority queue removes the entry selected as best by its priority
+        rule. A FIFO queue instead removes the entry that arrived earliest,
+        regardless of its key.
       </li>
       <li>
-        <strong>Min Convention:</strong> Which entry is best in a min-priority queue?
+        <strong>Answer:</strong>
+        A min-priority queue treats the entry with the smallest key as best.
+        A max-priority queue treats the entry with the largest key as best.
       </li>
       <li>
-        <strong>Peek and Extract:</strong> What state change distinguishes
-        <code>extract</code> from <code>peek</code>?
+        <strong>Answer:</strong>
+        Both operations identify the entry selected by the priority rule.
+        <code>peek</code> leaves that entry in the priority queue, while
+        <code>extract</code> removes it.
       </li>
       <li>
-        <strong>Ties:</strong> What extra information can make a priority queue stable?
+        <strong>Answer:</strong>
+        A stable priority queue extracts equal-key entries in their insertion
+        order. One general implementation method is to store an increasing
+        sequence number with each entry and use it to break ties.
       </li>
       <li>
-        <strong>Sorted Array:</strong> Why does the sorted-array layout place the best
-        entry at the right end?
+        <strong>Answer:</strong>
+        Removing the final used array entry does not shift any remaining
+        entries. Keeping the best entry there therefore allows
+        <code>extract</code> to run in \(O(1)\) time.
       </li>
       <li>
-        <strong>Binary Search:</strong> Why does binary search not reduce sorted-array
-        insertion below \(O(n)\)?
+        <strong>Answer:</strong>
+        Binary search can locate the insertion position using
+        \(O(\log n)\) comparisons, but as many as \(n\) existing entries may
+        still need to shift to open that position.
       </li>
       <li>
-        <strong>Unsorted Extraction:</strong> Why can the final used entry replace an
-        extracted entry without preserving the array's old order?
+        <strong>Answer:</strong>
+        The unsorted representation has no required order. Replacing the
+        extracted entry with the final used entry therefore does not violate
+        its representation invariant.
       </li>
       <li>
-        <strong>Workload Choice:</strong> Which simple implementation is a better fit for
-        many insertions followed by only one extraction? Explain.
+        <strong>Answer:</strong>
+        The unsorted array is usually better. Its \(n\) insertions take
+        \(O(n)\) total amortized time, and the single extraction takes
+        \(O(n)\), for \(O(n)\) total time. Sorted-array insertion could take
+        \(O(n^2)\) total time.
       </li>
       <li>
-        <strong>Library Iteration:</strong> Why should a program not assume that iterating
-        through a library priority queue visits entries from best to worst?
+        <strong>Answer:</strong>
+        A binary heap provides \(O(1)\) <code>peek</code> and
+        \(O(\log n)\) insertion and extraction. Thus, neither insertion nor
+        extraction requires the \(O(n)\) time needed by one of the two simple
+        implementations.
+      </li>
+      <li>
+        <strong>Answer:</strong>
+        The priority-queue ADT guarantees which entry is returned by
+        <code>peek</code> or <code>extract</code>, not the physical order of
+        all stored entries. A heap-based library may expose its internal heap
+        arrangement rather than a sorted sequence.
       </li>
     </ol>
+  </div>
+</section>
 
-    <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
-    <div id="answers" class="answer" hidden>
-      <ol>
+
+ <section id="activities" section-title="In-Class Activities">
+  <h2>In-Class Activities</h2>
+  <ol>
+    <li>
+      <strong>Min-Queue and Max-Queue Traces:</strong>
+      Begin with an empty priority queue and perform the following operations:
+      <code>insert(A, 6)</code>, <code>insert(B, 2)</code>,
+      <code>insert(C, 8)</code>, <code>insert(D, 2)</code>,
+      <code>extract()</code>, <code>insert(E, 5)</code>, and
+      <code>extract()</code>. One group should use a stable min-priority
+      queue, and another should use a stable max-priority queue. Compare the
+      two extraction sequences and explain every difference.
+    </li>
+<li>
+  <strong>Compare Sorted and Unsorted Array Implementations:</strong>
+  Insert <code>A:7</code>, <code>B:3</code>, <code>C:9</code>,
+  <code>D:4</code>, and <code>E:1</code>, in that order, into both a
+  sorted-array and an unsorted-array min-priority queue.
+
+  <ol type="a">
+    <li>
+      For the sorted array, store entries from worse to better. After each
+      insertion, draw the array, record <code>count</code>, and count the
+      number of existing entries shifted.
+    </li>
+    <li>
+      For the unsorted array, draw the array after all five insertions.
+    </li>
+    <li>
+      Perform three extractions from each implementation. For the unsorted
+      array, show the key comparisons, identify <code>bestIndex</code>, and
+      show how the final used entry fills the resulting gap.
+    </li>
+    <li>
+      Count the total key comparisons, entry shifts, and replacement copies
+      used by each implementation. Identify which performed less work for
+      this sequence and explain why that does not make it the better choice
+      for every workload.
+    </li>
+  </ol>
+</li>
+
+<li>
+  <strong>Investigate Stable Ties:</strong>
+  Insert <code>A:4</code>, <code>B:2</code>, <code>C:4</code>,
+  <code>D:2</code>, and <code>E:4</code> in that order. First, show how
+  the sorted-array insertion rule can preserve insertion order among equal
+  keys. Then show where things can go wrong with the unsorted array version. 
+  Explain how to fix the unsorted array version or explain why it cannot be fixed.
+</li>
+
+<li>
+  <strong>Predict and Test with the Demo:</strong>
+  Before using the interactive demo, predict the results of inserting
+  <code>A:8</code>, <code>B:5</code>, <code>C:7</code>,
+  <code>D:1</code>, and <code>E:5</code>, followed by one
+  <code>peek</code> and three <code>extract</code> operations. Test the
+  prediction in the demo. Record whether the demo preserves insertion
+  order among tied entries and identify which behaviors come from the ADT
+  specification and which depend on the demo's policy.
+</li>
+
+<li>
+  <strong>Choose an Implementation for Each Workload:</strong>
+  For each workload below, choose a sorted array, unsorted array, or binary
+  heap. Give an asymptotic total-time argument for the choice.
+  <ol type="a">
+    <li>\(n\) insertions followed by one extraction.</li>
+    <li>\(n\) insertions followed by \(n\) peeks.</li>
+    <li>\(n\) alternating insertions and extractions.</li>
+    <li>Ten insertions and ten thousand peeks.</li>
+  </ol>
+</li>
+
+<li>
+  <strong>Implement a Priority Queue with a Binary Search Tree:</strong>
+  Suppose a stable min-priority queue is implemented with a binary search
+  tree. Each node stores a complete priority-queue entry together with its
+  insertion sequence number. Nodes are ordered first by priority key and then
+  by sequence number, so earlier entries come first when priority keys tie.
+  To be clear, a single sequence of numbers is used for all entries, not one for each key value.
+<p>
+</p>
+  <ol type="a">
+    <li>
+      Insert <code>A:6</code>, <code>B:2</code>, <code>C:9</code>, <code>D:4</code>, <code>E:7</code>, 
+      and <code>F:1</code>, in that order, into an empty BST. Make sure to add the sequence number to each entry, starting with 0.
+    </li>
+    <li>
+      Identify the node returned by <code>peek</code> and explain how to find
+      it from the root.
+    </li>
+    <li>
+      Perform one <code>extract</code> operation by removing the minimum
+      node. Draw the resulting tree.
+    </li>
+    <li>
+      Insert <code>G:4</code> and <code>H:2</code>. Show where they are
+      placed using the priority-key and sequence-number comparison rule.
+    </li>
+    <li>
+      Give the next four entries that would be extracted. Explain how the
+      sequence numbers determine the order of entries with equal priority
+      keys.
+    </li>
+    <li>
+      Describe how <code>insert</code>, <code>peek</code>, and
+      <code>extract</code> can be implemented using ordinary binary search
+      tree operations.
+    </li>
+    <li>
+      Give the running time of each operation in terms of the tree height
+      \(h\). Then give the bounds when the tree is balanced and when it
+      degenerates into a chain.
+    </li>
+    <li>
+      Explain how storing a direct reference to the minimum node would change
+      the cost of <code>peek</code>. What bookkeeping would be required after
+      insertion or extraction?
+    </li>
+    <li>
+      Compare this implementation with a binary heap. Identify one capability
+      that a binary search tree supports more naturally and one reason a
+      binary heap is usually preferred for the basic priority queue ADT.
+    </li>
+  </ol>
+</li>
+
+
+
+  </ol>
+</section>
+
+<section id="problems" section-title="Homework Problems">
+  <h2>Homework Problems</h2>
+  <ol>
+    <li>
+      <strong>Trace Both Array Implementations:</strong>
+      Begin with an empty stable min-priority queue and perform the following
+      operations:
+      <code>insert(A, 5)</code>, <code>insert(B, 2)</code>,
+      <code>insert(C, 7)</code>, <code>insert(D, 2)</code>,
+      <code>insert(E, 4)</code>, <code>extract()</code>,
+      <code>insert(F, 1)</code>, and <code>extract()</code>.
+      <ol type="a">
         <li>
-          <strong>Answer:</strong> A FIFO queue removes the earliest arrival, while a
-          priority queue removes the entry with the best priority under its ordering rule.
+          Trace the operations using the sorted-array representation from this
+          page. Show the array after every operation and count all entry shifts.
         </li>
         <li>
-          <strong>Answer:</strong> The entry with the smallest priority key.
+          Trace the same operations using the unsorted-array representation.
+          For each extraction, show the comparisons used to find
+          <code>bestIndex</code> and the entry copied into the resulting gap.
         </li>
         <li>
-          <strong>Answer:</strong> Both identify the best entry, but
-          <code>extract</code> removes it and <code>peek</code> leaves the queue unchanged.
+          Give the two returned extraction values for each implementation and
+          verify that both satisfy the same stable priority-queue behavior.
         </li>
         <li>
-          <strong>Answer:</strong> An increasing insertion sequence number can break ties
-          so that the earlier inserted entry is considered better.
-        </li>
-        <li>
-          <strong>Answer:</strong> Removing the final used array cell does not shift the
-          remaining entries, so extraction can take constant time.
-        </li>
-        <li>
-          <strong>Answer:</strong> Binary search can find the insertion position quickly,
-          but as many as \(n\) entries still have to shift to open that position.
-        </li>
-        <li>
-          <strong>Answer:</strong> The representation promises no order, so moving the
-          final entry into the gap does not violate an invariant.
-        </li>
-        <li>
-          <strong>Answer:</strong> The unsorted array is usually better because each
-          insertion is \(O(1)\) amortized and the one \(O(n)\) scan is postponed until
-          extraction.
-        </li>
-        <li>
-          <strong>Answer:</strong> The priority-queue ADT guarantees the next entry
-          returned by peek or extraction, not the traversal order of its internal storage.
+          Compare the total numbers of comparisons, shifts, and replacement
+          copies performed by the two representations.
         </li>
       </ol>
-    </div>
-  </section>
+    </li>
 
-  <section id="activities" section-title="In-Class Activities">
-    <h2>In-Class Activities</h2>
-    <ol>
-      <li>
-        <strong>ADT Trace:</strong> In groups, trace the same six entries through a
-        min-priority queue and a max-priority queue. Include a tie and state the
-        tie-breaking rule before beginning.
-      </li>
-      <li>
-        <strong>Sorted Insertion:</strong> Start with
-        <code>[(A, 9), (B, 6), (C, 4), (D, 1)]</code>, stored from worse to better.
-        Draw every array write needed to insert <code>(E, 5)</code>, then extract twice.
-      </li>
-      <li>
-        <strong>Unsorted Extraction:</strong> Start with
-        <code>[(A, 6), (B, 2), (C, 8), (D, 4), (E, 3)]</code>. Circle each comparison
-        used to find the minimum, remove it by filling the gap from the end, and repeat.
-      </li>
-      <li>
-        <strong>Workload Debate:</strong> Choose a sorted or unsorted representation for
-        each workload: one thousand inserts followed by one peek; one insert followed by
-        one thousand peeks; alternating insert and extract. Defend each choice using
-        total cost rather than one operation in isolation.
-      </li>
-      <li>
-        <strong>Stable Entries:</strong> Add sequence numbers to five entries containing
-        two priority ties. Write the comparison rule precisely and predict the full
-        extraction order.
-      </li>
-    </ol>
-  </section>
+<li>
+  <strong>Stable Tie-Breaking:</strong>
+  A stable min-priority queue assigns sequence numbers beginning with 0.
+  Insert <code>A:4</code>, <code>B:2</code>, <code>C:4</code>,
+  <code>D:2</code>, <code>E:4</code>, and <code>F:2</code>, in that
+  order.
 
-  <section id="problems" section-title="Homework Problems">
-    <h2>Homework Problems</h2>
-    <ol>
-      <li>
-        <strong>Sorted-Array Priority Queue:</strong> Implement a resizable sorted-array
-        min-priority queue with <code>insert</code>, <code>peek</code>,
-        <code>extract</code>, <code>isEmpty</code>, and <code>size</code>. Keep the best
-        entry at the used right end. Document the empty-queue policy and test insertions
-        at the beginning, middle, and end of the used range.
-      </li>
-      <li>
-        <strong>Unsorted-Array Priority Queue:</strong> Implement the same interface with
-        an unsorted resizable array. Extraction must fill the removed entry's gap with
-        the final used entry rather than shifting a suffix. Test the case where the best
-        entry is already last.
-      </li>
-      <li>
-        <strong>Stable Tie-Breaking:</strong> Extend both implementations with insertion
-        sequence numbers. Create tests showing that at least four equal-priority entries
-        leave in insertion order even after unsorted extraction changes array positions.
-      </li>
-      <li>
-        <strong>Total-Cost Analysis:</strong> For each implementation, determine the
-        worst-case total time for (a) \(n\) insertions followed by one extraction,
-        (b) one insertion followed by \(n\) peeks, and (c) \(n\) insertions followed by
-        \(n\) extractions. Explain each sum rather than multiplying bounds mechanically.
-      </li>
-      <li>
-        <strong>Experimental Comparison:</strong> Time your two implementations on
-        insertion-heavy, extraction-heavy, and alternating workloads. Use the same input
-        entries for both, repeat each experiment, and explain where the measurements do
-        or do not match the asymptotic analysis.
-      </li>
-      <li>
-        <strong>Event Scheduler:</strong> Design a small event simulation in which each
-        event has a name, scheduled time, and insertion sequence number. Describe how new
-        events enter the priority queue and what should happen when two events have the
-        same scheduled time.
-      </li>
-      <li>
-        <strong>Comparator Design:</strong> A hospital record stores severity from 1
-        (most severe) to 5 (least severe), arrival time, and patient name. Write a precise
-        comparison rule that handles all ties, then give the extraction order for at
-        least six sample records.
-      </li>
-    </ol>
-  </section>
+  <ol type="a">
+    <li>
+      Write each complete entry as
+      <code>(value, key, sequenceNumber)</code>.
+    </li>
+    <li>
+      Give the comparison rule for two entries, including the rule used
+      when their priority keys are equal.
+    </li>
+    <li>
+      Give the complete extraction order.
+    </li>
+    <li>
+      Show how the sorted-array insertion rule can preserve this order
+      without explicitly comparing sequence numbers.
+    </li>
+    <li>
+      Explain why the unsorted-array representation cannot rely on
+      physical array order to preserve stability after extractions begin.
+    </li>
+  </ol>
+</li>
+
+<li>
+  <strong>Total-Cost Analysis:</strong>
+  Analyze each of the following workloads for a sorted array, an unsorted
+  array, and a binary heap. Give a tight asymptotic bound for the complete
+  workload, not merely the cost of one operation.
+
+  <ol type="a">
+    <li>\(n\) insertions followed by one extraction.</li>
+    <li>\(n\) insertions followed by \(n\) peeks.</li>
+    <li>\(n\) insertions followed by \(n\) extractions.</li>
+    <li>
+      Begin with ten entries already in the priority queue. Repeat the following
+      pair of operations \(n\) times: insert one entry, then immediately extract
+      one entry. Thus, the priority queue contains ten entries at the beginning
+      and end of every repetition.
+    </li>
+
+  </ol>
+
+  For each part, identify which implementation has the best asymptotic
+  bound and explain any case in which the size of the priority queue,
+  rather than the total number of operations, changes the conclusion.
+</li>
+
+<li>
+  <strong>Merge Sorted Sequences:</strong>
+  Use a min-priority queue to merge the following sorted sequences:
+
+  <p>
+    <code>L1 = [2, 8, 11, 19]</code><br>
+    <code>L2 = [1, 6, 14]</code><br>
+    <code>L3 = [3, 4, 12, 17]</code><br>
+    <code>L4 = [5, 7, 9, 16]</code>
+  </p>
+
+  <ol type="a">
+    <li>
+      State exactly what information each priority-queue entry must store
+      in addition to the numerical value.
+    </li>
+    <li>
+      Show the initial priority-queue contents.
+    </li>
+    <li>
+      Trace the first eight extractions and the insertions that follow
+      them.
+    </li>
+    <li>Give the complete merged sequence.</li>
+    <li>
+      If the sequences contain \(N\) values altogether and there are
+      \(k\) sequences, determine the running time when the priority queue
+      is implemented with a binary heap.
+    </li>
+  </ol>
+</li>
+
+<li>
+  <strong>Keep the Largest Values in a Stream:</strong>
+  Process the stream
+
+  <p>
+    <code>18, 7, 25, 3, 14, 30, 11, 22, 5, 27, 16, 29</code>
+  </p>
+
+  while retaining only the four largest values seen so far.
+
+  <ol type="a">
+    <li>
+      Explain why a min-priority queue, rather than a max-priority queue,
+      is convenient for this task.
+    </li>
+    <li>
+      State the rule used when a new value arrives after four values are
+      already stored.
+    </li>
+    <li>
+      Show the priority-queue contents after each stream value is
+      processed.
+    </li>
+    <li>Give the final four retained values.</li>
+    <li>
+      Generalize the algorithm for retaining the largest \(k\) values
+      from a stream of \(n\) values and analyze its time and extra-space
+      complexity using a binary heap.
+    </li>
+  </ol>
+</li>
+
+<li>
+  <strong>Priority Queue with a Binary Search Tree:</strong>
+  A stable min-priority queue is implemented with a binary search tree.
+  Each entry is ordered by the pair
+  <code>(priorityKey, sequenceNumber)</code>, with smaller pairs appearing
+  earlier.
+
+  Insert <code>A:6</code>, <code>B:2</code>, <code>C:9</code>,
+  <code>D:4</code>, <code>E:7</code>, <code>F:1</code>,
+  <code>G:4</code>, and <code>H:2</code>, in that order, assigning
+  sequence numbers beginning with 0.
+
+  <ol type="a">
+    <li>
+      Draw the resulting binary search tree and label every node with its
+      value, key, and sequence number.
+    </li>
+    <li>
+      Identify the entry returned by <code>peek</code> and describe how
+      it is found.
+    </li>
+    <li>
+      Perform two extractions and draw the tree after each one.
+    </li>
+    <li>
+      Give the running times of <code>insert</code>,
+      <code>peek</code>, and <code>extract</code> in terms of the tree
+      height \(h\).
+    </li>
+    <li>
+      Give the corresponding bounds when the tree is balanced and when it
+      degenerates into a chain.
+    </li>
+    <li>
+      Explain how maintaining a direct reference to the minimum node
+      changes the cost of <code>peek</code> and what bookkeeping is needed
+      when that node is extracted.
+    </li>
+    <li>
+      Identify one capability supported naturally by the binary search
+      tree that is not part of the basic priority queue ADT.
+    </li>
+  </ol>
+</li>
+
+<li>
+  <strong>Application-Specific Comparison Rule:</strong>
+  A hospital waiting system stores each patient’s name, severity level,
+  arrival time, and registration number. Severity 1 is most urgent and
+  severity 5 is least urgent.
+
+  <ol type="a">
+    <li>
+      Write a complete comparison rule that first considers severity,
+      then arrival time, and finally registration number.
+    </li>
+    <li>
+      Create eight patient records, including at least two pairs with
+      equal severity and at least one pair with equal severity and arrival
+      time.
+    </li>
+    <li>Give the complete extraction order of your records.</li>
+    <li>
+      Explain whether your rule produces a stable priority queue with
+      respect to insertion order.
+    </li>
+    <li>
+      Describe one policy that could reduce the risk that low-severity
+      patients wait indefinitely.
+    </li>
+  </ol>
+</li>
+
+<li>
+  <strong>Sorted-Array Priority Queue:</strong> Implement a resizable sorted-array
+  min-priority queue with <code>insert</code>, <code>peek</code>,
+  <code>extract</code>, <code>isEmpty</code>, and <code>size</code>. Keep the best
+  entry at the used right end. Document the empty-queue policy and test insertions
+  at the beginning, middle, and end of the used range.
+</li>
+<li>
+  <strong>Unsorted-Array Priority Queue:</strong> Implement the same interface with
+  an unsorted resizable array. Extraction must fill the removed entry's gap with
+  the final used entry rather than shifting a suffix. Test the case where the best
+  entry is already last.
+</li>
+  </ol>
+</section>
+
 </body>
 </html>
