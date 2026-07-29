@@ -77,16 +77,8 @@
     }
 
     .cost-summary-table th:first-child,
-    .cost-summary-table td:first-child,
-    .cost-summary-table th:last-child,
-    .cost-summary-table td:last-child,
-    .library-priority-table th:last-child,
-    .library-priority-table td:last-child {
+    .cost-summary-table td:first-child {
       text-align: left;
-    }
-
-    .library-priority-table code {
-      white-space: nowrap;
     }
 
     .callout {
@@ -98,6 +90,18 @@
       background: #fff8e8;
     }
     .core-operations-table td:first-child code {
+      white-space: nowrap;
+    }
+   
+    .library-operation-table th,
+    .library-operation-table td {
+      padding: 0.3em 0.6em;
+      line-height: 1.25;
+      vertical-align: top;
+    }
+
+    .library-operation-table th {
+      width: 10em;
       white-space: nowrap;
     }
   </style>
@@ -1111,273 +1115,8 @@ extract():
   </section>
 </section>
 
-
-    ALSO OLD
-    <section id="implementation-unsorted" section-title="OLD Implementation 2: Unsorted Array or List">
-      <h3>OLD Implementation 2: Unsorted Array or List</h3>
-
-      <section id="implementation-unsorted-basics" section-title="Basics">
-        <h4>Basics</h4>
-        <p>
-          An unsorted representation stores entries in any convenient order. In an
-          array, insertion appends the new entry at <code>A[count]</code>. No existing
-          entry moves, and no comparisons are needed. The cost is postponed until
-          <code>peek</code> or <code>extract</code> must find the best priority.
-        </p>
-
-        <svg class="implementation-figure" viewBox="0 0 720 210" role="img"
-             aria-labelledby="unsortedArrayTitle unsortedArrayDesc">
-          <title id="unsortedArrayTitle">Unsorted-array min-priority queue</title>
-          <desc id="unsortedArrayDesc">
-            An array stores A priority 5, D priority 2, C priority 7, E priority 4,
-            and B priority 3 in no priority order. A scan arrow crosses all entries,
-            and D is highlighted as the best entry found.
-          </desc>
-          <defs>
-            <marker id="scan-arrow" viewBox="0 0 10 10" refX="9" refY="5"
-                    markerWidth="7" markerHeight="7" orient="auto">
-              <path d="M 0 0 L 10 5 L 0 10 z" fill="#0a3974"></path>
-            </marker>
-          </defs>
-          <text x="30" y="42" class="code-label">A</text>
-          <g transform="translate(60 20)">
-            <rect x="0" y="0" width="110" height="62" fill="#fff" stroke="#0a3974" stroke-width="2"></rect>
-            <rect x="110" y="0" width="110" height="62" fill="#fff3d9" stroke="#d9822b" stroke-width="3"></rect>
-            <rect x="220" y="0" width="110" height="62" fill="#fff" stroke="#0a3974" stroke-width="2"></rect>
-            <rect x="330" y="0" width="110" height="62" fill="#fff" stroke="#0a3974" stroke-width="2"></rect>
-            <rect x="440" y="0" width="110" height="62" fill="#fff" stroke="#0a3974" stroke-width="2"></rect>
-            <text x="55" y="26" text-anchor="middle" class="entry-value">A</text>
-            <text x="55" y="49" text-anchor="middle" class="entry-priority">priority 5</text>
-            <text x="165" y="26" text-anchor="middle" class="entry-value">D</text>
-            <text x="165" y="49" text-anchor="middle" class="entry-priority">priority 2</text>
-            <text x="275" y="26" text-anchor="middle" class="entry-value">C</text>
-            <text x="275" y="49" text-anchor="middle" class="entry-priority">priority 7</text>
-            <text x="385" y="26" text-anchor="middle" class="entry-value">E</text>
-            <text x="385" y="49" text-anchor="middle" class="entry-priority">priority 4</text>
-            <text x="495" y="26" text-anchor="middle" class="entry-value">B</text>
-            <text x="495" y="49" text-anchor="middle" class="entry-priority">priority 3</text>
-            <text x="55" y="84" text-anchor="middle" class="entry-priority">0</text>
-            <text x="165" y="84" text-anchor="middle" class="entry-priority">1</text>
-            <text x="275" y="84" text-anchor="middle" class="entry-priority">2</text>
-            <text x="385" y="84" text-anchor="middle" class="entry-priority">3</text>
-            <text x="495" y="84" text-anchor="middle" class="entry-priority">4</text>
-          </g>
-          <path d="M 75 145 H 595" fill="none" stroke="#0a3974" stroke-width="2.5"
-                marker-end="url(#scan-arrow)"></path>
-          <text x="335" y="137" text-anchor="middle" class="figure-label">
-            scan every used cell
-          </text>
-          <path d="M 225 190 V 88" fill="none" stroke="#d9822b" stroke-width="2.5"
-                marker-end="url(#scan-arrow)"></path>
-          <text x="225" y="205" text-anchor="middle" class="figure-label" font-weight="700">
-            best found at index 1
-          </text>
-        </svg>
-
-        <p>
-          The order in this drawing has no meaning. D happens to be at index 1, but a
-          later insertion with a better key could be appended at the right end. A scan
-          is necessary whenever the location of the best entry is not already known.
-        </p>
-      </section>
-
-      <section id="implementation-unsorted-operations" section-title="How the Operations Work">
-        <h4>How the Operations Work</h4>
-
-        <h5>Insert</h5>
-        <p>
-          Write the new entry into <code>A[count]</code> and increment
-          <code>count</code>. A resizable array occasionally needs to grow, but ordinary
-          insertions use one array write and no priority comparisons.
-        </p>
-
-        <h5>Peek</h5>
-        <p>
-          Start by treating <code>A[0]</code> as the best entry found so far. Compare it
-          with each remaining used cell. Whenever an entry has better priority, remember
-          its index. After the complete scan, return that entry without changing the
-          array.
-        </p>
-
-        <h5>Extract</h5>
-        <p>
-          First perform the same scan to find <code>bestIndex</code>. Because the array
-          is unsorted, removing that entry does not require shifting a whole suffix.
-          Copy the final used entry into <code>A[bestIndex]</code>, clear the final cell,
-          and decrement <code>count</code>. The remaining order changes, but it was
-          already irrelevant.
-        </p>
-
-        <svg class="implementation-figure" viewBox="0 0 720 285" role="img"
-             aria-labelledby="unsortedExtractTitle unsortedExtractDesc">
-          <title id="unsortedExtractTitle">Extraction from an unsorted-array priority queue</title>
-          <desc id="unsortedExtractDesc">
-            Before extraction D priority 2 is at index 1 and B priority 3 is in the last
-            used cell. D is removed, then B is copied into the gap. The resulting
-            unsorted array contains A priority 5, B priority 3, C priority 7, and E priority 4.
-          </desc>
-          <defs>
-            <marker id="replace-arrow" viewBox="0 0 10 10" refX="9" refY="5"
-                    markerWidth="7" markerHeight="7" orient="auto">
-              <path d="M 0 0 L 10 5 L 0 10 z" fill="#0a3974"></path>
-            </marker>
-          </defs>
-          <text x="20" y="43" class="figure-label" font-weight="700">before</text>
-          <g transform="translate(105 15)">
-            <rect x="0" y="0" width="100" height="56" fill="#fff" stroke="#0a3974" stroke-width="2"></rect>
-            <rect x="100" y="0" width="100" height="56" fill="#fff3d9" stroke="#d9822b" stroke-width="3"></rect>
-            <rect x="200" y="0" width="100" height="56" fill="#fff" stroke="#0a3974" stroke-width="2"></rect>
-            <rect x="300" y="0" width="100" height="56" fill="#fff" stroke="#0a3974" stroke-width="2"></rect>
-            <rect x="400" y="0" width="100" height="56" fill="#dcecff" stroke="#0a3974" stroke-width="2"></rect>
-            <text x="50" y="34" text-anchor="middle" class="entry-value">A:5</text>
-            <text x="150" y="34" text-anchor="middle" class="entry-value">D:2</text>
-            <text x="250" y="34" text-anchor="middle" class="entry-value">C:7</text>
-            <text x="350" y="34" text-anchor="middle" class="entry-value">E:4</text>
-            <text x="450" y="34" text-anchor="middle" class="entry-value">B:3</text>
-          </g>
-          <path d="M 555 82 C 520 125, 330 130, 255 83" fill="none" stroke="#0a3974"
-                stroke-width="2.5" marker-end="url(#replace-arrow)"></path>
-          <text x="405" y="130" text-anchor="middle" class="figure-label">
-            copy final entry into the gap
-          </text>
-          <text x="20" y="197" class="figure-label" font-weight="700">after</text>
-          <g transform="translate(105 168)">
-            <rect x="0" y="0" width="100" height="56" fill="#fff" stroke="#0a3974" stroke-width="2"></rect>
-            <rect x="100" y="0" width="100" height="56" fill="#dcecff" stroke="#0a3974" stroke-width="2"></rect>
-            <rect x="200" y="0" width="100" height="56" fill="#fff" stroke="#0a3974" stroke-width="2"></rect>
-            <rect x="300" y="0" width="100" height="56" fill="#fff" stroke="#0a3974" stroke-width="2"></rect>
-            <rect x="400" y="0" width="100" height="56" fill="#eef3f7" stroke="#9aacbd" stroke-width="2"></rect>
-            <text x="50" y="34" text-anchor="middle" class="entry-value">A:5</text>
-            <text x="150" y="34" text-anchor="middle" class="entry-value">B:3</text>
-            <text x="250" y="34" text-anchor="middle" class="entry-value">C:7</text>
-            <text x="350" y="34" text-anchor="middle" class="entry-value">E:4</text>
-            <text x="450" y="34" text-anchor="middle" class="entry-priority">unused</text>
-          </g>
-          <text x="255" y="268" text-anchor="middle" class="code-label">count changes from 5 to 4</text>
-        </svg>
-        <p>
-          If the best entry is already last, no copy is necessary; simply clear that
-          cell. Either way, the removal after the scan takes constant time.
-        </p>
-      </section>
-
-      <section id="implementation-unsorted-pseudocode" section-title="Unsorted-Array Pseudocode">
-        <h4>Unsorted-Array Pseudocode</h4>
-        
-<pre><code class="language-python">insert(value, priority):
-    if count == A.length:
-        grow A
-
-    A[count] = (value, priority)
-    count = count + 1
-
-findBestIndex():
-    if count == 0:
-        report underflow
-
-    bestIndex = 0
-    for i = 1 to count - 1:
-        if better(A[i], A[bestIndex]):
-            bestIndex = i
-    return bestIndex
-
-peek():
-    return A[findBestIndex()]
-
-extract():
-    bestIndex = findBestIndex()
-    result = A[bestIndex]
-
-    A[bestIndex] = A[count - 1]
-    A[count - 1] = empty
-    count = count - 1
-    return result</code></pre>
-        <p>
-          In a stable implementation, <code>better</code> again uses an insertion
-          sequence number to break priority ties. Without that secondary comparison,
-          replacing a removed entry with the final entry can change the relative array
-          positions of tied entries, so array position cannot safely stand in for
-          insertion order.
-        </p>
-      </section>
-
-      <section id="implementation-unsorted-analysis" section-title="Implementation Analysis">
-        <h4>Implementation Analysis</h4>
-        <ul>
-          <li>
-            <strong><code>insert</code>:</strong> \(O(1)\) amortized for a resizable
-            array. Most appends are constant time; an occasional resize takes \(O(n)\).
-          </li>
-          <li>
-            <strong><code>peek</code>:</strong> \(O(n)\), because the best entry could
-            be in any used cell.
-          </li>
-          <li>
-            <strong><code>extract</code>:</strong> \(O(n)\) overall. The scan is linear,
-            even though replacing the removed entry with the final entry is \(O(1)\).
-          </li>
-          <li>
-            <strong><code>isEmpty</code> and <code>size</code>:</strong> \(O(1)\) using
-            <code>count</code>.
-          </li>
-        </ul>
-        <p>
-          The storage cost is the same kind of \(O(n)\) resizable-array storage used by
-          the sorted implementation. A fixed-size version instead uses \(O(c)\) space
-          for capacity \(c\).
-        </p>
-        <p>
-          An unsorted linked list can insert at the head in \(O(1)\). Peek still scans
-          all nodes. Extraction also scans all nodes and must remember the node before
-          the best one so that it can unlink the best node after the scan. Its asymptotic
-          costs therefore match the unsorted array.
-        </p>
-      </section>
-
-      <section id="implementation-unsorted-tradeoffs" section-title="Tradeoffs">
-        <h4>Tradeoffs</h4>
-        <p>
-          The unsorted representation is a reasonable choice when insertions are much
-          more frequent than peeks or extractions, or when the priority queue always
-          remains small. It also makes a useful first implementation because the code
-          closely matches the definition: store every entry, then search for the best
-          when needed.
-        </p>
-        <p>
-          Its weakness appears in a workload that repeatedly extracts entries. Extracting
-          all \(n\) entries performs scans of sizes \(n\), \(n-1\), \(n-2\), and so on,
-          for \(\Theta(n^2)\) total work. The sorted version pays comparable work during
-          insertion instead. The next implementation topic will show how to avoid making
-          either operation linear.
-        </p>
-      </section>
-    </section>
-
-    <section id="other-options" section-title="Implementation 3: Other Options">
-      <h3>Implementation 3: Other Options</h3>
-      <p>
-        Sorted and unsorted arrays expose a sharp tradeoff: one gives fast extraction,
-        while the other gives fast insertion. A <strong>binary heap</strong> is an
-        array-based representation that offers a better balance. It provides constant-time
-        access to the best entry and logarithmic insertion and extraction without keeping
-        the entire array sorted.
-      </p>
-      <p>
-        The next page, <a href="?path=Data%20Structures%2FPriority%20Queues%20and%20Heaps%2FBinary%20Heaps">Binary
-        Heaps</a>, develops that representation. Heap drawings and heap repair operations
-        belong there; they are not part of the priority queue ADT itself.
-      </p>
-      <p>
-        Balanced search trees can also implement priority queues. They are worth
-        considering when a program needs operations beyond the basic ADT, such as finding
-        arbitrary keys or traversing all entries in sorted order. More specialized
-        priority-queue structures make still other tradeoffs, but they are best studied
-        after the basic heap implementation.
-      </p>
-    </section>
-
-    <section id="library-implementations" section-title="Implementation 4: Library Implementations">
-      <h3>Implementation 4: Library Implementations</h3>
+    <section id="library-implementations" section-title="Library Implementations">
+      <h3>Library Implementations</h3>
       <p>
         In everyday programming, a standard library priority queue is usually preferable
         to writing one from scratch. Library implementations are tested and efficient.
@@ -1385,165 +1124,247 @@ extract():
         a data structures course because it makes the ADT and its cost tradeoffs concrete.
       </p>
 
-      <table class="example-table left-align library-priority-table">
-        <thead>
-          <tr>
-            <th>Language</th>
-            <th>Common Choice</th>
-            <th>Insert</th>
-            <th>Peek</th>
-            <th>Extract</th>
-            <th>Notes</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><strong>Java</strong></td>
-            <td><code>PriorityQueue&lt;E&gt;</code></td>
-            <td><code>offer(value)</code></td>
-            <td><code>peek()</code></td>
-            <td><code>poll()</code></td>
-            <td>
-              The least element under the natural ordering or supplied
-              <code>Comparator</code> is at the head. Ties are not guaranteed to be stable.
-            </td>
-          </tr>
-          <tr>
-            <td><strong>C++</strong></td>
-            <td><code>std::priority_queue&lt;T&gt;</code></td>
-            <td><code>push(value)</code></td>
-            <td><code>top()</code></td>
-            <td><code>pop()</code></td>
-            <td>
-              Max-oriented by default. <code>pop()</code> removes but does not return the
-              top value, so call <code>top()</code> first when the value is needed.
-            </td>
-          </tr>
-          <tr>
-            <td><strong>Python</strong></td>
-            <td><code>heapq</code> with a <code>list</code></td>
-            <td><code>heappush(pq, value)</code></td>
-            <td><code>pq[0]</code></td>
-            <td><code>heappop(pq)</code></td>
-            <td>
-              Min-oriented. <code>heapq</code> is a module of functions that operate on
-              a list rather than a separate priority-queue class.
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <h4>Java</h4>
+<table class="example-table left-align library-operation-table">
+  <tbody>
+    <tr>
+      <th>Class or Module</th>
+      <td><code>PriorityQueue&lt;E&gt;</code></td>
+    </tr>
+    <tr>
+      <th>Underlying Structure</th>
+      <td>A resizable array maintained as a binary heap.</td>
+    </tr>
+    <tr>
+      <th>Insert</th>
+      <td><code>offer(value)</code></td>
+    </tr>
+    <tr>
+      <th>Peek</th>
+      <td><code>peek()</code></td>
+    </tr>
+    <tr>
+      <th>Extract</th>
+      <td><code>poll()</code></td>
+    </tr>
+    <tr>
+      <th>Notes</th>
+      <td>
+        Java places the least element under its natural ordering or a supplied
+        <code>Comparator</code> at the head. Equal elements are not guaranteed
+        to be removed in insertion order.
+      </td>
+    </tr>
+  </tbody>
+</table>
 
-      <p>
-        Library defaults matter. Java and Python put a least element first under their
-        default ordering, while C++ puts a greatest element first. All three allow custom
-        ordering, but their comparator syntax and direction differ.
-      </p>
-      <p>
-        A priority queue's internal iteration order is also not necessarily priority
-        order. To process entries from best to worst, repeatedly use the extraction
-        operation. Iterating over the underlying library container may reveal an
-        implementation-dependent arrangement instead.
-      </p>
-      <p>
-        Finally, the basic libraries above do not directly provide the abstract
-        <code>changePriority</code> operation described earlier. A program may need a
-        different data structure, extra position bookkeeping, or a strategy that inserts
-        a replacement entry and later ignores the stale one.
-      </p>
+<h4>C++</h4>
+<table class="example-table left-align library-operation-table">
+  <tbody>
+    <tr>
+      <th>Class or Module</th>
+      <td><code>std::priority_queue&lt;T&gt;</code></td>
+    </tr>
+    <tr>
+      <th>Underlying Structure</th>
+      <td>
+        A container adapter, usually backed by a <code>vector</code> maintained
+        as a binary heap.
+      </td>
+    </tr>
+    <tr>
+      <th>Insert</th>
+      <td><code>push(value)</code></td>
+    </tr>
+    <tr>
+      <th>Peek</th>
+      <td><code>top()</code></td>
+    </tr>
+    <tr>
+      <th>Extract</th>
+      <td><code>pop()</code></td>
+    </tr>
+    <tr>
+      <th>Notes</th>
+      <td>
+        C++ is max-oriented by default. <code>pop()</code> removes the top
+        entry but does not return it, so call <code>top()</code> first when
+        the value is needed.
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<h4>Python</h4>
+<table class="example-table left-align library-operation-table">
+  <tbody>
+    <tr>
+      <th>Class or Module</th>
+      <td><code>heapq</code></td>
+    </tr>
+    <tr>
+      <th>Underlying Structure</th>
+      <td>A Python <code>list</code> maintained as a binary min-heap.</td>
+    </tr>
+    <tr>
+      <th>Insert</th>
+      <td><code>heappush(pq, value)</code></td>
+    </tr>
+    <tr>
+      <th>Peek</th>
+      <td><code>pq[0]</code></td>
+    </tr>
+    <tr>
+      <th>Extract</th>
+      <td><code>heappop(pq)</code></td>
+    </tr>
+    <tr> <th>Notes</th> <td> Python's traditional <code>heapq</code> operations are min-oriented. 
+      Beginning with Python 3.14, the module also provides corresponding max-heap operations. 
+      The functions operate on a list rather than defining a separate priority-queue class. 
+    </td> </tr>
+  </tbody>
+</table>
+
+    <p>
+      All three library choices are heap-based rather than using the fully sorted
+      or completely unsorted representations developed earlier. Java provides a
+      heap-based priority queue, C++ maintains its underlying container using heap
+      operations, and Python's <code>heapq</code> maintains a heap directly in a
+      list. The next page,
+      <a href="?path=Data%20Structures%2FPriority%20Queues%20and%20Heaps%2FBinary%20Heaps">Binary
+      Heaps</a>, develops this representation and explains how it supports
+      efficient insertion, inspection, and extraction.
+    </p>
+    <p>
+      Library defaults matter. Java places the least element first under its
+      default ordering, while C++ places the greatest element first. Python's
+      traditional <code>heapq</code> operations use a min-heap. Each language
+      also provides a way to reverse or customize the ordering, although the
+      syntax differs.
+    </p>
+    <p>
+      Where traversal is available, it does not necessarily visit entries in
+      priority order. Java's iterator and the list used by Python expose an
+      internal heap arrangement rather than a sorted sequence, while C++'s
+      <code>priority_queue</code> does not provide an iteration interface. To
+      process entries from best to worst, repeatedly use the extraction operation.
+    </p>
+    <p>
+      Finally, these basic library interfaces do not directly provide the abstract
+      <code>changePriority</code> operation described earlier. A program may need
+      additional position bookkeeping, a different data structure, or a strategy
+      that inserts a replacement entry and later ignores the stale one.
+    </p>
     </section>
 
     <section id="cost-summary" section-title="Implementation Cost Summary">
-      <h3>Implementation Cost Summary</h3>
-      <p>
-        The two simple implementations move the same linear work to different operations.
-        The table assumes the array layouts developed above: the sorted array stores the
-        best entry at its used right end, and the unsorted array replaces an extracted
-        entry with the final used entry.
-      </p>
-
-      <table class="example-table cost-summary-table">
-        <thead>
-          <tr>
-            <th>Operation</th>
-            <th>Sorted Array</th>
-            <th>Unsorted Array</th>
-            <th>Notes</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><b><code>insert</code></b></td>
-            <td>\(O(n)\)</td>
-            <td>\(O(1)\) amortized</td>
-            <td>
-              The sorted version shifts entries. The unsorted version appends; an
-              occasional resize takes \(O(n)\).
-            </td>
-          </tr>
-          <tr>
-            <td><b><code>peek</code></b></td>
-            <td>\(O(1)\)</td>
-            <td>\(O(n)\)</td>
-            <td>
-              The sorted version knows the best position. The unsorted version scans.
-            </td>
-          </tr>
-          <tr>
-            <td><b><code>extract</code></b></td>
-            <td>\(O(1)\)</td>
-            <td>\(O(n)\)</td>
-            <td>
-              Sorted extraction removes at the used end. Unsorted extraction scans and
-              then fills the gap in constant time.
-            </td>
-          </tr>
-          <tr>
-            <td><code>isEmpty</code></td>
-            <td>\(O(1)\)</td>
-            <td>\(O(1)\)</td>
-            <td>Both check whether <code>count == 0</code>.</td>
-          </tr>
-          <tr>
-            <td><code>size</code></td>
-            <td>\(O(1)\)</td>
-            <td>\(O(1)\)</td>
-            <td>Both return <code>count</code>.</td>
-          </tr>
-          <tr>
-            <td>Storage</td>
-            <td>\(O(n)\)</td>
-            <td>\(O(n)\)</td>
-            <td>Resizable arrays may reserve more cells than are currently used.</td>
-          </tr>
-          <tr>
-            <td>Best fit</td>
-            <td>Few insertions, many peeks or extractions</td>
-            <td>Many insertions, few peeks or extractions</td>
-            <td>
-              If both insertion and extraction are frequent, neither simple version is
-              ideal; the Binary Heaps page addresses that workload.
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      <p>
-        The linked-list variants have the same asymptotic bounds for these core
-        operations. The meaningful differences are memory layout, allocation overhead,
-        unused array capacity, and the exact mechanics of insertion and removal.
-      </p>
-    </section>
-
-    <section id="binary-heaps-preview" section-title="Looking Ahead: Binary Heaps">
-  <h3>Looking Ahead: Binary Heaps</h3>
+  <h3>Implementation Cost Summary</h3>
   <p>
-    The sorted and unsorted representations move the linear work to different
-    operations. A binary heap provides a better balance: peek takes \(O(1)\)
-    time, while insertion and extraction take \(O(\log n)\) time.
+  The sorted and unsorted implementations both require \(O(n)\) time for one
+  of the main priority queue operations. A sorted array may shift many entries
+  during insertion, while an unsorted array must scan all entries to find the
+  best one during <code>peek</code> or <code>extract</code>. A binary heap
+  avoids making either insertion or extraction linear, providing a more
+  balanced set of operation costs.
+</p>
+
+  <table class="example-table cost-summary-table">
+    <thead>
+      <tr>
+        <th>Operation</th>
+        <th>Sorted Array</th>
+        <th>Unsorted Array</th>
+        <th>Binary Heap</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><b><code>insert</code></b></td>
+        <td>\(O(n)\)</td>
+        <td>\(O(1)\) amortized</td>
+        <td>\(O(\log n)\)</td>
+      </tr>
+      <tr>
+        <td><b><code>peek</code></b></td>
+        <td>\(O(1)\)</td>
+        <td>\(O(n)\)</td>
+        <td>\(O(1)\)</td>
+      </tr>
+      <tr>
+        <td><b><code>extract</code></b></td>
+        <td>\(O(1)\)</td>
+        <td>\(O(n)\)</td>
+        <td>\(O(\log n)\)</td>
+      </tr>
+      <tr>
+        <td><code>isEmpty</code></td>
+        <td>\(O(1)\)</td>
+        <td>\(O(1)\)</td>
+        <td>\(O(1)\)</td>
+      </tr>
+      <tr>
+        <td><code>size</code></td>
+        <td>\(O(1)\)</td>
+        <td>\(O(1)\)</td>
+        <td>\(O(1)\)</td>
+      </tr>
+      <tr>
+        <td>Storage</td>
+        <td>\(O(n)\)</td>
+        <td>\(O(n)\)</td>
+        <td>\(O(n)\)</td>
+      </tr>
+     
+    </tbody>
+  </table>
+
+<p>
+  The best choice depends on the expected workload. A sorted array works well
+  when insertions are relatively rare but peeks and extractions are frequent.
+  An unsorted array is better when many entries are inserted but the best entry
+  is requested only occasionally. When insertion and extraction are both
+  common, a binary heap usually provides the best general-purpose balance.
+</p>
+
+  
+  <p>
+    In the sorted array, insertion may shift as many as \(n\) entries, but the
+    best entry is always available at the used end. In the unsorted array,
+    insertion usually appends in constant time, but <code>peek</code> and
+    <code>extract</code> must scan the used cells. Resizable arrays may
+    occasionally require \(O(n)\) time to grow, which is why unsorted-array
+    insertion is described as \(O(1)\) amortized.
   </p>
+
   <p>
-    The next page develops binary heaps in detail. It uses max-heaps to
-    demonstrate the max-oriented convention, although the same structure can
-    be reversed to produce the min-priority queues used on this page.
+    A binary heap avoids making either insertion or extraction linear. It
+    keeps the best entry in a known position while maintaining only enough
+    order to repair the structure in \(O(\log n)\) time after an insertion or
+    extraction. This balance makes binary heaps the most common
+    general-purpose implementation of priority queues.
+  </p>
+
+  <p>
+    The linked-list versions of the sorted and unsorted representations have
+    the same asymptotic operation bounds as their array counterparts. Their
+    main differences involve memory layout, allocation overhead, unused array
+    capacity, and the mechanics of insertion and removal.
+  </p>
+
+  <p>
+    The next page,
+    <a href="?path=Data%20Structures%2FPriority%20Queues%20and%20Heaps%2FBinary%20Heaps">Binary
+    Heaps</a>, develops this representation in detail. It uses max-heaps to
+    demonstrate the max-oriented convention, although reversing the comparison
+    produces the min-priority queues used on this page.
+  </p>
+
+  <p>
+    Balanced search trees can also implement priority queues and may be useful
+    when a program needs additional operations, such as searching for
+    arbitrary keys or traversing all entries in sorted order. More specialized
+    priority-queue structures make other tradeoffs, but binary heaps are the
+    usual next step.
   </p>
 </section>
   </section>
