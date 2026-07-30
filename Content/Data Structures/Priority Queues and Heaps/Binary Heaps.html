@@ -22,264 +22,1006 @@
 <body>
   <h1>Binary Heaps</h1>
 
-  <section id="overview" section-title="Overview">
-    <h2>Overview</h2>
+  <section id="overview" section-title="Overview and Structure">
+  <h2>Overview and Structure</h2>
+
+  <p>
+    A <strong>binary heap</strong> is a tree-shaped data structure that keeps
+    one extreme entry&mdash;either the minimum or the maximum&mdash;easy to access.
+    It does not completely sort its entries. Instead, it imposes just enough
+    structure to place the highest-priority entry at the root while supporting
+    efficient insertion and removal.
+  </p>
+
+  <p>
+    It is helpful to distinguish the data structure from the interface it
+    implements. A <strong>priority queue</strong> is an abstract data type that
+    supports operations such as inserting an entry, inspecting the
+    highest-priority entry, and removing it. A binary heap is one concrete
+    way to implement that interface.
+  </p>
+
+  <p>
+    This page develops <strong>max-heaps</strong>, where larger keys have
+    higher priority. In a <strong>min-heap</strong>, smaller keys have higher
+    priority, and the same algorithms work with the comparisons reversed. For
+    the priority-queue interface and simpler implementation choices, review the
+    <a href="?path=Data%20Structures%2FPriority%20Queues%20and%20Heaps%2FPriority%20Queues">
+      Priority Queues
+    </a>
+    page.
+  </p>
+
+  <p>
+    Two properties define the structure of a binary heap:
+  </p>
+
+  <ol class="spaced">
+    <li>
+      <strong>Complete-tree shape:</strong>
+      The heap is a complete binary tree. Every level is full except possibly
+      the last, and entries on the last level occupy the leftmost available
+      positions. Consequently, a nonempty heap containing \(n\) entries has
+      height \(\lfloor \log_2 n \rfloor\).
+    </li>
+    <li>
+      <strong>Heap order:</strong>
+      In a max-heap, the key stored at each node is greater than or equal to
+      the keys stored at its children. In a min-heap, each parent's key is less
+      than or equal to its children's keys.
+    </li>
+  </ol>
+
+  <div class="example-box">
+    <strong class="example-title">Example 1: A Complete Max-Heap</strong>
+<svg viewBox="0 0 900 460"
+     role="img"
+     aria-labelledby="heapExampleTitle heapExampleDesc"
+     style="display:block; width:100%; height:auto; margin-top:0.75em;">
+  <title id="heapExampleTitle">
+    A complete binary tree satisfying max-heap order
+  </title>
+  <desc id="heapExampleDesc">
+    The root contains 90. Its children contain 72 and 85. The next
+    level contains 31, 60, 40, and 10. The final level contains 20,
+    25, and 55 in the three leftmost available positions. Every parent
+    is at least as large as each of its children.
+  </desc>
+
+  <defs>
+    <style>
+      .heap-edge {
+        stroke: #555;
+        stroke-width: 2.5;
+        stroke-linecap: round;
+      }
+
+      .heap-node {
+        fill: #f0f8ff;
+        stroke: #003366;
+        stroke-width: 2.5;
+      }
+
+      .heap-node-text {
+        fill: #002244;
+        font-family: Verdana, sans-serif;
+        font-size: 18px;
+        font-weight: 600;
+        text-anchor: middle;
+        dominant-baseline: middle;
+      }
+
+      .heap-label {
+        fill: #444;
+        font-family: Verdana, sans-serif;
+        font-size: 15px;
+      }
+
+      .heap-guide {
+        stroke: #888;
+        stroke-width: 1.5;
+        stroke-dasharray: 7 5;
+      }
+    </style>
+  </defs>
+
+  <!-- Edges: center to center -->
+  <!-- Root to level 1 -->
+  <line x1="450" y1="55" x2="270" y2="150" class="heap-edge"/>
+  <line x1="450" y1="55" x2="630" y2="150" class="heap-edge"/>
+
+  <!-- Level 1 to level 2 -->
+  <line x1="270" y1="150" x2="150" y2="250" class="heap-edge"/>
+  <line x1="270" y1="150" x2="350" y2="250" class="heap-edge"/>
+  <line x1="630" y1="150" x2="550" y2="250" class="heap-edge"/>
+  <line x1="630" y1="150" x2="750" y2="250" class="heap-edge"/>
+
+  <!-- Level 2 to level 3 -->
+  <line x1="150" y1="250" x2="90" y2="350" class="heap-edge"/>
+  <line x1="150" y1="250" x2="210" y2="350" class="heap-edge"/>
+  <line x1="350" y1="250" x2="310" y2="350" class="heap-edge"/>
+
+  <!-- Root -->
+  <circle cx="450" cy="55" r="28" class="heap-node"/>
+  <text x="450" y="55" class="heap-node-text">90</text>
+
+  <!-- Level 1 -->
+  <circle cx="270" cy="150" r="28" class="heap-node"/>
+  <text x="270" y="150" class="heap-node-text">72</text>
+
+  <circle cx="630" cy="150" r="28" class="heap-node"/>
+  <text x="630" y="150" class="heap-node-text">85</text>
+
+  <!-- Level 2 -->
+  <circle cx="150" cy="250" r="28" class="heap-node"/>
+  <text x="150" y="250" class="heap-node-text">31</text>
+
+  <circle cx="350" cy="250" r="28" class="heap-node"/>
+  <text x="350" y="250" class="heap-node-text">60</text>
+
+  <circle cx="550" cy="250" r="28" class="heap-node"/>
+  <text x="550" y="250" class="heap-node-text">40</text>
+
+  <circle cx="750" cy="250" r="28" class="heap-node"/>
+  <text x="750" y="250" class="heap-node-text">10</text>
+
+  <!-- Level 3 -->
+  <circle cx="90" cy="350" r="28" class="heap-node"/>
+  <text x="90" y="350" class="heap-node-text">20</text>
+
+  <circle cx="210" cy="350" r="28" class="heap-node"/>
+  <text x="210" y="350" class="heap-node-text">25</text>
+
+  <circle cx="310" cy="350" r="28" class="heap-node"/>
+  <text x="310" y="350" class="heap-node-text">55</text>
+
+  <!-- Completeness annotation -->
+  <line x1="55" y1="397" x2="345" y2="397" class="heap-guide"/>
+  <text x="200" y="425"
+        class="heap-label"
+        text-anchor="middle">
+    The final level is occupied from left to right.
+  </text>
+
+  <!-- Heap-order annotation -->
+  <text x="590" y="350" class="heap-label">
+    Every parent is at least
+  </text>
+  <text x="590" y="373" class="heap-label">
+    as large as its children.
+  </text>
+</svg>
+
+<p>
+  This is a valid max-heap. Its last level is not full, but the occupied
+  positions are filled from left to right, so the tree is complete. The next
+  inserted entry would become the right child of <code>60</code>. Every parent
+  is also at least as large as its children, so the tree satisfies max-heap
+  order.
+</p>
+
+<p>
+  Heap order does not sort the entire tree. For example, <code>72</code>
+  appears to the left of the larger value <code>85</code>, and values in
+  different branches have no required relationship. The local parent-child
+  rule guarantees only that the largest value, <code>90</code>, is at the
+  root. A heap is therefore not a binary search tree.
+</p>
+
+  </div>
+
+  
+</section>
+
+<section id="array-representation" section-title="Array Representation">
+  <h2>Array Representation</h2>
+
+  <p>
+    Although a binary heap is described as a tree, it is usually stored in an
+    array. Because the tree is complete, its nodes have no gaps when listed
+    level by level from left to right. They can therefore occupy consecutive
+    array positions without storing child or parent references.
+  </p>
+
+  <p>
+    The root is stored first, followed by the nodes on each successive level
+    from left to right. With zero-based indexing, the relatives of the node at
+    index \(i\) are determined directly from its index:
+  </p>
+
+  <ul>
+    <li>left child: \(2i+1\),</li>
+    <li>right child: \(2i+2\), and</li>
+    <li>parent, when \(i&gt;0\): \(\lfloor(i-1)/2\rfloor\).</li>
+  </ul>
+
+  <p>
+    The max-heap from the previous example is stored as
+    <code>[90, 72, 85, 31, 60, 40, 10, 20, 25, 55]</code>.
+    For example, the entry <code>85</code> is at index <code>2</code>.
+    Its children are at indices <code>5</code> and <code>6</code>, and its
+    parent is at index <code>0</code>.
+  </p>
+
     <p>
-      A <strong>binary heap</strong> is a tree-shaped data structure that keeps
-      one extreme entry—the minimum or maximum—easy to access. It combines two
-      rules: the tree has a complete shape, and every parent has at least as
-      much priority as its children. Those rules are weak enough to maintain
-      efficiently but strong enough to place the best entry at the root.
-    </p>
-    <p>
-      It is helpful to separate interface from representation. A
-      <strong>priority queue</strong> is the abstract data type: it specifies
-      operations such as insertion, inspecting the best entry, and removing the
-      best entry. A binary heap is a concrete data structure that implements
-      that interface. People sometimes speak informally of the “heap ADT”
-      because a heap object exposes the same operations, but the important
-      distinction is that the priority queue describes <em>what</em> clients
-      may do while the binary heap describes <em>how</em> those operations are
-      represented and maintained.
-    </p>
-    <p>
-      This page develops max-heaps, where larger keys have higher priority.
-      Min-heaps use exactly the same structure and algorithms with the
-      comparisons reversed. For the priority-queue interface and other
-      implementation choices, review the
-      <a href="?path=Data%20Structures%2FPriority%20Queues%20and%20Heaps%2FPriority%20Queues">Priority Queues</a>
-      page.
-    </p>
+    This implementation stores a fixed-capacity backing array and a logical
+    <code>size</code>. Only indices <code>0</code> through
+    <code>size - 1</code> belong to the heap; later cells are unused capacity.
+    Tests for whether a child exists must therefore compare its index with
+    <code>size</code>, not with the physical length of the backing array.
+  </p>
+
+  <p>
+    Use the following demo to explore how a binary heap's array positions
+    correspond to nodes in the conceptual tree. Select an entry to identify its
+    parent and children in both representations.
+  </p>
+
+  <div class="embeddedDemoContainer">
+    <iframe class="embeddedDemo"
+            src="/DAIADS/Content/Demos/Data Structures/Heap/Heap Representation Demo.html"
+            allow="fullscreen"
+            name="heap-representation-demo">
+    </iframe>
+  </div>
+</section>
+
+<section id="core-operations" section-title="Core Operations">
+  <h2>Core Operations</h2>
+
+  <p>
+    The public operations largely match the priority-queue interface. This
+    page assumes that the heap uses a <strong>fixed-capacity array</strong>.
+    An insertion into a full heap fails and leaves the heap unchanged. The
+    table uses max-heap names to make the selected extreme explicit; a more
+    general implementation could instead use names such as
+    <code>peekBest</code> and <code>extractBest</code>.
+  </p>
+
+  <table class="example-table left-top-align">
+    <thead>
+      <tr>
+        <th>Operation</th>
+        <th>Behavior</th>
+        <th>Worst-Case Time</th>
+      </tr>
+    </thead>
+    <tbody>
+  <tr>
+    <td><code>isEmpty()</code></td>
+    <td>Report whether the heap is empty.</td>
+    <td>\(\Theta(1)\)</td>
+  </tr>
+  <tr>
+    <td><code>isFull()</code></td>
+    <td>Report whether the heap has reached its capacity.</td>
+    <td>\(\Theta(1)\)</td>
+  </tr>
+  <tr>
+    <td><code>size()</code></td>
+    <td>Return the number of stored entries.</td>
+    <td>\(\Theta(1)\)</td>
+  </tr>
+  <tr>
+    <td><code>peekMax()</code></td>
+    <td>Return the maximum entry without removing it.</td>
+    <td>\(\Theta(1)\)</td>
+  </tr>
+  <tr>
+    <td><code>insert(entry)</code></td>
+    <td>
+      Insert a new entry. Return <code>false</code> if the heap is full;
+      otherwise, return <code>true</code>.
+    </td>
+    <td>\(\Theta(\log n)\)</td>
+  </tr>
+  <tr>
+    <td><code>extractMax()</code></td>
+    <td>Remove and return the maximum entry.</td>
+    <td>\(\Theta(\log n)\)</td>
+  </tr>
+</tbody>
+
+  </table>
+
+  <p>
+    Two private helpers restore heap order.
+    <code>siftUp</code> moves a newly inserted entry toward the root, while
+    <code>siftDown</code> moves a replacement entry toward the leaves. These
+    helpers are implementation mechanisms rather than operations exposed
+    through the priority-queue interface.
+  </p>
+
+  <p>
+    A resizable heap would grow its backing array when it becomes full rather
+    than rejecting an insertion. Copying entries into a larger array makes an
+    occasional insertion take \(\Theta(n)\) time, although insertion remains
+    \(O(\log n)\) amortized when the capacity is doubled.
+  </p>
+</section>
+
+<section id="operation-behavior" section-title="How the Operations Work">
+  <h2>How the Operations Work</h2>
+
+  <p>
+    Heap updates handle shape and order separately. An entry is first added or
+    removed in the position required by the complete-tree shape. If this
+    disrupts heap order, one entry is moved along a single path until the order
+    is restored.
+  </p>
+
+<section id="operation-peekMax" section-title="peekMax">
+  <h3><code>peekMax</code></h3>
+  <p>
+    In a nonempty max-heap, the maximum entry is always at the root, which is
+    stored at index <code>0</code>. Thus, <code>peekMax</code> can return the
+    maximum without searching the heap. The implementation must also define
+    what happens when the heap is empty, such as signaling an error or returning
+    a designated empty result.
+  </p>
   </section>
 
-  <section id="structure-and-invariants" section-title="Structure and Invariants">
-    <h2>Structure and Invariants</h2>
-    <p>
-      Every valid binary heap satisfies a <strong>shape invariant</strong> and
-      an <strong>order invariant</strong>. An operation is not finished until
-      both are true.
-    </p>
+<section id="operation-insert" section-title="insert">
+  <h3><code>insert</code></h3>
+  <p>
+  If the fixed-capacity array is full, <code>insert</code> returns
+  <code>false</code> and leaves the heap unchanged. Otherwise, it places the
+  new entry at index <code>size</code>, the next position required by the
+  complete-tree shape, and increases <code>size</code>.
+</p>
 
-    <h3>Complete-tree shape</h3>
-    <p>
-      The heap is a complete binary tree: every level is full except possibly
-      the last, and the last level is occupied from left to right. Consequently,
-      a heap with \(n\) entries has height \(\lfloor\log_2 n\rfloor\). There is
-      only one legal position for the next inserted entry and only one leaf
-      that can be removed without creating a gap.
-    </p>
+<p>
+  The existing entries still satisfy max-heap order, so the only possible
+  violation is between the new entry and its parent. The
+  <code>siftUp</code> helper repeatedly swaps the entry with its parent while
+  the entry is larger. It stops when the entry reaches the root or is no
+  larger than its parent. Once heap order has been restored,
+  <code>insert</code> returns <code>true</code>.
+</p>
 
-    <h3>Heap order</h3>
-    <ul>
-      <li>
-        In a <strong>max-heap</strong>, each parent’s key is greater than or
-        equal to the keys of its children.
-      </li>
-      <li>
-        In a <strong>min-heap</strong>, each parent’s key is less than or equal
-        to the keys of its children.
-      </li>
-    </ul>
-    <p>
-      The rule is local, but it implies that the root is globally best. It does
-      not order siblings or entries in different branches, and a heap should
-      never be mistaken for a sorted array or a binary search tree.
-    </p>
-    <pre><code>        90
-      /    \
-    72      85
-   /  \    /  \
-  31  60  40  10</code></pre>
-    <p>
-      This is a valid max-heap. Every parent dominates its children, even
-      though values such as <code>72</code> and <code>85</code> do not appear
-      in sorted order from left to right.
-    </p>
+
+  <div class="example-box"
+     style="display:block; width:100%; max-width:1000px; margin:1em auto;">
+  <strong class="example-title">Example 2: Insertion</strong>
+
+  <p>
+    Insert <code>88</code> into the heap shown below. The new entry is placed
+    in the next available position, as the left child of <code>60</code>.
+    It then swaps with <code>60</code> and <code>80</code>, stopping below
+    <code>95</code>.
+  </p>
+
+<svg viewBox="0 0 1000 700"
+    role="img"
+    aria-labelledby="insertHeapTitle insertHeapDesc"
+    style="display:block; width:100%; height:auto;"> <title id="insertHeapTitle">
+Inserting 88 into a max-heap </title> <desc id="insertHeapDesc">
+Four tree diagrams show the original max-heap, 88 placed as the next
+leaf, 88 swapped with 60, and 88 swapped with 80. It stops below 95. </desc>
+<defs>
+  <style>
+    .insert-edge {
+      stroke: #555;
+      stroke-width: 2.5;
+      stroke-linecap: round;
+    }
+
+    .insert-node {
+      fill: #ffffff;
+      stroke: #003366;
+      stroke-width: 2.5;
+    }
+
+    .insert-active-node {
+      fill: #dbeafe;
+      stroke: #003366;
+      stroke-width: 3;
+    }
+
+    .insert-text {
+      fill: #002244;
+      font-family: Verdana, sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      text-anchor: middle;
+      dominant-baseline: middle;
+    }
+
+    .insert-step {
+      fill: #002244;
+      font-family: Verdana, sans-serif;
+      font-size: 17px;
+      font-weight: 600;
+      text-anchor: middle;
+    }
+
+    .insert-caption {
+      fill: #444;
+      font-family: Verdana, sans-serif;
+      font-size: 14px;
+      text-anchor: middle;
+    }
+  </style>
+</defs>
+
+<!-- ========================================================= -->
+<!-- Step 1: Original heap                                     -->
+<!-- ========================================================= -->
+
+<g transform="translate(25,35)">
+  <text x="225" y="10" class="insert-step">
+    1. Start with a valid max-heap
+  </text>
+
+  <!-- Edges -->
+  <line x1="225" y1="50" x2="113" y2="110" class="insert-edge"/>
+  <line x1="225" y1="50" x2="338" y2="110" class="insert-edge"/>
+
+  <line x1="113" y1="110" x2="58" y2="175" class="insert-edge"/>
+  <line x1="113" y1="110" x2="168" y2="175" class="insert-edge"/>
+  <line x1="338" y1="110" x2="283" y2="175" class="insert-edge"/>
+  <line x1="338" y1="110" x2="393" y2="175" class="insert-edge"/>
+
+  <line x1="58" y1="175" x2="30" y2="245" class="insert-edge"/>
+  <line x1="58" y1="175" x2="85" y2="245" class="insert-edge"/>
+  <line x1="168" y1="175" x2="140" y2="245" class="insert-edge"/>
+  <line x1="168" y1="175" x2="195" y2="245" class="insert-edge"/>
+
+  <!-- Nodes -->
+  <circle cx="225" cy="50" r="21" class="insert-node"/>
+  <text x="225" y="50" class="insert-text">95</text>
+
+  <circle cx="113" cy="110" r="21" class="insert-node"/>
+  <text x="113" y="110" class="insert-text">84</text>
+
+  <circle cx="338" cy="110" r="21" class="insert-node"/>
+  <text x="338" y="110" class="insert-text">80</text>
+
+  <circle cx="58" cy="175" r="21" class="insert-node"/>
+  <text x="58" y="175" class="insert-text">70</text>
+
+  <circle cx="168" cy="175" r="21" class="insert-node"/>
+  <text x="168" y="175" class="insert-text">65</text>
+
+  <circle cx="283" cy="175" r="21" class="insert-node"/>
+  <text x="283" y="175" class="insert-text">60</text>
+
+  <circle cx="393" cy="175" r="21" class="insert-node"/>
+  <text x="393" y="175" class="insert-text">55</text>
+
+  <circle cx="30" cy="245" r="21" class="insert-node"/>
+  <text x="30" y="245" class="insert-text">30</text>
+
+  <circle cx="85" cy="245" r="21" class="insert-node"/>
+  <text x="85" y="245" class="insert-text">25</text>
+
+  <circle cx="140" cy="245" r="21" class="insert-node"/>
+  <text x="140" y="245" class="insert-text">50</text>
+
+  <circle cx="195" cy="245" r="21" class="insert-node"/>
+  <text x="195" y="245" class="insert-text">45</text>
+
+  <text x="225" y="295" class="insert-caption">
+    The next open position is the left child of 60.
+  </text>
+</g>
+
+<!-- ========================================================= -->
+<!-- Step 2: Insert 88                                         -->
+<!-- ========================================================= -->
+
+<g transform="translate(525,35)">
+  <text x="225" y="10" class="insert-step">
+    2. Insert 88 at the next position
+  </text>
+
+  <!-- Edges -->
+  <line x1="225" y1="50" x2="113" y2="110" class="insert-edge"/>
+  <line x1="225" y1="50" x2="338" y2="110" class="insert-edge"/>
+
+  <line x1="113" y1="110" x2="58" y2="175" class="insert-edge"/>
+  <line x1="113" y1="110" x2="168" y2="175" class="insert-edge"/>
+  <line x1="338" y1="110" x2="283" y2="175" class="insert-edge"/>
+  <line x1="338" y1="110" x2="393" y2="175" class="insert-edge"/>
+
+  <line x1="58" y1="175" x2="30" y2="245" class="insert-edge"/>
+  <line x1="58" y1="175" x2="85" y2="245" class="insert-edge"/>
+  <line x1="168" y1="175" x2="140" y2="245" class="insert-edge"/>
+  <line x1="168" y1="175" x2="195" y2="245" class="insert-edge"/>
+  <line x1="283" y1="175" x2="250" y2="245" class="insert-edge"/>
+
+  <!-- Nodes -->
+  <circle cx="225" cy="50" r="21" class="insert-node"/>
+  <text x="225" y="50" class="insert-text">95</text>
+
+  <circle cx="113" cy="110" r="21" class="insert-node"/>
+  <text x="113" y="110" class="insert-text">84</text>
+
+  <circle cx="338" cy="110" r="21" class="insert-node"/>
+  <text x="338" y="110" class="insert-text">80</text>
+
+  <circle cx="58" cy="175" r="21" class="insert-node"/>
+  <text x="58" y="175" class="insert-text">70</text>
+
+  <circle cx="168" cy="175" r="21" class="insert-node"/>
+  <text x="168" y="175" class="insert-text">65</text>
+
+  <circle cx="283" cy="175" r="21" class="insert-node"/>
+  <text x="283" y="175" class="insert-text">60</text>
+
+  <circle cx="393" cy="175" r="21" class="insert-node"/>
+  <text x="393" y="175" class="insert-text">55</text>
+
+  <circle cx="30" cy="245" r="21" class="insert-node"/>
+  <text x="30" y="245" class="insert-text">30</text>
+
+  <circle cx="85" cy="245" r="21" class="insert-node"/>
+  <text x="85" y="245" class="insert-text">25</text>
+
+  <circle cx="140" cy="245" r="21" class="insert-node"/>
+  <text x="140" y="245" class="insert-text">50</text>
+
+  <circle cx="195" cy="245" r="21" class="insert-node"/>
+  <text x="195" y="245" class="insert-text">45</text>
+
+  <circle cx="250" cy="245" r="21" class="insert-active-node"/>
+  <text x="250" y="245" class="insert-text">88</text>
+
+  <text x="225" y="295" class="insert-caption">
+    Since 88 is larger than 60, swap them.
+  </text>
+</g>
+
+<!-- ========================================================= -->
+<!-- Step 3: First swap                                        -->
+<!-- ========================================================= -->
+
+<g transform="translate(25,375)">
+  <text x="225" y="10" class="insert-step">
+    3. Swap 88 with 60
+  </text>
+
+  <!-- Edges -->
+  <line x1="225" y1="50" x2="113" y2="110" class="insert-edge"/>
+  <line x1="225" y1="50" x2="338" y2="110" class="insert-edge"/>
+
+  <line x1="113" y1="110" x2="58" y2="175" class="insert-edge"/>
+  <line x1="113" y1="110" x2="168" y2="175" class="insert-edge"/>
+  <line x1="338" y1="110" x2="283" y2="175" class="insert-edge"/>
+  <line x1="338" y1="110" x2="393" y2="175" class="insert-edge"/>
+
+  <line x1="58" y1="175" x2="30" y2="245" class="insert-edge"/>
+  <line x1="58" y1="175" x2="85" y2="245" class="insert-edge"/>
+  <line x1="168" y1="175" x2="140" y2="245" class="insert-edge"/>
+  <line x1="168" y1="175" x2="195" y2="245" class="insert-edge"/>
+  <line x1="283" y1="175" x2="250" y2="245" class="insert-edge"/>
+
+  <!-- Nodes -->
+  <circle cx="225" cy="50" r="21" class="insert-node"/>
+  <text x="225" y="50" class="insert-text">95</text>
+
+  <circle cx="113" cy="110" r="21" class="insert-node"/>
+  <text x="113" y="110" class="insert-text">84</text>
+
+  <circle cx="338" cy="110" r="21" class="insert-node"/>
+  <text x="338" y="110" class="insert-text">80</text>
+
+  <circle cx="58" cy="175" r="21" class="insert-node"/>
+  <text x="58" y="175" class="insert-text">70</text>
+
+  <circle cx="168" cy="175" r="21" class="insert-node"/>
+  <text x="168" y="175" class="insert-text">65</text>
+
+  <circle cx="283" cy="175" r="21" class="insert-active-node"/>
+  <text x="283" y="175" class="insert-text">88</text>
+
+  <circle cx="393" cy="175" r="21" class="insert-node"/>
+  <text x="393" y="175" class="insert-text">55</text>
+
+  <circle cx="30" cy="245" r="21" class="insert-node"/>
+  <text x="30" y="245" class="insert-text">30</text>
+
+  <circle cx="85" cy="245" r="21" class="insert-node"/>
+  <text x="85" y="245" class="insert-text">25</text>
+
+  <circle cx="140" cy="245" r="21" class="insert-node"/>
+  <text x="140" y="245" class="insert-text">50</text>
+
+  <circle cx="195" cy="245" r="21" class="insert-node"/>
+  <text x="195" y="245" class="insert-text">45</text>
+
+  <circle cx="250" cy="245" r="21" class="insert-node"/>
+  <text x="250" y="245" class="insert-text">60</text>
+
+  <text x="225" y="295" class="insert-caption">
+    Since 88 is larger than 80, swap again.
+  </text>
+</g>
+
+<!-- ========================================================= -->
+<!-- Step 4: Second swap                                       -->
+<!-- ========================================================= -->
+
+<g transform="translate(525,375)">
+  <text x="225" y="10" class="insert-step">
+    4. Swap 88 with 80
+  </text>
+
+  <!-- Edges -->
+  <line x1="225" y1="50" x2="113" y2="110" class="insert-edge"/>
+  <line x1="225" y1="50" x2="338" y2="110" class="insert-edge"/>
+
+  <line x1="113" y1="110" x2="58" y2="175" class="insert-edge"/>
+  <line x1="113" y1="110" x2="168" y2="175" class="insert-edge"/>
+  <line x1="338" y1="110" x2="283" y2="175" class="insert-edge"/>
+  <line x1="338" y1="110" x2="393" y2="175" class="insert-edge"/>
+
+  <line x1="58" y1="175" x2="30" y2="245" class="insert-edge"/>
+  <line x1="58" y1="175" x2="85" y2="245" class="insert-edge"/>
+  <line x1="168" y1="175" x2="140" y2="245" class="insert-edge"/>
+  <line x1="168" y1="175" x2="195" y2="245" class="insert-edge"/>
+  <line x1="283" y1="175" x2="250" y2="245" class="insert-edge"/>
+
+  <!-- Nodes -->
+  <circle cx="225" cy="50" r="21" class="insert-node"/>
+  <text x="225" y="50" class="insert-text">95</text>
+
+  <circle cx="113" cy="110" r="21" class="insert-node"/>
+  <text x="113" y="110" class="insert-text">84</text>
+
+  <circle cx="338" cy="110" r="21" class="insert-active-node"/>
+  <text x="338" y="110" class="insert-text">88</text>
+
+  <circle cx="58" cy="175" r="21" class="insert-node"/>
+  <text x="58" y="175" class="insert-text">70</text>
+
+  <circle cx="168" cy="175" r="21" class="insert-node"/>
+  <text x="168" y="175" class="insert-text">65</text>
+
+  <circle cx="283" cy="175" r="21" class="insert-node"/>
+  <text x="283" y="175" class="insert-text">80</text>
+
+  <circle cx="393" cy="175" r="21" class="insert-node"/>
+  <text x="393" y="175" class="insert-text">55</text>
+
+  <circle cx="30" cy="245" r="21" class="insert-node"/>
+  <text x="30" y="245" class="insert-text">30</text>
+
+  <circle cx="85" cy="245" r="21" class="insert-node"/>
+  <text x="85" y="245" class="insert-text">25</text>
+
+  <circle cx="140" cy="245" r="21" class="insert-node"/>
+  <text x="140" y="245" class="insert-text">50</text>
+
+  <circle cx="195" cy="245" r="21" class="insert-node"/>
+  <text x="195" y="245" class="insert-text">45</text>
+
+  <circle cx="250" cy="245" r="21" class="insert-node"/>
+  <text x="250" y="245" class="insert-text">60</text>
+
+  <text x="225" y="295" class="insert-caption">
+    Since 95 is larger than 88, siftUp stops.
+  </text>
+</g>
+  </svg>
+
+  <p>
+    The resulting heap is
+    <code>[95, 84, 88, 70, 65, 80, 55, 30, 25, 50, 45, 60]</code>.
+    The tree remains complete, and max-heap order has been restored.
+  </p>
+</div>
+
+  <p>
+    Use the following demo to insert entries and follow the comparisons and
+    swaps performed by <code>siftUp</code>.
+  </p>
+
+  <div class="embeddedDemoContainer">
+    <iframe class="embeddedDemo"
+            src="/DAIADS/Content/Demos/Data Structures/Heap/Insert Demo.html"
+            allow="fullscreen"
+            name="heap-insert-demo">
+    </iframe>
+  </div>
+  
+  <p>
+    Because <code>siftUp</code> is used here only to complete an insertion, we
+    treat it as part of <code>insert</code> rather than as a separate operation.
+    In contrast, <code>siftDown</code> is useful in several heap algorithms and
+    is discussed separately.
+  </p>
   </section>
 
-  <section id="array-representation" section-title="Array Representation">
-    <h2>Array Representation</h2>
+<section id="operation-siftDown" section-title="siftDown">
+  <h3><code>siftDown</code></h3>
     <p>
-      Completeness lets a binary heap use an array instead of linked tree
-      nodes. Store the nodes in level order: root first, then each level from
-      left to right. With zero-based indexing, the relatives of index \(i\)
-      are:
+      The <code>siftDown</code> helper repairs the subtree rooted at a given
+      position when the entry at that position may be smaller than one or both of
+      its children. It assumes that the subtrees rooted at those children are
+      already valid heaps.
     </p>
-    <ul>
-      <li>left child: \(2i+1\),</li>
-      <li>right child: \(2i+2\), and</li>
-      <li>parent, when \(i&gt;0\): \(\lfloor(i-1)/2\rfloor\).</li>
-    </ul>
+
     <p>
-      For the example above, the array is
-      <code>[90, 72, 85, 31, 60, 40, 10]</code>. The children of index
-      <code>2</code> are at indices <code>5</code> and <code>6</code>, and its
-      parent is at index <code>0</code>.
-    </p>
-    <p>
-      A resizable implementation stores both a backing array and a logical
-      <code>size</code>. Only indices <code>0</code> through
-      <code>size - 1</code> belong to the heap; later cells are unused capacity.
-      Child tests must therefore compare against <code>size</code>, not the
-      physical array length.
-    </p>
-    <div class="embeddedDemoContainer">
-      <iframe class="embeddedDemo"
-              src="../../../Content/Demos/Data Structures/Heap/Heap Representation Demo.html"
-              allow="fullscreen"
-              name="heap-representation-demo">
-      </iframe>
-    </div>
+    At each step, the entry is compared with its existing children. If either
+    child is larger, the entry swaps with the larger child and continues from
+    its new position. When two children are present, swapping with the smaller
+    one could leave a violation with the larger one. The process stops at a leaf
+    or when the entry is at least as large as every child.
+  </p>
+
+  <p>
+    Thus, <code>siftDown</code> repairs one path through an otherwise valid
+    heap; it does not repair arbitrary disorder throughout a subtree. We will
+    use this helper after replacing the root during
+    <code>extractMax</code>.
+  </p>
+
+  <p>
+    Use the following demo to change one entry and follow the comparisons and
+    swaps used to restore heap order.
+  </p>
+
+  <div class="embeddedDemoContainer">
+    <iframe class="embeddedDemo"
+            src="/DAIADS/Content/Demos/Data Structures/Heap/SiftDown Demo.html"
+            allow="fullscreen"
+            name="heap-sift-down-demo">
+    </iframe>
+  </div>
   </section>
 
-  <section id="core-operations" section-title="Core Operations">
-    <h2>Core Operations</h2>
-    <p>
-      The public operations match the priority-queue interface. The table uses
-      max-heap names to make the selected extreme explicit; a generic class
-      could instead use names such as <code>peekBest</code> and
-      <code>extractBest</code>.
-    </p>
-    <table class="example-table">
-      <thead>
-        <tr>
-          <th>Operation</th>
-          <th>Behavior</th>
-          <th>Worst-Case Time</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><code>isEmpty()</code></td>
-          <td>Report whether the logical size is zero.</td>
-          <td>\(\Theta(1)\)</td>
-        </tr>
-        <tr>
-          <td><code>size()</code></td>
-          <td>Return the number of stored entries.</td>
-          <td>\(\Theta(1)\)</td>
-        </tr>
-        <tr>
-          <td><code>peekMax()</code></td>
-          <td>Return the root without removing it.</td>
-          <td>\(\Theta(1)\)</td>
-        </tr>
-        <tr>
-          <td><code>insert(entry)</code></td>
-          <td>Add one entry and repair upward.</td>
-          <td>\(O(n)\) on a resize; \(O(\log n)\) amortized</td>
-        </tr>
-        <tr>
-          <td><code>extractMax()</code></td>
-          <td>Remove the root and repair downward.</td>
-          <td>\(O(\log n)\)</td>
-        </tr>
-      </tbody>
-    </table>
-    <p>
-      Two private helpers do the structural repair.
-      <code>siftUp</code> moves a newly inserted entry toward the root, while
-      <code>siftDown</code> moves a replacement root toward the leaves.
-      These helpers are implementation mechanisms, not additional
-      priority-queue operations exposed to clients.
-    </p>
+<section id="operation-extractMax" section-title="extractMax">
+  <h3><code>extractMax</code></h3>
+  <p>
+    The maximum entry is at the root, but removing it directly would leave a
+    gap at the beginning of the array. Instead, <code>extractMax</code> saves
+    the root for return, moves the final entry to the root, decreases
+    <code>size</code>, and calls <code>siftDown</code> at the root.
+    If the heap is empty, <code>extractMax</code> signals the same empty-heap
+    result used by <code>peekMax</code>.
+  </p>
+
+  <div class="example-box">
+    <strong class="example-title">Example 3: Extraction</strong>
+<p>
+  Begin with the heap on the left. After <code>90</code> is removed,
+  the final entry, <code>10</code>, is moved to the root. The complete-tree
+  shape is preserved, but max-heap order must be restored by calling <code>siftDown</code> at the root.
+</p>
+
+<svg viewBox="0 0 1320 340"
+  role="img"
+  aria-labelledby="extractHeapTitle extractHeapDesc"
+  style="display:block; width:100%; height:auto;">
+
+  <title id="extractHeapTitle">
+    Extracting 90 from a max-heap
+  </title>
+  <desc id="extractHeapDesc">
+    Three trees arranged from left to right show the original heap, 10 moved
+    from the final position to the root, and the heap after 10 swaps with 85
+    and then 40.
+  </desc>
+
+  <defs>
+    <style>
+      .extract-edge {
+        stroke: #555;
+        stroke-width: 2.5;
+        stroke-linecap: round;
+      }
+  .extract-node {
+    fill: #ffffff;
+    stroke: #003366;
+    stroke-width: 2.5;
+  }
+
+  .extract-active-node {
+    fill: #dbeafe;
+    stroke: #003366;
+    stroke-width: 3;
+  }
+
+  .extract-text {
+    fill: #002244;
+    font-family: Verdana, sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    text-anchor: middle;
+    dominant-baseline: middle;
+  }
+
+  .extract-step {
+    fill: #002244;
+    font-family: Verdana, sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    text-anchor: middle;
+  }
+
+  .extract-caption {
+    fill: #444;
+    font-family: Verdana, sans-serif;
+    font-size: 13px;
+    text-anchor: middle;
+  }
+
+  .extract-arrow {
+    stroke: #555;
+    stroke-width: 2.5;
+    fill: none;
+    marker-end: url(#extractArrowhead);
+  }
+</style>
+
+<marker id="extractArrowhead"
+        markerWidth="10"
+        markerHeight="10"
+        refX="8"
+        refY="3"
+        orient="auto"
+        markerUnits="strokeWidth">
+  <path d="M0,0 L0,6 L9,3 z" fill="#555"/>
+</marker>
+
+  </defs>
+  <!-- ======================================================= -->
+  <!-- Step 1: Original heap                                   -->
+  <!-- ======================================================= -->
+  <text x="200" y="24" class="extract-step">
+    1. Before extraction
+  </text>
+
+  <!-- Edges -->
+  <line x1="200" y1="70" x2="120" y2="145" class="extract-edge"/>
+  <line x1="200" y1="70" x2="280" y2="145" class="extract-edge"/>
+
+  <line x1="120" y1="145" x2="80" y2="230" class="extract-edge"/>
+  <line x1="120" y1="145" x2="160" y2="230" class="extract-edge"/>
+  <line x1="280" y1="145" x2="240" y2="230" class="extract-edge"/>
+  <line x1="280" y1="145" x2="320" y2="230" class="extract-edge"/>
+
+  <!-- Nodes -->
+  <circle cx="200" cy="70" r="22" class="extract-active-node"/>
+  <text x="200" y="70" class="extract-text">90</text>
+
+  <circle cx="120" cy="145" r="22" class="extract-node"/>
+  <text x="120" y="145" class="extract-text">72</text>
+
+  <circle cx="280" cy="145" r="22" class="extract-node"/>
+  <text x="280" y="145" class="extract-text">85</text>
+
+  <circle cx="80" cy="230" r="22" class="extract-node"/>
+  <text x="80" y="230" class="extract-text">31</text>
+
+  <circle cx="160" cy="230" r="22" class="extract-node"/>
+  <text x="160" y="230" class="extract-text">60</text>
+
+  <circle cx="240" cy="230" r="22" class="extract-node"/>
+  <text x="240" y="230" class="extract-text">40</text>
+
+  <circle cx="320" cy="230" r="22" class="extract-active-node"/>
+  <text x="320" y="230" class="extract-text">10</text>
+
+  <text x="200" y="292" class="extract-caption">
+    Remove 90 and use the final entry to fill the root.
+  </text>
+
+  <!-- Arrow to step 2 -->
+  <path d="M390,145 L470,145" class="extract-arrow"/>
+  <!-- ======================================================= -->
+  <!-- Step 2: Move final entry to root                         -->
+  <!-- ======================================================= -->
+  <text x="660" y="24" class="extract-step">
+    2. Move 10 to the root
+  </text>
+
+  <!-- Edges -->
+  <line x1="660" y1="70" x2="580" y2="145" class="extract-edge"/>
+  <line x1="660" y1="70" x2="740" y2="145" class="extract-edge"/>
+
+  <line x1="580" y1="145" x2="540" y2="230" class="extract-edge"/>
+  <line x1="580" y1="145" x2="620" y2="230" class="extract-edge"/>
+  <line x1="740" y1="145" x2="700" y2="230" class="extract-edge"/>
+
+  <!-- Nodes -->
+  <circle cx="660" cy="70" r="22" class="extract-active-node"/>
+  <text x="660" y="70" class="extract-text">10</text>
+
+  <circle cx="580" cy="145" r="22" class="extract-node"/>
+  <text x="580" y="145" class="extract-text">72</text>
+
+  <circle cx="740" cy="145" r="22" class="extract-node"/>
+  <text x="740" y="145" class="extract-text">85</text>
+
+  <circle cx="540" cy="230" r="22" class="extract-node"/>
+  <text x="540" y="230" class="extract-text">31</text>
+
+  <circle cx="620" cy="230" r="22" class="extract-node"/>
+  <text x="620" y="230" class="extract-text">60</text>
+
+  <circle cx="700" cy="230" r="22" class="extract-node"/>
+  <text x="700" y="230" class="extract-text">40</text>
+
+  <text x="660" y="292" class="extract-caption">
+    The shape is complete, but 10 violates max-heap order.
+  </text>
+
+  <!-- Arrow to step 3 -->
+  <path d="M850,145 L930,145" class="extract-arrow"/>
+  <!-- ======================================================= -->
+  <!-- Step 3: Repaired heap                                    -->
+  <!-- ======================================================= -->
+  <text x="1120" y="24" class="extract-step">
+    3. Apply siftDown
+  </text>
+
+  <!-- Edges -->
+  <line x1="1120" y1="70" x2="1040" y2="145" class="extract-edge"/>
+  <line x1="1120" y1="70" x2="1200" y2="145" class="extract-edge"/>
+
+  <line x1="1040" y1="145" x2="1000" y2="230" class="extract-edge"/>
+  <line x1="1040" y1="145" x2="1080" y2="230" class="extract-edge"/>
+  <line x1="1200" y1="145" x2="1160" y2="230" class="extract-edge"/>
+
+  <!-- Nodes -->
+  <circle cx="1120" cy="70" r="22" class="extract-node"/>
+  <text x="1120" y="70" class="extract-text">85</text>
+
+  <circle cx="1040" cy="145" r="22" class="extract-node"/>
+  <text x="1040" y="145" class="extract-text">72</text>
+
+  <circle cx="1200" cy="145" r="22" class="extract-node"/>
+  <text x="1200" y="145" class="extract-text">40</text>
+
+  <circle cx="1000" cy="230" r="22" class="extract-node"/>
+  <text x="1000" y="230" class="extract-text">31</text>
+
+  <circle cx="1080" cy="230" r="22" class="extract-node"/>
+  <text x="1080" y="230" class="extract-text">60</text>
+
+  <circle cx="1160" cy="230" r="22" class="extract-active-node"/>
+  <text x="1160" y="230" class="extract-text">10</text>
+
+  <text x="1120" y="292" class="extract-caption">
+    Swap 10 with 85 and then 40.
+  </text>
+</svg>
+
+<p>
+  The final heap is
+  <code>[85, 72, 40, 31, 60, 10]</code>. The removed value
+  <code>90</code> is returned.
+</p>
+  </div>
+
+  <p>
+    Use the following demo to perform extractions and observe how the
+    replacement entry moves toward the leaves.
+  </p>
+
+  <div class="embeddedDemoContainer">
+    <iframe class="embeddedDemo"
+            src="/DAIADS/Content/Demos/Data Structures/Heap/ExtractMax Demo.html"
+            allow="fullscreen"
+            name="heap-extract-demo">
+    </iframe>
+  </div>
   </section>
+</section>
 
-  <section id="operation-behavior" section-title="How the Operations Work">
-    <h2>How the Operations Work</h2>
+<section id="implementation" section-title="Implementation">
+  <h2>Implementation</h2>
 
-    <h3>Inspecting the maximum</h3>
-    <p>
-      In a nonempty max-heap, the heap property guarantees that the maximum is
-      at index <code>0</code>. Inspection therefore requires no traversal.
-      The implementation must still define an empty-heap policy, such as
-      returning an optional result or raising an exception.
-    </p>
+  <p>
+    The following pseudocode describes a max-heap stored in a fixed-capacity
+    array. A min-heap uses the same structure and algorithms with the priority
+    comparison reversed.
+  </p>
 
-    <h3>Insertion and upward repair</h3>
-    <p>
-      To preserve completeness, append the new entry at index
-      <code>size</code>. The old heap remains valid, so the only possible order
-      violation lies between the new leaf and its parent. Compare those two
-      entries and swap while the child has higher priority.
-    </p>
-    <p>
-      For example, insert <code>88</code> into
-      <code>[90, 72, 85, 31, 60, 40, 10]</code>. It first occupies index
-      <code>7</code>. It swaps with <code>31</code>, then with
-      <code>72</code>, and stops below <code>90</code>:
-    </p>
-    <pre><code>[90, 72, 85, 31, 60, 40, 10, 88]
-[90, 72, 85, 88, 60, 40, 10, 31]
-[90, 88, 85, 72, 60, 40, 10, 31]</code></pre>
-    <div class="embeddedDemoContainer">
-      <iframe class="embeddedDemo"
-              src="../../../Content/Demos/Data Structures/Heap/Insert Demo.html"
-              allow="fullscreen"
-              name="heap-insert-demo">
-      </iframe>
-    </div>
-
-    <h3>Downward repair with <code>siftDown</code></h3>
-    <p>
-      Downward repair begins at an index whose left and right child subtrees
-      are already valid heaps. Only the entry at that index may violate heap
-      order. Compare it with both children, swap it with the higher-priority
-      child when necessary, and continue from that child's index. The process
-      stops at a leaf or when the entry already dominates both children.
-    </p>
-    <p>
-      This precondition matters: <code>siftDown</code> repairs one root-to-leaf
-      path, not arbitrary disorder throughout a subtree. The demo lets you
-      change one entry and follow each comparison and swap in the repair.
-    </p>
-    <div class="embeddedDemoContainer">
-      <iframe class="embeddedDemo"
-              src="../../../Content/Demos/Data Structures/Heap/SiftDown Demo.html"
-              allow="fullscreen"
-              name="heap-sift-down-demo">
-      </iframe>
-    </div>
-
-    <h3>Extraction and downward repair</h3>
-    <p>
-      Removing the root directly would leave a gap at the top. Instead, save
-      the root for return, move the final used entry to index <code>0</code>,
-      reduce the size, and repair downward. At each step, compare both children
-      and swap with the higher-priority child. Choosing merely the left child
-      can leave a violation with the right child.
-    </p>
-    <p>
-      Extracting <code>90</code> from
-      <code>[90, 72, 85, 31, 60, 40, 10]</code> moves <code>10</code> to the
-      root. It then swaps with <code>85</code> and finally with
-      <code>40</code>:
-    </p>
-    <pre><code>[10, 72, 85, 31, 60, 40]
-[85, 72, 10, 31, 60, 40]
-[85, 72, 40, 31, 60, 10]</code></pre>
-    <div class="embeddedDemoContainer">
-      <iframe class="embeddedDemo"
-              src="../../../Content/Demos/Data Structures/Heap/ExtractMax Demo.html"
-              allow="fullscreen"
-              name="heap-extract-demo">
-      </iframe>
-    </div>
-  </section>
-
-  <section id="implementation" section-title="Pseudocode Implementation">
-    <h2>Pseudocode Implementation</h2>
-    <p>
-      The following pseudocode describes a max-heap backed by a resizable
-      array. A min-heap changes only <code>higherPriority</code>. A stable
-      priority queue can compare entries first by key and then by an insertion
-      sequence number, as discussed on the
-      <a href="?path=Data%20Structures%2FPriority%20Queues%20and%20Heaps%2FPriority%20Queues">Priority Queues</a>
-      page.
-    </p>
-
-    <h3>Index and comparison helpers</h3>
-    <pre><code>parent(i):
+  <h3>Index and Comparison Helpers</h3>
+  <pre><code>parent(i):
     return floor((i - 1) / 2)
 
 leftChild(i):
@@ -289,11 +1031,14 @@ rightChild(i):
     return 2 * i + 2
 
 higherPriority(first, second):
-    return first.key &gt; second.key</code></pre>
+    return first.key > second.key</code></pre>
 
-    <h3>Basic queries</h3>
-    <pre><code>isEmpty(H):
+  <h3>Basic Queries</h3>
+  <pre><code>isEmpty(H):
     return H.size == 0
+
+isFull(H):
+    return H.size == length(H.A)
 
 size(H):
     return H.size
@@ -301,230 +1046,448 @@ size(H):
 peekMax(H):
     if H.size == 0:
         signal EMPTY_HEAP
+
     return H.A[0]</code></pre>
 
-    <h3>Insertion</h3>
-    <pre><code>insert(H, entry):
-    if H.size == length(H.A):
-        doubleCapacity(H.A)
-
+  <h3><code>insert</code></h3>
+  <pre><code>insert(H, entry):
+    if isFull(H):
+        return false
     H.A[H.size] = entry
     H.size = H.size + 1
     siftUp(H, H.size - 1)
 
-siftUp(H, i):
+    return true</code></pre>
+
+  <h3><code>siftUp</code></h3>
+  <pre><code>siftUp(H, i):
     while i &gt; 0:
         p = parent(i)
         if not higherPriority(H.A[i], H.A[p]):
             return
+
         swap(H.A[i], H.A[p])
         i = p</code></pre>
 
-    <h3>Downward repair</h3>
-    <pre><code>siftDown(H, i):
-    while true:
-        best = i
+  <h3><code>siftDown</code></h3>
+  <pre><code>siftDown(H, i):
+    while leftChild(i) &lt; H.size:
         left = leftChild(i)
         right = rightChild(i)
+        bestChild = left
 
-        if left &lt; H.size and higherPriority(H.A[left], H.A[best]):
-            best = left
-        if right &lt; H.size and higherPriority(H.A[right], H.A[best]):
-            best = right
+        if right &lt; H.size and higherPriority(H.A[right], H.A[left]):
+            bestChild = right
 
-        if best == i:
+        if not higherPriority(H.A[bestChild], H.A[i]):
             return
 
-        swap(H.A[i], H.A[best])
-        i = best</code></pre>
+        swap(H.A[i], H.A[bestChild])
+        i = bestChild</code></pre>
 
-    <h3>Extraction</h3>
-    <pre><code>extractMax(H):
-    if H.size == 0:
+  <h3><code>extractMax</code></h3>
+  <pre><code>extractMax(H):
+    if isEmpty(H):
         signal EMPTY_HEAP
 
-    best = H.A[0]
+    maximum = H.A[0]
+    lastIndex = H.size - 1
+    H.A[0] = H.A[lastIndex]
+    H.A[lastIndex] = EMPTY
     H.size = H.size - 1
 
     if H.size &gt; 0:
-        H.A[0] = H.A[H.size]
-        H.A[H.size] = EMPTY
         siftDown(H, 0)
-    else:
-        H.A[0] = EMPTY
 
-    return best</code></pre>
-  </section>
+    return maximum</code></pre>
 
-  <section id="analysis" section-title="Time/Space Analysis">
-    <h2>Time/Space Analysis</h2>
-    <p>
-      A complete tree has logarithmic height. Both repair helpers follow only
-      one path, so insertion and extraction take \(O(\log n)\) time in the
-      worst case. Inspection, size, and emptiness checks use stored fields or
-      the root and therefore take \(\Theta(1)\) time.
-    </p>
-    <p>
-      The heap stores \(n\) entries in \(\Theta(n)\) array space. Iterative
-      repair uses \(\Theta(1)\) auxiliary space. A recursive downward repair
-      instead consumes \(O(\log n)\) call-stack space. Array growth makes an
-      occasional insertion take \(\Theta(n)\), but doubling capacity keeps
-      insertion \(O(\log n)\) amortized because the logarithmic repair already
-      dominates the constant amortized resizing cost.
-    </p>
-    <p>
-      Finding an arbitrary entry by value or key is still \(O(n)\). Heap order
-      tells us where the best entry is, not where a particular non-root entry
-      is. Applications needing fast arbitrary search often maintain a separate
-      map from identifiers to heap indices.
-    </p>
-  </section>
+  <p>
+    A resizable implementation would replace the failed full-heap insertion
+    with an array-growth step. That occasional resize would take
+    \(\Theta(n)\) time, while insertion would remain \(O(\log n)\) amortized
+    if the capacity were doubled.
+  </p>
+</section>
 
-  <section id="applications" section-title="Applications">
-    <h2>Applications</h2>
-    <ul>
-      <li>
-        <strong>Scheduling:</strong> choose the most urgent waiting job while
-        allowing new jobs to arrive.
-      </li>
-      <li>
-        <strong>Graph algorithms:</strong> min-heaps commonly select the next
-        lowest-cost vertex in shortest-path and minimum-spanning-tree methods.
-      </li>
-      <li>
-        <strong>Event simulation:</strong> process the event with the earliest
-        scheduled time.
-      </li>
-      <li>
-        <strong>Top-\(k\) selection:</strong> keep a small heap of the best
-        values observed in a much larger stream.
-      </li>
-      <li>
-        <strong>Huffman encoding:</strong> repeatedly obtain the two
-        lowest-frequency trees from a min-priority queue.
-      </li>
-    </ul>
-  </section>
+<section id="analysis" section-title="Time/Space Analysis">
+  <h2>Time/Space Analysis</h2>
 
-  <section id="comparison" section-title="Comparisons and Tradeoffs">
-    <h2>Comparisons and Tradeoffs</h2>
-    <ul>
-      <li>
-        <strong>Compared with a sorted array:</strong> both expose the best
-        entry in constant time, but the heap avoids linear shifting during
-        insertion.
-      </li>
-      <li>
-        <strong>Compared with an unsorted array:</strong> the heap spends more
-        time inserting but avoids a linear scan during inspection or removal.
-      </li>
-      <li>
-        <strong>Compared with a balanced search tree:</strong> the heap is
-        compact and specializes in an extreme entry; a search tree supports
-        arbitrary ordered search and traversal.
-      </li>
-      <li>
-        <strong>Compared with linked trees:</strong> the array representation
-        avoids child references and usually has good cache locality.
-      </li>
-    </ul>
-  </section>
+  <p>
+    A complete binary tree with \(n\) entries has height
+    \(\lfloor \log_2 n \rfloor\). Both <code>siftUp</code> and
+    <code>siftDown</code> follow at most one path through the tree, so each
+    takes \(O(\log n)\) time.
+  </p>
 
-  <section id="variations" section-title="Variations and Extensions">
-    <h2>Variations and Extensions</h2>
-    <ul>
-      <li><strong>Min-heaps:</strong> reverse the priority comparison.</li>
-      <li>
-        <strong>d-ary heaps:</strong> use more children per node, reducing
-        height while increasing child comparisons during downward repair.
-      </li>
-      <li>
-        <strong>Indexed heaps:</strong> maintain identifier-to-index mappings
-        to support priority changes efficiently.
-      </li>
-      <li>
-        <strong>Meldable heap families:</strong> binomial, Fibonacci, and
-        pairing heaps support different operation tradeoffs, especially when
-        merging is important.
-      </li>
-    </ul>
-  </section>
+  <p>
+    A successful insertion takes \(\Theta(1)\) time when the new entry already
+    belongs below its parent and \(\Theta(\log n)\) time in the worst case when
+    it moves to the root. An insertion into a full fixed-capacity heap returns
+    <code>false</code> in \(\Theta(1)\) time. Similarly,
+    <code>extractMax</code> takes \(\Theta(1)\) time when the replacement root
+    requires no swaps and \(\Theta(\log n)\) time in the worst case.
+  </p>
 
-  <section id="pitfalls" section-title="Common Pitfalls">
-    <h2>Common Pitfalls</h2>
-    <ul>
-      <li><strong>Assuming total order:</strong> only parent-child order is guaranteed.</li>
-      <li><strong>Mixing index conventions:</strong> zero-based and one-based heaps use different formulas.</li>
-      <li><strong>Using capacity as size:</strong> unused array cells are not heap entries.</li>
-      <li><strong>Choosing the wrong child:</strong> downward repair must compare both children.</li>
-      <li><strong>Repairing in the wrong direction:</strong> insertion repairs upward; root replacement repairs downward.</li>
-      <li><strong>Ignoring ties:</strong> a stable priority queue needs an explicit and consistently applied tie policy.</li>
-      <li><strong>Forgetting empty behavior:</strong> inspection and extraction need a documented empty-heap policy.</li>
-    </ul>
-  </section>
+  <p>
+    The operations <code>isEmpty</code>, <code>isFull</code>,
+    <code>size</code>, and <code>peekMax</code> inspect stored fields or the
+    root, so each takes \(\Theta(1)\) time.
+  </p>
 
-  <section id="summary" section-title="Summary">
-    <h2>Summary</h2>
-    <p>
-      A binary heap is a complete binary tree stored compactly in an array. Its
-      local heap-order rule places the best entry at the root without fully
-      ordering the remaining entries. As a priority-queue implementation, it
-      provides constant-time inspection and logarithmic insertion and
-      extraction using upward and downward path repairs.
-    </p>
-  </section>
+  <p>
+    If the fixed backing array has capacity \(C\), the heap uses
+    \(\Theta(C)\) storage, of which the first \(n\) positions are currently
+    occupied. The iterative operations use only \(\Theta(1)\) auxiliary space.
+    Recursive versions of <code>siftUp</code> or <code>siftDown</code> would
+    use \(O(\log n)\) call-stack space.
+  </p>
 
-  <section id="related-pages" section-title="Related Pages">
-    <h2>Related Pages</h2>
-    <ul>
-      <li>
-        <a href="?path=Data%20Structures%2FPriority%20Queues%20and%20Heaps%2FPriority%20Queues">Priority Queues</a>,
-        for the ADT, simple array implementations, and stability policies.
-      </li>
-      <li>
-        <a href="?path=Data%20Structures%2FLinear%20Structures%2FRepresenting%20Linear%20Structures">Representing Linear Structures</a>,
-        for array storage and resizing fundamentals.
-      </li>
-      <li>
-        <a href="?path=Data%20Structures%2FTrees%2FBinary%20Trees">Binary Trees</a>,
-        for binary-tree terminology and shape.
-      </li>
-    </ul>
-  </section>
+  <p>
+    A resizable implementation would occasionally require \(\Theta(n)\) time
+    to copy the entries into a larger array. If the capacity is doubled when
+    full, insertion remains \(O(\log n)\) amortized, and the array uses
+    \(\Theta(n)\) space.
+  </p>
 
-  <section id="links" section-title="Helpful Links and Resources">
-    <h2>Helpful Links and Resources</h2>
-    <ul>
-      <li><a href="https://opendatastructures.org/ods-java/10_1_Implicit_Binary_Tree.html" target="_blank">Open Data Structures: BinaryHeap</a></li>
-      <li><a href="https://opendsa.cs.vt.edu/ODSA/Books/Everything/html/Heaps.html" target="_blank">OpenDSA: Heaps and Priority Queues</a></li>
-      <li><a href="https://docs.python.org/3/library/heapq.html" target="_blank">Python <code>heapq</code></a></li>
-    </ul>
-  </section>
+  <p>
+    Searching for an arbitrary entry still takes \(O(n)\) time in the worst
+    case. Heap order identifies the maximum, but it does not provide a search
+    direction for other entries. Applications that need fast access to
+    particular entries may maintain a separate map from identifiers to heap
+    indices.
+  </p>
+</section>
 
-  <section id="reading-questions" section-title="Reading Comprehension Questions">
-    <h2>Reading Comprehension Questions</h2>
+<section id="applications" section-title="Applications">
+  <h2>Applications</h2>
+
+  <p>
+    Because binary heaps efficiently implement priority queues, they can be
+    used for the scheduling, graph-processing, event-simulation, and
+    compression applications discussed on the
+    <a href="?path=Data%20Structures%2FPriority%20Queues%20and%20Heaps%2FPriority%20Queues">
+      Priority Queues
+    </a>
+    page. 
+    Two uses of binary heaps that are especially worth emphasizing are:
+  </p>
+
+  <ul>
+    <li>
+      <strong>Heapsort:</strong> arrange the entries into a heap and repeatedly
+      move the root to its final position, producing an in-place
+      \(O(n \log n)\) sorting algorithm.
+    </li>
+    <li>
+      <strong>Top-\(k\) selection:</strong> maintain a heap containing only the
+      best \(k\) entries seen so far, using \(O(k)\) space rather than storing
+      and sorting the entire input.
+    </li>
+  </ul>
+</section>
+
+<section id="comparison" section-title="Comparisons and Tradeoffs">
+  <h2>Comparisons and Tradeoffs</h2>
+
+  <p>
+    The Priority Queues page compares the operation costs of several simple
+    implementations. A binary heap provides a useful balance: it supports both
+    insertion and removal of the highest-priority entry in \(O(\log n)\) time
+    while keeping the highest-priority entry available in \(\Theta(1)\) time.
+  </p>
+
+  <ul>
+    <li>
+      <strong>Compared with sorted and unsorted arrays:</strong>
+      a sorted array provides constant-time access to the best entry but
+      requires linear-time insertion, while an unsorted array inserts in
+      constant time but requires a linear search for the best entry. A binary
+      heap avoids either operation being linear.
+    </li>
+    <li>
+      <strong>Compared with a balanced search tree:</strong>
+      a binary heap is simpler and more compact when only an extreme entry is
+      needed. Its array representation often gives it smaller constant factors and
+      better memory locality than a pointer-based balanced search tree. A balanced
+      search tree, however, additionally supports efficient search for arbitrary
+      keys, predecessor and successor queries, and ordered traversal.
+    </li>
+    <li>
+      <strong>Compared with a pointer-based tree:</strong>
+      the array representation avoids parent and child references and usually
+      provides better memory locality. Its main limitation is that a
+      fixed-capacity heap can become full; a resizable heap must occasionally
+      allocate and copy a larger array.
+    </li>
+  </ul>
+</section>
+
+<section id="variations" section-title="Variations and Extensions">
+  <h2>Variations and Extensions</h2>
+
+  <ul>
+    <li>
+      <strong>Min-heaps:</strong>
+      reverse the priority comparison so that the smallest entry is stored at
+      the root.
+    </li>
+    <li>
+      <strong>Resizable heaps:</strong>
+      replace the fixed-capacity array with a dynamically resized array.
+      An insertion that encounters a full array grows the capacity rather than
+      failing.
+    </li>
+    <li>
+      <strong>d-ary heaps:</strong>
+      allow each node to have up to \(d\) children. This reduces the height of
+      the heap but requires examining more children during
+      <code>siftDown</code>.
+    </li>
+    <li>
+      <strong>Indexed heaps:</strong>
+      maintain a map from entry identifiers to array indices. This makes it
+      possible to locate entries quickly for priority changes or removal, but
+      the map must be updated after every swap.
+    </li>
+  </ul>
+
+  <p>
+    Other heap data structures, including binomial, Fibonacci, and pairing
+    heaps, use different representations and provide different tradeoffs.
+    They are particularly useful when efficient merging or priority changes
+    are important.
+  </p>
+</section>
+
+<section id="pitfalls" section-title="Common Pitfalls">
+  <h2>Common Pitfalls</h2>
+
+  <ul>
+    <li>
+      <strong>Assuming total order:</strong>
+      heap order constrains parent-child pairs but does not sort siblings or
+      entries in different branches.
+    </li>
+    <li>
+      <strong>Mixing index conventions:</strong>
+      zero-based and one-based heaps use different formulas for parents and
+      children.
+    </li>
+    <li>
+      <strong>Confusing size and capacity:</strong>
+      only indices below <code>size</code> contain heap entries; the remaining
+      array positions are unused capacity.
+    </li>
+    <li>
+      <strong>Ignoring a full heap:</strong>
+      insertion into a fixed-capacity heap must fail without changing the
+      existing entries.
+    </li>
+    <li>
+      <strong>Choosing the wrong child:</strong>
+      <code>siftDown</code> must examine every existing child and swap with the
+      higher-priority one.
+    </li>
+    <li>
+      <strong>Repairing in the wrong direction:</strong>
+      insertion may violate order with a parent and repairs upward, while
+      replacing the root may violate order with a child and repairs downward.
+    </li>
+    <li>
+      <strong>Forgetting empty-heap behavior:</strong>
+      <code>peekMax</code> and <code>extractMax</code> must use a clearly
+      defined and consistent policy when the heap is empty.
+    </li>
+  </ul>
+</section>
+
+<section id="summary" section-title="Summary">
+  <h2>Summary</h2>
+
+  <p>
+    A binary heap is a complete binary tree that is usually stored in
+    level order in an array. Completeness allows parent and child positions to
+    be computed directly from array indices, while heap order guarantees that
+    the highest-priority entry is at the root without fully sorting the
+    remaining entries.
+  </p>
+
+  <p>
+    In a max-heap, insertion places a new entry in the next available position
+    and uses <code>siftUp</code> to restore order. Extraction replaces the root
+    with the final entry and uses <code>siftDown</code>. Root inspection and
+    basic size queries take \(\Theta(1)\) time, while successful insertion and
+    extraction take \(\Theta(\log n)\) time in the worst case and
+    \(\Theta(1)\) auxiliary space when implemented iteratively. A min-heap uses
+    the same representation and algorithms with the priority comparisons
+    reversed.
+  </p>
+</section>
+
+
+ <section id="links" section-title="Helpful Links and Resources">
+  <h2>Helpful Links and Resources</h2>
+
+  <ul>
+    <li>
+      <a href="https://opendatastructures.org/ods-java/10_1_BinaryHeap_Implicit_Bi.html"
+         target="_blank"
+         rel="noopener">
+        Open Data Structures: BinaryHeap
+      </a>: develops the implicit array representation and analyzes insertion,
+      removal, and resizing.
+    </li>
+    <li>
+      <a href="https://docs.python.org/3/library/heapq.html"
+         target="_blank"
+         rel="noopener">
+        Python <code>heapq</code>
+      </a>: documents Python's standard-library heap operations and includes
+      examples of heapsort, selection, and priority-queue implementation.
+    </li>
+    <li>
+      <a href="https://visualgo.net/en/heap"
+         target="_blank"
+         rel="noopener">
+        VisuAlgo: Binary Heap
+      </a>: interactively displays a max-heap as both a complete binary tree
+      and an array while demonstrating its operations.
+    </li>
+  </ul>
+</section>
+
+ <section id="reading-questions" section-title="Reading Comprehension Questions">
+  <h2>Reading Comprehension Questions</h2>
+
+  <ol>
+    <li>
+      <strong>ADT versus Implementation:</strong>
+      What is the difference between a priority queue and a binary heap?
+    </li>
+    <li>
+      <strong>Defining Properties:</strong>
+      What two properties define a binary heap?
+    </li>
+    <li>
+      <strong>Array Representation:</strong>
+      Why can a binary heap be stored in consecutive array positions without
+      parent or child references?
+    </li>
+    <li>
+      <strong>Partial Order:</strong>
+      What does max-heap order guarantee, and what relationships does it leave
+      unspecified?
+    </li>
+    <li>
+      <strong>Constant-Time Inspection:</strong>
+      Why can <code>peekMax</code> return the maximum entry in
+      \(\Theta(1)\) time?
+    </li>
+    <li>
+      <strong>Priority Ranks:</strong>
+      Assuming all keys are distinct, where can the second-largest,
+      third-largest, and smallest entries occur in a max-heap?
+    </li>
+    <li>
+      <strong>Full Heap:</strong>
+      What must <code>insert</code> do when the fixed-capacity backing array is
+      full?
+    </li>
+    <li>
+      <strong>Upward Repair:</strong>
+      Why can an insertion create a violation only between the new entry and
+      its ancestors?
+    </li>
+    <li>
+      <strong>Downward Repair:</strong>
+      Why must <code>siftDown</code> swap with the higher-priority child?
+    </li>
+    <li>
+      <strong>Logarithmic Updates:</strong>
+      Why do successful insertion and extraction take
+      \(\Theta(\log n)\) time in the worst case?
+    </li>
+    <li>
+      <strong>Arbitrary Search:</strong>
+      Why can searching for a particular non-root entry still require
+      \(O(n)\) time?
+    </li>
+  </ol>
+
+<button id="toggleAnswers"
+       class="show-answer"
+       aria-expanded="false">
+Show Answers </button>
+
+  <div id="answers" class="answer" hidden>
     <ol>
-      <li>What is the difference between the priority-queue ADT and a binary heap?</li>
-      <li>Why does completeness allow a binary heap to omit child references?</li>
-      <li>What does max-heap order guarantee, and what does it leave unordered?</li>
-      <li>Why can inspection return the maximum in constant time?</li>
-      <li>Why does insertion repair upward rather than downward?</li>
-      <li>Why must extraction compare both children during downward repair?</li>
-      <li>Why is arbitrary search still linear in the worst case?</li>
+      <li>
+        <strong>Answer:</strong>
+        A priority queue is an abstract data type that specifies
+        priority-based operations. A binary heap is one data structure that
+        can implement those operations.
+      </li>
+      <li>
+        <strong>Answer:</strong>
+        A binary heap must have complete-tree shape and satisfy heap order.
+        Completeness controls where nodes occur, while heap order controls the
+        relationship between each parent and its children.
+      </li>
+      <li>
+        <strong>Answer:</strong>
+        A complete tree has no gaps when its nodes are listed level by level
+        from left to right. The nodes therefore occupy consecutive array
+        positions, and parent and child indices can be calculated directly.
+      </li>
+      <li>
+        <strong>Answer:</strong>
+        In a max-heap, every parent has a key at least as large as the keys of
+        its children, so the maximum is at the root. Siblings and entries in
+        different branches need not be ordered relative to one another.
+      </li>
+      <li>
+        <strong>Answer:</strong>
+        Max-heap order guarantees that the maximum entry is stored at the root,
+        which occupies array index <code>0</code>.
+      </li>
+      <li>
+        <strong>Answer:</strong>
+        The second-largest entry must be one of the root's children. The
+        third-largest entry must be either the root's other child or a child of the
+        second-largest entry. The smallest entry must be a leaf, but it need not be
+        the final entry in the array.
+      </li>
+      <li>
+        <strong>Answer:</strong>
+        It must return <code>false</code> and leave the heap unchanged.
+      </li>
+      <li>
+        <strong>Answer:</strong>
+        The new entry is placed in the next leaf position. All relationships
+        among the existing entries remain valid, so only the path from the new
+        entry toward the root can contain a new violation.
+      </li>
+      <li>
+        <strong>Answer:</strong>
+        Swapping with the lower-priority child could leave the entry below the
+        other, higher-priority child, so heap order would still be violated.
+      </li>
+      <li>
+        <strong>Answer:</strong>
+        A complete binary tree has height
+        \(\lfloor \log_2 n \rfloor\), and both <code>siftUp</code> and
+        <code>siftDown</code> follow at most one root-to-leaf path.
+      </li>
+      <li>
+        <strong>Answer:</strong>
+        Heap order identifies the extreme entry but does not provide a search
+        direction for an arbitrary key. In the worst case, every entry may
+        need to be examined.
+      </li>
     </ol>
-    <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
-    <div id="answers" class="answer" hidden>
-      <ol>
-        <li>The ADT specifies priority-based behavior; the heap is one concrete representation that provides it.</li>
-        <li>A complete tree has no interior gaps, so level-order positions map to contiguous array indices.</li>
-        <li>Each parent dominates its children and the root is maximum; siblings and separate branches need not be ordered.</li>
-        <li>The maximum is always the root at index <code>0</code>.</li>
-        <li>The new entry is appended as a leaf, so only its ancestor path can contain a new violation.</li>
-        <li>Swapping with the lower-priority child could leave a violation with the other child.</li>
-        <li>Heap order identifies an extreme entry but provides no search direction for an arbitrary key.</li>
-      </ol>
-    </div>
-  </section>
+  </div>
+</section>
+
 
   <section id="activities" section-title="In-Class Activities">
     <h2>In-Class Activities</h2>
