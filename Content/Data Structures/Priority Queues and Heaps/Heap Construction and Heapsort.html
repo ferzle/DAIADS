@@ -23,128 +23,834 @@
   <h1>Heap Construction and Heapsort</h1>
 
   <section id="overview" section-title="Overview">
-    <h2>Overview</h2>
-    <p>
-      Sometimes values arrive one at a time, making ordinary heap insertion the
-      natural update. In other situations, all values are already present in an
-      array. Repeated insertion will produce a valid heap, but a bottom-up
-      method can reorganize the entire array more efficiently.
-    </p>
-    <p>
-      This page develops two algorithms:
-      <code>buildMaxHeap</code>, which converts an arbitrary array into a
-      max-heap in place, and <strong>Heapsort</strong>, which repeatedly uses
-      that heap to place values into sorted order. Both rely on the array
-      representation and downward repair from the
-      <a href="?path=Data%20Structures%2FPriority%20Queues%20and%20Heaps%2FBinary%20Heaps">Binary Heaps</a>
-      page.
-    </p>
-  </section>
+  <h2>Overview</h2>
 
-  <section id="sift-down-review" section-title="Downward Repair Review">
-    <h2>Downward Repair Review</h2>
-    <p>
-      The helper <code>siftDown(A, i, heapSize)</code> assumes that the left
-      and right child subtrees of index <code>i</code> are already max-heaps.
-      Only <code>A[i]</code> may be too small. The helper repeatedly swaps that
-      value with its larger child until the max-heap property is restored.
-    </p>
-    <pre><code>siftDown(A, i, heapSize):
-    while true:
-        largest = i
-        left = 2 * i + 1
-        right = 2 * i + 2
+  <p>
+    Given an array of values, there are two natural ways to build a binary
+    heap:
+  </p>
 
-        if left &lt; heapSize and A[left] &gt; A[largest]:
-            largest = left
-        if right &lt; heapSize and A[right] &gt; A[largest]:
-            largest = right
+  <ol class="spaced">
+    <li>
+      <strong>Repeated insertion:</strong>
+      begin with an empty heap and insert the values one at a time, using
+      <code>siftUp</code> after each insertion.
+    </li>
+    <li>
+      <strong>Bottom-up construction:</strong>
+      treat the array as a complete binary tree and apply
+      <code>siftDown</code> to its internal nodes, working from the bottom of
+      the tree toward the root.
+    </li>
+  </ol>
 
-        if largest == i:
+  <p>
+    Both methods produce a valid heap, but they do not take the same amount of
+    time. Repeated insertion takes \(O(n \log n)\) time in the worst case.
+    Bottom-up construction, usually called <code>buildMaxHeap</code> for a
+    max-heap, reorganizes the existing array in \(\Theta(n)\) time.
+  </p>
+
+  <p>
+    This page first develops bottom-up heap construction and explains why its
+    running time is linear. It then uses the resulting max-heap to perform
+    <strong>Heapsort</strong>, which repeatedly moves the maximum remaining
+    value into its final position.
+  </p>
+
+  <p>
+    The discussion assumes familiarity with the array representation of a
+    binary heap and with <code>siftUp</code> and <code>siftDown</code>. These
+    are developed on the
+    <a href="?path=Data%20Structures%2FPriority%20Queues%20and%20Heaps%2FBinary%20Heaps">
+      Binary Heaps
+    </a>
+    page.
+  </p>
+</section>
+
+<section id="active-heap-sift-down"
+         section-title="siftDown with an Active Heap Size">
+  <h2><code>siftDown</code> with an Active Heap Size</h2>
+
+  <p>
+    The Binary Heaps page defines <code>siftDown(H, i)</code> for a heap
+    object whose logical size is stored in <code>H.size</code>.
+    Heap construction and Heapsort use the same repair process, but they operate
+    directly on an array. In addition, Heapsort gradually shrinks the active
+    heap while leaving the sorted values in the same array. We therefore use
+    a modified version of <code>siftDown</code> that passes
+    the active heap size explicitly: <code>siftDown(A, i, heapSize)</code>.
+  </p>
+
+  <p>
+    Only indices <code>0</code> through <code>heapSize - 1</code> belong to
+    the heap. During bottom-up construction, <code>heapSize</code> is the full
+    array length. During Heapsort, it decreases as values are moved into the
+    sorted suffix.
+  </p>
+
+  <pre><code>siftDown(A, i, heapSize):
+    while leftChild(i) &lt; heapSize:
+        left = leftChild(i)
+        right = rightChild(i)
+        largerChild = left
+
+        if right &lt; heapSize and A[right] &gt; A[left]:
+            largerChild = right
+
+        if A[i] &gt;= A[largerChild]:
             return
 
-        swap(A[i], A[largest])
-        i = largest</code></pre>
-    <p>
-      A call can move through at most the height of the subtree rooted at
-      \(i\). Its cost is therefore \(O(h_i)\), where \(h_i\) is that subtree’s
-      height, and at most \(O(\log n)\) for the root.
-    </p>
-    <div class="embeddedDemoContainer">
-      <iframe class="embeddedDemo"
-              src="../../../Content/Demos/Data Structures/Heap/SiftDown Demo.html"
-              allow="fullscreen"
-              name="sift-down-review-demo">
-      </iframe>
-    </div>
-  </section>
+        swap(A[i], A[largerChild])
+        i = largerChild</code></pre>
 
-  <section id="bottom-up-construction" section-title="Bottom-Up Heap Construction">
-    <h2>Bottom-Up Heap Construction</h2>
-    <p>
-      In an \(n\)-entry heap array, every index from
-      \(\lfloor n/2\rfloor\) through \(n-1\) is a leaf. A leaf is already a
-      valid one-node heap, so no work is needed there. The last possible
-      internal node is \(\lfloor n/2\rfloor-1\).
-    </p>
-    <p>
-      Starting at that node, process internal nodes from right to left toward
-      the root. When index \(i\) is reached, both child subtrees have already
-      been repaired, exactly satisfying the precondition of
-      <code>siftDown</code>. After the root is processed, the entire array is a
-      max-heap.
-    </p>
-    <pre><code>buildMaxHeap(A):
+  <p>
+  This is the same downward-repair algorithm used for an ordinary binary heap.
+  The only differences are that it uses the supplied
+  <code>heapSize</code> rather than a size stored in a heap object and
+  explicitly implements max-heap order using direct value comparisons.
+</p>
+
+</section>
+
+
+
+<section id="bottom-up-construction" section-title="Bottom-Up Heap Construction">
+  <h2>Bottom-Up Heap Construction</h2>
+
+  <p>
+  Bottom-up construction views the array as a complete binary tree and builds
+  valid heaps from the leaves toward the root. A leaf contains only one entry,
+  so it already forms a valid heap. The algorithm can therefore begin with the
+  lowest internal nodes and use those one-entry heaps as the base from which
+  larger heaps are formed.
+</p>
+
+<p>
+  In a zero-based array of length \(n\), the node at index \(i\) has a left
+  child only when \(2i+1&lt;n\). It follows that the internal nodes occupy
+  indices \(0\) through \(\lfloor n/2\rfloor-1\), while indices
+  \(\lfloor n/2\rfloor\) through \(n-1\) are leaves. Since the leaves need no
+  repair, the first node processed is the last internal node, at index
+  \(\lfloor n/2\rfloor-1\).
+</p>
+
+<p>
+  The internal nodes are then processed in decreasing index order. Every child
+  has a larger index than its parent, so by the time the algorithm reaches
+  index \(i\), the subtrees rooted at its children have already been made into
+  heaps. The precondition for <code>siftDown</code> is therefore satisfied:
+  only the entry at index \(i\) may violate heap order. After
+  <code>siftDown</code> finishes, the entire subtree rooted at \(i\) is a
+  heap.
+</p>
+
+<p>
+  Processing the nodes from the root toward the leaves would not give the same
+  guarantee. A child subtree repaired later could move a larger entry to its
+  root and create a new violation with its parent. By processing children
+  before parents, bottom-up construction ensures that each subtree is repaired
+  once its smaller component heaps are already complete.
+</p>
+
+
+ <div class="example-box">
+  <strong class="example-title">Example 1: Why a Forward Pass Fails</strong>
+
+  <p>
+    Consider the array <code>[1, 2, 3, 4, 5, 6, 7]</code>. Suppose we try to
+    build a max-heap by processing the internal nodes from left to right,
+    starting at the root.
+  </p>
+
+  <svg viewBox="0 0 1200 340"
+       role="img"
+       aria-labelledby="forwardPassTitle forwardPassDesc"
+       style="display:block; width:100%; height:auto; margin:1em auto;">
+    <title id="forwardPassTitle">
+      Why a forward pass fails when building a heap
+    </title>
+    <desc id="forwardPassDesc">
+      Three tree diagrams show the original array interpreted as a tree, the
+      result after applying siftDown at the root, and the result after then
+      applying siftDown at index 1. The final tree still violates max-heap
+      order at the root.
+    </desc>
+
+    <defs>
+      <style>
+        .forward-edge {
+          stroke: #555;
+          stroke-width: 2.5;
+          stroke-linecap: round;
+        }
+
+        .forward-node {
+          fill: #ffffff;
+          stroke: #003366;
+          stroke-width: 2.5;
+        }
+
+        .forward-active {
+          fill: #dbeafe;
+          stroke: #003366;
+          stroke-width: 3;
+        }
+
+        .forward-text {
+          fill: #002244;
+          font-family: Verdana, sans-serif;
+          font-size: 15px;
+          font-weight: 600;
+          text-anchor: middle;
+          dominant-baseline: middle;
+        }
+
+        .forward-step {
+          fill: #002244;
+          font-family: Verdana, sans-serif;
+          font-size: 16px;
+          font-weight: 600;
+          text-anchor: middle;
+        }
+
+        .forward-caption {
+          fill: #444;
+          font-family: Verdana, sans-serif;
+          font-size: 14px;
+          text-anchor: middle;
+        }
+
+        .forward-array {
+          fill: #222;
+          font-family: "Courier New", monospace;
+          font-size: 14px;
+          text-anchor: middle;
+        }
+
+        .forward-arrow {
+          stroke: #555;
+          stroke-width: 2.5;
+          fill: none;
+          marker-end: url(#forwardArrowhead);
+        }
+      </style>
+
+      <marker id="forwardArrowhead"
+              markerWidth="10"
+              markerHeight="10"
+              refX="8"
+              refY="3"
+              orient="auto"
+              markerUnits="strokeWidth">
+        <path d="M0,0 L0,6 L9,3 z" fill="#555"/>
+      </marker>
+    </defs>
+
+    <!-- ==================== -->
+    <!-- Step 1: original     -->
+    <!-- ==================== -->
+    <g transform="translate(20,25)">
+      <text x="170" y="0" class="forward-step">
+        1. Start
+      </text>
+
+      <line x1="170" y1="40" x2="100" y2="105" class="forward-edge"/>
+      <line x1="170" y1="40" x2="240" y2="105" class="forward-edge"/>
+      <line x1="100" y1="105" x2="60" y2="175" class="forward-edge"/>
+      <line x1="100" y1="105" x2="140" y2="175" class="forward-edge"/>
+      <line x1="240" y1="105" x2="200" y2="175" class="forward-edge"/>
+      <line x1="240" y1="105" x2="280" y2="175" class="forward-edge"/>
+
+      <circle cx="170" cy="40" r="20" class="forward-active"/>
+      <text x="170" y="40" class="forward-text">1</text>
+
+      <circle cx="100" cy="105" r="20" class="forward-node"/>
+      <text x="100" y="105" class="forward-text">2</text>
+
+      <circle cx="240" cy="105" r="20" class="forward-node"/>
+      <text x="240" y="105" class="forward-text">3</text>
+
+      <circle cx="60" cy="175" r="20" class="forward-node"/>
+      <text x="60" y="175" class="forward-text">4</text>
+
+      <circle cx="140" cy="175" r="20" class="forward-node"/>
+      <text x="140" y="175" class="forward-text">5</text>
+
+      <circle cx="200" cy="175" r="20" class="forward-node"/>
+      <text x="200" y="175" class="forward-text">6</text>
+
+      <circle cx="280" cy="175" r="20" class="forward-node"/>
+      <text x="280" y="175" class="forward-text">7</text>
+
+      <text x="170" y="225" class="forward-array">[1, 2, 3, 4, 5, 6, 7]</text>
+      <text x="170" y="250" class="forward-caption">
+        Begin by processing index 0.
+      </text>
+    </g>
+
+    <path d="M330,125 L395,125" class="forward-arrow"/>
+
+    <!-- ==================== -->
+    <!-- Step 2: after root   -->
+    <!-- ==================== -->
+    <g transform="translate(410,25)">
+      <text x="170" y="0" class="forward-step">
+        2. After siftDown at index 0
+      </text>
+
+      <line x1="170" y1="40" x2="100" y2="105" class="forward-edge"/>
+      <line x1="170" y1="40" x2="240" y2="105" class="forward-edge"/>
+      <line x1="100" y1="105" x2="60" y2="175" class="forward-edge"/>
+      <line x1="100" y1="105" x2="140" y2="175" class="forward-edge"/>
+      <line x1="240" y1="105" x2="200" y2="175" class="forward-edge"/>
+      <line x1="240" y1="105" x2="280" y2="175" class="forward-edge"/>
+
+      <circle cx="170" cy="40" r="20" class="forward-active"/>
+      <text x="170" y="40" class="forward-text">3</text>
+
+      <circle cx="100" cy="105" r="20" class="forward-node"/>
+      <text x="100" y="105" class="forward-text">2</text>
+
+      <circle cx="240" cy="105" r="20" class="forward-active"/>
+      <text x="240" y="105" class="forward-text">7</text>
+
+      <circle cx="60" cy="175" r="20" class="forward-node"/>
+      <text x="60" y="175" class="forward-text">4</text>
+
+      <circle cx="140" cy="175" r="20" class="forward-node"/>
+      <text x="140" y="175" class="forward-text">5</text>
+
+      <circle cx="200" cy="175" r="20" class="forward-node"/>
+      <text x="200" y="175" class="forward-text">6</text>
+
+      <circle cx="280" cy="175" r="20" class="forward-node"/>
+      <text x="280" y="175" class="forward-text">1</text>
+
+      <text x="170" y="225" class="forward-array">[3, 2, 7, 4, 5, 6, 1]</text>
+      <text x="170" y="250" class="forward-caption">
+        Next, process index 1.
+      </text>
+    </g>
+
+    <path d="M720,125 L785,125" class="forward-arrow"/>
+
+    <!-- ==================== -->
+    <!-- Step 3: after index1 -->
+    <!-- ==================== -->
+    <g transform="translate(800,25)">
+      <text x="170" y="0" class="forward-step">
+        3. After siftDown at index 1
+      </text>
+
+      <line x1="170" y1="40" x2="100" y2="105" class="forward-edge"/>
+      <line x1="170" y1="40" x2="240" y2="105" class="forward-edge"/>
+      <line x1="100" y1="105" x2="60" y2="175" class="forward-edge"/>
+      <line x1="100" y1="105" x2="140" y2="175" class="forward-edge"/>
+      <line x1="240" y1="105" x2="200" y2="175" class="forward-edge"/>
+      <line x1="240" y1="105" x2="280" y2="175" class="forward-edge"/>
+
+      <circle cx="170" cy="40" r="20" class="forward-active"/>
+      <text x="170" y="40" class="forward-text">3</text>
+
+      <circle cx="100" cy="105" r="20" class="forward-active"/>
+      <text x="100" y="105" class="forward-text">5</text>
+
+      <circle cx="240" cy="105" r="20" class="forward-node"/>
+      <text x="240" y="105" class="forward-text">7</text>
+
+      <circle cx="60" cy="175" r="20" class="forward-node"/>
+      <text x="60" y="175" class="forward-text">4</text>
+
+      <circle cx="140" cy="175" r="20" class="forward-node"/>
+      <text x="140" y="175" class="forward-text">2</text>
+
+      <circle cx="200" cy="175" r="20" class="forward-node"/>
+      <text x="200" y="175" class="forward-text">6</text>
+
+      <circle cx="280" cy="175" r="20" class="forward-node"/>
+      <text x="280" y="175" class="forward-text">1</text>
+
+      <text x="170" y="225" class="forward-array">[3, 5, 7, 4, 2, 6, 1]</text>
+      <text x="170" y="250" class="forward-caption">
+        The root is still too small: 3 &lt; 5 and 3 &lt; 7.
+      </text>
+    </g>
+  </svg>
+
+  <p>
+    After processing index <code>1</code>, the subtree rooted there is a heap,
+    but the whole tree is not: the root still violates max-heap order. A
+    forward pass therefore does not work, because repairing a child subtree
+    later can create a new violation above it.
+  </p>
+</div>
+
+  <p>
+    The resulting algorithm is very simple:
+  </p>
+
+  <pre><code>buildMaxHeap(A):
     n = length(A)
+
     for i = floor(n / 2) - 1 down to 0:
         siftDown(A, i, n)</code></pre>
 
-    <h3>Worked example</h3>
-    <p>
-      Consider <code>[4, 10, 3, 5, 1]</code>. Indices <code>2</code> through
-      <code>4</code> are leaves, so processing begins at index <code>1</code>.
-    </p>
-    <ol>
-      <li>
-        Index <code>1</code> contains <code>10</code>; its children are
-        <code>5</code> and <code>1</code>, so no swap is needed.
-      </li>
-      <li>
-        Index <code>0</code> contains <code>4</code>. Swap it with the larger
-        child <code>10</code>, giving <code>[10, 4, 3, 5, 1]</code>.
-      </li>
-      <li>
-        Continue downward from index <code>1</code>. Swap <code>4</code> with
-        <code>5</code>, producing <code>[10, 5, 3, 4, 1]</code>.
-      </li>
-    </ol>
-    <p>
-      The final array is a max-heap. The algorithm changed values in place and
-      did not allocate tree nodes or a second array.
-    </p>
-    <div class="embeddedDemoContainer">
-      <iframe class="embeddedDemo"
-              src="../../../Content/Demos/Data Structures/Heap/Build Heap Demo.html"
-              allow="fullscreen"
-              name="build-max-heap-demo">
-      </iframe>
-    </div>
-  </section>
+  <p>
+    After each iteration, the subtree rooted at index \(i\) is a max-heap.
+    When index <code>0</code> has been processed, the subtree rooted at the
+    root is the entire tree, so the whole array is a max-heap.
+  </p>
 
-  <section id="heapsort" section-title="Heapsort">
-    <h2>Heapsort</h2>
-    <p>
-      Once an array is a max-heap, its largest value is at index
-      <code>0</code>. Swap that value with the final entry in the active heap.
-      The maximum is now in its final sorted position. Reduce
-      <code>heapSize</code> so the sorted suffix is no longer considered part
-      of the heap, then repair the new root.
-    </p>
-    <p>
-      Repeating this process moves maxima from right to left. When only one
-      active entry remains, the entire array is in nondecreasing order.
-    </p>
-    <pre><code>heapsort(A):
+  <div class="example-box">
+  <strong class="example-title">Example 2: Bottom-Up Construction</strong>
+
+  <p>
+    Consider the array
+    <code>[4, 15, 7, 20, 9, 2, 6, 11, 18, 3, 14]</code>. Since the array has
+    \(11\) entries, the leaves are at indices <code>5</code> through
+    <code>10</code>, so bottom-up construction begins at index
+    <code>4</code> and then continues with indices <code>3</code>,
+    <code>2</code>, <code>1</code>, and <code>0</code>.
+    In each diagram, the blue node is the root of the subtree just processed by
+    <code>siftDown</code>.
+  </p>
+
+  <svg viewBox="0 0 1120 610"
+       role="img"
+       aria-labelledby="buildHeapExampleTitle buildHeapExampleDesc"
+       style="display:block; width:100%; height:auto; margin:1em auto;">
+    <title id="buildHeapExampleTitle">
+      Bottom-up heap construction example
+    </title>
+    <desc id="buildHeapExampleDesc">
+      Five tree diagrams show the result after each siftDown call in
+      buildMaxHeap for the array [4, 15, 7, 20, 9, 2, 6, 11, 18, 3, 14].
+      The calls are at indices 4, 3, 2, 1, and 0.
+    </desc>
+
+    <defs>
+      <style>
+        .bhe-edge {
+          stroke: #555;
+          stroke-width: 2.2;
+          stroke-linecap: round;
+        }
+
+        .bhe-node {
+          fill: #ffffff;
+          stroke: #003366;
+          stroke-width: 2.2;
+        }
+
+        .bhe-active {
+          fill: #dbeafe;
+          stroke: #003366;
+          stroke-width: 2.8;
+        }
+
+        .bhe-text {
+          fill: #002244;
+          font-family: Verdana, sans-serif;
+          font-size: 16px;
+          font-weight: 600;
+          text-anchor: middle;
+          dominant-baseline: middle;
+        }
+
+        .bhe-step {
+          fill: #002244;
+          font-family: Verdana, sans-serif;
+          font-size: 15px;
+          font-weight: 600;
+          text-anchor: middle;
+        }
+
+        .bhe-array {
+          fill: #222;
+          font-family: "Courier New", monospace;
+          font-size: 15px;
+          text-anchor: middle;
+        }
+
+        .bhe-caption {
+          fill: #444;
+          font-family: Verdana, sans-serif;
+          font-size: 16px;
+          text-anchor: middle;
+        }
+      </style>
+    </defs>
+
+    <!-- ====================================================== -->
+    <!-- 1. After siftDown at index 4                           -->
+    <!-- ====================================================== -->
+    <g transform="translate(20,10)">
+      <text x="170" y="0" class="bhe-step">
+        After siftDown at index 4
+      </text>
+
+      <!-- edges -->
+      <line x1="170" y1="35" x2="90" y2="90" class="bhe-edge"/>
+      <line x1="170" y1="35" x2="250" y2="90" class="bhe-edge"/>
+
+      <line x1="90" y1="90" x2="50" y2="145" class="bhe-edge"/>
+      <line x1="90" y1="90" x2="130" y2="145" class="bhe-edge"/>
+      <line x1="250" y1="90" x2="210" y2="145" class="bhe-edge"/>
+      <line x1="250" y1="90" x2="290" y2="145" class="bhe-edge"/>
+
+      <line x1="50" y1="145" x2="30" y2="205" class="bhe-edge"/>
+      <line x1="50" y1="145" x2="70" y2="205" class="bhe-edge"/>
+      <line x1="130" y1="145" x2="110" y2="205" class="bhe-edge"/>
+      <line x1="130" y1="145" x2="150" y2="205" class="bhe-edge"/>
+
+      <!-- nodes -->
+      <circle cx="170" cy="35" r="18" class="bhe-node"/>
+      <text x="170" y="35" class="bhe-text">4</text>
+
+      <circle cx="90" cy="90" r="18" class="bhe-node"/>
+      <text x="90" y="90" class="bhe-text">15</text>
+
+      <circle cx="250" cy="90" r="18" class="bhe-node"/>
+      <text x="250" y="90" class="bhe-text">7</text>
+
+      <circle cx="50" cy="145" r="18" class="bhe-node"/>
+      <text x="50" y="145" class="bhe-text">20</text>
+
+      <circle cx="130" cy="145" r="18" class="bhe-active"/>
+      <text x="130" y="145" class="bhe-text">14</text>
+
+      <circle cx="210" cy="145" r="18" class="bhe-node"/>
+      <text x="210" y="145" class="bhe-text">2</text>
+
+      <circle cx="290" cy="145" r="18" class="bhe-node"/>
+      <text x="290" y="145" class="bhe-text">6</text>
+
+      <circle cx="30" cy="205" r="18" class="bhe-node"/>
+      <text x="30" y="205" class="bhe-text">11</text>
+
+      <circle cx="70" cy="205" r="18" class="bhe-node"/>
+      <text x="70" y="205" class="bhe-text">18</text>
+
+      <circle cx="110" cy="205" r="18" class="bhe-node"/>
+      <text x="110" y="205" class="bhe-text">3</text>
+
+      <circle cx="150" cy="205" r="18" class="bhe-node"/>
+      <text x="150" y="205" class="bhe-text">9</text>
+
+      <text x="170" y="250" class="bhe-array">
+        [4, 15, 7, 20, 14, 2, 6, 11, 18, 3, 9]
+      </text>
+      <text x="170" y="272" class="bhe-caption">
+        9 swaps with 14.
+      </text>
+    </g>
+
+    <!-- ====================================================== -->
+    <!-- 2. After siftDown at index 3                           -->
+    <!-- ====================================================== -->
+    <g transform="translate(390,10)">
+      <text x="170" y="0" class="bhe-step">
+        After siftDown at index 3
+      </text>
+
+      <!-- edges -->
+      <line x1="170" y1="35" x2="90" y2="90" class="bhe-edge"/>
+      <line x1="170" y1="35" x2="250" y2="90" class="bhe-edge"/>
+
+      <line x1="90" y1="90" x2="50" y2="145" class="bhe-edge"/>
+      <line x1="90" y1="90" x2="130" y2="145" class="bhe-edge"/>
+      <line x1="250" y1="90" x2="210" y2="145" class="bhe-edge"/>
+      <line x1="250" y1="90" x2="290" y2="145" class="bhe-edge"/>
+
+      <line x1="50" y1="145" x2="30" y2="205" class="bhe-edge"/>
+      <line x1="50" y1="145" x2="70" y2="205" class="bhe-edge"/>
+      <line x1="130" y1="145" x2="110" y2="205" class="bhe-edge"/>
+      <line x1="130" y1="145" x2="150" y2="205" class="bhe-edge"/>
+
+      <!-- nodes -->
+      <circle cx="170" cy="35" r="18" class="bhe-node"/>
+      <text x="170" y="35" class="bhe-text">4</text>
+
+      <circle cx="90" cy="90" r="18" class="bhe-node"/>
+      <text x="90" y="90" class="bhe-text">15</text>
+
+      <circle cx="250" cy="90" r="18" class="bhe-node"/>
+      <text x="250" y="90" class="bhe-text">7</text>
+
+      <circle cx="50" cy="145" r="18" class="bhe-active"/>
+      <text x="50" y="145" class="bhe-text">20</text>
+
+      <circle cx="130" cy="145" r="18" class="bhe-node"/>
+      <text x="130" y="145" class="bhe-text">14</text>
+
+      <circle cx="210" cy="145" r="18" class="bhe-node"/>
+      <text x="210" y="145" class="bhe-text">2</text>
+
+      <circle cx="290" cy="145" r="18" class="bhe-node"/>
+      <text x="290" y="145" class="bhe-text">6</text>
+
+      <circle cx="30" cy="205" r="18" class="bhe-node"/>
+      <text x="30" y="205" class="bhe-text">11</text>
+
+      <circle cx="70" cy="205" r="18" class="bhe-node"/>
+      <text x="70" y="205" class="bhe-text">18</text>
+
+      <circle cx="110" cy="205" r="18" class="bhe-node"/>
+      <text x="110" y="205" class="bhe-text">3</text>
+
+      <circle cx="150" cy="205" r="18" class="bhe-node"/>
+      <text x="150" y="205" class="bhe-text">9</text>
+
+      <text x="170" y="250" class="bhe-array">
+        [4, 15, 7, 20, 14, 2, 6, 11, 18, 3, 9]
+      </text>
+      <text x="170" y="272" class="bhe-caption">
+        20 is already at least as large as its children.
+      </text>
+    </g>
+
+    <!-- ====================================================== -->
+    <!-- 3. After siftDown at index 2                           -->
+    <!-- ====================================================== -->
+    <g transform="translate(760,10)">
+      <text x="170" y="0" class="bhe-step">
+        After siftDown at index 2
+      </text>
+
+      <!-- edges -->
+      <line x1="170" y1="35" x2="90" y2="90" class="bhe-edge"/>
+      <line x1="170" y1="35" x2="250" y2="90" class="bhe-edge"/>
+
+      <line x1="90" y1="90" x2="50" y2="145" class="bhe-edge"/>
+      <line x1="90" y1="90" x2="130" y2="145" class="bhe-edge"/>
+      <line x1="250" y1="90" x2="210" y2="145" class="bhe-edge"/>
+      <line x1="250" y1="90" x2="290" y2="145" class="bhe-edge"/>
+
+      <line x1="50" y1="145" x2="30" y2="205" class="bhe-edge"/>
+      <line x1="50" y1="145" x2="70" y2="205" class="bhe-edge"/>
+      <line x1="130" y1="145" x2="110" y2="205" class="bhe-edge"/>
+      <line x1="130" y1="145" x2="150" y2="205" class="bhe-edge"/>
+
+      <!-- nodes -->
+      <circle cx="170" cy="35" r="18" class="bhe-node"/>
+      <text x="170" y="35" class="bhe-text">4</text>
+
+      <circle cx="90" cy="90" r="18" class="bhe-node"/>
+      <text x="90" y="90" class="bhe-text">15</text>
+
+      <circle cx="250" cy="90" r="18" class="bhe-active"/>
+      <text x="250" y="90" class="bhe-text">7</text>
+
+      <circle cx="50" cy="145" r="18" class="bhe-node"/>
+      <text x="50" y="145" class="bhe-text">20</text>
+
+      <circle cx="130" cy="145" r="18" class="bhe-node"/>
+      <text x="130" y="145" class="bhe-text">14</text>
+
+      <circle cx="210" cy="145" r="18" class="bhe-node"/>
+      <text x="210" y="145" class="bhe-text">2</text>
+
+      <circle cx="290" cy="145" r="18" class="bhe-node"/>
+      <text x="290" y="145" class="bhe-text">6</text>
+
+      <circle cx="30" cy="205" r="18" class="bhe-node"/>
+      <text x="30" y="205" class="bhe-text">11</text>
+
+      <circle cx="70" cy="205" r="18" class="bhe-node"/>
+      <text x="70" y="205" class="bhe-text">18</text>
+
+      <circle cx="110" cy="205" r="18" class="bhe-node"/>
+      <text x="110" y="205" class="bhe-text">3</text>
+
+      <circle cx="150" cy="205" r="18" class="bhe-node"/>
+      <text x="150" y="205" class="bhe-text">9</text>
+
+      <text x="170" y="250" class="bhe-array">
+        [4, 15, 7, 20, 14, 2, 6, 11, 18, 3, 9]
+      </text>
+      <text x="170" y="272" class="bhe-caption">
+        7 is already at least as large as 2 and 6.
+      </text>
+    </g>
+
+    <!-- ====================================================== -->
+    <!-- 4. After siftDown at index 1                           -->
+    <!-- ====================================================== -->
+    <g transform="translate(205,325)">
+      <text x="170" y="0" class="bhe-step">
+        After siftDown at index 1
+      </text>
+
+      <!-- edges -->
+      <line x1="170" y1="35" x2="90" y2="90" class="bhe-edge"/>
+      <line x1="170" y1="35" x2="250" y2="90" class="bhe-edge"/>
+
+      <line x1="90" y1="90" x2="50" y2="145" class="bhe-edge"/>
+      <line x1="90" y1="90" x2="130" y2="145" class="bhe-edge"/>
+      <line x1="250" y1="90" x2="210" y2="145" class="bhe-edge"/>
+      <line x1="250" y1="90" x2="290" y2="145" class="bhe-edge"/>
+
+      <line x1="50" y1="145" x2="30" y2="205" class="bhe-edge"/>
+      <line x1="50" y1="145" x2="70" y2="205" class="bhe-edge"/>
+      <line x1="130" y1="145" x2="110" y2="205" class="bhe-edge"/>
+      <line x1="130" y1="145" x2="150" y2="205" class="bhe-edge"/>
+
+      <!-- nodes -->
+      <circle cx="170" cy="35" r="18" class="bhe-node"/>
+      <text x="170" y="35" class="bhe-text">4</text>
+
+      <circle cx="90" cy="90" r="18" class="bhe-active"/>
+      <text x="90" y="90" class="bhe-text">20</text>
+
+      <circle cx="250" cy="90" r="18" class="bhe-node"/>
+      <text x="250" y="90" class="bhe-text">7</text>
+
+      <circle cx="50" cy="145" r="18" class="bhe-node"/>
+      <text x="50" y="145" class="bhe-text">18</text>
+
+      <circle cx="130" cy="145" r="18" class="bhe-node"/>
+      <text x="130" y="145" class="bhe-text">14</text>
+
+      <circle cx="210" cy="145" r="18" class="bhe-node"/>
+      <text x="210" y="145" class="bhe-text">2</text>
+
+      <circle cx="290" cy="145" r="18" class="bhe-node"/>
+      <text x="290" y="145" class="bhe-text">6</text>
+
+      <circle cx="30" cy="205" r="18" class="bhe-node"/>
+      <text x="30" y="205" class="bhe-text">11</text>
+
+      <circle cx="70" cy="205" r="18" class="bhe-node"/>
+      <text x="70" y="205" class="bhe-text">15</text>
+
+      <circle cx="110" cy="205" r="18" class="bhe-node"/>
+      <text x="110" y="205" class="bhe-text">3</text>
+
+      <circle cx="150" cy="205" r="18" class="bhe-node"/>
+      <text x="150" y="205" class="bhe-text">9</text>
+
+      <text x="170" y="250" class="bhe-array">
+        [4, 20, 7, 18, 14, 2, 6, 11, 15, 3, 9]
+      </text>
+      <text x="170" y="272" class="bhe-caption">
+        15 swaps with 20, then with 18.
+      </text>
+    </g>
+
+    <!-- ====================================================== -->
+    <!-- 5. After siftDown at index 0                           -->
+    <!-- ====================================================== -->
+    <g transform="translate(575,325)">
+      <text x="170" y="0" class="bhe-step">
+        After siftDown at index 0
+      </text>
+
+      <!-- edges -->
+      <line x1="170" y1="35" x2="90" y2="90" class="bhe-edge"/>
+      <line x1="170" y1="35" x2="250" y2="90" class="bhe-edge"/>
+
+      <line x1="90" y1="90" x2="50" y2="145" class="bhe-edge"/>
+      <line x1="90" y1="90" x2="130" y2="145" class="bhe-edge"/>
+      <line x1="250" y1="90" x2="210" y2="145" class="bhe-edge"/>
+      <line x1="250" y1="90" x2="290" y2="145" class="bhe-edge"/>
+
+      <line x1="50" y1="145" x2="30" y2="205" class="bhe-edge"/>
+      <line x1="50" y1="145" x2="70" y2="205" class="bhe-edge"/>
+      <line x1="130" y1="145" x2="110" y2="205" class="bhe-edge"/>
+      <line x1="130" y1="145" x2="150" y2="205" class="bhe-edge"/>
+
+      <!-- nodes -->
+      <circle cx="170" cy="35" r="18" class="bhe-active"/>
+      <text x="170" y="35" class="bhe-text">20</text>
+
+      <circle cx="90" cy="90" r="18" class="bhe-node"/>
+      <text x="90" y="90" class="bhe-text">18</text>
+
+      <circle cx="250" cy="90" r="18" class="bhe-node"/>
+      <text x="250" y="90" class="bhe-text">7</text>
+
+      <circle cx="50" cy="145" r="18" class="bhe-node"/>
+      <text x="50" y="145" class="bhe-text">15</text>
+
+      <circle cx="130" cy="145" r="18" class="bhe-node"/>
+      <text x="130" y="145" class="bhe-text">14</text>
+
+      <circle cx="210" cy="145" r="18" class="bhe-node"/>
+      <text x="210" y="145" class="bhe-text">2</text>
+
+      <circle cx="290" cy="145" r="18" class="bhe-node"/>
+      <text x="290" y="145" class="bhe-text">6</text>
+
+      <circle cx="30" cy="205" r="18" class="bhe-node"/>
+      <text x="30" y="205" class="bhe-text">11</text>
+
+      <circle cx="70" cy="205" r="18" class="bhe-node"/>
+      <text x="70" y="205" class="bhe-text">4</text>
+
+      <circle cx="110" cy="205" r="18" class="bhe-node"/>
+      <text x="110" y="205" class="bhe-text">3</text>
+
+      <circle cx="150" cy="205" r="18" class="bhe-node"/>
+      <text x="150" y="205" class="bhe-text">9</text>
+
+      <text x="170" y="250" class="bhe-array">
+        [20, 18, 7, 15, 14, 2, 6, 11, 4, 3, 9]
+      </text>
+      <text x="170" y="272" class="bhe-caption">
+        4 swaps with 20, then 18, then 15.
+      </text>
+    </g>
+  </svg>
+
+  <p>
+    After the final call, the array is a max-heap. Each call to
+    <code>siftDown</code> assumes that the child subtrees are already heaps,
+    which is exactly why the indices are processed from right to left.
+  </p>
+</div>
+
+  <p>
+  Use the following demo to follow the construction step by step, including
+  each call to <code>siftDown</code> and every swap used to restore heap order.
+</p>
+
+  <div class="embeddedDemoContainer">
+    <iframe class="embeddedDemo"
+            src="/DAIADS/Content/Demos/Data Structures/Heap/Build Heap Demo.html"
+            allow="fullscreen"
+            name="build-max-heap-demo">
+    </iframe>
+  </div>
+</section>
+
+<section id="heapsort" section-title="Heapsort">
+  <h2>Heapsort</h2>
+
+  <p>
+    Heapsort turns the maximum-selection property of a max-heap into an
+    in-place sorting algorithm. After <code>buildMaxHeap</code> finishes, the
+    largest value in the array is at the root. Rather than removing that value
+    from the array, Heapsort swaps it with the final value in the active heap.
+    The maximum is then in its final sorted position.
+  </p>
+
+  <p>
+    The algorithm decreases <code>heapSize</code> so that this completed
+    position is no longer part of the heap. The value moved to the root may
+    violate max-heap order, but both of its child subtrees are still heaps, so
+    one call to <code>siftDown</code> restores the active heap.
+  </p>
+
+  <p>
+    Repeating these steps places the remaining maximum values from right to
+    left. The active heap shrinks by one position during each iteration while
+    a sorted suffix grows at the end of the same array. When only one active
+    value remains, the entire array is in nondecreasing order.
+  </p>
+
+  <pre><code>heapsort(A):
     buildMaxHeap(A)
     heapSize = length(A)
 
@@ -153,261 +859,1277 @@
         heapSize = heapSize - 1
         siftDown(A, 0, heapSize)</code></pre>
 
-    <h3>Heap prefix and sorted suffix</h3>
-    <p>
-      During sorting, the same physical array represents two regions:
-    </p>
-    <ul>
-      <li><code>A[0 .. heapSize-1]</code> is the active max-heap, and</li>
-      <li><code>A[heapSize .. n-1]</code> is a sorted suffix in final positions.</li>
-    </ul>
-    <p>
-      Every child-bound check must use <code>heapSize</code>. Using the full
-      array length would pull completed values back into the heap.
-    </p>
+  <h3>One Array, Two Regions</h3>
 
-    <h3>Worked trace</h3>
-    <p>
-      Continue from the max-heap
-      <code>[10, 5, 3, 4, 1]</code>:
-    </p>
-    <table class="example-table">
-      <thead>
-        <tr>
-          <th>Active size after swap</th>
-          <th>Array after downward repair</th>
-          <th>Sorted suffix</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>4</td>
-          <td><code>[5, 4, 3, 1, 10]</code></td>
-          <td><code>[10]</code></td>
-        </tr>
-        <tr>
-          <td>3</td>
-          <td><code>[4, 1, 3, 5, 10]</code></td>
-          <td><code>[5, 10]</code></td>
-        </tr>
-        <tr>
-          <td>2</td>
-          <td><code>[3, 1, 4, 5, 10]</code></td>
-          <td><code>[4, 5, 10]</code></td>
-        </tr>
-        <tr>
-          <td>1</td>
-          <td><code>[1, 3, 4, 5, 10]</code></td>
-          <td><code>[3, 4, 5, 10]</code></td>
-        </tr>
-      </tbody>
-    </table>
-    <div class="embeddedDemoContainer">
-      <iframe class="embeddedDemo"
-              src="../../../Content/Demos/Transform-and-Conquer/Heapsort Demo.html"
-              allow="fullscreen"
-              name="heapsort-demo">
-      </iframe>
-    </div>
-  </section>
+  <p>
+    During Heapsort, the array is divided into an active max-heap and a sorted
+    suffix. The boundary between them moves one position to the left after
+    each root swap.
+  </p>
 
-  <section id="analysis" section-title="Time/Space Analysis">
-    <h2>Time/Space Analysis</h2>
-    <p>
-      Bottom-up heap construction runs in \(\Theta(n)\) time. This result is
-      sharper than multiplying the number of internal nodes by the maximum cost
-      of one downward repair; the next section explains why.
-    </p>
-    <p>
-      Heapsort performs the linear construction phase once. It then performs
-      \(n-1\) root swaps and downward repairs. Each repair costs at most
-      \(O(\log n)\), so the complete algorithm takes \(O(n\log n)\) time,
-      with a worst-case bound of \(\Theta(n\log n)\).
-    </p>
-    <p>
-      With iterative <code>siftDown</code>, both algorithms use
-      \(\Theta(1)\) auxiliary space beyond the input array. A recursive helper
-      adds \(O(\log n)\) call-stack space. Heapsort is in place, but it is not
-      stable: root swaps can reverse equal-key entries that were far apart.
-    </p>
-  </section>
+<svg viewBox="0 0 1000 260"
+    role="img"
+    aria-labelledby="heapRegionsTitle heapRegionsDesc"
+    style="display:block; width:100%; height:auto; margin:1em auto;"> <title id="heapRegionsTitle">
+Active heap prefix and sorted suffix during Heapsort </title> <desc id="heapRegionsDesc">
+An array contains the values 7, 5, 6, 4, 1, 3, 2, 8, 9, and 10.
+The first seven positions form the active max-heap. The final three
+positions form a sorted suffix containing values already in their final
+positions. </desc>
+<defs>
+  <style>
+    .heap-region-active {
+      fill: #dbeafe;
+      stroke: #003366;
+      stroke-width: 2;
+    }
 
-  <section id="advanced-analysis" section-title="Advanced Analysis">
-    <h2>Advanced Analysis</h2>
+    .heap-region-sorted {
+      fill: #e8f5e9;
+      stroke: #245c2a;
+      stroke-width: 2;
+    }
 
-    <h3>Why the obvious \(O(n\log n)\) bound is loose</h3>
-    <p>
-      There are about \(n/2\) internal nodes, and one call to
-      <code>siftDown</code> can cost \(O(\log n)\). Multiplying these values
-      gives \(O(n\log n)\), which is a valid upper bound but treats every call
-      as though it began at the root. Most calls begin much lower.
-    </p>
-    <p>
-      At most about \(n/2^{h+1}\) nodes have height \(h\). A node of height
-      \(h\) can move down at most \(h\) levels, so the total work is bounded by
-    </p>
-    <p>
-      \[
-      \sum_{h=1}^{\lfloor\log n\rfloor}
-        \frac{n}{2^{h+1}}\,O(h)
-      = O(n)\sum_{h=1}^{\infty}\frac{h}{2^{h+1}}
-      = O(n).
-      \]
-    </p>
-    <p>
-      The infinite series converges to a constant. Intuitively, half the nodes
-      are leaves and are skipped, about one quarter can move down only one
-      level, about one eighth can move two levels, and only a tiny number can
-      travel near the full height. The loop also examines
-      \(\Theta(n)\) internal nodes in total, so the complete running time is
-      \(\Theta(n)\).
-    </p>
+    .heap-region-text {
+      fill: #002244;
+      font-family: Verdana, sans-serif;
+      font-size: 18px;
+      font-weight: 600;
+      text-anchor: middle;
+      dominant-baseline: middle;
+    }
 
-    <h3>Why \(n\) insertions do not receive the same bound</h3>
-    <p>
-      Inserting the values one at a time into an initially empty max-heap costs
-      at most
-      \[
-      \sum_{i=1}^{n} O(\log i)=O(\log(n!))=O(n\log n).
-      \]
-      Unlike the bottom-up method, this upper bound is tight in the worst case.
-      Insert keys in increasing order. Every new key is larger than all earlier
-      keys, so it rises from its new leaf position to the root. Its cost is
-      \(\Theta(\log i)\).
-    </p>
-    <p>
-      Even after accounting for the smaller early heaps, a constant fraction
-      of the insertions occur when \(i\) lies between \(n/2\) and \(n\). Each
-      of those heaps has height \(\Theta(\log n)\), and each insertion in this
-      input travels that height. Their total alone is
-      \(\Theta(n\log n)\).
-    </p>
-    <p>
-      The difference is where the work begins. Bottom-up repair charges each
-      existing node according to its <em>height</em>, and most nodes have very
-      small height. Insertion always begins at a new leaf and may travel
-      according to its <em>depth</em>; most later leaves have logarithmic
-      depth. Both methods produce a valid heap, but they distribute work very
-      differently.
-    </p>
-  </section>
+    .heap-region-index {
+      fill: #555;
+      font-family: Verdana, sans-serif;
+      font-size: 13px;
+      text-anchor: middle;
+    }
 
-  <section id="correctness" section-title="Why the Algorithms Work">
-    <h2>Why the Algorithms Work</h2>
-    <p>
-      Bottom-up construction processes nodes in an order that maintains a
-      simple invariant: before index \(i\) is repaired, both of its child
-      subtrees are heaps. Downward repair then makes the subtree rooted at
-      \(i\) a heap without disturbing already processed descendants. After
-      index <code>0</code>, the whole array satisfies heap order.
-    </p>
-    <p>
-      During Heapsort, the active prefix is a max-heap and the suffix contains
-      the largest removed values in sorted order. Swapping the root with the
-      last active entry places the largest remaining value immediately before
-      that suffix. Downward repair restores the prefix invariant, so the
-      argument repeats until no unsorted entries remain.
-    </p>
-  </section>
+    .heap-region-label {
+      fill: #002244;
+      font-family: Verdana, sans-serif;
+      font-size: 17px;
+      font-weight: 600;
+      text-anchor: middle;
+    }
 
-  <section id="pitfalls" section-title="Common Pitfalls">
-    <h2>Common Pitfalls</h2>
-    <ul>
-      <li><strong>Starting at a leaf:</strong> leaves need no repair; begin at \(\lfloor n/2\rfloor-1\).</li>
-      <li><strong>Processing top-down:</strong> a parent cannot use downward repair safely until its child subtrees are heaps.</li>
-      <li><strong>Using array length during sorting:</strong> the sorted suffix is outside the active heap.</li>
-      <li><strong>Skipping the root repair:</strong> every root swap can violate heap order at index <code>0</code>.</li>
-      <li><strong>Claiming stability:</strong> in-place root swaps do not preserve the order of equal keys.</li>
-      <li><strong>Stopping at the loose bound:</strong> \(O(n\log n)\) is true for construction but fails to describe its tighter \(\Theta(n)\) cost.</li>
-    </ul>
-  </section>
+    .heap-region-note {
+      fill: #444;
+      font-family: Verdana, sans-serif;
+      font-size: 14px;
+      text-anchor: middle;
+    }
 
-  <section id="summary" section-title="Summary">
-    <h2>Summary</h2>
-    <p>
-      Bottom-up construction treats leaves as finished heaps and repairs
-      internal nodes toward the root, producing a heap in linear time.
-      Heapsort first performs that construction, then repeatedly moves the root
-      into a growing sorted suffix. It sorts in place in
-      \(\Theta(n\log n)\) time. The construction phase is linear because most
-      nodes can move only a short distance; repeated insertion has no matching
-      worst-case improvement because many inserted leaves may travel a
-      logarithmic distance.
-    </p>
-  </section>
+    .heap-region-divider {
+      stroke: #555;
+      stroke-width: 2.5;
+      stroke-dasharray: 7 5;
+    }
+  </style>
+</defs>
 
-  <section id="related-pages" section-title="Related Pages">
-    <h2>Related Pages</h2>
-    <ul>
+<!-- Active heap cells -->
+<rect x="50"  y="85" width="90" height="65" class="heap-region-active"/>
+<rect x="140" y="85" width="90" height="65" class="heap-region-active"/>
+<rect x="230" y="85" width="90" height="65" class="heap-region-active"/>
+<rect x="320" y="85" width="90" height="65" class="heap-region-active"/>
+<rect x="410" y="85" width="90" height="65" class="heap-region-active"/>
+<rect x="500" y="85" width="90" height="65" class="heap-region-active"/>
+<rect x="590" y="85" width="90" height="65" class="heap-region-active"/>
+
+<!-- Sorted suffix cells -->
+<rect x="680" y="85" width="90" height="65" class="heap-region-sorted"/>
+<rect x="770" y="85" width="90" height="65" class="heap-region-sorted"/>
+<rect x="860" y="85" width="90" height="65" class="heap-region-sorted"/>
+
+<!-- Values -->
+<text x="95"  y="118" class="heap-region-text">7</text>
+<text x="185" y="118" class="heap-region-text">5</text>
+<text x="275" y="118" class="heap-region-text">6</text>
+<text x="365" y="118" class="heap-region-text">4</text>
+<text x="455" y="118" class="heap-region-text">1</text>
+<text x="545" y="118" class="heap-region-text">3</text>
+<text x="635" y="118" class="heap-region-text">2</text>
+<text x="725" y="118" class="heap-region-text">8</text>
+<text x="815" y="118" class="heap-region-text">9</text>
+<text x="905" y="118" class="heap-region-text">10</text>
+
+<!-- Indices -->
+<text x="95"  y="173" class="heap-region-index">0</text>
+<text x="185" y="173" class="heap-region-index">1</text>
+<text x="275" y="173" class="heap-region-index">2</text>
+<text x="365" y="173" class="heap-region-index">3</text>
+<text x="455" y="173" class="heap-region-index">4</text>
+<text x="545" y="173" class="heap-region-index">5</text>
+<text x="635" y="173" class="heap-region-index">6</text>
+<text x="725" y="173" class="heap-region-index">7</text>
+<text x="815" y="173" class="heap-region-index">8</text>
+<text x="905" y="173" class="heap-region-index">9</text>
+
+<!-- Boundary -->
+<line x1="680" y1="62" x2="680" y2="190"
+      class="heap-region-divider"/>
+
+<!-- Labels -->
+<text x="365" y="40" class="heap-region-label">
+  Active max-heap
+</text>
+<text x="815" y="40" class="heap-region-label">
+  Sorted suffix
+</text>
+
+<text x="365" y="218" class="heap-region-note">
+  Indices 0 through heapSize - 1
+</text>
+<text x="815" y="218" class="heap-region-note">
+  Values already in final positions
+</text>
+  </svg>
+
+  <p>
+    Every child-bound check made by <code>siftDown</code> must use
+    <code>heapSize</code>. Using the full array length would allow values from
+    the completed suffix to reenter the active heap.
+  </p>
+
+  <div class="example-box">
+  <strong class="example-title">Example 3: Heapsort Trace</strong>
+
+  <p>
+    Begin with the max-heap
+    <code>[20, 16, 18, 8, 14, 15, 17, 3, 5, 9, 12]</code>. The first three
+    passes of Heapsort are shown below. In each pass, the root is swapped with
+    the final entry of the active heap, the heap boundary moves left by one,
+    and <code>siftDown</code> restores max-heap order.
+  </p>
+
+  <p>
+    In each diagram, blue entries changed during the most recent pass. Green
+    entries belong to the sorted suffix and are no longer part of the heap, so
+    they are shown without connecting edges.
+  </p>
+
+  <svg viewBox="0 0 760 760"
+       role="img"
+       aria-labelledby="heapsortTraceTitle heapsortTraceDesc"
+       style="display:block; width:100%; height:auto; margin:1em auto;">
+    <title id="heapsortTraceTitle">
+      First three passes of Heapsort on an eleven-entry max-heap
+    </title>
+    <desc id="heapsortTraceDesc">
+      Four panels show the initial max-heap and the results after the first
+      three passes of Heapsort. Each panel includes a tree view and an array
+      view. Changed entries are highlighted in blue, and the sorted suffix is
+      highlighted in green.
+    </desc>
+
+    <defs>
+      <style>
+        .hs-edge {
+          stroke: #555;
+          stroke-width: 2.2;
+          stroke-linecap: round;
+        }
+
+        .hs-node {
+          fill: #ffffff;
+          stroke: #003366;
+          stroke-width: 2.2;
+        }
+
+        .hs-changed {
+          fill: #dbeafe;
+          stroke: #003366;
+          stroke-width: 2.8;
+        }
+
+        .hs-sorted {
+          fill: #e8f5e9;
+          stroke: #2f6b35;
+          stroke-width: 2.2;
+        }
+
+        .hs-text {
+          fill: #002244;
+          font-family: Verdana, sans-serif;
+          font-size: 12px;
+          font-weight: 600;
+          text-anchor: middle;
+          dominant-baseline: middle;
+        }
+
+        .hs-step {
+          fill: #002244;
+          font-family: Verdana, sans-serif;
+          font-size: 15px;
+          font-weight: 600;
+          text-anchor: middle;
+        }
+
+        .hs-caption {
+          fill: #444;
+          font-family: Verdana, sans-serif;
+          font-size: 12px;
+          text-anchor: middle;
+        }
+
+        .hs-cell {
+          fill: #ffffff;
+          stroke: #003366;
+          stroke-width: 1.8;
+        }
+
+        .hs-cell-changed {
+          fill: #dbeafe;
+          stroke: #003366;
+          stroke-width: 2.2;
+        }
+
+        .hs-cell-sorted {
+          fill: #e8f5e9;
+          stroke: #2f6b35;
+          stroke-width: 1.8;
+        }
+
+        .hs-array-text {
+          fill: #002244;
+          font-family: "Courier New", monospace;
+          font-size: 12px;
+          font-weight: 600;
+          text-anchor: middle;
+          dominant-baseline: middle;
+        }
+
+        .hs-index-text {
+          fill: #666;
+          font-family: Verdana, sans-serif;
+          font-size: 10px;
+          text-anchor: middle;
+        }
+
+        .hs-panel-border {
+          fill: none;
+          stroke: #dddddd;
+          stroke-width: 1.5;
+        }
+      </style>
+    </defs>
+
+    <!-- ===================================================== -->
+    <!-- Panel 1: initial heap                                -->
+    <!-- ===================================================== -->
+    <g transform="translate(10,20)">
+      <rect x="0" y="0" width="360" height="340" class="hs-panel-border"/>
+      <text x="180" y="20" class="hs-step">Start: Max-Heap</text>
+
+      <!-- edges -->
+      <line x1="180" y1="50" x2="110" y2="105" class="hs-edge"/>
+      <line x1="180" y1="50" x2="250" y2="105" class="hs-edge"/>
+
+      <line x1="110" y1="105" x2="70" y2="160" class="hs-edge"/>
+      <line x1="110" y1="105" x2="150" y2="160" class="hs-edge"/>
+      <line x1="250" y1="105" x2="210" y2="160" class="hs-edge"/>
+      <line x1="250" y1="105" x2="290" y2="160" class="hs-edge"/>
+
+      <line x1="70" y1="160" x2="50" y2="220" class="hs-edge"/>
+      <line x1="70" y1="160" x2="90" y2="220" class="hs-edge"/>
+      <line x1="150" y1="160" x2="130" y2="220" class="hs-edge"/>
+      <line x1="150" y1="160" x2="170" y2="220" class="hs-edge"/>
+
+      <!-- nodes -->
+      <circle cx="180" cy="50" r="18" class="hs-node"/><text x="180" y="50" class="hs-text">20</text>
+      <circle cx="110" cy="105" r="18" class="hs-node"/><text x="110" y="105" class="hs-text">16</text>
+      <circle cx="250" cy="105" r="18" class="hs-node"/><text x="250" y="105" class="hs-text">18</text>
+      <circle cx="70" cy="160" r="18" class="hs-node"/><text x="70" y="160" class="hs-text">8</text>
+      <circle cx="150" cy="160" r="18" class="hs-node"/><text x="150" y="160" class="hs-text">14</text>
+      <circle cx="210" cy="160" r="18" class="hs-node"/><text x="210" y="160" class="hs-text">15</text>
+      <circle cx="290" cy="160" r="18" class="hs-node"/><text x="290" y="160" class="hs-text">17</text>
+      <circle cx="50" cy="220" r="18" class="hs-node"/><text x="50" y="220" class="hs-text">3</text>
+      <circle cx="90" cy="220" r="18" class="hs-node"/><text x="90" y="220" class="hs-text">5</text>
+      <circle cx="130" cy="220" r="18" class="hs-node"/><text x="130" y="220" class="hs-text">9</text>
+      <circle cx="170" cy="220" r="18" class="hs-node"/><text x="170" y="220" class="hs-text">12</text>
+
+      <!-- array -->
+      <g transform="translate(18,270)">
+        <rect x="0" y="0" width="28" height="28" class="hs-cell"/><text x="14" y="14" class="hs-array-text">20</text>
+        <rect x="28" y="0" width="28" height="28" class="hs-cell"/><text x="42" y="14" class="hs-array-text">16</text>
+        <rect x="56" y="0" width="28" height="28" class="hs-cell"/><text x="70" y="14" class="hs-array-text">18</text>
+        <rect x="84" y="0" width="28" height="28" class="hs-cell"/><text x="98" y="14" class="hs-array-text">8</text>
+        <rect x="112" y="0" width="28" height="28" class="hs-cell"/><text x="126" y="14" class="hs-array-text">14</text>
+        <rect x="140" y="0" width="28" height="28" class="hs-cell"/><text x="154" y="14" class="hs-array-text">15</text>
+        <rect x="168" y="0" width="28" height="28" class="hs-cell"/><text x="182" y="14" class="hs-array-text">17</text>
+        <rect x="196" y="0" width="28" height="28" class="hs-cell"/><text x="210" y="14" class="hs-array-text">3</text>
+        <rect x="224" y="0" width="28" height="28" class="hs-cell"/><text x="238" y="14" class="hs-array-text">5</text>
+        <rect x="252" y="0" width="28" height="28" class="hs-cell"/><text x="266" y="14" class="hs-array-text">9</text>
+        <rect x="280" y="0" width="28" height="28" class="hs-cell"/><text x="294" y="14" class="hs-array-text">12</text>
+
+        <text x="14" y="42" class="hs-index-text">0</text>
+        <text x="42" y="42" class="hs-index-text">1</text>
+        <text x="70" y="42" class="hs-index-text">2</text>
+        <text x="98" y="42" class="hs-index-text">3</text>
+        <text x="126" y="42" class="hs-index-text">4</text>
+        <text x="154" y="42" class="hs-index-text">5</text>
+        <text x="182" y="42" class="hs-index-text">6</text>
+        <text x="210" y="42" class="hs-index-text">7</text>
+        <text x="238" y="42" class="hs-index-text">8</text>
+        <text x="266" y="42" class="hs-index-text">9</text>
+        <text x="294" y="42" class="hs-index-text">10</text>
+      </g>
+
+      <text x="180" y="330" class="hs-caption">
+        Initial heap before sorting begins.
+      </text>
+    </g>
+
+    <!-- ===================================================== -->
+    <!-- Panel 2: after pass 1                                -->
+    <!-- ===================================================== -->
+    <g transform="translate(390,20)">
+      <rect x="0" y="0" width="360" height="340" class="hs-panel-border"/>
+      <text x="180" y="20" class="hs-step">After Pass 1</text>
+
+      <!-- edges for active heapSize = 10 -->
+      <line x1="180" y1="50" x2="110" y2="105" class="hs-edge"/>
+      <line x1="180" y1="50" x2="250" y2="105" class="hs-edge"/>
+
+      <line x1="110" y1="105" x2="70" y2="160" class="hs-edge"/>
+      <line x1="110" y1="105" x2="150" y2="160" class="hs-edge"/>
+      <line x1="250" y1="105" x2="210" y2="160" class="hs-edge"/>
+      <line x1="250" y1="105" x2="290" y2="160" class="hs-edge"/>
+
+      <line x1="70" y1="160" x2="50" y2="220" class="hs-edge"/>
+      <line x1="70" y1="160" x2="90" y2="220" class="hs-edge"/>
+      <line x1="150" y1="160" x2="130" y2="220" class="hs-edge"/>
+
+      <!-- nodes -->
+      <circle cx="180" cy="50" r="18" class="hs-changed"/><text x="180" y="50" class="hs-text">18</text>
+      <circle cx="110" cy="105" r="18" class="hs-node"/><text x="110" y="105" class="hs-text">16</text>
+      <circle cx="250" cy="105" r="18" class="hs-changed"/><text x="250" y="105" class="hs-text">17</text>
+      <circle cx="70" cy="160" r="18" class="hs-node"/><text x="70" y="160" class="hs-text">8</text>
+      <circle cx="150" cy="160" r="18" class="hs-node"/><text x="150" y="160" class="hs-text">14</text>
+      <circle cx="210" cy="160" r="18" class="hs-node"/><text x="210" y="160" class="hs-text">15</text>
+      <circle cx="290" cy="160" r="18" class="hs-changed"/><text x="290" y="160" class="hs-text">12</text>
+      <circle cx="50" cy="220" r="18" class="hs-node"/><text x="50" y="220" class="hs-text">3</text>
+      <circle cx="90" cy="220" r="18" class="hs-node"/><text x="90" y="220" class="hs-text">5</text>
+      <circle cx="130" cy="220" r="18" class="hs-node"/><text x="130" y="220" class="hs-text">9</text>
+      <circle cx="170" cy="220" r="18" class="hs-sorted"/><text x="170" y="220" class="hs-text">20</text>
+
+      <!-- array -->
+      <g transform="translate(18,270)">
+        <rect x="0" y="0" width="28" height="28" class="hs-cell-changed"/><text x="14" y="14" class="hs-array-text">18</text>
+        <rect x="28" y="0" width="28" height="28" class="hs-cell"/><text x="42" y="14" class="hs-array-text">16</text>
+        <rect x="56" y="0" width="28" height="28" class="hs-cell-changed"/><text x="70" y="14" class="hs-array-text">17</text>
+        <rect x="84" y="0" width="28" height="28" class="hs-cell"/><text x="98" y="14" class="hs-array-text">8</text>
+        <rect x="112" y="0" width="28" height="28" class="hs-cell"/><text x="126" y="14" class="hs-array-text">14</text>
+        <rect x="140" y="0" width="28" height="28" class="hs-cell"/><text x="154" y="14" class="hs-array-text">15</text>
+        <rect x="168" y="0" width="28" height="28" class="hs-cell-changed"/><text x="182" y="14" class="hs-array-text">12</text>
+        <rect x="196" y="0" width="28" height="28" class="hs-cell"/><text x="210" y="14" class="hs-array-text">3</text>
+        <rect x="224" y="0" width="28" height="28" class="hs-cell"/><text x="238" y="14" class="hs-array-text">5</text>
+        <rect x="252" y="0" width="28" height="28" class="hs-cell"/><text x="266" y="14" class="hs-array-text">9</text>
+        <rect x="280" y="0" width="28" height="28" class="hs-cell-sorted"/><text x="294" y="14" class="hs-array-text">20</text>
+
+        <text x="14" y="42" class="hs-index-text">0</text>
+        <text x="42" y="42" class="hs-index-text">1</text>
+        <text x="70" y="42" class="hs-index-text">2</text>
+        <text x="98" y="42" class="hs-index-text">3</text>
+        <text x="126" y="42" class="hs-index-text">4</text>
+        <text x="154" y="42" class="hs-index-text">5</text>
+        <text x="182" y="42" class="hs-index-text">6</text>
+        <text x="210" y="42" class="hs-index-text">7</text>
+        <text x="238" y="42" class="hs-index-text">8</text>
+        <text x="266" y="42" class="hs-index-text">9</text>
+        <text x="294" y="42" class="hs-index-text">10</text>
+      </g>
+
+      <text x="180" y="330" class="hs-caption">
+        Swap 20 with 12, then sift 12 down to index 6.
+      </text>
+    </g>
+
+    <!-- ===================================================== -->
+    <!-- Panel 3: after pass 2                                -->
+    <!-- ===================================================== -->
+    <g transform="translate(10,390)">
+      <rect x="0" y="0" width="360" height="340" class="hs-panel-border"/>
+      <text x="180" y="20" class="hs-step">After Pass 2</text>
+
+      <!-- edges for active heapSize = 9 -->
+      <line x1="180" y1="50" x2="110" y2="105" class="hs-edge"/>
+      <line x1="180" y1="50" x2="250" y2="105" class="hs-edge"/>
+
+      <line x1="110" y1="105" x2="70" y2="160" class="hs-edge"/>
+      <line x1="110" y1="105" x2="150" y2="160" class="hs-edge"/>
+      <line x1="250" y1="105" x2="210" y2="160" class="hs-edge"/>
+      <line x1="250" y1="105" x2="290" y2="160" class="hs-edge"/>
+
+      <line x1="70" y1="160" x2="50" y2="220" class="hs-edge"/>
+      <line x1="70" y1="160" x2="90" y2="220" class="hs-edge"/>
+
+      <!-- nodes -->
+      <circle cx="180" cy="50" r="18" class="hs-changed"/><text x="180" y="50" class="hs-text">17</text>
+      <circle cx="110" cy="105" r="18" class="hs-node"/><text x="110" y="105" class="hs-text">16</text>
+      <circle cx="250" cy="105" r="18" class="hs-changed"/><text x="250" y="105" class="hs-text">15</text>
+      <circle cx="70" cy="160" r="18" class="hs-node"/><text x="70" y="160" class="hs-text">8</text>
+      <circle cx="150" cy="160" r="18" class="hs-node"/><text x="150" y="160" class="hs-text">14</text>
+      <circle cx="210" cy="160" r="18" class="hs-changed"/><text x="210" y="160" class="hs-text">9</text>
+      <circle cx="290" cy="160" r="18" class="hs-node"/><text x="290" y="160" class="hs-text">12</text>
+      <circle cx="50" cy="220" r="18" class="hs-node"/><text x="50" y="220" class="hs-text">3</text>
+      <circle cx="90" cy="220" r="18" class="hs-node"/><text x="90" y="220" class="hs-text">5</text>
+      <circle cx="130" cy="220" r="18" class="hs-sorted"/><text x="130" y="220" class="hs-text">18</text>
+      <circle cx="170" cy="220" r="18" class="hs-sorted"/><text x="170" y="220" class="hs-text">20</text>
+
+      <!-- array -->
+      <g transform="translate(18,270)">
+        <rect x="0" y="0" width="28" height="28" class="hs-cell-changed"/><text x="14" y="14" class="hs-array-text">17</text>
+        <rect x="28" y="0" width="28" height="28" class="hs-cell"/><text x="42" y="14" class="hs-array-text">16</text>
+        <rect x="56" y="0" width="28" height="28" class="hs-cell-changed"/><text x="70" y="14" class="hs-array-text">15</text>
+        <rect x="84" y="0" width="28" height="28" class="hs-cell"/><text x="98" y="14" class="hs-array-text">8</text>
+        <rect x="112" y="0" width="28" height="28" class="hs-cell"/><text x="126" y="14" class="hs-array-text">14</text>
+        <rect x="140" y="0" width="28" height="28" class="hs-cell-changed"/><text x="154" y="14" class="hs-array-text">9</text>
+        <rect x="168" y="0" width="28" height="28" class="hs-cell"/><text x="182" y="14" class="hs-array-text">12</text>
+        <rect x="196" y="0" width="28" height="28" class="hs-cell"/><text x="210" y="14" class="hs-array-text">3</text>
+        <rect x="224" y="0" width="28" height="28" class="hs-cell"/><text x="238" y="14" class="hs-array-text">5</text>
+        <rect x="252" y="0" width="28" height="28" class="hs-cell-sorted"/><text x="266" y="14" class="hs-array-text">18</text>
+        <rect x="280" y="0" width="28" height="28" class="hs-cell-sorted"/><text x="294" y="14" class="hs-array-text">20</text>
+
+        <text x="14" y="42" class="hs-index-text">0</text>
+        <text x="42" y="42" class="hs-index-text">1</text>
+        <text x="70" y="42" class="hs-index-text">2</text>
+        <text x="98" y="42" class="hs-index-text">3</text>
+        <text x="126" y="42" class="hs-index-text">4</text>
+        <text x="154" y="42" class="hs-index-text">5</text>
+        <text x="182" y="42" class="hs-index-text">6</text>
+        <text x="210" y="42" class="hs-index-text">7</text>
+        <text x="238" y="42" class="hs-index-text">8</text>
+        <text x="266" y="42" class="hs-index-text">9</text>
+        <text x="294" y="42" class="hs-index-text">10</text>
+      </g>
+
+      <text x="180" y="330" class="hs-caption">
+        Swap 18 with 9, then sift 9 down to index 5.
+      </text>
+    </g>
+
+    <!-- ===================================================== -->
+    <!-- Panel 4: after pass 3                                -->
+    <!-- ===================================================== -->
+    <g transform="translate(390,390)">
+      <rect x="0" y="0" width="360" height="340" class="hs-panel-border"/>
+      <text x="180" y="20" class="hs-step">After Pass 3</text>
+
+      <!-- edges for active heapSize = 8 -->
+      <line x1="180" y1="50" x2="110" y2="105" class="hs-edge"/>
+      <line x1="180" y1="50" x2="250" y2="105" class="hs-edge"/>
+
+      <line x1="110" y1="105" x2="70" y2="160" class="hs-edge"/>
+      <line x1="110" y1="105" x2="150" y2="160" class="hs-edge"/>
+      <line x1="250" y1="105" x2="210" y2="160" class="hs-edge"/>
+      <line x1="250" y1="105" x2="290" y2="160" class="hs-edge"/>
+
+      <line x1="70" y1="160" x2="50" y2="220" class="hs-edge"/>
+
+      <!-- nodes -->
+      <circle cx="180" cy="50" r="18" class="hs-changed"/><text x="180" y="50" class="hs-text">16</text>
+      <circle cx="110" cy="105" r="18" class="hs-changed"/><text x="110" y="105" class="hs-text">14</text>
+      <circle cx="250" cy="105" r="18" class="hs-node"/><text x="250" y="105" class="hs-text">15</text>
+      <circle cx="70" cy="160" r="18" class="hs-node"/><text x="70" y="160" class="hs-text">8</text>
+      <circle cx="150" cy="160" r="18" class="hs-changed"/><text x="150" y="160" class="hs-text">5</text>
+      <circle cx="210" cy="160" r="18" class="hs-node"/><text x="210" y="160" class="hs-text">9</text>
+      <circle cx="290" cy="160" r="18" class="hs-node"/><text x="290" y="160" class="hs-text">12</text>
+      <circle cx="50" cy="220" r="18" class="hs-node"/><text x="50" y="220" class="hs-text">3</text>
+      <circle cx="90" cy="220" r="18" class="hs-sorted"/><text x="90" y="220" class="hs-text">17</text>
+      <circle cx="130" cy="220" r="18" class="hs-sorted"/><text x="130" y="220" class="hs-text">18</text>
+      <circle cx="170" cy="220" r="18" class="hs-sorted"/><text x="170" y="220" class="hs-text">20</text>
+
+      <!-- array -->
+      <g transform="translate(18,270)">
+        <rect x="0" y="0" width="28" height="28" class="hs-cell-changed"/><text x="14" y="14" class="hs-array-text">16</text>
+        <rect x="28" y="0" width="28" height="28" class="hs-cell-changed"/><text x="42" y="14" class="hs-array-text">14</text>
+        <rect x="56" y="0" width="28" height="28" class="hs-cell"/><text x="70" y="14" class="hs-array-text">15</text>
+        <rect x="84" y="0" width="28" height="28" class="hs-cell"/><text x="98" y="14" class="hs-array-text">8</text>
+        <rect x="112" y="0" width="28" height="28" class="hs-cell-changed"/><text x="126" y="14" class="hs-array-text">5</text>
+        <rect x="140" y="0" width="28" height="28" class="hs-cell"/><text x="154" y="14" class="hs-array-text">9</text>
+        <rect x="168" y="0" width="28" height="28" class="hs-cell"/><text x="182" y="14" class="hs-array-text">12</text>
+        <rect x="196" y="0" width="28" height="28" class="hs-cell"/><text x="210" y="14" class="hs-array-text">3</text>
+        <rect x="224" y="0" width="28" height="28" class="hs-cell-sorted"/><text x="238" y="14" class="hs-array-text">17</text>
+        <rect x="252" y="0" width="28" height="28" class="hs-cell-sorted"/><text x="266" y="14" class="hs-array-text">18</text>
+        <rect x="280" y="0" width="28" height="28" class="hs-cell-sorted"/><text x="294" y="14" class="hs-array-text">20</text>
+
+        <text x="14" y="42" class="hs-index-text">0</text>
+        <text x="42" y="42" class="hs-index-text">1</text>
+        <text x="70" y="42" class="hs-index-text">2</text>
+        <text x="98" y="42" class="hs-index-text">3</text>
+        <text x="126" y="42" class="hs-index-text">4</text>
+        <text x="154" y="42" class="hs-index-text">5</text>
+        <text x="182" y="42" class="hs-index-text">6</text>
+        <text x="210" y="42" class="hs-index-text">7</text>
+        <text x="238" y="42" class="hs-index-text">8</text>
+        <text x="266" y="42" class="hs-index-text">9</text>
+        <text x="294" y="42" class="hs-index-text">10</text>
+      </g>
+
+      <text x="180" y="330" class="hs-caption">
+        Swap 17 with 5, then sift 5 down to index 4.
+      </text>
+    </g>
+  </svg>
+
+  <p>
+    The process continues in the same way until only one active heap entry
+    remains. At that point, the entire array is sorted in nondecreasing order.
+  </p>
+</div>
+
+  <p>
+    Use the following demo to follow each root swap, the movement of the heap
+    boundary, and the calls to <code>siftDown</code> that restore the active
+    heap.
+  </p>
+
+  <div class="embeddedDemoContainer">
+    <iframe class="embeddedDemo"
+            src="/DAIADS/Content/Demos/Transform-and-Conquer/Heapsort Demo.html"
+            allow="fullscreen"
+            name="heapsort-demo">
+    </iframe>
+  </div>
+</section>
+
+<section id="analysis" section-title="Time/Space Analysis">
+  <h2>Time/Space Analysis</h2>
+  <p>
+    A naive analysis gives an \(O(n\log n)\) bound for bottom-up heap
+    construction: there are \(\Theta(n)\) internal nodes, and each call to
+    <code>siftDown</code> takes at most \(O(\log n)\) time. This bound is valid
+    but not tight because most calls begin near the leaves and cannot move that
+    far. About half of the nodes are leaves and require no work, about one
+    quarter can move down at most one level, about one eighth can move down at
+    most two levels, and progressively fewer nodes can move farther. These
+    decreasing amounts of work add to \(\Theta(n)\), as shown in more detail in
+    the Advanced Analysis section.
+  </p>
+
+  <p>
+  Heapsort performs the \(\Theta(n)\) construction phase once. It then
+  performs \(n-1\) root swaps and downward repairs. Although the active heap
+  gradually shrinks, every repair begins at its root, and each takes at most
+  \(O(\log n)\) time. The sorting phase therefore takes
+  \(O(n\log n)\) time. Because Heapsort is a comparison-based sorting
+  algorithm, the \(\Omega(n\log n)\) worst-case lower bound for comparison
+  sorting also applies. 
+  Because Heapsort is a comparison-based sorting
+  algorithm, the \(\Omega(n\log n)\) worst-case lower bound for comparison
+  sorting also applies. 
+  Its worst-case running time is therefore \(\Theta(n\log n)\).
+</p>
+
+OLD
+
+  <p>
+  Heapsort performs the \(\Theta(n)\) construction phase once. It then
+  performs \(n-1\) root swaps and downward repairs. Although the active heap
+  gradually shrinks, every repair begins at its root rather than at nodes of
+  different heights. Moreover, during the first \(n/2\) passes, the active
+  heap still contains at least \(n/2\) entries and has height
+  \(\Theta(\log n)\). Each of those repairs can therefore take
+  \(\Theta(\log n)\) time in the worst case. The complete algorithm takes
+  \(O(n\log n)\) time, with a worst-case running time of
+  \(\Theta(n\log n)\).
+</p>
+
+  <p>
+    With iterative <code>siftDown</code>, both algorithms use
+    \(\Theta(1)\) auxiliary space beyond the input array. A recursive helper
+    instead uses \(O(\log n)\) call-stack space. Heapsort is therefore an
+    in-place sorting algorithm, but it is not stable: swaps between distant
+    positions can reverse the relative order of entries with equal keys.
+  </p>
+</section>
+
+<section id="advanced-analysis" section-title="Advanced Analysis">
+  <h2>Advanced Analysis</h2>
+
+  <h3>Why Bottom-Up Construction Is Linear</h3>
+
+  <p>
+    A simple analysis observes that there are fewer than \(n/2\) internal
+    nodes and that one call to <code>siftDown</code> takes at most
+    \(O(\log n)\) time. Multiplying these bounds gives
+    \(O(n\log n)\). This is a valid upper bound, but it is not tight because it
+    treats every internal node as though it were the root of the entire tree.
+  </p>
+
+  <p>
+    The cost of a call depends on the height of the subtree where it begins.
+    Nodes near the bottom can move only a short distance:
+  </p>
+
+  <table class="example-table">
+    <thead>
+      <tr>
+        <th>Location</th>
+        <th>Approximate Number of Nodes</th>
+        <th>Maximum Downward Movement</th>
+        <th>Maximum Total Work</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Leaves</td>
+        <td>\(n/2\)</td>
+        <td>0 levels</td>
+        <td>0</td>
+      </tr>
+      <tr>
+        <td>Parents of leaves</td>
+        <td>\(n/4\)</td>
+        <td>1 level</td>
+        <td>\(n/4\)</td>
+      </tr>
+      <tr>
+        <td>Height 2</td>
+        <td>\(n/8\)</td>
+        <td>2 levels</td>
+        <td>\(2n/8\)</td>
+      </tr>
+      <tr>
+        <td>Height 3</td>
+        <td>\(n/16\)</td>
+        <td>3 levels</td>
+        <td>\(3n/16\)</td>
+      </tr>
+      <tr>
+        <td>Height \(h\)</td>
+        <td>At most about \(n/2^{h+1}\)</td>
+        <td>\(h\) levels</td>
+        <td>At most about \(hn/2^{h+1}\)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>
+  Thus, apart from constant work performed by each call, the total number of
+  possible downward steps is bounded by
+</p>
+
+<p>
+  \[
+    \frac{n}{4}
+    + 2\left(\frac{n}{8}\right)
+    + 3\left(\frac{n}{16}\right)
+    + 4\left(\frac{n}{32}\right)
+    + \cdots
+    =
+    n\sum_{h=1}^{\infty}\frac{h}{2^{h+1}}.
+  \]
+</p>
+
+<p>
+  This infinite sum can be evaluated directly. Let
+</p>
+
+<p>
+  \[
+    T=\sum_{h=1}^{\infty}\frac{h}{2^h}
+      =\frac12+\frac24+\frac38+\frac4{16}+\cdots.
+  \]
+</p>
+
+<p>
+  Dividing by \(2\) and subtracting gives
+</p>
+
+<p>
+  \[
+  \begin{aligned}
+    T-\frac{T}{2}
+      &=
+      \left(\frac12+\frac24+\frac38+\cdots\right)
+      -
+      \left(\frac14+\frac28+\frac3{16}+\cdots\right)\\
+      &=
+      \frac12+\frac14+\frac18+\cdots\\
+      &=1.
+  \end{aligned}
+  \]
+</p>
+
+<p>
+  Therefore \(T=2\), and
+</p>
+
+<p>
+  \[
+    \sum_{h=1}^{\infty}\frac{h}{2^{h+1}}
+    =\frac{T}{2}
+    =1.
+  \]
+</p>
+
+  <p>
+    The idealized series evaluates to \(n\), showing that the total number of
+    downward steps is bounded by a constant multiple of \(n\), even for an
+    incomplete final level. The algorithm also makes \(\Theta(n)\) calls with
+    constant overhead, so bottom-up heap construction takes
+    \(\Theta(n)\) time.
+  </p>
+
+  <p>
+    The important point is not merely that each call is fast. It is that calls
+    capable of traveling many levels are rare. Only the root can travel the
+    full height, only a few nodes can travel almost that far, and most calls
+    can move at most one or two levels.
+  </p>
+
+  <h3>Why Repeated Insertion Is Different</h3>
+
+
+ <p>
+    The alternative construction method inserts the values one at a time into
+    an initially empty heap. The \(i\)th insertion begins at a new leaf and
+    may move upward through a heap of height \(\Theta(\log i)\). Thus, the
+    total cost of inserting the values one at a time is
+</p>
+
+<p>
+  \[
+    \sum_{i=1}^{n} O(\log i)
+    =
+    O\left(\log(n!)\right).
+  \]
+</p>
+
+<p>
+  This quantity is \(\Theta(n\log n)\). For the upper bound,
+  \(n!\leq n^n\), so \(\log(n!)\leq n\log n\). For the lower bound, the
+  final \(n/2\) factors of \(n!\) are each at least \(n/2\), giving
+</p>
+
+<p>
+  \[
+    \log(n!)
+    \geq
+    \log\left(\left(\frac n2\right)^{n/2}\right)
+    =
+    \frac n2\log\left(\frac n2\right)
+    =
+    \Theta(n\log n).
+  \]
+</p>
+
+<p>
+  Hence, \(\log(n!)=\Theta(n\log n)\).
+</p>
+<p>
+  This bound is attained in the worst case. If distinct values are inserted
+  into a max-heap in increasing order, each new value is larger than every
+  value already present and rises from its new leaf position to the root. The
+  \(i\)th insertion therefore takes \(\Theta(\log i)\) time, so the total
+  running time is
+  \(\Theta(\log(n!))=\Theta(n\log n)\).
+</p>
+
+  <p>
+    The two methods distribute their work differently. Bottom-up construction
+    starts at existing nodes and charges each one according to its
+    <em>height</em>; most nodes have very small height. Repeated insertion
+    starts each new value at a leaf and may move it according to its
+    <em>depth</em>; most later leaves have logarithmic depth. This difference
+    allows bottom-up construction to run in linear time while repeated
+    insertion can require \(\Theta(n\log n)\).
+  </p>
+</section>
+
+<section id="comparison" section-title="Comparisons and Tradeoffs">
+  <h2>Comparisons and Tradeoffs</h2>
+
+  <ul>
+    <li>
+      <strong>Bottom-up construction versus repeated insertion:</strong>
+      both methods produce a valid heap, but bottom-up construction takes
+      \(\Theta(n)\) time, while inserting all values individually can require
+      \(\Theta(n\log n)\) time. Repeated insertion remains appropriate when
+      values arrive over time rather than being available together in an
+      array.
+    </li>
+
+    <li>
+      <strong>Compared with Quicksort:</strong>
+      Heapsort guarantees \(\Theta(n\log n)\) worst-case time, whereas basic
+      Quicksort has an \(O(n^2)\) worst case. In practice, however, well-chosen
+      Quicksort implementations are usually faster. After Heapsort moves the
+      maximum to the end of the array, the value swapped into the root comes from
+      the final position of the active heap. That position is a leaf, so its value
+      is often relatively small compared with values near the top of the heap.
+      It may therefore travel through many levels during <code>siftDown</code>,
+      causing several comparisons and swaps. These accesses also jump among array
+      positions that are increasingly far apart. Quicksort instead performs much
+      of its work through sequential scans of contiguous array regions, typically
+      giving it better memory locality and smaller practical constant factors.
+    </li>
+
+
+    <li>
+      <strong>Compared with Mergesort:</strong>
+      both algorithms guarantee \(\Theta(n\log n)\) running time. Heapsort uses
+      only \(\Theta(1)\) auxiliary space when implemented iteratively, while
+      the usual array-based Mergesort requires \(\Theta(n)\) auxiliary space.
+      Mergesort is stable and usually has more sequential memory access;
+      Heapsort is not stable.
+    </li>
+  </ul>
+</section>
+<section id="pitfalls" section-title="Common Pitfalls">
+  <h2>Common Pitfalls</h2>
+
+  <ul>
+    <li>
+      <strong>Beginning at the wrong index:</strong>
+      leaves are already one-entry heaps and need no repair. In a zero-based
+      array, bottom-up construction begins at the last internal node,
+      \(\lfloor n/2\rfloor-1\).
+    </li>
+    <li>
+      <strong>Processing nodes from the root downward:</strong>
+      <code>siftDown</code> assumes that both child subtrees are already
+      heaps. Processing internal nodes in decreasing index order establishes
+      this condition before each call.
+    </li>
+    <li>
+      <strong>Using the full array length during Heapsort:</strong>
+      only indices below <code>heapSize</code> belong to the active heap.
+      Using the full length in child-bound checks can move values from the
+      sorted suffix back into the heap.
+    </li>
+    <li>
+      <strong>Using the wrong heap boundary:</strong>
+      after swapping the root with <code>A[end]</code>, the active heap
+      contains indices <code>0</code> through <code>end - 1</code>. Thus,
+      <code>end</code> is the new <code>heapSize</code>.
+    </li>
+    <li>
+      <strong>Skipping downward repair:</strong>
+      the value moved from the end of the active heap to the root may be
+      smaller than one of its children. Heap order must be restored with
+      <code>siftDown</code> before the next pass.
+    </li>
+    <li>
+      <strong>Claiming stability:</strong>
+      Heapsort swaps entries across distant positions, so equal-key entries
+      need not remain in their original relative order.
+    </li>
+    <li>
+      <strong>Stopping at the loose construction bound:</strong>
+      multiplying \(\Theta(n)\) internal nodes by the maximum
+      \(O(\log n)\) cost of one repair gives a valid \(O(n\log n)\) bound,
+      but most nodes can move only one or two levels. The tighter bound for
+      bottom-up construction is \(\Theta(n)\).
+    </li>
+  </ul>
+</section>
+
+<section id="summary" section-title="Summary">
+  <h2>Summary</h2>
+
+  <p>
+    An array can be converted into a heap either by repeated insertion or by
+    bottom-up construction. Bottom-up construction treats every leaf as an
+    existing one-entry heap, then processes the internal nodes in decreasing
+    index order. When a node is reached, its child subtrees are already heaps,
+    so <code>siftDown</code> can make the larger subtree rooted there into a
+    heap. Although a naive analysis gives an \(O(n\log n)\) bound, the tighter
+    running time is \(\Theta(n)\) because most nodes are near the leaves and
+    can move down only a small number of levels.
+  </p>
+
+  <p>
+    Heapsort first builds a max-heap and then repeatedly swaps the root with
+    the final entry in the active heap. Each swap places the largest remaining
+    value into a growing sorted suffix. The active heap boundary moves left,
+    and <code>siftDown</code> restores heap order within the remaining prefix.
+    Heapsort runs in \(\Theta(n\log n)\) worst-case time and uses
+    \(\Theta(1)\) auxiliary space with iterative downward repair. It is
+    therefore in place, but it is not stable and is often slower in practice
+    than Quicksort because of its repeated long downward repairs and less
+    sequential memory access.
+  </p>
+</section>
+<section id="links" section-title="Helpful Links and Resources">
+  <h2>Helpful Links and Resources</h2>
+
+  <ul class="resource-list">
+    <li>
+      <a href="https://algs4.cs.princeton.edu/24pq/" target="_blank">
+        Algorithms, 4th Edition: Priority Queues and Heapsort
+      </a>
+      Includes heap construction, Heapsort, implementation details, traces,
+      and analysis.
+    </li>
+    <li>
+      <a href="https://opendatastructures.org/ods-java/11_1_Comparison_Based_Sorti.html#SECTION001413000000000000000"
+         target="_blank">
+        Open Data Structures: Heap-Sort
+      </a>
+      Presents an array-based implementation and analyzes Heapsort as an
+      in-place comparison sort.
+    </li>
+    <li>
+      <a href="https://visualgo.net/en/heap" target="_blank">
+        VisuAlgo: Binary Heap
+      </a>
+      Animates the array and tree representations of a heap and its downward
+      repair operations.
+    </li>
+    <li>
+      <a href="https://en.wikipedia.org/wiki/Heapsort" target="_blank">
+        Wikipedia: Heapsort
+      </a>
+      Provides a broad reference on the algorithm, its history, complexity,
+      implementation, and variants.
+    </li>
+  </ul>
+</section>
+
+<section id="reading-questions" section-title="Reading Comprehension Questions">
+  <h2>Reading Comprehension Questions</h2>
+
+  <ol>
+    <li>
+      <strong>Leaves:</strong>
+      Why are leaves omitted from the loop in
+      <code>buildMaxHeap</code>?
+    </li>
+    <li>
+      <strong>Processing Order:</strong>
+      Why are the internal nodes processed in decreasing index order?
+    </li>
+    <li>
+      <strong>Active Heap Size:</strong>
+      During Heapsort, what is the difference between
+      <code>heapSize</code> and the physical length of the array?
+    </li>
+    <li>
+      <strong>Loose Construction Bound:</strong>
+      Why does multiplying \(\Theta(n)\) internal nodes by an
+      \(O(\log n)\) repair cost give a valid but loose bound for bottom-up
+      construction?
+    </li>
+    <li>
+      <strong>Height Distribution:</strong>
+      How does the number of nodes capable of moving \(h\) levels change as
+      \(h\) increases?
+    </li>
+    <li>
+      <strong>Shrinking Heap:</strong>
+      Why does the shrinking active heap not reduce Heapsort to linear time?
+    </li>
+    <li>
+      <strong>Repeated Insertion:</strong>
+      Why can inserting values in increasing order into a max-heap require
+      \(\Theta(n\log n)\) total time?
+    </li>
+    <li>
+      <strong>Stability:</strong>
+      Why is Heapsort not stable?
+    </li>
+  </ol>
+
+<button id="toggleAnswers"
+       class="show-answer"
+       aria-expanded="false">
+Show Answers </button>
+
+  <div id="answers" class="answer" hidden>
+    <ol>
       <li>
-        <a href="?path=Data%20Structures%2FPriority%20Queues%20and%20Heaps%2FBinary%20Heaps">Binary Heaps</a>,
-        for heap representation, priority-queue operations, and repair helpers.
+        <strong>Answer:</strong>
+        Every leaf is already a valid one-entry heap, so it requires no
+        downward repair.
       </li>
       <li>
-        <a href="?path=Data%20Structures%2FPriority%20Queues%20and%20Heaps%2FPriority%20Queues">Priority Queues</a>,
-        for the ADT and alternative representations.
+        <strong>Answer:</strong>
+        Every child has a larger index than its parent. Processing indices in
+        decreasing order therefore ensures that both child subtrees are heaps
+        before their parent is repaired.
       </li>
       <li>
-        <a href="?path=Algorithms%2FTransform-and-Conquer%2FHeapsort">Heapsort</a>,
-        for the algorithm in the broader transform-and-conquer context.
+        <strong>Answer:</strong>
+        <code>heapSize</code> counts only the entries in the active heap. The
+        physical array also contains the sorted suffix beyond that boundary.
       </li>
-    </ul>
-  </section>
-
-  <section id="links" section-title="Helpful Links and Resources">
-    <h2>Helpful Links and Resources</h2>
-    <ul>
-      <li><a href="https://opendsa.cs.vt.edu/ODSA/Books/Everything/html/Heaps.html" target="_blank">OpenDSA: Heaps and Priority Queues</a></li>
-      <li><a href="https://opendatastructures.org/ods-java/10_1_Implicit_Binary_Tree.html" target="_blank">Open Data Structures: BinaryHeap</a></li>
-    </ul>
-  </section>
-
-  <section id="reading-questions" section-title="Reading Comprehension Questions">
-    <h2>Reading Comprehension Questions</h2>
-    <ol>
-      <li>Why are leaves omitted from the bottom-up loop?</li>
-      <li>Why are internal nodes processed from right to left toward the root?</li>
-      <li>What do <code>heapSize</code> and the physical array length mean during Heapsort?</li>
-      <li>Why is \(O(n\log n)\) a valid but loose bound for bottom-up construction?</li>
-      <li>What property of the tree makes the sharper construction bound linear?</li>
-      <li>Why can increasing-order insertion into a max-heap require \(\Theta(n\log n)\) total time?</li>
-      <li>Why is Heapsort not stable?</li>
+      <li>
+        <strong>Answer:</strong>
+        The bound assigns the maximum \(O(\log n)\) repair cost to every
+        internal node, even though most internal nodes are near the leaves and
+        can move only one or two levels.
+      </li>
+      <li>
+        <strong>Answer:</strong>
+        The number decreases exponentially. About \(n/4\) nodes can move one
+        level, \(n/8\) can move two levels, \(n/16\) can move three levels,
+        and so on.
+      </li>
+      <li>
+        <strong>Answer:</strong>
+        Every repair begins at the root, and for a constant fraction of the
+        passes the active heap still has \(\Theta(n)\) entries and height
+        \(\Theta(\log n)\).
+      </li>
+      <li>
+        <strong>Answer:</strong>
+        Each new value is larger than all earlier values, so it can rise from
+        its new leaf position to the root. Many such insertions take
+        \(\Theta(\log n)\) time.
+      </li>
+      <li>
+        <strong>Answer:</strong>
+        Heapsort swaps entries across distant positions, so entries with equal
+        keys need not remain in their original relative order.
+      </li>
     </ol>
-    <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
-    <div id="answers" class="answer" hidden>
-      <ol>
-        <li>Every leaf is already a valid one-entry heap.</li>
-        <li>That order ensures both child subtrees are heaps before their parent is repaired.</li>
-        <li>The logical size ends at the active heap prefix; the physical array also includes the completed suffix.</li>
-        <li>It assigns the root’s maximum repair cost to every internal node, including nodes near the leaves.</li>
-        <li>The number of nodes decreases exponentially as subtree height increases.</li>
-        <li>Each new key is the largest so far and can rise from a deep leaf all the way to the root.</li>
-        <li>Long-distance root swaps can reverse the relative order of equal-key entries.</li>
-      </ol>
-    </div>
-  </section>
+  </div>
+</section>
 
-  <section id="activities" section-title="In-Class Activities">
-    <h2>In-Class Activities</h2>
-    <ol>
-      <li><strong>Bottom-Up Trace:</strong> Mark leaves and internal nodes, then record the array after each downward repair.</li>
-      <li><strong>Two-Region Trace:</strong> During Heapsort, color the active heap prefix and sorted suffix after every iteration.</li>
-      <li><strong>Loose-Bound Diagnosis:</strong> Identify which calls in a small construction trace cannot possibly take logarithmic time.</li>
-      <li><strong>Method Comparison:</strong> Create the same heap by bottom-up repair and repeated insertion, then count comparisons and swaps.</li>
-    </ol>
-  </section>
 
-  <section id="problems" section-title="Homework Problems">
-    <h2>Homework Problems</h2>
-    <ol>
-      <li><strong>Construction Trace:</strong> Apply <code>buildMaxHeap</code> to <code>[7, 2, 9, 1, 6, 8, 3, 5, 4]</code>, showing every swap.</li>
-      <li><strong>Heapsort Trace:</strong> Continue from that heap and show the active prefix and sorted suffix after every pass.</li>
-      <li><strong>Correctness:</strong> State and justify the loop invariant for bottom-up construction.</li>
-      <li><strong>Linear Analysis:</strong> Derive the height-based summation and explain why replacing every height by \(\log n\) loses information.</li>
-      <li><strong>Insertion Lower Bound:</strong> Prove that increasing-order insertion into a max-heap takes \(\Theta(n\log n)\) total time.</li>
-      <li><strong>Min-Heap Variant:</strong> Modify the construction procedure for a min-heap and explain what order repeated root placement produces.</li>
-      <li><strong>Stability Investigation:</strong> Find a small input with duplicate keys whose relative order changes during Heapsort.</li>
-    </ol>
-  </section>
+
+ <section id="activities" section-title="In-Class Activities">
+  <h2>In-Class Activities</h2>
+
+  <ol>
+    <li>
+      <strong>Locate the Starting Index:</strong>
+      For arrays of lengths \(2\), \(7\), \(10\), and \(15\), identify
+      the last internal node and the range of leaf indices. Verify each answer
+      using the condition \(2i+1&lt;n\).
+    </li>
+    <li>
+      <strong>Bottom-Up Construction Trace:</strong>
+      Apply <code>buildMaxHeap</code> to
+      <code>[6, 11, 4, 17, 9, 2, 13, 8, 15, 5]</code>. Draw the initial
+      complete tree, then show both the tree and array after every call to
+      <code>siftDown</code>. Highlight every entry changed by a swap.
+    </li>
+
+    <li>
+      <strong>Forward-Pass Failure:</strong>
+      Starting with <code>[2, 5, 7, 9, 8, 10, 12]</code>, process the internal
+      nodes from the root toward the leaves using <code>siftDown</code>.
+      Record the resulting array and identify the first heap-order violation
+      that remains. Explain why repairing a child subtree created or exposed
+      that violation.
+    </li>
+
+    <li>
+      <strong>Child-First Justification:</strong>
+      For the array
+      <code>[3, 14, 8, 19, 11, 6, 7, 4, 17]</code>, consider the moment when
+      <code>buildMaxHeap</code> reaches index <code>1</code>. Identify the two
+      child subtrees and explain why each is already a heap before
+      <code>siftDown(A, 1, n)</code> begins.
+    </li>
+
+    <li>
+      <strong>Heapsort Regions:</strong>
+      Begin with the max-heap
+      <code>[24, 18, 21, 10, 15, 17, 20, 3, 8, 6, 12]</code>. Perform the
+      first four Heapsort passes. After each pass, draw the array, mark the
+      active heap boundary, shade the sorted suffix, and list every swap made
+      by <code>siftDown</code>.
+    </li>
+
+    <li>
+      <strong>Boundary Error Investigation:</strong>
+      After one Heapsort pass, intentionally call <code>siftDown</code> using
+      the full array length rather than the reduced <code>heapSize</code>.
+      Construct or use a small example where a value from the sorted suffix
+      reenters the heap, then explain exactly which child-bound test caused
+      the error.
+    </li>
+
+    <li>
+      <strong>Construction Method Comparison:</strong>
+      Build a max-heap from
+      <code>[2, 4, 6, 8, 10, 12, 14, 16]</code> in two ways: repeated
+      insertion and bottom-up construction. For each method, count comparisons
+      and swaps, record the final heap, and explain why the two methods need
+      not produce the same valid heap.
+    </li>
+
+    <li>
+      <strong>Height-Based Work Count:</strong>
+      For a complete tree with \(31\) nodes, count the leaves and the nodes of
+      heights \(1\), \(2\), \(3\), and \(4\). Multiply each count by the
+      maximum number of levels a node at that height can move, then compare
+      the total with the loose bound obtained by charging every internal node
+      \(\log n\) levels.
+    </li>
+  </ol>
+</section>
+
+
+<section id="problems" section-title="Homework Problems">
+  <h2>Homework Problems</h2>
+
+  <ol>
+    <li>
+      <strong>Bottom-Up Construction Trace:</strong>
+      Apply <code>buildMaxHeap</code> to
+      <code>[7, 2, 9, 1, 6, 8, 3, 5, 4]</code>.
+  <ol type="a">
+    <li>
+      Identify the leaf indices and the sequence of internal indices
+      processed by the algorithm.
+    </li>
+    <li>
+      Show the array after every swap performed by
+      <code>siftDown</code>.
+    </li>
+    <li>
+      After each completed call to <code>siftDown</code>, draw the
+      corresponding tree and highlight the subtree that has just become a
+      heap.
+    </li>
+  </ol>
+</li>
+
+<li>
+  <strong>Complete Heapsort Trace:</strong>
+  Begin with the max-heap produced in the previous problem and perform
+  Heapsort.
+
+  <ol type="a">
+    <li>
+      After each root swap, show the array before downward repair.
+    </li>
+    <li>
+      Show the array again after every swap made by
+      <code>siftDown</code>.
+    </li>
+    <li>
+      After each pass, mark the active heap prefix and the sorted suffix.
+    </li>
+    <li>
+      State the value placed into its final position during each pass.
+    </li>
+  </ol>
+</li>
+
+<li>
+  <strong>Bottom-Up Correctness:</strong>
+  Use the following loop invariant:
+  immediately before index \(i\) is processed, every subtree rooted at an
+  internal node with index greater than \(i\) is a max-heap.
+
+  <ol type="a">
+    <li>Explain why the invariant is true before the first iteration.</li>
+    <li>
+      Explain why <code>siftDown(A, i, n)</code> preserves the invariant
+      for the next iteration.
+    </li>
+    <li>
+      Explain why the invariant implies that the entire array is a
+      max-heap when the loop terminates.
+    </li>
+  </ol>
+</li>
+
+<li>
+  <strong>Height-Based Construction Analysis:</strong>
+  Consider bottom-up construction on a complete binary tree with
+  \(n=2^{k+1}-1\) nodes.
+
+  <ol type="a">
+    <li>
+      Determine the number of nodes of each height
+      \(0,1,\ldots,k\).
+    </li>
+    <li>
+      Use these counts to write an upper bound on the total number of
+      downward levels traveled by all calls to <code>siftDown</code>.
+    </li>
+    <li>
+      Evaluate or bound the resulting series and conclude that the total
+      construction time is \(\Theta(n)\).
+    </li>
+    <li>
+      Explain exactly what information is lost by replacing every node's
+      height with the tree height \(\Theta(\log n)\).
+    </li>
+  </ol>
+</li>
+
+<li>
+  <strong>Repeated-Insertion Lower Bound:</strong>
+  Insert the values \(1,2,\ldots,n\), in that order, into an initially
+  empty max-heap.
+
+  <ol type="a">
+    <li>
+      Explain why each newly inserted value rises to the root.
+    </li>
+    <li>
+      Show that the \(i\)th insertion takes
+      \(\Theta(\log i)\) time.
+    </li>
+    <li>
+      Prove that the total running time is
+      \(\Theta(n\log n)\), using bounds on
+      \(\log(n!)\).
+    </li>
+    <li>
+      Contrast this argument with the height-based analysis of bottom-up
+      construction.
+    </li>
+  </ol>
+</li>
+
+<li>
+  <strong>Min-Heap Heapsort Variant:</strong>
+  Modify <code>buildMaxHeap</code>, <code>siftDown</code>, and Heapsort
+  so that they use min-heap order.
+
+  <ol type="a">
+    <li>Give the revised pseudocode.</li>
+    <li>
+      State whether the final array is in increasing or decreasing order.
+    </li>
+    <li>
+      Explain why repeatedly moving the minimum to the end produces that
+      order.
+    </li>
+    <li>
+      State the time and auxiliary-space complexities of the modified
+      algorithm.
+    </li>
+  </ol>
+</li>
+
+<li>
+  <strong>Stability Counterexample:</strong>
+  Treat equal-key entries as distinct by attaching labels, such as
+  \(4_a\) and \(4_b\).
+
+  <ol type="a">
+    <li>
+      Find an input of at most six entries for which Heapsort reverses the
+      relative order of two equal-key entries.
+    </li>
+    <li>
+      Trace the root swaps and downward repairs until the reversal occurs.
+    </li>
+    <li>
+      Explain why comparing only the keys cannot prevent this behavior.
+    </li>
+  </ol>
+</li>
+
+<li>
+  <strong>Implement:</strong>
+  <!-- Add implementation problem here. -->
+</li>
+  </ol>
+</section>
+
 </body>
 </html>
