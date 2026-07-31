@@ -78,18 +78,18 @@ int removeBack() {
 
 void checkAtLine(int actual, int expected, int line, const char* expression) {
     if (actual == expected) {
-        cout << "pass" << endl;
+        cout << "PASS at test line " << line << " (" << expression << "): got " << actual << endl;
     } else {
-        cout << "fail at test line " << line << " (" << expression
+        cout << "FAIL at test line " << line << " (" << expression
              << "): expected " << expected << " but got " << actual << endl;
     }
 }
 
 void checkAtLine(bool actual, bool expected, int line, const char* expression) {
     if (actual == expected) {
-        cout << "pass" << endl;
+        cout << "PASS at test line " << line << " (" << expression << "): got " << actual << endl;
     } else {
-        cout << "fail at test line " << line << " (" << expression
+        cout << "FAIL at test line " << line << " (" << expression
              << "): expected " << (expected ? "true" : "false")
              << " but got " << (actual ? "true" : "false") << endl;
     }
@@ -174,6 +174,17 @@ check(deque.addBack(10), true);      // [10]
 check(deque.removeFront(), 10);      // []
 check(deque.isEmpty(), true);
 check(deque.size(), 0);
+
+IntDeque transitions;
+bool transitionOk = true;
+for (int i = 0; i < 500; i++) {
+    transitionOk = transitions.addFront(i) && transitionOk;
+    transitionOk = transitions.addBack(-i) && transitionOk;
+    transitionOk = (transitions.removeFront() == i) && transitionOk;
+    transitionOk = (transitions.removeBack() == -i) && transitionOk;
+    transitionOk = transitions.isEmpty() && transitionOk;
+}
+check(transitionOk, true);
 }
 
 int main() {

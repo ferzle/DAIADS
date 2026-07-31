@@ -183,6 +183,15 @@ class TwoThreeTree:
             node = child
         return Location(node, 0, True)
 
+    @staticmethod
+    def _maximum_location(node: Node) -> Location:
+        """Return the rightmost leaf and its last key position."""
+        while not node.is_leaf:
+            child = node.children[node.key_count]
+            assert child is not None
+            node = child
+        return Location(node, node.key_count - 1, True)
+
     def minimum(self) -> Optional[int]:
         """Return the smallest key, or None when empty."""
         if self.root is None:
@@ -193,7 +202,7 @@ class TwoThreeTree:
 
     def maximum(self) -> Optional[int]:
         """Return the largest key, or None when empty."""
-        # TODO: Implement symmetrically to minimum().
+        # TODO: Use _maximum_location symmetrically to minimum().
         return None
 
     def predecessor(self, key: int) -> Optional[int]:

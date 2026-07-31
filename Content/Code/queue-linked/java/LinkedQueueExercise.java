@@ -52,17 +52,17 @@ public class LinkedQueueExercise {
 
     static void check(int actual, int expected) {
         if (actual == expected) {
-            System.out.println("pass");
+            System.out.println("PASS at " + checkLocation() + ": got " + actual);
         } else {
-            System.out.println("fail at " + checkLocation() + ": expected " + expected + " but got " + actual);
+            System.out.println("FAIL at " + checkLocation() + ": expected " + expected + " but got " + actual);
         }
     }
 
     static void check(boolean actual, boolean expected) {
         if (actual == expected) {
-            System.out.println("pass");
+            System.out.println("PASS at " + checkLocation() + ": got " + actual);
         } else {
-            System.out.println("fail at " + checkLocation() + ": expected " + expected + " but got " + actual);
+            System.out.println("FAIL at " + checkLocation() + ": expected " + expected + " but got " + actual);
         }
     }
 
@@ -103,6 +103,13 @@ public class LinkedQueueExercise {
         check(queue.front(), 6);
         check(queue.dequeue(), 6);
         check(queue.isEmpty(), true);
+
+        IntQueue large = new IntQueue();
+        boolean largeOk = true;
+        for (int i = 0; i < 5000; i++) large.enqueue(i);
+        largeOk &= large.size() == 5000 && large.front() == 0;
+        for (int i = 0; i < 5000; i++) largeOk &= large.dequeue() == i;
+        check(largeOk && large.isEmpty(), true);
     }
 
     public static void main(String[] args) {

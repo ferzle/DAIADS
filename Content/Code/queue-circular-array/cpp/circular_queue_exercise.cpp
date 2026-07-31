@@ -53,18 +53,18 @@ public:
 
 void checkAtLine(int actual, int expected, int line, const char* expression) {
     if (actual == expected) {
-        cout << "pass" << endl;
+        cout << "PASS at test line " << line << " (" << expression << "): got " << actual << endl;
     } else {
-        cout << "fail at test line " << line << " (" << expression
+        cout << "FAIL at test line " << line << " (" << expression
              << "): expected " << expected << " but got " << actual << endl;
     }
 }
 
 void checkAtLine(bool actual, bool expected, int line, const char* expression) {
     if (actual == expected) {
-        cout << "pass" << endl;
+        cout << "PASS at test line " << line << " (" << expression << "): got " << actual << endl;
     } else {
-        cout << "fail at test line " << line << " (" << expression
+        cout << "FAIL at test line " << line << " (" << expression
              << "): expected " << (expected ? "true" : "false")
              << " but got " << (actual ? "true" : "false") << endl;
     }
@@ -105,6 +105,14 @@ void testQueue() {
 
     check(queue.enqueue(11), true);
     check(queue.front(), 11);
+
+    IntQueue wrapped(257);
+    bool wrappedOk = true;
+    for (int round = 0; round < 20; round++) {
+        for (int i = 0; i < 257; i++) wrappedOk = wrapped.enqueue(round * 257 + i) && wrappedOk;
+        for (int i = 0; i < 257; i++) wrappedOk = (wrapped.dequeue() == round * 257 + i) && wrappedOk;
+    }
+    check(wrappedOk && wrapped.isEmpty(), true);
 }
 
 int main() {

@@ -83,11 +83,11 @@ class IntList:
 
 
 def check(actual, expected):
+    line = inspect.currentframe().f_back.f_lineno
     if actual == expected:
-        print("pass")
+        print(f"PASS at test line {line}: got {actual!r}")
     else:
-        line = inspect.currentframe().f_back.f_lineno
-        print(f"fail at test line {line}: expected {expected!r} but got {actual!r}")
+        print(f"FAIL at test line {line}: expected {expected!r} but got {actual!r}")
 
 
 def test_list():
@@ -114,6 +114,13 @@ def test_list():
     check(values.get(0), 2)
     check(values.get(2), 9)
     check(values.get(4), -1)
+    check(values.get(-1), -1)
+    check(values.set(-1, 8), False)
+    check(values.set(99, 8), False)
+    check(values.insert(-1, 8), False)
+    check(values.insert(99, 8), False)
+    check(values.remove(-1), -1)
+    check(values.remove(99), -1)
 
     check(values.set(1, 5), True)         # [2, 5, 9, 7]
     check(values.get(1), 5)
@@ -147,6 +154,12 @@ def test_list():
     check(values.is_empty(), True)
     check(values.size(), 0)
     check(values.first(), -1)
+
+    large = IntList()
+    large_ok = all(large.add_last(i) for i in range(1000))
+    large_ok = all(large.get(i) == i for i in range(1000)) and large_ok
+    large_ok = all(large.remove_last() == i for i in range(999, -1, -1)) and large_ok
+    check(large_ok and large.is_empty(), True)
     check(values.last(), -1)
 
     check(values.delete(5), False)

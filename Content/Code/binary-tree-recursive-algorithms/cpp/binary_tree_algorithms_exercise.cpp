@@ -36,9 +36,9 @@
 
   void checkAtLine(int actual, int expected, int line, const char* expression) {
       if (actual == expected) {
-          cout << "pass" << endl;
+          cout << "PASS at test line " << line << " (" << expression << "): got " << actual << endl;
       } else {
-      cout << "fail at test line " << line << " (" << expression
+      cout << "FAIL at test line " << line << " (" << expression
            << "): expected " << expected << " but got " << actual << endl;
   }
 }

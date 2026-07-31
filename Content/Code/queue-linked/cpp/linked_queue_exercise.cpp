@@ -59,18 +59,18 @@ public:
 
 void checkAtLine(int actual, int expected, int line, const char* expression) {
     if (actual == expected) {
-        cout << "pass" << endl;
+        cout << "PASS at test line " << line << " (" << expression << "): got " << actual << endl;
     } else {
-        cout << "fail at test line " << line << " (" << expression
+        cout << "FAIL at test line " << line << " (" << expression
              << "): expected " << expected << " but got " << actual << endl;
     }
 }
 
 void checkAtLine(bool actual, bool expected, int line, const char* expression) {
     if (actual == expected) {
-        cout << "pass" << endl;
+        cout << "PASS at test line " << line << " (" << expression << "): got " << actual << endl;
     } else {
-        cout << "fail at test line " << line << " (" << expression
+        cout << "FAIL at test line " << line << " (" << expression
              << "): expected " << (expected ? "true" : "false")
              << " but got " << (actual ? "true" : "false") << endl;
     }
@@ -115,6 +115,13 @@ void testQueue() {
     check(queue.front(), 6);
     check(queue.dequeue(), 6);
     check(queue.isEmpty(), true);
+
+    IntQueue large;
+    bool largeOk = true;
+    for (int i = 0; i < 5000; i++) large.enqueue(i);
+    largeOk = (large.size() == 5000 && large.front() == 0) && largeOk;
+    for (int i = 0; i < 5000; i++) largeOk = (large.dequeue() == i) && largeOk;
+    check(largeOk && large.isEmpty(), true);
 }
 
 int main() {

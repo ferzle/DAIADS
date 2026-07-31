@@ -48,17 +48,17 @@ public class CircularQueueExercise {
 
     static void check(int actual, int expected) {
         if (actual == expected) {
-            System.out.println("pass");
+            System.out.println("PASS at " + checkLocation() + ": got " + actual);
         } else {
-            System.out.println("fail at " + checkLocation() + ": expected " + expected + " but got " + actual);
+            System.out.println("FAIL at " + checkLocation() + ": expected " + expected + " but got " + actual);
         }
     }
 
     static void check(boolean actual, boolean expected) {
         if (actual == expected) {
-            System.out.println("pass");
+            System.out.println("PASS at " + checkLocation() + ": got " + actual);
         } else {
-            System.out.println("fail at " + checkLocation() + ": expected " + expected + " but got " + actual);
+            System.out.println("FAIL at " + checkLocation() + ": expected " + expected + " but got " + actual);
         }
     }
 
@@ -95,6 +95,14 @@ public class CircularQueueExercise {
 
         check(queue.enqueue(11), true);
         check(queue.front(), 11);
+
+        IntQueue wrapped = new IntQueue(257);
+        boolean wrappedOk = true;
+        for (int round = 0; round < 20; round++) {
+            for (int i = 0; i < 257; i++) wrappedOk &= wrapped.enqueue(round * 257 + i);
+            for (int i = 0; i < 257; i++) wrappedOk &= wrapped.dequeue() == round * 257 + i;
+        }
+        check(wrappedOk && wrapped.isEmpty(), true);
     }
 
     public static void main(String[] args) {

@@ -152,27 +152,27 @@ public:
 
 void checkAtLine(const string& actual, const string& expected, int line, const char* expression) {
     if (actual == expected) {
-        cout << "pass" << endl;
+        cout << "PASS at test line " << line << " (" << expression << "): got \"" << actual << "\"" << endl;
     } else {
-        cout << "fail at test line " << line << " (" << expression
+        cout << "FAIL at test line " << line << " (" << expression
              << "): expected \"" << expected << "\" but got \"" << actual << "\"" << endl;
     }
 }
 
 void checkAtLine(int actual, int expected, int line, const char* expression) {
     if (actual == expected) {
-        cout << "pass" << endl;
+        cout << "PASS at test line " << line << " (" << expression << "): got " << actual << endl;
     } else {
-        cout << "fail at test line " << line << " (" << expression
+        cout << "FAIL at test line " << line << " (" << expression
              << "): expected " << expected << " but got " << actual << endl;
     }
 }
 
 void checkAtLine(bool actual, bool expected, int line, const char* expression) {
     if (actual == expected) {
-        cout << "pass" << endl;
+        cout << "PASS at test line " << line << " (" << expression << "): got " << actual << endl;
     } else {
-        cout << "fail at test line " << line << " (" << expression
+        cout << "FAIL at test line " << line << " (" << expression
              << "): expected " << (expected ? "true" : "false")
              << " but got " << (actual ? "true" : "false") << endl;
     }
@@ -223,6 +223,21 @@ void testDoublyList() {
     check(list.traverseBackward(), "12");
     check(list.deleteFromHead(), 12);
     check(list.isEmpty(), true);
+
+    list.insertAtTail(4);
+    list.insertAtTail(7);
+    list.insertAtTail(9);
+    auto* node7 = list.searchForward(7);
+    check(node7 != nullptr, true);
+    check(list.searchForward(99) == nullptr, true);
+    list.insertBefore(node7, 6);
+    list.insertAfter(node7, 8);
+    check(list.traverseForward(), "4 -> 6 -> 7 -> 8 -> 9");
+    check(list.traverseBackward(), "9 -> 8 -> 7 -> 6 -> 4");
+    check(list.deleteNode(node7), 7);
+    check(list.traverseForward(), "4 -> 6 -> 8 -> 9");
+    check(list.deleteNode(nullptr), -1);
+    check(list.size(), 4);
 }
 
 int main() {

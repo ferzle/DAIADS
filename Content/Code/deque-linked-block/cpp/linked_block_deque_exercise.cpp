@@ -88,18 +88,18 @@ int removeBack() {
 
 void checkAtLine(int actual, int expected, int line, const char* expression) {
     if (actual == expected) {
-        cout << "pass" << endl;
+        cout << "PASS at test line " << line << " (" << expression << "): got " << actual << endl;
     } else {
-        cout << "fail at test line " << line << " (" << expression
+        cout << "FAIL at test line " << line << " (" << expression
              << "): expected " << expected << " but got " << actual << endl;
     }
 }
 
 void checkAtLine(bool actual, bool expected, int line, const char* expression) {
     if (actual == expected) {
-        cout << "pass" << endl;
+        cout << "PASS at test line " << line << " (" << expression << "): got " << actual << endl;
     } else {
-        cout << "fail at test line " << line << " (" << expression
+        cout << "FAIL at test line " << line << " (" << expression
              << "): expected " << (expected ? "true" : "false")
              << " but got " << (actual ? "true" : "false") << endl;
     }
@@ -177,6 +177,15 @@ deque.clear();                       // []
 check(deque.isEmpty(), true);
 check(deque.size(), 0);
 check(deque.peekFront(), -1);
+
+IntDeque tinyBlocks(1);
+bool tinyOk = true;
+for (int i = 0; i < 500; i++) tinyOk = tinyBlocks.addBack(i) && tinyOk;
+for (int i = 0; i < 250; i++) tinyOk = (tinyBlocks.removeFront() == i) && tinyOk;
+for (int i = 500; i < 750; i++) tinyOk = tinyBlocks.addFront(i) && tinyOk;
+for (int i = 749; i >= 500; i--) tinyOk = (tinyBlocks.removeFront() == i) && tinyOk;
+for (int i = 499; i >= 250; i--) tinyOk = (tinyBlocks.removeBack() == i) && tinyOk;
+check(tinyOk && tinyBlocks.isEmpty(), true);
 }
 
 int main() {

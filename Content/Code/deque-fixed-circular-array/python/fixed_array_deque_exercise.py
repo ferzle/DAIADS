@@ -53,11 +53,11 @@ class IntDeque:
 
 
 def check(actual, expected):
+    line = inspect.currentframe().f_back.f_lineno
     if actual == expected:
-        print("pass")
+        print(f"PASS at test line {line}: got {actual!r}")
     else:
-        line = inspect.currentframe().f_back.f_lineno
-        print(f"fail at test line {line}: expected {expected!r} but got {actual!r}")
+        print(f"FAIL at test line {line}: expected {expected!r} but got {actual!r}")
 
 
 def test_deque():
@@ -67,6 +67,16 @@ def test_deque():
     check(deque.is_full(), False)
     check(deque.size(), 0)
     check(deque.peek_front(), -1)
+
+    large = IntDeque(257)
+    large_ok = True
+    for round_number in range(20):
+        for i in range(257):
+            large_ok = large.add_back(round_number * 257 + i) and large_ok
+        large_ok = large.is_full() and not large.add_front(-1) and large_ok
+        for i in range(257):
+            large_ok = large.remove_front() == round_number * 257 + i and large_ok
+    check(large_ok and large.is_empty(), True)
     check(deque.peek_back(), -1)
     check(deque.remove_front(), -1)
     check(deque.remove_back(), -1)

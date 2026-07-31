@@ -102,6 +102,7 @@ public class LinkedSequenceActivity {
         Node node4 = list.search(4);
         expectException(() -> list.deleteAfter(node4));
         expectException(() -> list.insertAfter(null, 8));
+        expectException(() -> list.deleteAfter(null));
 
         check(list.deleteAtHead(), 9);
         check(list.deleteAtHead(), 4);

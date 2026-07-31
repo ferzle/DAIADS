@@ -38,10 +38,10 @@ public class BinaryTreeAlgorithmsExercise {
 
   static void check(int actual, int expected) {
       if (actual == expected) {
-          System.out.println("pass");
+          System.out.println("PASS at " + checkLocation() + ": got " + actual);
       } else {
           System.out.println(
-              "fail at " + checkLocation() + ": expected " + expected + " but got " + actual
+              "FAIL at " + checkLocation() + ": expected " + expected + " but got " + actual
           );
       }
   }

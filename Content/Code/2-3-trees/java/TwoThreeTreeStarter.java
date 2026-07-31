@@ -209,6 +209,12 @@ public class TwoThreeTreeStarter {
         return new Location(node, 0, true);
     }
 
+    /** Return the rightmost leaf and its last key position. */
+    private Location maximumLocation(Node node) {
+        while (!node.isLeaf()) node = node.children[node.keyCount];
+        return new Location(node, node.keyCount - 1, true);
+    }
+
     public OptionalInt minimum() {
         if (root == null) return OptionalInt.empty();
         Location location = minimumLocation(root);
@@ -216,7 +222,7 @@ public class TwoThreeTreeStarter {
     }
 
     public OptionalInt maximum() {
-        // TODO: Implement symmetrically to minimum().
+        // TODO: Use maximumLocation symmetrically to minimum().
         return OptionalInt.empty();
     }
 

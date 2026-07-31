@@ -46,17 +46,17 @@ public class ArrayQueueExercise {
 
     static void check(int actual, int expected) {
         if (actual == expected) {
-            System.out.println("pass");
+            System.out.println("PASS at " + checkLocation() + ": got " + actual);
         } else {
-            System.out.println("fail at " + checkLocation() + ": expected " + expected + " but got " + actual);
+            System.out.println("FAIL at " + checkLocation() + ": expected " + expected + " but got " + actual);
         }
     }
 
     static void check(boolean actual, boolean expected) {
         if (actual == expected) {
-            System.out.println("pass");
+            System.out.println("PASS at " + checkLocation() + ": got " + actual);
         } else {
-            System.out.println("fail at " + checkLocation() + ": expected " + expected + " but got " + actual);
+            System.out.println("FAIL at " + checkLocation() + ": expected " + expected + " but got " + actual);
         }
     }
 
@@ -88,6 +88,13 @@ public class ArrayQueueExercise {
         check(queue.isEmpty(), true);
         check(queue.size(), 0);
         check(queue.dequeue(), -1);
+
+        IntQueue large = new IntQueue(1024);
+        boolean largeOk = true;
+        for (int i = 0; i < 1024; i++) largeOk &= large.enqueue(i);
+        largeOk &= large.isFull() && !large.enqueue(1024);
+        for (int i = 0; i < 1024; i++) largeOk &= large.dequeue() == i;
+        check(largeOk && large.isEmpty(), true);
     }
 
     public static void main(String[] args) {

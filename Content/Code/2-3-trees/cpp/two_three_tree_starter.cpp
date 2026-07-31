@@ -226,6 +226,11 @@ private:
         return {node, 0, true};
     }
 
+    Location maximumLocation(Node* node) const {
+        while (!node->isLeaf()) node = node->children[node->keyCount];
+        return {node, node->keyCount - 1, true};
+    }
+
     void destroy(Node* node) {
         if (node == nullptr) return;
         for (size_t i = 0; i < node->childCount; i++) {
@@ -266,7 +271,7 @@ public:
     }
 
     optional<int> maximum() const {
-        // TODO: Implement symmetrically to minimum().
+        // TODO: Use maximumLocation symmetrically to minimum().
         return nullopt;
     }
 

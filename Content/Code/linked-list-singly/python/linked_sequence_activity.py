@@ -83,6 +83,7 @@ def test_linked_sequence():
     node4 = lst.search(4)
     expect_exception(lambda: lst.delete_after(node4), ValueError)
     expect_exception(lambda: lst.insert_after(None, 8), ValueError)
+    expect_exception(lambda: lst.delete_after(None), ValueError)
 
     check(lst.delete_at_head(), 9)
     check(lst.delete_at_head(), 4)

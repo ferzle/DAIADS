@@ -28,11 +28,11 @@ def count_two_child_nodes(node):
 
 
 def check(actual, expected):
+    line = inspect.currentframe().f_back.f_lineno
     if actual == expected:
-        print("pass")
+        print(f"PASS at test line {line}: got {actual!r}")
     else:
-        line = inspect.currentframe().f_back.f_lineno
-        print(f"fail at test line {line}: expected {expected!r} but got {actual!r}")
+        print(f"FAIL at test line {line}: expected {expected!r} but got {actual!r}")
 
 
 def build_complete_tree():

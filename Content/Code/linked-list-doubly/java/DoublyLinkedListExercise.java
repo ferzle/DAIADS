@@ -138,25 +138,25 @@ public class DoublyLinkedListExercise {
 
     static void check(String actual, String expected) {
         if (actual.equals(expected)) {
-            System.out.println("pass");
+            System.out.println("PASS at " + checkLocation() + ": got \"" + actual + "\"");
         } else {
-            System.out.println("fail at " + checkLocation() + ": expected \"" + expected + "\" but got \"" + actual + "\"");
+            System.out.println("FAIL at " + checkLocation() + ": expected \"" + expected + "\" but got \"" + actual + "\"");
         }
     }
 
     static void check(int actual, int expected) {
         if (actual == expected) {
-            System.out.println("pass");
+            System.out.println("PASS at " + checkLocation() + ": got " + actual);
         } else {
-            System.out.println("fail at " + checkLocation() + ": expected " + expected + " but got " + actual);
+            System.out.println("FAIL at " + checkLocation() + ": expected " + expected + " but got " + actual);
         }
     }
 
     static void check(boolean actual, boolean expected) {
         if (actual == expected) {
-            System.out.println("pass");
+            System.out.println("PASS at " + checkLocation() + ": got " + actual);
         } else {
-            System.out.println("fail at " + checkLocation() + ": expected " + expected + " but got " + actual);
+            System.out.println("FAIL at " + checkLocation() + ": expected " + expected + " but got " + actual);
         }
     }
 
@@ -203,6 +203,21 @@ public class DoublyLinkedListExercise {
         check(list.traverseBackward(), "12");
         check(list.deleteFromHead(), 12);
         check(list.isEmpty(), true);
+
+        list.insertAtTail(4);
+        list.insertAtTail(7);
+        list.insertAtTail(9);
+        IntDoublyList.Node node7 = list.searchForward(7);
+        check(node7 != null, true);
+        check(list.searchForward(99) == null, true);
+        list.insertBefore(node7, 6);
+        list.insertAfter(node7, 8);
+        check(list.traverseForward(), "4 -> 6 -> 7 -> 8 -> 9");
+        check(list.traverseBackward(), "9 -> 8 -> 7 -> 6 -> 4");
+        check(list.deleteNode(node7), 7);
+        check(list.traverseForward(), "4 -> 6 -> 8 -> 9");
+        check(list.deleteNode(null), -1);
+        check(list.size(), 4);
     }
 
     public static void main(String[] args) {

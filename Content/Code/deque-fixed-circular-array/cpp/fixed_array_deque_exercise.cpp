@@ -79,18 +79,18 @@ int removeBack() {
 
 void checkAtLine(int actual, int expected, int line, const char* expression) {
     if (actual == expected) {
-        cout << "pass" << endl;
+        cout << "PASS at test line " << line << " (" << expression << "): got " << actual << endl;
     } else {
-        cout << "fail at test line " << line << " (" << expression
+        cout << "FAIL at test line " << line << " (" << expression
              << "): expected " << expected << " but got " << actual << endl;
     }
 }
 
 void checkAtLine(bool actual, bool expected, int line, const char* expression) {
     if (actual == expected) {
-        cout << "pass" << endl;
+        cout << "PASS at test line " << line << " (" << expression << "): got " << actual << endl;
     } else {
-        cout << "fail at test line " << line << " (" << expression
+        cout << "FAIL at test line " << line << " (" << expression
              << "): expected " << (expected ? "true" : "false")
              << " but got " << (actual ? "true" : "false") << endl;
     }
@@ -177,6 +177,15 @@ deque.clear();                       // []
 check(deque.isEmpty(), true);
 check(deque.size(), 0);
 check(deque.peekFront(), -1);
+
+IntDeque large(257);
+bool largeOk = true;
+for (int round = 0; round < 20; round++) {
+    for (int i = 0; i < 257; i++) largeOk = large.addBack(round * 257 + i) && largeOk;
+    largeOk = large.isFull() && !large.addFront(-1) && largeOk;
+    for (int i = 0; i < 257; i++) largeOk = (large.removeFront() == round * 257 + i) && largeOk;
+}
+check(largeOk && large.isEmpty(), true);
 
 }
 

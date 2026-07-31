@@ -33,11 +33,11 @@ class IntQueue:
 
 
 def check(actual, expected):
+    line = inspect.currentframe().f_back.f_lineno
     if actual == expected:
-        print("pass")
+        print(f"PASS at test line {line}: got {actual!r}")
     else:
-        line = inspect.currentframe().f_back.f_lineno
-        print(f"fail at test line {line}: expected {expected!r} but got {actual!r}")
+        print(f"FAIL at test line {line}: expected {expected!r} but got {actual!r}")
 
 
 def test_queue():
@@ -73,6 +73,15 @@ def test_queue():
 
     check(queue.enqueue(11), True)
     check(queue.front(), 11)
+
+    wrapped = IntQueue(257)
+    wrapped_ok = True
+    for round_number in range(20):
+        for i in range(257):
+            wrapped_ok = wrapped.enqueue(round_number * 257 + i) and wrapped_ok
+        for i in range(257):
+            wrapped_ok = wrapped.dequeue() == round_number * 257 + i and wrapped_ok
+    check(wrapped_ok and wrapped.is_empty(), True)
 
 
 test_queue()

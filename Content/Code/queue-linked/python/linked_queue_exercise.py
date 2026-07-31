@@ -35,11 +35,11 @@ class IntQueue:
 
 
 def check(actual, expected):
+    line = inspect.currentframe().f_back.f_lineno
     if actual == expected:
-        print("pass")
+        print(f"PASS at test line {line}: got {actual!r}")
     else:
-        line = inspect.currentframe().f_back.f_lineno
-        print(f"fail at test line {line}: expected {expected!r} but got {actual!r}")
+        print(f"FAIL at test line {line}: expected {expected!r} but got {actual!r}")
 
 
 def test_queue():
@@ -79,6 +79,14 @@ def test_queue():
     check(queue.front(), 6)
     check(queue.dequeue(), 6)
     check(queue.is_empty(), True)
+
+    large = IntQueue()
+    for i in range(5000):
+        large.enqueue(i)
+    large_ok = large.size() == 5000 and large.front() == 0
+    for i in range(5000):
+        large_ok = large.dequeue() == i and large_ok
+    check(large_ok and large.is_empty(), True)
 
 
 test_queue()

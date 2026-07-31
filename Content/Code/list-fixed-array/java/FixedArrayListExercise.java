@@ -95,17 +95,17 @@ static String checkLocation() {
 
 static void check(int actual, int expected) {
     if (actual == expected) {
-        System.out.println("pass");
+        System.out.println("PASS at " + checkLocation() + ": got " + actual);
     } else {
-        System.out.println("fail at " + checkLocation() + ": expected " + expected + " but got " + actual);
+        System.out.println("FAIL at " + checkLocation() + ": expected " + expected + " but got " + actual);
     }
 }
 
 static void check(boolean actual, boolean expected) {
     if (actual == expected) {
-        System.out.println("pass");
+        System.out.println("PASS at " + checkLocation() + ": got " + actual);
     } else {
-        System.out.println("fail at " + checkLocation() + ": expected " + expected + " but got " + actual);
+        System.out.println("FAIL at " + checkLocation() + ": expected " + expected + " but got " + actual);
     }
 }
 
@@ -133,6 +133,10 @@ static void testList() {
     check(list.get(0), 2);
     check(list.get(2), 9);
     check(list.get(4), -1);
+    check(list.get(-1), -1);
+    check(list.set(-1, 8), false);
+    check(list.insert(-1, 8), false);
+    check(list.remove(-1), -1);
 
     check(list.set(1, 5), true);        // [2, 5, 9, 7]
     check(list.get(1), 5);
@@ -176,6 +180,23 @@ static void testList() {
     check(list.isEmpty(), true);
     check(list.size(), 0);
     check(list.first(), -1);
+
+    IntList duplicates = new IntList(8);
+    check(duplicates.addLast(5), true);
+    check(duplicates.addLast(2), true);
+    check(duplicates.addLast(5), true);
+    check(duplicates.addLast(5), true);
+    check(duplicates.indexOf(5), 0);
+    check(duplicates.delete(5), true);
+    check(duplicates.size(), 3);
+    check(duplicates.indexOf(5), 1);
+
+    IntList large = new IntList(256);
+    boolean largeOk = true;
+    for (int i = 0; i < 256; i++) largeOk &= large.addLast(i);
+    for (int i = 0; i < 256; i++) largeOk &= large.get(i) == i;
+    for (int i = 0; i < 256; i++) largeOk &= large.removeFirst() == i;
+    check(largeOk && large.isEmpty(), true);
 }
 
 public static void main(String[] args) {

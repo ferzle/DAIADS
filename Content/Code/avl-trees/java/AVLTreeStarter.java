@@ -166,17 +166,40 @@ public class AVLTreeStarter {
     public static void main(String[] args) {
         AVLTreeStarter tree = new AVLTreeStarter();
         check(tree.isEmpty(), "a new tree is empty");
+        check(tree.size() == 0, "a new tree has size zero");
+        check(!tree.contains(99), "contains reports an absent key");
+        check(!tree.remove(99), "removing an absent key returns false");
         int[] keys = {30, 20, 10, 40, 50, 25, 27};
         for (int key : keys) {
             check(tree.insert(key), "insert " + key);
             check(tree.hasValidStructure(), "invariants after inserting " + key);
         }
         check(!tree.insert(25), "duplicate insertion leaves the set unchanged");
+        check(tree.size() == keys.length, "size counts distinct insertions");
         check(tree.contains(27), "contains finds a stored key");
         for (int key : new int[]{40, 30, 10}) {
             check(tree.remove(key), "remove " + key);
             check(tree.hasValidStructure(), "invariants after removing " + key);
         }
+
+        int[][] rotationPatterns = {
+            {30, 20, 10}, {10, 20, 30}, {30, 10, 20}, {10, 30, 20}
+        };
+        for (int i = 0; i < rotationPatterns.length; i++) {
+            AVLTreeStarter rotationTree = new AVLTreeStarter();
+            boolean ok = true;
+            for (int key : rotationPatterns[i]) ok &= rotationTree.insert(key);
+            check(ok && rotationTree.size() == 3 && rotationTree.hasValidStructure(),
+                "rotation pattern " + (i + 1));
+        }
+
+        AVLTreeStarter large = new AVLTreeStarter();
+        boolean largeOk = true;
+        for (int i = 0; i < 1000; i++) largeOk &= large.insert((i * 641) % 1000);
+        largeOk &= large.size() == 1000 && large.hasValidStructure();
+        for (int i = 0; i < 1000; i += 2) largeOk &= large.remove(i);
+        largeOk &= large.size() == 500 && large.hasValidStructure();
+        check(largeOk, "1000-key insertion and 500-key removal stress test");
         System.out.println("inorder: " + tree.inorderValues());
     }
 }

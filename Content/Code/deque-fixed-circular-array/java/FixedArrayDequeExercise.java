@@ -72,17 +72,17 @@ static String checkLocation() {
 
 static void check(int actual, int expected) {
     if (actual == expected) {
-        System.out.println("pass");
+        System.out.println("PASS at " + checkLocation() + ": got " + actual);
     } else {
-        System.out.println("fail at " + checkLocation() + ": expected " + expected + " but got " + actual);
+        System.out.println("FAIL at " + checkLocation() + ": expected " + expected + " but got " + actual);
     }
 }
 
 static void check(boolean actual, boolean expected) {
     if (actual == expected) {
-        System.out.println("pass");
+        System.out.println("PASS at " + checkLocation() + ": got " + actual);
     } else {
-        System.out.println("fail at " + checkLocation() + ": expected " + expected + " but got " + actual);
+        System.out.println("FAIL at " + checkLocation() + ": expected " + expected + " but got " + actual);
     }
 }
 
@@ -165,6 +165,15 @@ static void testDeque() {
     check(deque.isEmpty(), true);
     check(deque.size(), 0);
     check(deque.peekFront(), -1);
+
+    IntDeque large = new IntDeque(257);
+    boolean largeOk = true;
+    for (int round = 0; round < 20; round++) {
+        for (int i = 0; i < 257; i++) largeOk &= large.addBack(round * 257 + i);
+        largeOk &= large.isFull() && !large.addFront(-1);
+        for (int i = 0; i < 257; i++) largeOk &= large.removeFront() == round * 257 + i;
+    }
+    check(largeOk && large.isEmpty(), true);
 }
 
 public static void main(String[] args) {

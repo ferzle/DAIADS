@@ -112,11 +112,11 @@ class IntDoublyList:
 
 
 def check(actual, expected):
+    line = inspect.currentframe().f_back.f_lineno
     if actual == expected:
-        print("pass")
+        print(f"PASS at test line {line}: got {actual!r}")
     else:
-        line = inspect.currentframe().f_back.f_lineno
-        print(f"fail at test line {line}: expected {expected!r} but got {actual!r}")
+        print(f"FAIL at test line {line}: expected {expected!r} but got {actual!r}")
 
 
 def test_doubly_list():
@@ -162,6 +162,21 @@ def test_doubly_list():
     check(lst.traverse_backward(), "12")
     check(lst.delete_from_head(), 12)
     check(lst.is_empty(), True)
+
+    lst.insert_at_tail(4)
+    lst.insert_at_tail(7)
+    lst.insert_at_tail(9)
+    node7 = lst.search_forward(7)
+    check(node7 is not None, True)
+    check(lst.search_forward(99) is None, True)
+    lst.insert_before(node7, 6)
+    lst.insert_after(node7, 8)
+    check(lst.traverse_forward(), "4 -> 6 -> 7 -> 8 -> 9")
+    check(lst.traverse_backward(), "9 -> 8 -> 7 -> 6 -> 4")
+    check(lst.delete_node(node7), 7)
+    check(lst.traverse_forward(), "4 -> 6 -> 8 -> 9")
+    check(lst.delete_node(None), -1)
+    check(lst.size(), 4)
 
 
 test_doubly_list()

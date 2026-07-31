@@ -80,17 +80,17 @@ static String checkLocation() {
 
 static void check(int actual, int expected) {
     if (actual == expected) {
-        System.out.println("pass");
+        System.out.println("PASS at " + checkLocation() + ": got " + actual);
     } else {
-        System.out.println("fail at " + checkLocation() + ": expected " + expected + " but got " + actual);
+        System.out.println("FAIL at " + checkLocation() + ": expected " + expected + " but got " + actual);
     }
 }
 
 static void check(boolean actual, boolean expected) {
     if (actual == expected) {
-        System.out.println("pass");
+        System.out.println("PASS at " + checkLocation() + ": got " + actual);
     } else {
-        System.out.println("fail at " + checkLocation() + ": expected " + expected + " but got " + actual);
+        System.out.println("FAIL at " + checkLocation() + ": expected " + expected + " but got " + actual);
     }
 }
 
@@ -164,6 +164,15 @@ static void testDeque() {
     check(deque.isEmpty(), true);
     check(deque.size(), 0);
     check(deque.peekFront(), -1);
+
+    IntDeque tinyBlocks = new IntDeque(1);
+    boolean tinyOk = true;
+    for (int i = 0; i < 500; i++) tinyOk &= tinyBlocks.addBack(i);
+    for (int i = 0; i < 250; i++) tinyOk &= tinyBlocks.removeFront() == i;
+    for (int i = 500; i < 750; i++) tinyOk &= tinyBlocks.addFront(i);
+    for (int i = 749; i >= 500; i--) tinyOk &= tinyBlocks.removeFront() == i;
+    for (int i = 499; i >= 250; i--) tinyOk &= tinyBlocks.removeBack() == i;
+    check(tinyOk && tinyBlocks.isEmpty(), true);
 }
 
 public static void main(String[] args) {

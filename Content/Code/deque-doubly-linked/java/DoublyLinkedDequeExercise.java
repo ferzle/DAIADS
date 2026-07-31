@@ -74,17 +74,17 @@ static String checkLocation() {
 
 static void check(int actual, int expected) {
     if (actual == expected) {
-        System.out.println("pass");
+        System.out.println("PASS at " + checkLocation() + ": got " + actual);
     } else {
-        System.out.println("fail at " + checkLocation() + ": expected " + expected + " but got " + actual);
+        System.out.println("FAIL at " + checkLocation() + ": expected " + expected + " but got " + actual);
     }
 }
 
 static void check(boolean actual, boolean expected) {
     if (actual == expected) {
-        System.out.println("pass");
+        System.out.println("PASS at " + checkLocation() + ": got " + actual);
     } else {
-        System.out.println("fail at " + checkLocation() + ": expected " + expected + " but got " + actual);
+        System.out.println("FAIL at " + checkLocation() + ": expected " + expected + " but got " + actual);
     }
 }
 
@@ -165,6 +165,17 @@ static void testDeque() {
     check(deque.removeFront(), 10);      // []
     check(deque.isEmpty(), true);
     check(deque.size(), 0);
+
+    IntDeque transitions = new IntDeque();
+    boolean transitionOk = true;
+    for (int i = 0; i < 500; i++) {
+        transitionOk &= transitions.addFront(i);
+        transitionOk &= transitions.addBack(-i);
+        transitionOk &= transitions.removeFront() == i;
+        transitionOk &= transitions.removeBack() == -i;
+        transitionOk &= transitions.isEmpty();
+    }
+    check(transitionOk, true);
 }
 
 public static void main(String[] args) {

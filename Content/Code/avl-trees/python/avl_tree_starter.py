@@ -131,14 +131,30 @@ def check(condition, description):
 def main():
     tree = AVLTree()
     check(tree.is_empty(), "a new tree is empty")
+    check(tree.size == 0, "a new tree has size zero")
+    check(not tree.contains(99), "contains reports an absent key")
+    check(not tree.remove(99), "removing an absent key returns False")
     for key in [30, 20, 10, 40, 50, 25, 27]:
         check(tree.insert(key), "insert " + str(key))
         check(tree.has_valid_structure(), "invariants after inserting " + str(key))
     check(not tree.insert(25), "duplicate insertion leaves the set unchanged")
+    check(tree.size == 7, "size counts seven distinct insertions")
     check(tree.contains(27), "contains finds a stored key")
     for key in [40, 30, 10]:
         check(tree.remove(key), "remove " + str(key))
         check(tree.has_valid_structure(), "invariants after removing " + str(key))
+    rotation_patterns = ([30, 20, 10], [10, 20, 30], [30, 10, 20], [10, 30, 20])
+    for number, pattern in enumerate(rotation_patterns, 1):
+        rotation_tree = AVLTree()
+        ok = all(rotation_tree.insert(key) for key in pattern)
+        check(ok and rotation_tree.size == 3 and rotation_tree.has_valid_structure(),
+              "rotation pattern " + str(number))
+    large = AVLTree()
+    large_ok = all(large.insert((i * 641) % 1000) for i in range(1000))
+    large_ok = large.size == 1000 and large.has_valid_structure() and large_ok
+    large_ok = all(large.remove(i) for i in range(0, 1000, 2)) and large_ok
+    large_ok = large.size == 500 and large.has_valid_structure() and large_ok
+    check(large_ok, "1000-key insertion and 500-key removal stress test")
     print("inorder:", tree.inorder_values())
 
 

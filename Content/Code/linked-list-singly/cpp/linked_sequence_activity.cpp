@@ -109,6 +109,10 @@ void deleteAfterTail() {
     testList->deleteAfter(testNode);
 }
 
+void deleteAfterNull() {
+    testList->deleteAfter(nullptr);
+}
+
 int main() {
     LinkedSequence list;
     testList = &list;
@@ -142,6 +146,7 @@ int main() {
     testNode = list.search(4);
     expectException(deleteAfterTail);
     expectException(insertAfterNull);
+    expectException(deleteAfterNull);
 
     check(list.deleteAtHead(), 9);
     check(list.deleteAtHead(), 4);
