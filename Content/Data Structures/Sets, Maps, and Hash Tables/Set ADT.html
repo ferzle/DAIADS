@@ -10,6 +10,47 @@
   <script src="/DAIADS/scripts/chapterScripts.js"></script>
   <link rel="stylesheet" href="/DAIADS/css/style.css">
   <link rel="stylesheet" href="/DAIADS/css/chapter.css">
+  <style>
+    .set-model {
+      display: block;
+      width: min(100%, 760px);
+      height: auto;
+      margin: 1rem auto;
+    }
+
+    .set-model .boundary {
+      fill: #f7fbff;
+      stroke: #315d7d;
+      stroke-width: 2;
+    }
+
+    .set-model .member {
+      fill: #cce3ff;
+      stroke: #274c77;
+      stroke-width: 2;
+    }
+
+    .set-model .candidate {
+      fill: #fff8e8;
+      stroke: #b97820;
+      stroke-width: 2;
+    }
+
+    .set-model text {
+      fill: #17324d;
+      font-family: "Segoe UI", Verdana, sans-serif;
+      text-anchor: middle;
+    }
+
+    .set-model .item-label {
+      font-size: 17px;
+      font-weight: 700;
+    }
+
+    .set-model .annotation {
+      font-size: 15px;
+    }
+  </style>
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
   <script>
@@ -39,6 +80,53 @@
       search tree, hash table, or bit vector. The ADT describes the visible behavior; the implementation
       determines the cost of each operation and whether traversal happens in any useful order.
     </p>
+
+    <svg class="set-model" viewBox="0 0 760 300" role="img"
+         aria-labelledby="setModelTitle setModelDesc">
+      <title id="setModelTitle">Conceptual model of a set</title>
+      <desc id="setModelDesc">
+        A rounded boundary contains the distinct keys red, green, and blue. A second red key approaches the set but
+        does not create a duplicate. Orange is outside the boundary, so a membership query for orange is false.
+      </desc>
+      <defs>
+        <marker id="set-arrowhead" viewBox="0 0 10 10" refX="9" refY="5"
+                markerWidth="7" markerHeight="7" orient="auto">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#315d7d"></path>
+        </marker>
+      </defs>
+      <rect class="boundary" x="150" y="35" width="455" height="220" rx="70"></rect>
+      <text class="annotation" x="377" y="65">logical set — positions have no meaning</text>
+
+      <g>
+        <ellipse class="member" cx="255" cy="130" rx="62" ry="34"></ellipse>
+        <text class="item-label" x="255" y="136">red</text>
+      </g>
+      <g>
+        <ellipse class="member" cx="455" cy="120" rx="62" ry="34"></ellipse>
+        <text class="item-label" x="455" y="126">green</text>
+      </g>
+      <g>
+        <ellipse class="member" cx="365" cy="205" rx="62" ry="34"></ellipse>
+        <text class="item-label" x="365" y="211">blue</text>
+      </g>
+
+      <ellipse class="candidate" cx="70" cy="105" rx="48" ry="30"></ellipse>
+      <text class="item-label" x="70" y="111">red</text>
+      <path d="M 120 105 H 178" fill="none" stroke="#315d7d" stroke-width="2.5"
+            marker-end="url(#set-arrowhead)"></path>
+      <text class="annotation" x="95" y="170">add(red)</text>
+      <text class="annotation" x="95" y="192">no change</text>
+
+      <ellipse class="candidate" cx="680" cy="165" rx="55" ry="30"></ellipse>
+      <text class="item-label" x="680" y="171">orange</text>
+      <text class="annotation" x="665" y="225">contains(orange)</text>
+      <text class="annotation" x="665" y="247">false</text>
+    </svg>
+    <p>
+      The drawing shows only the logical contents. It deliberately avoids indexes, links, tree edges, or buckets.
+      From the client's point of view, the important facts are that each key is either present or absent and that an
+      equal key cannot appear twice. The physical positions of the labels have no meaning.
+    </p>
   </section>
 
   <section id="adt" section-title="Abstract Data Type and Operations">
@@ -46,20 +134,54 @@
     <p>
       A set stores keys with no duplicates. A typical set interface includes these operations:
     </p>
-    <ul>
-      <li><strong><code>add(key)</code>:</strong> Insert <code>key</code> if it is not already present.</li>
-      <li><strong><code>remove(key)</code>:</strong> Delete <code>key</code> if it is present.</li>
-      <li><strong><code>contains(key)</code>:</strong> Return whether <code>key</code> is present.</li>
-      <li><strong><code>size()</code>:</strong> Return the number of distinct keys in the set.</li>
-      <li><strong><code>isEmpty()</code>:</strong> Return whether the set contains no keys.</li>
-      <li><strong><code>clear()</code>:</strong> Remove all keys from the set.</li>
-    </ul>
+    <table class="example-table left-top-align">
+      <thead>
+        <tr>
+          <th>Operation</th>
+          <th>Caller-visible behavior</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong><code>add(key)</code></strong></td>
+          <td>Insert <code>key</code> if no equal key is present. A useful interface returns whether the set changed.</td>
+        </tr>
+        <tr>
+          <td><strong><code>remove(key)</code></strong></td>
+          <td>Delete the equal stored key, if one exists, and often return whether removal occurred.</td>
+        </tr>
+        <tr>
+          <td><strong><code>contains(key)</code></strong></td>
+          <td>Return <code>true</code> exactly when the set contains a key equal to <code>key</code>.</td>
+        </tr>
+        <tr>
+          <td><code>size()</code></td>
+          <td>Return the number of distinct stored keys.</td>
+        </tr>
+        <tr>
+          <td><code>isEmpty()</code></td>
+          <td>Return whether <code>size()</code> is zero.</td>
+        </tr>
+        <tr>
+          <td><code>clear()</code></td>
+          <td>Remove every key, leaving the empty set.</td>
+        </tr>
+        <tr>
+          <td><code>iterate()</code></td>
+          <td>Visit every stored key once; unless promised otherwise, the visitation order is unspecified.</td>
+        </tr>
+      </tbody>
+    </table>
     <p>
       Some interfaces return a Boolean from <code>add</code> and <code>remove</code>. For example,
       <code>add(key)</code> might return <code>true</code> only when the key was newly inserted, and
       <code>remove(key)</code> might return <code>true</code> only when a key was actually removed. Other interfaces
       simply perform the operation and leave the caller to use <code>contains</code> if it needs that information.
     </p>
+    <div class="callout">
+      <strong>Set invariant:</strong> at every observable moment, the set contains at most one representative of each
+      equality class. An implementation may store keys in any arrangement, but it must preserve that uniqueness rule.
+    </div>
   </section>
 
   <section id="conceptual-model" section-title="Conceptual Model">
@@ -146,6 +268,11 @@
       returns whether it exists. Sets are often chosen specifically because membership should be faster or cleaner
       than scanning a list.
     </p>
+    <p>
+      Membership uses the set's equality rule, not necessarily object identity. For example, two separately created
+      strings containing the same characters normally represent the same string key. A reference-identity set would
+      be a different ADT with a different contract.
+    </p>
 
     <h3>Insertion</h3>
     <p>
@@ -175,6 +302,55 @@
       function to every key. It is not the same as indexed access. Unless the set interface promises an order, client
       code should not rely on the traversal order.
     </p>
+
+    <h3>Clear, Size, and Empty Queries</h3>
+    <p>
+      <code>size</code> counts distinct stored keys, not the number of attempted insertions. If the set contains
+      <code>{red, green, blue}</code>, calling <code>add(red)</code> again leaves the size at three.
+      <code>isEmpty</code> is therefore equivalent to testing whether the size is zero. After <code>clear</code>, every
+      membership query is false until another key is added.
+    </p>
+
+    <div class="example-box">
+      <strong class="example-title">Example 1: Operation Trace with Return Values</strong>
+      <p>
+        The following interface makes <code>add</code> and <code>remove</code> return whether they changed the set.
+        Start with an empty set.
+      </p>
+      <table class="example-table left-top-align">
+        <thead>
+          <tr><th>Operation</th><th>Return value</th><th>Logical contents afterward</th><th>Why</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>add(4)</code></td><td><code>true</code></td><td><code>{4}</code></td><td>4 was absent.</td></tr>
+          <tr><td><code>add(9)</code></td><td><code>true</code></td><td><code>{4, 9}</code></td><td>9 was absent.</td></tr>
+          <tr><td><code>add(4)</code></td><td><code>false</code></td><td><code>{4, 9}</code></td><td>No duplicate is stored.</td></tr>
+          <tr><td><code>contains(7)</code></td><td><code>false</code></td><td><code>{4, 9}</code></td><td>A query does not change the set.</td></tr>
+          <tr><td><code>remove(9)</code></td><td><code>true</code></td><td><code>{4}</code></td><td>9 was present.</td></tr>
+          <tr><td><code>remove(9)</code></td><td><code>false</code></td><td><code>{4}</code></td><td>9 is already absent.</td></tr>
+        </tbody>
+      </table>
+      <p>
+        The braces describe an unordered logical collection. Writing <code>{4, 9}</code> does not promise that 4 is
+        physically stored before 9 or that iteration will visit it first.
+      </p>
+    </div>
+  </section>
+
+  <section id="demo" section-title="Interactive Demo">
+    <h2>Interactive Demo</h2>
+    <p>
+      Use the demo to add, test, and remove keys. It scatters the keys deliberately so that the picture represents
+      only membership and uniqueness—not an array, linked list, search tree, or hash table. Try adding an existing
+      key and removing a missing key, and compare the return value with the resulting size.
+    </p>
+    <div class="embeddedDemoContainer">
+      <iframe class="embeddedDemo"
+              src="/DAIADS/Content/Demos/Data Structures/Set ADT Demo.html"
+              allow="fullscreen"
+              name="set-adt-demo">
+      </iframe>
+    </div>
   </section>
 
   <section id="set-algebra" section-title="Set Algebra Operations">
@@ -208,6 +384,11 @@
           <td>\(\{1,2\}\)</td>
         </tr>
         <tr>
+          <td>Symmetric difference, \(A \mathbin{\triangle} B\)</td>
+          <td>Keys in exactly one of the two sets.</td>
+          <td>\(\{1,2,4\}\)</td>
+        </tr>
+        <tr>
           <td>Subset test, \(A \subseteq B\)</td>
           <td>Every key in \(A\) also appears in \(B\).</td>
           <td>false</td>
@@ -225,6 +406,12 @@
         if B.contains(key):
             result.add(key)
     return result</code></pre>
+    <p>
+      The running time of a set-algebra operation depends on the operations supplied by the implementation. If
+      membership in \(B\) takes expected \(O(1)\), iterating through all \(|A|\) keys gives expected
+      \(O(|A|)\) time for the sketch. If membership takes \(O(\log |B|)\), the same high-level algorithm takes
+      \(O(|A|\log |B|)\). Iterating through the smaller set is often the better choice for intersection.
+    </p>
   </section>
 
   <section id="implementations" section-title="Implementation Options">
@@ -284,6 +471,52 @@
       Hash tables are a common default for general-purpose sets, but they are not the only choice. If a program needs
       the keys in sorted order, a tree-based set may be more appropriate. If keys are small nonnegative integers, a
       bit vector can be extremely compact and fast.
+    </p>
+
+    <h3>Unsorted Sequential Representation</h3>
+    <p>
+      An array or linked list can store the distinct keys in no particular sorted order. Membership must inspect keys
+      until it finds a match or reaches the end, so it is \(O(n)\) in the worst case. Addition also needs that search;
+      appending without checking would violate uniqueness. Once a key has been located, array deletion may shift later
+      entries, while linked-list deletion changes links. This representation is valuable for small sets and for
+      learning the ADT contract, but it does not provide scalable membership.
+    </p>
+
+    <h3>Sorted Array or Balanced Search Tree</h3>
+    <p>
+      Sorting enables ordered traversal and comparison-based lookup. A sorted array supports binary-search membership
+      in \(O(\log n)\), but insertion and deletion are \(O(n)\) because entries may move. A balanced search tree keeps
+      membership, addition, and removal at \(O(\log n)\) worst-case while also supporting minimum, maximum, range, and
+      predecessor/successor operations. Those ordered capabilities are not required by the basic set ADT, but some
+      applications benefit from them.
+    </p>
+
+    <h3>Hash Table</h3>
+    <p>
+      A hash table uses a key's hash value to narrow the search to a small part of a table. With a suitable hash
+      function, collision policy, and resizing policy, membership, addition, and removal take expected \(O(1)\) time.
+      The tradeoffs are extra unused capacity, no natural sorted order, and an \(O(n)\) worst case if many keys collide.
+      The remaining pages in this unit develop this option in detail.
+    </p>
+
+    <h3>Bit Vector</h3>
+    <p>
+      If every possible key is an integer in a modest universe \(0\) through \(U-1\), one bit per possible key can
+      record membership: bit \(k\) is 1 exactly when key \(k\) is present. Operations are constant time and storage is
+      \(O(U)\) bits, independent of how many keys are present. This is excellent for a dense, bounded universe but
+      wasteful or impossible for arbitrary strings or a huge sparse range of integers.
+    </p>
+
+    <h3>Library Implementations</h3>
+    <ul>
+      <li><strong>Java:</strong> <code>HashSet</code> provides hash-based expected constant-time operations; <code>TreeSet</code> keeps keys ordered.</li>
+      <li><strong>C++:</strong> <code>std::unordered_set</code> is hash based; <code>std::set</code> is ordered and normally tree based.</li>
+      <li><strong>Python:</strong> the built-in <code>set</code> is hash based; Python does not provide a general built-in sorted set.</li>
+    </ul>
+    <p>
+      Library sets should normally be used in application code. Implementing a small set yourself is still useful
+      when the learning goal is to understand equality, uniqueness, operation contracts, or the tradeoffs among
+      representations.
     </p>
   </section>
 
@@ -355,6 +588,7 @@
       <li><strong>Implementation:</strong> Why might a hash set be preferred over an unsorted list for a large collection?</li>
       <li><strong>Ordering:</strong> Why should client code avoid assuming that a general set iterates in sorted order?</li>
       <li><strong>Set algebra:</strong> How can <code>contains</code> be used to compute an intersection?</li>
+      <li><strong>Return values:</strong> Why is a Boolean return from <code>add</code> or <code>remove</code> useful?</li>
     </ol>
     <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
     <div id="answers" class="answer" hidden>
@@ -365,6 +599,7 @@
         <li><strong>Answer:</strong> A hash set usually supports expected constant-time membership, insertion, and deletion, while an unsorted list requires a linear scan.</li>
         <li><strong>Answer:</strong> Different implementations use different internal layouts. Only ordered set implementations promise sorted traversal.</li>
         <li><strong>Answer:</strong> Iterate through one set and add a key to the result only when the other set contains that key.</li>
+        <li><strong>Answer:</strong> It tells the caller whether the operation actually changed membership without requiring a separate query.</li>
       </ol>
     </div>
   </section>

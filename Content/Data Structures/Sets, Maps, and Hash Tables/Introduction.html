@@ -10,6 +10,50 @@
   <script src="/DAIADS/scripts/chapterScripts.js"></script>
   <link rel="stylesheet" href="/DAIADS/css/style.css">
   <link rel="stylesheet" href="/DAIADS/css/chapter.css">
+  <style>
+    .unit-model {
+      display: block;
+      width: min(100%, 860px);
+      height: auto;
+      margin: 1rem auto;
+    }
+
+    .unit-model .panel {
+      fill: #f7fbff;
+      stroke: #58758f;
+      stroke-width: 2;
+    }
+
+    .unit-model .implementation {
+      fill: #fff8e8;
+      stroke: #b97820;
+      stroke-width: 2;
+    }
+
+    .unit-model .heading {
+      fill: #17324d;
+      font: 700 20px "Segoe UI", Verdana, sans-serif;
+      text-anchor: middle;
+    }
+
+    .unit-model .label {
+      fill: #263746;
+      font: 16px "Segoe UI", Verdana, sans-serif;
+      text-anchor: middle;
+    }
+
+    .unit-model .arrow-label {
+      fill: #526777;
+      font: 15px "Segoe UI", Verdana, sans-serif;
+      text-anchor: middle;
+    }
+
+    .unit-model .arrow {
+      fill: none;
+      stroke: #315d7d;
+      stroke-width: 2.5;
+    }
+  </style>
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
   <script>
@@ -44,6 +88,24 @@
     </p>
   </section>
 
+  <section id="learning-goals" section-title="Learning Goals">
+    <h2>Learning Goals</h2>
+    <p>
+      After completing this unit, you should be able to separate three questions that are often blurred together:
+      what behavior a client needs, which ADT supplies that behavior, and which representation supplies the desired
+      performance. In particular, you should be able to:
+    </p>
+    <ul>
+      <li>choose between a set and a map by deciding whether associated values are needed;</li>
+      <li>state the contracts of membership, lookup, insertion, update, and removal operations;</li>
+      <li>explain why key equality is part of the meaning of both ADTs;</li>
+      <li>trace how a hash table converts a key into a starting table position;</li>
+      <li>resolve collisions using separate chaining or open addressing;</li>
+      <li>explain the roles of load factor, resizing, and rehashing; and</li>
+      <li>distinguish expected constant-time hashing from worst-case guarantees and ordered operations.</li>
+    </ul>
+  </section>
+
   <section id="why-together" section-title="Why These Topics Are Together">
     <h2>Why These Topics Are Together</h2>
     <p>
@@ -55,6 +117,55 @@
       Hashing is grouped with them because hash tables are the standard implementation when the goal is fast average
       lookup by key. A hash function maps a key to an array index. If the hash function spreads keys well and the table
       is not too full, common operations are expected \(O(1)\).
+    </p>
+    <svg class="unit-model" viewBox="0 0 860 350" role="img"
+         aria-labelledby="unitModelTitle unitModelDesc">
+      <title id="unitModelTitle">Relationship among sets, maps, and their implementations</title>
+      <desc id="unitModelDesc">
+        A set ADT stores unique keys and a map ADT stores key-value associations. Arrows from both ADTs point to a
+        hash table and a balanced search tree to show that either ADT can have more than one implementation.
+      </desc>
+      <defs>
+        <marker id="unit-arrowhead" viewBox="0 0 10 10" refX="9" refY="5"
+                markerWidth="7" markerHeight="7" orient="auto">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#315d7d"></path>
+        </marker>
+      </defs>
+
+      <rect class="panel" x="55" y="35" width="300" height="115" rx="18"></rect>
+      <text class="heading" x="205" y="72">Set ADT</text>
+      <text class="label" x="205" y="102">stores distinct keys</text>
+      <text class="label" x="205" y="128">answers contains(key)</text>
+
+      <rect class="panel" x="505" y="35" width="300" height="115" rx="18"></rect>
+      <text class="heading" x="655" y="72">Map ADT</text>
+      <text class="label" x="655" y="102">stores key → value entries</text>
+      <text class="label" x="655" y="128">answers get(key)</text>
+
+      <text class="arrow-label" x="430" y="181">caller-visible behavior</text>
+      <text class="arrow-label" x="430" y="204">implemented by</text>
+      <path class="arrow" d="M 205 150 C 205 205, 300 210, 330 245"
+            marker-end="url(#unit-arrowhead)"></path>
+      <path class="arrow" d="M 655 150 C 655 205, 560 210, 530 245"
+            marker-end="url(#unit-arrowhead)"></path>
+      <path class="arrow" d="M 205 150 C 205 220, 520 215, 560 245"
+            marker-end="url(#unit-arrowhead)"></path>
+      <path class="arrow" d="M 655 150 C 655 220, 340 215, 300 245"
+            marker-end="url(#unit-arrowhead)"></path>
+
+      <rect class="implementation" x="155" y="245" width="250" height="75" rx="14"></rect>
+      <text class="heading" x="280" y="278">Hash table</text>
+      <text class="label" x="280" y="303">fast expected exact lookup</text>
+
+      <rect class="implementation" x="455" y="245" width="250" height="75" rx="14"></rect>
+      <text class="heading" x="580" y="278">Balanced search tree</text>
+      <text class="label" x="580" y="303">ordered keys and ranges</text>
+    </svg>
+    <p>
+      The arrows in the diagram go both ways because neither ADT is tied to one representation. A hash table can
+      implement a set or a map, and a balanced search tree can do the same. Choosing the ADT answers “what should the
+      client be allowed to do?” Choosing the representation answers “how will those operations be carried out, and
+      what will they cost?”
     </p>
   </section>
 
@@ -80,6 +191,20 @@
       A <strong>key</strong> is the value used for lookup. In a student-record map, the key might be a student ID. In
       a word-frequency table, the key is a word. In a visited set for graph search, the key is a vertex.
     </p>
+    <p>
+      A key is not necessarily a number. Strings, immutable records, coordinates, dates, and many other values can be
+      keys as long as the implementation has a consistent way to compare them. The word <em>key</em> describes the
+      role a value plays in lookup, not its programming-language type.
+    </p>
+
+    <h3>Key Equality</h3>
+    <p>
+      Every set or map needs a rule for deciding when two supplied keys mean the same thing. Should
+      <code>"Blue"</code> and <code>"blue"</code> be distinct? Do two coordinate objects with fields
+      <code>(3, 5)</code> represent the same key even if they are different objects? The ADT's behavior depends on
+      these decisions. If two keys are equal, a set stores only one of them and a map stores only one entry for that
+      key.
+    </p>
 
     <h3>Membership</h3>
     <p>
@@ -101,6 +226,19 @@
       unavoidable when many possible keys are mapped into a finite array. Hash-table implementations differ mostly in
       how they resolve collisions and when they resize.
     </p>
+
+    <h3>Exact-Key Questions and Ordered Questions</h3>
+    <p>
+      Sets and maps naturally answer exact-key questions such as “is vertex 17 present?” or “what record belongs to
+      ID A104?” Some implementations also support ordered questions such as “what is the next larger key?” or “which
+      keys lie from 200 through 299?” Hash tables generally do not support those ordered questions efficiently;
+      balanced search trees do. The required operations should drive the implementation choice.
+    </p>
+
+    <div class="callout">
+      <strong>Vocabulary checkpoint:</strong> a set and a map are abstract data types. A hash table is one way to
+      implement either ADT. Calling every map a “hash map” hides this important distinction.
+    </div>
   </section>
 
   <section id="worked-example" section-title="Worked Example">
@@ -147,10 +285,20 @@
       word in that bucket. A map stores the pair <code>(word, count)</code>. If another word hashes to the same
       bucket, the collision-resolution strategy decides where that entry goes.
     </p>
+    <p>
+      Notice the progression of questions. The program first decides what information it needs: distinct words or
+      word counts. That determines the ADT. Only then does it decide whether a hash table, tree, or another
+      representation should implement the ADT. The input and desired output do not themselves require hashing.
+    </p>
   </section>
 
   <section id="implementation-options" section-title="Implementation Options">
     <h2>Implementation Options</h2>
+    <p>
+      The same logical set or map can be represented in several ways. The table gives typical costs for a dynamic
+      collection of \(n\) entries. These are not promises made by the ADT; they are consequences of the chosen
+      representation and, in the case of hashing, assumptions about distribution and resizing.
+    </p>
     <table class="example-table">
       <thead>
         <tr>
@@ -192,6 +340,12 @@
       sorted structures are better when the program needs keys in order, range queries, predecessor/successor
       operations, or predictable worst-case bounds.
     </p>
+    <p>
+      Size also matters. A linear scan through five entries may be simpler and fast enough even though its asymptotic
+      cost is \(O(n)\). Conversely, a large, frequently changing collection may justify a more sophisticated
+      representation. Complexity describes how costs grow; it does not remove the need to consider constants,
+      memory use, ordering requirements, and implementation complexity.
+    </p>
   </section>
 
   <section id="hashing-preview" section-title="Hashing Preview">
@@ -211,6 +365,11 @@
       The two main collision-resolution families in this section are separate chaining and open addressing. Separate
       chaining stores a small collection at each bucket. Open addressing stores entries directly in the array and
       follows a probe sequence when a collision occurs.
+    </p>
+    <p>
+      A collision is not an error and does not mean that the hash function is “broken.” It is a normal event that the
+      table must handle correctly. A good hash function and a controlled load factor make collisions inexpensive on
+      average; the collision policy preserves correctness when they occur.
     </p>
   </section>
 
@@ -279,6 +438,7 @@
       <li><strong>Load Factor:</strong> Why does a hash table resize?</li>
       <li><strong>Ordering:</strong> Why might a balanced search tree be better than a hash table?</li>
       <li><strong>Keys:</strong> Why can mutating an object used as a key cause lookup problems?</li>
+      <li><strong>ADT versus implementation:</strong> Why is “map” not synonymous with “hash table”?</li>
     </ol>
     <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
     <div id="answers" class="answer" hidden>
@@ -289,6 +449,7 @@
         <li><strong>Answer:</strong> Resizing lowers the load factor and reduces collision cost.</li>
         <li><strong>Answer:</strong> Ordered structures are better when the program needs sorted traversal, range queries, or predecessor/successor operations.</li>
         <li><strong>Answer:</strong> If the key's hash or equality result changes, the table may search in the wrong bucket or fail to recognize the stored key.</li>
+        <li><strong>Answer:</strong> A map specifies key-value behavior. Hash tables, balanced trees, sorted arrays, and other structures can all implement that behavior with different performance and ordering guarantees.</li>
       </ol>
     </div>
   </section>

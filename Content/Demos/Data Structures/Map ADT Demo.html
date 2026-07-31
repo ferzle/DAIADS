@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Map ADT Demo</title>
+  <script src="/DAIADS/scripts/demoScripts.js"></script>
+  <link rel="stylesheet" href="/DAIADS/css/style.css">
+  <link rel="stylesheet" href="/DAIADS/css/demo.css">
+  <style>
+    #demoContainer h2 {
+      padding-right: 120px;
+    }
+
+    .map-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .map-controls label {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .map-controls input {
+      box-sizing: border-box;
+      width: 105px;
+      min-height: 30px;
+    }
+
+    #status {
+      min-height: 42px;
+      margin: 8px 0;
+      padding: 7px 10px;
+      border-left: 4px solid #4a768b;
+      background: #f7fbfd;
+      line-height: 1.45;
+    }
+
+    .map-layout {
+      display: grid;
+      grid-template-columns: minmax(300px, 1fr) minmax(220px, 300px);
+      gap: 16px;
+      align-items: stretch;
+      max-width: 1040px;
+    }
+
+    .map-stage {
+      position: relative;
+      box-sizing: border-box;
+      width: 100%;
+      min-width: 0;
+      aspect-ratio: 16 / 9;
+      border: 1px solid #9eb2c5;
+      border-radius: 28px;
+      background: #f7fbff;
+      overflow: hidden;
+    }
+
+    #mapSvg {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .stage-label,
+    .empty-message,
+    .entry text {
+      font-family: "Segoe UI", Verdana, sans-serif;
+    }
+
+    .stage-label {
+      fill: #334e68;
+      font-size: 24px;
+      font-weight: 600;
+    }
+
+    .map-legend {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px 14px;
+      margin: 7px 0;
+      font-size: 14px;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      white-space: nowrap;
+    }
+
+    .legend-swatch {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 1px solid #58758f;
+      border-radius: 2px;
+      box-sizing: border-box;
+    }
+
+    .legend-swatch.key {
+      background: #cce3ff;
+    }
+
+    .legend-swatch.value {
+      background: #fff;
+    }
+
+    .entry .card {
+      fill: #fff;
+      stroke: #58758f;
+      stroke-width: 2;
+      transition: stroke-width 180ms ease, fill 180ms ease;
+    }
+
+    .entry .key-part {
+      fill: #cce3ff;
+    }
+
+    .entry text {
+      fill: #102a43;
+      font-size: 20px;
+      font-weight: 700;
+      pointer-events: none;
+      text-anchor: middle;
+      dominant-baseline: middle;
+    }
+
+    .entry.added .card {
+      fill: #eef9ff;
+      stroke: #146b8c;
+      stroke-width: 3;
+    }
+
+    .entry.updated .card {
+      fill: #fff5d6;
+      stroke: #a06000;
+      stroke-width: 3;
+    }
+
+    .entry.found .card {
+      fill: #f4fbf4;
+      stroke: #2e7d32;
+      stroke-width: 3;
+    }
+
+    .empty-message {
+      fill: #526777;
+      font-size: 18px;
+      font-style: italic;
+      text-anchor: middle;
+    }
+
+    .map-notes {
+      display: grid;
+      gap: 10px;
+      align-content: start;
+    }
+
+    .result-box,
+    .fact {
+      padding: 10px 12px;
+      border: 1px solid #aebdca;
+      background: #fff;
+      line-height: 1.45;
+    }
+
+    .result-box {
+      display: grid;
+      gap: 8px;
+      border-left: 4px solid #777;
+      background: #f6f6f6;
+    }
+
+    .result-box.has-value {
+      border-left-color: #2e7d32;
+      background: #f4fbf4;
+    }
+
+    .result-box.is-missing {
+      border-left-color: #b97820;
+      background: #fff8e8;
+    }
+
+    .result-box.is-false {
+      border-left-color: #b97820;
+      background: #fff8e8;
+    }
+
+    .result-box.has-error {
+      border-left-color: #b3261e;
+      background: #fff5f5;
+    }
+
+    .result-label {
+      color: #555;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .return-value {
+      display: inline-flex;
+      min-width: 86px;
+      min-height: 40px;
+      align-items: center;
+      justify-content: center;
+      justify-self: start;
+      padding: 0 12px;
+      border: 1px solid #333;
+      border-radius: 22px;
+      background: #d9ead9;
+      color: #111;
+      font-weight: 700;
+      box-sizing: border-box;
+    }
+
+    .return-value.none {
+      border-style: dashed;
+      border-radius: 4px;
+      background: #fff;
+      color: #555;
+      font-weight: 400;
+    }
+
+    .return-value.missing {
+      border-radius: 4px;
+      background: #ffe2bf;
+    }
+
+    .return-value.false {
+      background: #ffe2bf;
+    }
+
+    .return-value.error {
+      border-radius: 4px;
+      background: #ffa088;
+    }
+
+    .fact strong {
+      margin-right: 4px;
+    }
+
+    @media (max-width: 580px) {
+      .map-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .map-stage {
+        min-height: 330px;
+      }
+    }
+  </style>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-DQ5LVZVFDC');
+  </script>
+</head>
+<body class="no-tooltips">
+  <div id="demoContainer">
+    <h2>Map ADT Demo</h2>
+
+    <div class="map-controls">
+      <label>Key <input id="keyInput" type="text" maxlength="9" value="A101"></label>
+      <label>Value <input id="valueInput" type="text" maxlength="9" value="Dee"></label>
+      <button id="putBtn">Put</button>
+      <button id="getBtn">Get</button>
+      <button id="containsBtn">Contains Key</button>
+      <button id="removeBtn">Remove</button>
+      <button id="clearBtn">Clear</button>
+      <button id="resetBtn">Reset</button>
+    </div>
+
+    <div class="map-legend" aria-label="Map entry legend">
+      <strong>Legend:</strong>
+      <span class="legend-item"><span class="legend-swatch key" aria-hidden="true"></span>Key</span>
+      <span class="legend-item"><span class="legend-swatch value" aria-hidden="true"></span>Value</span>
+    </div>
+
+    <div id="status" role="status" aria-live="polite"></div>
+
+    <div class="map-layout">
+      <div class="map-stage">
+        <svg id="mapSvg" viewBox="0 0 900 520" role="img"
+             aria-labelledby="mapTitle mapDescription">
+          <title id="mapTitle">Logical contents of a map</title>
+          <desc id="mapDescription">
+            Key-value entries are scattered to avoid suggesting any particular internal representation.
+          </desc>
+        </svg>
+      </div>
+
+      <div class="map-notes">
+        <div id="resultBox" class="result-box">
+          <div class="result-label">Operation result</div>
+          <span id="returnValue" class="return-value none">none</span>
+          <div id="resultNote">No operation has returned a value yet.</div>
+        </div>
+        <div class="fact"><strong>Size:</strong><span id="mapSize"></span></div>
+        <div class="fact"><strong>Key rule:</strong>unique, exact text, case-sensitive</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const SVG_NS = 'http://www.w3.org/2000/svg';
+    const positions = [
+      { x: 120, y: 104 },
+      { x: 345, y: 91 },
+      { x: 566, y: 111 },
+      { x: 790, y: 94 },
+      { x: 145, y: 215 },
+      { x: 368, y: 236 },
+      { x: 590, y: 207 },
+      { x: 806, y: 233 },
+      { x: 106, y: 332 },
+      { x: 330, y: 313 },
+      { x: 555, y: 340 },
+      { x: 781, y: 316 },
+      { x: 145, y: 449 },
+      { x: 370, y: 466 },
+      { x: 600, y: 439 },
+      { x: 800, y: 458 }
+    ];
+
+    let entries = [];
+    let highlightedKey = null;
+    let highlightMode = null;
+    let resultMode = 'none';
+    let returnedText = 'none';
+    let resultNote = 'No operation has returned a value yet.';
+
+    function createSvgElement(name, attributes = {}) {
+      const element = document.createElementNS(SVG_NS, name);
+      Object.entries(attributes).forEach(([key, value]) => element.setAttribute(key, value));
+      return element;
+    }
+
+    function inputValue(id) {
+      return document.getElementById(id).value.trim();
+    }
+
+    function entryFor(key) {
+      return entries.find(entry => entry.key === key) || null;
+    }
+
+    function setResult(mode, value, note) {
+      resultMode = mode;
+      returnedText = value;
+      resultNote = note;
+    }
+
+    function shuffledSlotIndexes() {
+      const indexes = positions.map((position, index) => index);
+      for (let index = indexes.length - 1; index > 0; index -= 1) {
+        const swapIndex = Math.floor(Math.random() * (index + 1));
+        [indexes[index], indexes[swapIndex]] = [indexes[swapIndex], indexes[index]];
+      }
+      return indexes;
+    }
+
+    function availableSlot() {
+      const usedSlots = new Set(entries.map(entry => entry.slot));
+      const freeSlots = positions
+        .map((position, index) => index)
+        .filter(index => !usedSlots.has(index));
+      if (freeSlots.length === 0) return -1;
+      return freeSlots[Math.floor(Math.random() * freeSlots.length)];
+    }
+
+    function resetState() {
+      const initialSlots = shuffledSlotIndexes();
+      entries = [
+        { key: 'A100', value: 'Mina', slot: initialSlots[0] },
+        { key: 'A101', value: 'Cal', slot: initialSlots[1] },
+        { key: 'A102', value: 'Mina', slot: initialSlots[2] }
+      ];
+      highlightedKey = null;
+      highlightMode = null;
+      setResult('none', 'none', 'No operation has returned a value yet.');
+      render('Initial map. Keys are unique; values may repeat; drawn positions have no meaning.');
+    }
+
+    function render(message) {
+      document.getElementById('status').textContent = message;
+      document.getElementById('mapSize').textContent = entries.length;
+
+      const resultBox = document.getElementById('resultBox');
+      resultBox.className = 'result-box';
+      if (resultMode === 'value') resultBox.classList.add('has-value');
+      if (resultMode === 'missing') resultBox.classList.add('is-missing');
+      if (resultMode === 'false') resultBox.classList.add('is-false');
+      if (resultMode === 'error') resultBox.classList.add('has-error');
+
+      const returnValue = document.getElementById('returnValue');
+      returnValue.className = 'return-value';
+      if (resultMode === 'none') returnValue.classList.add('none');
+      if (resultMode === 'missing') returnValue.classList.add('missing');
+      if (resultMode === 'false') returnValue.classList.add('false');
+      if (resultMode === 'error') returnValue.classList.add('error');
+      returnValue.textContent = returnedText;
+      document.getElementById('resultNote').textContent = resultNote;
+
+      const svg = document.getElementById('mapSvg');
+      svg.replaceChildren();
+      const title = createSvgElement('title', { id: 'mapTitle' });
+      title.textContent = 'Logical contents of a map';
+      svg.appendChild(title);
+      const description = createSvgElement('desc', { id: 'mapDescription' });
+      description.textContent = entries.length === 0
+        ? 'The map is empty.'
+        : `The map contains ${entries.map(entry => `${entry.key} maps to ${entry.value}`).join('; ')}. ` +
+          'Entry positions have no meaning.';
+      svg.appendChild(description);
+
+      const label = createSvgElement('text', { x: 20, y: 36, class: 'stage-label' });
+      label.textContent = 'Logical map — lookup is by key; position does not matter';
+      svg.appendChild(label);
+      if (entries.length === 0) {
+        const empty = createSvgElement('text', { x: 450, y: 270, class: 'empty-message' });
+        empty.textContent = 'empty map';
+        svg.appendChild(empty);
+        return;
+      }
+
+      entries.forEach(entry => {
+        const position = positions[entry.slot];
+        const classes = ['entry'];
+        if (entry.key === highlightedKey && highlightMode) classes.push(highlightMode);
+        const group = createSvgElement('g', {
+          class: classes.join(' '),
+          role: 'img',
+          'aria-label': `key ${entry.key}, value ${entry.value}`
+        });
+        group.appendChild(createSvgElement('rect', {
+          class: 'card', x: position.x - 97, y: position.y - 29,
+          width: 194, height: 58, rx: 4
+        }));
+        group.appendChild(createSvgElement('path', {
+          class: 'key-part',
+          d: `M ${position.x - 93} ${position.y - 29} H ${position.x} V ${position.y + 29} ` +
+             `H ${position.x - 93} Q ${position.x - 97} ${position.y + 29} ${position.x - 97} ${position.y + 25} ` +
+             `V ${position.y - 25} Q ${position.x - 97} ${position.y - 29} ${position.x - 93} ${position.y - 29} Z`
+        }));
+        const keyText = createSvgElement('text', { x: position.x - 49, y: position.y + 2 });
+        keyText.textContent = entry.key;
+        group.appendChild(keyText);
+        const valueText = createSvgElement('text', { x: position.x + 49, y: position.y + 2 });
+        valueText.textContent = entry.value;
+        group.appendChild(valueText);
+        svg.appendChild(group);
+      });
+    }
+
+    function requireKey() {
+      const key = inputValue('keyInput');
+      if (key !== '') return key;
+      highlightedKey = null;
+      highlightMode = null;
+      setResult('error', 'error', 'A key is required for this operation.');
+      render('Enter a nonempty key. Leading and trailing spaces are ignored.');
+      return null;
+    }
+
+    document.getElementById('putBtn').addEventListener('click', () => {
+      const key = requireKey();
+      if (key === null) return;
+      const value = inputValue('valueInput');
+      if (value === '') {
+        highlightedKey = null;
+        highlightMode = null;
+        setResult('error', 'error', 'This demo requires a nonempty value for put.');
+        render('Enter a value before using Put. Get, Contains Key, and Remove use only the key.');
+        return;
+      }
+      const existing = entryFor(key);
+      if (existing) {
+        const oldValue = existing.value;
+        existing.value = value;
+        highlightedKey = key;
+        highlightMode = 'updated';
+        setResult('value', oldValue, 'Put returned the value that was replaced.');
+        render(`Updated key “${key}” from “${oldValue}” to “${value}.” The size remains ${entries.length}.`);
+        return;
+      }
+      if (entries.length === positions.length) {
+        highlightedKey = null;
+        highlightMode = null;
+        setResult('error', 'error', 'Put failed because this demonstration is full. Remove an entry, then try Put again.');
+        render(`Put failed: this drawing already contains its maximum of ${positions.length} entries. ` +
+          'The abstract map itself need not have this limit.');
+        return;
+      }
+      entries.push({ key, value, slot: availableSlot() });
+      highlightedKey = key;
+      highlightMode = 'added';
+      setResult('none', 'none', 'No previous value existed for this new key.');
+      render(`Inserted “${key}” → “${value}.” The size increased to ${entries.length}.`);
+    });
+
+    document.getElementById('getBtn').addEventListener('click', () => {
+      const key = requireKey();
+      if (key === null) return;
+      const entry = entryFor(key);
+      highlightedKey = entry ? key : null;
+      highlightMode = entry ? 'found' : null;
+      if (!entry) {
+        setResult('missing', 'missing', 'This demo reports an explicit missing-key result.');
+        render(`Get found no association for key “${key}.” The map is unchanged.`);
+        return;
+      }
+      setResult('value', entry.value, 'Get returned the value associated with the key.');
+      render(`Get returned “${entry.value}” for key “${key}.” The map is unchanged.`);
+    });
+
+    document.getElementById('containsBtn').addEventListener('click', () => {
+      const key = requireKey();
+      if (key === null) return;
+      const entry = entryFor(key);
+      highlightedKey = entry ? key : null;
+      highlightMode = entry ? 'found' : null;
+      setResult(entry ? 'value' : 'false', String(Boolean(entry)), 'Contains Key returns a Boolean and does not inspect equality of values.');
+      render(entry
+        ? `The map contains key “${key}.” Its current value is “${entry.value}.”`
+        : `The map does not contain key “${key}.”`);
+    });
+
+    document.getElementById('removeBtn').addEventListener('click', () => {
+      const key = requireKey();
+      if (key === null) return;
+      const index = entries.findIndex(entry => entry.key === key);
+      highlightedKey = null;
+      highlightMode = null;
+      if (index === -1) {
+        setResult('missing', 'missing', 'Remove found no entry to return.');
+        render(`Key “${key}” is absent, so removal makes no change.`);
+        return;
+      }
+      const [removed] = entries.splice(index, 1);
+      setResult('value', removed.value, 'Remove returned the value from the deleted entry.');
+      render(`Removed “${removed.key}” → “${removed.value}.” The size decreased to ${entries.length}.`);
+    });
+
+    document.getElementById('clearBtn').addEventListener('click', () => {
+      const oldSize = entries.length;
+      entries = [];
+      highlightedKey = null;
+      highlightMode = null;
+      setResult('none', 'none', 'Clear changes the map but returns no entry in this demo.');
+      render(oldSize === 0
+        ? 'The map was already empty.'
+        : `Cleared ${oldSize} ${oldSize === 1 ? 'entry' : 'entries'}. The map is now empty.`);
+    });
+
+    ['keyInput', 'valueInput'].forEach(id => {
+      document.getElementById(id).addEventListener('keydown', event => {
+        if (event.key === 'Enter') document.getElementById('putBtn').click();
+      });
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', resetState);
+    resetState();
+  </script>
+</body>
+</html>

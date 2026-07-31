@@ -10,6 +10,26 @@
   <script src="/DAIADS/scripts/chapterScripts.js"></script>
   <link rel="stylesheet" href="/DAIADS/css/style.css">
   <link rel="stylesheet" href="/DAIADS/css/chapter.css">
+  <style>
+    .probe-model {
+      display: block;
+      width: min(100%, 860px);
+      height: auto;
+      margin: 1rem auto;
+    }
+    .probe-model .slot { fill: #fff; stroke: #58758f; stroke-width: 2; }
+    .probe-model .occupied { fill: #cce3ff; stroke: #274c77; stroke-width: 2; }
+    .probe-model .deleted { fill: #fff3d9; stroke: #b97820; stroke-width: 3; stroke-dasharray: 6 4; }
+    .probe-model .target { fill: #dff0df; stroke: #2e7d32; stroke-width: 3; }
+    .probe-model text {
+      fill: #17324d;
+      font-family: "Segoe UI", Verdana, sans-serif;
+      text-anchor: middle;
+    }
+    .probe-model .label { font-size: 15px; }
+    .probe-model .value { font-size: 18px; font-weight: 700; }
+    .probe-model .path { fill: none; stroke: #315d7d; stroke-width: 2.5; }
+  </style>
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
   <script>
@@ -39,6 +59,19 @@
     </p>
   </section>
 
+  <section id="learning-goals" section-title="Learning Goals">
+    <h2>Learning Goals</h2>
+    <p>After reading this page, you should be able to:</p>
+    <ul>
+      <li>distinguish empty, occupied, and deleted slot states;</li>
+      <li>generate and trace linear, quadratic, and double-hashing probe sequences;</li>
+      <li>use the same probe rule for lookup, insertion, update, and removal;</li>
+      <li>explain why deletion normally leaves a tombstone;</li>
+      <li>distinguish live-entry load from the occupancy caused by live entries plus tombstones; and</li>
+      <li>compare clustering, locality, and parameter requirements among probe strategies.</li>
+    </ul>
+  </section>
+
   <section id="table-states" section-title="Table States">
     <h2>Table States</h2>
     <p>
@@ -53,6 +86,51 @@
       The deleted state is important. During lookup, a tombstone cannot stop the search, because the key being
       searched for may have been placed farther along the same probe sequence. During insertion, a tombstone may be
       reused as a slot for a new entry.
+    </p>
+
+    <svg class="probe-model" viewBox="0 0 860 275" role="img"
+         aria-labelledby="probeModelTitle probeModelDesc">
+      <title id="probeModelTitle">Lookup continuing through a tombstone</title>
+      <desc id="probeModelDesc">
+        A seven-slot linear-probing table contains key 10 at index 3, a tombstone at index 4, and key 24 at index 5.
+        Arrows show lookup for key 24 checking index 3, continuing through deleted index 4, and finding key 24 at 5.
+      </desc>
+      <defs>
+        <marker id="probe-arrowhead" viewBox="0 0 10 10" refX="9" refY="5"
+                markerWidth="7" markerHeight="7" orient="auto">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#315d7d"></path>
+        </marker>
+      </defs>
+
+      <text class="label" x="430" y="25">search for 24 with h(k) = k mod 7 and linear probing</text>
+      <g>
+        <rect class="slot" x="80" y="95" width="100" height="70"></rect>
+        <rect class="slot" x="180" y="95" width="100" height="70"></rect>
+        <rect class="slot" x="280" y="95" width="100" height="70"></rect>
+        <rect class="occupied" x="380" y="95" width="100" height="70"></rect>
+        <rect class="deleted" x="480" y="95" width="100" height="70"></rect>
+        <rect class="target" x="580" y="95" width="100" height="70"></rect>
+        <rect class="slot" x="680" y="95" width="100" height="70"></rect>
+        <text class="label" x="130" y="185">0</text><text class="label" x="230" y="185">1</text>
+        <text class="label" x="330" y="185">2</text><text class="label" x="430" y="185">3</text>
+        <text class="label" x="530" y="185">4</text><text class="label" x="630" y="185">5</text>
+        <text class="label" x="730" y="185">6</text>
+        <text class="value" x="430" y="137">10</text>
+        <text class="value" x="530" y="128">deleted</text><text class="label" x="530" y="150">continue</text>
+        <text class="value" x="630" y="137">24</text>
+      </g>
+      <path class="path" d="M 430 78 H 515" marker-end="url(#probe-arrowhead)"></path>
+      <path class="path" d="M 530 78 H 615" marker-end="url(#probe-arrowhead)"></path>
+      <text class="label" x="430" y="65">home slot</text>
+      <text class="label" x="530" y="65">tombstone</text>
+      <text class="label" x="630" y="65">found</text>
+      <text class="label" x="430" y="235">If index 4 were changed to empty, lookup would stop there and incorrectly report “missing.”</text>
+    </svg>
+    <p>
+      The tombstone preserves evidence that the probe sequence once continued beyond index 4. It no longer stores a
+      live key, but lookup must treat it differently from a slot that has never been occupied. Insertion may remember
+      it as a candidate position while continuing far enough to check whether the key already exists later in the
+      sequence.
     </p>
   </section>
 
@@ -78,6 +156,11 @@
       The search stops at an empty slot because an empty slot means the key would have been inserted earlier in that
       same probe sequence if it were present. A tombstone does not stop the search.
     </p>
+    <div class="callout">
+      <strong>Probe invariant:</strong> for a stored key, every slot before the key in its probe sequence is occupied
+      or marked deleted. Encountering a never-used empty slot proves that the key is absent because insertion would
+      have stopped there.
+    </div>
 
     <section id="linear-probing" section-title="Linear Probing">
       <h3>Linear Probing</h3>
@@ -223,6 +306,21 @@ probe sequence: 3, 9, 4, 10, 5, 0, 6, 1, 7, 2, 8</code></pre>
     </p>
   </section>
 
+  <section id="demo" section-title="Interactive Demo">
+    <h2>Interactive Demo</h2>
+    <p>
+      Step through insertions and searches to see how collisions extend a probe sequence. Try inputs that share a home
+      slot and watch how the table distinguishes a key's home position from its final stored slot.
+    </p>
+    <div class="embeddedDemoContainer">
+      <iframe class="embeddedDemo"
+              src="/DAIADS/Content/Demos/Data Structures/Open Addressing Demo.html"
+              allow="fullscreen"
+              name="open-addressing-demo">
+      </iframe>
+    </div>
+  </section>
+
   <section id="insertion-deletion" section-title="Insertion and Deletion Details">
     <h2>Insertion and Deletion Details</h2>
     <h3>Insertion</h3>
@@ -258,6 +356,24 @@ probe sequence: 3, 9, 4, 10, 5, 0, 6, 1, 7, 2, 8</code></pre>
       Too many tombstones slow down probing. Implementations may rebuild the table when tombstones accumulate, even
       if the number of live entries is not too high.
     </p>
+    <pre><code>remove(key):
+    for i from 0 to table.length - 1:
+        j = probeIndex(key, i)
+        if table[j] is empty:
+            report missing key
+        if table[j] is occupied by key:
+            table[j] = deleted marker
+            size = size - 1
+            deletedCount = deletedCount + 1
+            return removed entry
+        otherwise continue probing
+    report missing key</code></pre>
+    <p>
+      Some linear-probing implementations use backward-shift deletion instead of tombstones, moving later entries
+      carefully to close a gap without breaking their search paths. That technique can avoid tombstone accumulation
+      but is more subtle and does not generalize unchanged to every probe strategy. Tombstones are the clearest general
+      model for this page.
+    </p>
   </section>
 
   <section id="load-factor" section-title="Load Factor">
@@ -270,6 +386,32 @@ probe sequence: 3, 9, 4, 10, 5, 0, 6, 1, 7, 2, 8</code></pre>
     <p>
       Linear probing is especially sensitive to high load factors because clusters grow. Quadratic probing and double
       hashing also slow down as fewer empty slots remain.
+    </p>
+    <p>
+      With tombstones, two ratios matter. The <strong>live load factor</strong> is
+      \(n/m\), where \(n\) counts live entries. Probe length is also affected by the <strong>occupied fraction</strong>
+      \((n+d)/m\), where \(d\) is the number of tombstones. A table can have a modest live load yet perform poorly if
+      many deleted markers remain. Rebuilding the table removes those markers.
+    </p>
+  </section>
+
+  <section id="resizing" section-title="Resizing and Rebuilding">
+    <h2>Resizing and Rebuilding</h2>
+    <p>
+      Resizing creates a fresh array and reinserts every live entry. Tombstones are not copied. Reinsertion is
+      necessary because both the home position and the probe sequence may depend on the capacity. Even rebuilding at
+      the same capacity can improve performance by eliminating deleted markers and compacting probe runs.
+    </p>
+    <pre><code>rebuild(newCapacity):
+    oldTable = table
+    table = new array of empty slots
+    size = 0
+    deletedCount = 0
+    for each occupied entry in oldTable:
+        insertKnownDistinct(entry)</code></pre>
+    <p>
+      The helper should not treat an old tombstone as an entry and should not recursively trigger another resize.
+      After rebuilding, every live key must still be discoverable by the probe rule under the new capacity.
     </p>
   </section>
 
@@ -349,6 +491,36 @@ probe sequence: 3, 9, 4, 10, 5, 0, 6, 1, 7, 2, 8</code></pre>
         </tr>
       </tbody>
     </table>
+    <p>
+      Linear probing often performs very well in practice because consecutive memory accesses have strong cache
+      locality, even though primary clustering is a theoretical and practical concern. Double hashing spreads probes
+      more widely but usually accesses less-local memory. Quadratic probing sits between them and depends heavily on
+      capacity and constant choices. The best strategy is therefore not determined by probe count alone.
+    </p>
+  </section>
+
+  <section id="implementation" section-title="Implementation Guidance">
+    <h2>Implementation Guidance</h2>
+    <p>
+      An open-addressed table needs a slot-state representation that cannot be confused with a valid key or value.
+      Common designs use an explicit state field, reserved singleton marker objects, or a tagged entry type. Track live
+      entries separately from tombstones so resize policies can consider both.
+    </p>
+    <div class="example-box">
+      <strong class="example-title">Implementation Exercise</strong>
+      <p>Implement a linear-probing hash map and test the following sequence:</p>
+      <ol>
+        <li>insert at least three keys with the same home slot;</li>
+        <li>find the first, middle, and final key in the cluster;</li>
+        <li>remove the middle key and verify that the final key is still found;</li>
+        <li>insert a new colliding key and verify that the tombstone can be reused;</li>
+        <li>update an existing key beyond a tombstone without creating a duplicate; and</li>
+        <li>rebuild or resize and then find every live key.</li>
+      </ol>
+      <p>
+        Also test a completely full probe cycle so lookup and insertion terminate instead of looping forever.
+      </p>
+    </div>
   </section>
 
   <section id="pitfalls" section-title="Common Pitfalls">
@@ -393,6 +565,7 @@ probe sequence: 3, 9, 4, 10, 5, 0, 6, 1, 7, 2, 8</code></pre>
       <li><strong>Quadratic probing:</strong> What problem does it reduce, and what clustering problem can remain?</li>
       <li><strong>Double hashing:</strong> Why must the second hash function avoid a zero step size?</li>
       <li><strong>Deletion:</strong> Why are tombstones needed?</li>
+      <li><strong>Occupancy:</strong> Why can tombstones hurt performance even when the live-entry load factor is low?</li>
     </ol>
     <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
     <div id="answers" class="answer" hidden>
@@ -403,6 +576,7 @@ probe sequence: 3, 9, 4, 10, 5, 0, 6, 1, 7, 2, 8</code></pre>
         <li><strong>Answer:</strong> It reduces primary clustering, but keys with the same home slot still follow the same probe sequence, causing secondary clustering.</li>
         <li><strong>Answer:</strong> A zero step would probe the same slot repeatedly and never search the rest of the table.</li>
         <li><strong>Answer:</strong> A tombstone lets lookup continue past a deleted slot so it can still find keys placed farther along the probe sequence.</li>
+        <li><strong>Answer:</strong> Tombstones do not terminate unsuccessful searches, so probes may cross many formerly occupied slots; the occupied fraction can remain high.</li>
       </ol>
     </div>
   </section>

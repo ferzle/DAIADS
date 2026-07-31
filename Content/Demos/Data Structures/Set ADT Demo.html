@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Set ADT Demo</title>
+  <script src="/DAIADS/scripts/demoScripts.js"></script>
+  <link rel="stylesheet" href="/DAIADS/css/style.css">
+  <link rel="stylesheet" href="/DAIADS/css/demo.css">
+  <style>
+    #demoContainer h2 {
+      padding-right: 120px;
+    }
+
+    .set-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .set-controls label {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    #keyInput {
+      box-sizing: border-box;
+      width: 120px;
+      min-height: 30px;
+    }
+
+    #status {
+      min-height: 42px;
+      margin: 8px 0;
+      padding: 7px 10px;
+      border-left: 4px solid #4a768b;
+      background: #f7fbfd;
+      line-height: 1.45;
+    }
+
+    .set-layout {
+      display: grid;
+      grid-template-columns: minmax(300px, 1fr) minmax(220px, 300px);
+      gap: 16px;
+      align-items: stretch;
+      max-width: 1040px;
+    }
+
+    .set-stage {
+      position: relative;
+      box-sizing: border-box;
+      width: 100%;
+      min-width: 0;
+      aspect-ratio: 16 / 9;
+      border: 1px solid #9eb2c5;
+      border-radius: 42px;
+      background: #f7fbff;
+      overflow: hidden;
+    }
+
+    #setSvg {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .stage-label,
+    .empty-message,
+    .key text {
+      font-family: "Segoe UI", Verdana, sans-serif;
+    }
+
+    .stage-label {
+      fill: #334e68;
+      font-size: 24px;
+      font-weight: 600;
+    }
+
+    .key rect {
+      fill: #cce3ff;
+      stroke: #274c77;
+      stroke-width: 2;
+      transition: fill 180ms ease, stroke-width 180ms ease;
+    }
+
+    .key text {
+      fill: #102a43;
+      font-size: 21px;
+      font-weight: 700;
+      pointer-events: none;
+      text-anchor: middle;
+      dominant-baseline: middle;
+    }
+
+    .key.added rect {
+      fill: #8ecae6;
+      stroke-width: 3;
+    }
+
+    .key.found rect {
+      fill: #ffe16a;
+      stroke: #8a5a00;
+      stroke-width: 3;
+    }
+
+    .key.duplicate rect {
+      fill: #ffd4a8;
+      stroke: #a45100;
+      stroke-width: 3;
+    }
+
+    .empty-message {
+      fill: #526777;
+      font-size: 18px;
+      font-style: italic;
+      text-anchor: middle;
+    }
+
+    .set-notes {
+      display: grid;
+      gap: 10px;
+      align-content: start;
+    }
+
+    .result-box,
+    .fact {
+      padding: 10px 12px;
+      border: 1px solid #aebdca;
+      background: #fff;
+      line-height: 1.45;
+    }
+
+    .result-box {
+      display: grid;
+      gap: 8px;
+      border-left: 4px solid #777;
+      background: #f6f6f6;
+    }
+
+    .result-box.is-true {
+      border-left-color: #2e7d32;
+      background: #f4fbf4;
+    }
+
+    .result-box.is-false {
+      border-left-color: #b97820;
+      background: #fff8e8;
+    }
+
+    .result-box.has-error {
+      border-left-color: #b3261e;
+      background: #fff5f5;
+    }
+
+    .result-label {
+      color: #555;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .return-value {
+      display: inline-flex;
+      min-width: 76px;
+      min-height: 40px;
+      align-items: center;
+      justify-content: center;
+      justify-self: start;
+      padding: 0 12px;
+      border: 1px solid #333;
+      border-radius: 22px;
+      background: #d9ead9;
+      color: #111;
+      font-weight: 700;
+      box-sizing: border-box;
+    }
+
+    .return-value.none {
+      border-style: dashed;
+      border-radius: 4px;
+      background: #fff;
+      color: #555;
+      font-weight: 400;
+    }
+
+    .return-value.false {
+      background: #ffe2bf;
+    }
+
+    .return-value.error {
+      border-radius: 4px;
+      background: #ffa088;
+    }
+
+    .fact strong {
+      margin-right: 4px;
+    }
+
+    @media (max-width: 580px) {
+      .set-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .set-stage {
+        min-height: 300px;
+      }
+    }
+  </style>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-DQ5LVZVFDC');
+  </script>
+</head>
+<body class="no-tooltips">
+  <div id="demoContainer">
+    <h2>Set ADT Demo</h2>
+
+    <div class="set-controls">
+      <label>Key <input id="keyInput" type="text" maxlength="10" value="orange"></label>
+      <button id="addBtn">Add</button>
+      <button id="containsBtn">Contains</button>
+      <button id="removeBtn">Remove</button>
+      <button id="clearBtn">Clear</button>
+      <button id="resetBtn">Reset</button>
+    </div>
+
+    <div id="status" role="status" aria-live="polite"></div>
+
+    <div class="set-layout">
+      <div class="set-stage">
+        <svg id="setSvg" viewBox="0 0 780 450" role="img"
+             aria-labelledby="setTitle setDescription">
+          <title id="setTitle">Logical contents of a set</title>
+          <desc id="setDescription">
+            Distinct keys are scattered to avoid suggesting any particular internal representation.
+          </desc>
+        </svg>
+      </div>
+
+      <div class="set-notes">
+        <div id="resultBox" class="result-box">
+          <div class="result-label">Operation result</div>
+          <span id="returnValue" class="return-value none">none</span>
+          <div id="resultNote">No operation has returned a Boolean yet.</div>
+        </div>
+        <div class="fact"><strong>Size:</strong><span id="setSize"></span></div>
+        <div class="fact"><strong>Equality rule:</strong>exact text, case-sensitive</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const SVG_NS = 'http://www.w3.org/2000/svg';
+    const positions = [
+      { x: 82, y: 95 },
+      { x: 205, y: 111 },
+      { x: 335, y: 91 },
+      { x: 465, y: 108 },
+      { x: 590, y: 88 },
+      { x: 708, y: 109 },
+      { x: 106, y: 222 },
+      { x: 232, y: 239 },
+      { x: 358, y: 215 },
+      { x: 485, y: 241 },
+      { x: 610, y: 218 },
+      { x: 718, y: 246 },
+      { x: 76, y: 359 },
+      { x: 205, y: 338 },
+      { x: 335, y: 365 },
+      { x: 467, y: 343 },
+      { x: 594, y: 369 },
+      { x: 714, y: 346 }
+    ];
+
+    let keys = [];
+    let slotsByKey = new Map();
+    let highlightedKey = null;
+    let highlightMode = null;
+    let resultMode = 'none';
+    let returnedText = 'none';
+    let resultNote = 'No operation has returned a Boolean yet.';
+
+    function normalizeInput() {
+      return document.getElementById('keyInput').value.trim();
+    }
+
+    function createSvgElement(name, attributes = {}) {
+      const element = document.createElementNS(SVG_NS, name);
+      Object.entries(attributes).forEach(([key, value]) => element.setAttribute(key, value));
+      return element;
+    }
+
+    function setResult(mode, note) {
+      resultMode = mode;
+      returnedText = mode === 'true' || mode === 'false' ? mode : mode === 'error' ? 'error' : 'none';
+      resultNote = note;
+    }
+
+    function shuffledSlotIndexes() {
+      const indexes = positions.map((position, index) => index);
+      for (let index = indexes.length - 1; index > 0; index -= 1) {
+        const swapIndex = Math.floor(Math.random() * (index + 1));
+        [indexes[index], indexes[swapIndex]] = [indexes[swapIndex], indexes[index]];
+      }
+      return indexes;
+    }
+
+    function availableSlot() {
+      const usedSlots = new Set(slotsByKey.values());
+      const freeSlots = positions
+        .map((position, index) => index)
+        .filter(index => !usedSlots.has(index));
+      if (freeSlots.length === 0) return -1;
+      return freeSlots[Math.floor(Math.random() * freeSlots.length)];
+    }
+
+    function resetState() {
+      keys = ['red', 'green', 'blue'];
+      slotsByKey = new Map();
+      const initialSlots = shuffledSlotIndexes();
+      keys.forEach((key, index) => slotsByKey.set(key, initialSlots[index]));
+      highlightedKey = null;
+      highlightMode = null;
+      setResult('none', 'No operation has returned a Boolean yet.');
+      render('Initial set. Each key is present once; the drawn positions have no meaning.');
+    }
+
+    function render(message) {
+      document.getElementById('status').textContent = message;
+      document.getElementById('setSize').textContent = keys.length;
+
+      const resultBox = document.getElementById('resultBox');
+      resultBox.className = 'result-box';
+      if (resultMode === 'true') resultBox.classList.add('is-true');
+      if (resultMode === 'false') resultBox.classList.add('is-false');
+      if (resultMode === 'error') resultBox.classList.add('has-error');
+
+      const returnValue = document.getElementById('returnValue');
+      returnValue.className = 'return-value';
+      if (resultMode === 'none') returnValue.classList.add('none');
+      if (resultMode === 'false') returnValue.classList.add('false');
+      if (resultMode === 'error') returnValue.classList.add('error');
+      returnValue.textContent = returnedText;
+      document.getElementById('resultNote').textContent = resultNote;
+
+      const svg = document.getElementById('setSvg');
+      svg.replaceChildren();
+
+      const title = createSvgElement('title', { id: 'setTitle' });
+      title.textContent = 'Logical contents of a set';
+      svg.appendChild(title);
+
+      const description = createSvgElement('desc', { id: 'setDescription' });
+      description.textContent = keys.length === 0
+        ? 'The set is empty.'
+        : `The set contains the distinct keys ${keys.join(', ')}. Their positions have no meaning.`;
+      svg.appendChild(description);
+
+      const label = createSvgElement('text', { x: 20, y: 36, class: 'stage-label' });
+      label.textContent = 'Logical set — membership matters; position does not';
+      svg.appendChild(label);
+
+      if (keys.length === 0) {
+        const empty = createSvgElement('text', { x: 390, y: 235, class: 'empty-message' });
+        empty.textContent = 'empty set';
+        svg.appendChild(empty);
+        return;
+      }
+
+      keys.forEach(key => {
+        const position = positions[slotsByKey.get(key)];
+        const classes = ['key'];
+        if (key === highlightedKey && highlightMode) classes.push(highlightMode);
+        const group = createSvgElement('g', {
+          class: classes.join(' '),
+          role: 'img',
+          'aria-label': `${key}, member of the set`
+        });
+        const width = Math.max(72, Math.min(112, 18 + key.length * 9.5));
+        group.appendChild(createSvgElement('rect', {
+          x: position.x - width / 2,
+          y: position.y - 25,
+          width,
+          height: 50,
+          rx: 25
+        }));
+        const text = createSvgElement('text', { x: position.x, y: position.y + 2 });
+        text.textContent = key;
+        group.appendChild(text);
+        svg.appendChild(group);
+      });
+    }
+
+    function requireKey() {
+      const key = normalizeInput();
+      if (key !== '') return key;
+      highlightedKey = null;
+      highlightMode = null;
+      setResult('error', 'A key is required for this operation.');
+      render('Enter a nonempty key. Leading and trailing spaces are ignored.');
+      return null;
+    }
+
+    document.getElementById('addBtn').addEventListener('click', () => {
+      const key = requireKey();
+      if (key === null) return;
+      if (keys.includes(key)) {
+        highlightedKey = key;
+        highlightMode = 'duplicate';
+        setResult('false', 'Add returned false because the set did not change.');
+        render(`The set already contains “${key}.” No duplicate was added, so the size remains ${keys.length}.`);
+        return;
+      }
+      if (keys.length === positions.length) {
+        highlightedKey = null;
+        highlightMode = null;
+        setResult('error', 'Add failed because this demonstration is full. Remove a key, then try Add again.');
+        render(`Add failed: this drawing already contains its maximum of ${positions.length} keys. ` +
+          'The abstract set itself need not have this limit.');
+        return;
+      }
+      slotsByKey.set(key, availableSlot());
+      keys.push(key);
+      highlightedKey = key;
+      highlightMode = 'added';
+      setResult('true', 'Add returned true because membership changed.');
+      render(`Added “${key}.” It is now a member, and the size increased to ${keys.length}.`);
+    });
+
+    document.getElementById('containsBtn').addEventListener('click', () => {
+      const key = requireKey();
+      if (key === null) return;
+      const present = keys.includes(key);
+      highlightedKey = present ? key : null;
+      highlightMode = present ? 'found' : null;
+      setResult(String(present), 'Contains reports membership without changing the set.');
+      render(present
+        ? `Contains found “${key}.” The set and its size are unchanged.`
+        : `Contains did not find “${key}.” The set and its size are unchanged.`);
+    });
+
+    document.getElementById('removeBtn').addEventListener('click', () => {
+      const key = requireKey();
+      if (key === null) return;
+      const index = keys.indexOf(key);
+      highlightedKey = null;
+      highlightMode = null;
+      if (index === -1) {
+        setResult('false', 'Remove returned false because the key was already absent.');
+        render(`“${key}” is not present, so removal makes no change.`);
+        return;
+      }
+      keys.splice(index, 1);
+      slotsByKey.delete(key);
+      setResult('true', 'Remove returned true because membership changed.');
+      render(`Removed “${key}.” It is now absent, and the size decreased to ${keys.length}.`);
+    });
+
+    document.getElementById('clearBtn').addEventListener('click', () => {
+      const oldSize = keys.length;
+      keys = [];
+      slotsByKey.clear();
+      highlightedKey = null;
+      highlightMode = null;
+      setResult('none', 'Clear changes the set but this interface returns no value.');
+      render(oldSize === 0
+        ? 'The set was already empty.'
+        : `Cleared ${oldSize} ${oldSize === 1 ? 'key' : 'keys'}. The set is now empty.`);
+    });
+
+    document.getElementById('keyInput').addEventListener('keydown', event => {
+      if (event.key === 'Enter') document.getElementById('addBtn').click();
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', resetState);
+    resetState();
+  </script>
+</body>
+</html>
