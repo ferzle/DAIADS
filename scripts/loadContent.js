@@ -122,8 +122,8 @@ const DATA_STRUCTURES_ORDERS = {
     'Linear Structures',
     'Trees',
     'Priority Queues and Heaps',
-    'Maps, Sets, and Hashing',
-    //'Graph Structures',
+    'Sets, Maps, and Hash Tables',
+    'Graphs',
     //'Disjoint Sets',
     //'String Structures',
     //'Advanced Structures'
@@ -152,14 +152,13 @@ const DATA_STRUCTURES_ORDERS = {
     'Binary Heaps',
     'Heap Construction and Heapsort'
   ],
-  'Data Structures/Maps, Sets, and Hashing/': [
+  'Data Structures/Sets, Maps, and Hash Tables/': [
     'Introduction',
     'Set ADT',
     'Map and Dictionary ADT',
     'Hash Tables',
     'Separate Chaining',
-    'Open Addressing',
-    //'Skip Lists'
+    'Open Addressing'
   ]
   //,
   //'Data Structures/Graph Structures/': [
