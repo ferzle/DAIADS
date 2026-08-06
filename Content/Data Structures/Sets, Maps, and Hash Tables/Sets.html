@@ -61,287 +61,283 @@
   </script>
 </head>
 <body>
-  <h1>Set ADT</h1>
+  <h1>Sets</h1>
 
   <section id="overview" section-title="Overview">
-    <h2>Overview</h2>
-    <p>
-      A <strong>set</strong> is an abstract data type that stores a collection of distinct keys. The central question
-      a set answers is simple: <em>is this key present?</em> If a value is already in the set, adding it again does
-      not create a second copy.
-    </p>
-    <p>
-      Sets are useful whenever a program cares about membership instead of position or frequency. They remove
-      duplicates, track visited vertices in graph algorithms, record banned words, test whether a user has a
-      permission, and represent mathematical collections such as \(A\), \(B\), and \(A \cap B\).
-    </p>
-    <p>
-      The set is an ADT, not a single implementation. A set can be implemented with a list, sorted array, balanced
-      search tree, hash table, or bit vector. The ADT describes the visible behavior; the implementation
-      determines the cost of each operation and whether traversal happens in any useful order.
-    </p>
+  <h2>Overview</h2>
+  <p>
+    A <strong>set</strong> is an abstract data type that stores a collection of
+    distinct keys. The central question answered by a set is:
+    <em>Is this key present?</em> Each key is either present or absent, and adding
+    a key that is already present does not create a second copy.
+  </p>
+  <p>
+    Sets are useful whenever a program cares about membership or uniqueness
+    rather than position or frequency. For example, a set can track the vertices
+    already visited during a graph search, record blocked words or user
+    permissions, remove duplicates from a collection, or represent a mathematical
+    set such as \(A\), \(B\), or \(A \cap B\).
+  </p>
 
-    <svg class="set-model" viewBox="0 0 760 300" role="img"
-         aria-labelledby="setModelTitle setModelDesc">
-      <title id="setModelTitle">Conceptual model of a set</title>
-      <desc id="setModelDesc">
-        A rounded boundary contains the distinct keys red, green, and blue. A second red key approaches the set but
-        does not create a duplicate. Orange is outside the boundary, so a membership query for orange is false.
-      </desc>
-      <defs>
-        <marker id="set-arrowhead" viewBox="0 0 10 10" refX="9" refY="5"
-                markerWidth="7" markerHeight="7" orient="auto">
-          <path d="M 0 0 L 10 5 L 0 10 z" fill="#315d7d"></path>
-        </marker>
-      </defs>
-      <rect class="boundary" x="150" y="35" width="455" height="220" rx="70"></rect>
-      <text class="annotation" x="377" y="65">logical set — positions have no meaning</text>
+<svg class="set-model" viewBox="0 0 760 300" role="img"
+    aria-labelledby="setModelTitle setModelDesc"> <title id="setModelTitle">Conceptual model of a set</title> <desc id="setModelDesc">
+A rounded boundary contains the distinct keys red, green, and blue.
+A second red key approaches the set but does not create a duplicate.
+Orange is outside the boundary, so a membership query for orange is false. </desc> <defs> <marker id="set-arrowhead" viewBox="0 0 10 10" refX="9" refY="5"
+           markerWidth="7" markerHeight="7" orient="auto"> <path d="M 0 0 L 10 5 L 0 10 z" fill="#315d7d"></path> </marker> </defs>
+<rect class="boundary" x="150" y="35" width="455" height="220"
+      rx="70"></rect>
+<text class="annotation" x="377" y="65">
+  logical set - positions have no meaning
+</text>
 
-      <g>
-        <ellipse class="member" cx="255" cy="130" rx="62" ry="34"></ellipse>
-        <text class="item-label" x="255" y="136">red</text>
-      </g>
-      <g>
-        <ellipse class="member" cx="455" cy="120" rx="62" ry="34"></ellipse>
-        <text class="item-label" x="455" y="126">green</text>
-      </g>
-      <g>
-        <ellipse class="member" cx="365" cy="205" rx="62" ry="34"></ellipse>
-        <text class="item-label" x="365" y="211">blue</text>
-      </g>
+<g>
+  <ellipse class="member" cx="255" cy="130" rx="62" ry="34"></ellipse>
+  <text class="item-label" x="255" y="136">red</text>
+</g>
+<g>
+  <ellipse class="member" cx="455" cy="120" rx="62" ry="34"></ellipse>
+  <text class="item-label" x="455" y="126">green</text>
+</g>
+<g>
+  <ellipse class="member" cx="365" cy="205" rx="62" ry="34"></ellipse>
+  <text class="item-label" x="365" y="211">blue</text>
+</g>
 
-      <ellipse class="candidate" cx="70" cy="105" rx="48" ry="30"></ellipse>
-      <text class="item-label" x="70" y="111">red</text>
-      <path d="M 120 105 H 178" fill="none" stroke="#315d7d" stroke-width="2.5"
-            marker-end="url(#set-arrowhead)"></path>
-      <text class="annotation" x="95" y="170">add(red)</text>
-      <text class="annotation" x="95" y="192">no change</text>
+<ellipse class="candidate" cx="70" cy="105" rx="48" ry="30"></ellipse>
+<text class="item-label" x="70" y="111">red</text>
+<path d="M 120 105 H 178"
+      fill="none"
+      stroke="#315d7d"
+      stroke-width="2.5"
+      marker-end="url(#set-arrowhead)"></path>
+<text class="annotation" x="95" y="170">add(red)</text>
+<text class="annotation" x="95" y="192">no change</text>
 
-      <ellipse class="candidate" cx="680" cy="165" rx="55" ry="30"></ellipse>
-      <text class="item-label" x="680" y="171">orange</text>
-      <text class="annotation" x="665" y="225">contains(orange)</text>
-      <text class="annotation" x="665" y="247">false</text>
-    </svg>
-    <p>
-      The drawing shows only the logical contents. It deliberately avoids indexes, links, tree edges, or buckets.
-      From the client's point of view, the important facts are that each key is either present or absent and that an
-      equal key cannot appear twice. The physical positions of the labels have no meaning.
-    </p>
-  </section>
+<ellipse class="candidate" cx="680" cy="165" rx="55" ry="30"></ellipse>
+<text class="item-label" x="680" y="171">orange</text>
+<text class="annotation" x="665" y="225">contains(orange)</text>
+<text class="annotation" x="665" y="247">false</text>
+  </svg>
 
-  <section id="adt" section-title="Abstract Data Type and Operations">
-    <h2>Abstract Data Type and Operations</h2>
-    <p>
-      A set stores keys with no duplicates. A typical set interface includes these operations:
-    </p>
-    <table class="example-table left-top-align">
-      <thead>
-        <tr>
-          <th>Operation</th>
-          <th>Caller-visible behavior</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><strong><code>add(key)</code></strong></td>
-          <td>Insert <code>key</code> if no equal key is present. A useful interface returns whether the set changed.</td>
-        </tr>
-        <tr>
-          <td><strong><code>remove(key)</code></strong></td>
-          <td>Delete the equal stored key, if one exists, and often return whether removal occurred.</td>
-        </tr>
-        <tr>
-          <td><strong><code>contains(key)</code></strong></td>
-          <td>Return <code>true</code> exactly when the set contains a key equal to <code>key</code>.</td>
-        </tr>
-        <tr>
-          <td><code>size()</code></td>
-          <td>Return the number of distinct stored keys.</td>
-        </tr>
-        <tr>
-          <td><code>isEmpty()</code></td>
-          <td>Return whether <code>size()</code> is zero.</td>
-        </tr>
-        <tr>
-          <td><code>clear()</code></td>
-          <td>Remove every key, leaving the empty set.</td>
-        </tr>
-        <tr>
-          <td><code>iterate()</code></td>
-          <td>Visit every stored key once; unless promised otherwise, the visitation order is unspecified.</td>
-        </tr>
-      </tbody>
-    </table>
-    <p>
-      Some interfaces return a Boolean from <code>add</code> and <code>remove</code>. For example,
-      <code>add(key)</code> might return <code>true</code> only when the key was newly inserted, and
-      <code>remove(key)</code> might return <code>true</code> only when a key was actually removed. Other interfaces
-      simply perform the operation and leave the caller to use <code>contains</code> if it needs that information.
-    </p>
-    <div class="callout">
-      <strong>Set invariant:</strong> at every observable moment, the set contains at most one representative of each
-      equality class. An implementation may store keys in any arrangement, but it must preserve that uniqueness rule.
-    </div>
-  </section>
+  <p>
+    The drawing represents only the logical contents of the set. The positions
+    of the keys have no meaning, and the set does not provide indexed access.
+    Some implementations support iteration, but the order may be sorted,
+    insertion-based, or unspecified depending on the implementation.
+  </p>
+  <p>
+    Sets differ from several related data types. A list stores items in
+    positions and may contain repeated values. A set stores distinct keys
+    without meaningful positions. A map also stores distinct keys, but it
+    associates a value with each key. Thus, a set is appropriate when only
+    membership matters, while a map is appropriate when additional information
+    must be stored with each key.
+  </p>
+  <p>
+    A set is an ADT, not a particular representation. It can be implemented
+    using an unsorted sequence, sorted array, balanced search tree, hash table,
+    or bit vector. These implementations provide the same basic set behavior,
+    but they differ in running time, space usage, and ordering guarantees. We
+    begin by defining the operations and guarantees of the Set ADT.
+  </p>
+</section>
 
-  <section id="conceptual-model" section-title="Conceptual Model">
-    <h2>Conceptual Model</h2>
-    <p>
-      Think of a set as a bag of labels where each label may appear at most once.
-    </p>
-    <pre><code>S = { "red", "green", "blue" }</code></pre>
-    <p>
-      The expression <code>contains("green")</code> returns <code>true</code>, while
-      <code>contains("orange")</code> returns <code>false</code>. Calling <code>add("red")</code> does not make two
-      copies of <code>"red"</code>; the set still contains exactly three keys.
-    </p>
-    <p>
-      The set ADT does not promise that keys have positions such as index <code>0</code> or index <code>1</code>.
-      Some implementations let you iterate over the keys, but the order depends on the implementation. A hash set may
-      produce an order that seems arbitrary. A tree set may produce sorted order. A linked hash set may preserve
-      insertion order.
-    </p>
-  </section>
+<section id="core-operations" section-title="Core Operations">
+  <h2>Core Operations</h2>
+  <p>
+    A set stores distinct keys and supports operations for testing and changing
+    membership. A typical set interface includes the following operations.
+  </p>
 
-  <section id="worked-example" section-title="Worked Example">
-    <h2>Worked Example</h2>
-    <p>
-      Suppose a program scans these course IDs and wants to report the distinct courses mentioned:
-    </p>
-    <pre><code>CS1, CS2, MATH, CS2, HIST, CS1</code></pre>
-    <p>
-      Start with an empty set and add each key in order.
-    </p>
-    <table class="example-table">
-      <thead>
-        <tr>
-          <th>Operation</th>
-          <th>Set Afterward</th>
-          <th>Did the Size Change?</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><code>add("CS1")</code></td>
-          <td><code>{CS1}</code></td>
-          <td>yes</td>
-        </tr>
-        <tr>
-          <td><code>add("CS2")</code></td>
-          <td><code>{CS1, CS2}</code></td>
-          <td>yes</td>
-        </tr>
-        <tr>
-          <td><code>add("MATH")</code></td>
-          <td><code>{CS1, CS2, MATH}</code></td>
-          <td>yes</td>
-        </tr>
-        <tr>
-          <td><code>add("CS2")</code></td>
-          <td><code>{CS1, CS2, MATH}</code></td>
-          <td>no</td>
-        </tr>
-        <tr>
-          <td><code>add("HIST")</code></td>
-          <td><code>{CS1, CS2, MATH, HIST}</code></td>
-          <td>yes</td>
-        </tr>
-        <tr>
-          <td><code>add("CS1")</code></td>
-          <td><code>{CS1, CS2, MATH, HIST}</code></td>
-          <td>no</td>
-        </tr>
-      </tbody>
-    </table>
-    <p>
-      The final set has size <code>4</code>, even though the input list had six entries. A list keeps all occurrences.
-      A set keeps only distinct keys.
-    </p>
-  </section>
+  <table class="example-table left-top-align">
+    <thead>
+      <tr>
+        <th>Operation</th>
+        <th>Behavior</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong><code>contains(key)</code></strong></td>
+        <td>
+          Return <code>true</code> exactly when the set contains a key equal to
+          <code>key</code>.
+        </td>
+      </tr>
+      <tr>
+        <td><strong><code>add(key)</code></strong></td>
+        <td>
+          Insert <code>key</code> if no equal key is already present. The
+          operation often returns whether the set changed.
+        </td>
+      </tr>
+      <tr>
+        <td><strong><code>remove(key)</code></strong></td>
+        <td>
+          Remove the equal stored key, if one exists. The operation often
+          returns whether the set changed.
+        </td>
+      </tr>
+      <tr>
+        <td><code>size()</code></td>
+        <td>Return the number of distinct keys currently stored.</td>
+      </tr>
+      <tr>
+        <td><code>isEmpty()</code></td>
+        <td>Return whether the set contains no keys.</td>
+      </tr>
+      <tr>
+        <td><code>clear()</code></td>
+        <td>Remove every key from the set.</td>
+      </tr>
+      <tr>
+        <td><code>iterate()</code></td>
+        <td>
+          <em>(Optional)</em> Visit every stored key once. Unless the interface promises otherwise,
+          the visitation order is unspecified.
+        </td>
+      </tr>
+    </tbody>
+  </table>
 
-  <section id="core-operations" section-title="Core Operations">
-    <h2>Core Operations</h2>
+  <h3>Membership</h3>
+  <p>
+    The defining set query is <code>contains(key)</code>. It searches for a
+    stored key that is equal to <code>key</code> and reports whether such a key
+    exists. Sets are often used specifically because a program needs frequent
+    membership tests.
+  </p>
+  <p>
+    Membership depends on the set's equality rule. For example, two separately
+    created strings containing the same characters normally represent the same
+    key. The implementation must use equality consistently when searching,
+    adding, and removing keys.
+  </p>
 
-    <h3>Membership</h3>
-    <p>
-      <code>contains(key)</code> is the defining set operation. The implementation searches for an equal key and
-      returns whether it exists. Sets are often chosen specifically because membership should be faster or cleaner
-      than scanning a list.
-    </p>
-    <p>
-      Membership uses the set's equality rule, not necessarily object identity. For example, two separately created
-      strings containing the same characters normally represent the same string key. A reference-identity set would
-      be a different ADT with a different contract.
-    </p>
+  <h3>Insertion</h3>
+  <p>
+    The operation <code>add(key)</code> inserts the key only when no equal key
+    is already present. If the key is absent, the size increases by one. If the
+    key is already present, the logical contents and size remain unchanged.
+  </p>
 
-    <h3>Insertion</h3>
-    <p>
-      <code>add(key)</code> must preserve uniqueness. If the key is absent, the operation inserts it and increases
-      the size by one. If an equal key is already present, the visible set does not change.
-    </p>
-    <pre><code>add(key):
-    if contains(key):
-        do not insert a duplicate
-    else:
-        store key
-        size = size + 1</code></pre>
-    <p>
-      Many real implementations combine the search and insertion work instead of literally calling
-      <code>contains</code> first. The sketch shows the behavior, not necessarily the most efficient code structure.
-    </p>
+  <pre><code>add(key):
+    if the set contains a key equal to key:
+        return false
+    store key
+    size = size + 1
+    return true</code></pre>
 
-    <h3>Deletion</h3>
-    <p>
-      <code>remove(key)</code> deletes the key if it is present. Removing a key that is not present is usually not an
-      error; it simply leaves the set unchanged or returns <code>false</code>.
-    </p>
+  <p>
+    This pseudocode describes the required behavior. An efficient
+    implementation usually combines the membership test and insertion rather
+    than performing two separate searches.
+  </p>
 
-    <h3>Iteration</h3>
-    <p>
-      Many sets support iteration over all stored keys. Iteration is useful for printing, copying, or applying a
-      function to every key. It is not the same as indexed access. Unless the set interface promises an order, client
-      code should not rely on the traversal order.
-    </p>
+  <h3>Removal</h3>
+  <p>
+    The operation <code>remove(key)</code> removes the equal stored key when it
+    is present. Removing a key that is absent normally leaves the set unchanged.
+    A Boolean return value can report whether a key was actually removed.
+  </p>
 
-    <h3>Clear, Size, and Empty Queries</h3>
-    <p>
-      <code>size</code> counts distinct stored keys, not the number of attempted insertions. If the set contains
-      <code>{red, green, blue}</code>, calling <code>add(red)</code> again leaves the size at three.
-      <code>isEmpty</code> is therefore equivalent to testing whether the size is zero. After <code>clear</code>, every
-      membership query is false until another key is added.
-    </p>
+  <pre><code>remove(key):
+    if the set does not contain a key equal to key:
+        return false
+    remove the stored key
+    size = size - 1
+    return true</code></pre>
 
-    <div class="example-box">
-      <strong class="example-title">Example 1: Operation Trace with Return Values</strong>
-      <p>
-        The following interface makes <code>add</code> and <code>remove</code> return whether they changed the set.
-        Start with an empty set.
-      </p>
-      <table class="example-table left-top-align">
-        <thead>
-          <tr><th>Operation</th><th>Return value</th><th>Logical contents afterward</th><th>Why</th></tr>
-        </thead>
-        <tbody>
-          <tr><td><code>add(4)</code></td><td><code>true</code></td><td><code>{4}</code></td><td>4 was absent.</td></tr>
-          <tr><td><code>add(9)</code></td><td><code>true</code></td><td><code>{4, 9}</code></td><td>9 was absent.</td></tr>
-          <tr><td><code>add(4)</code></td><td><code>false</code></td><td><code>{4, 9}</code></td><td>No duplicate is stored.</td></tr>
-          <tr><td><code>contains(7)</code></td><td><code>false</code></td><td><code>{4, 9}</code></td><td>A query does not change the set.</td></tr>
-          <tr><td><code>remove(9)</code></td><td><code>true</code></td><td><code>{4}</code></td><td>9 was present.</td></tr>
-          <tr><td><code>remove(9)</code></td><td><code>false</code></td><td><code>{4}</code></td><td>9 is already absent.</td></tr>
-        </tbody>
-      </table>
-      <p>
-        The braces describe an unordered logical collection. Writing <code>{4, 9}</code> does not promise that 4 is
-        physically stored before 9 or that iteration will visit it first.
-      </p>
-    </div>
-  </section>
+  <h3>Size, Empty, and Clear</h3>
+  <p>
+  The value returned by <code>size()</code> is the number of distinct stored
+  keys, not the number of attempted insertions or the number of storage
+  locations allocated by the underlying representation. Thus, repeatedly
+  adding the same key does not increase the size. The operation
+  <code>isEmpty()</code> is equivalent to testing whether the size is zero.
+  After <code>clear()</code>, the size is zero and every membership query
+  returns <code>false</code>.
+</p>
+
+  <h3>Iteration</h3>
+  <p>
+    Many sets allow the client to iterate through all stored keys. Iteration is
+    useful for printing, copying, or applying an operation to every key, but it
+    is not indexed access. Unless the interface explicitly guarantees an order,
+    client code should not assume that keys are visited in sorted or insertion
+    order.
+  </p>
+
+  <div class="example-box">
+    <strong class="example-title">Example 1: Tracing Set Operations</strong>
+    <p>
+      Suppose <code>add</code> and <code>remove</code> return whether they
+      changed the set. Starting with an empty set, consider the following
+      sequence.
+    </p>
+<table class="example-table left-top-align">
+  <thead>
+    <tr>
+      <th>Operation</th>
+      <th>Return Value</th>
+      <th>Contents Afterward</th>
+      <th>Explanation</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>add(4)</code></td>
+      <td><code>true</code></td>
+      <td><code>{4}</code></td>
+      <td>The key was absent, so it was inserted.</td>
+    </tr>
+    <tr>
+      <td><code>add(9)</code></td>
+      <td><code>true</code></td>
+      <td><code>{4, 9}</code></td>
+      <td>The key was absent, so it was inserted.</td>
+    </tr>
+    <tr>
+      <td><code>add(4)</code></td>
+      <td><code>false</code></td>
+      <td><code>{4, 9}</code></td>
+      <td>The key was already present, so no duplicate was stored.</td>
+    </tr>
+    <tr>
+      <td><code>contains(7)</code></td>
+      <td><code>false</code></td>
+      <td><code>{4, 9}</code></td>
+      <td>A membership query does not change the set.</td>
+    </tr>
+    <tr>
+      <td><code>remove(9)</code></td>
+      <td><code>true</code></td>
+      <td><code>{4}</code></td>
+      <td>The key was present and was removed.</td>
+    </tr>
+    <tr>
+      <td><code>remove(9)</code></td>
+      <td><code>false</code></td>
+      <td><code>{4}</code></td>
+      <td>The key was already absent.</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>
+  The braces describe the logical contents of the set. Writing
+  <code>{4, 9}</code> does not imply that 4 is physically stored before 9 or
+  that iteration will visit it first.
+</p>
+  </div>
+</section>
 
   <section id="demo" section-title="Interactive Demo">
     <h2>Interactive Demo</h2>
     <p>
-      Use the demo to add, test, and remove keys. It scatters the keys deliberately so that the picture represents
-      only membership and uniqueness—not an array, linked list, search tree, or hash table. Try adding an existing
+      Use the demo to insert, check for, and remove keys. It scatters the keys deliberately so that the picture represents
+      only membership and uniqueness—not an array, linked list, search tree, or hash table. Try inserting an existing
       key and removing a missing key, and compare the return value with the resulting size.
     </p>
     <div class="embeddedDemoContainer">
@@ -354,265 +350,1441 @@
   </section>
 
   <section id="set-algebra" section-title="Set Algebra Operations">
-    <h2>Set Algebra Operations</h2>
-    <p>
-      Sets also support operations from mathematics. These operations create or update sets based on membership in
-      other sets.
-    </p>
-    <table class="example-table">
-      <thead>
-        <tr>
-          <th>Operation</th>
-          <th>Meaning</th>
-          <th>Example with \(A=\{1,2,3\}\), \(B=\{3,4\}\)</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>Union, \(A \cup B\)</td>
-          <td>Keys in \(A\), in \(B\), or in both.</td>
-          <td>\(\{1,2,3,4\}\)</td>
-        </tr>
-        <tr>
-          <td>Intersection, \(A \cap B\)</td>
-          <td>Keys that appear in both sets.</td>
-          <td>\(\{3\}\)</td>
-        </tr>
-        <tr>
-          <td>Difference, \(A - B\)</td>
-          <td>Keys in \(A\) that are not in \(B\).</td>
-          <td>\(\{1,2\}\)</td>
-        </tr>
-        <tr>
-          <td>Symmetric difference, \(A \mathbin{\triangle} B\)</td>
-          <td>Keys in exactly one of the two sets.</td>
-          <td>\(\{1,2,4\}\)</td>
-        </tr>
-        <tr>
-          <td>Subset test, \(A \subseteq B\)</td>
-          <td>Every key in \(A\) also appears in \(B\).</td>
-          <td>false</td>
-        </tr>
-      </tbody>
-    </table>
-    <p>
-      These operations can be built from <code>contains</code>, <code>add</code>, and iteration. For example, to
-      compute an intersection, iterate over the smaller set and add a key to the result only if the other set contains
-      that key.
-    </p>
-    <pre><code>intersection(A, B):
+  <h2>Set Algebra Operations</h2>
+  <p>
+    In addition to the core operations, many set implementations provide
+    higher-level operations corresponding to operations on mathematical sets.
+    These operations are not required by the basic Set ADT because they can be
+    constructed from membership, insertion, removal, and iteration.
+  </p>
+  <p>
+    Let \(A\) and \(B\) be sets. The most common set-algebra operations are
+    shown below.
+  </p>
+
+  <table class="example-table left-top-align">
+    <thead>
+      <tr>
+        <th>Operation</th>
+        <th>Result</th>
+        <th>Example</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Union</strong>, \(A \cup B\)</td>
+        <td>
+          A set containing every key that appears in \(A\), in \(B\), or in
+          both.
+        </td>
+        <td>
+          If \(A=\{1,2,3\}\) and \(B=\{3,4\}\), then
+          \(A \cup B=\{1,2,3,4\}\).
+        </td>
+      </tr>
+      <tr>
+        <td><strong>Intersection</strong>, \(A \cap B\)</td>
+        <td>A set containing the keys that appear in both \(A\) and \(B\).</td>
+        <td>\(A \cap B=\{3\}\).</td>
+      </tr>
+      <tr>
+        <td><strong>Difference</strong>, \(A-B\)</td>
+        <td>
+          A set containing the keys that appear in \(A\) but not in \(B\).
+        </td>
+        <td>\(A-B=\{1,2\}\).</td>
+      </tr>
+      <tr>
+        <td>
+          <strong>Symmetric difference</strong>,
+          \(A \oplus B\)
+        </td>
+        <td>
+          A set containing the keys that appear in exactly one of the two sets.
+        </td>
+        <td>\(A \oplus B=\{1,2,4\}\).</td>
+      </tr>
+      <tr>
+        <td><strong>Subset test</strong>, \(A \subseteq B\)</td>
+        <td>
+          Return whether every key in \(A\) also appears in \(B\).
+        </td>
+        <td>\(A \subseteq B\) is false.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>
+  A set-algebra operation may either create a new set or modify one of its
+  input sets. For example, a union operation may return a new set containing
+  \(A \cup B\), or it may add every key from \(B\) directly to \(A\). An
+  intersection operation may similarly return a new set containing
+  \(A \cap B\), or it may remove from \(A\) every key that is not also in
+  \(B\).
+</p>
+  
+  <h3>Constructing Set Operations</h3>
+  <p>
+    Set-algebra operations can be built from the core Set ADT operations. To
+    compute an intersection, for example, iterate through one set, test each
+    key for membership in the other set, and add the common keys to a new set.
+  </p>
+
+  <pre><code>intersection(A, B):
+    if A.size() &lt;= B.size():
+        smaller = A
+        larger = B
+    else:
+        smaller = B
+        larger = A
+
     result = empty set
-    for each key in A:
-        if B.contains(key):
+    for each key in smaller:
+        if larger.contains(key):
             result.add(key)
+
     return result</code></pre>
-    <p>
-      The running time of a set-algebra operation depends on the operations supplied by the implementation. If
-      membership in \(B\) takes expected \(O(1)\), iterating through all \(|A|\) keys gives expected
-      \(O(|A|)\) time for the sketch. If membership takes \(O(\log |B|)\), the same high-level algorithm takes
-      \(O(|A|\log |B|)\). Iterating through the smaller set is often the better choice for intersection.
-    </p>
-  </section>
 
-  <section id="implementations" section-title="Implementation Options">
-    <h2>Implementation Options</h2>
-    <p>
-      Different implementations provide the same set behavior with different costs and ordering guarantees.
-    </p>
-    <table class="example-table">
-      <thead>
-        <tr>
-          <th>Implementation</th>
-          <th>Membership</th>
-          <th>Add/Remove</th>
-          <th>Ordering</th>
-          <th>Best Fit</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>Unsorted array or linked list</td>
-          <td>\(O(n)\)</td>
-          <td>\(O(n)\) because duplicates must be checked</td>
-          <td>Can preserve insertion order</td>
-          <td>Small sets and first implementations</td>
-        </tr>
-        <tr>
-          <td>Sorted array</td>
-          <td>\(O(\log n)\)</td>
-          <td>\(O(n)\) because elements may shift</td>
-          <td>Sorted</td>
-          <td>Mostly-static sets with many membership tests</td>
-        </tr>
-        <tr>
-          <td>Balanced search tree</td>
-          <td>\(O(\log n)\)</td>
-          <td>\(O(\log n)\)</td>
-          <td>Sorted</td>
-          <td>Ordered traversal and range-style queries</td>
-        </tr>
-        <tr>
-          <td>Hash table</td>
-          <td>Expected \(O(1)\)</td>
-          <td>Expected \(O(1)\)</td>
-          <td>Usually not sorted</td>
-          <td>Fast exact membership, insertion, and deletion</td>
-        </tr>
-        <tr>
-          <td>Bit vector</td>
-          <td>\(O(1)\)</td>
-          <td>\(O(1)\)</td>
-          <td>By numeric key order</td>
-          <td>Dense sets over a small integer universe</td>
-        </tr>
-      </tbody>
-    </table>
-    <p>
-      Hash tables are a common default for general-purpose sets, but they are not the only choice. If a program needs
-      the keys in sorted order, a tree-based set may be more appropriate. If keys are small nonnegative integers, a
-      bit vector can be extremely compact and fast.
-    </p>
+  <p>
+   Choosing the smaller set to iterate through reduces the number of membership tests.
+    The same basic ideas produce the other operations:
+  </p>
 
-    <h3>Unsorted Sequential Representation</h3>
-    <p>
-      An array or linked list can store the distinct keys in no particular sorted order. Membership must inspect keys
-      until it finds a match or reaches the end, so it is \(O(n)\) in the worst case. Addition also needs that search;
-      appending without checking would violate uniqueness. Once a key has been located, array deletion may shift later
-      entries, while linked-list deletion changes links. This representation is valuable for small sets and for
-      learning the ADT contract, but it does not provide scalable membership.
-    </p>
+  <ul class="spaced">
+    <li>
+      <strong>Union:</strong> Copy one set, then add every key from the other
+      set.
+    </li>
+    <li>
+      <strong>Difference:</strong> Iterate through \(A\) and add a key to the
+      result only when \(B\) does not contain it.
+    </li>
+    <li>
+      <strong>Symmetric difference:</strong> Add keys from \(A-B\) and
+      \(B-A\).
+    </li>
+    <li>
+      <strong>Subset test:</strong> Check whether every key in \(A\) is
+      contained in \(B\), stopping as soon as a missing key is found.
+    </li>
+  </ul>
 
-    <h3>Sorted Array or Balanced Search Tree</h3>
-    <p>
-      Sorting enables ordered traversal and comparison-based lookup. A sorted array supports binary-search membership
-      in \(O(\log n)\), but insertion and deletion are \(O(n)\) because entries may move. A balanced search tree keeps
-      membership, addition, and removal at \(O(\log n)\) worst-case while also supporting minimum, maximum, range, and
-      predecessor/successor operations. Those ordered capabilities are not required by the basic set ADT, but some
-      applications benefit from them.
-    </p>
+<p>
+  These algorithms provide general ways to construct set-algebra operations
+  from the basic Set ADT operations. Some representations can perform the same
+  operations more efficiently by taking advantage of their internal structure.
+  Such representation-specific algorithms are beyond the scope of this
+  overview.
+</p>
 
-    <h3>Hash Table</h3>
-    <p>
-      A hash table uses a key's hash value to narrow the search to a small part of a table. With a suitable hash
-      function, collision policy, and resizing policy, membership, addition, and removal take expected \(O(1)\) time.
-      The tradeoffs are extra unused capacity, no natural sorted order, and an \(O(n)\) worst case if many keys collide.
-      The remaining pages in this unit develop this option in detail.
-    </p>
+</section>
 
-    <h3>Bit Vector</h3>
-    <p>
-      If every possible key is an integer in a modest universe \(0\) through \(U-1\), one bit per possible key can
-      record membership: bit \(k\) is 1 exactly when key \(k\) is present. Operations are constant time and storage is
-      \(O(U)\) bits, independent of how many keys are present. This is excellent for a dense, bounded universe but
-      wasteful or impossible for arbitrary strings or a huge sparse range of integers.
-    </p>
+<section id="implementation" section-title="Implementation Options">
+  <h2>Implementation Options</h2>
+  
+<section id="implementation-overview" section-title="Overview">
+  <h3>Overview</h3>
+  <p>
+    The Set ADT specifies what operations a set must perform, but it does not
+    specify how the keys are stored. Several data structures can implement a
+    set, and each provides a different balance among running time, space usage,
+    ordering, and restrictions on the keys.
+  </p>
 
-    <h3>Library Implementations</h3>
-    <ul>
-      <li><strong>Java:</strong> <code>HashSet</code> provides hash-based expected constant-time operations; <code>TreeSet</code> keeps keys ordered.</li>
-      <li><strong>C++:</strong> <code>std::unordered_set</code> is hash based; <code>std::set</code> is ordered and normally tree based.</li>
-      <li><strong>Python:</strong> the built-in <code>set</code> is hash based; Python does not provide a general built-in sorted set.</li>
+  <table class="example-table left-top-align">
+    <thead>
+      <tr>
+        <th>Implementation</th>
+        <th><code>contains</code></th>
+        <th><code>add</code></th>
+        <th><code>remove</code></th>
+        <th>Iteration Order</th>
+        <th>Best Use</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Unsorted array or linked list</strong></td>
+        <td>\(O(n)\)</td>
+        <td>\(O(n)\)</td>
+        <td>\(O(n)\)</td>
+        <td>May preserve insertion order</td>
+        <td>Small sets and simple implementations</td>
+      </tr>
+      <tr>
+        <td><strong>Sorted array</strong></td>
+        <td>\(O(\log n)\)</td>
+        <td>\(O(n)\)</td>
+        <td>\(O(n)\)</td>
+        <td>Sorted</td>
+        <td>Mostly static sets with frequent membership tests</td>
+      </tr>
+      <tr>
+        <td><strong>Balanced search tree</strong></td>
+        <td>\(O(\log n)\)</td>
+        <td>\(O(\log n)\)</td>
+        <td>\(O(\log n)\)</td>
+        <td>Sorted</td>
+        <td>Sets that need ordered traversal or range queries</td>
+      </tr>
+      <tr>
+        <td><strong>Hash table</strong></td>
+        <td>Expected \(O(1)\)</td>
+        <td>Expected \(O(1)\)</td>
+        <td>Expected \(O(1)\)</td>
+        <td>Usually unspecified</td>
+        <td>Fast general-purpose membership and updates</td>
+      </tr>
+      <tr>
+        <td><strong>Bit vector</strong></td>
+        <td>\(O(1)\)</td>
+        <td>\(O(1)\)</td>
+        <td>\(O(1)\)</td>
+        <td>Increasing key order</td>
+        <td>Sets drawn from a small, known integer universe</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>
+    The bounds in the table are worst-case bounds unless marked as expected.
+    For an unsorted sequence, insertion is \(O(n)\) because the implementation
+    must first determine whether an equal key is already present. Removal also
+    requires locating the key before deleting it.
+  </p>
+
+  <p>
+    We examine unsorted sequential representations and bit vectors in more
+    detail because they illustrate two simple but very different approaches.
+    We give briefer descriptions of sorted arrays, balanced search trees, and
+    standard library implementations. Hash tables are introduced here as a
+    common set representation, but their construction and analysis are
+    developed in detail on a later page.
+  </p>
+</section>
+<section id="unsorted-sequential-set"
+         section-title="Unsorted Sequential Representation">
+  <h3>Unsorted Sequential Representation</h3>
+  <p>
+    The simplest way to implement a set is to store its keys in an unsorted
+    array or linked list. The keys may appear in any physical order, but the
+    representation must never contain two equal keys.
+  </p>
+
+  <h4>Membership</h4>
+  <p>
+    To implement <code>contains(key)</code>, scan the stored keys until an equal
+    key is found or every key has been examined. In the worst case, all \(n\)
+    stored keys must be checked, so membership takes \(O(n)\) time.
+  </p>
+
+  <pre><code>contains(key):
+    for each storedKey in the set:
+        if storedKey equals key:
+            return true
+    return false</code></pre>
+
+    <p>This is just an implementation of the familiar sequential search algorithm.</p>
+
+<h4>Insertion</h4>
+<p>
+  Insertion also requires a linear search. The implementation cannot simply
+  append a key, because doing so might create a duplicate. If no equal key is
+  found, the key is added at a location appropriate for the representation.
+</p>
+
+<pre><code>add(key):
+    if contains(key):
+        return false
+
+    insert key into the underlying representation
+    size = size + 1
+    return true</code></pre>
+
+<p>
+  In an array implementation, the new key can be placed in the first unused
+  position, provided the array has available capacity. If the array is full, a
+  resizable implementation must allocate a larger array and copy the existing
+  keys before inserting the new one. In a linked-list implementation, 
+  insertion can create a new node and link itat the front in \(O(1)\) time. 
+  It can also insert at the back in \(O(1)\) time if the representation maintains a tail pointer.
+</p>
+
+<p>
+  When space is already available, the actual insertion takes \(O(1)\) time for
+  either representation. However, the preceding duplicate check takes
+  \(O(n)\) time in the worst case. Therefore, the complete
+  <code>add</code> operation is \(O(n)\).
+</p>
+
+<h4>Removal</h4>
+<p>
+  Removal must first locate an equal key, which takes \(O(n)\) time in the
+  worst case. In a linked-list implementation, the search can keep track of
+  both the matching node and the node preceding it. Once they have been found,
+  the matching node can be removed by changing one or two links.
+</p>
+
+<p>
+  In an array implementation, one option is to shift every later key one
+  position to the left. This preserves the relative order of the remaining
+  keys but may require \(O(n)\) additional work. If the physical order of the
+  keys does not need to be preserved, the implementation can instead copy the
+  final stored key into the removed key's position and then decrease the used
+  size by one.
+</p>
+
+<pre><code>remove(key):
+    find the position of a key equal to key
+    if no such key exists:
+        return false
+
+    remove the key from the underlying representation
+    size = size - 1
+    return true</code></pre>
+
+<p>
+  Although the work performed after locating the key may be constant time,
+  searching for the key takes \(O(n)\) time in the worst case. Therefore, the
+  complete <code>remove</code> operation is \(O(n)\).
+</p>
+
+<h4>Other Operations</h4>
+<p>
+  Iterating through the set takes \(O(n)\) time because every stored key must
+  be visited. The operations <code>size</code> and <code>isEmpty</code> take
+  \(O(1)\) time if the implementation maintains the current number of stored
+  keys.
+</p>
+
+
+<h4>Summary</h4>
+  <table class="example-table left-top-align">
+    <thead>
+      <tr>
+        <th>Operation</th>
+        <th>Worst-Case Time</th>
+        <th>Reason</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>contains(key)</code></td>
+        <td>\(O(n)\)</td>
+        <td>The key may require a scan of the entire representation.</td>
+      </tr>
+      <tr>
+        <td><code>add(key)</code></td>
+        <td>\(O(n)\)</td>
+        <td>The implementation must check for an existing equal key.</td>
+      </tr>
+      <tr>
+        <td><code>remove(key)</code></td>
+        <td>\(O(n)\)</td>
+        <td>The implementation must locate the key before removing it.</td>
+      </tr>
+      <tr>
+        <td><code>size()</code></td>
+        <td>\(O(1)\)</td>
+        <td>The current size can be stored in a variable.</td>
+      </tr>
+      <tr>
+        <td><code>isEmpty()</code></td>
+        <td>\(O(1)\)</td>
+        <td>The implementation tests whether the stored size is zero.</td>
+      </tr>
+      <tr>
+        <td>Iteration</td>
+        <td>\(O(n)\)</td>
+        <td>Each stored key is visited once.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>
+    A sequential representation may preserve insertion order, but this is an
+    implementation choice rather than a requirement of the Set ADT. For
+    example, shifting array elements during removal preserves their relative
+    order, while replacing a removed key with the final key does not.
+  </p>
+
+  <p>
+    This representation is easy to implement and can work well for small sets.
+    Its main limitation is that membership, insertion, and removal all require
+    linear time. Larger or frequently searched sets usually benefit from a
+    sorted representation, balanced search tree, hash table, or bit vector.
+  </p>
+</section>
+
+<section id="sorted-array-set" section-title="Sorted Array">
+  <h3>Sorted Array</h3>
+  <p>
+    A sorted array stores the keys in increasing order. To implement
+    <code>contains(key)</code>, the set uses binary search, so membership takes
+    \(O(\log n)\) time.
+  </p>
+  <p>
+    To implement <code>add(key)</code>, the set first uses binary search to
+    determine whether the key is already present and, if not, where it belongs.
+    The search takes \(O(\log n)\) time, but inserting the key may require
+    shifting later keys one position to the right. Thus, insertion takes
+    \(O(n)\) time in the worst case.
+  </p>
+  <p>
+    Removal works similarly. The set uses binary search to locate the key and,
+    if it is present, shifts later keys one position to the left to close the
+    gap. Therefore, <code>remove(key)</code> also takes \(O(n)\) time in the
+    worst case.
+  </p>
+  <p>
+    A sorted array is most appropriate when the set changes infrequently but
+    supports many membership tests. It also provides sorted iteration without
+    any additional work.
+  </p>
+</section>
+
+<section id="balanced-tree-set" section-title="Balanced Search Tree">
+  <h3>Balanced Search Tree</h3>
+  <p>
+    A balanced binary search tree implements the Set operations using the
+    ordinary binary-search-tree operations. The operation
+    <code>contains(key)</code> performs a BST search,
+    <code>add(key)</code> performs a BST insertion when the key is absent, and
+    <code>remove(key)</code> performs a BST deletion when the key is present.
+  </p>
+  <p>
+    Because the tree remains balanced, its height is \(O(\log n)\).
+    Membership, insertion, and removal therefore each take \(O(\log n)\) time
+    in the worst case. The balancing work is handled by the underlying tree
+    implementation and does not change the Set ADT interface.
+  </p>
+  <p>
+    An inorder traversal visits the keys in sorted order. The tree can also
+    support ordered operations such as finding the minimum or maximum key,
+    locating predecessors and successors, and reporting all keys in a range.
+    These operations go beyond the basic Set ADT but are useful when ordered
+    access is required.
+  </p>
+  <p>
+    This representation is appropriate when a set must support both frequent
+    updates and sorted access. Balanced binary search trees and their operations
+    are discussed in detail on the corresponding tree pages.
+  </p>
+</section>
+
+
+<section id="hash-table-set" section-title="Hash Table">
+  <h3>Hash Table</h3>
+  <p>
+    A hash table uses a hash function to determine where a key should be stored
+    and searched for. A hash-based set stores only keys rather than key-value
+    pairs. The operations <code>contains</code>, <code>add</code>, and
+    <code>remove</code> use the key's hash value to examine a small portion of
+    the table instead of searching through every stored key.
+  </p>
+  <p>
+    Different keys may be assigned to the same location, producing a
+    <strong>collision</strong>. A hash table must use a collision-resolution
+    method to distinguish and store such keys. It must also resize periodically
+    as more keys are added so that the table does not become too crowded.
+    With an appropriate hash function, collision policy, and resizing policy,
+    membership, insertion, and removal each take expected \(O(1)\) time,
+    although their worst-case running time is \(O(n)\).
+  </p>
+  <p>
+    Hash tables do not normally store keys in sorted or insertion order, so
+    their iteration order is usually unspecified. They are nevertheless a
+    common choice for general-purpose sets because their basic operations are
+    fast in typical use. Hash functions, collisions, resizing, and hash-table
+    implementations are developed in detail on the later Hash Tables page.
+  </p>
+</section>
+
+<section id="bit-vector-set" section-title="Bit Vector">
+  <h3>Bit Vector</h3>
+  <p>
+    A bit vector provides very fast set operations, but it applies only in a
+    specialized situation. Every key must be an integer from a fixed universe
+    \[
+      \{0,1,\ldots,U-1\},
+    \]
+    and the representation reserves a membership position for every possible
+    key, whether or not that key is present. Thus, its storage and initialization
+    costs depend on \(U\), the size of the universe, rather than on \(n\), the
+    number of keys actually stored.
+  </p>
+
+  <p>
+    This representation works well when \(U\) is reasonably small. For example,
+    it may be appropriate for a set of course numbers between 0 and 999 or a set
+    of character codes from a small alphabet. It is usually a poor choice when
+    the possible integer range is enormous but only a few keys are present. It
+    also cannot directly represent strings, objects, or arbitrary integers
+    without first assigning them suitable integer positions.
+  </p>
+
+  <p>
+    For now, assume that the language provides a bit array
+    <code>present[0..U-1]</code>. The bit <code>present[k]</code> is 1 exactly
+    when \(k\) belongs to the set and is 0 otherwise.
+  </p>
+
+  <p>
+    For example, suppose \(U=8\) and the set is \(\{1,4,6\}\). Its bit vector
+    is:
+  </p>
+
+  <table class="example-table">
+    <thead>
+      <tr>
+        <th>Key</th>
+        <th>0</th>
+        <th>1</th>
+        <th>2</th>
+        <th>3</th>
+        <th>4</th>
+        <th>5</th>
+        <th>6</th>
+        <th>7</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Bit</strong></td>
+        <td>0</td>
+        <td>1</td>
+        <td>0</td>
+        <td>0</td>
+        <td>1</td>
+        <td>0</td>
+        <td>1</td>
+        <td>0</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h4>Membership</h4>
+  <p>
+    Membership is determined by reading the bit corresponding to the key.
+  </p>
+
+  <pre><code>contains(key):
+    return present[key] == 1</code></pre>
+
+  <p>
+    Accessing one position of the bit array takes \(O(1)\) time, so
+    <code>contains</code> takes \(O(1)\) time.
+  </p>
+
+  <h4>Insertion and Removal</h4>
+  <p>
+    Insertion sets the corresponding bit to 1. If the bit was already 1, the
+    key was already present and the set does not change.
+  </p>
+
+  <pre><code>add(key):
+    if present[key] == 1:
+        return false
+
+    present[key] = 1
+    size = size + 1
+    return true</code></pre>
+
+  <p>
+    Removal sets the corresponding bit to 0. If the bit was already 0, the key
+    was not present.
+  </p>
+
+  <pre><code>remove(key):
+    if present[key] == 0:
+        return false
+
+    present[key] = 0
+    size = size - 1
+    return true</code></pre>
+
+  <p>
+    Both operations access one membership position, so <code>add</code> and
+    <code>remove</code> each take \(O(1)\) time.
+  </p>
+
+  <h4>Operation Costs and Appropriate Use</h4>
+  <p>
+    If the current number of stored keys is maintained in a variable,
+    <code>size</code> and <code>isEmpty</code> also take \(O(1)\) time.
+    Iteration is less favorable: the implementation may need to examine all
+    \(U\) positions to find the keys whose bits are 1. Thus, iteration takes
+    \(O(U)\) time, even if the set contains only a small number \(n\) of keys.
+    Initializing or clearing the representation may also require \(O(U)\) time.
+  </p>
+
+  <table class="example-table left-top-align">
+    <thead>
+      <tr>
+        <th>Operation</th>
+        <th>Worst-Case Time</th>
+        <th>Reason</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>contains(key)</code></td>
+        <td>\(O(1)\)</td>
+        <td>Read the membership position for the key.</td>
+      </tr>
+      <tr>
+        <td><code>add(key)</code></td>
+        <td>\(O(1)\)</td>
+        <td>Set one membership position.</td>
+      </tr>
+      <tr>
+        <td><code>remove(key)</code></td>
+        <td>\(O(1)\)</td>
+        <td>Clear one membership position.</td>
+      </tr>
+      <tr>
+        <td><code>size()</code></td>
+        <td>\(O(1)\)</td>
+        <td>The current size can be stored in a variable.</td>
+      </tr>
+      <tr>
+        <td>Iteration</td>
+        <td>\(O(U)\)</td>
+        <td>All possible key positions may need to be examined.</td>
+      </tr>
+      <tr>
+        <td><code>clear()</code></td>
+        <td>\(O(U)\)</td>
+        <td>Every membership position may need to be reset.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>
+    A true bit vector uses \(U\) bits of storage. This can be extremely compact
+    when the universe is small, but the representation still allocates space
+    for absent keys. For example, representing a few integers drawn from the
+    range 0 through one billion would require roughly one billion bits, even if
+    the set contained only ten keys.
+  </p>
+
+  <p>
+    Bit vectors can also perform some set-algebra operations efficiently.
+    Union corresponds to applying OR to corresponding bits, intersection
+    corresponds to AND, and difference can be implemented using AND together
+    with complement. A packed implementation can process many membership bits
+    in one machine operation.
+  </p>
+
+  <h4>Practical Representation</h4>
+  <p>
+    Many languages provide arrays of Boolean values, but a Boolean array does
+    not necessarily store one value in one bit. Each entry may occupy a byte or
+    even a larger amount of memory. Such an array implements the same logical
+    idea and supports the same operation times, but it may use substantially
+    more than \(U\) bits of storage.
+  </p>
+
+  <p>
+    A space-efficient implementation packs the bits into an array of unsigned
+    machine integers. For example, an array of 32-bit unsigned integers stores
+    32 membership bits in each array entry. Key \(k\) is stored in array entry
+    \[
+      \left\lfloor \frac{k}{32} \right\rfloor
+    \]
+    and uses bit position
+    \[
+      k \bmod 32.
+    \]
+    Bit masks and shift operations read, set, or clear that particular bit.
+    The array therefore needs approximately \(\lceil U/32\rceil\) integers
+    rather than one Boolean array entry for every possible key.
+  </p>
+
+  <p>
+    Some languages provide a bit-array or bit-set library that performs this
+    packing automatically. We treat that low-level representation as an
+    implementation detail and use the simpler <code>present[key]</code>
+    notation above.
+  </p>
+</section>
+
+<section id="library-set-implementations"
+         section-title="Library Implementations">
+  <h3>Library Implementations</h3>
+  <p>
+    Most programs should use a set implementation supplied by the language's
+    standard library. The usual choice is between a hash-based set, which
+    emphasizes fast membership and updates, and a sorted set, which maintains
+    its keys in sorted order.
+  </p>
+
+  <table class="example-table left-top-align">
+    <thead>
+      <tr>
+        <th>Language</th>
+        <th>Hash-Based Set</th>
+        <th>Sorted Set</th>
+        <th>Other Useful Types</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Java</strong></td>
+        <td>
+          <code>HashSet&lt;E&gt;</code> provides expected \(O(1)\)
+          membership, insertion, and removal. Its iteration order is
+          unspecified.
+        </td>
+        <td>
+          <code>TreeSet&lt;E&gt;</code> keeps keys sorted and provides
+          \(O(\log n)\) membership, insertion, and removal.
+        </td>
+        <td>
+          <code>LinkedHashSet&lt;E&gt;</code> preserves insertion order.
+          <code>BitSet</code> represents nonnegative integer positions using a
+          packed bit vector.
+        </td>
+      </tr>
+      <tr>
+        <td><strong>C++</strong></td>
+        <td>
+          <code>std::unordered_set</code> provides average \(O(1)\)
+          membership, insertion, and removal. Its iteration order should not
+          be treated as meaningful.
+        </td>
+        <td>
+          <code>std::set</code> keeps keys sorted and provides
+          \(O(\log n)\) membership, insertion, and removal.
+        </td>
+        <td>
+          <code>std::bitset&lt;N&gt;</code> provides a fixed-size packed
+          collection of bits, although its interface differs from that of a
+          general-purpose set.
+        </td>
+      </tr>
+      <tr>
+        <td><strong>Python</strong></td>
+        <td>
+          The built-in <code>set</code> type is hash based and supports
+          membership, insertion, removal, iteration, and set-algebra
+          operations.
+        </td>
+        <td>
+          Python does not provide a general-purpose built-in set that
+          automatically maintains its elements in sorted order.
+        </td>
+        <td>
+          <code>frozenset</code> is an immutable hash-based set. When sorted
+          output is needed, the elements can be sorted when they are
+          processed.
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>
+    Library implementations should normally be preferred in application code
+    because they are tested, optimized, and integrated with the language's
+    collection framework. Direct implementations remain useful for studying
+    the Set ADT, comparing representations, or creating a specialized
+    representation such as a bit vector.
+  </p>
+</section>
+
+</section>
+
+<section id="applications" section-title="Applications">
+  <h2>Applications</h2>
+  <p>
+    Sets are useful whenever a program must track uniqueness, test membership,
+    or compare collections without storing additional information for each key.
+    Common applications include the following.
+  </p>
+
+  <ul class="spaced">
+    <li>
+      <strong>Duplicate detection:</strong> Insert each item into a set. If an
+      insertion reports that the item was already present, then a duplicate has
+      been found.
+    </li>
+    <li>
+      <strong>Removing duplicates:</strong> Add every item from a collection to
+      a set, then iterate through the set to obtain the distinct items.
+    </li>
+    <li>
+      <strong>Visited tracking:</strong> Graph searches and maze-solving
+      algorithms use a set to avoid processing the same vertex or position more
+      than once.
+    </li>
+    <li>
+      <strong>Filtering:</strong> A set of allowed or blocked keys can determine
+      whether each item in a collection should be kept, rejected, or processed.
+    </li>
+    <li>
+      <strong>Fast membership testing:</strong> One collection can be converted
+      to a set so that items from another collection can be tested against it
+      efficiently. For example, a program might test which submitted IDs appear
+      in a set of valid IDs.
+    </li>
+    <li>
+      <strong>Permissions and capabilities:</strong> A user or process can have
+      a set of permissions, roles, enabled features, or supported operations.
+    </li>
+    <li>
+      <strong>Comparing groups:</strong> Union, intersection, and difference can
+      determine which items appear in either group, in both groups, or in only
+      one group.
+    </li>
+  </ul>
+</section>
+
+<section id="connections-comparisons"
+         section-title="Connections and Comparisons">
+  <h2>Connections and Comparisons</h2>
+  <p>
+    Sets are closely related to several other abstract data types, but the
+    distinctions among them determine what information is preserved and which
+    operations are natural.
+  </p>
+
+  <table class="example-table left-top-align">
+    <thead>
+      <tr>
+        <th>Structure</th>
+        <th>What It Stores</th>
+        <th>How It Differs from a Set</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>List</strong></td>
+        <td>Items in a sequence, possibly with duplicates</td>
+        <td>
+          A list preserves positions and may store the same value multiple
+          times. A set stores only whether each distinct key is present.
+        </td>
+      </tr>
+      <tr>
+        <td><strong>Map</strong></td>
+        <td>Distinct keys with associated values</td>
+        <td>
+          A set stores keys only. A map is appropriate when each key must also
+          have a count, label, record, distance, or other associated value.
+        </td>
+      </tr>
+      <tr>
+        <td><strong>Multiset</strong></td>
+        <td>Keys together with their numbers of occurrences</td>
+        <td>
+          A multiset allows repeated values and records their multiplicities.
+          An ordinary set records only presence or absence.
+        </td>
+      </tr>
+      <tr>
+        <td><strong>Disjoint-set structure</strong></td>
+        <td>A partition of items into nonoverlapping groups</td>
+        <td>
+          A disjoint-set structure answers whether two items belong to the same
+          group and supports merging groups. Despite the similar name, it is
+          not a general-purpose Set ADT.
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>
+    Sets and maps are especially closely connected. Many map implementations
+    store distinct keys and already provide efficient key lookup. A set can
+    therefore be implemented using a map in which each key is associated with
+    the same unused marker value. The set contains a key exactly when the map
+    contains that key.
+  </p>
+
+  <pre><code>set contains key  &lt;==&gt;  markerMap contains key</code></pre>
+
+  <p>
+    The two ADTs nevertheless serve different purposes. A client that needs
+    only membership should use a set, since the interface communicates that no
+    associated values are needed. A client that needs information attached to
+    each key should use a map.
+  </p>
+
+  <p>
+    A finite set can also be viewed as a membership predicate: for every
+    possible key, the predicate answers either <code>true</code> or
+    <code>false</code>. The bit-vector representation makes this connection
+    explicit by storing one membership bit for every possible key in a fixed
+    universe.
+  </p>
+</section>
+
+<section id="variations-extensions"
+         section-title="Variations and Extensions">
+  <h2>Variations and Extensions</h2>
+  <p>
+    The basic Set ADT requires only distinct keys and membership operations.
+    Many libraries provide specialized variations that add ordering,
+    immutability, multiplicities, or other guarantees.
+  </p>
+
+  <ul class="spaced">
+    <li>
+      <strong>Sorted sets:</strong> A sorted set maintains its keys in order
+      and may support minimum, maximum, predecessor, successor, and range
+      operations in addition to the basic Set operations.
+    </li>
+    <li>
+      <strong>Insertion-ordered sets:</strong> These sets preserve the order in
+      which keys were first inserted. Duplicate insertions do not create new
+      positions because each key still appears only once.
+    </li>
+    <li>
+      <strong>Immutable sets:</strong> An immutable set cannot be changed after
+      it is created. Operations such as insertion and removal instead return
+      new sets. Immutable sets are useful when values must be safely shared or
+      used as keys in other data structures.
+    </li>
+    <li>
+      <strong>Persistent sets:</strong> A persistent set preserves earlier
+      versions after an update. The old and new versions may share much of
+      their internal structure rather than copying every key.
+    </li>
+    <li>
+      <strong>Multisets:</strong> A multiset extends the idea of a set by
+      storing a multiplicity for each key. Adding an existing key increases
+      its count rather than leaving the collection unchanged.
+    </li>
+    <li>
+      <strong>Identity sets:</strong> Some specialized sets distinguish objects
+      by identity rather than by ordinary value equality. Two separate objects
+      may therefore be treated as different keys even if their contents are
+      equal.
+    </li>
+    <li>
+      <strong>Concurrent sets:</strong> A concurrent set allows multiple
+      threads to perform operations safely. Its implementation must coordinate
+      simultaneous membership tests and updates while preserving uniqueness.
+    </li>
+    <li>
+      <strong>Universe-specific sets:</strong> When the possible keys come from
+      a small fixed collection, such as an enumeration, a specialized packed
+      representation may use less space and support very fast operations.
+    </li>
+  </ul>
+
+  <p>
+    These variations preserve the central idea that each ordinary set key is
+    either present or absent, but they strengthen the interface or alter the
+    update model to meet particular application needs.
+  </p>
+</section>
+
+
+  <section id="common-pitfalls" section-title="Common Pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul class="spaced">
+    <li>
+      <strong>Allowing duplicate keys:</strong> An implementation must check
+      whether a key is already present before storing it. Adding an existing key
+      must not create another copy or increase the size.
+    </li>
+    <li>
+      <strong>Mishandling removal of a missing key:</strong> The interface
+      should clearly specify whether removing an absent key returns
+      <code>false</code>, leaves the set unchanged without reporting anything,
+      or signals an error.
+    </li>
+    <li>
+      <strong>Using inconsistent equality rules:</strong> Membership, insertion,
+      and removal must use the same definition of equality. In a hash-based set,
+      equal keys must also have equal hash values. In a tree-based set, the
+      ordering rule must agree with the equality rule.
+    </li>
+    <li>
+      <strong>Modifying stored keys:</strong> Changing a key after insertion can
+      break later searches if the change affects its equality, hash value, or
+      ordering. Keys stored in hash-based or tree-based sets should therefore
+      remain unchanged in all properties used by the implementation.
+    </li>
+    <li>
+      <strong>Assuming an iteration order:</strong> Client code should not assume
+      that iteration is sorted or follows insertion order unless the chosen
+      implementation explicitly guarantees that behavior.
+    </li>
+    <li>
+      <strong>Using a set when multiplicity matters:</strong> A set records only
+      whether a key is present, so it loses information about repeated
+      occurrences. If frequencies matter, use a map from each key to its count
+      or a multiset.
+    </li>
+    <li>
+      <strong>Choosing a bit vector for a sparse, large universe:</strong> A bit
+      vector allocates space according to the range of possible keys rather than
+      the number of keys actually stored. It may therefore waste substantial
+      space when \(U\) is large and \(n\) is small.
+    </li>
+    <li>
+      <strong>Ignoring implementation guarantees:</strong> Hash-based, tree-based,
+      sequential, and bit-vector sets provide different operation costs and
+      ordering guarantees. Choosing an implementation without considering the
+      required operations can lead to unnecessary time or space costs.
+    </li>
+    <li>
+        <strong>Using an out-of-range bit-vector key:</strong> A bit vector can
+        represent only keys in its fixed universe. The implementation must reject
+        or otherwise define the behavior for keys smaller than 0 or at least \(U\).
+      </li>
+  </ul>
+</section>
+  
+ <section id="summary" section-title="Summary">
+  <h2>Summary</h2>
+  <p>
+    A set stores distinct keys and makes membership its central operation.
+    The core Set ADT supports testing, adding, and removing keys, together
+    with operations such as <code>size</code>, <code>isEmpty</code>, and
+    <code>clear</code>. Adding an existing key does not create a duplicate,
+    and removing an absent key normally leaves the set unchanged. Many
+    implementations also support iteration and higher-level set-algebra
+    operations such as union, intersection, difference, and subset testing.
+  </p>
+  <p>
+    The Set ADT does not prescribe a representation. Unsorted sequences are
+    simple but require linear-time searches. Sorted arrays provide logarithmic
+    membership but linear-time updates. Balanced search trees provide
+    logarithmic membership and updates together with sorted traversal, while
+    hash tables provide expected constant-time basic operations without a
+    useful ordering guarantee. Bit vectors provide constant-time membership
+    and updates for keys from a small fixed integer universe, but their space
+    and traversal costs depend on the size of that universe rather than on the
+    number of stored keys.
+  </p>
+  <p>
+    The appropriate representation depends on the required operations,
+    ordering guarantees, key restrictions, and space constraints. In most
+    application code, a standard-library set should be preferred. A set is the
+    appropriate ADT when only uniqueness and membership matter; lists preserve
+    positions and duplicates, maps associate values with keys, and multisets
+    preserve occurrence counts.
+  </p>
+</section>
+
+
+  <section id="links" section-title="Helpful Links and Resources">
+  <h2>Helpful Links and Resources</h2>
+  
+  <p>For a more complete treatment of set-algebra operations, see your favorite discrete mathematics textbook, 
+    for instance, one of the following:
+  </p>
+    <ul class="resource-list spaced">
+      <li><a href="https://cusack.hope.edu/DAIADS/PDFS/AIDM_4_1.pdf">An Active Introduction to Discrete Mathematics</a></li>
+      <li><a href="https://cusack.hope.edu/DAIADS/PDFS/AIDMA_3_5.pdf">An Active Introduction to Discrete Mathematics and Algorithms</a></li>
     </ul>
-    <p>
-      Library sets should normally be used in application code. Implementing a small set yourself is still useful
-      when the learning goal is to understand equality, uniqueness, operation contracts, or the tradeoffs among
-      representations.
-    </p>
-  </section>
 
-  <section id="sets-and-maps" section-title="Relationship to Maps">
-    <h2>Relationship to Maps</h2>
-    <p>
-      Sets and maps are closely related. A set stores keys only. A map stores keys with associated values. One common
-      way to implement a set is to use a map from each key to a simple marker value.
-    </p>
-    <pre><code>set contains key  &lt;==&gt;  markerMap contains key</code></pre>
-    <p>
-      This relationship is useful, but the ADTs answer different questions. A set asks whether a key is present. A
-      map asks what value is associated with a key. If the program needs counts, labels, records, or distances, use a
-      map. If it only needs membership, use a set.
-    </p>
-  </section>
+    <p>These resources provide additional information and examples for working with sets:</p>
+  <ul class="resource-list spaced">
+    <li>
+      <a href="https://xlinux.nist.gov/dads/HTML/set.html"
+         target="_blank">
+        NIST Dictionary of Algorithms and Data Structures: Set
+      </a>
+      provides a concise definition of the Set ADT and its central
+      membership, insertion, and removal operations.
+    </li>
+    <li>
+      <a href="https://en.wikipedia.org/wiki/Set_%28abstract_data_type%29"
+         target="_blank">
+        Wikipedia: Set (Abstract Data Type)
+      </a>
+      gives a broad overview of set operations, implementations, and
+      variations.
+    </li>
+    <li>
+      <a href="https://www.geeksforgeeks.org/dsa/introduction-to-set-data-structure/"
+         target="_blank">
+        GeeksforGeeks: Introduction to the Set Data Structure
+      </a>
+      presents additional examples, applications, and implementation
+      comparisons.
+    </li>
+    <li>
+      <a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/Set.html"
+         target="_blank">
+        Java Set Interface
+      </a>
+      documents the operations and guarantees shared by Java set
+      implementations such as <code>HashSet</code> and <code>TreeSet</code>.
+    </li>
+    <li>
+      <a href="https://en.cppreference.com/w/cpp/container/set"
+         target="_blank">
+        C++ <code>std::set</code>
+      </a>
+      and
+      <a href="https://en.cppreference.com/w/cpp/container/unordered_set"
+         target="_blank">
+        C++ <code>std::unordered_set</code>
+      </a>
+      document the standard ordered and hash-based set containers.
+    </li>
+    <li>
+      <a href="https://docs.python.org/3/tutorial/datastructures.html#sets"
+         target="_blank">
+        Python Tutorial: Sets
+      </a>
+      introduces Python's built-in <code>set</code> type and its
+      set-algebra operations.
+    </li>
+    <li>
+      <a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/BitSet.html"
+         target="_blank">
+        Java <code>BitSet</code>
+      </a>
+      provides an example of a library-supported packed bit-vector
+      representation.
+    </li>
+  </ul>
+      
+</section>
 
-  <section id="edge-cases" section-title="Edge Cases and Pitfalls">
-    <h2>Edge Cases and Pitfalls</h2>
-    <ul>
-      <li><strong>Duplicate insertion:</strong> Adding an existing key should not increase the size.</li>
-      <li><strong>Removing a missing key:</strong> The interface should define whether this returns <code>false</code>, does nothing, or reports an error.</li>
-      <li><strong>Equality rules:</strong> The set needs a clear definition of when two keys count as the same key.</li>
-      <li><strong>Mutable keys:</strong> Changing a key after insertion can break hash-based or tree-based lookup if the key's hash, equality, or ordering changes.</li>
-      <li><strong>Iteration order:</strong> Do not assume sorted or insertion order unless the implementation promises it.</li>
-      <li><strong>Using a set when counts matter:</strong> A set loses frequency information. Use a map from key to count when occurrences matter.</li>
-    </ul>
-  </section>
-
-  <section id="applications" section-title="Applications">
-    <h2>Applications</h2>
-    <ul>
-      <li><strong>Duplicate detection:</strong> Insert each item into a set and report a duplicate when insertion finds an existing key.</li>
-      <li><strong>Visited tracking:</strong> Graph searches use a set to avoid processing the same vertex repeatedly.</li>
-      <li><strong>Filtering:</strong> A set of allowed or blocked keys can decide whether an item should be kept.</li>
-      <li><strong>Membership joins:</strong> Given two collections, convert one to a set so membership tests against it are fast.</li>
-      <li><strong>Feature flags and permissions:</strong> A user can have a set of permissions, enabled features, or roles.</li>
-      <li><strong>Mathematical modeling:</strong> Union, intersection, and difference model overlap between groups.</li>
-    </ul>
-  </section>
-
-  <section id="summary" section-title="Summary">
-    <h2>Summary</h2>
-    <p>
-      A set stores distinct keys and makes membership a primary operation. Adding an existing key leaves the set
-      unchanged, while removing a missing key usually has no effect or returns <code>false</code>. Sets can be
-      implemented in several ways, including lists, sorted arrays, balanced trees, hash tables, and bit vectors. The
-      right implementation depends on whether the program needs fast exact lookup, sorted traversal, compact integer
-      storage, or simple teaching code.
-    </p>
-  </section>
-
-  <section id="related-pages" section-title="Related Pages">
-    <h2>Related Pages</h2>
-    <ul>
-      <li><a href="?path=Data%20Structures%2FSets%2C%20Maps%2C%20and%20Hash%20Tables%2FIntroduction">Sets, Maps, and Hash Tables</a>, for the section overview.</li>
-      <li><a href="?path=Data%20Structures%2FSets%2C%20Maps%2C%20and%20Hash%20Tables%2FMap%20and%20Dictionary%20ADT">Map and Dictionary ADT</a>, for key-value lookup.</li>
-      <li><a href="?path=Data%20Structures%2FSets%2C%20Maps%2C%20and%20Hash%20Tables%2FHash%20Tables">Hash Tables</a>, for the most common fast set implementation.</li>
-      <li><a href="?path=Data%20Structures%2FTrees%2FBinary%20Search%20Trees">Binary Search Trees</a>, for an ordered implementation idea.</li>
-    </ul>
-  </section>
-
-  <section id="reading-questions" section-title="Reading Comprehension Questions">
-    <h2>Reading Comprehension Questions</h2>
-    <ol>
-      <li><strong>Definition:</strong> What makes a set different from a list?</li>
-      <li><strong>Insertion:</strong> What should happen if <code>add(key)</code> is called when <code>key</code> is already present?</li>
-      <li><strong>Membership:</strong> Why is <code>contains</code> the central operation for a set?</li>
-      <li><strong>Implementation:</strong> Why might a hash set be preferred over an unsorted list for a large collection?</li>
-      <li><strong>Ordering:</strong> Why should client code avoid assuming that a general set iterates in sorted order?</li>
-      <li><strong>Set algebra:</strong> How can <code>contains</code> be used to compute an intersection?</li>
-      <li><strong>Return values:</strong> Why is a Boolean return from <code>add</code> or <code>remove</code> useful?</li>
-    </ol>
-    <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
-    <div id="answers" class="answer" hidden>
-      <ol>
-        <li><strong>Answer:</strong> A set stores distinct keys and does not keep duplicate occurrences. A list may contain repeated values and has positions.</li>
-        <li><strong>Answer:</strong> The set should not insert a duplicate. The size should stay the same.</li>
-        <li><strong>Answer:</strong> A set is mainly used to answer whether a key is present, so membership is the defining query.</li>
-        <li><strong>Answer:</strong> A hash set usually supports expected constant-time membership, insertion, and deletion, while an unsorted list requires a linear scan.</li>
-        <li><strong>Answer:</strong> Different implementations use different internal layouts. Only ordered set implementations promise sorted traversal.</li>
-        <li><strong>Answer:</strong> Iterate through one set and add a key to the result only when the other set contains that key.</li>
-        <li><strong>Answer:</strong> It tells the caller whether the operation actually changed membership without requiring a separate query.</li>
+<section id="reading-questions" section-title="Reading Comprehension Questions">
+  <h2>Reading Comprehension Questions</h2>
+  <ol>
+    <li>
+      <strong>Cost of Sequential Insertion:</strong>
+      In an unsorted sequential set, physically inserting a new key may take
+      \(O(1)\) time. Why is the complete <code>add(key)</code> operation still
+      \(O(n)\) in the worst case?
+    </li>
+    <li>
+      <strong>Array Removal Choices:</strong>
+      Describe the two removal methods presented for an unsorted array. 
+      What is the advantage and disadvantage of each method, and what is the worst-case time for each?
+    </li>
+    <li>
+      <strong>Sorted-Array Tradeoff:</strong>
+      A sorted array can locate a key or its insertion position in
+      \(O(\log n)\) time. Why do <code>add</code> and <code>remove</code> still
+      take \(O(n)\) time in the worst case?
+    </li>
+    <li>
+      <strong>Set Operations in a BST:</strong>
+      How are <code>contains</code>, <code>add</code>, and <code>remove</code>
+      implemented using an ordinary balanced binary search tree? What additional
+      capabilities does the tree representation provide?
+    </li>
+    <li>
+      <strong>Intersection Construction:</strong>
+      Describe how to construct \(A \cap B\) using iteration,
+      <code>contains</code>, and <code>add</code>. Why should the algorithm
+      iterate through the smaller input set?
+    </li>
+    <li>
+      <strong>Representation-Specific Set Algebra:</strong>
+      Why might the general intersection algorithm fail to be the fastest
+      possible algorithm for a particular set representation? Give one example
+      from the page.
+    </li>
+    <li>
+      <strong>Universe Size versus Set Size:</strong>
+      Suppose a bit-vector set contains only ten keys, but its possible keys
+      range from 0 through one billion. Why can this representation still
+      require a large amount of space and take a long time to iterate through?
+    </li>
+    <li>
+      <strong>Logical and Physical Bit Arrays:</strong>
+      The bit-vector pseudocode uses <code>present[key]</code> as though each
+      array entry were one bit. Why might a Boolean array use more space than
+      \(U\) bits, and how can an array of 32-bit unsigned integers store the
+      bits more compactly?
+    </li>
+    <li>
+      <strong>Consistent Key Rules:</strong>
+      What consistency conditions must equality, hashing, and ordering satisfy
+      in hash-based and tree-based sets? What can go wrong if a stored key is
+      modified in a way that changes one of these properties?
+    </li>
+    <li>
+      <strong>Choosing an Implementation:</strong>
+      For each of the following situations, choose an unsorted sequence, sorted
+      array, balanced search tree, hash table, or bit vector, and justify the
+      choice:
+      <ol type="a">
+        <li>A small set used only a few times.</li>
+        <li>A mostly static set requiring many membership tests.</li>
+        <li>A frequently updated set that must be traversed in sorted order.</li>
+        <li>A general-purpose set requiring fast membership but no ordering.</li>
+        <li>A set of integers from a small fixed universe.</li>
       </ol>
-    </div>
-  </section>
+    </li>
+  </ol>
 
-  <section id="activities" section-title="In-Class Activities">
-    <h2>In-Class Activities</h2>
+  <button id="toggleAnswers" class="show-answer" aria-expanded="false">
+    Show Answers
+  </button>
+
+  <div id="answers" class="answer" hidden>
     <ol>
-      <li><strong>Trace the set:</strong> Starting from an empty set, trace <code>add(5)</code>, <code>add(2)</code>, <code>add(5)</code>, <code>remove(7)</code>, <code>add(7)</code>, and <code>contains(2)</code>. Record the set and size after each operation.</li>
-      <li><strong>Choose the structure:</strong> For each task, decide whether a list, set, or map is the best ADT: storing a playlist order, checking whether an ID is banned, counting word frequencies, and tracking visited maze cells.</li>
-      <li><strong>Set algebra by hand:</strong> Given \(A=\{a,b,c,d\}\) and \(B=\{b,d,e\}\), compute \(A \cup B\), \(A \cap B\), \(A-B\), and \(B-A\).</li>
-      <li><strong>Implementation debate:</strong> Compare a hash set and a tree set for a spell-check dictionary. Which operations matter, and does sorted order help?</li>
+      <li>
+        <strong>Answer:</strong>
+        Before inserting the key, the implementation must scan the existing
+        keys to determine whether an equal key is already present. That
+        duplicate check takes \(O(n)\) time in the worst case and dominates the
+        constant-time physical insertion.
+      </li>
+      <li>
+        <strong>Answer:</strong>
+        The implementation can shift all later keys one position to the left,
+        which preserves their relative order but may require \(O(n)\) work. If
+        order need not be preserved, it can copy the final stored key into the
+        removed key's position and reduce the used size. The second method takes
+        \(O(1)\) time after the key has been located.
+      </li>
+      <li>
+        <strong>Answer:</strong>
+        Binary search finds the key or insertion position in \(O(\log n)\)
+        time, but preserving sorted order may require shifting as many as
+        \(n\) keys. Insertion shifts keys to the right, while removal shifts
+        later keys to the left.
+      </li>
+      <li>
+        <strong>Answer:</strong>
+        <code>contains</code> uses BST search, <code>add</code> uses BST
+        insertion, and <code>remove</code> uses BST
+        deletion. A balanced tree keeps these operations
+        at \(O(\log n)\) worst-case time and also supports sorted traversal,
+        minimum and maximum keys, predecessors and successors, and range
+        queries.
+      </li>
+      <li>
+        <strong>Answer:</strong>
+        Iterate through one input set. For each key, test whether the other set
+        contains it and add it to the result when it does. Iterating through the
+        smaller set minimizes the number of membership tests.
+      </li>
+      <li>
+        <strong>Answer:</strong>
+        The general algorithm uses only the Set ADT interface and does not take
+        advantage of the internal representation. A bit vector, for example,
+        can compute intersection by applying bitwise AND to corresponding
+        packed words, thereby processing many membership positions at once.
+      </li>
+      <li>
+        <strong>Answer:</strong>
+        A bit vector reserves a position for every possible key, so its storage
+        depends on \(U\), not on the ten keys actually present. Iteration may
+        also need to inspect all \(U\) positions to determine which bits are 1.
+      </li>
+      <li>
+        <strong>Answer:</strong>
+        A language may store each Boolean value in a byte or a larger storage
+        unit rather than in one bit. A packed representation divides the key
+        \(k\) by 32 to select an unsigned integer and uses \(k \bmod 32\) to
+        select one bit within that integer. Thus, each array entry represents
+        32 possible keys.
+      </li>
+      <li>
+        <strong>Answer:</strong>
+        In a hash-based set, equal keys must have equal hash values. In a
+        tree-based set, the ordering rule must agree with equality. If a stored
+        key is modified so that its equality, hash value, or ordering changes,
+        later searches may look in a different location and fail to find the
+        key.
+      </li>
+      <li>
+        <strong>Answer:</strong>
+        <ol type="a">
+          <li>
+            Use an unsorted sequence because it is simple and linear searches
+            are acceptable for a small set.
+          </li>
+          <li>
+            Use a sorted array because binary search provides
+            \(O(\log n)\) membership and updates are infrequent.
+          </li>
+          <li>
+            Use a balanced search tree because it supports
+            \(O(\log n)\) updates and sorted traversal.
+          </li>
+          <li>
+            Use a hash table because it provides expected \(O(1)\) membership
+            and updates when no useful order is required.
+          </li>
+          <li>
+            Use a bit vector because direct bit access provides constant-time
+            membership and updates when the integer universe is small and
+            fixed.
+          </li>
+        </ol>
+      </li>
     </ol>
-  </section>
+  </div>
+</section>
+
+<section id="activities" section-title="In-Class Activities">
+  <h2>In-Class Activities</h2>
+  <ol>
+    <li>
+      <strong>Trace Set Operations:</strong>
+      Starting with an empty set, trace
+      <code>add(5)</code>, <code>add(2)</code>,
+      <code>add(5)</code>, <code>remove(7)</code>,
+      <code>add(7)</code>, <code>contains(2)</code>, and
+      <code>remove(5)</code>. For each operation, record its return value, the
+      logical contents of the set, and the size afterward.
+    </li>
+    <li>
+      <strong>Choose the Appropriate ADT:</strong>
+      For each task below, decide whether a list, set, map, or multiset is the
+      most appropriate ADT. Justify each choice by identifying the information
+      that must be preserved.
+      <ol type="a">
+        <li>Store songs in the order they should be played.</li>
+        <li>Test whether a submitted ID has been blocked.</li>
+        <li>Count how many times each word occurs in a document.</li>
+        <li>Track the maze positions that have already been visited.</li>
+        <li>Store each student's ID together with the student's grade.</li>
+        <li>Record the distinct courses represented at an event.</li>
+      </ol>
+    </li>
+
+    <li>
+      <strong>Construct Set-Algebra Algorithms:</strong>
+      The page gives pseudocode for intersection. Write representation-independent
+      pseudocode for each of the following using iteration and the core
+      operations <code>contains</code>, <code>add</code>, and
+      <code>remove</code> as appropriate:
+      <ol type="a">
+        <li>Union: \(A \cup B\)</li>
+        <li>Difference: \(A - B\)</li>
+        <li>Symmetric difference: \(A \oplus B\)</li>
+        <li>Testing whether \(A \subseteq B\)</li>
+      </ol>
+      For each algorithm, state whether it returns a new set or modifies an
+      input set. Then analyze the running time in terms of \(n=|A|\), \(m=|B|\), and \(|U|\) as appropriate.
+    </li>
+
+    <li>
+      <strong>Compare Array Removal Strategies:</strong>
+      Suppose an unsorted array set stores
+      <code>[18, 7, 25, 4, 13, 31]</code>.
+      Show the array after removing <code>7</code> using each of the following
+      methods:
+      <ol type="a">
+        <li>Shift every later key one position to the left.</li>
+        <li>Replace the removed key with the final stored key.</li>
+      </ol>
+      Compare the work performed and explain which properties of the physical
+      order are preserved by each method.
+    </li>
+
+    <li>
+      <strong>Build and Analyze a Bit Vector:</strong>
+      Let the universe be \(\{0,1,\ldots,15\}\) and let
+      \(S=\{1,4,6,9,14\}\).
+      <ol type="a">
+        <li>Draw the 16 membership bits representing \(S\).</li>
+        <li>Show the result of <code>add(11)</code>,
+        <code>remove(4)</code>, and <code>contains(8)</code>.</li>
+        <li>Give the order in which the keys are found when the bit vector is
+        scanned from left to right.</li>
+        <li>Explain why iteration takes \(O(U)\) time rather than
+        \(O(n)\) time.</li>
+      </ol>
+    </li>
+
+    <li>
+  <strong>Perform Set Algebra with Bit Operations:</strong>
+  Suppose the universe is \(U = \{0,1,\ldots,7\}\), and bit \(k\) records whether
+  key \(k\) is present. Let
+  \[
+    A=\{0,2,3,6\}
+    \qquad\text{and}\qquad
+    B=\{1,2,5,6\}.
+  \]
+  Write each set as an 8-bit value, listing the bits from key 7 on the left to
+  key 0 on the right. Recall the following bit operations:
+  <ul>
+    <li>
+      <code>x | y</code> is bitwise OR: a result bit is 1 when either
+      corresponding bit is 1.
+    </li>
+    <li>
+      <code>x &amp; y</code> is bitwise AND: a result bit is 1 only when both
+      corresponding bits are 1.
+    </li>
+    <li>
+      <code>x ^ y</code> is bitwise XOR: a result bit is 1 when exactly one
+      corresponding bit is 1.
+    </li>
+    <li>
+      <code>~x</code> is bitwise complement: every bit is reversed. When using
+      complement, retain only the eight bits belonging to the universe.
+    </li>
+  </ul>
+  <p>Do the following:</p>
+  <ol type="a">
+    <li>Write the bit-vector representations of \(A\) and \(B\).</li>
+    <li>
+      Compute <code>A | B</code>. Translate the resulting bit vector back into
+      a set. What set operation does this represent?
+    </li>
+    <li>
+      Compute <code>A &amp; B</code>. Translate the result back into a set.
+      What set operation does this represent?
+    </li>
+    <li>
+      Compute <code>A ^ B</code>. Translate the result back into a set. 
+      What set operation does this represent?
+    </li>
+    <li>
+      Compute <code>A &amp; ~B</code>, keeping only the eight relevant bits.
+      Translate the result back into a set. What set operation does this represent?
+    </li>
+    <li>
+      Give a bitwise expression for \(B-A\), and compute its resulting set.
+    </li>
+    <li>Compute \(\overline{A}\), the complement of \(A\). 
+      That is, \(U - A\).
+    </li>
+    <li>Give a bitwise expression for computing \(\overline{A}\).</li>
+    <li>
+      Explain why these operations can be faster on a packed bit vector than
+      applying <code>contains</code> separately to every possible key.
+    </li>
+  </ol>
+</li>
+
+    <li>
+      <strong>Select a Set Representation:</strong>
+      For each situation, choose an unsorted sequence, sorted array, balanced
+      search tree, hash table, or bit vector. Identify the relevant operation
+      costs, ordering requirements, and restrictions on the key universe.
+      <ol type="a">
+        <li>A small set that is searched only occasionally.</li>
+        <li>A mostly static dictionary that receives many membership queries.</li>
+        <li>A frequently updated collection that must be traversed in sorted order.</li>
+        <li>A general-purpose set needing fast membership with no ordering requirement.</li>
+        <li>A set of room numbers from 0 through 499.</li>
+        <li>Ten integers selected from the range 0 through one billion.</li>
+      </ol>
+    </li>
+
+    <li>
+      <strong>Implement an Unsorted Sequential Set:</strong>
+      Complete the provided starter code for a set implemented using an
+      unsorted array.
+    </li>
+
+    <li>
+      <strong>Implement a Sorted-Array Set:</strong>
+      Complete the provided starter code for a set implemented using a sorted
+      array.
+    </li>
+  </ol>
+</section>
+
 
   <section id="problems" section-title="Homework Problems">
     <h2>Homework Problems</h2>
