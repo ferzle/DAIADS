@@ -154,15 +154,15 @@ const DATA_STRUCTURES_ORDERS = {
   ],
   'Data Structures/Sets, Maps, and Hash Tables/': [
     'Introduction',
-    'Set ADT',
-    'Map and Dictionary ADT',
+    'Sets',
+    'Maps',
     'Hash Tables',
     'Separate Chaining',
     'Open Addressing'
   ]
   //,
   //'Data Structures/Graph Structures/': [
-  //  'Graph ADT',
+  //  'Graphs',
   //  'Edge Lists',
   //  'Adjacency Lists',
   //  'Adjacency Matrices'
