@@ -2146,7 +2146,95 @@ complement is written <code>~</code>.</p>
         </li>
       </ol>
     </li>
-    <li><strong>Implement a Bit-Vector Set:</strong></li>
+    <li>
+      <strong>Implement a Packed Bit-Vector Set:</strong>
+      Implement a set whose keys come from the fixed universe
+      \(\{0,1,\ldots,U-1\}\). The constructor receives \(U\), and the
+      representation packs the membership bits into an array of 32-bit integer
+      words. Download a starter program, complete each method marked
+      <code>TODO</code>, and run its tests. Do not replace the word array with a
+      library set, bit set, Boolean array, or list of stored keys.
+
+      <p>Your implementation must satisfy the following requirements:</p>
+      <ul>
+        <li>
+          Allocate exactly \(\lceil U/32\rceil\) words. All words initially
+          contain zero, and the constructor must reject a nonpositive universe
+          size.
+        </li>
+        <li>
+          Complete the helper methods that compute
+          <code>wordIndex = key / 32</code>,
+          <code>bitIndex = key % 32</code>, and
+          <code>wordMask(bitIndex) = 1 &lt;&lt; bitIndex</code>. The first two
+          helpers accept a key from the universe. <code>wordMask</code> instead
+          accepts a bit index from 0 through 31 and produces a mask for one
+          array word, not for the complete bit vector.
+        </li>
+        <li>
+          <code>contains</code>, <code>add</code>, and <code>remove</code> must
+          reject keys outside the universe. For a valid key, they must inspect
+          or modify only its selected word and bit.
+        </li>
+        <li>
+          <code>add</code> returns <code>false</code> for a duplicate; otherwise
+          it sets the bit and increments the stored size exactly once.
+          <code>remove</code> behaves symmetrically for an absent or present key.
+        </li>
+        <li>
+          Maintain the number of present keys so that <code>size</code> and
+          <code>isEmpty</code> take constant time. <code>clear</code> must reset
+          every word and the size while preserving the universe.
+        </li>
+        <li>
+          Return keys in increasing order from the supplied snapshot method by
+          scanning the universe; iteration does not need to be constant time.
+        </li>
+      </ul>
+
+      <p>
+        The supplied tests use a universe of 128 keys, which requires four
+        32-bit words. They exercise keys 0, 31, 32, 47, 63, 64, 95, 96, and
+        127 so that both ends of every word and every word boundary are tested.
+        They also cover duplicates, absent removals, clearing and reuse, and
+        invalid keys. Add tests for a universe whose size is not a multiple of
+        32, then state and justify the worst-case running time of every public
+        operation, including the snapshot method and <code>clear</code>.
+      </p>
+
+      <p>
+        The three versions deliberately model the same 32-bit word layout, but
+        the language types differ. Java's <code>int</code> has exactly 32 bits.
+        C++ does not guarantee that plain <code>int</code> is 32 bits, so its
+        starter uses <code>std::uint32_t</code>. Python integers have arbitrary
+        precision, so its starter uses only bit positions 0 through 31 in each
+        integer stored in the list.
+      </p>
+
+      <div class="starter-download-panel">
+        <p><strong>Choose a language and download the packed bit-vector starter:</strong></p>
+        <div class="starter-downloads" role="list" aria-label="Packed bit-vector set starter downloads">
+          <a class="starter-download" role="listitem"
+             href="/DAIADS/Content/Code/set-bit-vector/java/BitVectorSetExercise.java" download>
+            Java <span class="file-type">.java</span>
+          </a>
+          <a class="starter-download" role="listitem"
+             href="/DAIADS/Content/Code/set-bit-vector/cpp/bit_vector_set_exercise.cpp" download>
+            C++ <span class="file-type">.cpp</span>
+          </a>
+          <a class="starter-download" role="listitem"
+             href="/DAIADS/Content/Code/set-bit-vector/python/bit_vector_set_exercise.py" download>
+            Python <span class="file-type">.py</span>
+          </a>
+        </div>
+        <p>Each download is one runnable file containing the starter implementation and tests.</p>
+        <ul class="starter-run-instructions spaced">
+          <li><strong>Java:</strong> <code>javac BitVectorSetExercise.java</code>, then <code>java BitVectorSetExercise</code>.</li>
+          <li><strong>C++:</strong> <code>g++ -std=c++17 -Wall -Wextra -pedantic bit_vector_set_exercise.cpp -o bit_vector_set_exercise</code>, then <code>./bit_vector_set_exercise</code>.</li>
+          <li><strong>Python:</strong> <code>python3 bit_vector_set_exercise.py</code>.</li>
+        </ul>
+      </div>
+    </li>
   </ol>
 </section>
 
