@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Map and Dictionary ADT</title>
+  <title>Map ADT</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
   <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
@@ -60,298 +60,458 @@
   </script>
 </head>
 <body>
-  <h1>Map and Dictionary ADT</h1>
+  <h1>Maps</h1>
 
   <section id="overview" section-title="Overview">
     <h2>Overview</h2>
     <p>
-      A <strong>map</strong> is an abstract data type that stores associations between keys and values. Given a key,
-      the map finds the value associated with that key. This is why maps are often called
-      <strong>dictionaries</strong> or <strong>associative arrays</strong>: they let a program look up information by
-      name, identifier, word, or other key.
+      A <strong>map</strong> is an abstract data type that stores associations
+      between distinct keys and values. The central question answered by a map
+      is: <em>What value is associated with this key?</em> Maps are also called
+      <strong>dictionaries</strong> or <strong>associative arrays</strong>.
     </p>
     <p>
-      The key idea is that keys are unique. A map should not contain two separate entries with the same key. Values do
-      not have to be unique. Many different keys may map to the same value.
-    </p>
-    <p>
-      This page treats <em>map</em>, <em>dictionary</em>, and <em>associative array</em> as closely related names for
-      the same keyed-lookup ADT. Different textbooks and programming languages choose different names, but the
-      central behavior is the same: store a key-value association, then retrieve or update it by key.
+      Every key identifies at most one entry, but values do not need to be
+      unique. For example, a map might associate each student ID with a student
+      record, each word with its frequency, or each graph vertex with its
+      current distance estimate. Different keys may have equal values associated with them.
     </p>
 
-    <svg class="map-model" viewBox="0 0 800 315" role="img"
-         aria-labelledby="mapModelTitle mapModelDesc">
-      <title id="mapModelTitle">Conceptual model of a map</title>
-      <desc id="mapModelDesc">
-        Three key-value entry cards are scattered inside a map boundary. Keys A100, A101, and A102 are unique, while
-        the value Mina appears in two different entries. A note says positions have no meaning.
-      </desc>
-      <rect class="boundary" x="90" y="35" width="620" height="235" rx="38"></rect>
-      <text class="annotation" x="400" y="64">logical map — entries are found by key; positions have no meaning</text>
+    <svg class="map-model" viewBox="0 0 800 400" role="img"
+     aria-labelledby="mapModelTitle mapModelDesc">
+  <title id="mapModelTitle">Conceptual model of a map</title>
+  <desc id="mapModelDesc">
+    Seven key-value entry cards are scattered inside a map boundary. Keys
+    A100 through A106 are unique, while some values repeat. Positions have
+    no meaning.
+  </desc>
 
-      <g>
-        <rect class="entry" x="135" y="95" width="225" height="62" rx="10"></rect>
-        <path class="key-part" d="M145 95 H245 V157 H145 Q135 157 135 147 V105 Q135 95 145 95 Z"></path>
-        <text class="entry-text" x="190" y="132">A100</text>
-        <text class="entry-text" x="302" y="132">Mina</text>
-      </g>
-      <g>
-        <rect class="entry" x="440" y="88" width="225" height="62" rx="10"></rect>
-        <path class="key-part" d="M450 88 H550 V150 H450 Q440 150 440 140 V98 Q440 88 450 88 Z"></path>
-        <text class="entry-text" x="495" y="125">A101</text>
-        <text class="entry-text" x="607" y="125">Cal</text>
-      </g>
-      <g>
-        <rect class="entry" x="280" y="185" width="225" height="62" rx="10"></rect>
-        <path class="key-part" d="M290 185 H390 V247 H290 Q280 247 280 237 V195 Q280 185 290 185 Z"></path>
-        <text class="entry-text" x="335" y="222">A102</text>
-        <text class="entry-text" x="447" y="222">Mina</text>
-      </g>
+  <rect class="boundary" x="70" y="35" width="660" height="305" rx="38"></rect>
+  <text class="annotation" x="400" y="64">
+    logical map - entries are found by key; positions have no meaning
+  </text>
 
-      <text class="annotation" x="215" y="294">keys are unique</text>
-      <text class="annotation" x="575" y="294">values may repeat</text>
-    </svg>
-    <p>
-      Each card is one entry. The blue half is the key used for lookup, and the white half is the associated value.
-      Two entries may contain equal values, as A100 and A102 do here, but two entries may not have equal keys. The
-      arrangement of cards is deliberately arbitrary because the map ADT does not specify a representation.
-    </p>
-  </section>
+  <!-- A100 -->
+  <g transform="rotate(-6 190 122)">
+    <rect class="entry" x="100" y="96" width="180" height="52" rx="10"></rect>
+    <path class="key-part"
+          d="M110 96 H185 V148 H110 Q100 148 100 138 V106 Q100 96 110 96 Z"></path>
+    <text class="entry-text" x="145" y="129">A100</text>
+    <text class="entry-text" x="230" y="129">Mina</text>
+  </g>
 
-  <section id="adt" section-title="Abstract Data Type and Operations">
-    <h2>Abstract Data Type and Operations</h2>
-    <p>
-      A map stores entries. Each entry has a <strong>key</strong> and a <strong>value</strong>.
-    </p>
-    <pre><code>key -> value</code></pre>
-    <p>
-      A typical map interface includes these operations:
-    </p>
-    <table class="example-table left-top-align">
-      <thead>
-        <tr><th>Operation</th><th>Caller-visible behavior</th></tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><strong><code>put(key, value)</code></strong></td>
-          <td>Insert a new entry when the key is absent; otherwise replace the value associated with the equal key.</td>
-        </tr>
-        <tr>
-          <td><strong><code>get(key)</code></strong></td>
-          <td>Return the value associated with <code>key</code>, following a documented policy when the key is absent.</td>
-        </tr>
-        <tr>
-          <td><strong><code>containsKey(key)</code></strong></td>
-          <td>Return whether an entry with an equal key is present, independently of its value.</td>
-        </tr>
-        <tr>
-          <td><strong><code>remove(key)</code></strong></td>
-          <td>Delete the entry for <code>key</code>, often returning the removed value or whether it existed.</td>
-        </tr>
-        <tr><td><code>size()</code></td><td>Return the number of key-value entries, which is also the number of distinct keys.</td></tr>
-        <tr><td><code>isEmpty()</code></td><td>Return whether the map has no entries.</td></tr>
-        <tr><td><code>keys()</code></td><td>Iterate over each key once.</td></tr>
-        <tr><td><code>values()</code></td><td>Iterate over values; equal values may appear more than once.</td></tr>
-        <tr><td><code>entries()</code></td><td>Iterate over complete key-value associations.</td></tr>
-      </tbody>
-    </table>
-    <p>
-      Some interfaces use names such as <code>set</code>, <code>insert</code>, <code>lookup</code>, or
-      <code>delete</code> instead of <code>put</code>, <code>get</code>, and <code>remove</code>. The names vary, but
-      the ADT contract should still make the behavior clear.
-    </p>
-    <div class="callout">
-      <strong>Map invariant:</strong> each stored key has exactly one associated value. Calling <code>put</code> with
-      an existing key changes that association; it does not append a second entry with the same key.
-    </div>
-  </section>
+  <!-- A101 -->
+  <g transform="rotate(5 590 112)">
+    <rect class="entry" x="500" y="86" width="180" height="52" rx="10"></rect>
+    <path class="key-part"
+          d="M510 86 H585 V138 H510 Q500 138 500 128 V96 Q500 86 510 86 Z"></path>
+    <text class="entry-text" x="545" y="119">A101</text>
+    <text class="entry-text" x="630" y="119">Cal</text>
+  </g>
 
-  <section id="conceptual-model" section-title="Conceptual Model">
-    <h2>Conceptual Model</h2>
-    <p>
-      A map can be pictured as a two-column table where the left column contains keys and the right column contains
-      the associated values.
-    </p>
-    <table class="example-table">
-      <thead>
-        <tr>
-          <th>Key</th>
-          <th>Value</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><code>"A100"</code></td>
-          <td><code>"Mina"</code></td>
-        </tr>
-        <tr>
-          <td><code>"A101"</code></td>
-          <td><code>"Cal"</code></td>
-        </tr>
-        <tr>
-          <td><code>"A102"</code></td>
-          <td><code>"Mina"</code></td>
-        </tr>
-      </tbody>
-    </table>
-    <p>
-      The keys <code>"A100"</code>, <code>"A101"</code>, and <code>"A102"</code> are unique. The value
-      <code>"Mina"</code> appears twice, and that is allowed because values are not used to identify entries.
-    </p>
-    <p>
-      Calling <code>get("A101")</code> returns <code>"Cal"</code>. Calling <code>containsKey("A103")</code> returns
-      <code>false</code>. The map searches by key, not by value.
-    </p>
-  </section>
+  <!-- A102 -->
+  <g transform="rotate(-3 390 149)">
+    <rect class="entry" x="300" y="123" width="180" height="52" rx="10"></rect>
+    <path class="key-part"
+          d="M310 123 H385 V175 H310 Q300 175 300 165 V133 Q300 123 310 123 Z"></path>
+    <text class="entry-text" x="345" y="156">A102</text>
+    <text class="entry-text" x="430" y="156">Ivy</text>
+  </g>
 
-  <section id="worked-example" section-title="Worked Example">
-    <h2>Worked Example</h2>
+  <!-- A103 -->
+  <g transform="rotate(4 270 231)">
+    <rect class="entry" x="180" y="205" width="180" height="52" rx="10"></rect>
+    <path class="key-part"
+          d="M190 205 H265 V257 H190 Q180 257 180 247 V215 Q180 205 190 205 Z"></path>
+    <text class="entry-text" x="225" y="238">A103</text>
+    <text class="entry-text" x="310" y="238">Mina</text>
+  </g>
+
+  <!-- A104 -->
+  <g transform="rotate(-5 555 201)">
+    <rect class="entry" x="465" y="175" width="180" height="52" rx="10"></rect>
+    <path class="key-part"
+          d="M475 175 H550 V227 H475 Q465 227 465 217 V185 Q465 175 475 175 Z"></path>
+    <text class="entry-text" x="510" y="208">A104</text>
+    <text class="entry-text" x="595" y="208">Noah</text>
+  </g>
+
+  <!-- A105 -->
+  <g transform="rotate(3 200 291)">
+    <rect class="entry" x="110" y="265" width="180" height="52" rx="10"></rect>
+    <path class="key-part"
+          d="M120 265 H195 V317 H120 Q110 317 110 307 V275 Q110 265 120 265 Z"></path>
+    <text class="entry-text" x="155" y="298">A105</text>
+    <text class="entry-text" x="240" y="298">Cal</text>
+  </g>
+
+  <!-- A106 -->
+  <g transform="rotate(6 520 281)">
+    <rect class="entry" x="430" y="255" width="180" height="52" rx="10"></rect>
+    <path class="key-part"
+          d="M440 255 H515 V307 H440 Q430 307 430 297 V265 Q430 255 440 255 Z"></path>
+    <text class="entry-text" x="475" y="288">A106</text>
+    <text class="entry-text" x="560" y="288">Zoe</text>
+  </g>
+
+  <text class="annotation" x="210" y="372">keys are unique</text>
+  <text class="annotation" x="585" y="372">values may repeat</text>
+</svg>
+
     <p>
-      Suppose a program counts word frequencies in this input:
+      Each card is one map entry. The blue part is the key used to locate the
+      entry, and the white part is the associated value. The drawing represents
+      only the logical contents of the map. The positions of the entries have
+      no meaning, and the Map ADT does not specify how they are stored.
     </p>
-    <pre><code>to be or not to be</code></pre>
     <p>
-      The map stores each distinct word as a key and the number of times that word has appeared as the value.
+      A map is closely related to a set. Both store distinct keys and must be
+      able to locate a key efficiently. The difference is that a map stores
+      additional information with each key. A set can answer whether a student
+      ID is present; a map can use that ID to retrieve the student's name,
+      record, grade, or other associated value.
     </p>
-    <table class="example-table">
-      <thead>
-        <tr>
-          <th>Word Read</th>
-          <th>Operation</th>
-          <th>Map Afterward</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><code>to</code></td>
-          <td><code>put("to", 1)</code></td>
-          <td><code>{to: 1}</code></td>
-        </tr>
-        <tr>
-          <td><code>be</code></td>
-          <td><code>put("be", 1)</code></td>
-          <td><code>{to: 1, be: 1}</code></td>
-        </tr>
-        <tr>
-          <td><code>or</code></td>
-          <td><code>put("or", 1)</code></td>
-          <td><code>{to: 1, be: 1, or: 1}</code></td>
-        </tr>
-        <tr>
-          <td><code>not</code></td>
-          <td><code>put("not", 1)</code></td>
-          <td><code>{to: 1, be: 1, or: 1, not: 1}</code></td>
-        </tr>
-        <tr>
-          <td><code>to</code></td>
-          <td><code>put("to", get("to") + 1)</code></td>
-          <td><code>{to: 2, be: 1, or: 1, not: 1}</code></td>
-        </tr>
-        <tr>
-          <td><code>be</code></td>
-          <td><code>put("be", get("be") + 1)</code></td>
-          <td><code>{to: 2, be: 2, or: 1, not: 1}</code></td>
-        </tr>
-      </tbody>
-    </table>
     <p>
-      Notice that the second occurrence of <code>to</code> does not create another <code>to</code> entry. It updates
-      the value associated with the existing key.
+      A map is an ADT, not a particular representation. It can be implemented
+      using an unsorted sequence, sorted array, balanced search tree, hash
+      table, or direct-address table. These implementations use the key to
+      locate an entry and then store or retrieve the value attached to that
+      entry. We begin by defining the operations and guarantees of the Map ADT.
     </p>
   </section>
 
   <section id="core-operations" section-title="Core Operations">
     <h2>Core Operations</h2>
+    <p>
+      A map stores key-value entries and supports operations for locating,
+      creating, changing, and removing associations. A typical map interface
+      includes the following operations.
+    </p>
+
+    <table class="example-table left-top-align">
+      <thead>
+        <tr>
+          <th>Operation</th>
+          <th>Behavior</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong><code>get(key)</code></strong></td>
+          <td>
+            Return the value associated with an equal key, following a
+            documented policy when the key is absent.
+          </td>
+        </tr>
+        <tr>
+          <td><strong><code>put(key, value)</code></strong></td>
+          <td>
+            Insert a new entry when the key is absent. If an equal key is
+            already present, replace its associated value.
+          </td>
+        </tr>
+        <tr>
+          <td><strong><code>containsKey(key)</code></strong></td>
+          <td>
+            Return whether an entry with an equal key is present.
+          </td>
+        </tr>
+        <tr>
+          <td><strong><code>remove(key)</code></strong></td>
+          <td>
+            Remove the entry with the equal key, if one exists. The operation
+            often returns the removed value or whether an entry was removed.
+          </td>
+        </tr>
+        <tr>
+          <td><code>size()</code></td>
+          <td>Return the number of key-value entries.</td>
+        </tr>
+        <tr>
+          <td><code>isEmpty()</code></td>
+          <td>Return whether the map contains no entries.</td>
+        </tr>
+        <tr>
+          <td><code>clear()</code></td>
+          <td>Remove every entry from the map.</td>
+        </tr>
+        <tr>
+          <td><code>keys()</code></td>
+          <td><em>(Optional)</em> Visit every stored key once.</td>
+        </tr>
+        <tr>
+          <td><code>values()</code></td>
+          <td>
+            <em>(Optional)</em> Visit every associated value. Equal values may
+            be visited more than once.
+          </td>
+        </tr>
+        <tr>
+          <td><code>entries()</code></td>
+          <td>
+            <em>(Optional)</em> Visit every complete key-value association.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p>
+      These operations closely parallel the Set ADT because both structures store
+      distinct keys and support searching, insertion, removal, and iteration. The
+      main difference is that a map stores an associated value with each key.
+      Thus, <code>containsKey(key)</code> corresponds to
+      <code>contains(key)</code> for a set, while <code>put(key, value)</code>
+      extends set insertion by storing a value and replacing that value when the
+      key is already present. Similarly, removing a key from a map removes its
+      associated value as well. The additional operations <code>get</code>,
+      <code>values</code>, and <code>entries</code> exist specifically because a
+      map stores information beyond membership.
+    </p>
+
 
     <h3>Lookup</h3>
     <p>
-      <code>get(key)</code> searches for the entry with the given key and returns its value. This is the defining map
-      operation. A map is useful because the caller does not need to scan every entry manually to find the matching
-      key.
+      The defining map query is <code>get(key)</code>. It searches for a stored
+      key equal to <code>key</code> and returns the value associated with that
+      entry. The map searches by key, not by value. The interface must specify
+      what happens when the key is absent. Common policies include returning a
+      special value, throwing an exception, or returning an optional result that
+      explicitly represents either a value or no value.
     </p>
+
     <p>
-      A map interface must define what happens when the key is missing. Common choices include returning a special
-      value such as <code>null</code>, throwing an exception, returning an optional result, or requiring the caller to
-      check <code>containsKey</code> first.
-    </p>
-    <p>
-      If the map permits <code>null</code> or another sentinel-like value to be stored, then a result of
-      <code>null</code> may be ambiguous: it might mean “the key is absent” or “the key is present and maps to
-      <code>null</code>.” In that situation, <code>containsKey</code> or an optional-result type distinguishes the two
-      cases.
+      The operation <code>containsKey(key)</code> asks only whether an equal key
+      is present in the map. It returns <code>true</code> or <code>false</code>
+      without returning the associated value. This is useful when the program
+      needs to distinguish between a missing key and a key that is present but
+      associated with a value that might otherwise be used to represent
+      "missing."
     </p>
 
     <h3>Insertion and Update</h3>
     <p>
-      <code>put(key, value)</code> has two cases. If the key is absent, the operation inserts a new entry and
-      increases the size by one. If the key is already present, the operation replaces the old value and the size does
-      not change.
+      The operation <code>put(key, value)</code> has two cases. If the key is
+      absent, the map stores a new key-value entry and increases the size by
+      one. If the key is already present, the map replaces the old associated
+      value and leaves the size unchanged.
     </p>
-    <pre><code>put(key, value):
-    if key is already present:
-        replace the old value with value
+
+  <pre><code class="language-java">put(key, value):
+    if containsKey(key):
+        update the value associated with key to value
     else:
-        store a new (key, value) entry
+        store a new entry containing key and value
         size = size + 1</code></pre>
-    <p>
-      Some map APIs separate these cases with operations such as <code>putIfAbsent</code>, <code>replace</code>, or
-      <code>insert</code> that fails when the key already exists. The important point is that the interface must make
-      the update rule explicit.
+
+   <p>
+      This pseudocode makes the value-storage responsibility explicit. When the
+      key is already present, <code>put</code> changes the value stored with that
+      key rather than creating another entry. When the key is absent, it stores a
+      new entry containing both the key and its associated value.
     </p>
 
-    <h3>Deletion</h3>
     <p>
-      <code>remove(key)</code> deletes the entry with the given key if it exists. A useful version returns the removed
-      value or a Boolean that says whether anything was removed. Removing a missing key usually leaves the map
-      unchanged.
+      A common use of <code>put</code> is to update a value based on its current
+      value. For example, suppose a map stores the number of times each word has
+      been encountered. The first occurrence of a word creates a new entry, while
+      each later occurrence increases the existing count.
     </p>
 
-    <h3>Iteration</h3>
+    <pre><code class="language-java">if counts.containsKey(word):
+    counts.put(word, counts.get(word) + 1)
+else:
+    counts.put(word, 1)</code></pre>
+
     <p>
-      A map may let clients iterate over keys, values, or entries. Iterating over entries is useful when both parts
-      are needed, such as printing a frequency table. Iterating over values alone can be useful, but remember that
-      values are not required to be unique.
+      Many map libraries provide convenience operations that shorten patterns like
+      this, but those operations and their exact behavior differ among languages.
     </p>
+
+
     <p>
-      Unless the map contract promises ordering, iteration order is unspecified. In particular, printing a hash map
-      and observing one order during a test run does not make that order part of the interface. Code that needs sorted
-      keys should either use an ordered map or explicitly sort a snapshot of the keys.
+      Map interfaces differ in what <code>put</code> returns. Some return no value,
+      some return the value that was previously associated with the key, and some
+      return information indicating whether a new entry was inserted or an existing
+      entry was updated. Returning the new value is generally unnecessary because
+      the caller already supplied it. The Map ADT does not require one particular
+      return convention, but an implementation should document which convention it
+      uses.
+    </p>
+
+   <h3>Removal</h3>
+<p>
+  The operation <code>remove(key)</code> removes the entry associated with
+  <code>key</code>, if one exists. Because a map stores a value with each key,
+  a useful convention is for <code>remove</code> to return the value that was
+  associated with the removed key. If the key is absent, the operation leaves
+  the map unchanged and returns a documented indication that no value was
+  removed.
+</p>
+
+<pre><code class="language-java">remove(key):
+    if containsKey(key):
+        oldValue = get(key)
+        remove the entry associated with key
+        size = size - 1
+        return oldValue
+    else:
+        return no removed value</code></pre>
+
+    <p>
+      Removing an entry removes both its key and its associated value. The size
+      decreases only when the key was present. Map interfaces differ in how they
+      represent the absence of a removed value; for example, an implementation
+      might return a special value or an optional result. Some map interfaces
+      instead return a Boolean indicating whether an entry was removed.
+    </p>
+
+
+   <h3>Size, Empty, Clear, and Iteration</h3>
+    <p>
+      The operation <code>size()</code> returns the number of distinct keys in the
+      map, which is also the number of key-value entries. The operation
+      <code>isEmpty()</code> reports whether the size is zero, and
+      <code>clear()</code> removes every entry from the map.
+    </p>
+
+    <p>
+      Maps may also support iteration over their contents in several forms.
+      <code>keys()</code> visits each stored key once, <code>values()</code> visits
+      each associated value, and <code>entries()</code> visits each complete
+      key-value association. Because values need not be unique,
+      <code>values()</code> may visit equal values more than once.
+    </p>
+
+    <p>
+      We leave the exact iterator interfaces and traversal mechanisms unspecified.
+      An implementation might return an iterator object, an iterable collection, a
+      snapshot, or provide some other way to visit the contents. Unless the map
+      interface explicitly guarantees an order, client code should not assume that
+      keys, values, or entries are visited in sorted order or insertion order.
     </p>
 
     <div class="example-box">
-      <strong class="example-title">Example 1: Insert, Update, Query, and Remove</strong>
-      <p>
-        Start with an empty map. In this trace, <code>put</code> returns the previous value or <code>none</code>, and
-        <code>remove</code> returns the removed value or <code>missing</code>. Other interfaces may choose different
-        return policies while preserving the same key-value behavior.
-      </p>
-      <table class="example-table left-top-align">
-        <thead>
-          <tr><th>Operation</th><th>Return value</th><th>Logical entries afterward</th><th>Size</th></tr>
-        </thead>
-        <tbody>
-          <tr><td><code>put(A, 4)</code></td><td><code>none</code></td><td><code>{A: 4}</code></td><td>1</td></tr>
-          <tr><td><code>put(B, 9)</code></td><td><code>none</code></td><td><code>{A: 4, B: 9}</code></td><td>2</td></tr>
-          <tr><td><code>put(A, 7)</code></td><td><code>4</code></td><td><code>{A: 7, B: 9}</code></td><td>2</td></tr>
-          <tr><td><code>get(A)</code></td><td><code>7</code></td><td><code>{A: 7, B: 9}</code></td><td>2</td></tr>
-          <tr><td><code>containsKey(C)</code></td><td><code>false</code></td><td><code>{A: 7, B: 9}</code></td><td>2</td></tr>
-          <tr><td><code>remove(B)</code></td><td><code>9</code></td><td><code>{A: 7}</code></td><td>1</td></tr>
-        </tbody>
-      </table>
-      <p>
-        The third operation is an update, not a second insertion. Key A still identifies one entry, so the size stays
-        two even though its associated value changes from 4 to 7.
-      </p>
-    </div>
+  <strong class="example-title">Example 1: Tracing Map Operations</strong>
+  <p>
+    Start with an empty map. For this example, <code>put</code> returns the
+    previous value or <code>none</code> when the key was not already present,
+    <code>get</code> returns the associated value or <code>missing</code>, and
+    <code>remove</code> returns the removed value or <code>missing</code>.
+  </p>
+
+  <table class="example-table left-top-align">
+    <thead>
+      <tr>
+        <th>Operation</th>
+        <th>Return Value</th>
+        <th>Entries Afterward</th>
+        <th>Size</th>
+        <th>Explanation</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>isEmpty()</code></td>
+        <td><code>true</code></td>
+        <td><code>{}</code></td>
+        <td>0</td>
+        <td>The map initially contains no entries.</td>
+      </tr>
+      <tr>
+        <td><code>put(A, 4)</code></td>
+        <td><code>none</code></td>
+        <td><code>{A: 4}</code></td>
+        <td>1</td>
+        <td>A new key-value entry is stored.</td>
+      </tr>
+      <tr>
+        <td><code>put(B, 9)</code></td>
+        <td><code>none</code></td>
+        <td><code>{A: 4, B: 9}</code></td>
+        <td>2</td>
+        <td>A second distinct key is stored.</td>
+      </tr>
+      <tr>
+        <td><code>put(A, 7)</code></td>
+        <td><code>4</code></td>
+        <td><code>{A: 7, B: 9}</code></td>
+        <td>2</td>
+        <td>The value associated with A is replaced, so the size does not change.</td>
+      </tr>
+      <tr>
+        <td><code>get(A)</code></td>
+        <td><code>7</code></td>
+        <td><code>{A: 7, B: 9}</code></td>
+        <td>2</td>
+        <td>The value associated with the present key A is returned.</td>
+      </tr>
+      <tr>
+        <td><code>get(C)</code></td>
+        <td><code>missing</code></td>
+        <td><code>{A: 7, B: 9}</code></td>
+        <td>2</td>
+        <td>No entry has key C, so the missing-key policy is used.</td>
+      </tr>
+      <tr>
+        <td><code>containsKey(B)</code></td>
+        <td><code>true</code></td>
+        <td><code>{A: 7, B: 9}</code></td>
+        <td>2</td>
+        <td>An entry with key B is present.</td>
+      </tr>
+      <tr>
+        <td><code>containsKey(C)</code></td>
+        <td><code>false</code></td>
+        <td><code>{A: 7, B: 9}</code></td>
+        <td>2</td>
+        <td>No entry has key C.</td>
+      </tr>
+      <tr>
+        <td><code>remove(B)</code></td>
+        <td><code>9</code></td>
+        <td><code>{A: 7}</code></td>
+        <td>1</td>
+        <td>The complete entry for B is removed and its associated value is returned.</td>
+      </tr>
+      <tr>
+        <td><code>remove(B)</code></td>
+        <td><code>missing</code></td>
+        <td><code>{A: 7}</code></td>
+        <td>1</td>
+        <td>B is already absent, so the map does not change.</td>
+      </tr>
+      <tr>
+        <td><code>size()</code></td>
+        <td><code>1</code></td>
+        <td><code>{A: 7}</code></td>
+        <td>1</td>
+        <td>Exactly one key-value entry remains.</td>
+      </tr>
+      <tr>
+        <td><code>clear()</code></td>
+        <td>no return value</td>
+        <td><code>{}</code></td>
+        <td>0</td>
+        <td>Every key-value entry is removed.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>
+    The braces describe the logical associations in the map. Writing
+    <code>{A: 7, B: 9}</code> does not imply a physical storage order or an
+    iteration order.
+  </p>
+</div>
+
   </section>
 
   <section id="demo" section-title="Interactive Demo">
     <h2>Interactive Demo</h2>
     <p>
-      Use the demo to put, get, test, and remove associations. Entries are scattered to avoid suggesting an array,
-      list, tree, or hash table. Pay particular attention to what happens when <code>put</code> uses an existing key:
-      the value changes, but the number of entries does not.
+      Use the demo to insert, retrieve, update, test, and remove associations.
+      Pay particular attention to what happens when <code>put</code> uses an
+      existing key: the stored value changes, but the number of entries does not.
     </p>
     <div class="embeddedDemoContainer">
       <iframe class="embeddedDemo"
@@ -362,251 +522,1326 @@
     </div>
   </section>
 
-  <section id="missing-keys" section-title="Missing Keys and Default Values">
-    <h2>Missing Keys and Default Values</h2>
-    <p>
-      Missing keys are one of the most common sources of map bugs. In the word-frequency example, the program cannot
-      simply write <code>put(word, get(word) + 1)</code> for the first occurrence of a word unless <code>get</code>
-      has a defined default.
-    </p>
-    <p>
-      A common pattern is to check for membership first:
-    </p>
-    <pre><code>if counts.containsKey(word):
-    counts.put(word, counts.get(word) + 1)
-else:
-    counts.put(word, 1)</code></pre>
-    <p>
-      Many languages provide helper operations for this pattern, such as "get with default," "compute if absent," or
-      dictionary indexing that creates a default value. Those helpers are conveniences built on top of the same ADT
-      idea: missing keys need a deliberate policy.
-    </p>
-    <p>
-      A default is not automatically inserted. An operation such as <code>getOrDefault(word, 0)</code> may return
-      zero while leaving the map unchanged, whereas an operation such as <code>computeIfAbsent</code> may create an
-      entry. Similar-looking convenience methods can therefore have different postconditions. Read the contract
-      before using them in an update expression.
-    </p>
-  </section>
-
-  <section id="implementations" section-title="Implementation Options">
+  <section id="implementation" section-title="Implementation Options">
     <h2>Implementation Options</h2>
-    <p>
-      Maps can be implemented many ways. The right choice depends on operation costs, ordering needs, and the types of
-      keys being stored.
-    </p>
-    <table class="example-table">
-      <thead>
-        <tr>
-          <th>Implementation</th>
-          <th>Typical Lookup</th>
-          <th>Typical Put/Remove</th>
-          <th>Ordering</th>
-          <th>Best Fit</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>Unsorted list of entries</td>
-          <td>\(O(n)\)</td>
-          <td>\(O(n)\), because the key must be searched</td>
-          <td>Can preserve insertion order</td>
-          <td>Small maps and simple first implementations</td>
-        </tr>
-        <tr>
-          <td>Sorted array of entries</td>
-          <td>\(O(\log n)\)</td>
-          <td>\(O(n)\), because entries may shift</td>
-          <td>Sorted by key</td>
-          <td>Mostly-static dictionaries with many lookups</td>
-        </tr>
-        <tr>
-          <td>Balanced search tree</td>
-          <td>\(O(\log n)\)</td>
-          <td>\(O(\log n)\)</td>
-          <td>Sorted by key</td>
-          <td>Ordered maps, range queries, predecessor/successor operations</td>
-        </tr>
-        <tr>
-          <td>Hash table</td>
-          <td>Expected \(O(1)\)</td>
-          <td>Expected \(O(1)\)</td>
-          <td>Usually not sorted</td>
-          <td>Fast exact lookup, insertion, and deletion by key</td>
-        </tr>
-      </tbody>
-    </table>
-    <p>
-      Hash tables are a common default when the program needs exact lookup by key and does not need sorted order.
-      Tree-based maps are better matches when order matters, such as printing keys alphabetically or
-      finding all keys in a range.
-    </p>
 
-    <h3>Unsorted List of Entries</h3>
-    <p>
-      The simplest representation stores key-value entry objects in an array or linked list. Lookup scans until it
-      finds an equal key. <code>put</code> must perform the same search so that it updates rather than creates a
-      duplicate key, and removal must locate the entry before deleting it. These operations are therefore \(O(n)\)
-      in the worst case. This representation is easy to implement and can be reasonable for very small maps.
-    </p>
+    <section id="implementation-overview" section-title="Overview">
+  <h3>Overview</h3>
 
-    <h3>Sorted Array or Balanced Search Tree</h3>
-    <p>
-      A sorted array supports binary-search lookup in \(O(\log n)\), but maintaining sorted order makes insertion and
-      deletion \(O(n)\). A balanced search tree supports lookup, update, and removal in \(O(\log n)\) worst-case and
-      also supplies sorted traversal, range queries, and predecessor/successor operations. These ordered operations
-      are the main reason to prefer a tree map over a hash map.
-    </p>
+  <p>
+    The same basic data structures used to implement sets can also implement
+    maps. In both cases, the representation must store distinct keys and support
+    locating a key efficiently. The main difference is that a map must also
+    store a value with each key and keep that value associated with the correct
+    key whenever entries are inserted, moved, updated, or removed.
+  </p>
 
-    <h3>Hash Table</h3>
-    <p>
-      A hash table computes a table position from the key and resolves any collision with other keys assigned to the
-      same position. With well-distributed hashes and controlled load factor, exact lookup, <code>put</code>, and
-      removal take expected \(O(1)\) time. A hash map normally does not keep entries sorted and still has an
-      \(O(n)\) worst case when many keys collide.
-    </p>
+  <p>
+    Because the key-location tradeoffs are largely the same as those discussed
+    for sets, we will not repeat the full implementation details here. Instead,
+    we focus on how each representation is extended to store key-value
+    associations and on the additional responsibilities introduced by the
+    value.
+  </p>
 
-    <h3>Library Implementations</h3>
-    <ul>
-      <li><strong>Java:</strong> <code>HashMap</code> is hash based; <code>TreeMap</code> maintains keys in sorted order.</li>
-      <li><strong>C++:</strong> <code>std::unordered_map</code> is hash based; <code>std::map</code> is ordered and normally tree based.</li>
-      <li><strong>Python:</strong> <code>dict</code> is hash based and preserves insertion order, but it does not sort keys.</li>
-    </ul>
+  <table class="example-table left-top-align">
+    <thead>
+      <tr>
+        <th>Implementation</th>
+        <th><code>get</code></th>
+        <th><code>put</code></th>
+        <th><code>remove</code></th>
+        <th>Where the Value Is Stored</th>
+        <th>Iteration Order</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Unsorted array or linked list</strong></td>
+        <td>\(O(n)\)</td>
+        <td>\(O(n)\)</td>
+        <td>\(O(n)\)</td>
+        <td>In the same entry or node as the key</td>
+        <td>May preserve insertion order</td>
+      </tr>
+      <tr>
+        <td><strong>Sorted array</strong></td>
+        <td>\(O(\log n)\)</td>
+        <td>\(O(n)\)</td>
+        <td>\(O(n)\)</td>
+        <td>In the entry that moves with the key</td>
+        <td>Sorted by key</td>
+      </tr>
+      <tr>
+        <td><strong>Balanced search tree</strong></td>
+        <td>\(O(\log n)\)</td>
+        <td>\(O(\log n)\)</td>
+        <td>\(O(\log n)\)</td>
+        <td>In the tree node containing the key</td>
+        <td>Sorted by key</td>
+      </tr>
+      <tr>
+        <td><strong>Hash table</strong></td>
+        <td>Expected \(O(1)\)</td>
+        <td>Expected \(O(1)\)</td>
+        <td>Expected \(O(1)\)</td>
+        <td>In the bucket entry or occupied table slot</td>
+        <td>Usually unspecified</td>
+      </tr>
+      <tr>
+        <td><strong>Direct-address table</strong></td>
+        <td>\(O(1)\)</td>
+        <td>\(O(1)\)</td>
+        <td>\(O(1)\)</td>
+        <td>At the array position selected directly by the key</td>
+        <td>Increasing key order when scanned</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>
+    The bounds in the table are worst-case bounds unless marked as expected.
+    Notice that they match the corresponding set representations: adding a
+    value does not fundamentally change the cost of locating, inserting, or
+    removing a key. What changes is what must be stored and maintained once the
+    key has been located.
+  </p>
+</section>
+
+<section id="storing-entries" section-title="Storing Key-Value Entries">
+  <h3>Storing Key-Value Entries</h3>
+
+  <p>
+    A set representation needs to store only keys. A map representation must
+    store each key together with its associated value. Conceptually, the key
+    and value form a single <strong>entry</strong>, even if the implementation
+    stores the two parts separately.
+  </p>
+
+  <p>
+    One common representation uses an entry object or record containing two
+    fields.
+  </p>
+
+  <pre><code class="language-java">Entry:
+    key
+    value</code></pre>
+
+  <p>
+    An array or linked-list map can store these entry records directly. A tree
+    map can store the key and value in the same tree node, along with the child
+    links and any balancing information. A hash map can store complete entries
+    in buckets or table slots. In all of these representations, searches and
+    comparisons use the key. The associated value is retrieved or changed only
+    after the correct key has been located.
+  </p>
+
+  <p>
+    An array-based map can instead store keys and values in two parallel
+    arrays.
+  </p>
+
+  <pre><code class="language-java">keys[0..capacity-1]
+values[0..capacity-1]</code></pre>
+
+  <p>
+    In this representation, <code>keys[i]</code> and
+    <code>values[i]</code> together form one logical map entry. The central
+    invariant is that <code>values[i]</code> is always the value associated
+    with <code>keys[i]</code>. Therefore, whenever an entry is shifted, copied,
+    swapped, or removed, the key and its value must be moved together.
+  </p>
+
+  <div class="example-box">
+    <strong class="example-title">Example 2: Moving Complete Entries</strong>
+<p>
+  Suppose an unsorted array map stores its keys and values in parallel
+  arrays as shown below.
+</p>
+
+<table class="example-table">
+  <thead>
+    <tr>
+      <th>Index</th>
+      <th>0</th>
+      <th>1</th>
+      <th>2</th>
+      <th>3</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Key</strong></td>
+      <td>A</td>
+      <td>B</td>
+      <td>C</td>
+      <td>D</td>
+    </tr>
+    <tr>
+      <td><strong>Value</strong></td>
+      <td>12</td>
+      <td>5</td>
+      <td>19</td>
+      <td>8</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>
+  Suppose the entry with key B is removed by replacing it with the final
+  entry. Both the key D and its associated value 8 must move to index 1.
+  Moving only D would incorrectly create the association D to 5.
+</p>
+
+<table class="example-table">
+  <thead>
+    <tr>
+      <th>Index</th>
+      <th>0</th>
+      <th>1</th>
+      <th>2</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Key</strong></td>
+      <td>A</td>
+      <td>D</td>
+      <td>C</td>
+    </tr>
+    <tr>
+      <td><strong>Value</strong></td>
+      <td>12</td>
+      <td>8</td>
+      <td>19</td>
+    </tr>
+  </tbody>
+</table>
+  </div>
+
+  <p>
+    The same requirement applies during insertion, shifting, resizing, tree
+    restructuring, and hash-table movement: the representation may reorganize
+    entries, but it must never change which value is associated with a key.
+    This is the main storage responsibility that distinguishes a map
+    implementation from the corresponding set implementation.
+  </p>
+</section>
+
+<section id="arrays-lists-trees"
+         section-title="Arrays, Lists, and Trees">
+  <h3>Arrays, Lists, and Trees</h3>
+
+  <p>
+    An unsorted array or linked-list map is nearly identical to the
+    corresponding set representation, except that it stores complete
+    key-value entries rather than keys alone. Lookup compares the keys of
+    successive entries. When <code>put</code> finds an equal key, it updates
+    that entry's value; when the key is absent, it stores a new entry.
+    Lookup, <code>put</code>, and removal therefore take \(O(n)\) time in the
+    worst case, just as they do for an unsorted sequential set.
+  </p>
+
+  <p>
+    A sorted-array map similarly extends a sorted-array set by storing a value
+    with each key. Entries are sorted by key; the values do not participate in
+    the ordering. Binary search locates a key or its insertion position in
+    \(O(\log n)\) time, but insertion and removal may require shifting
+    \(O(n)\) entries. Whenever an entry moves, its value must move with its
+    key.
+  </p>
+
+  <p>
+    A balanced-search-tree map adds a value field to each node of the
+    corresponding set representation. Comparisons use only the key to choose
+    the search path and determine the tree structure. If <code>put</code>
+    finds an existing key, it updates the value stored in that node rather
+    than inserting another node. Because the tree remains balanced, lookup,
+    <code>put</code>, and removal each take \(O(\log n)\) time in the worst
+    case. An inorder traversal visits the entries in increasing order of their
+    keys.
+  </p>
+
+  <p>
+    Thus, adding values does not change the basic search or update costs of
+    these representations. The main additional requirement is that every
+    operation preserve the association between each key and its value.
+  </p>
+</section>
+
+<section id="hash-table-map" section-title="Hash Table">
+  <h3>Hash Table</h3>
+
+  <p>
+    A hash-table map extends a hash-table set by storing a value with each key.
+    The hash table still uses the key to determine where an entry should be
+    searched for or stored. Once the key is found, <code>get</code> returns its
+    associated value, and <code>put</code> can replace that value without
+    creating another copy of the key.
+  </p>
+
+  <p>
+    With an appropriate hash function and resizing policy,
+    <code>get</code>, <code>put</code>, and <code>remove</code> take expected
+    \(O(1)\) time, although the worst-case running time is \(O(n)\). Hash-table
+    maps generally do not provide sorted iteration.
+  </p>
+
+  <p>
+    Hash tables are one of the most common implementations of maps. Their
+    representation, collision handling, resizing, and analysis are developed
+    in detail on the later Hash Tables page.
+  </p>
+</section>
+
+<section id="direct-address-map" section-title="Direct-Address Table">
+  <h3>Direct-Address Table</h3>
+
+  <p>
+    A <strong>direct-address table</strong> can implement a map when every key
+    is an integer from a small fixed universe
+    \[
+      \{0,1,\ldots,U-1\}.
+    \]
+    Instead of searching for a key, the implementation uses the key itself as
+    an array index. Thus, key \(k\) is associated with position \(k\).
+  </p>
+
+  <p>
+    For a set, this idea requires only a presence array or bit vector indicating
+    whether each possible key is present. A map must also store the value
+    associated with each present key. One simple representation therefore uses
+    two arrays.
+  </p>
+
+  <pre><code class="language-java">present[0..U-1]
+values[0..U-1]</code></pre>
+
+  <p>
+    The entry for key \(k\) is present exactly when
+    <code>present[k]</code> is true. When it is present,
+    <code>values[k]</code> stores the value associated with \(k\).
+    The implementation should not try to determine presence from
+    <code>values[k]</code> alone, because a legitimate map entry might contain
+    the same value that would otherwise be used to represent an unused
+    position.
+    Operations must reject or otherwise define the behavior for keys outside this universe.
+  </p>
+
+  <pre><code class="language-java">containsKey(key):
+    return present[key]
+
+get(key):
+    if not present[key]:
+        report that the key is missing
+    return values[key]
+
+put(key, value):
+    if present[key]:
+        values[key] = value
+    else:
+        present[key] = true
+        values[key] = value
+        size = size + 1
+
+remove(key):
+    if not present[key]:
+        return no removed value
+
+    oldValue = values[key]
+    present[key] = false
+    size = size - 1
+    return oldValue</code></pre>
+
+  <p>
+    Each of these operations accesses only the array position corresponding to
+    the key, so <code>containsKey</code>, <code>get</code>,
+    <code>put</code>, and <code>remove</code> all take \(O(1)\) time.
+    Maintaining the current number of entries in a variable also allows
+    <code>size()</code> and <code>isEmpty()</code> to take \(O(1)\) time.
+  </p>
+
+  <p>
+    The tradeoff is that the representation allocates storage according to the
+    size \(U\) of the entire key universe rather than the number \(n\) of
+    entries actually stored. It therefore uses \(O(U)\) space even when only a
+    few keys are present. Iterating through all entries may also require
+    examining all \(U\) positions, so iteration takes \(O(U)\) time.
+    Similarly, initializing or clearing the entire representation may require
+    \(O(U)\) time.
+  </p>
+
+  <p>
+    Direct addressing is therefore most useful when the possible keys form a
+    small, reasonably dense integer range. For example, it could be practical
+    for mapping room numbers from 0 through 499 to room information, but it
+    would waste substantial space for a map containing only a few integers
+    drawn from a range of billions of possible keys.
+  </p>
+</section>
+
+<section id="library-map-implementations"
+         section-title="Library Implementations">
+  <h3>Library Implementations</h3>
+
+  <p>
+    Most programs should use a map implementation supplied by the language's
+    standard library. As with sets, the usual choice is between a hash-based
+    implementation, which emphasizes fast exact lookup and updates, and an
+    ordered implementation, which maintains keys in sorted order.
+  </p>
+
+  <table class="example-table left-top-align">
+    <thead>
+      <tr>
+        <th>Language</th>
+        <th>Hash-Based Map</th>
+        <th>Sorted Map</th>
+        <th>Other Relevant Behavior</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Java</strong></td>
+        <td>
+          <code>HashMap&lt;K,V&gt;</code> provides expected \(O(1)\)
+          lookup, insertion, update, and removal.
+        </td>
+        <td>
+          <code>TreeMap&lt;K,V&gt;</code> keeps keys sorted and provides
+          \(O(\log n)\) basic operations.
+        </td>
+        <td>
+          <code>LinkedHashMap&lt;K,V&gt;</code> preserves a defined
+          iteration order.
+        </td>
+      </tr>
+      <tr>
+        <td><strong>C++</strong></td>
+        <td>
+          <code>std::unordered_map</code> provides average \(O(1)\)
+          lookup, insertion, update, and removal.
+        </td>
+        <td>
+          <code>std::map</code> keeps keys sorted and provides
+          \(O(\log n)\) basic operations.
+        </td>
+        <td>
+          Different access operations have different missing-key behavior; for
+          example, some forms of indexing may insert a missing key with a
+          default-constructed value.
+        </td>
+      </tr>
+      <tr>
+        <td><strong>Python</strong></td>
+        <td>
+          The built-in <code>dict</code> type is hash based and supports
+          lookup, insertion, update, removal, and iteration.
+        </td>
+        <td>
+          Python does not provide a general-purpose built-in map that
+          automatically keeps keys sorted.
+        </td>
+        <td>
+          A <code>dict</code> preserves insertion order, but that is different
+          from keeping keys in sorted order.
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>
+    The underlying ADT is the same across these libraries, but the exact
+    interfaces differ. In particular, languages may use different conventions
+    for missing keys, the return values of <code>put</code> or
+    <code>remove</code>, whether indexing inserts a missing entry, and what
+    iteration order is guaranteed. Client code should therefore rely on the
+    documented behavior of the specific library rather than assuming that all
+    map interfaces behave identically.
+  </p>
+</section>
+  </section>
+
+  <section id="applications" section-title="Applications">
+    <h2>Applications</h2>
     <p>
-      These libraries differ in missing-key behavior, permitted key types, ordering guarantees, and return values.
-      The shared map concept is stable, but the exact API contract must be checked in the language documentation.
+      Maps are useful whenever a program must retrieve or update information by
+      a key. Common applications include the following.
+    </p>
+<ul class="spaced">
+  <li>
+    <strong>Frequency tables:</strong> Associate each distinct item with the
+    number of times it occurs. For example, a word-frequency map stores each
+    word as a key and its count as the associated value.
+  </li>
+  <li>
+    <strong>Record lookup and indexes:</strong> Associate a unique identifier,
+    such as a student ID, username, or product code, with a complete record or
+    with the location of that record.
+  </li>
+  <li>
+    <strong>Graph algorithms:</strong> Associate each vertex with information
+    maintained by an algorithm, such as its current distance, parent, color,
+    discovery time, or adjacency collection.
+  </li>
+  <li>
+    <strong>Symbol tables:</strong> Associate each variable or function name
+    with information about its type, scope, parameters, or storage location.
+  </li>
+  <li>
+    <strong>Caches and memoization:</strong> Associate an input, request, or
+    subproblem with a result that has already been computed so that later
+    occurrences can reuse it.
+  </li>
+  <li>
+    <strong>Sparse arrays and matrices:</strong> Associate only the indices
+    whose values differ from a default value with the values stored at those
+    positions. Indices not present as keys implicitly have the default value.
+  </li>
+  <li>
+    <strong>Configuration data:</strong> Associate each option or setting name
+    with its current value, such as a display mode, file path, or numerical
+    parameter.
+  </li>
+</ul>
+
+  <div class="example-box">
+  <strong class="example-title">Example 3: Memoization</strong>
+  <p>
+    Suppose a recursive algorithm repeatedly solves the same subproblems. A map
+    can associate each subproblem with the result already computed for it.
+    Before solving a subproblem, the algorithm checks whether its key is in the
+    map. If so, it reuses the stored result; otherwise, it computes the result
+    and adds the new association to the map.
+  </p>
+  <p>
+    A map is appropriate because each subproblem acts as a key and its computed
+    result is the information that must be retrieved later. A set could record
+    that a subproblem had been encountered, but it could not by itself store
+    the result needed to avoid recomputing it.
+  </p>
+</div>
+
+<div class="example-box">
+  <strong class="example-title">Example 4: Sparse Storage</strong>
+  <p>
+    Suppose a very large array contains zero in almost every position. Instead
+    of allocating storage for every position, a map can store only the
+    nonzero entries, using an array index as the key and the nonzero array value
+    as its associated value. An index that is not present in the map is
+    interpreted as containing zero.
+  </p>
+  <p>
+    A map is appropriate because the program needs both pieces of information:
+    which positions are exceptional and what value is stored at each one. This
+    can save substantial space when the number of nonzero positions is small
+    compared with the size of the full array.
+  </p>
+</div>
+
+  </section>
+
+  
+  <section id="connections-comparisons"
+           section-title="Connections and Comparisons">
+    <h2>Connections and Comparisons</h2>
+
+<p>
+  Maps and sets are especially closely related because both organize their
+  contents around distinct keys. Many of the same underlying data structures
+  can implement either ADT. A set can even be implemented using a map by
+  associating every stored key with the same unused marker value. Conversely,
+  many set representations can be extended into map representations by storing
+  an associated value with each key.
+</p>
+
+
+<pre><code class="language-java">set entry:  key
+map entry:  key + associated value</code></pre>
+
+<p>Here is a brief comparison of several related structures:</p>
+    <table class="example-table left-top-align">
+  <thead>
+    <tr>
+      <th>Structure</th>
+      <th>What It Stores</th>
+      <th>How It Differs from a Map</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Set</strong></td>
+      <td>Distinct keys only</td>
+      <td>
+        A set records whether each key is present. A map also stores a value
+        associated with each key.
+      </td>
+    </tr>
+    <tr>
+      <td><strong>List</strong></td>
+      <td>Items in a sequence, possibly with duplicates</td>
+      <td>
+        A list preserves positions and sequence order. A map instead retrieves
+        an associated value by key.
+      </td>
+    </tr>
+    <tr>
+      <td><strong>Multiset</strong></td>
+      <td>Distinct keys together with their multiplicities</td>
+      <td>
+        A multiset records how many times each key occurs. It can be
+        implemented using a map from each key to its count.
+      </td>
+    </tr>
+    <tr>
+      <td><strong>Multimap</strong></td>
+      <td>Keys associated with one or more values</td>
+      <td>
+        An ordinary map has at most one current value for each key. A multimap
+        allows a key to be associated with multiple values.
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+    <p>
+      The choice of interface still matters. When only membership is needed, a set
+      expresses that no additional information is associated with each key. When
+      counts, labels, records, distances, or other information must be stored and
+      retrieved by key, a map is the appropriate ADT.
     </p>
   </section>
 
-  <section id="maps-and-sets" section-title="Relationship to Sets">
-    <h2>Relationship to Sets</h2>
+  <section id="variations-extensions"
+           section-title="Variations and Extensions">
+    <h2>Variations and Extensions</h2>
     <p>
-      A set stores keys only. A map stores keys and values. Because every map entry has a unique key, the keys of a
-      map form a set.
+      The basic Map ADT stores one value per key. Libraries and specialized data
+      structures may strengthen the ordering guarantees or change the update
+      model.
     </p>
-    <pre><code>map entries:  {A: 4, B: 9, C: 4}
-key set:      {A, B, C}</code></pre>
-    <p>
-      This relationship explains why maps and sets often have similar implementations. A hash set and a hash map both
-      need hashing, collision handling, resizing, and key equality. The map stores an extra value with each key.
-    </p>
+
+   <ul class="spaced">
+  <li>
+    <strong>Sorted maps:</strong> Maintain keys in sorted order and may support
+    additional operations such as finding minimum or maximum keys,
+    predecessors and successors, and all entries whose keys fall within a
+    range.
+  </li>
+  <li>
+    <strong>Insertion-ordered maps:</strong> Preserve the order in which keys
+    were first inserted. Updating the value associated with an existing key
+    normally leaves that key in its current iteration position.
+  </li>
+  <li>
+    <strong>Immutable maps:</strong> Cannot be changed after they are created.
+    Operations that would normally update the map instead produce a new map
+    with the requested association added, changed, or removed.
+  </li>
+  <li>
+    <strong>Persistent maps:</strong> Preserve earlier versions after an
+    update. Different versions may share unchanged portions of their internal
+    representation rather than copying every entry.
+  </li>
+  <li>
+    <strong>Multimaps:</strong> Allow one key to be associated with multiple
+    values. A similar effect can often be obtained with an ordinary map whose
+    value for each key is a list, set, or other collection.
+  </li>
+  <li>
+    <strong>Bidirectional maps:</strong> Support lookup both from key to value
+    and from value to key. This generally requires values, like keys, to be
+    unique so that the reverse lookup is unambiguous.
+  </li>
+</ul>
   </section>
 
-  <section id="key-rules" section-title="Key Rules">
-    <h2>Key Rules</h2>
-    <p>
-      A map implementation needs a reliable way to decide whether two keys are the same. Hash-based maps use equality
-      and hash codes. Tree-based maps use a comparison order. Either way, the key rule must stay consistent while the
-      key is stored in the map.
-    </p>
-    <ul>
-      <li><strong>Keys must be comparable or hashable:</strong> The implementation needs a lookup rule.</li>
-      <li><strong>Keys should be stable:</strong> Mutating a key after insertion can make future lookup fail.</li>
-      <li><strong>Keys identify entries:</strong> Two equal keys should not create two entries.</li>
-      <li><strong>Values may repeat:</strong> Duplicate values are allowed because values are not used as identifiers.</li>
-    </ul>
-    <p>
-      For example, using a student's ID number as a key is usually safer than using a student object whose fields may
-      change. If the object changes in a way that affects equality, hashing, or ordering, the map may no longer be
-      able to find the entry correctly.
-    </p>
-    <p>
-      Mutating a <em>value</em> does not normally affect how the map locates its entry, because lookup is by key.
-      Mutating a key is dangerous when the changed fields participate in hashing, equality, or ordering. This
-      asymmetry is another reason to keep the key and value roles conceptually separate.
-    </p>
-  </section>
+<section id="common-pitfalls" section-title="Common Pitfalls">
+  <h2>Common Pitfalls</h2>
+  <ul class="spaced">
+    <li>
+      <strong>Creating duplicate keys:</strong> When <code>put</code> receives
+      a key that is already present, it must replace the value associated with
+      that key rather than store a second entry with an equal key.
+    </li>
+    <li>
+      <strong>Losing the key-value association:</strong> When entries are
+      shifted, swapped, copied, resized, or removed, each value must remain
+      attached to its key. This is especially easy to mishandle when keys and
+      values are stored in parallel arrays.
+    </li>
+    <li>
+      <strong>Mishandling missing keys:</strong> Client code must follow the
+      documented behavior of <code>get</code> when no entry exists. If a
+      special value such as <code>null</code> or zero can also be stored as an
+      ordinary value, that result alone may not distinguish a missing key from
+      a present key having that value.
+    </li>
+    <li>
+      <strong>Using inconsistent key rules:</strong> Lookup, insertion, update,
+      and removal must use consistent rules for deciding when keys are equal.
+      Hash-based and ordered implementations impose additional consistency
+      requirements on hashing or comparison.
+    </li>
+    <li>
+      <strong>Modifying stored keys:</strong> Changing a key after insertion
+      can make later searches fail if the change affects equality, hashing, or
+      ordering. Changing the associated value normally does not cause this
+      problem because the key still identifies the entry.
+    </li>
+    <li>
+      <strong>Assuming an iteration order:</strong> Client code should not
+      assume sorted or insertion order unless the chosen map implementation
+      explicitly guarantees it.
+    </li>
+    <li>
+      <strong>Using a map when a set is sufficient:</strong> If the program
+      needs only membership, a set usually communicates the intended use more
+      clearly and avoids storing an unnecessary associated value.
+    </li>
+    <li>
+      <strong>Choosing direct addressing for a sparse, large universe:</strong>
+      A direct-address map uses space based on the size \(U\) of the possible
+      key universe rather than on the number of entries actually stored.
+    </li>
+  </ul>
+</section>
 
-  <section id="common-uses" section-title="Common Uses">
-    <h2>Common Uses</h2>
-    <ul>
-      <li><strong>Frequency tables:</strong> Map each item to a count.</li>
-      <li><strong>Symbol tables:</strong> Map variable names to type, scope, or memory-location information.</li>
-      <li><strong>Caches:</strong> Map a request or input to a previously computed result.</li>
-      <li><strong>Indexes:</strong> Map an ID, word, or key field to records where it appears.</li>
-      <li><strong>Graph algorithms:</strong> Map vertices to distances, parents, colors, discovery times, or adjacency lists.</li>
-      <li><strong>Sparse arrays:</strong> Map meaningful indices to values and omit default entries.</li>
-      <li><strong>Configuration data:</strong> Map option names to option values.</li>
-    </ul>
-  </section>
+<section id="summary" section-title="Summary">
+  <h2>Summary</h2>
+  <p>
+    A map stores key-value associations. Keys are distinct and identify
+    entries; values are the information associated with those keys and may
+    repeat. The core operations are <code>get</code>, <code>put</code>,
+    <code>containsKey</code>, and <code>remove</code>, together with
+    <code>size</code>, <code>isEmpty</code>, <code>clear</code>, and optional
+    iteration operations. Inserting a new key increases the size, while
+    replacing the value associated with an existing key does not.
+  </p>
 
-  <section id="pitfalls" section-title="Common Pitfalls">
-    <h2>Common Pitfalls</h2>
-    <ul>
-      <li><strong>Confusing keys and values:</strong> A map searches by key. Values are the data retrieved after the key is found.</li>
-      <li><strong>Expecting duplicate keys:</strong> Inserting an existing key updates or rejects the old entry depending on the API; it does not create a second equal key.</li>
-      <li><strong>Ignoring missing keys:</strong> Calling <code>get</code> on a missing key must be handled deliberately.</li>
-      <li><strong>Assuming sorted order:</strong> Many maps, especially hash maps, do not iterate in sorted key order.</li>
-      <li><strong>Mutating keys:</strong> A key that changes after insertion can become impossible to find.</li>
-      <li><strong>Using a map when a set is enough:</strong> If no value is needed, a set usually communicates the intent more clearly.</li>
-      <li><strong>Using a set when a map is needed:</strong> If counts, labels, distances, or records matter, the value part is essential.</li>
-    </ul>
-  </section>
+  <p>
+    Maps can be implemented using the same basic key-location structures as
+    sets, but each stored key must also have an associated value. Arrays and
+    linked lists may store complete entry records or use parallel key and value
+    storage. Tree and hash-table representations similarly keep a value
+    associated with each stored key. A direct-address map stores the value at
+    the position selected by the key and normally uses separate presence
+    information to distinguish missing keys from stored values.
+  </p>
 
-  <section id="summary" section-title="Summary">
-    <h2>Summary</h2>
-    <p>
-      A map stores key-value associations. Keys are unique and identify entries; values are the data associated with
-      those keys and may repeat. The main operations are lookup, insertion or update, deletion, and iteration over
-      keys, values, or entries. Lists, sorted arrays, balanced trees, and hash tables can all implement
-      the same map ADT with different cost and ordering tradeoffs.
-    </p>
-  </section>
+  <p>
+    The appropriate representation depends on the required operation costs,
+    ordering guarantees, and restrictions on the keys. In most application
+    code, a standard-library map should be preferred. A set is appropriate
+    when only membership matters; a map is appropriate when additional
+    information must be stored, retrieved, or updated for each key.
+  </p>
+</section>
 
-  <section id="related-pages" section-title="Related Pages">
-    <h2>Related Pages</h2>
-    <ul>
-      <li><a href="?path=Data%20Structures%2FSets%2C%20Maps%2C%20and%20Hash%20Tables%2FIntroduction">Sets, Maps, and Hash Tables</a>, for the section overview.</li>
-      <li><a href="?path=Data%20Structures%2FSets%2C%20Maps%2C%20and%20Hash%20Tables%2FSet%20ADT">Set ADT</a>, for membership without associated values.</li>
-      <li><a href="?path=Data%20Structures%2FSets%2C%20Maps%2C%20and%20Hash%20Tables%2FHash%20Tables">Hash Tables</a>, for the most common fast map implementation.</li>
-      <li><a href="?path=Data%20Structures%2FTrees%2FBinary%20Search%20Trees">Binary Search Trees</a>, for an ordered tree foundation.</li>
-    </ul>
-  </section>
+<section id="links" section-title="Helpful Links and Resources">
+  <h2>Helpful Links and Resources</h2>
+  <p>
+    These resources provide additional information about maps, their
+    implementations, and standard-library interfaces.
+  </p>
 
-  <section id="reading-questions" section-title="Reading Comprehension Questions">
-    <h2>Reading Comprehension Questions</h2>
-    <ol>
-      <li><strong>Definition:</strong> What does a map store?</li>
-      <li><strong>Keys and values:</strong> Which part of a map entry must be unique?</li>
-      <li><strong>Update:</strong> What should happen when <code>put(key, value)</code> is called for a key that is already present?</li>
-      <li><strong>Missing keys:</strong> Why is calling <code>get</code> on a missing key a boundary case?</li>
-      <li><strong>Implementation:</strong> Why might a hash map be preferred for exact lookup, but a tree map be preferred for sorted traversal?</li>
-      <li><strong>Set relationship:</strong> How are the keys of a map related to a set?</li>
-      <li><strong>Update:</strong> Why does replacing the value for an existing key leave the size unchanged?</li>
-    </ol>
-    <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
-    <div id="answers" class="answer" hidden>
-      <ol>
-        <li><strong>Answer:</strong> A map stores key-value associations.</li>
-        <li><strong>Answer:</strong> The keys must be unique. Values may repeat.</li>
-        <li><strong>Answer:</strong> The existing value should be replaced, or the operation should follow another explicitly documented update policy.</li>
-        <li><strong>Answer:</strong> The map has no associated value to return, so the interface must define whether it returns a special value, throws an exception, returns an optional result, or requires a membership check first.</li>
-        <li><strong>Answer:</strong> A hash map usually gives expected constant-time exact lookup, while a tree map keeps keys ordered for sorted iteration and range-style operations.</li>
-        <li><strong>Answer:</strong> The keys of a map form a set because each key appears at most once.</li>
-        <li><strong>Answer:</strong> The operation changes one existing association rather than creating another distinct key-value entry.</li>
+  <ul class="resource-list spaced">
+    <li>
+      <a href="https://xlinux.nist.gov/dads/HTML/dictionary.html"
+         target="_blank">
+        NIST Dictionary of Algorithms and Data Structures: Dictionary
+      </a>
+      gives a concise description of the dictionary or map abstraction.
+    </li>
+    <li>
+      <a href="https://en.wikipedia.org/wiki/Associative_array"
+         target="_blank">
+        Wikipedia: Associative Array
+      </a>
+      provides an overview of map terminology, operations, and common
+      implementation approaches.
+    </li>
+    <li>
+      <a href="https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/Map.html"
+         target="_blank">
+        Java Map Interface
+      </a>
+      documents the operations and guarantees shared by Java map
+      implementations such as <code>HashMap</code> and <code>TreeMap</code>.
+    </li>
+    <li>
+      <a href="https://en.cppreference.com/w/cpp/container/map"
+         target="_blank">
+        C++ <code>std::map</code>
+      </a>
+      and
+      <a href="https://en.cppreference.com/w/cpp/container/unordered_map"
+         target="_blank">
+        C++ <code>std::unordered_map</code>
+      </a>
+      document the standard ordered and hash-based map types, respectively.
+    </li>
+    <li>
+      <a href="https://docs.python.org/3/tutorial/datastructures.html#dictionaries"
+         target="_blank">
+        Python Tutorial: Dictionaries
+      </a>
+      introduces Python's built-in <code>dict</code> type and its basic
+      operations.
+    </li>
+  </ul>
+</section>
+
+<section id="reading-questions" section-title="Reading Comprehension Questions">
+  <h2>Reading Comprehension Questions</h2>
+  <ol>
+    <li>
+      <strong>Keys and Values:</strong>
+      What restrictions does a map place on keys and values? In particular,
+      which must be distinct, and which may repeat?
+    </li>
+    <li>
+      <strong>Lookup and Membership:</strong>
+      What is the difference between <code>get(key)</code> and
+      <code>containsKey(key)</code>? Why can both operations be useful?
+    </li>
+
+    <li>
+      <strong>Insertion versus Update:</strong>
+      What are the two cases handled by <code>put(key, value)</code>? In which
+      case does the size of the map change?
+    </li>
+
+    <li>
+      <strong>Removing an Entry:</strong>
+      What information is removed by <code>remove(key)</code>? What are two
+      possible return conventions for this operation?
+    </li>
+
+    <li>
+      <strong>Keeping Associations Intact:</strong>
+      Suppose an array-based map stores keys and values in parallel arrays.
+      What invariant must hold between <code>keys[i]</code> and
+      <code>values[i]</code>, and why must the two arrays be modified
+      together?
+    </li>
+
+    <li>
+      <strong>Maps versus Sets:</strong>
+      In what sense can the same basic data structures implement both sets and
+      maps? What additional information must a map representation store?
+    </li>
+
+    <li>
+      <strong>Direct Addressing:</strong>
+      Why does a direct-address map normally use both a
+      <code>present</code> array and a <code>values</code> array? What are the
+      time and space costs of this representation?
+    </li>
+
+    <li>
+      <strong>Ordering:</strong>
+      Which map representations discussed on this page naturally support
+      iteration in sorted key order? Why should client code not assume an
+      iteration order for a general map?
+    </li>
+
+    <li>
+      <strong>Why Use a Map?</strong>
+      Explain why a map is more appropriate than a set for each of the
+      following:
+      <ol type="a">
+        <li>counting how many times each word occurs,</li>
+        <li>memoizing the result of each previously solved subproblem, and</li>
+        <li>storing only the nonzero entries of a sparse array.</li>
       </ol>
-    </div>
-  </section>
+    </li>
 
-  <section id="activities" section-title="In-Class Activities">
-    <h2>In-Class Activities</h2>
+    <li>
+      <strong>Choosing an Implementation:</strong>
+      For each situation below, choose the most appropriate representation
+      discussed on the page and briefly justify the choice.
+      <ol type="a">
+        <li>A small map containing only a few entries.</li>
+        <li>A mostly static map requiring many lookups and sorted keys.</li>
+        <li>A frequently updated map requiring sorted traversal.</li>
+        <li>A general-purpose map requiring fast exact lookup but no ordering.</li>
+        <li>A map whose keys are integers from a small fixed universe.</li>
+      </ol>
+    </li>
+  </ol>
+
+  <button id="toggleAnswers" class="show-answer" aria-expanded="false">
+    Show Answers
+  </button>
+
+  <div id="answers" class="answer" hidden>
     <ol>
-      <li><strong>Trace the map:</strong> Starting from an empty map, trace <code>put(A, 3)</code>, <code>put(B, 5)</code>, <code>put(A, 7)</code>, <code>remove(C)</code>, <code>put(C, 5)</code>, and <code>get(A)</code>. Record the entries and size after each operation.</li>
-      <li><strong>Classify the ADT:</strong> Decide whether each task needs a set, map, list, or priority queue: count word frequencies, remove duplicates, store students in seating order, and repeatedly remove the most urgent task.</li>
-      <li><strong>Missing-key policy:</strong> Design three possible behaviors for <code>get</code> when a key is absent. Discuss which one is easiest for a beginning programmer to use correctly.</li>
-      <li><strong>Implementation choice:</strong> Choose between a hash map and tree map for a phone book, a compiler symbol table, a leaderboard by username, and printing all usernames alphabetically.</li>
+      <li>
+        <strong>Answer:</strong>
+        Keys are distinct, so each key identifies at most one entry. Values do
+        not have to be distinct, so several different keys may have equal
+        associated values.
+      </li>
+      <li>
+        <strong>Answer:</strong>
+        <code>get(key)</code> retrieves the value associated with a key, while
+        <code>containsKey(key)</code> reports only whether the key is present.
+        If a value such as <code>null</code> or zero can also be stored
+        normally, the result of <code>get</code> alone may not distinguish a
+        missing key from a present key having that value.
+      </li>
+
+      <li>
+        <strong>Answer:</strong>
+        If the key is absent, <code>put</code> stores a new key-value entry and
+        increases the size by one. If the key is already present,
+        <code>put</code> replaces its associated value and leaves the size
+        unchanged.
+      </li>
+
+      <li>
+        <strong>Answer:</strong>
+        Removing a key removes the complete association, including both the key
+        and its value. An implementation may return the removed value, or it
+        may return a Boolean indicating whether an entry was removed. Other
+        documented conventions are also possible.
+      </li>
+
+      <li>
+        <strong>Answer:</strong>
+        <code>values[i]</code> must always be the value associated with
+        <code>keys[i]</code>. If a key is shifted, copied, swapped, or removed
+        without making the corresponding change to its value, the map may
+        associate values with the wrong keys.
+      </li>
+
+      <li>
+        <strong>Answer:</strong>
+        Sets and maps can both use unsorted sequences, sorted arrays, balanced
+        search trees, hash tables, and related structures to locate distinct
+        keys. A map extends the stored information by maintaining an associated
+        value for each key.
+      </li>
+
+      <li>
+        <strong>Answer:</strong>
+        The <code>present</code> array records whether a key actually has an
+        entry, while <code>values</code> stores its associated value. Presence
+        cannot always be inferred from the stored value because a legitimate
+        entry may contain the same value used as a default or sentinel.
+        <code>get</code>, <code>put</code>, <code>containsKey</code>, and
+        <code>remove</code> take \(O(1)\) time, but the representation uses
+        \(O(U)\) space and may require \(O(U)\) time for iteration or clearing.
+      </li>
+
+      <li>
+        <strong>Answer:</strong>
+        A sorted array and a balanced search tree naturally support iteration
+        in increasing key order. Other representations, especially hash
+        tables, may provide no useful ordering guarantee. Client code should
+        therefore assume an iteration order only when the map interface
+        explicitly promises one.
+      </li>
+
+      <li>
+        <strong>Answer:</strong>
+        <ol type="a">
+          <li>
+            A frequency table must associate each word with its count, not
+            merely record that the word appeared.
+          </li>
+          <li>
+            Memoization must retrieve the previously computed result associated
+            with each subproblem.
+          </li>
+          <li>
+            Sparse storage must record both which indices are nonzero and the
+            value stored at each such index.
+          </li>
+        </ol>
+      </li>
+
+      <li>
+        <strong>Answer:</strong>
+        <ol type="a">
+          <li>
+            An unsorted sequence is simple and reasonable when the map is very
+            small.
+          </li>
+          <li>
+            A sorted array provides \(O(\log n)\) lookup and sorted iteration
+            when updates are infrequent.
+          </li>
+          <li>
+            A balanced search tree provides \(O(\log n)\) updates together with
+            sorted traversal.
+          </li>
+          <li>
+            A hash table provides expected \(O(1)\) basic operations when no
+            sorted order is required.
+          </li>
+          <li>
+            A direct-address table provides \(O(1)\) basic operations when the
+            integer key universe is small and fixed.
+          </li>
+        </ol>
+      </li>
     </ol>
-  </section>
+  </div>
+</section>
+
+<section id="activities" section-title="In-Class Activities">
+  <h2>In-Class Activities</h2>
+  <ol>
+    <li>
+      <strong>Trace Map Operations:</strong>
+      Start with an empty map. For this activity, assume that
+      <code>put</code> returns the previous value or <code>none</code> when the
+      key was absent, and <code>remove</code> returns the removed value or
+      <code>missing</code>. Trace
+      <code>put(A, 3)</code>, <code>put(B, 5)</code>,
+      <code>put(A, 7)</code>, <code>remove(C)</code>,
+      <code>put(C, 5)</code>, <code>get(A)</code>, and
+      <code>remove(B)</code>. After each operation, record the return value,
+      the entries in the map, and its size.
+    </li>
+<li>
+  <strong>Explore Insertions and Updates:</strong>
+  Use the interactive demo to investigate the difference between inserting
+  a new key and updating an existing key.
+  <ol type="a">
+    <li>Insert three distinct key-value associations and record the size.</li>
+    <li>
+      Use <code>put</code> again with one of the existing keys but a
+      different value. Record what changes and what remains unchanged.
+    </li>
+    <li>
+      Retrieve each stored key and verify that the updated association is
+      the one returned.
+    </li>
+    <li>
+      Try a lookup and a removal using keys that are not present. Record
+      how the demo handles each case.
+    </li>
+  </ol>
+</li>
+
+<li>
+  <strong>Choose the Appropriate ADT:</strong>
+  For each task, decide whether a list, set, map, multiset, or multimap is
+  most appropriate. Identify what information must be preserved and explain
+  why that ADT provides it.
+  <ol type="a">
+    <li>Store songs in playback order.</li>
+    <li>Test whether a submitted ID has been blocked.</li>
+    <li>Count how many times each word appears.</li>
+    <li>Store each student ID with the student's grade.</li>
+    <li>Associate each course with all students enrolled in it.</li>
+    <li>Record repeated survey responses together with their counts.</li>
+  </ol>
+</li>
+
+<li>
+  <strong>Keep Parallel Arrays Aligned:</strong>
+  Suppose a map is represented by<br>
+  <pre><code class="language-java">keys   = [18, 7, 25, 4, 13]
+values = ["red", "blue", "green", "gold", "gray"]</code></pre>
+<p>Remove key 7 by replacing its entry with the final entry.</p> 
+<ol type="a"> <li>Show both arrays after the removal.</li> <li>State the new size.</li> <li>
+Show what the arrays would look like if the final key were copied
+but its value were not. </li> <li>
+Identify the incorrect key-value association created by that error. </li> </ol> </li>
+<li>
+  <strong>Build a Direct-Address Map:</strong>
+  Let the key universe be \(\{0,1,\ldots,9\}\). Draw a
+  <code>present</code> array and a <code>values</code> array, and trace
+  <code>put(3, 18)</code>, <code>put(7, 4)</code>,
+  <code>put(3, 22)</code>, <code>remove(5)</code>, and
+  <code>remove(7)</code>.
+  <ol type="a">
+    <li>Show both arrays after every operation.</li>
+    <li>Record the size after every operation.</li>
+    <li>
+      Identify which operation updates an existing entry rather than
+      creating a new one.
+    </li>
+    <li>
+      Explain why the <code>present</code> array is still necessary even
+      if every position of <code>values</code> has some stored bit pattern.
+    </li>
+  </ol>
+</li>
+
+<li>
+  <strong>Represent the Same Map Several Ways:</strong>
+  Consider the logical map
+  <code>{18: "red", 7: "blue", 25: "green", 13: "gray"}</code>.
+  Draw how these associations could be stored using:
+  <ol type="a">
+    <li>an unsorted array of entry records,</li>
+    <li>parallel key and value arrays,</li>
+    <li>a sorted array of entries, and</li>
+    <li>a binary search tree ordered by key.</li>
+  </ol>
+  In each drawing, indicate where each value is stored and identify which
+  parts of the representation are used to locate a key.
+</li>
+
+<li>
+  <strong>Sparse Array with a Map:</strong>
+  A logical array has indices \(0\) through \(999\), contains zero
+  everywhere except
+  \[
+    A[17]=6,\qquad A[240]=-3,\qquad A[815]=11.
+  \]
+  <ol type="a">
+    <li>
+      Write the three key-value associations that need to be stored in a
+      map representation.
+    </li>
+    <li>
+      Explain how the value of <code>A[500]</code> can be determined even
+      though key 500 is not stored.
+    </li>
+    <li>Update <code>A[240]</code> to 8 and show the resulting map.</li>
+    <li>
+      Set <code>A[17]</code> to zero and determine what should happen to
+      key 17 if the map stores only nonzero entries.
+    </li>
+    <li>
+      Explain why a set of the nonzero indices would not be sufficient to
+      represent this sparse array.
+    </li>
+    <li>Is there any sort of sparse array that could be represented using a set instead
+      of a map? Explain your answer.
+    </li>
+  </ol>
+</li>
+  </ol>
+</section>
 
   <section id="problems" section-title="Homework Problems">
     <h2>Homework Problems</h2>
     <ol>
-      <li><strong>Frequency table:</strong> Write pseudocode that uses a map to count how many times each word appears in a list of words.</li>
-      <li><strong>Index construction:</strong> Given a list of records with student ID and name, build a map from ID to name. State what your algorithm does if the same ID appears twice.</li>
-      <li><strong>Invert a map:</strong> Given a map from student ID to major, build a map from major to the set of student IDs in that major.</li>
-      <li><strong>Compare implementations:</strong> Compare an unsorted-list map, sorted-array map, hash map, and tree map for lookup-heavy workloads.</li>
-      <li><strong>Mutable-key failure:</strong> Explain why changing a key object after insertion can make lookup fail in a hash map or tree map.</li>
-      <li><strong>Design tests:</strong> List at least six tests for a map implementation, including duplicate-key updates and missing-key behavior.</li>
+      <li>
+  <strong>Duplicate Record Keys:</strong>
+  An input file contains student ID and student name pairs. Design an
+  algorithm that builds a map from ID to name.
+  <ol type="a">
+    <li>
+      Explain what ordinary <code>put</code> behavior would do if the same ID
+      appears more than once.
+    </li>
+    <li>
+      Give pseudocode that instead detects and rejects a duplicate ID.
+    </li>
+    <li>
+      Give pseudocode that deliberately allows a later record to replace the
+      earlier record.
+    </li>
+    <li>
+      Explain why deciding whether duplicates should be rejected or replaced
+      is an application-level decision rather than a change to the underlying
+      map representation.
+    </li>
+  </ol>
+</li>
+
+<li>
+  <strong>Compose Two Maps:</strong>
+  Suppose <code>advisor</code> maps each student ID to the name of that
+  student's advisor, and <code>office</code> maps each faculty name to an
+  office number. Construct a new map <code>studentOffice</code> that maps each
+  student ID to the office of that student's advisor.
+  <ol type="a">
+    <li>
+      Give pseudocode for constructing <code>studentOffice</code>.
+    </li>
+    <li>
+      State what your algorithm should do if a student's advisor is not a key
+      in <code>office</code>.
+    </li>
+    <li>
+      Suppose <code>advisor</code> contains \(n\) entries. Analyze the expected
+      running time if all three maps are implemented with hash tables.
+    </li>
+    <li>
+      Analyze the running time if <code>advisor</code> is iterated in
+      \(O(n)\) time but <code>office</code> and <code>studentOffice</code> are
+      balanced-search-tree maps.
+    </li>
+  </ol>
+</li>
+
+<li>
+  <strong>Invert a Map:</strong>
+  Consider the map
+  <pre><code class="language-none">{101: "CS", 102: "Math", 103: "CS", 104: "Physics", 105: "Math"}</code></pre>
+  from student ID to major.
+  <ol type="a">
+    <li>
+      Explain why simply exchanging every key and value does not produce an
+      ordinary map containing all of the original information.
+    </li>
+    <li>
+      Construct a map from each major to the set of student IDs having that
+      major.
+    </li>
+    <li>
+      Give pseudocode for constructing this map of sets from an arbitrary
+      student-to-major map.
+    </li>
+    <li>
+      Explain why a set is an appropriate value for each major.
+    </li>
+    <li>
+      Analyze the expected running time when the outer map and all inner sets
+      use hash tables.
+    </li>
+  </ol>
+</li>
+
+<li>
+  <strong>Missing Value or Missing Key:</strong>
+  Suppose a map permits <code>null</code> as an ordinary stored value and
+  <code>get(key)</code> also returns <code>null</code> when the key is absent.
+  <ol type="a">
+    <li>
+      Give two different map states in which <code>get(A)</code> returns
+      <code>null</code>.
+    </li>
+    <li>
+      Show how <code>containsKey(A)</code> distinguishes the two states.
+    </li>
+    <li>
+      Explain why choosing a different ordinary sentinel value does not solve
+      the general problem if that value is also permitted in the map.
+    </li>
+    <li>
+      Describe a return policy for <code>get</code> that removes the
+      ambiguity.
+    </li>
+  </ol>
+</li>
+
+<li>
+  <strong>Cost of a Sequence of Map Operations:</strong>
+  A map initially contains \(n\) entries. Consider a sequence consisting of
+  \(n\) successful lookups, \(n\) insertions of new keys, and \(n\) removals
+  of existing keys. Assume throughout the sequence that the map contains
+  \(\Theta(n)\) entries.
+  <ol type="a">
+    <li>
+      Determine the total worst-case running time if the map is implemented
+      with an unsorted array or linked list.
+    </li>
+    <li>
+      Determine the total worst-case running time for a sorted-array map.
+    </li>
+    <li>
+      Determine the total worst-case running time for a balanced-search-tree
+      map.
+    </li>
+    <li>
+      Determine the expected total running time for a hash-table map.
+    </li>
+    <li>
+      Explain why the answer for the hash table is an expected bound rather
+      than a worst-case bound.
+    </li>
+  </ol>
+</li>
+
+<li>
+  <strong>Failure after Key Modification:</strong>
+  A mutable object is used as a key in both a hash map and a tree map. After
+  the key is inserted, one of its fields is changed.
+  <ol type="a">
+    <li>
+      Explain how changing a field used to determine equality or the hash
+      value can cause a later lookup to fail in the hash map.
+    </li>
+    <li>
+      Explain how changing a field used by the ordering rule can leave the key
+      in the wrong logical position in the tree map.
+    </li>
+    <li>
+      Explain why changing only the associated value normally does not cause
+      either problem.
+    </li>
+    <li>
+      State a safe rule for fields of objects that are used to determine map
+      keys.
+    </li>
+  </ol>
+</li>
+
+<li>
+  <strong>Direct Addressing versus Hashing:</strong>
+  Two applications each store approximately 200 key-value entries.
+  Application A uses integer keys from \(\{0,1,\ldots,255\}\).
+  Application B uses integer keys from
+  \(\{0,1,\ldots,10^9\}\).
+  <ol type="a">
+    <li>
+      Explain why a direct-address map is reasonable for Application A.
+    </li>
+    <li>
+      Determine the asymptotic space used by a direct-address representation
+      for each application in terms of the universe size \(U\).
+    </li>
+    <li>
+      Explain why direct addressing is unattractive for Application B even
+      though both applications store approximately the same number of entries.
+    </li>
+    <li>
+      Explain why a hash table is a more natural choice for Application B.
+    </li>
+    <li>
+      Compare the basic-operation time bounds of the two approaches.
+    </li>
+  </ol>
+</li>
+
+<li>
+  <strong>Implement an Unsorted-Array Map:</strong>
+  Implement a resizable map from integer keys to integer values using parallel
+  arrays. The used prefix of <code>keys</code> and <code>values</code> must
+  always represent complete, aligned entries.
+  <ol type="a">
+    <li>
+      Implement <code>containsKey</code>, <code>get</code>,
+      <code>put</code>, <code>remove</code>, <code>size</code>,
+      <code>isEmpty</code>, and <code>clear</code>.
+    </li>
+    <li>
+      Choose and document policies for the return values of
+      <code>get</code>, <code>put</code>, and <code>remove</code> when
+      relevant.
+    </li>
+    <li>
+      Make <code>put</code> replace the associated value rather than create a
+      duplicate entry when the key is already present.
+    </li>
+    <li>
+      Resize both arrays together when the capacity is full.
+    </li>
+    <li>
+      Remove an entry by copying the final used key and its associated value
+      into the removed position.
+    </li>
+    <li>
+      Test new insertion, value replacement, present and missing lookup,
+      present and missing removal, resizing, removal from several positions,
+      and reuse after <code>clear</code>.
+    </li>
+    <li>
+      State and justify the worst-case running time of every public operation.
+    </li>
+  </ol>
+</li>
+
     </ol>
   </section>
 </body>
