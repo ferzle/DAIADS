@@ -70,7 +70,10 @@
   <section id="overview" section-title="Overview">
     <h2>Overview</h2>
     <p>
-      <strong>Separate chaining</strong> is a collision-resolution strategy for hash tables.
+      <strong>Separate chaining</strong>, also called <strong>Chaining</strong>, 
+      <strong>Open Hashing</strong> (not to be confused with <em>Open Addressing</em>),
+      or <strong>Closed Addressing</strong>,
+      is a collision-resolution strategy for hash tables.
       Instead of requiring each table position to store at most one entry, each position refers
       to a <strong>bucket</strong> that can hold all entries whose keys have that home position.
     </p>
@@ -80,14 +83,14 @@
       for another table position: colliding entries remain together in the same bucket.
     </p>
     <p>
+      A common implementation uses a linked list for each bucket, and that is the representation
+      we will use on this page. Other data structures can also be used to represent a bucket.
+    </p>
+    <p>
       Hash tables can be used to implement both sets and maps. A hash set stores keys, while a
       hash map stores key-value entries. Separate chaining works the same way in either case:
       entries whose keys have the same home position are stored together in the same bucket.
       To keep the discussion simple, we will focus primarily on sets and show only keys.
-    </p>
-    <p>
-      A common implementation uses a linked list for each bucket, and that is the representation
-      we will use on this page. Other data structures can also be used to represent a bucket.
     </p>
 
     <div class="example-box">
@@ -99,7 +102,7 @@
     bucket, and each bucket stores all keys whose home position is that index.
   </p>
 
-  <svg class="chaining-model" viewBox="0 0 860 335" role="img"
+  <svg class="chaining-model" viewBox="0 0 700 335" role="img"
        aria-labelledby="chainingModelTitle chainingModelDesc">
     <title id="chainingModelTitle">Separate chaining with five buckets</title>
     <desc id="chainingModelDesc">
@@ -135,28 +138,28 @@
     </g>
 
     <path class="link" d="M 155 113 H 205" marker-end="url(#chain-arrowhead)"></path>
-    <rect class="entry" x="215" y="88" width="105" height="45" rx="10"></rect>
-    <text class="entry-text" x="267" y="119">16</text>
+    <rect class="entry" x="215" y="93" width="80" height="40" rx="10"></rect>
+    <text class="entry-text" x="257" y="119">16</text>
     
-    <path class="link" d="M 155 162 H 205" marker-end="url(#chain-arrowhead)"></path>
-    <rect class="entry" x="215" y="137" width="105" height="45" rx="10"></rect>
-    <text class="entry-text" x="267" y="168">12</text>
+    <path class="link" d="M 155 165 H 205" marker-end="url(#chain-arrowhead)"></path>
+    <rect class="entry" x="215" y="142" width="80" height="40" rx="10"></rect>
+    <text class="entry-text" x="252" y="169">12</text>
 
-    <path class="link" d="M 320 162 H 360" marker-end="url(#chain-arrowhead)"></path>
-    <rect class="entry" x="370" y="137" width="105" height="45" rx="10"></rect>
-    <text class="entry-text" x="422" y="168">22</text>
+    <path class="link" d="M 295 162 H 335" marker-end="url(#chain-arrowhead)"></path>
+    <rect class="entry" x="337" y="142" width="80" height="40" rx="10"></rect>
+    <text class="entry-text" x="382" y="168">22</text>
 
-    <path class="link" d="M 475 162 H 515" marker-end="url(#chain-arrowhead)"></path>
-    <rect class="entry" x="525" y="137" width="105" height="45" rx="10"></rect>
-    <text class="entry-text" x="577" y="168">7</text>
+    <path class="link" d="M 417 162 H 457" marker-end="url(#chain-arrowhead)"></path>
+    <rect class="entry" x="460" y="142" width="80" height="40" rx="10"></rect>
+    <text class="entry-text" x="500" y="168">7</text>
 
-    <path class="link" d="M 630 162 H 670" marker-end="url(#chain-arrowhead)"></path>
-    <rect class="highlight" x="680" y="137" width="105" height="45" rx="10"></rect>
-    <text class="entry-text" x="732" y="168">17</text>
+    <path class="link" d="M 540 162 H 580" marker-end="url(#chain-arrowhead)"></path>
+    <rect class="highlight" x="583" y="142" width="80" height="40" rx="10"></rect>
+    <text class="entry-text" x="620" y="168">17</text>
 
     <path class="link" d="M 155 258 H 205" marker-end="url(#chain-arrowhead)"></path>
-    <rect class="entry" x="215" y="233" width="105" height="45" rx="10"></rect>
-    <text class="entry-text" x="267" y="264">4</text>
+    <rect class="entry" x="215" y="238" width="80" height="40" rx="10"></rect>
+    <text class="entry-text" x="257" y="264">4</text>
 
     <text class="label" x="445" y="320">all keys in bucket 2 satisfy \(k \bmod 5 = 2\)</text>
   </svg>
@@ -176,27 +179,42 @@
 
   </section>
 
-  <section id="operations" section-title="Core Operations">
-    <h2>Core Operations</h2>
+  <section id="operations" section-title="Core Operations and Implementation">
+    <h2>Core Operations and Implementation</h2>
     <p>
       Lookup, insertion, and removal all begin by computing the key's home position. Separate
       chaining then performs the rest of the operation within that one bucket.
+      Thus, the rest of the details depend on the data structure used to represent a bucket. 
+      In this section, we will demonstrate how to implement these operations when each bucket is a linked list
+      and insertions are made at the tail of the list. 
+      Other bucket representations are possible, but the overall approach is similar.
     </p>
 
+    <section id="lookup-core" section-title="Lookup">
     <h3>Lookup</h3>
     <p>
-      Lookup scans the selected bucket until it finds an equal key or reaches the end of the
-      bucket. A map returns the associated value; a set reports whether the key is present.
+      To look up a key, first compute its home position and follow the reference to the
+      linked list stored at that bucket. Traverse the list from its head, comparing each
+      stored key with the search key. The lookup succeeds as soon as a matching key is
+      found. If the traversal reaches the end of the list, the key is not present.
     </p>
+
     <pre><code>lookup(key):
     i = hash(key) mod table.length
-    for each entry in table[i]:
-        if entry.key equals key:
-            return entry
-    report missing key</code></pre>
+    current = table[i]
+
+    while current != null:
+        if current.key equals key:
+            return true
+        current = current.next
+
+    return false</code></pre>
+
     <p>
-      The comparison must use the actual keys, not just their hash values. Different keys can
-      collide and therefore appear in the same bucket.
+      The comparison must use the actual keys, not just their home positions. Every key in this
+      linked list has the same home position, but the keys themselves may be different. Lookup must
+      therefore compare the search key with each stored key until it finds an equal key or reaches
+      the end of the list.
     </p>
 
     <div class="example-box">
@@ -286,6 +304,14 @@
       #lookup-demo .dim {
         opacity: 0.35;
       }
+      #lookup-demo .null-box {
+        fill: #f7fbff;
+        stroke: #58758f;
+        stroke-width: 2;
+      }
+      #lookup-demo .hidden {
+        opacity: 0;
+      }
     </style>
 
     <text class="lookup-label" x="110" y="25">bucket array</text>
@@ -334,7 +360,9 @@
     <text class="entry-text" x="615" y="145">24</text>
 
     <path class="link" d="M 665 140 H 715" marker-end="url(#lookupArrow)"></path>
-    <text class="lookup-label" x="740" y="145">null</text>
+    <rect id="lookupNull" class="null-box hidden"
+      x="716" y="122" width="52" height="36" rx="8"></rect>
+<text class="lookup-label" x="742" y="145">null</text>
   </svg>
 
   <p>
@@ -366,7 +394,7 @@
       const elt = document.getElementById(id);
       elt.classList.remove("active", "found", "not-found", "dim");
     }
-
+document.getElementById("lookupNull").classList.add("hidden");
     setLookupStatus("Choose a lookup to animate.");
   }
 
@@ -415,7 +443,16 @@
         "Move to the next node and check 24.");
       highlightAfterDelay("node24", "not-found", 5300,
         "24 does not match 31.");
+      highlightAfterDelay(
+        "lookupNull",
+        "active",
+        6100,
+        "Reached null without finding 31. The lookup fails."
+      );
       lookupTimeouts.push(setTimeout(() => {
+        const nullBox = document.getElementById("lookupNull");
+        nullBox.classList.remove("hidden");
+        nullBox.classList.add("active");
         setLookupStatus("Reached null without finding 31. The lookup fails.");
       }, 6100));
     }
@@ -431,25 +468,48 @@
     }
   }
 </script>
+</section>
 
-    <h3>Insert or Put</h3>
-    <p>
-      Before adding a new entry, the table searches the bucket to determine whether the key is
-      already present. In a map, an existing key causes its value to be replaced. In a set, an
-      existing key leaves the set unchanged.
-    </p>
-    <pre><code>put(key, value):
+<section id="insert-core" section-title="Insert">
+<h3>Insert</h3>
+<p>
+  To insert a key, first compute its home position and traverse the linked list in that
+  bucket. If the key is already present, the set is unchanged. Otherwise, append a new
+  node containing the key to the tail of the list.
+</p>
+
+<pre><code>insert(key):
     i = hash(key) mod table.length
-    for each entry in table[i]:
-        if entry.key equals key:
-            entry.value = value
-            return
-    add (key, value) to table[i]
-    size = size + 1</code></pre>
+    current = table[i]
+    previous = null
+
+    while current != null:
+        if current.key equals key:
+            return false
+        previous = current
+        current = current.next
+
+    newNode = new Node(key)
+
+    if previous == null:
+        table[i] = newNode
+    else:
+        previous.next = newNode
+
+    size = size + 1
+    return true</code></pre>
+
     <p>
-      If the bucket is a linked list, a new entry can be added at the head in constant time.
-      However, <code>put</code> must still search the bucket first to determine whether the key is
-      already present.
+      The traversal serves two purposes. It determines whether the key is already present,
+      and, if the key is absent, leaves <code>previous</code> pointing to the final node in
+      the list. The new node can therefore be appended to the tail without another traversal.
+      If the bucket is empty, <code>previous</code> remains <code>null</code>, so the new node
+      becomes the head of the list.
+    </p>
+
+    <p>
+      For a hash map, the same traversal is used, but each node stores a key-value pair.
+      If the key is found, its associated value is replaced rather than inserting a new node.
     </p>
     
      <div class="example-box">
@@ -599,136 +659,258 @@
           <text class="label" x="70" y="66">empty</text>
           <text class="label" x="70" y="144">empty</text>
           <path class="link" d="M 90 87 H 128" marker-end="url(#chain-step-arrow)"></path>
-          <rect class="highlight" x="136" y="75" width="54" height="24" rx="8"></rect>
+          <rect class="highlight" x="136" y="75" width="54" height="22" rx="8"></rect>
           <text class="entry-text" x="163" y="92">6</text>
           <path class="link" d="M 90 113 H 128" marker-end="url(#chain-step-arrow)"></path>
-          <rect class="entry" x="136" y="101" width="54" height="24" rx="8"></rect>
+          <rect class="entry" x="136" y="101" width="54" height="22" rx="8"></rect>
           <text class="entry-text" x="163" y="118">12</text>
           <path class="link" d="M 190 113 H 224" marker-end="url(#chain-step-arrow)"></path>
-          <rect class="entry" x="232" y="101" width="54" height="24" rx="8"></rect>
+          <rect class="entry" x="232" y="101" width="54" height="22" rx="8"></rect>
           <text class="entry-text" x="259" y="118">22</text>
           <path class="link" d="M 90 165 H 128" marker-end="url(#chain-step-arrow)"></path>
-          <rect class="entry" x="136" y="153" width="54" height="24" rx="8"></rect>
+          <rect class="entry" x="136" y="153" width="54" height="22" rx="8"></rect>
           <text class="entry-text" x="163" y="170">4</text>
           <path class="link" d="M 190 165 H 224" marker-end="url(#chain-step-arrow)"></path>
-          <rect class="entry" x="232" y="153" width="54" height="24" rx="8"></rect>
+          <rect class="entry" x="232" y="153" width="54" height="22" rx="8"></rect>
           <text class="entry-text" x="259" y="170">9</text>
         </g>
       </svg>
-
-      <p>
-        A lookup for <code>9</code> goes directly to bucket 4 and searches only that bucket.
-        The final table is still not perfectly balanced, but now two buckets contain two entries
-        each and one bucket contains one entry.
-      </p>
     </div>
+    </section>
 
+    <section id="remove-core" section-title="Remove">
     <h3>Remove</h3>
-    <p>
-      Removal searches the selected bucket for an equal key and removes that entry if it is
-      present.
-    </p>
-    <pre><code>remove(key):
+<p>
+  To remove a key, first compute its home position and traverse the linked list in that
+  bucket. As the list is searched, keep track of both the current node and the node that
+  precedes it. If the key is found, remove its node by changing the appropriate reference.
+  If the traversal reaches the end of the list, the key is not present and the table is
+  unchanged.
+</p>
+
+<pre><code>remove(key):
     i = hash(key) mod table.length
-    search table[i] for key
-    if found:
-        remove that entry from the bucket
-        size = size - 1</code></pre>
-    <p>
-      Unlike open addressing, separate chaining does not require tombstones. Removing one entry
-      from a bucket does not break the search path used to find any other entry.
-    </p>
+    current = table[i]
+    previous = null
+
+    while current != null:
+        if current.key equals key:
+            if previous == null:
+                table[i] = current.next
+            else:
+                previous.next = current.next
+
+            size = size - 1
+            return true
+
+        previous = current
+        current = current.next
+
+    return false</code></pre>
+
+<p>
+  The case <code>previous == null</code> means that the matching node is the first node
+  in the bucket, so the bucket reference must be changed to point to the next node.
+  Otherwise, <code>previous.next</code> is changed to bypass the matching node.
+</p>
+
+<div class="example-box">
+  <strong class="example-title">Example: Removing from a Chain</strong>
+
+  <p>
+    Suppose the table has capacity 7 and uses \(h(k)=k \bmod 7\). Bucket 3 contains
+    the chain <code>[10, 17, 24]</code>. To remove <code>17</code>, the table first
+    computes \(h(17)=3\), then searches bucket 3. When <code>17</code> is found,
+    the reference from <code>10</code> is changed to point directly to <code>24</code>.
+    In the diagram below, we only show the one row of the table that is affected by the removal.
+  </p>
+
+  <svg class="chaining-model"
+     viewBox="0 20 700 210"
+     role="img"
+     aria-labelledby="removeExampleTitle removeExampleDesc">
+
+  <title id="removeExampleTitle">
+    Removing a node from a separately chained hash table
+  </title>
+
+  <desc id="removeExampleDesc">
+    Before removal, bucket 3 points to the linked list 10, 17, 24.
+    Key 17 is highlighted. After removal, bucket 3 points to the
+    linked list 10, 24.
+  </desc>
+
+  <defs>
+    <marker id="remove-arrowhead"
+            viewBox="0 0 10 10"
+            refX="9"
+            refY="5"
+            markerWidth="7"
+            markerHeight="7"
+            orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z"
+            fill="#58758f"></path>
+    </marker>
+  </defs>
+
+  <!-- Before -->
+  <text class="label" x="350" y="40">Before removing 17</text>
+
+  <rect class="bucket"
+        x="55" y="65"
+        width="100" height="48"></rect>
+  <text class="entry-text" x="82" y="95">3</text>
+
+  <path class="link"
+        d="M 155 89 H 205"
+        marker-end="url(#remove-arrowhead)"></path>
+
+  <rect class="entry"
+        x="215" y="64"
+        width="100" height="50"
+        rx="10"></rect>
+  <text class="entry-text" x="265" y="95">10</text>
+
+  <path class="link"
+        d="M 315 89 H 355"
+        marker-end="url(#remove-arrowhead)"></path>
+
+  <rect class="highlight"
+        x="365" y="64"
+        width="100" height="50"
+        rx="10"></rect>
+  <text class="entry-text" x="415" y="95">17</text>
+
+  <path class="link"
+        d="M 465 89 H 505"
+        marker-end="url(#remove-arrowhead)"></path>
+
+  <rect class="entry"
+        x="515" y="64"
+        width="100" height="50"
+        rx="10"></rect>
+  <text class="entry-text" x="565" y="95">24</text>
+
+
+  <!-- After -->
+  <text class="label" x="350" y="155">After removing 17</text>
+
+  <rect class="bucket"
+        x="55" y="170"
+        width="100" height="48"></rect>
+  <text class="entry-text" x="82" y="200">3</text>
+
+  <path class="link"
+        d="M 155 194 H 205"
+        marker-end="url(#remove-arrowhead)"></path>
+
+  <rect class="entry"
+        x="215" y="169"
+        width="100" height="50"
+        rx="10"></rect>
+  <text class="entry-text" x="265" y="200">10</text>
+
+  <path class="link"
+        d="M 315 194 H 505"
+        marker-end="url(#remove-arrowhead)"></path>
+
+  <rect class="entry"
+        x="515" y="169"
+        width="100" height="50"
+        rx="10"></rect>
+  <text class="entry-text" x="565" y="200">24</text>
+
+</svg>
+
+  <p>
+    The node containing <code>17</code> is no longer part of the chain, but
+    <code>24</code> remains reachable from the bucket. No other bucket is affected.
+  </p>
+</div>
+
+<p>
+  Because each bucket maintains its own linked list, removing a node affects only that
+  bucket. The remaining nodes in the list stay reachable, and searches in every other
+  bucket are unchanged. This makes deletion particularly straightforward with separate
+  chaining.
+</p>
+    </section>
+  <section id="analysis" section-title="Analysis">
+  <h3>Analysis</h3>
+
+  <p>
+    Suppose the table stores \(n\) entries in \(m\) buckets. The load factor is
+    \[
+      \alpha=\frac{n}{m}.
+    \]
+    For separate chaining, \(\alpha\) is also the average number of entries per bucket.
+    Unlike some other collision-resolution strategies, \(\alpha\) may be greater than 1
+    because each bucket can store multiple entries.
+  </p>
+
+  <p>
+    Computing a key's home position takes constant time. The remaining work depends on
+    the length of the selected bucket. If the hash function distributes entries uniformly,
+    the expected bucket length is \(\alpha\). Thus lookup, insertion, and removal each take
+    expected \(O(1+\alpha)\) time.
+  </p>
+
+  <p>
+    If the table is resized as needed so that \(\alpha\) remains bounded by a constant,
+    these operations take expected \(O(1)\) time. In the worst case, however, all \(n\)
+    entries may have the same home position, producing a single chain of length \(n\).
+    Lookup, insertion, and removal then require \(O(n)\) time.
+  </p>
+
+  <table class="example-table">
+    <thead>
+      <tr>
+        <th>Operation</th>
+        <th>Expected Cost</th>
+        <th>Worst Case</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Lookup</td>
+        <td>\(O(1+\alpha)\)</td>
+        <td>\(O(n)\)</td>
+      </tr>
+      <tr>
+        <td>Insert</td>
+        <td>\(O(1+\alpha)\)</td>
+        <td>\(O(n)\)</td>
+      </tr>
+      <tr>
+        <td>Remove</td>
+        <td>\(O(1+\alpha)\)</td>
+        <td>\(O(n)\)</td>
+      </tr>
+      <tr>
+        <td>Resize</td>
+        <td>\(\Theta(n+m)\)</td>
+        <td>\(\Theta(n+m)\)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>
+    As discussed on the Hash Tables page, increasing the table capacity requires the
+    existing entries to be rehashed because their home positions may change. Resizing
+    therefore requires scanning the old bucket array and processing every stored entry,
+    taking \(\Theta(n+m)\) time. When \(m=\Theta(n)\), this is \(\Theta(n)\).
+    With geometric growth, these occasional costs contribute only \(O(1)\) amortized
+    resizing cost per insertion.
+  </p>
+
+  <p>
+    The bucket array uses \(O(m)\) space, while the \(n\) linked-list nodes use \(O(n)\)
+    space. Thus the total space usage is \(O(n+m)\), which is \(O(n)\) when
+    \(m=\Theta(n)\). Each node also stores a reference to the next node in its bucket.
+  </p>
+</section>
   </section>
 
-  <section id="implementation" section-title="Implementation">
-    <h2>Implementation</h2>
-
-    <h3>Linked-List Representation</h3>
-    <p>
-      A standard chained hash map uses an array whose entries are references to linked lists.
-      Each node stores a key, its associated value, and a reference to the next node in the same
-      bucket. A set implementation can use the same structure without the value field.
-    </p>
-    <p>
-      In addition to the bucket array, the table normally stores the number of live entries. The
-      array length is the table capacity \(m\), while the entry count is \(n\).
-    </p>
-    <p>
-      Linked-list insertion is simplest at the front of the bucket. Removal from a singly linked
-      bucket must keep track of the previous node so that the matching node can be bypassed.
-      Removing the first node is a boundary case because the bucket-array reference itself must
-      change. If that node was the only entry, the bucket becomes empty.
-    </p>
-
-    <h3>Load Factor and Resizing</h3>
-    <p>
-      For a chained table, the load factor is
-      \[
-        \alpha=\frac{n}{m}.
-      \]
-      Because a bucket can contain multiple entries, \(\alpha\) may be greater than 1. In fact,
-      \(\alpha\) is also the average number of entries per bucket.
-    </p>
-    <p>
-      As \(\alpha\) grows, the buckets become longer on average, so operations require more work.
-      Implementations therefore resize the bucket array when the load factor becomes too large.
-      As discussed on the Hash Tables page, changing the capacity can change each key's home
-      position, so existing entries must be rehashed.
-    </p>
-    <pre><code>resize(newCapacity):
-    oldBuckets = buckets
-    buckets = array of newCapacity empty buckets
-
-    for each bucket in oldBuckets:
-        for each entry in bucket:
-            i = hash(entry.key) mod newCapacity
-            add entry to buckets[i]</code></pre>
-    <p>
-      During rehashing, the implementation already knows that every old entry is distinct. A
-      private helper that places such an entry directly into its new bucket can avoid unnecessary
-      duplicate checks and can prevent accidental recursive resizing.
-    </p>
-
-    <h3>Analysis</h3>
-    <p>
-      Computing the home position takes constant time. The remaining work depends on the length
-      of the selected bucket. If the hash function distributes entries uniformly, the expected
-      bucket length is \(\alpha\). Therefore lookup, put, and remove each take expected
-      \(O(1+\alpha)\) time.
-    </p>
-    <p>
-      When resizing keeps \(\alpha\) bounded by a constant, these operations have expected
-      \(O(1)\) time. In the worst case, however, all \(n\) entries can land in one bucket, making
-      lookup, put, and remove \(O(n)\).
-    </p>
-    <table class="example-table">
-      <thead>
-        <tr>
-          <th>Operation</th>
-          <th>Expected Cost</th>
-          <th>Worst Case</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr><td>Lookup</td><td>\(O(1+\alpha)\)</td><td>\(O(n)\)</td></tr>
-        <tr><td>Put</td><td>\(O(1+\alpha)\)</td><td>\(O(n)\)</td></tr>
-        <tr><td>Remove</td><td>\(O(1+\alpha)\)</td><td>\(O(n)\)</td></tr>
-        <tr><td>Resize</td><td>\(\Theta(n+m)\)</td><td>\(\Theta(n+m)\)</td></tr>
-        <tr><td>Iterate all entries</td><td>\(\Theta(n+m)\)</td><td>\(\Theta(n+m)\)</td></tr>
-      </tbody>
-    </table>
-    <p>
-      A resize must inspect the bucket array and rehash every stored entry. When the capacity is
-      maintained as \(m=\Theta(n)\), this is \(\Theta(n)\). If the table grows geometrically,
-      these occasional resizing costs are spread across many insertions, giving constant
-      amortized resizing cost per insertion.
-    </p>
-    <p>
-      The table uses \(O(m)\) space for the bucket array and \(O(n)\) space for the stored
-      entries, for \(O(n+m)\) total space. When \(m=\Theta(n)\), this simplifies to \(O(n)\).
-      Linked-list buckets also require a next reference for each stored entry.
-    </p>
-  </section>
 
   <section id="demo" section-title="Interactive Demo">
     <h2>Interactive Demo</h2>
