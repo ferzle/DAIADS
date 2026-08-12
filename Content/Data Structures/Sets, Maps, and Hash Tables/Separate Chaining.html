@@ -28,6 +28,32 @@
     .chaining-model .label { font-size: 15px; }
     .chaining-model .entry-text { font-size: 16px; font-weight: 700; }
     .chaining-model .link { fill: none; stroke: #58758f; stroke-width: 2; }
+
+      .chain-steps {
+      display: block;
+      width: min(100%, 1100px);
+      height: auto;
+      margin: 1rem auto;
+    }
+    .chain-steps .bucket { fill: #f7fbff; stroke: #315d7d; stroke-width: 1.8; }
+    .chain-steps .entry { fill: #cce3ff; stroke: #274c77; stroke-width: 1.8; }
+    .chain-steps .highlight { fill: #fff3d9; stroke: #b97820; stroke-width: 2.6; }
+    .chain-steps .link { fill: none; stroke: #58758f; stroke-width: 1.8; }
+    .chain-steps text {
+      fill: #17324d;
+      font-family: "Segoe UI", Verdana, sans-serif;
+      text-anchor: middle;
+    }
+    .chain-steps .panel-title { font-size: 16px; font-weight: 700; }
+    .chain-steps .label { font-size: 13px; }
+    .chain-steps .entry-text { font-size: 14px; font-weight: 700; }
+    #lookupStatus {
+      min-height: 1.5em;
+      margin: 0.5rem 0 0.75rem;
+      padding: 0.55rem 0.7rem;
+      border-left: 4px solid #4a768b;
+      background: #f7fbfd;
+    }
   </style>
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
@@ -54,90 +80,100 @@
       for another table position: colliding entries remain together in the same bucket.
     </p>
     <p>
-      Buckets are classically implemented with linked lists, which is the representation used for
-      most of this page. Other local collections can also be used. A chained hash set stores keys
-      in its buckets, while a chained hash map stores key-value entries.
+      Hash tables can be used to implement both sets and maps. A hash set stores keys, while a
+      hash map stores key-value entries. Separate chaining works the same way in either case:
+      entries whose keys have the same home position are stored together in the same bucket.
+      To keep the discussion simple, we will focus primarily on sets and show only keys.
     </p>
-
-    <svg class="chaining-model" viewBox="0 0 860 335" role="img"
-         aria-labelledby="chainingModelTitle chainingModelDesc">
-      <title id="chainingModelTitle">Separate chaining with five buckets</title>
-      <desc id="chainingModelDesc">
-        An array has buckets 0 through 4. Bucket 2 points to a chain containing keys 12, 22, 7,
-        and 17. Bucket 4 points to key 4. Other buckets are empty. Key 17 is highlighted.
-      </desc>
-      <defs>
-        <marker id="chain-arrowhead" viewBox="0 0 10 10" refX="9" refY="5"
-                markerWidth="7" markerHeight="7" orient="auto">
-          <path d="M 0 0 L 10 5 L 0 10 z" fill="#58758f"></path>
-        </marker>
-      </defs>
-      <text class="label" x="105" y="25">bucket array</text>
-      <g>
-        <rect class="bucket" x="55" y="42" width="100" height="48"></rect>
-        <rect class="bucket" x="55" y="90" width="100" height="48"></rect>
-        <rect class="bucket" x="55" y="138" width="100" height="48"></rect>
-        <rect class="bucket" x="55" y="186" width="100" height="48"></rect>
-        <rect class="bucket" x="55" y="234" width="100" height="48"></rect>
-        <text class="entry-text" x="82" y="72">0</text><text class="label" x="126" y="72">empty</text>
-        <text class="entry-text" x="82" y="120">1</text><text class="label" x="126" y="120">empty</text>
-        <text class="entry-text" x="82" y="168">2</text>
-        <text class="entry-text" x="82" y="216">3</text><text class="label" x="126" y="216">empty</text>
-        <text class="entry-text" x="82" y="264">4</text>
-      </g>
-      <path class="link" d="M 155 162 H 205" marker-end="url(#chain-arrowhead)"></path>
-      <rect class="entry" x="215" y="137" width="105" height="50" rx="10"></rect>
-      <text class="entry-text" x="267" y="168">12</text>
-      <path class="link" d="M 320 162 H 360" marker-end="url(#chain-arrowhead)"></path>
-      <rect class="entry" x="370" y="137" width="105" height="50" rx="10"></rect>
-      <text class="entry-text" x="422" y="168">22</text>
-      <path class="link" d="M 475 162 H 515" marker-end="url(#chain-arrowhead)"></path>
-      <rect class="entry" x="525" y="137" width="105" height="50" rx="10"></rect>
-      <text class="entry-text" x="577" y="168">7</text>
-      <path class="link" d="M 630 162 H 670" marker-end="url(#chain-arrowhead)"></path>
-      <rect class="highlight" x="680" y="137" width="105" height="50" rx="10"></rect>
-      <text class="entry-text" x="732" y="168">17</text>
-      <path class="link" d="M 155 258 H 205" marker-end="url(#chain-arrowhead)"></path>
-      <rect class="entry" x="215" y="233" width="105" height="50" rx="10"></rect>
-      <text class="entry-text" x="267" y="264">4</text>
-      <text class="label" x="445" y="320">all keys in bucket 2 satisfy key mod 5 = 2</text>
-    </svg>
-
     <p>
-      The essential invariant is that every entry is stored in the bucket selected by its key.
-      The order of entries within a bucket is normally irrelevant to the set or map being
-      implemented.
+      A common implementation uses a linked list for each bucket, and that is the representation
+      we will use on this page. Other data structures can also be used to represent a bucket.
     </p>
 
     <div class="example-box">
-      <strong class="example-title">Example: Building Chains</strong>
-      <p>
-        Suppose the table has capacity 5 and uses \(h(k)=k\bmod 5\). Insert
-        <code>12</code>, <code>22</code>, <code>7</code>, <code>4</code>, and
-        <code>17</code> in that order.
-      </p>
-      <table class="example-table">
-        <thead>
-          <tr>
-            <th>Key</th>
-            <th>Home Position</th>
-            <th>Bucket After Insertion</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr><td><code>12</code></td><td><code>2</code></td><td><code>[12]</code></td></tr>
-          <tr><td><code>22</code></td><td><code>2</code></td><td><code>[12, 22]</code></td></tr>
-          <tr><td><code>7</code></td><td><code>2</code></td><td><code>[12, 22, 7]</code></td></tr>
-          <tr><td><code>4</code></td><td><code>4</code></td><td><code>[4]</code></td></tr>
-          <tr><td><code>17</code></td><td><code>2</code></td><td><code>[12, 22, 7, 17]</code></td></tr>
-        </tbody>
-      </table>
-      <p>
-        A lookup for <code>17</code> goes directly to bucket 2 and searches only that bucket.
-        Notice that although the table stores five keys in five buckets, the entries are not
-        evenly distributed: one bucket contains four keys and three buckets are empty.
-      </p>
-    </div>
+  <strong class="example-title">Example: A Snapshot of Separate Chaining</strong>
+
+  <p>
+    Suppose a hash table has capacity 5 and uses \(h(k)=k \bmod 5\). The figure below shows
+    one possible state of the table after several insertions. Each array position refers to a
+    bucket, and each bucket stores all keys whose home position is that index.
+  </p>
+
+  <svg class="chaining-model" viewBox="0 0 860 335" role="img"
+       aria-labelledby="chainingModelTitle chainingModelDesc">
+    <title id="chainingModelTitle">Separate chaining with five buckets</title>
+    <desc id="chainingModelDesc">
+      An array has buckets 0 through 4. Bucket 2 points to a chain containing keys 12, 22, 7,
+      and 17. Bucket 4 points to key 4. Other buckets are empty. Key 17 is highlighted.
+    </desc>
+    <defs>
+      <marker id="chain-arrowhead" viewBox="0 0 10 10" refX="9" refY="5"
+              markerWidth="7" markerHeight="7" orient="auto">
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="#58758f"></path>
+      </marker>
+    </defs>
+
+    <text class="label" x="105" y="25">bucket array</text>
+    <g>
+      <rect class="bucket" x="55" y="42" width="100" height="48"></rect>
+      <rect class="bucket" x="55" y="90" width="100" height="48"></rect>
+      <rect class="bucket" x="55" y="138" width="100" height="48"></rect>
+      <rect class="bucket" x="55" y="186" width="100" height="48"></rect>
+      <rect class="bucket" x="55" y="234" width="100" height="48"></rect>
+
+      <text class="entry-text" x="82" y="72">0</text>
+      <text class="label" x="126" y="72">empty</text>
+
+      <text class="entry-text" x="82" y="120">1</text>
+
+      <text class="entry-text" x="82" y="168">2</text>
+
+      <text class="entry-text" x="82" y="216">3</text>
+      <text class="label" x="126" y="216">empty</text>
+
+      <text class="entry-text" x="82" y="264">4</text>
+    </g>
+
+    <path class="link" d="M 155 113 H 205" marker-end="url(#chain-arrowhead)"></path>
+    <rect class="entry" x="215" y="88" width="105" height="45" rx="10"></rect>
+    <text class="entry-text" x="267" y="119">16</text>
+    
+    <path class="link" d="M 155 162 H 205" marker-end="url(#chain-arrowhead)"></path>
+    <rect class="entry" x="215" y="137" width="105" height="45" rx="10"></rect>
+    <text class="entry-text" x="267" y="168">12</text>
+
+    <path class="link" d="M 320 162 H 360" marker-end="url(#chain-arrowhead)"></path>
+    <rect class="entry" x="370" y="137" width="105" height="45" rx="10"></rect>
+    <text class="entry-text" x="422" y="168">22</text>
+
+    <path class="link" d="M 475 162 H 515" marker-end="url(#chain-arrowhead)"></path>
+    <rect class="entry" x="525" y="137" width="105" height="45" rx="10"></rect>
+    <text class="entry-text" x="577" y="168">7</text>
+
+    <path class="link" d="M 630 162 H 670" marker-end="url(#chain-arrowhead)"></path>
+    <rect class="highlight" x="680" y="137" width="105" height="45" rx="10"></rect>
+    <text class="entry-text" x="732" y="168">17</text>
+
+    <path class="link" d="M 155 258 H 205" marker-end="url(#chain-arrowhead)"></path>
+    <rect class="entry" x="215" y="233" width="105" height="45" rx="10"></rect>
+    <text class="entry-text" x="267" y="264">4</text>
+
+    <text class="label" x="445" y="320">all keys in bucket 2 satisfy \(k \bmod 5 = 2\)</text>
+  </svg>
+
+  <p>
+    For example, the highlighted key <code>17</code> is stored in bucket 2 because
+    \(17 \bmod 5 = 2\). Likewise, key <code>4</code> is stored in bucket 4 because
+    \(4 \bmod 5 = 4\).
+  </p>
+
+  <p>
+    The essential invariant is that every entry is stored in the bucket selected by its key.
+    The order of entries within a bucket is usually not important to the set or map being
+    implemented.
+  </p>
+</div>
+
   </section>
 
   <section id="operations" section-title="Core Operations">
@@ -163,6 +199,239 @@
       collide and therefore appear in the same bucket.
     </p>
 
+    <div class="example-box">
+  <strong class="example-title">Example: Lookup</strong>
+
+  <p>
+    Suppose the table has capacity 7 and uses \(h(k)=k \bmod 7\).
+    In the snapshot below, bucket 3 contains the chain
+    <code>[10, 17, 24]</code>, since each of those keys satisfies
+    \(k \bmod 7 = 3\). Bucket 5 is empty.
+  </p>
+
+  <p>
+    Use the buttons to trace three different lookup operations:
+    a successful lookup for <code>24</code>, an unsuccessful lookup for
+    <code>31</code> in a nonempty bucket, and an unsuccessful lookup for
+    <code>5</code> in an empty bucket.
+  </p>
+
+  <div style="margin: 0.75em 0;">
+    <button type="button" onclick="runLookupScenario('success')">Successful Lookup: 24</button>
+    <button type="button" onclick="runLookupScenario('failChain')">Failed Lookup: 31</button>
+    <button type="button" onclick="runLookupScenario('failEmpty')">Empty Bucket: 5</button>
+    <button type="button" onclick="resetLookupScenario()">Reset</button>
+  </div>
+
+  <p id="lookupStatus" role="status" aria-live="polite">Choose a lookup to animate.</p>
+
+  <svg id="lookup-demo" viewBox="20 10 760 230" role="img"
+       aria-labelledby="lookupDemoTitle lookupDemoDesc"
+       style="display:block; width:100%; max-width:930px; height:auto; margin:1em auto;">
+    <title id="lookupDemoTitle">Animated lookup example for separate chaining</title>
+    <desc id="lookupDemoDesc">
+      A bucket array with indices 0 through 6. Bucket 3 points to a chain
+      containing 10, 17, and 24. Bucket 5 is empty. Buttons animate
+      successful and unsuccessful lookup traces.
+    </desc>
+
+    <defs>
+      <marker id="lookupArrow" viewBox="0 0 10 10" refX="9" refY="5"
+              markerWidth="7" markerHeight="7" orient="auto">
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="#58758f"></path>
+      </marker>
+    </defs>
+
+    <style>
+      #lookup-demo .bucket {
+        fill: #f7fbff;
+        stroke: #315d7d;
+        stroke-width: 2;
+      }
+      #lookup-demo .bucket-label,
+      #lookup-demo .entry-text,
+      #lookup-demo .lookup-label {
+        fill: #17324d;
+        font-family: Verdana, sans-serif;
+        text-anchor: middle;
+      }
+      #lookup-demo .bucket-label { font-size: 15px; }
+      #lookup-demo .entry-text { font-size: 16px; font-weight: 700; }
+      #lookup-demo .lookup-label { font-size: 15px; }
+      #lookup-demo .entry {
+        fill: #cce3ff;
+        stroke: #274c77;
+        stroke-width: 2;
+      }
+      #lookup-demo .link {
+        fill: none;
+        stroke: #58758f;
+        stroke-width: 2;
+      }
+      #lookup-demo .active {
+        fill: #fff3d9 !important;
+        stroke: #b97820 !important;
+        stroke-width: 3 !important;
+      }
+      #lookup-demo .found {
+        fill: #d9f5d6 !important;
+        stroke: #2e7d32 !important;
+        stroke-width: 3 !important;
+      }
+      #lookup-demo .not-found {
+        fill: #fde2e2 !important;
+        stroke: #b71c1c !important;
+        stroke-width: 3 !important;
+      }
+      #lookup-demo .dim {
+        opacity: 0.35;
+      }
+    </style>
+
+    <text class="lookup-label" x="110" y="25">bucket array</text>
+
+    <!-- Bucket array -->
+    <g id="lookup-buckets">
+      <rect id="bucket0" class="bucket" x="55" y="42" width="110" height="28"></rect>
+      <rect id="bucket1" class="bucket" x="55" y="70" width="110" height="28"></rect>
+      <rect id="bucket2" class="bucket" x="55" y="98" width="110" height="28"></rect>
+      <rect id="bucket3" class="bucket" x="55" y="126" width="110" height="28"></rect>
+      <rect id="bucket4" class="bucket" x="55" y="154" width="110" height="28"></rect>
+      <rect id="bucket5" class="bucket" x="55" y="182" width="110" height="28"></rect>
+      <rect id="bucket6" class="bucket" x="55" y="210" width="110" height="28"></rect>
+
+      <text class="entry-text" x="85" y="61">0</text>
+      <text class="entry-text" x="85" y="89">1</text>
+      <text class="entry-text" x="85" y="117">2</text>
+      <text class="entry-text" x="85" y="145">3</text>
+      <text class="entry-text" x="85" y="173">4</text>
+      <text class="entry-text" x="85" y="201">5</text>
+      <text class="entry-text" x="85" y="229">6</text>
+
+      <text class="bucket-label" x="130" y="61">empty</text>
+      <text class="bucket-label" x="130" y="89">[8]</text>
+      <text class="bucket-label" x="130" y="117">empty</text>
+      <text class="bucket-label" x="130" y="145"></text>
+      <text class="bucket-label" x="130" y="173">[11]</text>
+      <text class="bucket-label" x="130" y="201">empty</text>
+      <text class="bucket-label" x="130" y="229">[13]</text>
+    </g>
+
+    <!-- Chain from bucket 3 -->
+    <path class="link" d="M 165 140 H 225" marker-end="url(#lookupArrow)"></path>
+
+    <rect id="node10" class="entry" x="235" y="115" width="100" height="50" rx="10"></rect>
+    <text class="entry-text" x="285" y="145">10</text>
+
+    <path class="link" d="M 335 140 H 390" marker-end="url(#lookupArrow)"></path>
+
+    <rect id="node17" class="entry" x="400" y="115" width="100" height="50" rx="10"></rect>
+    <text class="entry-text" x="450" y="145">17</text>
+
+    <path class="link" d="M 500 140 H 555" marker-end="url(#lookupArrow)"></path>
+
+    <rect id="node24" class="entry" x="565" y="115" width="100" height="50" rx="10"></rect>
+    <text class="entry-text" x="615" y="145">24</text>
+
+    <path class="link" d="M 665 140 H 715" marker-end="url(#lookupArrow)"></path>
+    <text class="lookup-label" x="740" y="145">null</text>
+  </svg>
+
+  <p>
+    Notice that lookup always begins by computing the home position. Only one
+    bucket is examined, and then only the entries in that bucket are checked.
+  </p>
+</div>
+
+<script>
+  let lookupTimeouts = [];
+
+  function clearLookupTimeouts() {
+    for (const id of lookupTimeouts) {
+      clearTimeout(id);
+    }
+    lookupTimeouts = [];
+  }
+
+  function setLookupStatus(message) {
+    document.getElementById("lookupStatus").textContent = message;
+  }
+
+  function resetLookupScenario() {
+    clearLookupTimeouts();
+
+    const ids = ["bucket0","bucket1","bucket2","bucket3","bucket4","bucket5","bucket6",
+                 "node10","node17","node24"];
+    for (const id of ids) {
+      const elt = document.getElementById(id);
+      elt.classList.remove("active", "found", "not-found", "dim");
+    }
+
+    setLookupStatus("Choose a lookup to animate.");
+  }
+
+  function highlightAfterDelay(id, className, delay, message) {
+    lookupTimeouts.push(setTimeout(() => {
+      const elt = document.getElementById(id);
+      elt.classList.add(className);
+      if (message) setLookupStatus(message);
+    }, delay));
+  }
+
+  function runLookupScenario(type) {
+    resetLookupScenario();
+
+    if (type === "success") {
+      setLookupStatus("Looking up 24: compute h(24)=24 mod 7 = 3.");
+      highlightAfterDelay("bucket3", "active", 700,
+        "Go to bucket 3.");
+      highlightAfterDelay("node10", "active", 1500,
+        "Check 10: not a match.");
+      highlightAfterDelay("node10", "not-found", 2300,
+        "10 does not match 24.");
+      highlightAfterDelay("node17", "active", 3000,
+        "Move to the next node and check 17.");
+      highlightAfterDelay("node17", "not-found", 3800,
+        "17 does not match 24.");
+      highlightAfterDelay("node24", "active", 4500,
+        "Move to the next node and check 24.");
+      highlightAfterDelay("node24", "found", 5300,
+        "Found 24. The lookup succeeds.");
+    }
+
+    if (type === "failChain") {
+      setLookupStatus("Looking up 31: compute h(31)=31 mod 7 = 3.");
+      highlightAfterDelay("bucket3", "active", 700,
+        "Go to bucket 3.");
+      highlightAfterDelay("node10", "active", 1500,
+        "Check 10: not a match.");
+      highlightAfterDelay("node10", "not-found", 2300,
+        "10 does not match 31.");
+      highlightAfterDelay("node17", "active", 3000,
+        "Move to the next node and check 17.");
+      highlightAfterDelay("node17", "not-found", 3800,
+        "17 does not match 31.");
+      highlightAfterDelay("node24", "active", 4500,
+        "Move to the next node and check 24.");
+      highlightAfterDelay("node24", "not-found", 5300,
+        "24 does not match 31.");
+      lookupTimeouts.push(setTimeout(() => {
+        setLookupStatus("Reached null without finding 31. The lookup fails.");
+      }, 6100));
+    }
+
+    if (type === "failEmpty") {
+      setLookupStatus("Looking up 5: compute h(5)=5 mod 7 = 5.");
+      highlightAfterDelay("bucket5", "active", 700,
+        "Go to bucket 5.");
+      lookupTimeouts.push(setTimeout(() => {
+        document.getElementById("bucket5").classList.add("not-found");
+        setLookupStatus("Bucket 5 is empty, so the lookup fails immediately.");
+      }, 1700));
+    }
+  }
+</script>
+
     <h3>Insert or Put</h3>
     <p>
       Before adding a new entry, the table searches the bucket to determine whether the key is
@@ -182,6 +451,177 @@
       However, <code>put</code> must still search the bucket first to determine whether the key is
       already present.
     </p>
+    
+     <div class="example-box">
+      <strong class="example-title">Example: Inserting</strong>
+      <p>
+        Suppose the table has capacity 5 and uses \(h(k)=k\bmod 5\). Insert
+        <code>12</code>, <code>22</code>, <code>4</code>, <code>9</code>, and
+        <code>6</code> in that order.
+      </p>
+      <p>
+        The next figure shows the table after each insertion. The highlighted node is the key
+        added in that step.
+      </p>
+
+      <svg class="chain-steps" viewBox="0 0 820 400" role="img"
+           aria-labelledby="chainStepsTitle chainStepsDesc">
+        <title id="chainStepsTitle">A separately chained table growing step by step</title>
+        <desc id="chainStepsDesc">
+          Five panels show a hash table of size 5 after inserting 12, then 22, then 4, then 9,
+          then 6. The final table has bucket 1 containing 6, bucket 2 containing 12 and 22,
+          and bucket 4 containing 4 and 9.
+        </desc>
+        <defs>
+          <marker id="chain-step-arrow" viewBox="0 0 10 10" refX="9" refY="5"
+                  markerWidth="6" markerHeight="6" orient="auto">
+            <path d="M 0 0 L 10 5 L 0 10 z" fill="#58758f"></path>
+          </marker>
+        </defs>
+
+        <g transform="translate(0,0)">
+          <text class="panel-title" x="150" y="18">After inserting 12</text>
+          <text class="label" x="55" y="36">buckets</text>
+          <rect class="bucket" x="20" y="48" width="70" height="26"></rect>
+          <rect class="bucket" x="20" y="74" width="70" height="26"></rect>
+          <rect class="bucket" x="20" y="100" width="70" height="26"></rect>
+          <rect class="bucket" x="20" y="126" width="70" height="26"></rect>
+          <rect class="bucket" x="20" y="152" width="70" height="26"></rect>
+          <text class="entry-text" x="45" y="66">0</text>
+          <text class="entry-text" x="45" y="92">1</text>
+          <text class="entry-text" x="45" y="118">2</text>
+          <text class="entry-text" x="45" y="144">3</text>
+          <text class="entry-text" x="45" y="170">4</text>
+          <text class="label" x="70" y="66">empty</text>
+          <text class="label" x="70" y="92">empty</text>
+          <text class="label" x="70" y="144">empty</text>
+          <text class="label" x="70" y="170">empty</text>
+          <path class="link" d="M 90 113 H 128" marker-end="url(#chain-step-arrow)"></path>
+          <rect class="highlight" x="131" y="101" width="54" height="24" rx="8"></rect>
+          <text class="entry-text" x="158" y="118">12</text>
+        </g>
+
+        <g transform="translate(210,0)">
+          <text class="panel-title" x="150" y="18">After inserting 22</text>
+          <text class="label" x="55" y="36">buckets</text>
+          <rect class="bucket" x="20" y="48" width="70" height="26"></rect>
+          <rect class="bucket" x="20" y="74" width="70" height="26"></rect>
+          <rect class="bucket" x="20" y="100" width="70" height="26"></rect>
+          <rect class="bucket" x="20" y="126" width="70" height="26"></rect>
+          <rect class="bucket" x="20" y="152" width="70" height="26"></rect>
+          <text class="entry-text" x="45" y="66">0</text>
+          <text class="entry-text" x="45" y="92">1</text>
+          <text class="entry-text" x="45" y="118">2</text>
+          <text class="entry-text" x="45" y="144">3</text>
+          <text class="entry-text" x="45" y="170">4</text>
+          <text class="label" x="70" y="66">empty</text>
+          <text class="label" x="70" y="92">empty</text>
+          <text class="label" x="70" y="144">empty</text>
+          <text class="label" x="70" y="170">empty</text>
+          <path class="link" d="M 90 113 H 128" marker-end="url(#chain-step-arrow)"></path>
+          <rect class="entry" x="136" y="101" width="54" height="24" rx="8"></rect>
+          <text class="entry-text" x="163" y="118">12</text>
+          <path class="link" d="M 190 113 H 224" marker-end="url(#chain-step-arrow)"></path>
+          <rect class="highlight" x="227" y="101" width="54" height="24" rx="8"></rect>
+          <text class="entry-text" x="254" y="118">22</text>
+        </g>
+
+        <g transform="translate(510,10)">
+          <text class="panel-title" x="150" y="18">After inserting 4</text>
+          <text class="label" x="55" y="36">buckets</text>
+          <rect class="bucket" x="20" y="48" width="70" height="26"></rect>
+          <rect class="bucket" x="20" y="74" width="70" height="26"></rect>
+          <rect class="bucket" x="20" y="100" width="70" height="26"></rect>
+          <rect class="bucket" x="20" y="126" width="70" height="26"></rect>
+          <rect class="bucket" x="20" y="152" width="70" height="26"></rect>
+          <text class="entry-text" x="45" y="66">0</text>
+          <text class="entry-text" x="45" y="92">1</text>
+          <text class="entry-text" x="45" y="118">2</text>
+          <text class="entry-text" x="45" y="144">3</text>
+          <text class="entry-text" x="45" y="170">4</text>
+          <text class="label" x="70" y="66">empty</text>
+          <text class="label" x="70" y="92">empty</text>
+          <text class="label" x="70" y="144">empty</text>
+          <path class="link" d="M 90 113 H 128" marker-end="url(#chain-step-arrow)"></path>
+          <rect class="entry" x="136" y="101" width="54" height="24" rx="8"></rect>
+          <text class="entry-text" x="163" y="118">12</text>
+          <path class="link" d="M 190 113 H 224" marker-end="url(#chain-step-arrow)"></path>
+          <rect class="entry" x="232" y="101" width="54" height="24" rx="8"></rect>
+          <text class="entry-text" x="259" y="118">22</text>
+          <path class="link" d="M 90 165 H 128" marker-end="url(#chain-step-arrow)"></path>
+          <rect class="highlight" x="136" y="153" width="54" height="24" rx="8"></rect>
+          <text class="entry-text" x="163" y="170">4</text>
+        </g>
+
+        <g transform="translate(100,220)">
+          <text class="panel-title" x="150" y="18">After inserting 9</text>
+          <text class="label" x="55" y="36">buckets</text>
+          <rect class="bucket" x="20" y="48" width="70" height="26"></rect>
+          <rect class="bucket" x="20" y="74" width="70" height="26"></rect>
+          <rect class="bucket" x="20" y="100" width="70" height="26"></rect>
+          <rect class="bucket" x="20" y="126" width="70" height="26"></rect>
+          <rect class="bucket" x="20" y="152" width="70" height="26"></rect>
+          <text class="entry-text" x="45" y="66">0</text>
+          <text class="entry-text" x="45" y="92">1</text>
+          <text class="entry-text" x="45" y="118">2</text>
+          <text class="entry-text" x="45" y="144">3</text>
+          <text class="entry-text" x="45" y="170">4</text>
+          <text class="label" x="70" y="66">empty</text>
+          <text class="label" x="70" y="92">empty</text>
+          <text class="label" x="70" y="144">empty</text>
+          <path class="link" d="M 90 113 H 128" marker-end="url(#chain-step-arrow)"></path>
+          <rect class="entry" x="136" y="101" width="54" height="24" rx="8"></rect>
+          <text class="entry-text" x="163" y="118">12</text>
+          <path class="link" d="M 190 113 H 224" marker-end="url(#chain-step-arrow)"></path>
+          <rect class="entry" x="232" y="101" width="54" height="24" rx="8"></rect>
+          <text class="entry-text" x="259" y="118">22</text>
+          <path class="link" d="M 90 165 H 128" marker-end="url(#chain-step-arrow)"></path>
+          <rect class="entry" x="136" y="153" width="54" height="24" rx="8"></rect>
+          <text class="entry-text" x="163" y="170">4</text>
+          <path class="link" d="M 190 165 H 224" marker-end="url(#chain-step-arrow)"></path>
+          <rect class="highlight" x="232" y="153" width="54" height="24" rx="8"></rect>
+          <text class="entry-text" x="259" y="170">9</text>
+        </g>
+
+        <g transform="translate(450,220)">
+          <text class="panel-title" x="150" y="18">After inserting 6</text>
+          <text class="label" x="55" y="36">buckets</text>
+          <rect class="bucket" x="20" y="48" width="70" height="26"></rect>
+          <rect class="bucket" x="20" y="74" width="70" height="26"></rect>
+          <rect class="bucket" x="20" y="100" width="70" height="26"></rect>
+          <rect class="bucket" x="20" y="126" width="70" height="26"></rect>
+          <rect class="bucket" x="20" y="152" width="70" height="26"></rect>
+          <text class="entry-text" x="45" y="66">0</text>
+          <text class="entry-text" x="45" y="92">1</text>
+          <text class="entry-text" x="45" y="118">2</text>
+          <text class="entry-text" x="45" y="144">3</text>
+          <text class="entry-text" x="45" y="170">4</text>
+          <text class="label" x="70" y="66">empty</text>
+          <text class="label" x="70" y="144">empty</text>
+          <path class="link" d="M 90 87 H 128" marker-end="url(#chain-step-arrow)"></path>
+          <rect class="highlight" x="136" y="75" width="54" height="24" rx="8"></rect>
+          <text class="entry-text" x="163" y="92">6</text>
+          <path class="link" d="M 90 113 H 128" marker-end="url(#chain-step-arrow)"></path>
+          <rect class="entry" x="136" y="101" width="54" height="24" rx="8"></rect>
+          <text class="entry-text" x="163" y="118">12</text>
+          <path class="link" d="M 190 113 H 224" marker-end="url(#chain-step-arrow)"></path>
+          <rect class="entry" x="232" y="101" width="54" height="24" rx="8"></rect>
+          <text class="entry-text" x="259" y="118">22</text>
+          <path class="link" d="M 90 165 H 128" marker-end="url(#chain-step-arrow)"></path>
+          <rect class="entry" x="136" y="153" width="54" height="24" rx="8"></rect>
+          <text class="entry-text" x="163" y="170">4</text>
+          <path class="link" d="M 190 165 H 224" marker-end="url(#chain-step-arrow)"></path>
+          <rect class="entry" x="232" y="153" width="54" height="24" rx="8"></rect>
+          <text class="entry-text" x="259" y="170">9</text>
+        </g>
+      </svg>
+
+      <p>
+        A lookup for <code>9</code> goes directly to bucket 4 and searches only that bucket.
+        The final table is still not perfectly balanced, but now two buckets contain two entries
+        each and one bucket contains one entry.
+      </p>
+    </div>
 
     <h3>Remove</h3>
     <p>
@@ -298,7 +738,7 @@
     </p>
     <div class="embeddedDemoContainer">
       <iframe class="embeddedDemo"
-              src="/DAIADS/Content/Demos/Space-Time Tradeoff/Hashing-Chaining Demo.html"
+              src="/DAIADS/Content/Demos/Data Structures/Hashing-Chaining Demo.html"
               allow="fullscreen"
               name="hashing-chaining-demo">
       </iframe>
