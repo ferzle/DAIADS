@@ -10,26 +10,9 @@
   <script src="/DAIADS/scripts/chapterScripts.js"></script>
   <link rel="stylesheet" href="/DAIADS/css/style.css">
   <link rel="stylesheet" href="/DAIADS/css/chapter.css">
-  <style>
-    .probe-model {
-      display: block;
-      width: min(100%, 860px);
-      height: auto;
-      margin: 1rem auto;
-    }
-    .probe-model .slot { fill: #fff; stroke: #58758f; stroke-width: 2; }
-    .probe-model .occupied { fill: #cce3ff; stroke: #274c77; stroke-width: 2; }
-    .probe-model .deleted { fill: #fff3d9; stroke: #b97820; stroke-width: 3; stroke-dasharray: 6 4; }
-    .probe-model .target { fill: #dff0df; stroke: #2e7d32; stroke-width: 3; }
-    .probe-model text {
-      fill: #17324d;
-      font-family: "Segoe UI", Verdana, sans-serif;
-      text-anchor: middle;
-    }
-    .probe-model .label { font-size: 15px; }
-    .probe-model .value { font-size: 18px; font-weight: 700; }
-    .probe-model .path { fill: none; stroke: #315d7d; stroke-width: 2.5; }
-  </style>
+
+  <!-- Page-specific styles for examples and visualizations go here. -->
+
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
   <script>
@@ -38,280 +21,795 @@
     gtag('js', new Date());
     gtag('config', 'G-DQ5LVZVFDC');
   </script>
+  <style>
+  .probe-model {
+    display: block;
+    width: min(100%, 860px);
+    height: auto;
+    margin: 1rem auto;
+  }
+
+  .probe-model .slot {
+    fill: #fff;
+    stroke: #58758f;
+    stroke-width: 2;
+  }
+
+  .probe-model .occupied {
+    fill: #cce3ff;
+    stroke: #274c77;
+    stroke-width: 2;
+  }
+
+  .probe-model .deleted {
+    fill: #fff3d9;
+    stroke: #b97820;
+    stroke-width: 3;
+    stroke-dasharray: 6 4;
+  }
+
+  .probe-model .target {
+    fill: #dff0df;
+    stroke: #2e7d32;
+    stroke-width: 3;
+  }
+
+  .probe-model text {
+    fill: #17324d;
+    font-family: "Segoe UI", Verdana, sans-serif;
+    text-anchor: middle;
+  }
+
+  .probe-model .label {
+    font-size: 15px;
+  }
+
+  .probe-model .value {
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  .probe-model .path {
+    fill: none;
+    stroke: #315d7d;
+    stroke-width: 2.5;
+  }
+
+  .probe-sequence-demo {
+    display: block;
+    width: min(100%, 860px);
+    height: auto;
+    margin: 1rem auto;
+  }
+
+  .probe-sequence-demo .probe-first {
+    fill: #dff0df;
+    stroke: #2e7d32;
+    stroke-width: 3;
+  }
+
+  .probe-sequence-demo .probe-later {
+    fill: #d9ebff;
+    stroke: #315d7d;
+    stroke-width: 2;
+  }
+
+  .probe-sequence-demo text {
+    fill: #17324d;
+    font-family: "Segoe UI", Verdana, sans-serif;
+    text-anchor: middle;
+  }
+
+  .probe-sequence-demo .probe-number {
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  .probe-sequence-demo .array-index {
+    font-size: 13px;
+  }
+
+  .probe-sequence-demo .probe-caption {
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .probe-sequence-demo .probe-computation {
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 11px;
+  }
+
+  .probe-sequence-demo.is-animated .probe-first:not(.revealed),
+  .probe-sequence-demo.is-animated .probe-later:not(.revealed) {
+    fill: #fff;
+    stroke: #58758f;
+    stroke-width: 2;
+  }
+
+  .probe-sequence-demo.is-animated .probe-number:not(.revealed),
+  .probe-sequence-demo.is-animated .probe-computation:not(.revealed) {
+    opacity: 0;
+  }
+
+  .probe-sequence-demo .probe-first,
+  .probe-sequence-demo .probe-later,
+  .probe-sequence-demo .probe-number,
+  .probe-sequence-demo .probe-computation {
+    transition: fill 0.25s ease, stroke 0.25s ease, opacity 0.25s ease;
+  }
+
+  .probe-sequence-controls {
+    margin: 1rem 0 -0.25rem;
+    text-align: center;
+  }
+</style>
 </head>
 <body>
   <h1>Open Addressing</h1>
 
-  <section id="overview" section-title="Overview">
-    <h2>Overview</h2>
-    <p>
-      <strong>Open addressing</strong> is a collision-resolution strategy for hash tables where every entry is stored
-      directly inside the table array. There are no separate bucket lists. If a key's first-choice slot is already
-      occupied, the table follows a <strong>probe sequence</strong> until it finds the key or a usable slot.
-    </p>
-    <p>
-      Open addressing is space efficient because it avoids per-bucket linked structures. The tradeoff is that lookup,
-      insertion, and deletion depend heavily on the probe rule and on keeping the load factor below <code>1</code>.
-    </p>
-    <p>
-      This page covers the three standard probe families: <strong>linear probing</strong>,
-      <strong>quadratic probing</strong>, and <strong>double hashing</strong>.
-    </p>
-  </section>
+<section id="overview" section-title="Overview">
+  <h2>Overview</h2>
 
-  <section id="learning-goals" section-title="Learning Goals">
-    <h2>Learning Goals</h2>
-    <p>After reading this page, you should be able to:</p>
-    <ul>
-      <li>distinguish empty, occupied, and deleted slot states;</li>
-      <li>generate and trace linear, quadratic, and double-hashing probe sequences;</li>
-      <li>use the same probe rule for lookup, insertion, update, and removal;</li>
-      <li>explain why deletion normally leaves a tombstone;</li>
-      <li>distinguish live-entry load from the occupancy caused by live entries plus tombstones; and</li>
-      <li>compare clustering, locality, and parameter requirements among probe strategies.</li>
-    </ul>
-  </section>
+  <p>
+    <strong>Open addressing</strong> is a collision-resolution strategy for hash tables
+    in which every entry is stored directly in the table array. Each table position can
+    store at most one entry. When two keys have the same home position, the later key must
+    be stored in another position of the table.
+  </p>
 
-  <section id="table-states" section-title="Table States">
-    <h2>Table States</h2>
+  <p>
+    To determine where else a key may be stored, open addressing uses a
+    <strong>probe sequence</strong>: an ordered sequence of table positions associated
+    with that key. Lookup, insertion, and removal all follow the same probe sequence.
+    The key's home position is checked first, and additional positions are checked as
+    needed when collisions occur.
+  </p>
+
+  <p>
+    Unlike separate chaining, open addressing does not store a separate bucket or linked
+    structure at each table position. Colliding entries remain in the table array itself.
+    This avoids the extra storage needed for linked nodes and can provide good memory
+    locality, but it also means that the table must always retain enough available
+    positions for probing to work efficiently.
+  </p>
+
+  <p>
+    Hash tables can be used to implement both sets and maps. A hash set stores keys, while
+    a hash map stores key-value entries. Open addressing works the same way in either case:
+    the key determines the probe sequence used to locate the entry. To keep the discussion
+    simple, we will focus primarily on sets and show only keys.
+  </p>
+
+<div class="example-box">
+  <strong class="example-title">Example: A Snapshot of Open Addressing</strong>
+
+  <p>
+    Suppose a hash table has capacity 15 and uses \(h(k)=k\bmod 15\). The figure below
+    shows one possible state of the table after inserting several keys using a probing
+    rule that checks later positions when a collision occurs.
+  </p>
+
+  <svg class="probe-model"
+       viewBox="30 70 860 100"
+       role="img"
+       aria-labelledby="openAddressingOverviewTitle openAddressingOverviewDesc">
+
+    <title id="openAddressingOverviewTitle">
+      Open-addressed hash table with displaced keys
+    </title>
+
+    <desc id="openAddressingOverviewDesc">
+      A fifteen-position hash table contains key 2 at index 2, key 8 at index 8,
+      key 10 at index 10, key 25 at index 11, and key 40 at index 12.
+      Keys 10, 25, and 40 all have home position 10, so 25 and 40 are stored
+      away from their home positions.
+    </desc>
+    <g>
+      <!-- slots -->
+      <rect class="slot" x="70"  y="85" width="52" height="58"></rect>
+      <rect class="slot" x="122" y="85" width="52" height="58"></rect>
+      <rect class="occupied" x="174" y="85" width="52" height="58"></rect>
+      <rect class="slot" x="226" y="85" width="52" height="58"></rect>
+      <rect class="slot" x="278" y="85" width="52" height="58"></rect>
+      <rect class="slot" x="330" y="85" width="52" height="58"></rect>
+      <rect class="slot" x="382" y="85" width="52" height="58"></rect>
+      <rect class="slot" x="434" y="85" width="52" height="58"></rect>
+      <rect class="occupied" x="486" y="85" width="52" height="58"></rect>
+      <rect class="slot" x="538" y="85" width="52" height="58"></rect>
+      <rect class="occupied" x="590" y="85" width="52" height="58"></rect>
+      <rect class="occupied" x="642" y="85" width="52" height="58"></rect>
+      <rect class="occupied" x="694" y="85" width="52" height="58"></rect>
+      <rect class="slot" x="746" y="85" width="52" height="58"></rect>
+      <rect class="slot" x="798" y="85" width="52" height="58"></rect>
+
+      <!-- indices -->
+      <text class="label" x="96"  y="165">0</text>
+      <text class="label" x="148" y="165">1</text>
+      <text class="label" x="200" y="165">2</text>
+      <text class="label" x="252" y="165">3</text>
+      <text class="label" x="304" y="165">4</text>
+      <text class="label" x="356" y="165">5</text>
+      <text class="label" x="408" y="165">6</text>
+      <text class="label" x="460" y="165">7</text>
+      <text class="label" x="512" y="165">8</text>
+      <text class="label" x="564" y="165">9</text>
+      <text class="label" x="616" y="165">10</text>
+      <text class="label" x="668" y="165">11</text>
+      <text class="label" x="720" y="165">12</text>
+      <text class="label" x="772" y="165">13</text>
+      <text class="label" x="824" y="165">14</text>
+
+      <!-- values -->
+      <text class="value" x="200" y="121">2</text>
+      <text class="value" x="512" y="121">8</text>
+      <text class="value" x="616" y="121">10</text>
+      <text class="value" x="668" y="121">25</text>
+      <text class="value" x="720" y="121">40</text>
+    </g>
+  </svg>
+
+  <p>
+    Key <code>10</code> is stored at its home position because
+    \(10\bmod 15=10\). Keys <code>25</code> and <code>40</code> also have home
+    position 10, but that position is already occupied. They therefore appear at
+    later positions selected by the probing rule. Keys <code>2</code> and
+    <code>8</code> do not collide with these keys, so they remain at their own
+    home positions.
+  </p>
+
+  <p>
+    The essential invariant is that every stored key appears somewhere in its own
+    probe sequence. An operation searching for that key can therefore reproduce the
+    same sequence of positions until it either finds the key or determines that the
+    key is absent.
+  </p>
+</div>
+
+  <p>
+    Different open-addressing methods differ primarily in how they generate the probe
+    sequence. We next examine the three standard approaches: linear probing, quadratic
+    probing, and double hashing.
+  </p>
+</section>
+
+<section id="probe-sequences" section-title="Probe Sequences">
+  <h2>Probe Sequences</h2>
+
+  <p>
+    When a collision occurs in an open-addressed table, the algorithm must determine
+    which table position to try next. For each key \(k\), a
+    <strong>probe sequence</strong> specifies the positions to examine:
+    \(h_0(k), h_1(k), h_2(k), \ldots\).
+    The first position, \(h_0(k)\), is the key's home position. Later positions provide
+    alternatives when earlier ones are unavailable.
+  </p>
+
+  <p>
+    The same probe sequence must be reproducible whenever the table operates on a key.
+    Insertion follows the sequence to determine where the key can be stored, and lookup
+    follows the same sequence to find it again. Removal must also preserve enough
+    information that later lookups can continue along the sequence. We will examine the
+    details of these operations in the next section.
+  </p>
+
+  <p>
+    If a key is stored at \(h_i(k)\), then lookup must be able to pass through all earlier
+    positions \(h_0(k), h_1(k), \ldots, h_{i-1}(k)\). In particular, it must not encounter
+    a position that proves insertion would have stopped before reaching \(h_i(k)\). This
+    observation is the basic <strong>probe invariant</strong> behind open addressing.
+  </p>
+
+  <p>
+    A probe sequence should also avoid checking the same few positions repeatedly. Ideally,
+    it spreads probes through the table while remaining inexpensive to compute. The three
+    standard approaches are linear probing, quadratic probing, and double hashing.
+  </p>
+
+
+  <section id="linear-probing" section-title="Linear Probing">
+    <h3>Linear Probing</h3>
+
     <p>
-      In open addressing, each table slot has a state:
-    </p>
-    <ul>
-      <li><strong>Empty:</strong> The slot has never held an entry.</li>
-      <li><strong>Occupied:</strong> The slot currently stores an entry.</li>
-      <li><strong>Deleted:</strong> The slot used to store an entry but now holds a tombstone marker.</li>
-    </ul>
-    <p>
-      The deleted state is important. During lookup, a tombstone cannot stop the search, because the key being
-      searched for may have been placed farther along the same probe sequence. During insertion, a tombstone may be
-      reused as a slot for a new entry.
+      <strong>Linear probing</strong> checks consecutive table positions. If the table
+      has capacity \(m\), the \(i\)-th probe is
+      \(h_i(k)=(h(k)+i)\bmod m\), where \(i=0,1,\ldots,m-1\).
+      Thus the first probe is the home position, the next probe is the following array
+      position, and so on. The sequence wraps around to position 0 after reaching the
+      end of the array.
     </p>
 
-    <svg class="probe-model" viewBox="0 0 860 275" role="img"
-         aria-labelledby="probeModelTitle probeModelDesc">
-      <title id="probeModelTitle">Lookup continuing through a tombstone</title>
-      <desc id="probeModelDesc">
-        A seven-slot linear-probing table contains key 10 at index 3, a tombstone at index 4, and key 24 at index 5.
-        Arrows show lookup for key 24 checking index 3, continuing through deleted index 4, and finding key 24 at 5.
-      </desc>
-      <defs>
-        <marker id="probe-arrowhead" viewBox="0 0 10 10" refX="9" refY="5"
-                markerWidth="7" markerHeight="7" orient="auto">
-          <path d="M 0 0 L 10 5 L 0 10 z" fill="#315d7d"></path>
-        </marker>
-      </defs>
-
-      <text class="label" x="430" y="25">search for 24 with h(k) = k mod 7 and linear probing</text>
-      <g>
-        <rect class="slot" x="80" y="95" width="100" height="70"></rect>
-        <rect class="slot" x="180" y="95" width="100" height="70"></rect>
-        <rect class="slot" x="280" y="95" width="100" height="70"></rect>
-        <rect class="occupied" x="380" y="95" width="100" height="70"></rect>
-        <rect class="deleted" x="480" y="95" width="100" height="70"></rect>
-        <rect class="target" x="580" y="95" width="100" height="70"></rect>
-        <rect class="slot" x="680" y="95" width="100" height="70"></rect>
-        <text class="label" x="130" y="185">0</text><text class="label" x="230" y="185">1</text>
-        <text class="label" x="330" y="185">2</text><text class="label" x="430" y="185">3</text>
-        <text class="label" x="530" y="185">4</text><text class="label" x="630" y="185">5</text>
-        <text class="label" x="730" y="185">6</text>
-        <text class="value" x="430" y="137">10</text>
-        <text class="value" x="530" y="128">deleted</text><text class="label" x="530" y="150">continue</text>
-        <text class="value" x="630" y="137">24</text>
-      </g>
-      <path class="path" d="M 430 78 H 515" marker-end="url(#probe-arrowhead)"></path>
-      <path class="path" d="M 530 78 H 615" marker-end="url(#probe-arrowhead)"></path>
-      <text class="label" x="430" y="65">home slot</text>
-      <text class="label" x="530" y="65">tombstone</text>
-      <text class="label" x="630" y="65">found</text>
-      <text class="label" x="430" y="235">If index 4 were changed to empty, lookup would stop there and incorrectly report “missing.”</text>
-    </svg>
-    <p>
-      The tombstone preserves evidence that the probe sequence once continued beyond index 4. It no longer stores a
-      live key, but lookup must treat it differently from a slot that has never been occupied. Insertion may remember
-      it as a candidate position while continuing far enough to check whether the key already exists later in the
-      sequence.
-    </p>
-  </section>
-
-  <section id="probe-sequences" section-title="Probe Sequences">
-    <h2>Probe Sequences</h2>
-    <p>
-      A probe sequence is the order of table slots checked for a key. The general form is
-    </p>
-    <pre><code>h_0(key), h_1(key), h_2(key), ...</code></pre>
-    <p>
-      The first probe is the key's home slot. Later probes are alternate positions. A correct open-addressed table
-      must use the same probe sequence for insertion, lookup, and deletion.
-    </p>
-    <pre><code>lookup(key):
-    for i from 0 to table.length - 1:
-        j = probeIndex(key, i)
-        if table[j] is empty:
-            report missing key
-        if table[j] is occupied by key:
-            return table[j]
-        otherwise continue probing</code></pre>
-    <p>
-      The search stops at an empty slot because an empty slot means the key would have been inserted earlier in that
-      same probe sequence if it were present. A tombstone does not stop the search.
-    </p>
-    <div class="callout">
-      <strong>Probe invariant:</strong> for a stored key, every slot before the key in its probe sequence is occupied
-      or marked deleted. Encountering a never-used empty slot proves that the key is absent because insertion would
-      have stopped there.
+    <div class="probe-sequence-controls">
+      <button type="button" class="probe-sequence-start" aria-controls="linear-probe-demo">Play</button>
     </div>
+    <svg id="linear-probe-demo" class="probe-sequence-demo" viewBox="0 0 860 245" role="img"
+         aria-labelledby="linearProbeTitle linearProbeDesc">
+      <title id="linearProbeTitle">Complete linear probe sequence for key 20</title>
+      <desc id="linearProbeDesc">A table of capacity 16 shows the complete linear probe sequence for key 20. Index 4, the first probe, is green. Every later probe is blue, and each cell contains its probe number from i equals 0 through i equals 15.</desc>
+      <text class="probe-caption" x="430" y="20">k = 20, m = 16, h(k) = 20 mod 16 = 4</text>
+      <g>
+        <rect class="probe-later" x="30" y="38" width="50" height="48"></rect><text class="probe-number" x="55" y="68">i=12</text><text class="array-index" x="55" y="105">0</text>
+        <rect class="probe-later" x="80" y="38" width="50" height="48"></rect><text class="probe-number" x="105" y="68">i=13</text><text class="array-index" x="105" y="105">1</text>
+        <rect class="probe-later" x="130" y="38" width="50" height="48"></rect><text class="probe-number" x="155" y="68">i=14</text><text class="array-index" x="155" y="105">2</text>
+        <rect class="probe-later" x="180" y="38" width="50" height="48"></rect><text class="probe-number" x="205" y="68">i=15</text><text class="array-index" x="205" y="105">3</text>
+        <rect class="probe-first" x="230" y="38" width="50" height="48"></rect><text class="probe-number" x="255" y="68">i=0</text><text class="array-index" x="255" y="105">4</text>
+        <rect class="probe-later" x="280" y="38" width="50" height="48"></rect><text class="probe-number" x="305" y="68">i=1</text><text class="array-index" x="305" y="105">5</text>
+        <rect class="probe-later" x="330" y="38" width="50" height="48"></rect><text class="probe-number" x="355" y="68">i=2</text><text class="array-index" x="355" y="105">6</text>
+        <rect class="probe-later" x="380" y="38" width="50" height="48"></rect><text class="probe-number" x="405" y="68">i=3</text><text class="array-index" x="405" y="105">7</text>
+        <rect class="probe-later" x="430" y="38" width="50" height="48"></rect><text class="probe-number" x="455" y="68">i=4</text><text class="array-index" x="455" y="105">8</text>
+        <rect class="probe-later" x="480" y="38" width="50" height="48"></rect><text class="probe-number" x="505" y="68">i=5</text><text class="array-index" x="505" y="105">9</text>
+        <rect class="probe-later" x="530" y="38" width="50" height="48"></rect><text class="probe-number" x="555" y="68">i=6</text><text class="array-index" x="555" y="105">10</text>
+        <rect class="probe-later" x="580" y="38" width="50" height="48"></rect><text class="probe-number" x="605" y="68">i=7</text><text class="array-index" x="605" y="105">11</text>
+        <rect class="probe-later" x="630" y="38" width="50" height="48"></rect><text class="probe-number" x="655" y="68">i=8</text><text class="array-index" x="655" y="105">12</text>
+        <rect class="probe-later" x="680" y="38" width="50" height="48"></rect><text class="probe-number" x="705" y="68">i=9</text><text class="array-index" x="705" y="105">13</text>
+        <rect class="probe-later" x="730" y="38" width="50" height="48"></rect><text class="probe-number" x="755" y="68">i=10</text><text class="array-index" x="755" y="105">14</text>
+        <rect class="probe-later" x="780" y="38" width="50" height="48"></rect><text class="probe-number" x="805" y="68">i=11</text><text class="array-index" x="805" y="105">15</text>
+      </g>
+      <text class="probe-computation" x="123" y="140">i=0: (4+0) mod 16=4</text><text class="probe-computation" x="328" y="140">i=1: (4+1) mod 16=5</text><text class="probe-computation" x="533" y="140">i=2: (4+2) mod 16=6</text><text class="probe-computation" x="738" y="140">i=3: (4+3) mod 16=7</text>
+      <text class="probe-computation" x="123" y="165">i=4: (4+4) mod 16=8</text><text class="probe-computation" x="328" y="165">i=5: (4+5) mod 16=9</text><text class="probe-computation" x="533" y="165">i=6: (4+6) mod 16=10</text><text class="probe-computation" x="738" y="165">i=7: (4+7) mod 16=11</text>
+      <text class="probe-computation" x="123" y="190">i=8: (4+8) mod 16=12</text><text class="probe-computation" x="328" y="190">i=9: (4+9) mod 16=13</text><text class="probe-computation" x="533" y="190">i=10: (4+10) mod 16=14</text><text class="probe-computation" x="738" y="190">i=11: (4+11) mod 16=15</text>
+      <text class="probe-computation" x="123" y="215">i=12: (4+12) mod 16=0</text><text class="probe-computation" x="328" y="215">i=13: (4+13) mod 16=1</text><text class="probe-computation" x="533" y="215">i=14: (4+14) mod 16=2</text><text class="probe-computation" x="738" y="215">i=15: (4+15) mod 16=3</text>
+    </svg>
 
-    <section id="linear-probing" section-title="Linear Probing">
-      <h3>Linear Probing</h3>
-      <p>
-        <strong>Linear probing</strong> checks consecutive slots after the home slot:
-      </p>
-      <pre><code>h_i(key) = (h(key) + i) mod m</code></pre>
-      <p>
-        If the home slot is full, try the next slot, then the next, wrapping around at the end of the array.
-      </p>
-      <h4>Example</h4>
-      <p>
-        With \(m=10\), if a key hashes to <code>6</code>, its linear-probing sequence is:
-      </p>
-      <pre><code>6, 7, 8, 9, 0, 1, 2, 3, 4, 5</code></pre>
-      <h4>Advantages</h4>
-      <ul>
-        <li>Very simple to implement.</li>
-        <li>Good cache locality because nearby slots are checked together.</li>
-        <li>Uses no extra hash function.</li>
-      </ul>
-      <h4>Tradeoff: Primary Clustering</h4>
-      <p>
-        Linear probing suffers from <strong>primary clustering</strong>. Once a run of occupied slots forms, any key
-        that hashes into that run must move to the end of it, making the run longer. Longer runs make future operations
-        slower and attract even more keys.
-      </p>
-    </section>
+    <div class="example-box">
+  <strong class="example-title">Example: Linear Probing</strong>
 
-    <section id="quadratic-probing" section-title="Quadratic Probing">
-      <h3>Quadratic Probing</h3>
-      <p>
-        <strong>Quadratic probing</strong> spreads probes using a quadratic function of the probe number. A common form
-        is:
-      </p>
-      <pre><code>h_i(key) = (h(key) + c1 * i + c2 * i * i) mod m</code></pre>
-      <p>
-        In a simplified version, the offsets are square numbers:
-      </p>
-      <pre><code>h_i(key) = (h(key) + i * i) mod m</code></pre>
-      <h4>Example</h4>
-      <p>
-        With \(m=11\) and home slot <code>3</code>, square offsets give this sequence:
-      </p>
-      <pre><code>3, 4, 7, 1, 8, 6, ...</code></pre>
-      <p>
-        The probes jump away from the home slot instead of checking one long consecutive run.
-      </p>
-      <h4>Advantages</h4>
-      <ul>
-        <li>Reduces the primary clustering problem of linear probing.</li>
-        <li>Still uses a predictable formula and one main hash value.</li>
-        <li>Can perform well when the table size and constants are chosen carefully.</li>
-      </ul>
-      <h4>Tradeoff: Secondary Clustering</h4>
-      <p>
-        Quadratic probing can still suffer from <strong>secondary clustering</strong>. If two keys have the same home
-        slot, they follow the same probe sequence. Also, not every choice of table size and constants guarantees that
-        the sequence can reach every slot, so implementations must choose parameters carefully and resize before the
-        table becomes too full.
-      </p>
-    </section>
+  <p>
+    Suppose \(m=16\) and a key has home position 4. Its linear-probing sequence is
+  </p>
 
-    <section id="double-hashing" section-title="Double Hashing">
-      <h3>Double Hashing</h3>
-      <p>
-        <strong>Double hashing</strong> uses a second hash function to choose the step size for the probe sequence:
-      </p>
-      <pre><code>h_i(key) = (h1(key) + i * h2(key)) mod m</code></pre>
-      <p>
-        The first hash function chooses the home slot. The second hash function chooses how far to move on each probe.
-        The step size must not be <code>0</code>, and it should be relatively prime to the table size so the probe
-        sequence can visit every slot.
-      </p>
-      <h4>Example</h4>
-      <p>
-        Let \(m=11\), \(h_1(k)=k \bmod 11\), and \(h_2(k)=1+(k \bmod 10)\). For key <code>25</code>:
-      </p>
-      <pre><code>h1(25) = 3
-h2(25) = 6
-probe sequence: 3, 9, 4, 10, 5, 0, 6, 1, 7, 2, 8</code></pre>
-      <h4>Advantages</h4>
-      <ul>
-        <li>Usually reduces clustering more than linear or simple quadratic probing.</li>
-        <li>Keys with the same home slot can still have different probe sequences.</li>
-        <li>Can approximate uniform probing when the hash functions are well chosen.</li>
-      </ul>
-      <h4>Tradeoffs</h4>
-      <ul>
-        <li>Requires computing a second hash value.</li>
-        <li>The second hash function must be designed so the step size works with the table size.</li>
-        <li>It is slightly more complex to explain and implement correctly.</li>
-      </ul>
-    </section>
-  </section>
+  <pre><code>4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3</code></pre>
 
-  <section id="worked-example" section-title="Worked Example">
-    <h2>Worked Example</h2>
+  <p>
+    If positions 4, 5, and 6 are occupied, insertion next examines position 7.
+    A lookup for a key displaced to position 7 must repeat those same probes.
+  </p>
+</div>
+
     <p>
-      Use a table of size \(m=7\), hash function \(h(k)=k \bmod 7\), and linear probing. Insert
-      <code>10</code>, <code>17</code>, <code>24</code>, and <code>8</code>.
+      Linear probing is especially simple and has good memory locality because successive
+      probes access adjacent array positions. It also guarantees that every table position
+      is eventually examined: adding 1 repeatedly modulo \(m\) visits all \(m\) positions.
     </p>
-    <table class="example-table">
-      <thead>
-        <tr>
-          <th>Key</th>
-          <th>Home Slot</th>
-          <th>Probes</th>
-          <th>Final Slot</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><code>10</code></td>
-          <td><code>3</code></td>
-          <td><code>3</code> is empty</td>
-          <td><code>3</code></td>
-        </tr>
-        <tr>
-          <td><code>17</code></td>
-          <td><code>3</code></td>
-          <td><code>3</code> occupied, <code>4</code> empty</td>
-          <td><code>4</code></td>
-        </tr>
-        <tr>
-          <td><code>24</code></td>
-          <td><code>3</code></td>
-          <td><code>3</code> occupied, <code>4</code> occupied, <code>5</code> empty</td>
-          <td><code>5</code></td>
-        </tr>
-        <tr>
-          <td><code>8</code></td>
-          <td><code>1</code></td>
-          <td><code>1</code> is empty</td>
-          <td><code>1</code></td>
-        </tr>
-      </tbody>
-    </table>
+
     <p>
-      Searching for <code>24</code> repeats the same sequence: check <code>3</code>, then <code>4</code>, then
-      <code>5</code>. It cannot jump directly to <code>5</code> unless it remembers or recomputes the same probing
-      rule.
+      Its main disadvantage is <strong>primary clustering</strong>. A consecutive run of
+      occupied positions tends to grow over time. Any key whose home position lies within
+      the run, or whose probe sequence reaches the run, must continue to its end. Inserting
+      that key then makes the run even longer. As clusters grow, both successful and
+      unsuccessful operations may require more probes.
     </p>
   </section>
+
+
+  <section id="quadratic-probing" section-title="Quadratic Probing">
+    <h3>Quadratic Probing</h3>
+
+    <p>
+      <strong>Quadratic probing</strong> uses offsets that grow quadratically rather than
+      examining consecutive positions. A common general form is
+      \(h_i(k)=(h(k)+c_1i+c_2i^2)\bmod m\), where \(c_1\) and \(c_2\) are fixed constants.
+      A simple version uses only square offsets:
+      \(h_i(k)=(h(k)+i^2)\bmod m\).
+    </p>
+
+    <p>
+      <strong>Quadratic probing</strong> uses offsets that grow quadratically rather than
+      examining consecutive positions. A common general form is
+      \(h_i(k)=(h(k)+c_1i+c_2i^2)\bmod m\), where \(c_1\) and \(c_2\) are fixed constants.
+      The constants and table capacity must be chosen carefully so that the resulting probe
+      sequence reaches enough positions in the table.
+    </p>
+
+    <div class="probe-sequence-controls">
+      <button type="button" class="probe-sequence-start" aria-controls="quadratic-probe-demo">Play</button>
+    </div>
+    <svg id="quadratic-probe-demo" class="probe-sequence-demo" viewBox="0 0 860 245" role="img"
+         aria-labelledby="quadraticProbeTitle quadraticProbeDesc">
+      <title id="quadraticProbeTitle">Complete quadratic probe sequence for key 20</title>
+      <desc id="quadraticProbeDesc">A table of capacity 16 shows the complete triangular-offset quadratic probe sequence for key 20. Index 4, the first probe, is green. Every later probe is blue, and each cell contains its probe number.</desc>
+      <text class="probe-caption" x="430" y="20">k = 20, m = 16, h(k) = 4; offset = i(i+1)/2</text>
+      <g>
+        <rect class="probe-later" x="30" y="38" width="50" height="48"></rect><text class="probe-number" x="55" y="68">i=7</text><text class="array-index" x="55" y="105">0</text>
+        <rect class="probe-later" x="80" y="38" width="50" height="48"></rect><text class="probe-number" x="105" y="68">i=9</text><text class="array-index" x="105" y="105">1</text>
+        <rect class="probe-later" x="130" y="38" width="50" height="48"></rect><text class="probe-number" x="155" y="68">i=12</text><text class="array-index" x="155" y="105">2</text>
+        <rect class="probe-later" x="180" y="38" width="50" height="48"></rect><text class="probe-number" x="205" y="68">i=5</text><text class="array-index" x="205" y="105">3</text>
+        <rect class="probe-first" x="230" y="38" width="50" height="48"></rect><text class="probe-number" x="255" y="68">i=0</text><text class="array-index" x="255" y="105">4</text>
+        <rect class="probe-later" x="280" y="38" width="50" height="48"></rect><text class="probe-number" x="305" y="68">i=1</text><text class="array-index" x="305" y="105">5</text>
+        <rect class="probe-later" x="330" y="38" width="50" height="48"></rect><text class="probe-number" x="355" y="68">i=11</text><text class="array-index" x="355" y="105">6</text>
+        <rect class="probe-later" x="380" y="38" width="50" height="48"></rect><text class="probe-number" x="405" y="68">i=2</text><text class="array-index" x="405" y="105">7</text>
+        <rect class="probe-later" x="430" y="38" width="50" height="48"></rect><text class="probe-number" x="455" y="68">i=8</text><text class="array-index" x="455" y="105">8</text>
+        <rect class="probe-later" x="480" y="38" width="50" height="48"></rect><text class="probe-number" x="505" y="68">i=6</text><text class="array-index" x="505" y="105">9</text>
+        <rect class="probe-later" x="530" y="38" width="50" height="48"></rect><text class="probe-number" x="555" y="68">i=3</text><text class="array-index" x="555" y="105">10</text>
+        <rect class="probe-later" x="580" y="38" width="50" height="48"></rect><text class="probe-number" x="605" y="68">i=10</text><text class="array-index" x="605" y="105">11</text>
+        <rect class="probe-later" x="630" y="38" width="50" height="48"></rect><text class="probe-number" x="655" y="68">i=15</text><text class="array-index" x="655" y="105">12</text>
+        <rect class="probe-later" x="680" y="38" width="50" height="48"></rect><text class="probe-number" x="705" y="68">i=14</text><text class="array-index" x="705" y="105">13</text>
+        <rect class="probe-later" x="730" y="38" width="50" height="48"></rect><text class="probe-number" x="755" y="68">i=4</text><text class="array-index" x="755" y="105">14</text>
+        <rect class="probe-later" x="780" y="38" width="50" height="48"></rect><text class="probe-number" x="805" y="68">i=13</text><text class="array-index" x="805" y="105">15</text>
+      </g>
+      <text class="probe-computation" x="123" y="140">i=0: (4+0) mod 16=4</text><text class="probe-computation" x="328" y="140">i=1: (4+1) mod 16=5</text><text class="probe-computation" x="533" y="140">i=2: (4+3) mod 16=7</text><text class="probe-computation" x="738" y="140">i=3: (4+6) mod 16=10</text>
+      <text class="probe-computation" x="123" y="165">i=4: (4+10) mod 16=14</text><text class="probe-computation" x="328" y="165">i=5: (4+15) mod 16=3</text><text class="probe-computation" x="533" y="165">i=6: (4+21) mod 16=9</text><text class="probe-computation" x="738" y="165">i=7: (4+28) mod 16=0</text>
+      <text class="probe-computation" x="123" y="190">i=8: (4+36) mod 16=8</text><text class="probe-computation" x="328" y="190">i=9: (4+45) mod 16=1</text><text class="probe-computation" x="533" y="190">i=10: (4+55) mod 16=11</text><text class="probe-computation" x="738" y="190">i=11: (4+66) mod 16=6</text>
+      <text class="probe-computation" x="123" y="215">i=12: (4+78) mod 16=2</text><text class="probe-computation" x="328" y="215">i=13: (4+91) mod 16=15</text><text class="probe-computation" x="533" y="215">i=14: (4+105) mod 16=13</text><text class="probe-computation" x="738" y="215">i=15: (4+120) mod 16=12</text>
+    </svg>
+<div class="example-box">
+  <strong class="example-title">Example: Quadratic Probing</strong>
+
+  <p>
+    Suppose \(m=16\), the home position is 4, and the probe sequence uses
+    triangular-number offsets:
+    \[
+      h_i(k)=\left(h(k)+\frac{i(i+1)}{2}\right)\bmod 16.
+    \]
+    The first several probes are
+  </p>
+
+  <table class="example-table">
+    <thead>
+      <tr>
+        <th>\(i\)</th>
+        <th>Offset \(i(i+1)/2\)</th>
+        <th>Position</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>0</td>
+        <td>0</td>
+        <td>4</td>
+      </tr>
+      <tr>
+        <td>1</td>
+        <td>1</td>
+        <td>5</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>3</td>
+        <td>7</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>6</td>
+        <td>10</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>10</td>
+        <td>14</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td>15</td>
+        <td>3</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>
+    The complete sequence is
+  </p>
+
+  <pre><code>4, 5, 7, 10, 14, 3, 9, 0, 8, 1, 11, 6, 2, 15, 13, 12</code></pre>
+
+  <p>
+    All 16 positions are visited before the sequence repeats. Unlike linear probing,
+    however, the probes quickly move away from a consecutive run of occupied positions.
+  </p>
+</div>
+
+    <p>
+      Quadratic probing therefore reduces primary clustering. A key that encounters a
+      group of nearby occupied positions does not simply move to the end of that group.
+      However, keys with the same home position still follow exactly the same sequence
+      of offsets. They continue to collide with one another at every probe. This behavior
+      is called <strong>secondary clustering</strong>.
+    </p>
+
+    <p>
+      Quadratic probing also requires more care in choosing the table capacity and the
+      constants in the probe formula. Unlike linear probing, an arbitrary quadratic
+      sequence is not guaranteed to visit every table position. A sequence may begin
+      repeating while unused positions still remain. Implementations therefore choose
+      the capacity and constants together and keep the table sufficiently far from full.
+    </p>
+  </section>
+
+
+  <section id="double-hashing" section-title="Double Hashing">
+    <h3>Double Hashing</h3>
+
+    <p>
+      <strong>Double hashing</strong> uses one hash function to select the home position
+      and a second hash function to select the distance between successive probes:
+      \(h_i(k)=(h_1(k)+i h_2(k))\bmod m\).
+      Thus \(h_1(k)\) determines where probing begins, while \(h_2(k)\) determines the
+      step size.
+    </p>
+
+    <div class="probe-sequence-controls">
+      <button type="button" class="probe-sequence-start" aria-controls="double-probe-demo">Play</button>
+    </div>
+    <svg id="double-probe-demo" class="probe-sequence-demo" viewBox="0 0 860 245" role="img"
+         aria-labelledby="doubleProbeTitle doubleProbeDesc">
+      <title id="doubleProbeTitle">Complete double-hashing probe sequence for key 20</title>
+      <desc id="doubleProbeDesc">A table of capacity 16 shows the complete double-hashing probe sequence for key 20 with step size 9. Index 4, the first probe, is green. Every later probe is blue, and each cell contains its probe number.</desc>
+      <text class="probe-caption" x="430" y="20">k = 20, m = 16, h1(k) = 4, h2(k) = 9</text>
+      <g>
+        <rect class="probe-later" x="30" y="38" width="50" height="48"></rect><text class="probe-number" x="55" y="68">i=12</text><text class="array-index" x="55" y="105">0</text>
+        <rect class="probe-later" x="80" y="38" width="50" height="48"></rect><text class="probe-number" x="105" y="68">i=5</text><text class="array-index" x="105" y="105">1</text>
+        <rect class="probe-later" x="130" y="38" width="50" height="48"></rect><text class="probe-number" x="155" y="68">i=14</text><text class="array-index" x="155" y="105">2</text>
+        <rect class="probe-later" x="180" y="38" width="50" height="48"></rect><text class="probe-number" x="205" y="68">i=7</text><text class="array-index" x="205" y="105">3</text>
+        <rect class="probe-first" x="230" y="38" width="50" height="48"></rect><text class="probe-number" x="255" y="68">i=0</text><text class="array-index" x="255" y="105">4</text>
+        <rect class="probe-later" x="280" y="38" width="50" height="48"></rect><text class="probe-number" x="305" y="68">i=9</text><text class="array-index" x="305" y="105">5</text>
+        <rect class="probe-later" x="330" y="38" width="50" height="48"></rect><text class="probe-number" x="355" y="68">i=2</text><text class="array-index" x="355" y="105">6</text>
+        <rect class="probe-later" x="380" y="38" width="50" height="48"></rect><text class="probe-number" x="405" y="68">i=11</text><text class="array-index" x="405" y="105">7</text>
+        <rect class="probe-later" x="430" y="38" width="50" height="48"></rect><text class="probe-number" x="455" y="68">i=4</text><text class="array-index" x="455" y="105">8</text>
+        <rect class="probe-later" x="480" y="38" width="50" height="48"></rect><text class="probe-number" x="505" y="68">i=13</text><text class="array-index" x="505" y="105">9</text>
+        <rect class="probe-later" x="530" y="38" width="50" height="48"></rect><text class="probe-number" x="555" y="68">i=6</text><text class="array-index" x="555" y="105">10</text>
+        <rect class="probe-later" x="580" y="38" width="50" height="48"></rect><text class="probe-number" x="605" y="68">i=15</text><text class="array-index" x="605" y="105">11</text>
+        <rect class="probe-later" x="630" y="38" width="50" height="48"></rect><text class="probe-number" x="655" y="68">i=8</text><text class="array-index" x="655" y="105">12</text>
+        <rect class="probe-later" x="680" y="38" width="50" height="48"></rect><text class="probe-number" x="705" y="68">i=1</text><text class="array-index" x="705" y="105">13</text>
+        <rect class="probe-later" x="730" y="38" width="50" height="48"></rect><text class="probe-number" x="755" y="68">i=10</text><text class="array-index" x="755" y="105">14</text>
+        <rect class="probe-later" x="780" y="38" width="50" height="48"></rect><text class="probe-number" x="805" y="68">i=3</text><text class="array-index" x="805" y="105">15</text>
+      </g>
+      <text class="probe-computation" x="123" y="140">i=0: (4+0·9) mod 16=4</text><text class="probe-computation" x="328" y="140">i=1: (4+1·9) mod 16=13</text><text class="probe-computation" x="533" y="140">i=2: (4+2·9) mod 16=6</text><text class="probe-computation" x="738" y="140">i=3: (4+3·9) mod 16=15</text>
+      <text class="probe-computation" x="123" y="165">i=4: (4+4·9) mod 16=8</text><text class="probe-computation" x="328" y="165">i=5: (4+5·9) mod 16=1</text><text class="probe-computation" x="533" y="165">i=6: (4+6·9) mod 16=10</text><text class="probe-computation" x="738" y="165">i=7: (4+7·9) mod 16=3</text>
+      <text class="probe-computation" x="123" y="190">i=8: (4+8·9) mod 16=12</text><text class="probe-computation" x="328" y="190">i=9: (4+9·9) mod 16=5</text><text class="probe-computation" x="533" y="190">i=10: (4+10·9) mod 16=14</text><text class="probe-computation" x="738" y="190">i=11: (4+11·9) mod 16=7</text>
+      <text class="probe-computation" x="123" y="215">i=12: (4+12·9) mod 16=0</text><text class="probe-computation" x="328" y="215">i=13: (4+13·9) mod 16=9</text><text class="probe-computation" x="533" y="215">i=14: (4+14·9) mod 16=2</text><text class="probe-computation" x="738" y="215">i=15: (4+15·9) mod 16=11</text>
+    </svg>
+    <div class="example-box">
+  <strong class="example-title">Example: Double Hashing</strong>
+
+  <p>
+    Let \(m=16\),
+    \(h_1(k)=k\bmod 16\), and
+    \(h_2(k)=2(k\bmod 8)+1\).
+    For key <code>20</code>,
+  </p>
+
+  <p>
+    \(h_1(20)=4\) and \(h_2(20)=9\).
+  </p>
+
+  <p>
+    Starting at position 4 and repeatedly moving forward 9 positions modulo 16 gives
+  </p>
+
+  <pre><code>4, 13, 6, 15, 8, 1, 10, 3, 12, 5, 14, 7, 0, 9, 2, 11</code></pre>
+
+  <p>
+    All 16 positions are visited before the sequence returns to 4.
+  </p>
+</div>
+
+    <p>
+      The step size must never be 0, since a zero step would repeatedly examine the same
+      position. More generally, \(h_2(k)\) should be relatively prime to \(m\). If the
+      step size and \(m\) have greatest common divisor 1, repeatedly adding the step modulo
+      \(m\) visits every table position before repeating. Because the table in this example
+      has capacity 16, choosing an odd step size guarantees this property. Another common
+      approach is to use a prime table capacity, in which case every step from 1 through
+      \(m-1\) is relatively prime to \(m\).
+    </p>
+
+    <p>
+      Double hashing also reduces secondary clustering. Two keys can have the same home
+      position but different values of \(h_2(k)\), causing them to follow different probe
+      sequences after their first collision. With well-chosen hash functions, the resulting
+      probe patterns can be spread widely through the table.
+    </p>
+
+    <p>
+      The tradeoff is additional computation and design complexity. Each operation needs a
+      second hash value, and the second hash function must produce suitable step sizes for
+      the chosen table capacity.
+    </p>
+  </section>
+
+<section id="probe-comparison" section-title="Comparing the Probe Strategies">
+  <h3>Comparing the Probe Strategies</h3>
+
+  <p>
+    All three strategies begin at the key's home position. They differ in how later probes
+    move through the table and therefore in the kinds of clustering they produce.
+  </p>
+
+  <table class="example-table left-top-align">
+    <thead>
+      <tr>
+        <th>Strategy</th>
+        <th>Probe Formula</th>
+        <th>Main Strength</th>
+        <th>Main Concern</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Linear probing</td>
+        <td>\((h(k)+i)\bmod m\)</td>
+        <td>
+          Simple, inexpensive, cache-friendly, and guaranteed to visit every position
+        </td>
+        <td>Primary clustering</td>
+      </tr>
+      <tr>
+        <td>Quadratic probing</td>
+        <td>\((h(k)+c_1i+c_2i^2)\bmod m\)</td>
+        <td>Reduces primary clustering</td>
+        <td>
+          Secondary clustering; coverage depends on the capacity and constants
+        </td>
+      </tr>
+      <tr>
+        <td>Double hashing</td>
+        <td>\((h_1(k)+i h_2(k))\bmod m\)</td>
+        <td>
+          Keys with the same home position can follow different probe sequences
+        </td>
+        <td>
+          Requires a second hash function and a step size compatible with the capacity
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>
+    No probing strategy eliminates collisions, and the number of probes increases as the
+    table becomes crowded. The strategy determines what happens after a collision; the next
+    section examines how lookup, insertion, and removal use these probe sequences while
+    maintaining a correct open-addressed table.
+  </p>
+  </section>
+</section>
+
+
+  <section id="operations" section-title="Core Operations and Implementation">
+    <h2>Core Operations and Implementation</h2>
+
+    <!--
+      Explain that lookup, insertion, and removal all follow the
+      selected probe sequence.
+
+      Introduce the representation used on this page.
+    -->
+
+
+    <section id="slot-states" section-title="Slot States">
+      <h3>Slot States</h3>
+
+      <!--
+        Explain the three states:
+
+        - Empty
+        - Occupied
+        - Deleted
+
+        Explain why Empty and Deleted must be distinguished.
+
+        Move the useful tombstone diagram from the current Table States
+        section here.
+      -->
+
+    </section>
+
+
+    <section id="lookup-core" section-title="Lookup">
+      <h3>Lookup</h3>
+
+      <!--
+        Explain lookup:
+        - compute/follow the probe sequence;
+        - compare actual keys;
+        - continue through occupied nonmatches;
+        - continue through deleted slots;
+        - stop at a never-used empty slot;
+        - terminate after at most m probes.
+
+        Include pseudocode.
+
+        Include a worked example, preferably one that passes through
+        a tombstone.
+      -->
+
+    </section>
+
+
+    <section id="insert-core" section-title="Insert">
+      <h3>Insert</h3>
+
+      <!--
+        Explain insertion:
+        - follow the probe sequence;
+        - detect an existing key;
+        - remember the first tombstone;
+        - continue far enough to ensure that the key is not already
+          present;
+        - insert into the first reusable tombstone or empty slot.
+
+        Distinguish set insertion from map update.
+
+        Include pseudocode.
+
+        Move/adapt the existing worked insertion example here.
+      -->
+
+    </section>
+
+
+    <section id="remove-core" section-title="Remove">
+      <h3>Remove</h3>
+
+      <!--
+        Explain why simply changing the slot to Empty is incorrect.
+
+        Explain tombstone deletion.
+
+        Include pseudocode.
+
+        Include a concrete before-and-after example showing why a
+        later key must remain reachable.
+
+        Briefly mention that other deletion methods exist, but defer
+        backward-shift deletion to Variations and Extensions.
+      -->
+
+    </section>
+
+
+    <section id="analysis" section-title="Analysis">
+      <h3>Analysis</h3>
+
+      <!--
+        Define:
+          alpha = n / m
+
+        Explain that alpha < 1 is required for open addressing.
+
+        Explain expected constant-time performance when:
+        - hashing/probing distributes keys well;
+        - the load factor is kept appropriately bounded.
+
+        Explain worst-case O(n) probing.
+
+        With tombstones, distinguish:
+        - live load factor n/m
+        - occupied fraction (n+d)/m
+
+        Explain how tombstones increase probe lengths.
+
+        Discuss resizing/rebuilding:
+        - create a fresh table;
+        - reinsert live entries;
+        - do not copy tombstones;
+        - changing capacity changes probe sequences;
+        - rebuilding may also be useful simply to remove tombstones.
+
+        Discuss amortized resizing cost.
+
+        Give a complexity table for:
+        - Lookup
+        - Insert
+        - Remove
+        - Resize/Rebuild
+
+        Discuss space:
+        - O(m) table storage;
+        - no linked node per entry;
+        - normally m = Theta(n), so O(n) total storage.
+      -->
+
+    </section>
+
+  </section>
+
 
   <section id="demo" section-title="Interactive Demo">
     <h2>Interactive Demo</h2>
+
     <p>
-      Step through insertions and searches to see how collisions extend a probe sequence. Try inputs that share a home
-      slot and watch how the table distinguishes a key's home position from its final stored slot.
+      <!-- Brief introduction to what students should observe in the demo. -->
     </p>
+
     <div class="embeddedDemoContainer">
       <iframe class="embeddedDemo"
               src="/DAIADS/Content/Demos/Data Structures/Open Addressing Demo.html"
@@ -321,286 +819,210 @@ probe sequence: 3, 9, 4, 10, 5, 0, 6, 1, 7, 2, 8</code></pre>
     </div>
   </section>
 
-  <section id="insertion-deletion" section-title="Insertion and Deletion Details">
-    <h2>Insertion and Deletion Details</h2>
-    <h3>Insertion</h3>
-    <p>
-      To insert, follow the probe sequence until finding either the key, an empty slot, or a reusable tombstone. If
-      the key is found, update the existing map value or leave the set unchanged. If the key is absent, store the new
-      entry in the first valid slot.
-    </p>
-    <pre><code>put(key, value):
-    firstDeleted = none
-    for i from 0 to table.length - 1:
-        j = probeIndex(key, i)
-        if table[j] is occupied by key:
-            table[j].value = value
-            return
-        if table[j] is deleted and firstDeleted is none:
-            firstDeleted = j
-        if table[j] is empty:
-            if firstDeleted exists:
-                table[firstDeleted] = (key, value)
-            else:
-                table[j] = (key, value)
-            size = size + 1
-            return
-    resize and try again</code></pre>
 
-    <h3>Deletion</h3>
-    <p>
-      Deletion should usually mark a slot as deleted instead of making it empty. If the slot were made empty, later
-      lookups might stop too soon and fail to find keys placed farther along the same probe sequence.
-    </p>
-    <p>
-      Too many tombstones slow down probing. Implementations may rebuild the table when tombstones accumulate, even
-      if the number of live entries is not too high.
-    </p>
-    <pre><code>remove(key):
-    for i from 0 to table.length - 1:
-        j = probeIndex(key, i)
-        if table[j] is empty:
-            report missing key
-        if table[j] is occupied by key:
-            table[j] = deleted marker
-            size = size - 1
-            deletedCount = deletedCount + 1
-            return removed entry
-        otherwise continue probing
-    report missing key</code></pre>
-    <p>
-      Some linear-probing implementations use backward-shift deletion instead of tombstones, moving later entries
-      carefully to close a gap without breaking their search paths. That technique can avoid tombstone accumulation
-      but is more subtle and does not generalize unchanged to every probe strategy. Tombstones are the clearest general
-      model for this page.
-    </p>
+  <section id="connections" section-title="Connections and Comparisons">
+    <h2>Connections and Comparisons</h2>
+
+    <!--
+      Compare open addressing with separate chaining.
+
+      Topics might include:
+      - where colliding entries are stored;
+      - load-factor restrictions;
+      - deletion;
+      - extra per-entry storage;
+      - memory locality;
+      - sensitivity to high occupancy.
+
+      This should parallel the Connections and Comparisons section
+      on the Separate Chaining page.
+
+      Do not repeat the detailed comparison among linear probing,
+      quadratic probing, and double hashing from Probe Sequences.
+    -->
+
   </section>
 
-  <section id="load-factor" section-title="Load Factor">
-    <h2>Load Factor</h2>
-    <p>
-      In open addressing, every live entry must occupy a table slot, so the load factor must stay below <code>1</code>.
-      In practice, tables resize well before they are full. As the table fills, probe sequences become longer and
-      operations slow down sharply.
-    </p>
-    <p>
-      Linear probing is especially sensitive to high load factors because clusters grow. Quadratic probing and double
-      hashing also slow down as fewer empty slots remain.
-    </p>
-    <p>
-      With tombstones, two ratios matter. The <strong>live load factor</strong> is
-      \(n/m\), where \(n\) counts live entries. Probe length is also affected by the <strong>occupied fraction</strong>
-      \((n+d)/m\), where \(d\) is the number of tombstones. A table can have a modest live load yet perform poorly if
-      many deleted markers remain. Rebuilding the table removes those markers.
-    </p>
+
+  <section id="variations" section-title="Variations and Extensions">
+    <h2>Variations and Extensions</h2>
+
+    <!--
+      Possible topics:
+      - backward-shift deletion for linear probing;
+      - alternative rebuild policies;
+      - other probing strategies;
+      - Robin Hood hashing, if appropriate for this chapter.
+
+      Keep these clearly separate from the three main probing methods
+      taught earlier.
+    -->
+
   </section>
 
-  <section id="resizing" section-title="Resizing and Rebuilding">
-    <h2>Resizing and Rebuilding</h2>
-    <p>
-      Resizing creates a fresh array and reinserts every live entry. Tombstones are not copied. Reinsertion is
-      necessary because both the home position and the probe sequence may depend on the capacity. Even rebuilding at
-      the same capacity can improve performance by eliminating deleted markers and compacting probe runs.
-    </p>
-    <pre><code>rebuild(newCapacity):
-    oldTable = table
-    table = new array of empty slots
-    size = 0
-    deletedCount = 0
-    for each occupied entry in oldTable:
-        insertKnownDistinct(entry)</code></pre>
-    <p>
-      The helper should not treat an old tombstone as an entry and should not recursively trigger another resize.
-      After rebuilding, every live key must still be discoverable by the probe rule under the new capacity.
-    </p>
-  </section>
-
-  <section id="complexity" section-title="Time and Space Complexity">
-    <h2>Time and Space Complexity</h2>
-    <table class="example-table">
-      <thead>
-        <tr>
-          <th>Operation</th>
-          <th>Expected Cost</th>
-          <th>Worst Case</th>
-          <th>Reason</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>Lookup</td>
-          <td>\(O(1)\)</td>
-          <td>\(O(n)\)</td>
-          <td>Expected short probe sequence; worst case may scan many slots.</td>
-        </tr>
-        <tr>
-          <td>Put</td>
-          <td>\(O(1)\) amortized expected</td>
-          <td>\(O(n)\)</td>
-          <td>May probe many slots or trigger a resize.</td>
-        </tr>
-        <tr>
-          <td>Remove</td>
-          <td>\(O(1)\)</td>
-          <td>\(O(n)\)</td>
-          <td>Must find the key before placing a tombstone.</td>
-        </tr>
-        <tr>
-          <td>Space</td>
-          <td>\(O(m)\)</td>
-          <td>\(O(m)\)</td>
-          <td>Entries and slot states are stored in the table array.</td>
-        </tr>
-      </tbody>
-    </table>
-    <p>
-      Open addressing often uses less extra memory than separate chaining because it avoids a linked node for every
-      entry. Its performance depends more sharply on empty slots remaining available.
-    </p>
-  </section>
-
-  <section id="comparison" section-title="Probe Strategy Comparison">
-    <h2>Probe Strategy Comparison</h2>
-    <table class="example-table">
-      <thead>
-        <tr>
-          <th>Strategy</th>
-          <th>Formula</th>
-          <th>Main Strength</th>
-          <th>Main Risk</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>Linear probing</td>
-          <td>\((h(k)+i) \bmod m\)</td>
-          <td>Simple and cache-friendly</td>
-          <td>Primary clustering</td>
-        </tr>
-        <tr>
-          <td>Quadratic probing</td>
-          <td>\((h(k)+c_1i+c_2i^2) \bmod m\)</td>
-          <td>Reduces primary clustering</td>
-          <td>Secondary clustering and parameter sensitivity</td>
-        </tr>
-        <tr>
-          <td>Double hashing</td>
-          <td>\((h_1(k)+i h_2(k)) \bmod m\)</td>
-          <td>Better-separated probe sequences</td>
-          <td>Needs a correct second hash and step size</td>
-        </tr>
-      </tbody>
-    </table>
-    <p>
-      Linear probing often performs very well in practice because consecutive memory accesses have strong cache
-      locality, even though primary clustering is a theoretical and practical concern. Double hashing spreads probes
-      more widely but usually accesses less-local memory. Quadratic probing sits between them and depends heavily on
-      capacity and constant choices. The best strategy is therefore not determined by probe count alone.
-    </p>
-  </section>
-
-  <section id="implementation" section-title="Implementation Guidance">
-    <h2>Implementation Guidance</h2>
-    <p>
-      An open-addressed table needs a slot-state representation that cannot be confused with a valid key or value.
-      Common designs use an explicit state field, reserved singleton marker objects, or a tagged entry type. Track live
-      entries separately from tombstones so resize policies can consider both.
-    </p>
-    <div class="example-box">
-      <strong class="example-title">Implementation Exercise</strong>
-      <p>Implement a linear-probing hash map and test the following sequence:</p>
-      <ol>
-        <li>insert at least three keys with the same home slot;</li>
-        <li>find the first, middle, and final key in the cluster;</li>
-        <li>remove the middle key and verify that the final key is still found;</li>
-        <li>insert a new colliding key and verify that the tombstone can be reused;</li>
-        <li>update an existing key beyond a tombstone without creating a duplicate; and</li>
-        <li>rebuild or resize and then find every live key.</li>
-      </ol>
-      <p>
-        Also test a completely full probe cycle so lookup and insertion terminate instead of looping forever.
-      </p>
-    </div>
-  </section>
 
   <section id="pitfalls" section-title="Common Pitfalls">
     <h2>Common Pitfalls</h2>
-    <ul>
-      <li><strong>Clearing deleted slots:</strong> Replacing a deleted entry with an empty slot can break future searches.</li>
-      <li><strong>Letting the table get full:</strong> Open addressing needs empty slots to terminate unsuccessful searches and support insertion.</li>
-      <li><strong>Using a bad step size in double hashing:</strong> If the step does not work with the table size, the probe sequence may miss many slots.</li>
-      <li><strong>Forgetting to reuse tombstones:</strong> Tombstones should be available for future insertion, or the table will appear fuller than necessary.</li>
-      <li><strong>Ignoring clustering:</strong> Long probe runs can make operations much slower than expected.</li>
-      <li><strong>Changing the probe rule:</strong> Lookup, insertion, and deletion must use the same sequence for a key.</li>
-    </ul>
+
+    <!--
+      Likely items:
+      - replacing a deleted slot with Empty;
+      - stopping at a tombstone during lookup;
+      - inserting immediately into a tombstone without checking for
+        an existing copy of the key later in the probe sequence;
+      - allowing the table to become full;
+      - failing to limit a probe to at most m positions;
+      - inconsistent probe rules among operations;
+      - invalid double-hashing step sizes;
+      - resizing without rehashing;
+      - ignoring accumulated tombstones.
+    -->
+
   </section>
+
 
   <section id="summary" section-title="Summary">
     <h2>Summary</h2>
-    <p>
-      Open addressing stores all entries directly in the table array and resolves collisions by probing alternate
-      slots. Linear probing checks consecutive slots and is simple but can form primary clusters. Quadratic probing
-      jumps by quadratic offsets, reducing primary clustering but requiring careful parameters. Double hashing uses a
-      second hash function for the step size and usually reduces clustering further. All open-addressed tables need a
-      controlled load factor, consistent probe sequences, and careful tombstone handling for deletion.
-    </p>
+
+    <!--
+      Summarize:
+      - direct storage in the table;
+      - probe sequences;
+      - three principal probing strategies;
+      - slot states and tombstones;
+      - lookup/insert/remove behavior;
+      - load factor and rebuilding;
+      - expected and worst-case complexity;
+      - main contrast with separate chaining.
+    -->
+
   </section>
 
-  <section id="related-pages" section-title="Related Pages">
-    <h2>Related Pages</h2>
-    <ul>
-      <li><a href="?path=Data%20Structures%2FSets%2C%20Maps%2C%20and%20Hash%20Tables%2FHash%20Tables">Hash Tables</a>, for the general hash-table model.</li>
-      <li><a href="?path=Data%20Structures%2FSets%2C%20Maps%2C%20and%20Hash%20Tables%2FSeparate%20Chaining">Separate Chaining</a>, for bucket-based collision handling.</li>
-      <li><a href="?path=Data%20Structures%2FSets%2C%20Maps%2C%20and%20Hash%20Tables%2FMap%20and%20Dictionary%20ADT">Map and Dictionary ADT</a>, for key-value behavior.</li>
-      <li><a href="?path=Data%20Structures%2FSets%2C%20Maps%2C%20and%20Hash%20Tables%2FSet%20ADT">Set ADT</a>, for membership behavior.</li>
-    </ul>
+
+  <section id="links" section-title="Helpful Links and Resources">
+    <h2>Helpful Links and Resources</h2>
+
+    <!--
+      Include:
+      - Hash Tables page
+      - Separate Chaining page
+      - reputable external open-addressing resources
+    -->
+
   </section>
+
 
   <section id="reading-questions" section-title="Reading Comprehension Questions">
     <h2>Reading Comprehension Questions</h2>
+
     <ol>
-      <li><strong>Definition:</strong> Where are entries stored in an open-addressed hash table?</li>
-      <li><strong>Probing:</strong> Why must lookup use the same probe sequence as insertion?</li>
-      <li><strong>Linear probing:</strong> What is primary clustering?</li>
-      <li><strong>Quadratic probing:</strong> What problem does it reduce, and what clustering problem can remain?</li>
-      <li><strong>Double hashing:</strong> Why must the second hash function avoid a zero step size?</li>
-      <li><strong>Deletion:</strong> Why are tombstones needed?</li>
-      <li><strong>Occupancy:</strong> Why can tombstones hurt performance even when the live-entry load factor is low?</li>
+      <!-- Questions go here. -->
     </ol>
-    <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
+
+    <button id="toggleAnswers" class="show-answer" aria-expanded="false">
+      Show Answers
+    </button>
+
     <div id="answers" class="answer" hidden>
       <ol>
-        <li><strong>Answer:</strong> Entries are stored directly in the table array.</li>
-        <li><strong>Answer:</strong> The key may have been placed somewhere later in that sequence after earlier collisions.</li>
-        <li><strong>Answer:</strong> It is the growth of long consecutive occupied runs that attract more colliding keys and slow down probing.</li>
-        <li><strong>Answer:</strong> It reduces primary clustering, but keys with the same home slot still follow the same probe sequence, causing secondary clustering.</li>
-        <li><strong>Answer:</strong> A zero step would probe the same slot repeatedly and never search the rest of the table.</li>
-        <li><strong>Answer:</strong> A tombstone lets lookup continue past a deleted slot so it can still find keys placed farther along the probe sequence.</li>
-        <li><strong>Answer:</strong> Tombstones do not terminate unsuccessful searches, so probes may cross many formerly occupied slots; the occupied fraction can remain high.</li>
+        <!-- Corresponding answers go here. -->
       </ol>
     </div>
   </section>
 
+
   <section id="activities" section-title="In-Class Activities">
     <h2>In-Class Activities</h2>
+
     <ol>
-      <li><strong>Linear trace:</strong> Insert <code>19</code>, <code>28</code>, <code>37</code>, and <code>10</code> into a table of size <code>9</code> using \(h(k)=k \bmod 9\) and linear probing. Record every probe.</li>
-      <li><strong>Quadratic trace:</strong> Use \(h_i(k)=(h(k)+i^2) \bmod 11\). Starting from home slot <code>4</code>, list the first six probe positions.</li>
-      <li><strong>Double-hashing trace:</strong> With \(m=11\), \(h_1(k)=k \bmod 11\), and \(h_2(k)=1+(k \bmod 10)\), list the probe sequence for key <code>38</code>.</li>
-      <li><strong>Tombstone discussion:</strong> Create a small table where clearing a deleted slot would make a later lookup fail. Explain the failure.</li>
+      <!-- Activities go here. -->
     </ol>
   </section>
 
+
   <section id="problems" section-title="Homework Problems">
     <h2>Homework Problems</h2>
+
     <ol>
-      <li><strong>Implement lookup:</strong> Write pseudocode for <code>contains</code> in an open-addressed hash set with tombstones.</li>
-      <li><strong>Implement put:</strong> Write pseudocode for a map <code>put</code> operation that updates existing keys and reuses tombstones for new keys.</li>
-      <li><strong>Compare strategies:</strong> Explain the difference between primary clustering and secondary clustering, and identify which probing strategies are affected by each.</li>
-      <li><strong>Step-size design:</strong> For double hashing, explain why a table size that is prime can make it easier to choose a useful step size.</li>
-      <li><strong>Load factor experiment:</strong> Simulate linear probing at load factors near <code>0.25</code>, <code>0.50</code>, and <code>0.80</code>. Record how probe counts change.</li>
-      <li><strong>Deletion test:</strong> Design a sequence of inserts, one deletion, and one lookup that verifies tombstones are handled correctly.</li>
+      <!-- Homework problems go here. -->
     </ol>
   </section>
+
+  <script>
+    document.querySelectorAll('.probe-sequence-start').forEach((button) => {
+      const demo = document.getElementById(button.getAttribute('aria-controls'));
+      const stepNumber = (element) => Number(element.textContent.match(/i=(\d+)/)[1]);
+      const computations = Array.from(demo.querySelectorAll('.probe-computation'));
+      const computationByStep = new Map(
+        computations.map((element) => [stepNumber(element), element])
+      );
+      const steps = Array.from(demo.querySelectorAll('.probe-number'))
+        .map((label) => ({
+          number: stepNumber(label),
+          label,
+          cell: label.previousElementSibling,
+          computation: computationByStep.get(stepNumber(label))
+        }))
+        .sort((a, b) => a.number - b.number);
+      let timer = null;
+      let current = 0;
+      let state = 'ready';
+
+      demo.classList.add('is-animated');
+
+      const reset = () => {
+        window.clearInterval(timer);
+        timer = null;
+        current = 0;
+        steps.forEach((step) => {
+          step.cell.classList.remove('revealed');
+          step.label.classList.remove('revealed');
+          step.computation.classList.remove('revealed');
+        });
+      };
+
+      const revealNext = () => {
+        const step = steps[current];
+        step.cell.classList.add('revealed');
+        step.label.classList.add('revealed');
+        step.computation.classList.add('revealed');
+        current += 1;
+
+        if (current === steps.length) {
+          window.clearInterval(timer);
+          timer = null;
+          state = 'complete';
+          button.textContent = 'Restart';
+        }
+      };
+
+      button.addEventListener('click', () => {
+        if (state === 'playing') {
+          window.clearInterval(timer);
+          timer = null;
+          state = 'paused';
+          button.textContent = 'Play';
+          return;
+        }
+
+        if (state === 'complete') {
+          reset();
+          state = 'ready';
+        }
+
+        state = 'playing';
+        button.textContent = 'Pause';
+
+        if (current === 0) {
+          revealNext();
+        }
+
+        if (state === 'playing') {
+          timer = window.setInterval(revealNext, 1000);
+        }
+      });
+    });
+  </script>
+
 </body>
 </html>
