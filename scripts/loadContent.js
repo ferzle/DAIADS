@@ -58,6 +58,9 @@ const NUMBERED_PAGE_SECTION_HEADINGS = new Set([
   'Techniques',
   'Algorithms'
 ]);
+const UNNUMBERED_SECTION_PATHS = new Set([
+  'More/Glossary'
+]);
 const PROBLEMS_ORDER = [
   'Problem List',
   'Foundational',
@@ -201,16 +204,40 @@ const APPENDIX_ORDERS = {
 // For "Demos", we just mirror the same order as the algorithm names:
 const DEMOS_ORDER = [...ALGORITHMS_ORDER];
 const TECHNIQUES_ORDER = [...ALGORITHMS_ORDER];
-const MENU_ORDER_STORAGE_KEY = 'algorithms-menu-order';
-
-let menuSortMode = localStorage.getItem(MENU_ORDER_STORAGE_KEY) === 'flat'
-  ? 'flat'
-  : 'default';
+let chaptersData = {};
+let booksData = {
+  defaultBook: 'all-grouped',
+  books: [{ id: 'all-grouped', label: 'All: Grouped' }]
+};
+let activeBookId = 'all-grouped';
 
 let menuNumbering = {
   topLevel: new Map(),
   entries: new Map(),
   pages: new Map()
+};
+
+const getBook = (bookId = activeBookId) =>
+  booksData.books.find((book) => book.id === bookId) || booksData.books[0];
+
+const isKnownBook = (bookId) =>
+  booksData.books.some((book) => book.id === bookId);
+
+const isAllContentView = (bookId = activeBookId) =>
+  bookId === 'all-grouped' || bookId === 'all-alphabetic';
+
+const getRequestedBookId = () => {
+  const fromURL = new URLSearchParams(window.location.search).get('book');
+  if (fromURL && isKnownBook(fromURL)) return fromURL;
+
+  return booksData.defaultBook || 'all-grouped';
+};
+
+const buildNavigationURL = (path, bookId = activeBookId) => {
+  const params = new URLSearchParams();
+  params.set('book', bookId);
+  params.set('path', path);
+  return `?${params.toString()}`;
 };
 
 // ─── Utility Functions ────────────────────────────────────────────────────────
@@ -251,7 +278,7 @@ const getOrderListForPath = (pathPrefix) => {
   return [];
 };
 
-const sortEntries = (items, orderList = [], sortMode = menuSortMode) => {
+const sortEntries = (items, orderList = [], sortMode = 'default') => {
   const sortedItems = [...items];
 
   if (sortMode === 'flat') {
@@ -317,6 +344,32 @@ const buildMenuNumbering = (chapters) => {
   return { topLevel, entries, pages };
 };
 
+const getBookNodeNumber = (node, parentNumber, index) => {
+  if (Object.prototype.hasOwnProperty.call(node, 'number')) {
+    return String(node.number);
+  }
+  return parentNumber ? `${parentNumber}.${index + 1}` : '';
+};
+
+const buildBookNumbering = (book) => {
+  const pages = new Map();
+
+  const visit = (items, parentNumber) => {
+    (items || []).forEach((item, index) => {
+      const number = getBookNodeNumber(item, parentNumber, index);
+      if (item.path) pages.set(item.path, number);
+      if (item.items) visit(item.items, number);
+    });
+  };
+
+  (book.sections || []).forEach((section, index) => {
+    const number = getBookNodeNumber(section, '', index);
+    visit(section.items, number);
+  });
+
+  return { topLevel: new Map(), entries: new Map(), pages };
+};
+
 const applyPageNumber = (doc, path) => {
   const number = menuNumbering.pages.get(path);
   if (!number) return;
@@ -339,7 +392,7 @@ const applyPageNumber = (doc, path) => {
 const createMenuLink = (fullPath, label, level = 1, title = '') => {
   const a = document.createElement('a');
   a.textContent = label;
-  a.href = `?path=${encodeURIComponent(fullPath)}`;
+  a.href = buildNavigationURL(fullPath);
   a.style.fontSize = `${1 - (level - 1) * 0.1}em`;
   if (title) a.title = title;
 
@@ -357,7 +410,7 @@ const createMenuLink = (fullPath, label, level = 1, title = '') => {
       });
 
       const url = new URL(window.location.href);
-      url.search = `?path=${encodeURIComponent(fullPath)}`;
+      url.search = buildNavigationURL(fullPath).slice(1);
       const html = `<li><a href="${url.href}">DAIA: ${a.textContent}</a></li>`;
 
       navigator.clipboard.writeText(html)
@@ -406,6 +459,7 @@ function highlightActiveLink(path) {
     const aPath = new URLSearchParams(a.href.split('?')[1]).get('path');
     a.classList.toggle('active', aPath === path);
   });
+  updateBookContextNotice(path);
 }
 // -----------------------------------------------------------------
 
@@ -443,16 +497,16 @@ const navigateTo = (rawPath) => {
   const oldScrollY = window.pageYOffset;
   // Save scroll state without altering the current entry's URL
   history.replaceState(
-    { path: currentPath, scrollY: oldScrollY },
+    { path: currentPath, book: activeBookId, scrollY: oldScrollY },
     ''
   );
 
   // 2) Push new entry
   const safe = normalizePath(rawPath);
   history.pushState(
-    { path: rawPath, scrollY: 0 },
+    { path: rawPath, book: activeBookId, scrollY: 0 },
     '',
-    `?path=${safe}`
+    buildNavigationURL(rawPath)
   );
 
   // 3) Load
@@ -592,14 +646,43 @@ function hookIframeContent(iframe) {
     }
   })(innerDoc, document, iframe);
 
-  // Intercept any “?path=” links inside the iframe
+  // Keep the selected book in links copied or opened from content pages.
+  innerDoc.querySelectorAll('a[href]').forEach((anchor) => {
+    const rawHref = (anchor.getAttribute('href') || '').trim();
+    if (!rawHref || rawHref.startsWith('#')) return;
+
+    try {
+      const resolved = new URL(rawHref, innerDoc.location.href);
+      if (!resolved.searchParams.has('path')) return;
+      resolved.searchParams.set('book', activeBookId);
+
+      if (rawHref.startsWith('?')) {
+        anchor.setAttribute('href', `${resolved.search}${resolved.hash}`);
+      } else {
+        anchor.setAttribute('href', resolved.href);
+      }
+    } catch {}
+  });
+
+  // Intercept same-site “path” links inside the iframe.
   innerDoc.addEventListener('click', (event) => {
-    const anchor = event.target.closest('a[href^="?path="]');
+    const anchor = event.target.closest('a[href]');
     if (!anchor) return;
 
-    event.preventDefault();
-    const raw = new URLSearchParams(anchor.getAttribute('href').slice(1)).get('path');
+    const rawHref = (anchor.getAttribute('href') || '').trim();
+    let resolved;
+    try {
+      resolved = new URL(rawHref, innerDoc.location.href);
+    } catch {
+      return;
+    }
+
+    const raw = resolved.searchParams.get('path');
     if (!raw) return;
+    const isSameSite = resolved.origin === window.location.origin;
+    if (!rawHref.startsWith('?') && !isSameSite) return;
+
+    event.preventDefault();
     const parentPath = getCurrentPath.call(window.parent);
     if (raw === parentPath) return;
     window.parent.postMessage({ type: 'navigate', path: raw }, '*');
@@ -750,9 +833,11 @@ function hookIframeContent(iframe) {
       const initiallyCollapsed = doc.body.hasAttribute('data-sections-initially-collapsed');
       const currentPath = getCurrentPath();
       const topLevelSection = currentPath.split('/')[0];
-      const pageNumber = NUMBERED_PAGE_SECTION_HEADINGS.has(topLevelSection)
+      const pageNumber = !UNNUMBERED_SECTION_PATHS.has(currentPath) && !isAllContentView()
         ? menuNumbering.pages.get(currentPath)
-        : null;
+        : (NUMBERED_PAGE_SECTION_HEADINGS.has(topLevelSection)
+          ? menuNumbering.pages.get(currentPath)
+          : null);
       const sectionNumbers = new Map();
       const childCounts = new Map();
 
@@ -976,33 +1061,87 @@ function hookIframeContent(iframe) {
 
 // ─── Build Sidebar Menu ───────────────────────────────────────────────────────
 const buildMenu = (chapters) => {
-  menuNumbering = buildMenuNumbering(chapters);
+  const activeBook = getBook();
+  const isAllContent = isAllContentView();
+  const allContentSortMode = activeBookId === 'all-alphabetic'
+    ? 'flat'
+    : 'default';
+  menuNumbering = isAllContent
+    ? { topLevel: new Map(), entries: new Map(), pages: new Map() }
+    : buildBookNumbering(activeBook);
 
   const menuContainer = document.querySelector('#menu');
   menuContainer.innerHTML = `
+    <div class="book-selector">
+      <label for="bookSelect">View</label>
+      <select id="bookSelect" aria-label="Choose a book or show all content"></select>
+    </div>
     <div class="menu-controls">
       <div class="menu-icon-controls" aria-label="Menu display controls">
         <button id="expandAll" class="menu-icon-button" type="button" title="Expand all sections" aria-label="Expand all sections">▾▾</button>
         <button id="collapseAll" class="menu-icon-button" type="button" title="Collapse all sections" aria-label="Collapse all sections">▸▸</button>
       </div>
-      <button
-        id="toggleSort"
-        class="menu-view-toggle ${menuSortMode === 'flat' ? 'is-flat' : 'is-grouped'}"
-        type="button"
-        aria-pressed="${menuSortMode === 'flat' ? 'true' : 'false'}"
-        title="Switch between grouped and alphabetical navigation"
-      >
-        <span class="toggle-option toggle-grouped">Grouped</span>
-        <span class="toggle-option toggle-flat">Alphabetic</span>
-      </button>
     </div>
+    <p id="bookContextNote" class="book-context-note" hidden></p>
     <ul> </ul>
   `;
   const menuRoot = menuContainer.querySelector('ul');
+  const bookSelect = menuContainer.querySelector('#bookSelect');
+
+  booksData.books.forEach((book) => {
+    const option = document.createElement('option');
+    option.value = book.id;
+    option.textContent = book.label;
+    option.selected = book.id === activeBookId;
+    bookSelect.appendChild(option);
+  });
+
+  bookSelect.addEventListener('change', () => selectBook(bookSelect.value));
+
+  const addExpandableLabel = (li, label, level) => {
+    const span = document.createElement('span');
+    span.textContent = label;
+    span.style.fontSize = `${1.1 - Math.max(0, level - 1) * 0.1}em`;
+    span.onclick = (e) => {
+      if (e.altKey && e.shiftKey) return;
+      li.classList.toggle('open');
+    };
+    li.appendChild(span);
+  };
+
+  if (!isAllContent) {
+    const buildBookItems = (items, container, parentNumber, level = 2) => {
+      (items || []).forEach((item, index) => {
+        const li = document.createElement('li');
+        const number = getBookNodeNumber(item, parentNumber, index);
+        const label = prefixNumber(number, item.label);
+
+        if (item.path) {
+          li.appendChild(createMenuLink(item.path, label, level));
+        } else if (item.items) {
+          addExpandableLabel(li, label, level);
+          const ul = document.createElement('ul');
+          buildBookItems(item.items, ul, number, level + 1);
+          li.appendChild(ul);
+        }
+        container.appendChild(li);
+      });
+    };
+
+    (activeBook.sections || []).forEach((section, index) => {
+      const li = document.createElement('li');
+      const number = getBookNodeNumber(section, '', index);
+      addExpandableLabel(li, prefixNumber(number, section.label), 1);
+      const ul = document.createElement('ul');
+      buildBookItems(section.items, ul, number);
+      li.appendChild(ul);
+      menuRoot.appendChild(li);
+    });
+  } else {
 
   const buildList = (items, container, pathPrefix, level = 1) => {
    const orderList = getOrderListForPath(pathPrefix);
-    sortEntries(items, orderList).forEach((item) => {
+    sortEntries(items, orderList, allContentSortMode).forEach((item) => {
         const li = document.createElement('li');
         if (typeof item === 'string') {
           const raw = item.replace(/\.html$/, '');
@@ -1056,7 +1195,7 @@ const buildMenu = (chapters) => {
 
     const ul = document.createElement('ul');
 
-    if (menuSortMode === 'flat') {
+    if (allContentSortMode === 'flat') {
       const flatItems = flattenSectionItems(contents, `${sectionName}/`);
       const labelCounts = flatItems.reduce((counts, item) => {
         counts[item.label] = (counts[item.label] || 0) + 1;
@@ -1086,6 +1225,7 @@ const buildMenu = (chapters) => {
     li.appendChild(ul);
     menuRoot.appendChild(li);
   });
+  }
 
   menuContainer.querySelector('#expandAll').onclick = () => {
     document.querySelectorAll('#menu li').forEach((li) => li.classList.add('open'));
@@ -1095,13 +1235,34 @@ const buildMenu = (chapters) => {
     document.querySelectorAll('#menu li').forEach((li) => li.classList.remove('open'));
   };
 
-  menuContainer.querySelector('#toggleSort').onclick = () => {
-    menuSortMode = menuSortMode === 'flat' ? 'default' : 'flat';
-    localStorage.setItem(MENU_ORDER_STORAGE_KEY, menuSortMode);
-    buildMenu(chapters);
-    highlightActiveLink(getCurrentPath());
-  };
+  updateBookContextNotice(getCurrentPath());
 
+};
+
+const updateBookContextNotice = (path) => {
+  const note = document.querySelector('#bookContextNote');
+  if (!note) return;
+
+  const outsideBook = !isAllContentView() && !menuNumbering.pages.has(path);
+  note.hidden = !outsideBook;
+  note.textContent = outsideBook
+    ? 'Supplementary page — not in this book’s table of contents.'
+    : '';
+};
+
+const selectBook = (bookId) => {
+  if (!isKnownBook(bookId) || bookId === activeBookId) return;
+
+  const currentPath = getCurrentPath();
+  activeBookId = bookId;
+  history.pushState(
+    { path: currentPath, book: activeBookId, scrollY: window.pageYOffset || 0 },
+    '',
+    buildNavigationURL(currentPath)
+  );
+  buildMenu(chaptersData);
+  highlightActiveLink(currentPath);
+  loadContent(`${normalizePath(currentPath)}.html`);
 };
 
 // ─── Load Content via Fetch + Replace‐into‐iframe ────────────────────────────
@@ -1238,19 +1399,38 @@ window.addEventListener('load', () => {
 
 // ─── App Initialization ──────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-  fetch('scripts/chapters.json')
-    .then((res) => res.json())
-    .then((chaptersData) => {
+  Promise.all([
+    fetch('scripts/chapters.json').then((res) => res.json()),
+    fetch('scripts/books.json').then((res) => res.json())
+  ])
+    .then(([loadedChapters, loadedBooks]) => {
+      chaptersData = loadedChapters;
+      booksData = loadedBooks;
+      activeBookId = getRequestedBookId();
+
+      const initialPath = new URLSearchParams(window.location.search).get('path') || 'Start Here/About';
+      const requestedBook = new URLSearchParams(window.location.search).get('book');
+      if (requestedBook !== activeBookId) {
+        history.replaceState(
+          { path: initialPath, book: activeBookId, scrollY: window.pageYOffset || 0 },
+          '',
+          buildNavigationURL(initialPath)
+        );
+      }
+
       buildMenu(chaptersData);
 
       // Load initial content from URL and ensure the initial history state is set
       loadFromURLParams();
       try {
-        const initialPath = new URLSearchParams(window.location.search).get('path') || 'Start Here/About';
         const currentState = history.state || {};
-        if (currentState.path !== initialPath) {
+        if (currentState.path !== initialPath || currentState.book !== activeBookId) {
           // Preserve the current URL (including any hash) while setting state
-          history.replaceState({ path: initialPath, scrollY: window.pageYOffset || 0 }, '', window.location.href);
+          history.replaceState(
+            { path: initialPath, book: activeBookId, scrollY: window.pageYOffset || 0 },
+            '',
+            window.location.href
+          );
         }
       } catch {}
     })
@@ -1259,12 +1439,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.addEventListener('click', (event) => {
     if (event.target.closest('iframe')) return;
-    const anchor = event.target.closest('a[href^="?path="]');
+    const anchor = event.target.closest('a[href]');
     if (!anchor) return;
     if (aKeyDown) return;
+
+    let resolved;
+    try {
+      resolved = new URL(anchor.getAttribute('href'), window.location.href);
+    } catch {
+      return;
+    }
+
+    const rawPath = resolved.searchParams.get('path');
+    if (!rawPath || resolved.origin !== window.location.origin) return;
+
     event.preventDefault();
-    const rawPath = new URLSearchParams(anchor.getAttribute('href').slice(1)).get('path');
-    if (!rawPath) return;
     navigateTo(rawPath);
   });
 
@@ -1292,8 +1481,15 @@ window.addEventListener('popstate', (event) => {
   const state = event.state || {};
   pendingScrollRestore = typeof state.scrollY === 'number' ? state.scrollY : 0;
   // Prefer URL as source of truth for the popped entry; fallback to state
-  const urlPath = new URLSearchParams(window.location.search).get('path');
+  const params = new URLSearchParams(window.location.search);
+  const urlPath = params.get('path');
+  const urlBook = params.get('book');
   const rawPath = urlPath || state.path || 'Start Here/About';
+  const nextBook = isKnownBook(urlBook) ? urlBook : 'all-grouped';
+  if (nextBook !== activeBookId) {
+    activeBookId = nextBook;
+    buildMenu(chaptersData);
+  }
   highlightActiveLink(rawPath);
   loadContent(`${normalizePath(rawPath)}.html`);
 });
