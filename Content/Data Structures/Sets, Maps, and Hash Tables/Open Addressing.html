@@ -101,7 +101,7 @@
   }
 
   .probe-sequence-demo .probe-number {
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 700;
   }
 
@@ -116,7 +116,7 @@
 
   .probe-sequence-demo .probe-computation {
     font-family: Consolas, "Courier New", monospace;
-    font-size: 11px;
+    font-size: 14px;
   }
 
   .probe-sequence-demo.is-animated .probe-first:not(.revealed),
@@ -318,7 +318,20 @@
       end of the array.
     </p>
 
-    <div class="probe-sequence-controls">
+  
+
+    <div class="example-box">
+  <strong class="example-title">Example: Linear Probing</strong>
+<p>
+  Suppose a hash table has capacity \(m=16\), uses \(h(k)=k\bmod 16\),
+  and we are probing for key <code>20</code>. Since \(h(20)=4\), the
+  linear-probing sequence starts at index 4 and continues through the array,
+  wrapping around to the beginning after reaching the end:
+</p>
+
+  <pre><code>4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3</code></pre>
+  <p>Here is a visualization of the order in which entries are probed in the array:</p>
+  <div class="probe-sequence-controls">
       <button type="button" class="probe-sequence-start" aria-controls="linear-probe-demo">Play</button>
     </div>
     <svg id="linear-probe-demo" class="probe-sequence-demo" viewBox="0 0 860 245" role="img"
@@ -349,20 +362,6 @@
       <text class="probe-computation" x="123" y="190">i=8: (4+8) mod 16=12</text><text class="probe-computation" x="328" y="190">i=9: (4+9) mod 16=13</text><text class="probe-computation" x="533" y="190">i=10: (4+10) mod 16=14</text><text class="probe-computation" x="738" y="190">i=11: (4+11) mod 16=15</text>
       <text class="probe-computation" x="123" y="215">i=12: (4+12) mod 16=0</text><text class="probe-computation" x="328" y="215">i=13: (4+13) mod 16=1</text><text class="probe-computation" x="533" y="215">i=14: (4+14) mod 16=2</text><text class="probe-computation" x="738" y="215">i=15: (4+15) mod 16=3</text>
     </svg>
-
-    <div class="example-box">
-  <strong class="example-title">Example: Linear Probing</strong>
-
-  <p>
-    Suppose \(m=16\) and a key has home position 4. Its linear-probing sequence is
-  </p>
-
-  <pre><code>4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3</code></pre>
-
-  <p>
-    If positions 4, 5, and 6 are occupied, insertion next examines position 7.
-    A lookup for a key displaced to position 7 must repeat those same probes.
-  </p>
 </div>
 
     <p>
@@ -384,22 +383,88 @@
   <section id="quadratic-probing" section-title="Quadratic Probing">
     <h3>Quadratic Probing</h3>
 
-    <p>
-      <strong>Quadratic probing</strong> uses offsets that grow quadratically rather than
-      examining consecutive positions. A common general form is
-      \(h_i(k)=(h(k)+c_1i+c_2i^2)\bmod m\), where \(c_1\) and \(c_2\) are fixed constants.
-      A simple version uses only square offsets:
-      \(h_i(k)=(h(k)+i^2)\bmod m\).
-    </p>
+   <p>
+    <strong>Quadratic probing</strong> uses offsets that grow quadratically rather than
+    examining consecutive positions. A common general form is
+    \(h_i(k)=(h(k)+c_1i+c_2i^2)\bmod m\), where \(c_1\) and \(c_2\) are fixed constants.
+    A simple special case uses square offsets:
+    \(h_i(k)=(h(k)+i^2)\bmod m\).
+    Unlike linear probing, a quadratic probe sequence is not necessarily guaranteed to
+    visit every table position, so the constants, table capacity, and maximum load factor
+    must be chosen together to ensure that insertion can still find an available slot.
+  </p>
 
-    <p>
-      <strong>Quadratic probing</strong> uses offsets that grow quadratically rather than
-      examining consecutive positions. A common general form is
-      \(h_i(k)=(h(k)+c_1i+c_2i^2)\bmod m\), where \(c_1\) and \(c_2\) are fixed constants.
-      The constants and table capacity must be chosen carefully so that the resulting probe
-      sequence reaches enough positions in the table.
-    </p>
+  
+<div class="example-box">
+  <strong class="example-title">Example: Quadratic Probing</strong>
+<p>
+  Suppose a hash table has capacity \(m=16\), uses \(h(k)=k\bmod 16\),
+  and  the probe sequence uses triangular-number offsets:
+  \[
+    h_i(k)=\left(h(k)+\frac{i(i+1)}{2}\right)\bmod 16.
+  \]
+  This is a quadratic probe rule with \(c_1=c_2=1/2\).
+  </p>
+  <p>
+  If we are probing for key <code>20</code>, the home position is \(h(20)=4\).
+  Then the first several probes are:
+</p>
 
+<table class="example-table">
+  <thead>
+    <tr>
+      <th>\(i\)</th>
+      <th>Offset Computation</th>
+      <th>Position Computation</th>
+      <th>Position</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>0</td>
+      <td>\(0(0+1)/2=0\)</td>
+      <td>\((4+0)\bmod 16=4\)</td>
+      <td>4</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>\(1(1+1)/2=1\)</td>
+      <td>\((4+1)\bmod 16=5\)</td>
+      <td>5</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>\(2(2+1)/2=3\)</td>
+      <td>\((4+3)\bmod 16=7\)</td>
+      <td>7</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>\(3(3+1)/2=6\)</td>
+      <td>\((4+6)\bmod 16=10\)</td>
+      <td>10</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>\(4(4+1)/2=10\)</td>
+      <td>\((4+10)\bmod 16=14\)</td>
+      <td>14</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>\(5(5+1)/2=15\)</td>
+      <td>\((4+15)\bmod 16=3\)</td>
+      <td>3</td>
+    </tr>
+  </tbody>
+</table>
+
+  <p>
+    The complete sequence is
+  </p>
+
+  <pre><code>4, 5, 7, 10, 14, 3, 9, 0, 8, 1, 11, 6, 2, 15, 13, 12</code></pre>
+  <p>Here is a visualization of the probe sequence as it probes through the hash table:</p>
     <div class="probe-sequence-controls">
       <button type="button" class="probe-sequence-start" aria-controls="quadratic-probe-demo">Play</button>
     </div>
@@ -431,74 +496,15 @@
       <text class="probe-computation" x="123" y="190">i=8: (4+36) mod 16=8</text><text class="probe-computation" x="328" y="190">i=9: (4+45) mod 16=1</text><text class="probe-computation" x="533" y="190">i=10: (4+55) mod 16=11</text><text class="probe-computation" x="738" y="190">i=11: (4+66) mod 16=6</text>
       <text class="probe-computation" x="123" y="215">i=12: (4+78) mod 16=2</text><text class="probe-computation" x="328" y="215">i=13: (4+91) mod 16=15</text><text class="probe-computation" x="533" y="215">i=14: (4+105) mod 16=13</text><text class="probe-computation" x="738" y="215">i=15: (4+120) mod 16=12</text>
     </svg>
-<div class="example-box">
-  <strong class="example-title">Example: Quadratic Probing</strong>
 
   <p>
-    Suppose \(m=16\), the home position is 4, and the probe sequence uses
-    triangular-number offsets:
-    \[
-      h_i(k)=\left(h(k)+\frac{i(i+1)}{2}\right)\bmod 16.
-    \]
-    The first several probes are
-  </p>
-
-  <table class="example-table">
-    <thead>
-      <tr>
-        <th>\(i\)</th>
-        <th>Offset \(i(i+1)/2\)</th>
-        <th>Position</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>0</td>
-        <td>0</td>
-        <td>4</td>
-      </tr>
-      <tr>
-        <td>1</td>
-        <td>1</td>
-        <td>5</td>
-      </tr>
-      <tr>
-        <td>2</td>
-        <td>3</td>
-        <td>7</td>
-      </tr>
-      <tr>
-        <td>3</td>
-        <td>6</td>
-        <td>10</td>
-      </tr>
-      <tr>
-        <td>4</td>
-        <td>10</td>
-        <td>14</td>
-      </tr>
-      <tr>
-        <td>5</td>
-        <td>15</td>
-        <td>3</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <p>
-    The complete sequence is
-  </p>
-
-  <pre><code>4, 5, 7, 10, 14, 3, 9, 0, 8, 1, 11, 6, 2, 15, 13, 12</code></pre>
-
-  <p>
-    All 16 positions are visited before the sequence repeats. Unlike linear probing,
-    however, the probes quickly move away from a consecutive run of occupied positions.
+    For this choice of capacity and quadratic probe rule, all 16 positions are visited before the sequence repeats.
+     Unlike linear probing, however, the probes quickly move away from a consecutive run of occupied positions.
   </p>
 </div>
 
     <p>
-      Quadratic probing therefore reduces primary clustering. A key that encounters a
+      Quadratic probing reduces primary clustering. A key that encounters a
       group of nearby occupied positions does not simply move to the end of that group.
       However, keys with the same home position still follow exactly the same sequence
       of offsets. They continue to collide with one another at every probe. This behavior
@@ -519,21 +525,61 @@
     <h3>Double Hashing</h3>
 
     <p>
-      <strong>Double hashing</strong> uses one hash function to select the home position
-      and a second hash function to select the distance between successive probes:
-      \(h_i(k)=(h_1(k)+i h_2(k))\bmod m\).
-      Thus \(h_1(k)\) determines where probing begins, while \(h_2(k)\) determines the
-      step size.
-    </p>
+  <strong>Double hashing</strong> uses one hash function to select the home position
+  and a second hash function to select the distance between successive probes:
+  \[
+    h_i(k)=(h_1(k)+i\cdot h_2(k))\bmod m.
+  \]
+  For a fixed key \(k\), the two hash functions need to be evaluated only once.
+  If we let
+  \[
+    a=h_1(k)
+    \qquad\text{and}\qquad
+    b=h_2(k),
+  \]
+  then the probe sequence is simply
+  \[
+    h_i(k)=(a+i\cdot b)\bmod m.
+  \]
+  Thus \(a\) is the home position and \(b\) is the fixed step size used throughout
+  the probe sequence.
+</p>
 
-    <div class="probe-sequence-controls">
+
+   
+    <div class="example-box">
+  <strong class="example-title">Example: Double Hashing</strong>
+
+  <p>
+  Let the capacity of the hash table be \(m=16\),
+  \(h_1(k)=k\bmod 16\), and
+  \(h_2(k)=2(k\bmod 8)+1\).
+</p>
+
+<p>
+  For key <code>20</code>, compute the two hash functions once:
+  \[
+    a=h_1(20)=4
+    \qquad\text{and}\qquad
+    b=h_2(20)=9.
+  \]
+  Every probe can now be computed using
+  \[
+    h_i(20)=(4+i\cdot9)\bmod 16.
+  \]
+  This gives the sequence of positions
+</p>
+
+<pre><code>4, 13, 6, 15, 8, 1, 10, 3, 12, 5, 14, 7, 0, 9, 2, 11</code></pre>
+  <p>Here is the complete double-hashing probe sequence for key 20 shown in the hash table:</p>
+ <div class="probe-sequence-controls">
       <button type="button" class="probe-sequence-start" aria-controls="double-probe-demo">Play</button>
     </div>
     <svg id="double-probe-demo" class="probe-sequence-demo" viewBox="0 0 860 245" role="img"
          aria-labelledby="doubleProbeTitle doubleProbeDesc">
       <title id="doubleProbeTitle">Complete double-hashing probe sequence for key 20</title>
       <desc id="doubleProbeDesc">A table of capacity 16 shows the complete double-hashing probe sequence for key 20 with step size 9. Index 4, the first probe, is green. Every later probe is blue, and each cell contains its probe number.</desc>
-      <text class="probe-caption" x="430" y="20">k = 20, m = 16, h1(k) = 4, h2(k) = 9</text>
+      <text class="probe-caption" x="430" y="20">k = 20, m = 16, a = h1(k) = 4, b = h2(k) = 9</text>
       <g>
         <rect class="probe-later" x="30" y="38" width="50" height="48"></rect><text class="probe-number" x="55" y="68">i=12</text><text class="array-index" x="55" y="105">0</text>
         <rect class="probe-later" x="80" y="38" width="50" height="48"></rect><text class="probe-number" x="105" y="68">i=5</text><text class="array-index" x="105" y="105">1</text>
@@ -557,37 +603,28 @@
       <text class="probe-computation" x="123" y="190">i=8: (4+8·9) mod 16=12</text><text class="probe-computation" x="328" y="190">i=9: (4+9·9) mod 16=5</text><text class="probe-computation" x="533" y="190">i=10: (4+10·9) mod 16=14</text><text class="probe-computation" x="738" y="190">i=11: (4+11·9) mod 16=7</text>
       <text class="probe-computation" x="123" y="215">i=12: (4+12·9) mod 16=0</text><text class="probe-computation" x="328" y="215">i=13: (4+13·9) mod 16=9</text><text class="probe-computation" x="533" y="215">i=14: (4+14·9) mod 16=2</text><text class="probe-computation" x="738" y="215">i=15: (4+15·9) mod 16=11</text>
     </svg>
-    <div class="example-box">
-  <strong class="example-title">Example: Double Hashing</strong>
-
-  <p>
-    Let \(m=16\),
-    \(h_1(k)=k\bmod 16\), and
-    \(h_2(k)=2(k\bmod 8)+1\).
-    For key <code>20</code>,
-  </p>
-
-  <p>
-    \(h_1(20)=4\) and \(h_2(20)=9\).
-  </p>
-
-  <p>
-    Starting at position 4 and repeatedly moving forward 9 positions modulo 16 gives
-  </p>
-
-  <pre><code>4, 13, 6, 15, 8, 1, 10, 3, 12, 5, 14, 7, 0, 9, 2, 11</code></pre>
-
   <p>
     All 16 positions are visited before the sequence returns to 4.
   </p>
 </div>
+
+<p>
+  In an implementation, the positions do not even need to be recomputed from
+  \((a+ib)\bmod m\) each time. Starting with \(p=a\), each subsequent probe can
+  be generated by
+  \[
+    p=(p+b)\bmod m.
+  \]
+  Thus the two hash functions are computed once, and later probes require only
+  adding the fixed step size and reducing modulo \(m\).
+</p>
 
     <p>
       The step size must never be 0, since a zero step would repeatedly examine the same
       position. More generally, \(h_2(k)\) should be relatively prime to \(m\). If the
       step size and \(m\) have greatest common divisor 1, repeatedly adding the step modulo
       \(m\) visits every table position before repeating. Because the table in this example
-      has capacity 16, choosing an odd step size guarantees this property. Another common
+      has capacity \(16=2^4\), choosing an odd step size guarantees this property. Another common
       approach is to use a prime table capacity, in which case every step from 1 through
       \(m-1\) is relatively prime to \(m\).
     </p>
@@ -600,9 +637,10 @@
     </p>
 
     <p>
-      The tradeoff is additional computation and design complexity. Each operation needs a
-      second hash value, and the second hash function must produce suitable step sizes for
-      the chosen table capacity.
+      The tradeoff is additional computation and design complexity. Each operation must
+      compute two hash values initially rather than one, and the second hash function must
+      produce suitable step sizes for the chosen table capacity. Once those two values have
+      been computed, however, later probes can be generated using only the fixed step size.
     </p>
   </section>
 
@@ -611,7 +649,8 @@
 
   <p>
     All three strategies begin at the key's home position. They differ in how later probes
-    move through the table and therefore in the kinds of clustering they produce.
+    move through the table, the kinds of clustering they produce, and the cost and memory
+    access pattern of each probe.
   </p>
 
   <table class="example-table left-top-align">
@@ -621,194 +660,729 @@
         <th>Probe Formula</th>
         <th>Main Strength</th>
         <th>Main Concern</th>
+        <th>Practical Performance</th>
       </tr>
     </thead>
     <tbody>
       <tr>
-        <td>Linear probing</td>
+        <td>Linear<br> probing</td>
         <td>\((h(k)+i)\bmod m\)</td>
         <td>
-          Simple, inexpensive, cache-friendly, and guaranteed to visit every position
+          Simple and guaranteed to visit every position
         </td>
         <td>Primary clustering</td>
+        <td>
+          Very inexpensive probes and excellent cache locality; often especially fast
+          when the table is not too full
+        </td>
       </tr>
       <tr>
-        <td>Quadratic probing</td>
+        <td>Quadratic<br> probing</td>
         <td>\((h(k)+c_1i+c_2i^2)\bmod m\)</td>
         <td>Reduces primary clustering</td>
         <td>
           Secondary clustering; coverage depends on the capacity and constants
         </td>
+        <td>
+          Inexpensive probes with less clustering than linear probing, but weaker
+          memory locality
+        </td>
       </tr>
       <tr>
-        <td>Double hashing</td>
-        <td>\((h_1(k)+i h_2(k))\bmod m\)</td>
+        <td>Double<br> hashing</td>
+        <td>\((h_1(k)+i\cdot h_2(k))\bmod m\)</td>
         <td>
           Keys with the same home position can follow different probe sequences
         </td>
         <td>
           Requires a second hash function and a step size compatible with the capacity
         </td>
+        <td>
+          Better probe dispersion, but somewhat more computation and typically weaker
+          memory locality
+        </td>
       </tr>
     </tbody>
   </table>
 
   <p>
-    No probing strategy eliminates collisions, and the number of probes increases as the
-    table becomes crowded. The strategy determines what happens after a collision; the next
-    section examines how lookup, insertion, and removal use these probe sequences while
-    maintaining a correct open-addressed table.
+    These differences do not produce a universal speed ranking. Linear probing often
+    performs very well because consecutive probes are cheap and cache-friendly, while
+    quadratic probing and double hashing can require fewer probes by reducing clustering.
+    The relative performance therefore depends on factors such as the load factor, the
+    distribution of the keys, and the cost of the hash functions.
   </p>
-  </section>
+
+  <p>
+    No probing strategy eliminates collisions, and the number of probes generally increases
+    as the table becomes crowded. The next section examines how lookup, insertion, and removal
+    use these probe sequences while maintaining a correct open-addressed table.
+  </p>
+</section>
 </section>
 
+<section id="operations" section-title="Core Operations and Implementation">
+  <h2>Core Operations and Implementation</h2>
 
-  <section id="operations" section-title="Core Operations and Implementation">
-    <h2>Core Operations and Implementation</h2>
+  <p>
+    Lookup, insertion, and removal all follow the probe sequence determined by the
+    chosen probing strategy. The details of generating that sequence differ for linear
+    probing, quadratic probing, and double hashing, but the operations themselves have
+    the same general structure: examine positions in probe order until the operation
+    either succeeds or reaches a position that shows the key is not present.
+  </p>
 
-    <!--
-      Explain that lookup, insertion, and removal all follow the
-      selected probe sequence.
-
-      Introduce the representation used on this page.
-    -->
-
-
-    <section id="slot-states" section-title="Slot States">
-      <h3>Slot States</h3>
-
-      <!--
-        Explain the three states:
-
-        - Empty
-        - Occupied
-        - Deleted
-
-        Explain why Empty and Deleted must be distinguished.
-
-        Move the useful tombstone diagram from the current Table States
-        section here.
-      -->
-
-    </section>
+  <p>
+    To keep the pseudocode independent of the particular probing strategy, we will use
+    <code>probeIndex(key, i)</code> to mean the position of probe \(i\) for
+    <code>key</code>. Thus, for example, linear probing would use
+    \[
+      \text{probeIndex}(k,i)=(h(k)+i)\bmod m.
+    \]
+    The same probe rule must be used consistently by every operation.
+  </p>
 
 
-    <section id="lookup-core" section-title="Lookup">
-      <h3>Lookup</h3>
+  <section id="slot-states" section-title="Slot States">
+    <h3>Slot States</h3>
 
-      <!--
-        Explain lookup:
-        - compute/follow the probe sequence;
-        - compare actual keys;
-        - continue through occupied nonmatches;
-        - continue through deleted slots;
-        - stop at a never-used empty slot;
-        - terminate after at most m probes.
+    <p>
+      In open addressing, each position in the table must distinguish among three
+      possible states:
+    </p>
 
-        Include pseudocode.
+    <ul class="spaced">
+      <li>
+        <strong>Empty:</strong>
+        The position has not contained an entry since the table was created or rebuilt.
+      </li>
+      <li>
+        <strong>Occupied:</strong>
+        The position currently contains a key or key-value entry.
+      </li>
+      <li>
+        <strong>Deleted:</strong>
+        The position previously contained an entry that has been removed. Such a position
+        is often said to contain a <strong>tombstone</strong>.
+      </li>
+    </ul>
 
-        Include a worked example, preferably one that passes through
-        a tombstone.
-      -->
+    <p>
+      The distinction between an empty position and a deleted position is essential.
+      An empty position can terminate a lookup: if insertion previously reached that
+      position, the key would have been stored there rather than farther along the probe
+      sequence. A deleted position cannot terminate a lookup, because another key may have
+      been displaced beyond it before the deletion occurred.
+    </p>
 
-    </section>
+    <div class="example-box">
+      <strong class="example-title">Example: Why a Tombstone Is Different from an Empty Position</strong>
 
+      <p>
+        Suppose a table of capacity 13 uses \(h(k)=k\bmod 13\) and linear probing.
+        Keys <code>16</code>, <code>29</code>, and <code>42</code> all have home
+        position 3 and were inserted in that order. Suppose <code>29</code> is then
+        removed.
+      </p>
 
-    <section id="insert-core" section-title="Insert">
-      <h3>Insert</h3>
+      <table class="example-table">
+        <thead>
+          <tr>
+            <th>Index</th>
+            <th>3</th>
+            <th>4</th>
+            <th>5</th>
+            <th>6</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>State</td>
+            <td>Occupied</td>
+            <td>Deleted</td>
+            <td>Occupied</td>
+            <td>Empty</td>
+          </tr>
+          <tr>
+            <td>Key</td>
+            <td>16</td>
+            <td>-</td>
+            <td>42</td>
+            <td>-</td>
+          </tr>
+        </tbody>
+      </table>
 
-      <!--
-        Explain insertion:
-        - follow the probe sequence;
-        - detect an existing key;
-        - remember the first tombstone;
-        - continue far enough to ensure that the key is not already
-          present;
-        - insert into the first reusable tombstone or empty slot.
+      <p>
+        A lookup for <code>42</code> must continue through position 4. If position 4
+        had instead been changed to empty when <code>29</code> was removed, lookup
+        would stop there and incorrectly report that <code>42</code> is absent.
+      </p>
+    </div>
 
-        Distinguish set insertion from map update.
-
-        Include pseudocode.
-
-        Move/adapt the existing worked insertion example here.
-      -->
-
-    </section>
-
-
-    <section id="remove-core" section-title="Remove">
-      <h3>Remove</h3>
-
-      <!--
-        Explain why simply changing the slot to Empty is incorrect.
-
-        Explain tombstone deletion.
-
-        Include pseudocode.
-
-        Include a concrete before-and-after example showing why a
-        later key must remain reachable.
-
-        Briefly mention that other deletion methods exist, but defer
-        backward-shift deletion to Variations and Extensions.
-      -->
-
-    </section>
-
-
-    <section id="analysis" section-title="Analysis">
-      <h3>Analysis</h3>
-
-      <!--
-        Define:
-          alpha = n / m
-
-        Explain that alpha < 1 is required for open addressing.
-
-        Explain expected constant-time performance when:
-        - hashing/probing distributes keys well;
-        - the load factor is kept appropriately bounded.
-
-        Explain worst-case O(n) probing.
-
-        With tombstones, distinguish:
-        - live load factor n/m
-        - occupied fraction (n+d)/m
-
-        Explain how tombstones increase probe lengths.
-
-        Discuss resizing/rebuilding:
-        - create a fresh table;
-        - reinsert live entries;
-        - do not copy tombstones;
-        - changing capacity changes probe sequences;
-        - rebuilding may also be useful simply to remove tombstones.
-
-        Discuss amortized resizing cost.
-
-        Give a complexity table for:
-        - Lookup
-        - Insert
-        - Remove
-        - Resize/Rebuild
-
-        Discuss space:
-        - O(m) table storage;
-        - no linked node per entry;
-        - normally m = Theta(n), so O(n) total storage.
-      -->
-
-    </section>
-
+    <p>
+      An implementation may represent these states with an explicit state field, a
+      parallel state array, or special marker values that cannot be confused with valid
+      entries. In the pseudocode below, we will refer to the three states as
+      <code>EMPTY</code>, <code>OCCUPIED</code>, and <code>DELETED</code>.
+    </p>
   </section>
 
+
+  <section id="lookup-core" section-title="Lookup">
+    <h3>Lookup</h3>
+
+    <p>
+      To look up a key, follow its probe sequence in order. At each occupied position,
+      compare the stored key with the search key. If they match, the lookup succeeds.
+      If they do not match, continue probing.
+    </p>
+
+    <p>
+      A deleted position is also skipped because the desired key may occur later in the
+      probe sequence. In contrast, encountering an empty position proves that the key is
+      absent, so the search can stop immediately. If no empty position is encountered,
+      the search must still stop after at most \(m\) probes rather than continuing
+      indefinitely.
+    </p>
+
+    <pre><code>lookup(key):
+    for i from 0 to table.length - 1:
+        j = probeIndex(key, i)
+
+        if table[j].state == EMPTY:
+            return false
+
+        if table[j].state == OCCUPIED and table[j].key equals key:
+            return true
+
+        // OCCUPIED by another key or DELETED:
+        // continue along the probe sequence
+
+    return false</code></pre>
+
+    <div class="example-box">
+      <strong class="example-title">Example: Lookup Through a Tombstone</strong>
+
+      <p>
+        Return to the table above and look up <code>42</code>. Since
+        \(42\bmod 13=3\), linear probing examines:
+      </p>
+
+      <ol>
+        <li>
+          Position 3 contains <code>16</code>. It is occupied, but the key does not
+          match, so continue.
+        </li>
+        <li>
+          Position 4 is deleted. A tombstone does not terminate the search, so continue.
+        </li>
+        <li>
+          Position 5 contains <code>42</code>, so the lookup succeeds.
+        </li>
+      </ol>
+
+      <p>
+        By contrast, a lookup for <code>55</code>, which also has home position 3,
+        examines positions 3, 4, and 5 before reaching empty position 6. The empty
+        position proves that <code>55</code> is not in the table.
+      </p>
+    </div>
+
+    <p>
+      Notice that the table compares actual keys at occupied positions. Having the same
+      home position does not imply that two keys are equal; collisions are precisely the
+      reason multiple different keys may occur along the same probe path.
+    </p>
+  </section>
+
+
+  <section id="insert-core" section-title="Insert">
+    <h3>Insert</h3>
+
+    <p>
+      Insertion follows the same probe sequence as lookup, but tombstones require an
+      additional detail. A deleted position can eventually be reused, but insertion
+      should not immediately store the new key there. The same key might already occur
+      farther along the probe sequence.
+    </p>
+
+    <p>
+      Instead, insertion remembers the first deleted position it encounters and continues
+      probing. If the key is later found, a set remains unchanged; for a map, the value
+      associated with that key is updated. If an empty position is reached without finding
+      the key, the new entry is stored in the first remembered tombstone, if one exists,
+      or in the empty position otherwise.
+    </p>
+
+    <pre><code>insert(key):
+    firstDeleted = -1
+
+    for i from 0 to table.length - 1:
+        j = probeIndex(key, i)
+
+        if table[j].state == OCCUPIED:
+            if table[j].key equals key:
+                return false
+
+        else if table[j].state == DELETED:
+            if firstDeleted == -1:
+                firstDeleted = j
+
+        else:   // table[j].state == EMPTY
+            if firstDeleted != -1:
+                j = firstDeleted
+
+            table[j].key = key
+            table[j].state = OCCUPIED
+            size = size + 1
+            return true
+
+    // No EMPTY position was reached.
+    if firstDeleted != -1:
+        table[firstDeleted].key = key
+        table[firstDeleted].state = OCCUPIED
+        size = size + 1
+        return true
+    else 
+        return false</code></pre>
+<p>
+  If the probe sequence reaches an empty position, then the search has gone far enough
+  to prove that the key is absent. The new key is stored either in the first tombstone
+  encountered earlier in the probe sequence or, if there was no tombstone, in the empty
+  position itself.
+</p>
+
+<p>
+  If all \(m\) probes are examined without reaching an empty position, a remembered
+  tombstone can still be reused. If there is no tombstone, the insertion fails and the
+  procedure returns <code>false</code>. This may mean that the table is full or, for a
+  probing strategy that does not visit every table position, that no available position
+  is reachable by this key's probe sequence. In a resizable implementation, this final
+  case would instead trigger a resize or rebuild: create a new table, reinsert the live
+  entries using the new capacity, and then retry the insertion.
+</p>
+    <div class="example-box">
+      <strong class="example-title">Example: Reusing a Tombstone</strong>
+
+      <p>
+        Again suppose the relevant portion of the table is
+      </p>
+
+      <table class="example-table">
+        <thead>
+          <tr>
+            <th>Index</th>
+            <th>3</th>
+            <th>4</th>
+            <th>5</th>
+            <th>6</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>State</td>
+            <td>Occupied</td>
+            <td>Deleted</td>
+            <td>Occupied</td>
+            <td>Empty</td>
+          </tr>
+          <tr>
+            <td>Key</td>
+            <td>16</td>
+            <td>-</td>
+            <td>42</td>
+            <td>-</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>
+        To insert <code>55</code>, whose home position is also 3, probe position 3,
+        remember deleted position 4 as a possible insertion location, continue through
+        position 5, and finally reach empty position 6. Since <code>55</code> was not
+        found, it can now be stored in the remembered position 4.
+      </p>
+
+      <table class="example-table">
+        <thead>
+          <tr>
+            <th>Index</th>
+            <th>3</th>
+            <th>4</th>
+            <th>5</th>
+            <th>6</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>State</td>
+            <td>Occupied</td>
+            <td>Occupied</td>
+            <td>Occupied</td>
+            <td>Empty</td>
+          </tr>
+          <tr>
+            <td>Key</td>
+            <td>16</td>
+            <td>55</td>
+            <td>42</td>
+            <td>-</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>
+        Continuing beyond the tombstone is important. If the operation were instead
+        inserting <code>42</code>, stopping at position 4 would create a duplicate.
+        Continuing the probe sequence discovers the existing copy at position 5.
+      </p>
+    </div>
+
+    <p>
+      For a hash map, the procedure is nearly identical. Each occupied position stores a
+      key-value entry. If the key is found during probing, its value is replaced and the
+      size does not change. A new entry is created only when the key is absent.
+    </p>
+  </section>
+
+
+  <section id="remove-core" section-title="Remove">
+    <h3>Remove</h3>
+
+    <p>
+      Removal first performs essentially the same search as lookup. If an empty position
+      is reached, the key is absent. If the key is found, however, its position usually
+      cannot simply be changed to empty. Doing so could cause a later lookup to stop before
+      reaching another key that was displaced farther along the same probe sequence.
+    </p>
+
+    <p>
+      The standard general solution is to replace the removed entry with a tombstone by
+      changing its state to <code>DELETED</code>. The stored key is no longer considered
+      part of the set or map, but the deleted state tells future lookups that probing must
+      continue.
+    </p>
+
+    <pre><code>remove(key):
+    for i from 0 to table.length - 1:
+        j = probeIndex(key, i)
+
+        if table[j].state == EMPTY:
+            return false
+
+        if table[j].state == OCCUPIED and table[j].key equals key:
+            table[j].state = DELETED
+            size = size - 1
+            deletedCount = deletedCount + 1
+            return true
+
+        // OCCUPIED by another key or DELETED:
+        // continue along the probe sequence
+
+    return false</code></pre>
+
+    <div class="example-box">
+      <strong class="example-title">Example: Removing Without Breaking the Probe Sequence</strong>
+
+      <p>
+        Suppose linear probing has produced the following portion of a table:
+      </p>
+
+      <table class="example-table">
+        <thead>
+          <tr>
+            <th>Index</th>
+            <th>3</th>
+            <th>4</th>
+            <th>5</th>
+            <th>6</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>State</td>
+            <td>Occupied</td>
+            <td>Occupied</td>
+            <td>Occupied</td>
+            <td>Empty</td>
+          </tr>
+          <tr>
+            <td>Key</td>
+            <td>16</td>
+            <td>29</td>
+            <td>42</td>
+            <td>-</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>
+        Removing <code>29</code> changes position 4 to deleted rather than empty:
+      </p>
+
+      <table class="example-table">
+        <thead>
+          <tr>
+            <th>Index</th>
+            <th>3</th>
+            <th>4</th>
+            <th>5</th>
+            <th>6</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>State</td>
+            <td>Occupied</td>
+            <td>Deleted</td>
+            <td>Occupied</td>
+            <td>Empty</td>
+          </tr>
+          <tr>
+            <td>Key</td>
+            <td>16</td>
+            <td>-</td>
+            <td>42</td>
+            <td>-</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p>
+        A later lookup for <code>42</code> can therefore continue from position 3 through
+        the tombstone at position 4 and reach position 5. Changing position 4 to empty
+        would incorrectly break that search.
+      </p>
+    </div>
+
+    <p>
+      Tombstones make deletion work with any of the probing strategies discussed on this
+      page, but they have a cost: a tombstone cannot terminate a lookup, so many tombstones
+      can make probe sequences longer. Tables are therefore sometimes rebuilt simply to
+      remove accumulated tombstones. Some linear-probing implementations instead rearrange
+      later entries after a deletion.
+    </p>
+  </section>
+
+
+  <section id="analysis" section-title="Analysis">
+    <h3>Analysis</h3>
+
+    <p>
+      Suppose an open-addressed table has capacity \(m\) and contains \(n\) live entries.
+      Its <strong>load factor</strong> is
+      \[
+        \alpha=\frac{n}{m}.
+      \]
+      Because every live entry occupies one position in the table, open addressing
+      requires \(\alpha\leq 1\), and useful implementations keep the load factor
+      substantially below 1. The exact threshold depends in part on the probing strategy.
+      As the table becomes crowded, empty positions become harder to find and probe
+      sequences grow longer.
+    </p>
+
+    <p>
+      With a well-designed hash function, an appropriate probing strategy, and a load
+      factor bounded sufficiently below 1, lookup, insertion, and removal take expected
+      \(O(1)\) time. Unlike separate chaining, however, the expected cost of open
+      addressing becomes increasingly sensitive to the load factor as the table approaches
+      full capacity.
+    </p>
+
+    <p>
+      In the worst case, an operation may examine every position reachable in its probe
+      sequence. We always limit an operation to at most \(m\) probes, so lookup, insertion,
+      and removal require \(O(m)\) time in the worst case. When the table is maintained
+      with \(m=\Theta(n)\), this is \(O(n)\).
+    </p>
+
+    <h4>Effect of Tombstones</h4>
+
+    <p>
+      Tombstones introduce a second quantity that affects performance. Let \(d\) be the
+      number of deleted positions. The live load factor is still
+      \[
+        \alpha=\frac{n}{m},
+      \]
+      but probing is also affected by the fraction of positions that are either occupied
+      or deleted:
+      \[
+        \beta=\frac{n+d}{m}.
+      \]
+      A deleted position can be reused for a new entry, but it does not terminate a lookup.
+      Thus a table can have a moderate live load factor while still requiring long probes
+      if many tombstones have accumulated.
+    </p>
+
+    <h4>Resizing and Rebuilding</h4>
+
+   <p>
+      Resizing and rebuilding use the same basic process. If the live load factor becomes
+      too large, the table creates a larger array. If tombstones become too numerous, it may
+      instead create a fresh array of the same capacity. In either case, the new table begins
+      with every position empty, and each live entry from the old table is reinserted using
+      the probe rule for the new table. Tombstones are discarded. The following procedure
+      handles both cases; <code>newCapacity</code> is larger when resizing and unchanged when
+      simply rebuilding.
+    </p>
+
+    <pre><code>rebuild(newCapacity):
+    oldTable = table
+    table = new array with newCapacity positions
+    mark every position EMPTY
+    size = 0
+    deletedCount = 0
+
+    for each position in oldTable:
+        if position.state == OCCUPIED:
+            insertKnownDistinct(position.entry)
+
+insertKnownDistinct(entry):
+    for i from 0 to table.length - 1:
+        j = probeIndex(entry.key, i)
+
+        if table[j].state != OCCUPIED:
+            table[j] = entry
+            table[j].state = OCCUPIED
+            size = size + 1
+            return</code></pre>
+
+<p>
+  The helper <code>insertKnownDistinct</code> is simpler than the normal insertion
+  operation because every live entry from the old table is already known to have a
+  distinct key. Since the new table initially contains no tombstones, the helper simply
+  follows the entry's probe sequence until it finds an empty position.
+</p>
+
+<p>
+  Entries must be reinserted rather than copied to their old array positions because
+  changing the capacity may change both their home positions and their probe sequences.
+  Tombstones are not reinserted, so rebuilding also removes deleted markers and can
+  shorten future probes even when the capacity remains unchanged.
+</p>
+
+<p>
+  Rebuilding scans all \(m\) positions of the old table and reinserts the \(n\) live
+  entries. Under the same assumptions that give expected constant-time insertion, this
+  takes expected \(\Theta(m+n)\) time. Since \(n\leq m\) in open addressing, this is
+  \(\Theta(m)\). When \(m=\Theta(n)\), rebuilding therefore takes expected
+  \(\Theta(n)\) time.
+</p>
+
+<p>
+  If the table grows geometrically, such as by approximately doubling its capacity,
+  resizing occurs only occasionally. Its cost can therefore be spread across many
+  insertions, giving expected \(O(1)\) amortized insertion time when the load factor
+  remains appropriately bounded.
+</p>
+
+
+    <p>
+      The worst-case rebuild bound is larger because each of the \(n\) reinserted entries
+      could theoretically require \(O(m)\) probes. Under normal hashing assumptions,
+      however, rebuilding takes expected \(\Theta(m+n)\) time. When the table maintains
+      \(m=\Theta(n)\), the expected rebuild cost is therefore \(\Theta(n)\).
+    </p>
+
+    <h4>Space Usage</h4>
+
+    <p>
+      The table array uses \(O(m)\) space. Unlike separate chaining with linked-list
+      buckets, open addressing does not require a separate linked node for each entry,
+      although each position must represent its state. When \(m=\Theta(n)\), the total
+      table space is \(O(n)\).
+    </p>
+
+    <p>
+      During resizing or rebuilding, both the old and new arrays exist temporarily, so
+      the operation uses \(O(m)\) additional space. Once rebuilding is complete, the old
+      array can be discarded.
+    </p>
+
+    <h4>Summary</h4>
+<p>
+  The following table summarizes the expected and worst-case costs. The two insertion
+  rows distinguish a fixed-capacity table from an implementation that may resize and
+  rebuild the table when necessary.
+</p>
+<table class="example-table left-top-align">
+  <thead>
+    <tr>
+      <th>Operation</th>
+      <th>Expected Cost</th>
+      <th>Worst Case</th>
+      <th>Comments</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Lookup</td>
+      <td>\(O(1)\)</td>
+      <td>\(O(m)\)</td>
+      <td>
+        Expected constant time assumes suitable hashing, probing, and a
+        sufficiently low load factor.
+      </td>
+    </tr>
+    <tr>
+      <td>Insert, fixed capacity</td>
+      <td>\(O(1)\)</td>
+      <td>\(O(m)\)</td>
+      <td>
+        May fail if the probe sequence cannot find an empty or deleted position.
+      </td>
+    </tr>
+    <tr>
+      <td>Insert, with resizing</td>
+      <td>\(O(1)\) amortized</td>
+      <td>\(O(mn)\)</td>
+      <td>
+        The worst case occurs when insertion triggers a rebuild and each of the
+        \(n\) entries requires \(O(m)\) probes during reinsertion.
+      </td>
+    </tr>
+    <tr>
+      <td>Remove</td>
+      <td>\(O(1)\)</td>
+      <td>\(O(m)\)</td>
+      <td>
+        Finding the key has the same probing cost as lookup; once found, marking its
+        position <code>DELETED</code> takes \(O(1)\) time.
+      </td>
+    </tr>
+    <tr>
+      <td>Resize/Rebuild</td>
+      <td>\(\Theta(m+n)\)</td>
+      <td>\(O(mn)\)</td>
+      <td>
+        The expected cost scans the \(m\) old positions and reinserts the \(n\)
+        live entries. The worst case requires \(O(m)\) probes per reinsertion.
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<p>
+  When the table is maintained so that \(m=\Theta(n)\), the \(O(m)\) worst-case
+  probe costs are also \(O(n)\).
+</p>
+</section>
+</section>
 
   <section id="demo" section-title="Interactive Demo">
     <h2>Interactive Demo</h2>
 
-    <p>
-      <!-- Brief introduction to what students should observe in the demo. -->
-    </p>
+<p>
+  Use the demo to trace lookup, insertion, and removal one probe at a time and to compare
+  how different probe sequences move through the table. In addition to linear probing,
+  the demo includes several quadratic-probing and double-hashing variants, allowing you
+  to see how different formulas, table capacities, and step sizes affect the order and
+  coverage of the probes. Pay particular attention to how collisions extend a probe
+  sequence, how lookup continues past tombstones but stops at a never-used empty position,
+  and how insertion may remember a tombstone for later reuse while continuing to check
+  for an existing key.
+</p>
 
     <div class="embeddedDemoContainer">
       <iframe class="embeddedDemo"

@@ -12,6 +12,7 @@
     #demoContainer { max-width:1080px; margin:0 auto; }
     .oa-controls { display:flex; flex-direction:column; gap:7px; align-items:flex-start; margin-bottom:8px; }
     .control-row { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+    .table-actions { display:inline-flex; flex-wrap:nowrap; gap:8px; align-items:center; }
     .oa-controls label { display:inline-flex; align-items:center; gap:4px; }
     .oa-controls input { width:82px; }
     .oa-controls select { max-width:100%; }
@@ -75,28 +76,31 @@
   <main id="demoContainer">
     <h2>Open Addressing Operations</h2>
     <div class="oa-controls">
-      <div class="control-row">
+      <div class="control-row" aria-label="Probing strategy and table controls">
         <label>Probing
           <select id="strategySelect" aria-label="Probing strategy">
             <option value="linear">Linear probing</option>
             <option value="quadratic">Quadratic probing</option>
+            <option value="quadraticSquares">Quadratic probing: square offsets</option>
+            <option value="quadraticScaled">Quadratic probing: scaled triangular offsets</option>
+            <option value="doubleText">Double hashing: page example</option>
             <option value="doubleA">Double hashing: variable step</option>
             <option value="doubleB">Double hashing: prime-minus step</option>
           </select>
         </label>
+        <div class="table-actions" role="group" aria-label="Table controls">
+          <button id="resetBtn">Reset Table</button>
+          <button id="randomBtn">Random Table</button>
+          <button id="clearBtn">Clear Table</button>
+        </div>
       </div>
-      <div class="control-row" aria-label="Hash table operations">
-        <label>Key <input id="keyInput" type="number" min="-999" max="999" value="85"></label>
+      <div class="control-row" aria-label="Hash table operations and trace navigation">
+        <label>Key <input id="keyInput" type="number" min="0" max="999" value="85"></label>
         <button id="searchBtn">Search</button>
         <button id="insertBtn">Insert</button>
         <button id="deleteBtn">Delete</button>
-      </div>
-      <div class="control-row" aria-label="Playback and table controls">
         <button id="prevBtn">Previous</button>
         <button id="nextBtn">Next</button>
-        <button id="resetBtn">Reset Table</button>
-        <button id="randomBtn">Random Table</button>
-        <button id="clearBtn">Clear Table</button>
       </div>
     </div>
 
@@ -147,6 +151,39 @@
         index(key,i) { return mod(mod(key,16)+(i*(i+1))/2,16); },
         details(key) { return `h(${key}) = ${mod(key,16)}; offsets = 0, 1, 3, 6, 10, ...`; }
       },
+      quadraticSquares: {
+        name:'Quadratic probing: square offsets',
+        size:17,
+        randomCount:8,
+        indexFormula:'index(i) = (h(k) + i²) mod 17',
+        secondFormula:null,
+        note:'This simple quadratic rule reaches only 9 of the 17 slots for a given key, illustrating why the formula, capacity, and load limit must be chosen together.',
+        initial:[5,22,39,56,73,90,107,124],
+        index(key,i) { return mod(mod(key,17)+i*i,17); },
+        details(key) { return `h(${key}) = ${mod(key,17)}; offsets = 0, 1, 4, 9, 16, ...`; }
+      },
+      quadraticScaled: {
+        name:'Quadratic probing: scaled triangular offsets',
+        size:16,
+        indexFormula:'index(i) = (h(k) + 3i(i + 1)/2) mod 16',
+        secondFormula:null,
+        note:'Multiplying the triangular offsets by 3 changes their order while still visiting all 16 slots.',
+        initial:[5,21,37,53,69,10,26,42],
+        index(key,i) { return mod(mod(key,16)+3*(i*(i+1))/2,16); },
+        details(key) { return `h(${key}) = ${mod(key,16)}; offsets = 0, 3, 9, 18, 30, ...`; }
+      },
+      doubleText: {
+        name:'Double hashing: page example',
+        size:16,
+        indexFormula:'index(i) = (h₁(k) + i·h₂(k)) mod 16',
+        secondFormula:'h₂(k) = 2(k mod 8) + 1',
+        note:'This is the page’s worked rule. Its odd step size visits all 16 slots in the power-of-two table.',
+        initial:[20,36,52,68,84,10,26,42],
+        a(key) { return mod(key,16); },
+        b(key) { return 2*mod(key,8)+1; },
+        index(key,i) { return mod(this.a(key)+i*this.b(key),this.size); },
+        details(key) { return doubleHashDetails(this,key); }
+      },
       doubleA: {
         name:'Double hashing: variable step',
         size:17,
@@ -154,8 +191,10 @@
         secondFormula:'h₂(k) = 1 + (k mod 16)',
         note:'Because 17 is prime, every step from 1 through 16 visits all 17 slots.',
         initial:[5,22,39,56,73,10,27,44],
-        index(key,i) { return mod(mod(key,17)+i*(1+mod(key,16)),17); },
-        details(key) { return `h₁(${key}) = ${mod(key,17)}; h₂(${key}) = ${1+mod(key,16)}`; }
+        a(key) { return mod(key,17); },
+        b(key) { return 1+mod(key,16); },
+        index(key,i) { return mod(this.a(key)+i*this.b(key),this.size); },
+        details(key) { return doubleHashDetails(this,key); }
       },
       doubleB: {
         name:'Double hashing: prime-minus step',
@@ -164,8 +203,10 @@
         secondFormula:'h₂(k) = 17 − (k mod 17)',
         note:'The table size 19 is prime; the second hash uses the smaller prime 17.',
         initial:[5,24,43,62,81,10,29,48],
-        index(key,i) { return mod(mod(key,19)+i*(17-mod(key,17)),19); },
-        details(key) { return `h₁(${key}) = ${mod(key,19)}; h₂(${key}) = ${17-mod(key,17)}`; }
+        a(key) { return mod(key,19); },
+        b(key) { return 17-mod(key,17); },
+        index(key,i) { return mod(this.a(key)+i*this.b(key),this.size); },
+        details(key) { return doubleHashDetails(this,key); }
       }
     };
 
@@ -181,6 +222,12 @@
 
     function config() {
       return strategies[document.getElementById('strategySelect').value];
+    }
+
+    function doubleHashDetails(strategy,key) {
+      const a = strategy.a(key);
+      const b = strategy.b(key);
+      return `Compute a = h₁(${key}) = ${a} and b = h₂(${key}) = ${b}. Therefore index(i) = (a + i·b) mod ${strategy.size} = (${a} + i·${b}) mod ${strategy.size}.`;
     }
 
     function emptyTable(length) {
@@ -207,6 +254,12 @@
     }
 
     function probeLabel(key, probeNumber, index) {
+      const current = config();
+      if (current.a && current.b) {
+        const a = current.a(key);
+        const b = current.b(key);
+        return `Probe i = ${probeNumber}: (a + i·b) mod ${current.size} = (${a} + ${probeNumber}·${b}) mod ${current.size} = ${index}.`;
+      }
       return `Probe i = ${probeNumber}: index(${probeNumber}) = ${index}.`;
     }
 
@@ -217,8 +270,8 @@
     function parseKey() {
       const input = document.getElementById('keyInput');
       const key = Number(input.value);
-      if (!Number.isInteger(key) || key < -999 || key > 999) {
-        beginOperation('Enter an integer key from −999 through 999.');
+      if (!Number.isInteger(key) || key < 0 || key > 999) {
+        beginOperation('Enter a nonnegative integer key from 0 through 999.');
         render();
         return null;
       }
@@ -280,7 +333,7 @@
         return true;
       }
 
-      if (showSteps) record('All table slots are occupied, so insertion fails. A real implementation would resize and rehash.',{ probed:probed.slice() },'insert failed: table full');
+      if (showSteps) record('No empty or deleted slot is reachable in this probe sequence, so insertion fails. A real implementation would resize or rebuild and then rehash.',{ probed:probed.slice() },'insert failed: no reachable slot');
       return false;
     }
 
@@ -362,16 +415,16 @@
     function resetTable() {
       rebuild(config().initial);
       steps = [];
-      record(`Example restored for ${config().name}. Try inserting 85, searching for 53, or deleting 21.`,{},'ready');
+      record(`Example restored for ${config().name}. Try inserting 85, searching for ${config().initial[3]}, or deleting ${config().initial[1]}.`,{},'ready');
       stepIndex = 0;
       render();
     }
 
     function randomTable() {
       const values = [];
-      const target = Math.min(10,config().size-3);
+      const target = Math.min(config().randomCount || 10,config().size-3);
       while (values.length < target) {
-        const key = Math.floor(Math.random()*181)-90;
+        const key = Math.floor(Math.random()*181);
         if (!values.includes(key)) values.push(key);
       }
       rebuild(values);
@@ -425,6 +478,7 @@
         <strong class="strategy-title">${current.name} (m = ${current.size})</strong>
         <span class="formula-line"><strong>Probe index (start with i = 0):</strong> <code>${current.indexFormula}</code></span>
         ${current.secondFormula ? `<span class="formula-line"><strong>Second hash:</strong> <code>${current.secondFormula}</code></span>` : ''}
+        ${current.a && current.b ? `<span class="formula-line"><strong>Abbreviated form:</strong> <code>Let a = h₁(k) and b = h₂(k); index(i) = (a + i·b) mod ${current.size}</code></span>` : ''}
         <span class="strategy-note">${current.note}</span>`;
       document.getElementById('status').textContent = `${step.phase ? `${step.phase}: ` : ''}${step.message}`;
       document.getElementById('stepCount').textContent = `Step ${stepIndex+1} of ${Math.max(steps.length,1)}`;
@@ -436,6 +490,9 @@
       validity.className = check ? 'valid' : 'invalid';
       document.getElementById('prevBtn').disabled = stepIndex === 0;
       document.getElementById('nextBtn').disabled = stepIndex >= steps.length-1;
+      const viewingCommittedState = stepIndex >= steps.length-1;
+      ['strategySelect','keyInput','searchBtn','insertBtn','deleteBtn','resetBtn','randomBtn','clearBtn']
+        .forEach(id=>{ document.getElementById(id).disabled = !viewingCommittedState; });
 
       const probeNumbers = new Map();
       (marks.probed || []).forEach((index,i)=>{ if (!probeNumbers.has(index)) probeNumbers.set(index,i); });
