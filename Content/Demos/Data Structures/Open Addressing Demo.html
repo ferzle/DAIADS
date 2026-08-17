@@ -98,7 +98,7 @@
         <label>Key <input id="keyInput" type="number" min="0" max="999" value="85"></label>
         <button id="searchBtn">Search</button>
         <button id="insertBtn">Insert</button>
-        <button id="deleteBtn">Delete</button>
+        <button id="removeBtn">Remove</button>
         <button id="prevBtn">Previous</button>
         <button id="nextBtn">Next</button>
       </div>
@@ -176,11 +176,11 @@
         name:'Double hashing: page example',
         size:16,
         indexFormula:'index(i) = (h₁(k) + i·h₂(k)) mod 16',
-        secondFormula:'h₂(k) = 2(k mod 8) + 1',
+        secondFormula:'h₂(k) = 2(⌊k/16⌋ mod 8) + 1',
         note:'This is the page’s worked rule. Its odd step size visits all 16 slots in the power-of-two table.',
         initial:[20,36,52,68,84,10,26,42],
         a(key) { return mod(key,16); },
-        b(key) { return 2*mod(key,8)+1; },
+        b(key) { return 2*mod(Math.floor(key/16),8)+1; },
         index(key,i) { return mod(this.a(key)+i*this.b(key),this.size); },
         details(key) { return doubleHashDetails(this,key); }
       },
@@ -227,7 +227,7 @@
     function doubleHashDetails(strategy,key) {
       const a = strategy.a(key);
       const b = strategy.b(key);
-      return `Compute a = h₁(${key}) = ${a} and b = h₂(${key}) = ${b}. Therefore index(i) = (a + i·b) mod ${strategy.size} = (${a} + i·${b}) mod ${strategy.size}.`;
+      return `Compute a = h₁(${key}) = ${a} and b = h₂(${key}) = ${b}. Therefore index(i) = (a + i·b) mod ${strategy.size} = (${a} + i·${b}) mod ${strategy.size}`;
     }
 
     function emptyTable(length) {
@@ -359,9 +359,9 @@
           if (kind === 'search') {
             if (showSteps) record(`${probeLabel(key,i,index)} Slot ${index} contains ${key}; the search succeeds.`,marksFor(probed,index,{ found:index }),'search complete');
           } else {
-            if (showSteps) record(`${probeLabel(key,i,index)} Slot ${index} contains ${key}. Next, replace it with a tombstone so later searches will continue past this position.`,marksFor(probed,index,{ found:index }),'delete: found key');
+            if (showSteps) record(`${probeLabel(key,i,index)} Slot ${index} contains ${key}. Next, replace it with a tombstone so later searches will continue past this position.`,marksFor(probed,index,{ found:index }),'remove: found key');
             markDeleted(index);
-            if (showSteps) record(`The key has been removed from slot ${index}, and the slot now contains only the D tombstone state. D is not empty, so later searches continue past it.`,marksFor(probed,index,{ deleted:index }),'delete complete');
+            if (showSteps) record(`The key has been removed from slot ${index}, and the slot now contains only the D tombstone state. D is not empty, so later searches continue past it.`,marksFor(probed,index,{ deleted:index }),'remove complete');
           }
           return index;
         }
@@ -480,7 +480,10 @@
         ${current.secondFormula ? `<span class="formula-line"><strong>Second hash:</strong> <code>${current.secondFormula}</code></span>` : ''}
         ${current.a && current.b ? `<span class="formula-line"><strong>Abbreviated form:</strong> <code>Let a = h₁(k) and b = h₂(k); index(i) = (a + i·b) mod ${current.size}</code></span>` : ''}
         <span class="strategy-note">${current.note}</span>`;
-      document.getElementById('status').textContent = `${step.phase ? `${step.phase}: ` : ''}${step.message}`;
+      const phaseLabel = step.phase
+        ? step.phase.charAt(0).toUpperCase() + step.phase.slice(1)
+        : '';
+      document.getElementById('status').textContent = `${phaseLabel ? `${phaseLabel}: ` : ''}${step.message}`;
       document.getElementById('stepCount').textContent = `Step ${stepIndex+1} of ${Math.max(steps.length,1)}`;
       const load = step.table.length ? step.size/step.table.length : 0;
       document.getElementById('tableStats').textContent = `Size: ${step.size}/${step.table.length} · Tombstones: ${step.tombstones} · Load factor: ${load.toFixed(2)}`;
@@ -491,7 +494,7 @@
       document.getElementById('prevBtn').disabled = stepIndex === 0;
       document.getElementById('nextBtn').disabled = stepIndex >= steps.length-1;
       const viewingCommittedState = stepIndex >= steps.length-1;
-      ['strategySelect','keyInput','searchBtn','insertBtn','deleteBtn','resetBtn','randomBtn','clearBtn']
+      ['strategySelect','keyInput','searchBtn','insertBtn','removeBtn','resetBtn','randomBtn','clearBtn']
         .forEach(id=>{ document.getElementById(id).disabled = !viewingCommittedState; });
 
       const probeNumbers = new Map();
@@ -558,7 +561,7 @@
     document.getElementById('strategySelect').addEventListener('change',resetTable);
     document.getElementById('searchBtn').addEventListener('click',()=>runOperation('search'));
     document.getElementById('insertBtn').addEventListener('click',()=>runOperation('insert'));
-    document.getElementById('deleteBtn').addEventListener('click',()=>runOperation('delete'));
+    document.getElementById('removeBtn').addEventListener('click',()=>runOperation('remove'));
     document.getElementById('prevBtn').addEventListener('click',()=>{ if (stepIndex>0) { stepIndex--; render(); } });
     document.getElementById('nextBtn').addEventListener('click',()=>{ if (stepIndex<steps.length-1) { stepIndex++; render(); } });
     document.getElementById('resetBtn').addEventListener('click',resetTable);
