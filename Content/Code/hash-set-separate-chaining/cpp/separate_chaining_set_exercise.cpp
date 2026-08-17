@@ -26,7 +26,6 @@ private:
     void resize(std::size_t newCapacity) {
         // TODO: Allocate new buckets and move every existing node to the tail
         // of its new bucket. Do not allocate duplicate nodes or change count.
-        static_cast<void>(newCapacity);
     }
 
 public:
@@ -58,7 +57,6 @@ public:
 
     bool contains(int key) const {
         // TODO: Reject a negative key, then search only its linked bucket.
-        static_cast<void>(key);
         return false;
     }
 
@@ -69,14 +67,12 @@ public:
         //    array and rehash every existing key.
         // 3. Recompute key's index, append a new node to that bucket's tail,
         //    increment count exactly once, and return true.
-        static_cast<void>(key);
         return false;
     }
 
     bool remove(int key) {
         // TODO: Reject a negative key. Unlink and delete key's node if present,
         // handling the first node separately. Update count exactly once.
-        static_cast<void>(key);
         return false;
     }
 

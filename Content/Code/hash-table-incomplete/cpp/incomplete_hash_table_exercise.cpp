@@ -28,20 +28,17 @@ public:
     InsertResult insert(int key) {
         // TODO: Inspect only key's home position. Store the key if that
         // position is empty, and return the appropriate InsertResult.
-        static_cast<void>(key);
         return InsertResult::COLLISION;
     }
 
     bool contains(int key) const {
         // TODO: Return whether key is stored at its home position.
-        static_cast<void>(key);
         return false;
     }
 
     bool remove(int key) {
         // TODO: If key is stored at its home position, mark that position
         // empty and return true. Otherwise make no change and return false.
-        static_cast<void>(key);
         return false;
     }
 };

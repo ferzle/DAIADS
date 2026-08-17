@@ -36,20 +36,17 @@ private:
 
     int wordIndex(int key) const {
         // TODO: Return the index of the 32-bit word that stores key.
-        static_cast<void>(key);
         return -1;
     }
 
     int bitIndex(int key) const {
         // TODO: Return key's bit position within its word (0 through 31).
-        static_cast<void>(key);
         return -1;
     }
 
     std::uint32_t wordMask(int bitIndex) const {
         // TODO: Return a 32-bit word with only bitIndex set to 1.
         // bitIndex must be between 0 and 31.
-        static_cast<void>(bitIndex);
         return 0;
     }
 
