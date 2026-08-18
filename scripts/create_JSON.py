@@ -2,7 +2,7 @@
 import os, json, urllib.parse, xml.etree.ElementTree as ET
 
 # Edit this to match your actual root URL for the menu (include trailing slash if needed)
-SITE_ROOT = "https:///DAIADS/"
+SITE_ROOT = "https://cusack.hope.edu/DAIADS/"
 
 # Directories to exclude from menu generation (case-insensitive).
 # Content/Code stores downloadable starter code and should not appear in
