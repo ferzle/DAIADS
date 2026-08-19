@@ -1266,10 +1266,47 @@ const selectBook = (bookId) => {
 };
 
 // ─── Load Content via Fetch + Replace‐into‐iframe ────────────────────────────
+let lastTrackedPath = null;
+let lastTrackedPageLocation = null;
+
+const updateCanonicalLink = (path) => {
+  const canonicalURL = new URL('.', window.location.href);
+  canonicalURL.searchParams.set('path', path);
+
+  let canonicalLink = document.querySelector('link[rel="canonical"]');
+  if (!canonicalLink) {
+    canonicalLink = document.createElement('link');
+    canonicalLink.rel = 'canonical';
+    document.head.appendChild(canonicalLink);
+  }
+  canonicalLink.href = canonicalURL.href;
+};
+
+const trackPageView = (pageTitle) => {
+  if (typeof window.gtag !== 'function') return;
+
+  const path = getCurrentPath();
+  if (path === lastTrackedPath) return;
+
+  const pageLocation = window.location.href;
+  const eventParameters = {
+    page_location: pageLocation,
+    page_title: pageTitle || path.split('/').pop() || 'DAIADS'
+  };
+
+  const pageReferrer = lastTrackedPageLocation || document.referrer;
+  if (pageReferrer) eventParameters.page_referrer = pageReferrer;
+
+  window.gtag('event', 'page_view', eventParameters);
+  lastTrackedPath = path;
+  lastTrackedPageLocation = pageLocation;
+};
+
 async function loadContent(relativePath) {
   const iframe = document.getElementById('content');
   const err = document.getElementById('errorMessage');
   const url = `Content/${relativePath}`;
+  updateCanonicalLink(getCurrentPath());
 
   try {
     const res = await fetch(url, { cache: 'no-cache' });
@@ -1352,6 +1389,9 @@ async function loadContent(relativePath) {
       hookIframeContent(iframe);
       resizeIframe();
       const d = getIframeDocument(iframe);
+      const pageTitle = d && d.title;
+      if (pageTitle) document.title = `${pageTitle} | DAIADS`;
+      trackPageView(pageTitle);
       if (d) {
         new MutationObserver(resizeIframe).observe(d.documentElement, {
           subtree: true,

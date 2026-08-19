@@ -1,0 +1,102 @@
+# Google Analytics Audit Handoff
+
+Last reviewed: August 19, 2026
+
+## Request and current status
+
+The repository was audited to check whether its HTML files contain the expected Google Analytics 4 tag. On August 19, 2026, the site was changed to use centralized route tracking from `index.html` and `scripts/loadContent.js`.
+
+Current implementation:
+
+- `index.html` is the only HTML file that loads `gtag.js`.
+- Its `config` call uses `send_page_view: false`.
+- `scripts/loadContent.js` sends one explicit `page_view` after a non-empty lesson iframe loads.
+- The event uses the clean parent `?book=...&path=...` URL, the lesson document title, and the preceding logical route as `page_referrer`.
+- Consecutive reloads of the same logical path, such as switching book views, are not counted as new lesson views.
+- Analytics snippets were removed from all content pages and HTML templates.
+
+Local browser verification observed exactly one event for the initial Interval Scheduling route and exactly one additional event after navigating to Quickselect. The second event contained the first route as `page_referrer`.
+
+External GA4 setting still required: disable **Enhanced measurement → Page views → Page changes based on browser history events** so GA4 does not generate an automatic history event in addition to the explicit event.
+
+The GA4 measurement ID currently used throughout the site is:
+
+```text
+G-DQ5LVZVFDC
+```
+
+The existing snippets use the standard `gtag.js` structure:
+
+```html
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-DQ5LVZVFDC"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-DQ5LVZVFDC', { send_page_view: false });
+</script>
+```
+
+## Original audit results (before centralization)
+
+- There are 219 HTML files under `Content/`.
+- 210 contain all required parts of the existing GA snippet.
+- Nine routed content files do not contain the snippet.
+- `index.html` and all five HTML templates contain the snippet.
+- Every existing snippet uses `G-DQ5LVZVFDC`, occurs once per file, and is inside the document's `<head>`.
+- `images/A.html` is also untagged, but it appears to be a standalone visual asset rather than a routed content page and likely should not be tracked.
+
+### Untagged lesson pages
+
+- `Content/Algorithms/Decrease-and-Conquer/Quickselect.html`
+- `Content/Algorithms/Dynamic Programming/0-1 Knapsack.html`
+- `Content/Algorithms/Exhaustive Search/Depth-First Search.html`
+- `Content/Algorithms/Greedy/Fractional Knapsack.html`
+- `Content/Algorithms/Greedy/Interval Scheduling.html`
+
+### Untagged demos
+
+- `Content/Demos/Divide-and-Conquer/QuickHull Mini.html`
+- `Content/Demos/Space-Time Tradeoff/Horspool Precomputation Demo.html`
+
+### Untagged drafts
+
+- `Content/Algorithms/Decrease-and-Conquer/Topological Sort DRAFT.html`
+- `Content/Algorithms/Exhaustive Search/Topological Sort (DFS) DRAFT.html`
+
+## Architectural concern
+
+Simply adding the snippet to the nine missing pages is probably not the best final fix.
+
+DAIADS behaves like a single-page application:
+
+1. `index.html` loads GA and sends an automatic page view.
+2. A lesson is loaded as a separate document in the main iframe, and most lesson documents load GA and send another automatic page view.
+3. A lesson containing an embedded demo can load a third tagged document and send another page view.
+4. If the GA4 data stream has page changes based on browser history enabled, the site's `history.pushState()` calls may also generate page views.
+
+This can inflate page-view counts and mix shell, lesson, and demo views. The loader also adds timestamp query parameters to iframe URLs:
+
+- Main content: `Content/...html?_=<timestamp>` near `scripts/loadContent.js:1288`
+- Embedded demos: `...?cb=<timestamp>` near `scripts/loadContent.js:708`
+
+Those parameters may fragment GA page reports into many technically unique URLs.
+
+## Implemented direction
+
+Analytics is now centralized in `index.html` and records one explicit page view for each logical DAIADS `?path=` route. It uses a clean `page_location` based on the parent route and a useful `page_title` based on the loaded lesson. Lesson iframes and embedded demos no longer load their own Google tags.
+
+The remaining administrative step is to disable GA4 Enhanced Measurement's **Page changes based on browser history events** option. The code now supplies explicit events, so leaving that option enabled can double-count navigation.
+
+## Suggested continuation prompt
+
+Use the following prompt in a future session:
+
+> Read `GA_AUDIT.md`, inspect the current working tree, and continue deployment or live GA4 verification of the centralized Google Analytics implementation. Preserve unrelated changes.
+
+## References
+
+- Google tag setup: <https://developers.google.com/tag-platform/gtagjs>
+- GA4 SPA measurement: <https://developers.google.com/analytics/devguides/collection/ga4/single-page-applications>
+- GA4 page-view measurement: <https://developers.google.com/analytics/devguides/collection/ga4/views>
