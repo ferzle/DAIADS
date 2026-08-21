@@ -66,10 +66,23 @@
     });
   };
 
+  const addFallbackSvgNames = () => {
+    document.querySelectorAll('svg').forEach((svg) => {
+      if (svg.hasAttribute('aria-label') || svg.hasAttribute('aria-labelledby') || svg.hasAttribute('role')) return;
+      const heading = svg.closest('section')?.querySelector('h1, h2, h3, h4');
+      svg.setAttribute('role', 'img');
+      svg.setAttribute('aria-label', heading?.textContent.trim() || 'Diagram');
+    });
+  };
+
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', addFallbackControlNames, { once: true });
+    document.addEventListener('DOMContentLoaded', () => {
+      addFallbackControlNames();
+      addFallbackSvgNames();
+    }, { once: true });
   } else {
     addFallbackControlNames();
+    addFallbackSvgNames();
   }
 
   // Content documents stay put in DAIADS iframes. Standalone visits, including

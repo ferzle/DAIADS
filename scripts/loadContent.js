@@ -533,6 +533,18 @@ function hookIframeContent(iframe) {
 
   applyPageNumber(innerDoc, getCurrentPath());
 
+  // Give unlabeled SVG diagrams a useful accessible name. Existing role and
+  // ARIA labeling is preserved; unnamed visualizations inherit the nearest
+  // section heading when available.
+  innerDoc.querySelectorAll('svg').forEach((svg) => {
+    if (svg.hasAttribute('aria-label') || svg.hasAttribute('aria-labelledby') || svg.hasAttribute('role')) return;
+    const section = svg.closest('section');
+    const heading = section && section.querySelector('h1, h2, h3, h4');
+    const label = heading && heading.textContent.trim();
+    svg.setAttribute('role', 'img');
+    svg.setAttribute('aria-label', label || 'Diagram');
+  });
+
   // Inject glossary-tooltips.js (fresh each time)
   const head = innerDoc.head || innerDoc.getElementsByTagName('head')[0];
   const old = innerDoc.getElementById('glossary-tooltips-script');
@@ -727,9 +739,13 @@ function hookIframeContent(iframe) {
     frame.addEventListener('load', () => {
       const d = getIframeDocument(frame);
       if (!d) return;
-      if (d.title) {
-        frame.title = d.title;
-        if (!frame.hasAttribute('aria-label')) frame.setAttribute('aria-label', d.title);
+      const heading = d.querySelector('h1, h2, h3');
+      const headingName = heading && heading.textContent.trim();
+      const documentName = d.title && d.title.trim();
+      const accessibleName = headingName || documentName;
+      if (accessibleName) {
+        frame.title = accessibleName;
+        if (!frame.hasAttribute('aria-label')) frame.setAttribute('aria-label', accessibleName);
       }
       const html = d.documentElement;
       const resize = () => {
