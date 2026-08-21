@@ -715,6 +715,7 @@ function hookIframeContent(iframe) {
       } catch {}
       frame.title = frameName;
     }
+    if (!frame.hasAttribute('aria-label')) frame.setAttribute('aria-label', frame.title);
     const base = frame.src.split('?')[0];
     try {
       frame.contentWindow.location.replace(`${base}?cb=${Date.now()}`);
@@ -726,7 +727,10 @@ function hookIframeContent(iframe) {
     frame.addEventListener('load', () => {
       const d = getIframeDocument(frame);
       if (!d) return;
-      if (d.title) frame.title = d.title;
+      if (d.title) {
+        frame.title = d.title;
+        if (!frame.hasAttribute('aria-label')) frame.setAttribute('aria-label', d.title);
+      }
       const html = d.documentElement;
       const resize = () => {
         frame.style.height = 'auto';
