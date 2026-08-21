@@ -10,16 +10,25 @@
   const group = btn.closest('.tab-group');
   if (!group) return;
 
-  // 1) deactivate everything
-  group.querySelectorAll('.code-container')
-       .forEach(panel => panel.classList.remove('active'));
-  group.querySelectorAll('.tablink')
-       .forEach(tab   => tab.classList.remove('active'));
+  group.querySelectorAll('.code-container').forEach(panel => {
+    panel.classList.remove('active');
+    panel.hidden = true;
+  });
+  group.querySelectorAll('.tablink').forEach(tab => {
+    tab.classList.remove('active');
+    tab.setAttribute('aria-selected', 'false');
+    tab.tabIndex = -1;
+  });
 
-  // 2) activate the one we want
-  const panel = group.querySelector(`.code-container#${lang}`);
-  if (panel) panel.classList.add('active');
+  const panel = Array.from(group.querySelectorAll('.code-container'))
+    .find(candidate => candidate.dataset.tabLang === lang);
+  if (panel) {
+    panel.classList.add('active');
+    panel.hidden = false;
+  }
   btn.classList.add('active');
+  btn.setAttribute('aria-selected', 'true');
+  btn.tabIndex = 0;
 }
 
 /**
@@ -27,8 +36,32 @@
  * hide them, and then “open” the default tab.
  */
 function initTabGroups() {
-  document.querySelectorAll('.tab-group').forEach(group => {
+  document.querySelectorAll('.tab-group').forEach((group, groupIndex) => {
     const panels = Array.from(group.querySelectorAll('.code-container'));
+    const tabs = Array.from(group.querySelectorAll('.tablink'));
+
+    const tabList = group.querySelector('.tabs');
+    if (tabList) tabList.setAttribute('role', 'tablist');
+
+    panels.forEach((panel, panelIndex) => {
+      const originalId = panel.id || `panel-${panelIndex + 1}`;
+      panel.dataset.tabLang = originalId;
+      panel.id = `code-panel-${groupIndex + 1}-${panelIndex + 1}`;
+      panel.setAttribute('role', 'tabpanel');
+      panel.tabIndex = 0;
+    });
+
+    tabs.forEach((tab, tabIndex) => {
+      const lang = tab.dataset.lang || panels[tabIndex]?.dataset.tabLang || `panel-${tabIndex + 1}`;
+      const panel = panels.find(candidate => candidate.dataset.tabLang === lang) || panels[tabIndex];
+      tab.dataset.lang = lang;
+      tab.id = `code-tab-${groupIndex + 1}-${tabIndex + 1}`;
+      tab.setAttribute('role', 'tab');
+      if (panel) {
+        tab.setAttribute('aria-controls', panel.id);
+        panel.setAttribute('aria-labelledby', tab.id);
+      }
+    });
 
       // 1) Temporarily show them so we can measure
       panels.forEach(p => {
@@ -61,16 +94,35 @@ function initTabGroups() {
       //p.style.width     = maxW + 'px';
     });
 
-    // wire up all .tablink buttons by data-lang
-    document.querySelectorAll('.tablink').forEach(btn => {
+    // Wire up this group's tabs without duplicating handlers on other groups.
+    tabs.forEach((btn, tabIndex) => {
       btn.addEventListener('click', evt => {
         const lang = btn.dataset.lang;
         openTab({ currentTarget: btn }, lang);
       });
+
+      btn.addEventListener('keydown', event => {
+        let nextIndex = null;
+        if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+          nextIndex = (tabIndex + 1) % tabs.length;
+        } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+          nextIndex = (tabIndex - 1 + tabs.length) % tabs.length;
+        } else if (event.key === 'Home') {
+          nextIndex = 0;
+        } else if (event.key === 'End') {
+          nextIndex = tabs.length - 1;
+        }
+
+        if (nextIndex === null) return;
+        event.preventDefault();
+        const nextTab = tabs[nextIndex];
+        openTab({ currentTarget: nextTab }, nextTab.dataset.lang);
+        nextTab.focus();
+      });
     });
 
     // 3) “Click” the default tab
-    const btn = group.querySelector('.tablink.active') || group.querySelector('.tablink');
+    const btn = tabs.find(tab => tab.classList.contains('active')) || tabs[0];
     if (btn) {
       const lang = btn.dataset.lang || btn.id.split('-')[1];
       openTab({ currentTarget: btn }, lang);

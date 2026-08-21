@@ -457,7 +457,10 @@ const flattenSectionItems = (items, pathPrefix, contextParts = []) => {
 function highlightActiveLink(path) {
   document.querySelectorAll('#menu a').forEach(a => {
     const aPath = new URLSearchParams(a.href.split('?')[1]).get('path');
-    a.classList.toggle('active', aPath === path);
+    const isActive = aPath === path;
+    a.classList.toggle('active', isActive);
+    if (isActive) a.setAttribute('aria-current', 'page');
+    else a.removeAttribute('aria-current');
   });
   updateBookContextNotice(path);
 }
@@ -703,6 +706,15 @@ function hookIframeContent(iframe) {
 
   // Auto‐resize any embeddedDemo iframes
   innerDoc.querySelectorAll('iframe.embeddedDemo').forEach((frame) => {
+    if (!frame.hasAttribute('title')) {
+      let frameName = 'Interactive demonstration';
+      try {
+        const fileName = decodeURIComponent(new URL(frame.src, innerDoc.location.href).pathname.split('/').pop() || '');
+        const cleanName = fileName.replace(/\.html$/i, '').replace(/\s+/g, ' ').trim();
+        if (cleanName) frameName = cleanName;
+      } catch {}
+      frame.title = frameName;
+    }
     const base = frame.src.split('?')[0];
     try {
       frame.contentWindow.location.replace(`${base}?cb=${Date.now()}`);
@@ -714,6 +726,7 @@ function hookIframeContent(iframe) {
     frame.addEventListener('load', () => {
       const d = getIframeDocument(frame);
       if (!d) return;
+      if (d.title) frame.title = d.title;
       const html = d.documentElement;
       const resize = () => {
         frame.style.height = 'auto';
@@ -766,6 +779,7 @@ function hookIframeContent(iframe) {
           section.collapsible-ready > h5,
           section.collapsible-ready > h6 { margin: 0; }
           .section-toggle { cursor: pointer; background: none; border: none; padding: .15rem 0; font: inherit; color: inherit; display: inline-flex; align-items: center; gap: .4rem; }
+          .section-toggle:focus-visible, .section-toolbar button:focus-visible { outline: 3px solid #7c3aed; outline-offset: 2px; }
           .section-toggle .chev { display: inline-block; width: 1em; }
           .section-body { margin-top: .35rem; }
           /* toolbar for expand/collapse all */
@@ -888,6 +902,7 @@ function hookIframeContent(iframe) {
         // Wrap the rest of the content
         const body = doc.createElement('div');
         body.className = 'section-body';
+        body.id = `collapsible-section-${index + 1}-content`;
         const children = Array.from(section.childNodes);
         children.forEach((node) => {
           if (node !== header) body.appendChild(node);
@@ -898,6 +913,7 @@ function hookIframeContent(iframe) {
         const btn = doc.createElement('button');
         btn.type = 'button';
         btn.className = 'section-toggle';
+        btn.setAttribute('aria-controls', body.id);
         const label = titleAttr || header.textContent || id || 'Section';
         const sectionNumber = sectionNumbers.get(section);
         btn.innerHTML = `<span class="chev" aria-hidden="true">▸</span><span class="label"></span>`;
@@ -976,6 +992,8 @@ function hookIframeContent(iframe) {
         const toolbar = doc.createElement('div');
         toolbar.id = 'section-toolbar';
         toolbar.className = 'section-toolbar';
+        toolbar.setAttribute('role', 'group');
+        toolbar.setAttribute('aria-label', 'Section display controls');
         const expandBtn = doc.createElement('button');
         expandBtn.type = 'button';
         expandBtn.textContent = 'Expand All';
@@ -1070,14 +1088,14 @@ const buildMenu = (chapters) => {
     ? { topLevel: new Map(), entries: new Map(), pages: new Map() }
     : buildBookNumbering(activeBook);
 
-  const menuContainer = document.querySelector('#menu');
+  const menuContainer = document.querySelector('#menu-content');
   menuContainer.innerHTML = `
     <div class="book-selector">
       <label for="bookSelect">View</label>
       <select id="bookSelect" aria-label="Choose a book or show all content"></select>
     </div>
     <div class="menu-controls">
-      <div class="menu-icon-controls" aria-label="Menu display controls">
+      <div class="menu-icon-controls" role="group" aria-label="Menu display controls">
         <button id="expandAll" class="menu-icon-button" type="button" title="Expand all sections" aria-label="Expand all sections">▾▾</button>
         <button id="collapseAll" class="menu-icon-button" type="button" title="Collapse all sections" aria-label="Collapse all sections">▸▸</button>
       </div>
@@ -1098,15 +1116,26 @@ const buildMenu = (chapters) => {
 
   bookSelect.addEventListener('change', () => selectBook(bookSelect.value));
 
+  const setMenuItemExpanded = (li, expanded) => {
+    li.classList.toggle('open', expanded);
+    const toggle = li.querySelector(':scope > .menu-section-toggle');
+    if (toggle) toggle.setAttribute('aria-expanded', String(expanded));
+  };
+
   const addExpandableLabel = (li, label, level) => {
-    const span = document.createElement('span');
-    span.textContent = label;
-    span.style.fontSize = `${1.1 - Math.max(0, level - 1) * 0.1}em`;
-    span.onclick = (e) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'menu-section-toggle';
+    button.textContent = label;
+    button.setAttribute('aria-label', label);
+    button.style.fontSize = `${1.1 - Math.max(0, level - 1) * 0.1}em`;
+    button.setAttribute('aria-expanded', 'false');
+    button.addEventListener('click', (e) => {
       if (e.altKey && e.shiftKey) return;
-      li.classList.toggle('open');
-    };
-    li.appendChild(span);
+      setMenuItemExpanded(li, !li.classList.contains('open'));
+    });
+    li.appendChild(button);
+    return button;
   };
 
   if (!isAllContent) {
@@ -1154,16 +1183,12 @@ const buildMenu = (chapters) => {
         } else {
           Object.entries(item).forEach(([dir, sub]) => {
             const dirPath = `${pathPrefix}${dir}/`;
-            const span = document.createElement('span');
-            span.textContent = prefixNumber(menuNumbering.entries.get(dirPath), dir);
-            span.style.fontSize = `${1 - (level - 1) * 0.1}em`;
-            /*span.onclick = () => li.classList.toggle('open');*/
-			span.onclick = (e) => {
-				// Only toggle submenu if not Alt+Shift+Click
-				if (e.altKey && e.shiftKey) return;
-				li.classList.toggle('open');
-				};
-            li.appendChild(span);
+            const button = addExpandableLabel(
+              li,
+              prefixNumber(menuNumbering.entries.get(dirPath), dir),
+              level
+            );
+            button.style.fontSize = `${1 - (level - 1) * 0.1}em`;
 
             const ul = document.createElement('ul');
             buildList(sub, ul, dirPath, level + 1);
@@ -1181,17 +1206,11 @@ const buildMenu = (chapters) => {
     if (!contents) return;
 
     const li = document.createElement('li');
-    const span = document.createElement('span');
-    span.textContent = prefixNumber(menuNumbering.topLevel.get(sectionName), sectionName);
-    span.style.fontSize = '1.1em';
-    /*span.onclick = () => li.classList.toggle('open');*/
-	span.onclick = (e) => {
-		  // Prevent toggling open if Alt+Shift was used (used for copy)
-		  if (e.altKey && e.shiftKey) return;
-		  li.classList.toggle('open');
-		};
-
-    li.appendChild(span);
+    addExpandableLabel(
+      li,
+      prefixNumber(menuNumbering.topLevel.get(sectionName), sectionName),
+      1
+    );
 
     const ul = document.createElement('ul');
 
@@ -1228,11 +1247,15 @@ const buildMenu = (chapters) => {
   }
 
   menuContainer.querySelector('#expandAll').onclick = () => {
-    document.querySelectorAll('#menu li').forEach((li) => li.classList.add('open'));
+    document.querySelectorAll('#menu li').forEach((li) => {
+      if (li.querySelector(':scope > ul')) setMenuItemExpanded(li, true);
+    });
   };
 
   menuContainer.querySelector('#collapseAll').onclick = () => {
-    document.querySelectorAll('#menu li').forEach((li) => li.classList.remove('open'));
+    document.querySelectorAll('#menu li').forEach((li) => {
+      if (li.querySelector(':scope > ul')) setMenuItemExpanded(li, false);
+    });
   };
 
   updateBookContextNotice(getCurrentPath());
@@ -1390,7 +1413,12 @@ async function loadContent(relativePath) {
       resizeIframe();
       const d = getIframeDocument(iframe);
       const pageTitle = d && d.title;
-      if (pageTitle) document.title = `${pageTitle} | DAIADS`;
+      if (pageTitle) {
+        document.title = `${pageTitle} | DAIADS`;
+        iframe.title = pageTitle;
+        const routeStatus = document.getElementById('route-status');
+        if (routeStatus) routeStatus.textContent = `${pageTitle} loaded`;
+      }
       trackPageView(pageTitle);
       if (d) {
         new MutationObserver(resizeIframe).observe(d.documentElement, {

@@ -27,6 +27,42 @@ body {
   overflow: visible;
 }
 
+.skip-link {
+  position: fixed;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 10000;
+  padding: 0.6rem 0.85rem;
+  border: 2px solid #fff;
+  border-radius: 4px;
+  background: #0f172a;
+  color: #fff !important;
+  font-weight: 700;
+  transform: translateY(-160%);
+  transition: transform 0.15s ease;
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 3px solid #7c3aed;
+  outline-offset: 2px;
+}
+
 /* restore a monospace font for all code or pre */
 code,
 pre {
@@ -130,6 +166,8 @@ body.mainSite #container {
 /* 4) Main content area (iframe) */
 body.mainSite #content {
   flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
   border: 1px solid #ccc;
   box-sizing: border-box;
   overflow: hidden;
@@ -164,11 +202,18 @@ body.mainSite nav#menu li.open > ul {
   display: block;
 }
 
-body.mainSite nav#menu li span {
+body.mainSite nav#menu li > .menu-section-toggle {
   display: flex;
   align-items: flex-start;
   gap: 0.4em;
   width: 100%;
+  border: 0;
+  border-radius: 2px;
+  background: transparent;
+  color: #1e293b;
+  font: inherit;
+  text-align: left;
+  padding: 0;
   cursor: pointer;
 }
 
@@ -177,7 +222,7 @@ body.mainSite nav#menu li ul {
 }
 
 /* base arrow size */
-body.mainSite nav#menu li span::before {
+body.mainSite nav#menu li > .menu-section-toggle::before {
   content: "▶";
   display: inline-block;
   width: 1em;
@@ -190,21 +235,21 @@ body.mainSite nav#menu li span::before {
 }
 
 /* smaller arrows for deeper levels */
-body.mainSite nav#menu ul ul li span::before {
+body.mainSite nav#menu ul ul li > .menu-section-toggle::before {
   font-size: 0.9em;
 }
-body.mainSite nav#menu ul ul ul li span::before {
+body.mainSite nav#menu ul ul ul li > .menu-section-toggle::before {
   font-size: 0.8em;
 }
-body.mainSite nav#menu ul ul ul ul li span::before {
+body.mainSite nav#menu ul ul ul ul li > .menu-section-toggle::before {
   font-size: 0.7em;
 }
 
-body.mainSite nav#menu li.open > span::before {
+body.mainSite nav#menu li.open > .menu-section-toggle::before {
   transform: rotate(90deg);
 }
 
-body.mainSite nav#menu li span:hover {
+body.mainSite nav#menu li > .menu-section-toggle:hover {
   background-color: #94a3b8;
 }
 
@@ -296,7 +341,7 @@ nav#menu .menu-icon-button:hover {
 
 /* Highlight the displayed menu item */
 body.mainSite nav#menu a.active {
-  color: #0366d6;       /* Accent blue */
+  color: #064f91;
   background-color: #cbd5e1;  /* Subtle slate background */
   border-radius: 2px;
   padding: 2px 2px;
@@ -311,7 +356,7 @@ body.mainSite #errorMessage {
 }
 
  a {
-  color: #038c7f;
+  color: #02766b;
   text-decoration: none;
   padding-bottom: 0px;
 }
@@ -346,7 +391,7 @@ a.problem:hover {
 
 /* 9) Resource-list link styling in main content */
 .resource-list a {
-  color: #038c7f;
+  color: #02766b;
   text-decoration: none;
   padding-bottom: 0px;
   /*line-height: 1.75;*/
@@ -400,13 +445,14 @@ a.problem:hover {
   line-height: 1.4;
 
   opacity: 0;
-  pointer-events: none;        /* so hovering the tooltip itself does NOT keep it open */
+  pointer-events: auto;
   transition: opacity 150ms ease-in-out;
   z-index: 999;                /* relative to iframe—parent’s menu lives outside */
 }
 
 /* 3) Show only when hovering the term itself */
-.glossary-term:hover .tooltip-content {
+.glossary-term:hover .tooltip-content,
+.glossary-term.tooltip-open .tooltip-content {
   display: inline-block;
   opacity: 1;
 }
@@ -434,4 +480,67 @@ a.problem:hover {
   color: #333;                  /* darken text so it’s still readable */
   border-radius: 2px;           /* subtle rounding */
   transition: background-color 0.2s ease;
+}
+
+@media (max-width: 700px) {
+  body.mainSite {
+    margin: 0;
+    padding: 0;
+  }
+
+  body.mainSite #pageWrapper {
+    max-width: 100%;
+  }
+
+  body.mainSite header {
+    min-height: 76px;
+    padding-left: 130px !important;
+    padding-right: 8px !important;
+  }
+
+  body.mainSite header h1 {
+    font-size: 1.05rem;
+    color: #fff;
+  }
+
+  #siteLogo {
+    left: 38px !important;
+    width: 84px !important;
+    height: 44px !important;
+  }
+
+  #siteLogo .wordmark {
+    font-size: 1.9rem !important;
+  }
+
+  body.mainSite #container {
+    position: relative;
+    display: block;
+    width: 100%;
+    overflow: visible;
+  }
+
+  body.mainSite nav#menu {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 100;
+    width: min(19rem, calc(100% - 1rem));
+    max-height: calc(100vh - 1rem);
+    border: 1px solid #94a3b8;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.3);
+  }
+
+  #content-wrapper,
+  body.mainSite #content {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }

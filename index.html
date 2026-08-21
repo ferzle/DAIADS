@@ -36,20 +36,19 @@
 /* buttons inherit whatever styles you already had */
 #to-top,
 #to-bottom {
-  background: rgba(0,0,0,0.7);
+  background: #333;
   color: #fff;
   border: none;
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
   font-size: 0.9rem;
   cursor: pointer;
-  opacity: 0.6;
-  transition: opacity 0.2s;
+  transition: background-color 0.2s;
 }
 
 #to-top:hover,
 #to-bottom:hover {
-  opacity: 1;
+  background: #111;
 }
 
 #to-top.hidden,
@@ -57,22 +56,18 @@
   display: none;
 }
 
-#menu.collapsed {
-  display: none;
-}
 header {
   position: relative;
 }
 #hamburger {
-  position: fixed;
-  top: 0.25rem;    /* distance from top */
-  left: var(--hamburger-left, 1rem);
-  
+  position: sticky;
+  top: 0.25rem;
+  width: 1.75rem;
+  min-height: 1.75rem;
+  margin: 0 0 0.5rem 0;
   padding: 0 4px;
   line-height: 1;
-  /*left: 1rem;   */    /* distance from right */
   font-size: 1.2rem;
-  background: transparent;
   border: none;
   cursor: pointer;
   z-index: 1100;
@@ -95,13 +90,25 @@ body.mainSite header {
   text-align: center;
 }
 
-/* Collapse menu when toggled */
-#menu.collapsed {
+/* Keep the menu control available when the table of contents is collapsed. */
+body.mainSite nav#menu.collapsed {
+  display: block;
+  width: 2.5rem;
+  flex: 0 0 2.5rem;
+  padding: 0.25rem;
+  overflow: visible;
+}
+
+#menu.collapsed #menu-content {
   display: none;
 }
 
+#menu.collapsed #hamburger {
+  margin-bottom: 0;
+}
+
 /* Expand iframe to full width when menu is collapsed */
-#container.menu-collapsed #content {
+#container.menu-collapsed #content-wrapper {
   width: 100% !important;
 }
 
@@ -119,6 +126,15 @@ body.mainSite header {
 /* Iframe content */
 #content {
   flex: 1;
+  width: 100%;
+  min-width: 0;
+}
+
+#content-wrapper {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
 }
 /*-----------------------------------------------------------------------*/
 /* LOGO STUFF */
@@ -159,36 +175,42 @@ body.mainSite header {
 </style>
 </head>
 <body class="mainSite">
+  <a class="skip-link" href="#content-wrapper">Skip to main content</a>
+  <p id="route-status" class="visually-hidden" aria-live="polite"></p>
   <div id="pageWrapper">
     <header>
-    <div id="siteLogo">
+<div id="siteLogo" aria-hidden="true">
   <div class="wordmark"><span class="g">D</span><span class="g">A</span><span class="g">I</span><span class="y">A</span><span class="r">D</span><span class="r">S</span></div>
 </div>
       <div class="headerText">
 	      <h1>Design, Analysis, and Implementation of <br>Algorithms and Data Structures</h1>
       </div>
-
-
-
-    <button id="hamburger" aria-label="Toggle menu">&equiv;</button>
     </header>
 
     <div id="container">
 
-      <nav id="menu">
-      <ul></ul>
+      <nav id="menu" aria-label="Table of contents">
+        <button id="hamburger" type="button" aria-label="Hide table of contents"
+                aria-controls="menu-content" aria-expanded="true">&equiv;</button>
+        <div id="menu-content">
+          <ul></ul>
+        </div>
       </nav>
-      <iframe
-          id="content"
-          src=""
-          frameborder="0"
-          allow="fullscreen"
-          scrolling="no"
-          >
-      </iframe>
-        <div id="errorMessage" 
-             class="error" 
+      <main id="content-wrapper" tabindex="-1">
+        <iframe
+            id="content"
+            src=""
+            title="Lesson content"
+            frameborder="0"
+            allow="fullscreen"
+            scrolling="no"
+            >
+        </iframe>
+        <div id="errorMessage"
+             class="error"
+             role="alert"
              style="display:none;">Error loading content: Page not found.</div>
+      </main>
         </div>
   </div>
 
@@ -202,13 +224,16 @@ body.mainSite header {
   const toTop    = document.getElementById('to-top');
   const toBottom = document.getElementById('to-bottom');
 
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const scrollBehavior = () => prefersReducedMotion.matches ? 'auto' : 'smooth';
+
   // scroll actions
   toTop.addEventListener('click', () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: scrollBehavior() });
   });
   toBottom.addEventListener('click', () => {
     window.scrollTo({ top: document.documentElement.scrollHeight,
-                      behavior: 'smooth' });
+                      behavior: scrollBehavior() });
   });
 const HIDE_THRESHOLD = 100;  // px from top/bottom
 
@@ -225,44 +250,31 @@ window.addEventListener('scroll', () => {
   const nearBottom = innerH + scrollY >= docHeight - HIDE_THRESHOLD;
   toBottom.classList.toggle('hidden', nearBottom);
 });
-  document.getElementById('hamburger').addEventListener('click', () => {
+  const hamburger = document.getElementById('hamburger');
+  const setMenuCollapsed = (collapsed) => {
     const menu = document.getElementById('menu');
     const container = document.getElementById('container');
-    menu.classList.toggle('collapsed');
-    container.classList.toggle('menu-collapsed');
-  });
- 
- function updateHamburgerPosition() {
-  const wrapper = document.getElementById('pageWrapper');
-  const style = document.documentElement.style;
-  const padding = 4; // 1rem = 16px
-
-  if (!wrapper) return;
-
-  const rect = wrapper.getBoundingClientRect();
-  const leftOffset = Math.max(rect.left + padding, 8);
-
-  style.setProperty('--hamburger-left', `${leftOffset}px`);
-}
-
-// Always update on resize
-window.addEventListener('resize', updateHamburgerPosition);
-
-// On full load, wait for layout & fonts
-window.addEventListener('load', () => {
-  const runUpdate = () => {
-    requestAnimationFrame(() => {
-      updateHamburgerPosition();
-      setTimeout(updateHamburgerPosition, 50); // Just in case layout shifts again
-    });
+    menu.classList.toggle('collapsed', collapsed);
+    container.classList.toggle('menu-collapsed', collapsed);
+    hamburger.setAttribute('aria-expanded', String(!collapsed));
+    hamburger.setAttribute('aria-label', collapsed
+      ? 'Show table of contents'
+      : 'Hide table of contents');
   };
 
-  if (document.fonts && document.fonts.ready) {
-    document.fonts.ready.then(runUpdate);
-  } else {
-    runUpdate(); // Fallback if fonts not supported
+  hamburger.addEventListener('click', () => {
+    setMenuCollapsed(!document.getElementById('menu').classList.contains('collapsed'));
+  });
+
+  if (window.matchMedia('(max-width: 700px)').matches) {
+    setMenuCollapsed(true);
   }
-});
+
+  document.querySelector('.skip-link').addEventListener('click', event => {
+    event.preventDefault();
+    const main = document.getElementById('content-wrapper');
+    main.focus();
+  });
 </script>
 <!-- Cloudflare Web Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "c3f956e7631f4157896a46121c04d295"}'></script><!-- End Cloudflare Web Analytics -->
 </body>

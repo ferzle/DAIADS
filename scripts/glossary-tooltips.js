@@ -162,6 +162,7 @@ function buildAndWrap() {
   // Collect text nodes
   const walker = document.createTreeWalker(rootEl, NodeFilter.SHOW_TEXT, { acceptNode }, false);
   const textNodes = [];
+  let tooltipIdCounter = 0;
   let node;
   while ((node = walker.nextNode())) textNodes.push(node);
 
@@ -202,10 +203,14 @@ function buildAndWrap() {
       span.className = "glossary-term";
       span.style.whiteSpace = "nowrap";
       span.setAttribute("data-term", canonical);
+      span.tabIndex = 0;
       span.textContent = matchText;
 
       const tip = document.createElement("span");
       tip.className = "tooltip-content";
+      tip.id = `glossary-tooltip-${++tooltipIdCounter}`;
+      tip.setAttribute("role", "tooltip");
+      span.setAttribute("aria-describedby", tip.id);
       /*tip.textContent = definition;*/
       tip.innerHTML = definition;
       tip.style.display = "none";
@@ -213,17 +218,35 @@ function buildAndWrap() {
       span.appendChild(tip);
 
       let hoverTimeout;
+      const openTooltip = (x, y) => {
+        span.classList.add('highlighted', 'tooltip-open');
+        positionTooltipAt(x, y, tip);
+      };
+      const closeTooltip = () => {
+        span.classList.remove('highlighted', 'tooltip-open');
+        tip.style.display = 'none';
+        clearTimeout(hoverTimeout);
+        tip.classList.remove("to-right", "to-left", "to-center");
+      };
+
       span.addEventListener("mouseenter", evt => {
         span.classList.add('highlighted');
         hoverTimeout = setTimeout(() => {
-          positionTooltipAt(evt.clientX, evt.clientY, tip);
+          openTooltip(evt.clientX, evt.clientY);
         }, 1000);
       });
-      span.addEventListener("mouseleave", () => {
-        span.classList.remove('highlighted');
-        tip.style.display = 'none';
-        clearTimeout(hoverTimeout);
-        tip.classList.remove("to-right","to-left","to-center");
+      span.addEventListener("mouseleave", closeTooltip);
+      span.addEventListener("focus", () => {
+        const rect = span.getBoundingClientRect();
+        openTooltip(rect.left + rect.width / 2, rect.bottom);
+      });
+      span.addEventListener("focusout", event => {
+        if (!span.contains(event.relatedTarget)) closeTooltip();
+      });
+      span.addEventListener("keydown", event => {
+        if (event.key !== 'Escape') return;
+        event.preventDefault();
+        closeTooltip();
       });
 
       frag.appendChild(span);
