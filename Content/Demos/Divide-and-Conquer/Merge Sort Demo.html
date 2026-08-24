@@ -9,16 +9,31 @@
   <link rel="stylesheet" href="/DAIADS/css/demo.css">
   <title>Merge Sort Demo</title>
   <style>
-    .array-container { margin-bottom: 10px; }
+    .array-container {
+      margin-bottom: 10px;
+      max-width: 100%;
+      overflow-x: auto;
+    }
     .left { background-color: #ffcc00; }
     .right { background-color: #1f77b4; }
     .compare { background: #f99; }
     .merged { background: #9f9; }
-	.element { margin: 6px; }
-    .active-subarray { background-color: #FF9C00; border-radius: 4px; padding: 4px; gap: 0px; }
+	.element {
+      margin: 0;
+    }
+    .active-subarray {
+      background-color: #FF9C00;
+      border-radius: 4px;
+      padding: 0;
+      gap: 2px;
+      outline: 3px solid #FF9C00;
+      outline-offset: 2px;
+      position: relative;
+      z-index: 1;
+    }
 	
 #aux-container > .element:first-child {
-  border-left-width: 9px;
+  border-left-width: 2px;
 }
 
     #aux-label, #main-label, #other-label { font-weight: bold; margin-bottom: 8px; }
@@ -59,8 +74,10 @@
 #aux-arrow2 {
   position: absolute;
   font-size: 18px;
+  line-height: 1;
   color: #333;
   pointer-events: none;
+  transform: translateX(-50%);
   visibility: hidden;
 }
 
@@ -68,8 +85,10 @@
 #aux-arrow {
   position: absolute;
   font-size: 18px;
+  line-height: 1;
   color: #333;
   pointer-events: none;
+  transform: translateX(-50%);
   visibility: hidden;    /* start hidden until first compare */
 }
 
@@ -78,9 +97,23 @@
 }
 	.auxElem{
 	margin:0;
-	border-width: 13px;
-  box-sizing: content-box;
+	border-width: 2px;
+  box-sizing: border-box;
+	flex: 0 1 40px;
+	min-width: 28px;
+	width: 40px;
+	height: auto;
+	aspect-ratio: 1 / 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	line-height: normal;
 	}
+
+    #visualization,
+    #aux-container {
+      gap: 2px;
+    }
 	
 	.hidden{
 		background-color:transparent;
@@ -88,21 +121,73 @@
 		color:transparent
 	}
 	
-.array-container .element-wrapper {
+    .array-container .element-wrapper {
       /* stack vertically as you already have */
       display: flex;
       flex-direction: column;
       align-items: center;
-      margin-right: 4px;
+      margin-right: 0;
     
       /* NEW: ideal width = 40px, no grow, can shrink */
       flex: 0 1 40px;
+      min-width: 28px;
       box-sizing: border-box;   /* so padding/margin don’t bust the math */
     }
     .array-container .element-wrapper .element {
       width: 100%;
       aspect-ratio: 1 / 1;     /* keep it square */
       height: auto;
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: normal;
+    }
+
+    #subarrays > .array-container {
+      gap: 2px;
+      margin: 4px 0;
+      width: max-content;
+      max-width: none;
+      overflow: visible;
+      padding-bottom: 0.25em;
+    }
+
+    #subarrays {
+      display: block;
+      width: 100%;
+      max-width: 100%;
+      overflow-x: auto;
+      overflow-y: hidden;
+      box-sizing: border-box;
+      padding-left: 6px;
+      container-type: inline-size;
+      --merge-array-length: 16;
+      --conceptual-cell-size: clamp(
+        28px,
+        calc((100cqw - 32px) / var(--merge-array-length)),
+        40px
+      );
+    }
+
+    #subarrays .array-container .array-container {
+      gap: 2px;
+      margin: 0;
+      max-width: none;
+      overflow: visible;
+    }
+
+    #subarrays .element {
+      flex: 0 0 var(--conceptual-cell-size);
+      min-width: var(--conceptual-cell-size);
+      width: var(--conceptual-cell-size);
+      height: auto;
+      aspect-ratio: 1 / 1;
+      box-sizing: border-box;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: normal;
     }
   </style>
 </head>
@@ -138,9 +223,10 @@
   <div class="array-container" id="visualization"></div>
   
   <br><strong>Auxiliary Array:</strong>
-  <div id="aux-container" class="array-container" style="height: 80px;"></div>
-  <div id="aux-arrow"><b>↑<br>i</b></div>
-  <div id="aux-arrow2"><b>↑<br>j</b></div>
+  <div id="aux-container" class="array-container" style="height: 80px;">
+    <div id="aux-arrow"><b>↑<br>i</b></div>
+    <div id="aux-arrow2"><b>↑<br>j</b></div>
+  </div>
   <br><strong>Conceptual Arrays (these don't really exist):</strong>
   <div id="subarrays"></div>
   <div id="description">Press "Next" to begin.</div>
@@ -222,7 +308,8 @@
     };
     window.setupAux = function(original,n){
       const aux=document.getElementById('aux-container');
-	  aux.innerHTML='';
+	  const pointers = [document.getElementById('aux-arrow'), document.getElementById('aux-arrow2')];
+	  aux.replaceChildren();
 	  aux.classList.add('tight');
       original.forEach(v=>{const el=document.createElement('div');
 	  el.className='element';
@@ -230,6 +317,7 @@
 	  el.classList.add('auxElem');
 	  el.classList.add('hidden');
 	  });
+	  pointers.forEach(pointer => aux.appendChild(pointer));
     
   const oldBox = aux.querySelector('.aux-segment-box');
   if (oldBox) {
@@ -243,12 +331,17 @@
   
 }
     window.renderStep = function(steps,idx,original){
-      const main=document.getElementById('visualization'),
+	  const main=document.getElementById('visualization'),
 	  aux=document.getElementById('aux-container'),
 	  sub=document.getElementById('subarrays'),
 	  desc=document.getElementById('description');
+	  sub.style.setProperty('--merge-array-length', original.length);
 	  arrow = document.getElementById('aux-arrow');
 	  arrow2= document.getElementById('aux-arrow2');	  
+	  const positionAuxPointer = (pointer, cell) => {
+	    pointer.style.left = `${cell.offsetLeft + cell.offsetWidth / 2}px`;
+	    pointer.style.top = `${cell.offsetTop + cell.offsetHeight + 2}px`;
+	  };
       main.innerHTML=''; 
 	  sub.innerHTML=''; 
 	  window.setupAux(original,original.length);
@@ -404,22 +497,14 @@ arrow2.style.visibility = 'visible';
   desc.textContent = `Compare ${st.valueL} & ${st.valueR}`;
 
   // 2) compute container metrics once
-  const auxRect = aux.getBoundingClientRect();
-
   // ▶ arrow 1 under st.idxL
-  const cell1   = aux.children[st.idxL].getBoundingClientRect();
-  const left1   = cell1.left + cell1.width/2 - auxRect.left + 10;
-  const top1    = cell1.bottom - auxRect.top  + 350;
-  arrow.style.left       = `${left1}px`;
-  arrow.style.top        = `${top1}px`;
+  const cell1 = aux.children[st.idxL];
+  positionAuxPointer(arrow, cell1);
   arrow.style.visibility = 'visible';
 
   // ▶ arrow2 under st.idxR
-  const cell2   = aux.children[st.idxR].getBoundingClientRect();
-  const left2   = cell2.left + cell2.width/2 - auxRect.left + 10;
-  const top2    = cell2.bottom - auxRect.top  + 350;
-  arrow2.style.left       = `${left2}px`;
-  arrow2.style.top        = `${top2}px`;
+  const cell2 = aux.children[st.idxR];
+  positionAuxPointer(arrow2, cell2);
   arrow2.style.visibility = 'visible';
 
   break;
@@ -434,15 +519,8 @@ arrow2.style.visibility = 'visible';
     desc.textContent = `Placed ${st.newValue} at index ${st.k}, j will increment`;
     break;
 case 'placeLeftRemainder': {
- const auxRect  = aux.getBoundingClientRect();
-const cell     = aux.children[st.idxL];
-
-    const cellRect = cell.getBoundingClientRect();
-    const left = cellRect.left + cellRect.width/2 - auxRect.left +10;
-    const top  = cellRect.bottom - auxRect.top + 350;
-
-    arrow.style.left       = `${left}px`;
-    arrow.style.top        = `${top}px`;
+    const cell = aux.children[st.idxL];
+    positionAuxPointer(arrow, cell);
     arrow.style.visibility = 'visible';
 
     desc.textContent = `No right subarray elements remaining. Placed ${st.newValue} at index ${st.k}`;
@@ -453,14 +531,8 @@ const cell     = aux.children[st.idxL];
 
 
   case 'placeRightRemainder': {
-    const auxRect  = aux.getBoundingClientRect();
-    const cell     = aux.children[st.k];
-    const cellRect = cell.getBoundingClientRect();
-    const left = cellRect.left + cellRect.width/2 - auxRect.left +10;
-    const top  = cellRect.bottom - auxRect.top + 350;
-
-    arrow2.style.left       = `${left}px`;
-    arrow2.style.top        = `${top}px`;
+    const cell = aux.children[st.k];
+    positionAuxPointer(arrow2, cell);
     arrow2.style.visibility = 'visible';
 
     desc.textContent = `No left subarray elements remaining. Placed ${st.newValue} at index ${st.k}`;

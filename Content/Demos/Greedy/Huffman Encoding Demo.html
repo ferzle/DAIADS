@@ -7,7 +7,6 @@
   <script src="/DAIADS/scripts/demoScripts.js"></script>
   <link rel="stylesheet" href="/DAIADS/css/style.css">
   <link rel="stylesheet" href="/DAIADS/css/demo.css">
-</head>
 <style>
   #output {
     padding: 1em;
@@ -16,14 +15,17 @@
     min-height: 60px;
     white-space: pre-wrap;
     width: 100%;        /* fill container, avoid horizontal overflow in iframe */
+    box-sizing: border-box;
     overflow: auto;     /* allow scrolling when content is long */
     max-height: 32vh;   /* prevent the text from crowding out the graph */
   }
 
-  button {
-    margin: 0.5em;
-    padding: 0.5em 1em;
+  #inputText {
+    width: clamp(12rem, 60vw, 400px);
+    max-width: calc(100% - 10px);
+    box-sizing: border-box;
   }
+
   svg {
     width: 100%;
   }
@@ -52,51 +54,47 @@
     /* Let it participate in normal flow so iframe height matches content */
     overflow-x: auto;
     width: 100%;
+    box-sizing: border-box;
   }
-
-  /* New Play/Pause + Speed styles */
-  #play   { margin-left: 0.5em; }
-  #speed  { margin-left: 0.25em; }
-  #scaleVal { margin-left: 0.25em; }
-  #zoomOut, #zoomIn { margin-left: 0.25em; padding: 0.2em 0.5em; }
-  #allowFlips { margin-left: 0.75em; }
 </style>
+</head>
 <body class = "no-tooltips">
 
 <h2>Huffman Encoding Demo</h2>
 
-<p>Enter text to encode:</p>
-<label for="inputText" class="sr-only">Text to encode</label>
-<input type="text" id="inputText"
-       value="This is a sample string. Change if you want to."
-       style="width:400px;" />
-<button onclick="startVisualization()">Start</button>
-<br>
-<button onclick="prevStep()">Previous</button>
-<button onclick="nextStep()">Next</button>
+<div id="controls">
+  <label for="inputText">Text to encode:</label>
+  <input type="text" id="inputText"
+         value="This is a sample string. Change if you want to." />
+  <button onclick="startVisualization()">Start</button>
+</div>
 
-<!-- Added Play/Pause button and Speed dropdown below: -->
-<button id="play">Play</button>
-<label for="speed">Speed:</label>
-<select id="speed">
-  <option value="1">1×</option>
-  <option value="2">2×</option>
-  <option value="4">4×</option>
-  <option value="8">8×</option>
-  <option value="16">16×</option>
-</select>
-&nbsp; &nbsp; 
-<label>Scale:</label>
-<span id="scaleVal">1.0×</span>
-<button id="zoomOut" title="Zoom out">−</button>
-<button id="zoomIn" title="Zoom in">+</button>
-<button id="toggleDetails" title="Show/Hide details">Hide Details</button>
-<label for="allowFlips" id="allowFlipsLabel">Allow flips</label>
-<input type="checkbox" id="allowFlips" />
+<div id="buttons">
+  <button onclick="prevStep()">Previous</button>
+  <button onclick="nextStep()">Next</button>
+  <button id="play">Play</button>
+  <label for="speed">Speed:</label>
+  <select id="speed">
+    <option value="1">1×</option>
+    <option value="2">2×</option>
+    <option value="4">4×</option>
+    <option value="8">8×</option>
+    <option value="16">16×</option>
+  </select>
+  <span>Scale:</span>
+  <span id="scaleVal">1.0×</span>
+  <button id="zoomOut" title="Zoom out" aria-label="Zoom out">−</button>
+  <button id="zoomIn" title="Zoom in" aria-label="Zoom in">+</button>
+  <button id="toggleDetails" title="Show/Hide details">Hide Details</button>
+</div>
 
 <div id="output">Click "Start" to begin.</div>
 
 <h3>Priority Queue (Tree Forest)</h3>
+<p id="treeInteractionHint">
+  When the Huffman tree is complete, click any node to mirror its subtree.
+  The bit patterns will change, but the encoded length will remain the same.
+</p>
 <div id="queue-container">
   <svg id="queue-svg" style="width: 100%;"></svg>
 </div>
@@ -304,9 +302,8 @@
     const minLeftX = leftXs.length ? Math.min(...leftXs) : margin;
     const shiftRight = Math.max(0, margin - minLeftX);
 
-    // Decide if we enable flipping for this view: only final step (single tree) and checkbox checked
-    const allowFlipsChecked = document.getElementById('allowFlips')?.checked;
-    flipEnabledForThisView = !!(allowFlipsChecked && (queue.length === 1) && labelEdges);
+    // Subtree mirroring is available only for the final, edge-labeled tree.
+    flipEnabledForThisView = !!((queue.length === 1) && labelEdges);
     if (flipEnabledForThisView) {
       if (!interactiveRoot) interactiveRoot = deepCopy(queue[0]);
       queue = [interactiveRoot];
@@ -553,11 +550,6 @@
   });
   zoomInBtn.addEventListener('click', () => {
     setScale((Math.round((vizScale + SCALE_STEP) * 10) / 10));
-  });
-
-  // Flip support: re-render when checkbox toggled
-  document.getElementById('allowFlips').addEventListener('change', () => {
-    redrawCurrent();
   });
 
   function flipSubtree(node) {

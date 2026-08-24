@@ -8,6 +8,11 @@
   <link rel="stylesheet" href="/DAIADS/css/style.css">
   <link rel="stylesheet" href="/DAIADS/css/demo.css">
   <style>
+    :root {
+      --quick-cell-size: clamp(26px, 7vw, 32px);
+      --quick-cell-gap: clamp(2px, 1vw, 4px);
+    }
+
     .element-wrapper {
       display: flex;
       flex-direction: column;
@@ -19,24 +24,61 @@
       color: #555;
     }
 
-    .subarray-container { display: flex; flex-direction: column; gap: 10px; margin-top: 5px; }
+    .subarray-container {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 5px;
+      max-width: 100%;
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding-bottom: 12px;
+    }
     .subarray-row {
       display: flex;
-      gap: 10px;
+      gap: var(--quick-cell-gap);
       position: relative;
-      min-height: 80px;      /* extra space for arrows underneath */
+      min-height: 92px;      /* room for the cells, arrows, and labels */
+      width: max-content;
+      min-width: 0;
+    }
+    #boxes > .subarray-row,
+    #subarrays > .subarray-row {
+      min-width: 100%;
     }
     .element-wrapper {
-      display: flex; flex-direction: column; align-items: center;
+      display: flex;
+      flex: 0 0 var(--quick-cell-size);
+      flex-direction: column;
+      align-items: center;
+      position: relative;
     }
     .element {
-      width: 40px; height: 40px;
+      width: var(--quick-cell-size);
+      height: var(--quick-cell-size);
+      box-sizing: border-box;
       display: flex; justify-content: center; align-items: center;
       border: 1px solid #000;
       background: white;
     }
+    .subarray-row > .element,
+    .subarray-cell {
+      flex: 0 0 var(--quick-cell-size);
+      width: var(--quick-cell-size);
+      height: var(--quick-cell-size);
+      box-sizing: border-box;
+    }
+    .subarray-cell:not(.blank) {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #000;
+      background: white;
+    }
     .arrow {
-      top: 40px;
+      top: var(--quick-cell-size);
+      left: 0;
+      width: 100%;
       margin-top: 4px;
       text-align: center;
       line-height: 1.2;
@@ -44,7 +86,32 @@
     .step-comment { margin-top: 30px; font-style: italic; }
     .dynamic-group, .static-group { padding-top: 5px; }
     /* Adjust margins for headers and containers */
-    .array-container { display: flex; gap: 10px; margin-top: 10px; margin-bottom: 10px; }
+    .array-container {
+      display: flex;
+      gap: var(--quick-cell-gap);
+      margin-top: 10px;
+      margin-bottom: 10px;
+      max-width: 100%;
+      overflow-x: auto;
+    }
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+    .legend-item {
+      display: inline-flex;
+      flex: 0 0 auto;
+      align-items: center;
+      gap: 0.25rem;
+      white-space: nowrap;
+    }
+    .legend-item .legend-box {
+      flex: 0 0 auto;
+      margin-left: 0;
+    }
     h3 { margin: 5px 0; }
   </style>
 </head>
@@ -75,13 +142,13 @@
 
   <div class="legend">
     <b>Legend:</b>
-    <span class="legend-box" style="background-color: lightgreen;"></span> Pivot
-    <span class="legend-box" style="background-color: orange;"></span> ≤ pivot
-    <span class="legend-box" style="background-color: #1e90ff;"></span> &gt; pivot
-    <span class="legend-box" style="background-color: #ff7f7f;"></span> Comparing
-    <span class="legend-box" style="background-color: yellow;"></span> Swapping
-    <span class="legend-box" style="background-color: white;"></span> Unpartitioned
-    <span class="legend-box" style="background-color: #b579ee;"></span> Sorted
+    <span class="legend-item"><span class="legend-box" style="background-color: lightgreen;"></span> Pivot</span>
+    <span class="legend-item"><span class="legend-box" style="background-color: orange;"></span> ≤ pivot</span>
+    <span class="legend-item"><span class="legend-box" style="background-color: #1e90ff;"></span> &gt; pivot</span>
+    <span class="legend-item"><span class="legend-box" style="background-color: #ff7f7f;"></span> Comparing</span>
+    <span class="legend-item"><span class="legend-box" style="background-color: yellow;"></span> Swapping</span>
+    <span class="legend-item"><span class="legend-box" style="background-color: white;"></span> Unpartitioned</span>
+    <span class="legend-item"><span class="legend-box" style="background-color: #b579ee;"></span> Sorted</span>
   </div>
 
   <!-- Header for main array -->

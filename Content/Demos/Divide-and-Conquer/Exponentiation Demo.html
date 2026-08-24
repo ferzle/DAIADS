@@ -67,7 +67,9 @@
       margin-top: 10px;
       font-family: sans-serif;
       font-style: italic;
-      height: 20px;
+      min-height: 20px;
+      height: auto;
+      overflow-wrap: anywhere;
     }
 
     @keyframes bubbleUp {
@@ -100,6 +102,15 @@
   fill: lightgreen;
   stroke: #666;
   stroke-width: 1.5px;
+}
+
+#svg {
+  display: block;
+  width: 100%;
+  max-width: 900px;
+  height: auto;
+  margin: 0;
+  overflow: visible;
 }
   </style>
 </head>
@@ -166,10 +177,8 @@
   <!-- SVG container for drawing the recursion tree -->
   <svg
     id="svg"
-    width="600"
-    height="400"
+    viewBox="-25 0 650 270"
     preserveAspectRatio="xMinYMin meet"
-    style="display: block; margin: 0; overflow: visible;"
   >
     <g id="linkLayer"></g>
     <g id="nodeLayer"></g>
@@ -596,6 +605,16 @@ function animateBubbleStep(event) {
       const linkLayer = document.getElementById('linkLayer');
       const nodeLayer = document.getElementById('nodeLayer');
 
+      // Scale the logical tree into the available width. Use the finished
+      // tree depth when available so the SVG height stays stable between steps.
+      const completeNodes = buildExpSteps.nodes || nodes;
+      const maxDepth = completeNodes.reduce((depth, node) => Math.max(depth, node.path.length), 0);
+      const padding = settings.circleR + 5;
+      const logicalWidth = settings.hSpread * 2 + padding * 2;
+      const logicalHeight = Math.max(100, maxDepth * levelVGap + 40 + settings.circleR + 10);
+      svg.setAttribute('viewBox', `${-padding} 0 ${logicalWidth} ${logicalHeight}`);
+      svg.style.aspectRatio = `${logicalWidth} / ${logicalHeight}`;
+
       // Clear previous drawing
       linkLayer.innerHTML = '';
       nodeLayer.innerHTML = '';
@@ -803,8 +822,6 @@ slider.addEventListener('input', e => {
   </script>
 </body>
 </html>
-
-
 
 
 

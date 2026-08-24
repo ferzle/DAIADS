@@ -44,6 +44,25 @@
       font-weight: bold;
       margin-bottom: 5px;
     }
+    .coin-arrays-scroll {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: auto;
+      overflow-y: hidden;
+      box-sizing: border-box;
+      container-type: inline-size;
+      --coin-count: 10;
+      --coin-cell-size: clamp(
+        28px,
+        calc((100cqw - 38px) / var(--coin-count)),
+        40px
+      );
+    }
+    .array-section {
+      width: max-content;
+      max-width: none;
+      overflow: visible;
+    }
     .pointer-row {
       display: flex;
       justify-content: center;
@@ -58,6 +77,9 @@
     }
     .array-container {
       margin: 10px 0 60px;
+      gap: 2px;
+      width: max-content;
+      min-width: 100%;
     }
     .f-array-container {
       display: flex;
@@ -66,6 +88,9 @@
       font-size: 18px;
       position: relative;
       margin: 10px 0 20px;
+      gap: 2px;
+      width: max-content;
+      min-width: 100%;
     }
     /* index wrapper styles, from Merge Sort Demo :contentReference[oaicite:0]{index=0} */
     .element-wrapper {
@@ -83,32 +108,38 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      margin-right: 4px;
+      margin-right: 0;
     
       /* NEW: ideal width = 40px, no grow, can shrink */
-      flex: 0 1 40px;
+      flex: 0 0 var(--coin-cell-size);
+      min-width: var(--coin-cell-size);
+      width: var(--coin-cell-size);
       box-sizing: border-box;   /* so padding/margin don’t bust the math */
     }
     .array-container .element-wrapper .element {
       width: 100%;
       aspect-ratio: 1 / 1;     /* keep it square */
       height: auto;
+      box-sizing: border-box;
     }
     .f-array-container .element-wrapper {
       /* stack vertically as you already have */
       display: flex;
       flex-direction: column;
       align-items: center;
-      margin-right: 4px;
+      margin-right: 0;
     
       /* NEW: ideal width = 40px, no grow, can shrink */
-      flex: 0 1 40px;
+      flex: 0 0 var(--coin-cell-size);
+      min-width: var(--coin-cell-size);
+      width: var(--coin-cell-size);
       box-sizing: border-box;   /* so padding/margin don’t bust the math */
     }
     .f-array-container .element-wrapper .element {
       width: 100%;
       aspect-ratio: 1 / 1;     /* keep it square */
       height: auto;
+      box-sizing: border-box;
     }
     
   </style>
@@ -140,15 +171,17 @@
     </select>
   </div>
 
-  <div class="array-section">
-    <div class="array-label" style="margin-top: 10px;">C (Coin array)</div>
-    <div class="array-container" id="arrayContainer"></div>
-    <!-- ↓ one flex row of “pointer” slots under each box -->
-    <div class="pointer-row" id="inputPointerRow"></div>
-  </div>
-  <div class="array-section">
-    <div class="array-label">M (Dynamic Programming array)</div>
-    <div class="f-array-container" id="dpContainer"></div>
+  <div class="coin-arrays-scroll">
+    <div class="array-section">
+      <div class="array-label" style="margin-top: 10px;">C (Coin array)</div>
+      <div class="array-container" id="arrayContainer"></div>
+      <!-- ↓ one flex row of “pointer” slots under each box -->
+      <div class="pointer-row" id="inputPointerRow"></div>
+    </div>
+    <div class="array-section">
+      <div class="array-label">M (Dynamic Programming array)</div>
+      <div class="f-array-container" id="dpContainer"></div>
+    </div>
   </div>
   <div id="stepInfo" style="margin-top: 10px; margin-bottom: 10px;"></div>
 
@@ -354,6 +387,8 @@
       }
 
       // 3) Render input‐row
+      document.querySelector('.coin-arrays-scroll')
+        .style.setProperty('--coin-count', arr.length);
       const arrayC = document.getElementById('arrayContainer');
       arrayC.innerHTML = '';
       arr.forEach((val, j) => {

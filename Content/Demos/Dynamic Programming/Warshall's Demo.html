@@ -11,21 +11,24 @@
 
   <style>
     /* Minimal demo-specific styles; avoid overriding shared css */
-    .demo-content { display: flex; gap: 1em; align-items: flex-start; }
-    .graph-panel { flex: 1 1 auto; min-width: 220px; }
-    .matrix-panel { flex: 0 0 auto; min-width: 220px; }
+    .demo-content { display: flex; flex-wrap: wrap; gap: 1em; align-items: flex-start; justify-content: flex-start; }
+    .graph-panel { flex: 1 1 420px; min-width: min(100%, 280px); }
+    .matrix-panel { flex: 1 1 360px; min-width: min(100%, 280px); }
     .graph-panel svg {
       background: #fff;
-      border: 1px solid #ccc;
-      width: 100%;              /* fill available width */
+      border: 3px solid #b8b8b8;
+      border-radius: 6px;
+      width: min(100%, 400px);   /* grow with its panel, up to a useful maximum */
       aspect-ratio: 1 / 1;      /* keep square */
       height: auto;             /* derive from aspect ratio */
       display: block;
+      margin: 0;
+      box-sizing: border-box;
     }
 
     /* Matrix layout and highlighting */
-    .matrix-panel { display: flex; flex-direction: column; align-items: center; }
-    .matrix-panel .matrix-container { display: grid; gap: 4px; padding: 6px; border-radius: 6px; background: transparent; }
+    .matrix-panel { display: flex; flex-direction: column; align-items: flex-start; }
+    .matrix-panel .matrix-container { display: grid; gap: 4px; padding: 6px; border-radius: 6px; background: transparent; max-width: 100%; overflow-x: auto; box-sizing: border-box; }
     #matrix-r.matrix-container { position: relative; background: transparent; margin-top: 0.5em; }
     #matrix-r.matrix-container::before {
       content: '';
@@ -49,9 +52,23 @@
     .matrix-index { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; font-family: monospace; background: transparent; border: none; pointer-events: none; font-size: 1.0em; }
 
     /* Comment formatting tokens */
-    .comment-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-    .comment { margin-top: 0.25em; min-height: 5em; text-align: left; flex: 1; }
-    .comment-opt { white-space: nowrap; font-size: 0.95em; }
+    .comment-row { display: flex; flex-wrap: wrap; align-items: flex-start; width: 100%; gap: 12px; }
+    .comment { margin-top: 0.25em; min-height: 3em; min-width: 0; width: 100%; text-align: left; flex: 1 1 100%; overflow-wrap: anywhere; }
+    .comment-opt { white-space: normal; font-size: 0.95em; }
+    .original-toggle { display: block; margin-top: 0.75em; }
+    .demo-container > .legend {
+      display: block;
+      width: 100%;
+      max-width: 100%;
+      border: 1px solid #333;
+      box-sizing: border-box;
+      overflow-wrap: anywhere;
+    }
+    .demo-container > .legend .legend-items {
+      display: block;
+      min-width: 0;
+      line-height: 1.6;
+    }
     /* layout slider removed */
     .t-old { font-weight: 600; }
     .t-new { font-weight: 700; color: #333; }
@@ -125,17 +142,6 @@
     </svg> adding
     <br>
   </div>
-</div>
-
-    <!-- Comment Row with option on the right -->
-    <div class="comment-row">
-      <div id="comment" class="comment">Initialize to begin...</div>
-      <label class="comment-opt">
-        <input id="only-original" type="checkbox"> Show only original edges
-      </label>
-    </div>
-  </div>
-
     <!-- Demo Panels -->
     <div class="demo-content">
       <!-- Graph View -->
@@ -205,6 +211,9 @@
 
         <!-- everything else will be drawn by JS -->
       </svg>
+      <label class="comment-opt original-toggle">
+        <input id="only-original" type="checkbox"> Show only original edges
+      </label>
     </div>
 
 
@@ -214,6 +223,12 @@
         <div id="matrix-r" class="matrix-container"></div>
       </div>
     </div>
+
+    <!-- Full-width commentary below both visual panels -->
+    <div class="comment-row">
+      <div id="comment" class="comment">Initialize to begin...</div>
+    </div>
+  </div>
 
 
   <script>

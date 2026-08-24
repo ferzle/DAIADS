@@ -13,18 +13,19 @@
       flex-direction: column;
       align-items: center;
       gap: 2px;               /* ← space between the number box and index */
+      position: relative;
     }
     .element-index {
       font-size: 0.9em;
       color: #555;
     }
 
-    .subarray-container { display: flex; flex-direction: column; gap: 10px; margin-top: 5px; }
+    .subarray-container { display: flex; flex-direction: column; gap: 10px; margin-top: 5px; max-width: 100%; overflow-x: hidden; overflow-y: hidden; }
     .subarray-row {
       display: flex;
-      gap: 10px;
+      gap: 2px;
       position: relative;
-      min-height: 80px;      /* extra space for arrows underneath */
+      min-height: 96px;      /* room for two-line pointer labels underneath */
     }
     .element-wrapper {
       display: flex; flex-direction: column; align-items: center;
@@ -44,7 +45,15 @@
     .step-comment { margin-top: 30px; font-style: italic; }
     .dynamic-group, .static-group { padding-top: 5px; }
     /* Adjust margins for headers and containers */
-    .array-container { display: flex; gap: 10px; margin-top: 10px; margin-bottom: 10px; }
+    .array-container {
+      display: flex;
+      gap: 2px;
+      margin-top: 10px;
+      margin-bottom: 10px;
+      max-width: 100%;
+      overflow-x: hidden;
+      overflow-y: hidden;
+    }
     h3 { margin: 5px 0; }
 
    .legend-box {
@@ -58,10 +67,14 @@
 
     /* Adaptive sizing: default fixed width, shrink uniformly only if needed */
     :root { --cell-size: 40px; }
-    .subarray-row { display: flex; gap: 10px; flex-wrap: nowrap; align-items: flex-start; }
+    .subarray-row { display: flex; gap: 2px; flex-wrap: nowrap; align-items: flex-start; width: max-content; min-width: 100%; }
+    .static-group .subarray-row,
+    .dynamic-group .subarray-row { min-width: 0; }
     .subarray-row .element { width: var(--cell-size); height: 40px; }
     /* Placeholders directly under subarray-row (invisible offset cells) */
     .subarray-row > .element { width: var(--cell-size); height: 40px; }
+    .array-container.has-horizontal-overflow,
+    .subarray-container.has-horizontal-overflow { overflow-x: auto; }
   
 .element {
   border: 1px solid #000;
@@ -161,11 +174,20 @@
     if (!container || !n) return;
     const rect = container.getBoundingClientRect();
     const available = Math.max(0, rect.width);
-    const gap = 10; // matches CSS gap
+    const gap = 2; // matches CSS gap
     const totalGaps = gap * Math.max(0, n - 1);
     const raw = Math.floor((available - totalGaps) / n);
     const cell = Math.max(20, Math.min(40, raw));
     document.documentElement.style.setProperty('--cell-size', cell + 'px');
+  }
+
+  function updateArrayOverflow() {
+    ['boxes', 'subarrays'].forEach(id => {
+      const pane = document.getElementById(id);
+      if (!pane) return;
+      pane.classList.remove('has-horizontal-overflow');
+      pane.classList.toggle('has-horizontal-overflow', pane.scrollWidth > pane.clientWidth + 2);
+    });
   }
 
   function render() {
@@ -577,6 +599,7 @@ if (st.phase !== 'do-p' && st.phase !== 'base' && st.phase !== 'done') {
     // — 6) Step description
     const descEl = document.getElementById('step-desc');
     descEl.textContent = st.desc;
+    requestAnimationFrame(updateArrayOverflow);
   }
 
  function quickSelect(A, low, high, k, depth = 0) {
@@ -896,6 +919,7 @@ window.addEventListener("DOMContentLoaded", () => {
   window.addEventListener('resize', () => {
     const st = steps[cur] || steps[0];
     if (st && st.A) updateCellSize(st.A.length);
+    requestAnimationFrame(updateArrayOverflow);
   });
 });
 

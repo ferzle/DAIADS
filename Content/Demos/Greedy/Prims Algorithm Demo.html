@@ -98,6 +98,8 @@
     let dragNode = null;
     const edgeEls = {}, weightEls = {};
     let playing = false, intervalId = null;
+    let layoutWidth = 0, layoutHeight = 0;
+    let revealResizeObserver = null;
 
     window.onload = () => {
       generateBtn.disabled = false;
@@ -149,7 +151,12 @@
       graph = {};
       positions = {};
       weightLookup = {};
-      const w = svg.clientWidth, h = svg.clientHeight;
+      const measuredWidth = svg.clientWidth;
+      const measuredHeight = svg.clientHeight;
+      const w = measuredWidth || 480;
+      const h = measuredHeight || 480;
+      layoutWidth = measuredWidth;
+      layoutHeight = measuredHeight;
       const cx = w / 2, cy = h / 2, r = Math.min(cx, cy) - 50;
       for (let i = 0; i < n; i++) {
         positions[i] = {
@@ -162,6 +169,32 @@
       for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) if (Math.random() < 0.3) addEdge(i, j);
       draw();
     }
+
+    function relayoutAfterReveal() {
+      const w = svg.clientWidth;
+      const h = svg.clientHeight;
+      const n = Object.keys(positions).length;
+      if (!n || w <= 0 || h <= 0 || (layoutWidth > 0 && layoutHeight > 0)) return;
+
+      const cx = w / 2;
+      const cy = h / 2;
+      const r = Math.max(30, Math.min(cx, cy) - 50);
+      for (let i = 0; i < n; i++) {
+        positions[i] = {
+          x: cx + r * Math.cos(2 * Math.PI * i / n),
+          y: cy + r * Math.sin(2 * Math.PI * i / n)
+        };
+      }
+      layoutWidth = w;
+      layoutHeight = h;
+      updatePositions();
+    }
+
+    if ('ResizeObserver' in window) {
+      revealResizeObserver = new ResizeObserver(relayoutAfterReveal);
+      revealResizeObserver.observe(svg);
+    }
+    window.addEventListener('resize', relayoutAfterReveal);
 
     function addEdge(u, v) {
       const key = eKey(u, v);

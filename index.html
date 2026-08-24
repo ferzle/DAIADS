@@ -266,9 +266,17 @@ window.addEventListener('scroll', () => {
     setMenuCollapsed(!document.getElementById('menu').classList.contains('collapsed'));
   });
 
-  if (window.matchMedia('(max-width: 700px)').matches) {
-    setMenuCollapsed(true);
-  }
+  const narrowMenuQuery = window.matchMedia('(max-width: 700px)');
+  const syncMenuToViewport = event => setMenuCollapsed(event.matches);
+
+  setMenuCollapsed(narrowMenuQuery.matches);
+  narrowMenuQuery.addEventListener('change', syncMenuToViewport);
+
+  document.getElementById('menu-content').addEventListener('click', event => {
+    if (narrowMenuQuery.matches && event.target.closest('a[href]')) {
+      setMenuCollapsed(true);
+    }
+  });
 
   document.querySelector('.skip-link').addEventListener('click', event => {
     event.preventDefault();

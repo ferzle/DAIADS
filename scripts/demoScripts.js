@@ -3,31 +3,26 @@
 //--------------------------------------------------------
 // The fullscreen button
 document.addEventListener('DOMContentLoaded', () => {
-// Create button
+  // Create an icon-only button; its accessible name changes with the state.
   const btn = document.createElement('button');
-  // Style button
-  btn.textContent = '⤢ Fullscreen';
-  Object.assign(btn.style, {
-    position:  'fixed',
-    top:       '0px',
-    right:     '10px',
-    padding:   '0em 1em',
-    cursor:    'pointer',
-    zIndex:    9999
-  });
-  // Put the button on the page.
+  btn.type = 'button';
+  btn.className = 'demo-fullscreen-button';
+  btn.innerHTML = `
+    <svg class="demo-fullscreen-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path class="demo-fullscreen-enter-icon" d="M10 10 4 4 M4 4h5 M4 4v5 M14 14l6 6 M20 20h-5 M20 20v-5" />
+      <path class="demo-fullscreen-exit-icon" d="M4 4l6 6 M10 10H5 M10 10V5 M20 20l-6-6 M14 14h5 M14 14v5" />
+    </svg>`;
+
+  const updateFullscreenButton = () => {
+    const active = !!document.fullscreenElement;
+    btn.classList.toggle('is-fullscreen', active);
+    btn.setAttribute('aria-label', active ? 'Exit fullscreen' : 'Enter fullscreen');
+    btn.title = active ? 'Exit fullscreen' : 'Enter fullscreen';
+  };
+
   document.body.appendChild(btn);
-  // add listener so it does the fullscreen.
-  /*
-  btn.addEventListener('click', () => {
-    const container = document.getElementById('demoContainer');
-    if (!document.fullscreenElement) {
-      container.requestFullscreen().catch(console.error);
-    } else {
-      document.exitFullscreen();
-    }
-    });
-  */
+  updateFullscreenButton();
+
   btn.addEventListener('click', () => {
     const html = document.documentElement;
     if (!document.fullscreenElement) {
@@ -36,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.exitFullscreen();
     }
   });
-  
+  document.addEventListener('fullscreenchange', updateFullscreenButton);
 });
 //--------------------------------------------------------
 /*

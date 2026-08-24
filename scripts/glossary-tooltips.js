@@ -201,7 +201,6 @@ function buildAndWrap() {
       if (idx < start) frag.appendChild(document.createTextNode(text.slice(idx, start)));
       const span = document.createElement("span");
       span.className = "glossary-term";
-      span.style.whiteSpace = "nowrap";
       span.setAttribute("data-term", canonical);
       span.tabIndex = 0;
       span.textContent = matchText;
