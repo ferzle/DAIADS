@@ -26,54 +26,443 @@
   <section id="design" section-title="Design and Strategy">
     <h2>Design and Strategy</h2>
     <p>
-      Kruskal's Algorithm builds a minimum spanning tree one edge at a time. It sorts all edges by weight
-      and then scans them from lightest to heaviest. An edge is accepted exactly when it connects two
-      previously separate components; otherwise it is skipped because it would create a cycle.
+      Kruskal's Algorithm builds a minimum spanning tree of a connected, weighted, undirected graph by
+      considering edges from smallest weight to largest. It adds an edge whenever doing so does not create a
+      cycle. Since a spanning tree on \(V\) vertices has exactly \(V-1\) edges, the algorithm stops after
+      selecting that many edges.
     </p>
     <p>
-      The key data structure is a <em>disjoint-set union</em> structure, also called union-find. It quickly
-      answers whether two vertices are already in the same connected component and merges components when
-      a new edge is added to the tree.
+      This is a <strong>greedy</strong> algorithm: at each step it makes the locally best available choice by
+      taking the lightest edge that can safely be added, and it never reverses an earlier choice. The surprising
+      fact is that these local choices always produce a minimum spanning tree.
+    </p>
+    <p>
+      Another way to view the cycle test is to ask whether the endpoints of an edge are already connected by
+      the edges selected so far. If they are, adding the new edge would close a cycle, so the edge is skipped.
+      Efficient implementations usually keep track of these connected components with a disjoint-set structure,
+      also called union-find. The details of that data structure are not needed to understand the algorithm here.
+    </p>
+    <p>
+      A useful way to see why the greedy choice is safe is with an exchange argument. Suppose the edges selected
+      so far are contained in some minimum spanning tree, and Kruskal next selects edge \(e\). If that tree does not
+      contain \(e\), adding \(e\) creates a cycle. That cycle contains another edge leaving one of the components
+      that \(e\) joins. This other edge cannot be lighter than \(e\), or Kruskal would already have considered and
+      selected it. Replacing that edge with \(e\) therefore produces another minimum spanning tree that contains
+      all of Kruskal's choices so far.
     </p>
 
     <h3>High-Level Algorithm</h3>
     <ol class="spaced">
-      <li>Sort all graph edges into nondecreasing order by weight.</li>
-      <li>Place each vertex in its own singleton set.</li>
-      <li>Process edges in sorted order:
-        <ul>
-          <li>If an edge \((u,v)\) connects two different sets, add it to the tree and union those sets.</li>
-          <li>If \(u\) and \(v\) are already in the same set, skip the edge.</li>
-        </ul>
+      <li>Sort all edges into nondecreasing order by weight.</li>
+      <li>Start with no selected edges.</li>
+      <li>
+        Process the edges from smallest weight to largest.
+        <ol type="a">
+          <li>If adding the edge would not create a cycle, select it.</li>
+          <li>If adding the edge would create a cycle, skip it.</li>
+        </ol>
       </li>
-      <li>Stop after selecting \(V-1\) edges.</li>
+      <li>Stop when \(V-1\) edges have been selected.</li>
     </ol>
+<style>
+  #kruskal-mini-example {
+    display: block;
+    max-width: 760px;
+  }
 
-    <div class="example-box">
-      <strong class="example-title">Small Example</strong>
-      <p>
-        Suppose the graph has edges
-        \((A,B,2), (A,C,3), (B,C,1), (B,D,4), (C,E,2), (D,E,3)\).
-      </p>
-      <ol class="spaced">
-        <li>Sort edges by weight: \((B,C,1), (A,B,2), (C,E,2), (A,C,3), (D,E,3), (B,D,4)\).</li>
-        <li>Add \((B,C)\).</li>
-        <li>Add \((A,B)\).</li>
-        <li>Add \((C,E)\).</li>
-        <li>Skip \((A,C)\) because \(A\) and \(C\) are already connected.</li>
-        <li>Add \((D,E)\) and stop.</li>
-      </ol>
-      <p>
-        The chosen edges form an MST of total weight \(1 + 2 + 2 + 3 = 8\).
-      </p>
-    </div>
+  #kruskal-mini-example svg {
+    display: block;
+    width: 100%;
+    max-width: 520px;
+    height: auto;
+    margin: 0.75em 0;
+    border: 1px solid #888;
+    background: #ffffff;
+  }
+
+  #kruskal-mini-example .edge {
+    stroke: #999999;
+    stroke-width: 3;
+    fill: none;
+  }
+
+  #kruskal-mini-example .edge-label {
+    font-size: 14px;
+    fill: #333333;
+  }
+
+  #kruskal-mini-example .vertex {
+    fill: #f7f9fc;
+    stroke: #003366;
+    stroke-width: 2;
+  }
+
+  #kruskal-mini-example .vertex-label {
+    font-size: 16px;
+    font-weight: bold;
+    fill: #003366;
+    text-anchor: middle;
+    dominant-baseline: middle;
+  }
+
+  #kruskal-mini-example .accepted {
+    stroke: #2e8b57;
+    stroke-width: 5;
+  }
+
+  #kruskal-mini-example .rejected {
+    stroke: #cc3333;
+    stroke-width: 5;
+    stroke-dasharray: 10 6;
+  }
+
+  #kruskal-mini-example .current {
+    stroke: #d97706;
+    stroke-width: 6;
+  }
+
+  #kruskal-mini-example .legend {
+    margin: 0.5em 0;
+    font-size: 0.95em;
+  }
+
+  #kruskal-mini-example .legend span {
+    margin-right: 1em;
+    white-space: nowrap;
+  }
+
+  #kruskal-mini-example .legend-line {
+    display: inline-block;
+    width: 24px;
+    height: 0;
+    border-top: 4px solid #999999;
+    vertical-align: middle;
+    margin-right: 0.25em;
+  }
+
+  #kruskal-mini-example .legend-line.current {
+    border-top-color: #d97706;
+  }
+
+  #kruskal-mini-example .legend-line.accepted {
+    border-top-color: #2e8b57;
+  }
+
+  #kruskal-mini-example .legend-line.rejected {
+    border-top-color: #cc3333;
+    border-top-style: dashed;
+  }
+
+  #kruskal-mini-example .controls {
+    margin-top: 0.5em;
+  }
+
+  #kruskal-mini-example button {
+    margin-right: 0.4em;
+    margin-bottom: 0.4em;
+    padding: 0.35em 0.7em;
+    cursor: pointer;
+  }
+</style>
+
+<div id="kruskal-mini-example" class="example-box">
+  <strong class="example-title">Small Example</strong>
+
+  <p>
+    Suppose the graph has edges
+    \((A,B,2)\), \((A,C,3)\), \((B,C,1)\), \((B,D,4)\),
+    \((C,E,2)\), and \((D,E,3)\), where the third value is the
+    edge weight. Sorting the edges by weight gives
+    \[
+      (B,C,1), (A,B,2), (C,E,2), (A,C,3), (D,E,3), (B,D,4).
+    \]
+    Use the controls below to follow Kruskal's Algorithm as it considers
+    these edges in order.
+  </p>
+
+  <div class="controls">
+    <button type="button" id="k-prev">Previous</button>
+    <button type="button" id="k-next">Next</button>
+    <button type="button" id="k-play">Play</button>
+    <button type="button" id="k-reset">Reset</button>
+  </div>
+  <svg viewBox="0 0 520 240"
+       role="img"
+       aria-label="Weighted graph used to demonstrate Kruskal's Algorithm">
+
+    <!-- Edges -->
+    <line id="k-edge-ab" class="edge"
+          x1="90" y1="60" x2="210" y2="45"></line>
+    <text class="edge-label" x="150" y="42">2</text>
+
+    <line id="k-edge-bc" class="edge"
+          x1="210" y1="45" x2="170" y2="150"></line>
+    <text class="edge-label" x="198" y="102">1</text>
+
+    <line id="k-edge-ac" class="edge"
+          x1="90" y1="60" x2="170" y2="150"></line>
+    <text class="edge-label" x="112" y="115">3</text>
+
+    <line id="k-edge-ce" class="edge"
+          x1="170" y1="150" x2="390" y2="155"></line>
+    <text class="edge-label" x="280" y="145">2</text>
+
+    <line id="k-edge-de" class="edge"
+          x1="380" y1="60" x2="390" y2="155"></line>
+    <text class="edge-label" x="398" y="108">3</text>
+
+    <line id="k-edge-bd" class="edge"
+          x1="210" y1="45" x2="380" y2="60"></line>
+    <text class="edge-label" x="295" y="42">4</text>
+
+    <!-- Vertices -->
+    <circle class="vertex" cx="90" cy="60" r="18"></circle>
+    <text class="vertex-label" x="90" y="60">A</text>
+
+    <circle class="vertex" cx="210" cy="45" r="18"></circle>
+    <text class="vertex-label" x="210" y="45">B</text>
+
+    <circle class="vertex" cx="170" cy="150" r="18"></circle>
+    <text class="vertex-label" x="170" y="150">C</text>
+
+    <circle class="vertex" cx="380" cy="60" r="18"></circle>
+    <text class="vertex-label" x="380" y="60">D</text>
+
+    <circle class="vertex" cx="390" cy="155" r="18"></circle>
+    <text class="vertex-label" x="390" y="155">E</text>
+  </svg>
+
+  <div class="legend">
+    <span>
+      <span class="legend-line"></span>Not yet considered
+    </span>
+    <span>
+      <span class="legend-line current"></span>Currently considering
+    </span>
+    <span>
+      <span class="legend-line accepted"></span>Selected
+    </span>
+    <span>
+      <span class="legend-line rejected"></span>Skipped
+    </span>
+  </div>
+
+  <p id="k-status" aria-live="polite">
+    <strong>Step 0:</strong> Start with no selected edges.
+  </p>
+
+  <p id="k-components">
+    <strong>Connected components:</strong>
+    \(\{A\}, \{B\}, \{C\}, \{D\}, \{E\}\)
+  </p>
+</div>
+
+<script>
+(function () {
+  const edgeIds = {
+    ab: "k-edge-ab",
+    bc: "k-edge-bc",
+    ac: "k-edge-ac",
+    ce: "k-edge-ce",
+    de: "k-edge-de",
+    bd: "k-edge-bd"
+  };
+
+  const steps = [
+    {
+      status: "Start with no selected edges.",
+      components:
+        "\\(\\{A\\}, \\{B\\}, \\{C\\}, \\{D\\}, \\{E\\}\\)",
+      states: {}
+    },
+    {
+      status:
+        "Consider \\((B,C,1)\\). Select it because it does not create a cycle.",
+      components:
+        "\\(\\{A\\}, \\{B,C\\}, \\{D\\}, \\{E\\}\\)",
+      states: {
+        bc: "accepted"
+      },
+      current: "bc"
+    },
+    {
+      status:
+        "Consider \\((A,B,2)\\). Select it because it does not create a cycle.",
+      components:
+        "\\(\\{A,B,C\\}, \\{D\\}, \\{E\\}\\)",
+      states: {
+        bc: "accepted",
+        ab: "accepted"
+      },
+      current: "ab"
+    },
+    {
+      status:
+        "Consider \\((C,E,2)\\). Select it because it does not create a cycle.",
+      components:
+        "\\(\\{A,B,C,E\\}, \\{D\\}\\)",
+      states: {
+        bc: "accepted",
+        ab: "accepted",
+        ce: "accepted"
+      },
+      current: "ce"
+    },
+    {
+      status:
+        "Consider \\((A,C,3)\\). Skip it because \\(A\\) and \\(C\\) are already connected, so adding the edge would create a cycle.",
+      components:
+        "\\(\\{A,B,C,E\\}, \\{D\\}\\)",
+      states: {
+        bc: "accepted",
+        ab: "accepted",
+        ce: "accepted",
+        ac: "rejected"
+      },
+      current: "ac"
+    },
+    {
+      status:
+        "Consider \\((D,E,3)\\). Select it because it does not create a cycle.",
+      components:
+        "\\(\\{A,B,C,D,E\\}\\)",
+      states: {
+        bc: "accepted",
+        ab: "accepted",
+        ce: "accepted",
+        ac: "rejected",
+        de: "accepted"
+      },
+      current: "de"
+    },
+    {
+      status:
+        "Four edges have now been selected. Since the graph has five vertices, the spanning tree is complete. Its total weight is \\(1+2+2+3=8\\).",
+      components:
+        "\\(\\{A,B,C,D,E\\}\\)",
+      states: {
+        bc: "accepted",
+        ab: "accepted",
+        ce: "accepted",
+        ac: "rejected",
+        de: "accepted"
+      }
+    }
+  ];
+
+  let stepIndex = 0;
+  let timer = null;
+
+  const statusEl = document.getElementById("k-status");
+  const componentsEl = document.getElementById("k-components");
+  const prevBtn = document.getElementById("k-prev");
+  const nextBtn = document.getElementById("k-next");
+  const playBtn = document.getElementById("k-play");
+  const resetBtn = document.getElementById("k-reset");
+
+  function clearEdgeClasses() {
+    for (const shortName in edgeIds) {
+      const edge = document.getElementById(edgeIds[shortName]);
+      edge.classList.remove("accepted", "rejected", "current");
+    }
+  }
+
+  function renderStep() {
+    clearEdgeClasses();
+
+    const step = steps[stepIndex];
+
+    for (const shortName in step.states) {
+      const edge = document.getElementById(edgeIds[shortName]);
+      edge.classList.add(step.states[shortName]);
+    }
+
+    if (step.current) {
+      document.getElementById(edgeIds[step.current])
+              .classList.add("current");
+    }
+
+    statusEl.innerHTML =
+      "<strong>Step " + stepIndex + ":</strong> " + step.status;
+
+    componentsEl.innerHTML =
+      "<strong>Connected components:</strong> " + step.components;
+
+    if (window.MathJax && window.MathJax.typesetPromise) {
+      window.MathJax.typesetPromise([statusEl, componentsEl]);
+    }
+
+    prevBtn.disabled = stepIndex === 0;
+    nextBtn.disabled = stepIndex === steps.length - 1;
+  }
+
+  function stopPlaying() {
+    if (timer !== null) {
+      clearInterval(timer);
+      timer = null;
+    }
+
+    playBtn.textContent = "Play";
+  }
+
+  prevBtn.addEventListener("click", function () {
+    stopPlaying();
+
+    if (stepIndex > 0) {
+      stepIndex--;
+      renderStep();
+    }
+  });
+
+  nextBtn.addEventListener("click", function () {
+    stopPlaying();
+
+    if (stepIndex < steps.length - 1) {
+      stepIndex++;
+      renderStep();
+    }
+  });
+
+  playBtn.addEventListener("click", function () {
+    if (timer !== null) {
+      stopPlaying();
+      return;
+    }
+
+    if (stepIndex === steps.length - 1) {
+      stepIndex = 0;
+      renderStep();
+    }
+
+    playBtn.textContent = "Pause";
+
+    timer = setInterval(function () {
+      if (stepIndex < steps.length - 1) {
+        stepIndex++;
+        renderStep();
+      } else {
+        stopPlaying();
+      }
+    }, 1800);
+  });
+
+  resetBtn.addEventListener("click", function () {
+    stopPlaying();
+    stepIndex = 0;
+    renderStep();
+  });
+
+  renderStep();
+})();
+</script>
+
+    <p>
+      The interactive demo below lets you follow the same process on larger graphs.
+    </p>
   </section>
 
   <section id="demo" section-title="Interactive Demo">
     <h2>Interactive Demo</h2>
-    <p>
-      This demo shows the sorted edge list, the accepted and rejected edges, and the current disjoint sets.
-    </p>
     <div class="embeddedDemoContainer">
       <iframe class="embeddedDemo"
               src="../../../Content/Demos/Greedy/Kruskals Algorithm Demo.html"
@@ -83,180 +472,114 @@
     </div>
   </section>
 
-  <section id="code" section-title="Implementation in Java, C++, Python">
-    <h2>Implementation in Java, C++, Python</h2>
+  <section id="code" section-title="Pseudocode">
+    <h2>Pseudocode</h2>
     <p>
-      These implementations sort the edges, use union-find to detect cycles, and return the total weight
-      of the minimum spanning tree.
+      The pseudocode leaves the cycle test abstract. In a small graph it can be checked directly; efficient
+      implementations normally use union-find to perform this test quickly.
     </p>
-    <div class="tab-group">
-      <div class="tabs" role="tablist">
-        <button id="tab-java" class="tablink active" data-lang="java" role="tab" aria-controls="java" aria-selected="true">Java</button>
-        <button id="tab-cpp" class="tablink" data-lang="cpp" role="tab" aria-controls="cpp" aria-selected="false">C++</button>
-        <button id="tab-python" class="tablink" data-lang="python" role="tab" aria-controls="python" aria-selected="false">Python</button>
-      </div>
-      <div id="java" class="code-container active" role="tabpanel" aria-labelledby="tab-java">
-        <pre><code class="language-java">import java.util.*;
+    <pre><code>Kruskal(vertices, edges)
+  sort edges into nondecreasing order by weight
+  selected = empty set
 
-class Edge {
-  int u, v, w;
-  Edge(int u, int v, int w) { this.u = u; this.v = v; this.w = w; }
-}
+  for each edge e in edges
+    if adding e to selected would not create a cycle
+      add e to selected
 
-class DSU {
-  int[] parent, rank;
-  DSU(int n) {
-    parent = new int[n];
-    rank = new int[n];
-    for (int i = 0; i &lt; n; i++) parent[i] = i;
-  }
-  int find(int x) {
-    if (parent[x] != x) parent[x] = find(parent[x]);
-    return parent[x];
-  }
-  boolean union(int a, int b) {
-    int ra = find(a), rb = find(b);
-    if (ra == rb) return false;
-    if (rank[ra] &lt; rank[rb]) parent[ra] = rb;
-    else if (rank[ra] &gt; rank[rb]) parent[rb] = ra;
-    else {
-      parent[rb] = ra;
-      rank[ra]++;
-    }
-    return true;
-  }
-}
+      if selected contains |vertices| - 1 edges
+        return selected
 
-int kruskalMST(int n, List&lt;Edge&gt; edges) {
-  edges.sort(Comparator.comparingInt(e -&gt; e.w));
-  DSU dsu = new DSU(n);
-  int total = 0;
-
-  for (Edge e : edges) {
-    if (dsu.union(e.u, e.v)) {
-      total += e.w;
-    }
-  }
-  return total;
-}</code></pre>
-      </div>
-      <div id="cpp" class="code-container" role="tabpanel" aria-labelledby="tab-cpp">
-        <pre><code class="language-cpp">#include &lt;algorithm&gt;
-#include &lt;vector&gt;
-using namespace std;
-
-struct Edge {
-  int u, v, w;
-};
-
-struct DSU {
-  vector&lt;int&gt; parent, rank;
-  DSU(int n) : parent(n), rank(n, 0) {
-    for (int i = 0; i &lt; n; ++i) parent[i] = i;
-  }
-  int find(int x) {
-    if (parent[x] != x) parent[x] = find(parent[x]);
-    return parent[x];
-  }
-  bool unite(int a, int b) {
-    int ra = find(a), rb = find(b);
-    if (ra == rb) return false;
-    if (rank[ra] &lt; rank[rb]) parent[ra] = rb;
-    else if (rank[ra] &gt; rank[rb]) parent[rb] = ra;
-    else {
-      parent[rb] = ra;
-      rank[ra]++;
-    }
-    return true;
-  }
-};
-
-int kruskalMST(int n, vector&lt;Edge&gt;&amp; edges) {
-  sort(edges.begin(), edges.end(),
-       [](const Edge&amp; a, const Edge&amp; b) { return a.w &lt; b.w; });
-
-  DSU dsu(n);
-  int total = 0;
-  for (const Edge&amp; e : edges) {
-    if (dsu.unite(e.u, e.v)) {
-      total += e.w;
-    }
-  }
-  return total;
-}</code></pre>
-      </div>
-      <div id="python" class="code-container" role="tabpanel" aria-labelledby="tab-python">
-        <pre><code class="language-python">def kruskal_mst(n, edges):
-    parent = list(range(n))
-    rank = [0] * n
-
-    def find(x):
-        if parent[x] != x:
-            parent[x] = find(parent[x])
-        return parent[x]
-
-    def union(a, b):
-        ra, rb = find(a), find(b)
-        if ra == rb:
-            return False
-        if rank[ra] < rank[rb]:
-            parent[ra] = rb
-        elif rank[ra] > rank[rb]:
-            parent[rb] = ra
-        else:
-            parent[rb] = ra
-            rank[ra] += 1
-        return True
-
-    total = 0
-    for u, v, w in sorted(edges, key=lambda e: e[2]):
-        if union(u, v):
-            total += w
-    return total</code></pre>
-      </div>
-    </div>
+  return selected</code></pre>
+    <p>
+      For a connected graph, the algorithm returns a minimum spanning tree. If the graph is disconnected, it
+      cannot contain a spanning tree; the same process instead returns a minimum spanning forest.
+    </p>
   </section>
 
   <section id="analysis" section-title="Time/Space Analysis">
     <h2>Time/Space Analysis</h2>
     <p>
-      <strong>Time Complexity:</strong> Sorting the edges costs \(O(E \log E)\), and the union-find operations
-      are nearly constant amortized time, so the overall running time is dominated by the sort.
+      <strong>Time Complexity:</strong> Sorting the \(E\) edges takes \(O(E \log E)\) time. The algorithm then
+      examines each edge at most once. The cost of deciding whether an edge creates a cycle depends on how that
+      test is implemented. With the standard efficient approach using union-find, the cycle tests are fast enough
+      that sorting dominates, giving an overall running time of \(O(E \log E)\).
     </p>
     <p>
-      <strong>Space Complexity:</strong> The edge list and disjoint-set structure require \(O(V + E)\) space.
+      <strong>Space Complexity:</strong> An efficient implementation uses \(O(V)\) extra space to keep track of
+      connected components, not counting the input edge list or the edges returned as the output. If a separate
+      sorted copy of the edge list is created rather than sorting the input in place, that copy requires an
+      additional \(O(E)\) space.
     </p>
   </section>
 
   <section id="variations" section-title="Variations/Improvements">
     <h2>Variations/Improvements</h2>
     <p>
-      Kruskal's Algorithm is especially natural when the graph is already given as an edge list. Union by rank
-      together with path compression makes cycle detection very fast in practice. A closely related alternative is
-      <a href="?path=Algorithms%2FGreedy%2FPrims%20DRAFT">Prim's Algorithm</a>, which grows the tree from a starting vertex.
+      The main implementation issue in Kruskal's Algorithm is testing whether an edge would create a cycle.
+      Repeatedly searching the selected edges from scratch would be inefficient. A disjoint-set, or union-find,
+      data structure keeps track of which vertices are already connected and supports this test efficiently.
+      More advanced implementations typically combine union by rank or size with path compression.
+    </p>
+    <p>
+      Equal-weight edges do not require a special rule. They may be processed in any order. Different orders can
+      produce different spanning trees, but Kruskal's Algorithm still produces a minimum spanning tree. If all
+      edge weights are distinct, the minimum spanning tree is unique. Equal weights can allow multiple MSTs,
+      although they do not guarantee that multiple MSTs exist.
+    </p>
+  </section>
+
+  <section id="connections" section-title="Connections and Comparisons">
+    <h2>Connections and Comparisons</h2>
+    <p>
+      Kruskal's Algorithm and
+      <a href="?path=Algorithms%2FGreedy%2FPrims%20DRAFT">Prim's Algorithm</a>
+      both solve the minimum spanning tree problem greedily, but they
+      organize their choices differently. Kruskal's Algorithm considers edges globally from smallest to largest.
+      During the process, the selected edges may form several separate trees that gradually merge. Prim's
+      Algorithm instead begins at one vertex and grows a single tree by repeatedly adding a light edge that
+      connects the current tree to a new vertex.
+    </p>
+    <p>
+      Kruskal's Algorithm is especially natural when a graph is represented as an edge list, since its first step
+      is to sort the edges. Prim's Algorithm is often a natural fit when the graph is represented by adjacency
+      lists and a priority queue is available. The two algorithms can make different choices and produce different
+      minimum spanning trees when several MSTs exist, but both always produce an MST on a connected weighted
+      undirected graph.
     </p>
   </section>
 
   <section id="links" section-title="Related Links and Resources">
     <h2>Related Links and Resources</h2>
     <ul>
-      <li><a href="https://en.wikipedia.org/wiki/Kruskal%27s_algorithm" target="_blank">Wikipedia: Kruskal's algorithm</a> Background, greedy intuition, and historical notes.</li>
-      <li><a href="https://cp-algorithms.com/graph/mst_kruskal.html" target="_blank">cp-algorithms: Kruskal's algorithm</a> Implementation-oriented explanation using union-find.</li>
-      <li><a href="https://www.geeksforgeeks.org/kruskals-minimum-spanning-tree-algorithm-greedy-algo-2/" target="_blank">GeeksforGeeks: Kruskal's Minimum Spanning Tree</a> Additional worked examples and code samples.</li>
+      <li><a href="https://en.wikipedia.org/wiki/Kruskal%27s_algorithm" target="_blank">Wikipedia: Kruskal's algorithm</a> Background, examples, and additional details.</li>
+      <li><a href="https://cp-algorithms.com/graph/mst_kruskal.html" target="_blank">cp-algorithms: Kruskal's algorithm</a> A more implementation-oriented treatment using union-find.</li>
+      <li><a href="https://www.geeksforgeeks.org/kruskals-minimum-spanning-tree-algorithm-greedy-algo-2/" target="_blank">GeeksforGeeks: Kruskal's Minimum Spanning Tree</a> Worked examples and implementations.</li>
     </ul>
   </section>
 
   <section id="reading-questions" section-title="Reading Comprehension Questions">
     <h2>Reading Comprehension Questions</h2>
     <ol>
-      <li><strong>Edge Ordering:</strong> Why does Kruskal's Algorithm sort all edges before making any selections?</li>
-      <li><strong>Skipping Edges:</strong> Under what condition is an edge skipped during the scan of the sorted edge list?</li>
+      <li><strong>Greedy Choice:</strong> What greedy choice does Kruskal's Algorithm make at each step?</li>
+      <li><strong>Rejecting an Edge:</strong> Why does Kruskal's Algorithm skip an edge whose endpoints are already connected by selected edges?</li>
+      <li><strong>Stopping Condition:</strong> Why can the algorithm stop after selecting \(V-1\) edges?</li>
+      <li><strong>Small Example:</strong> In the example above, why is edge \((A,C)\) skipped even though it has weight 3?</li>
+      <li><strong>Greedy Correctness:</strong> What exchange idea explains why accepting the next safe edge cannot make the final spanning tree more expensive than necessary?</li>
+      <li><strong>Running Time:</strong> Which step is responsible for the \(O(E \log E)\) running time in the standard efficient implementation?</li>
+      <li><strong>Disconnected Graph:</strong> What does the algorithm produce if the input graph is disconnected?</li>
+      <li><strong>Kruskal vs. Prim:</strong> What is the main difference between how Kruskal's Algorithm and Prim's Algorithm grow a minimum spanning tree?</li>
     </ol>
     <button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
     <div id="answers" class="answer" hidden>
       <ol>
-        <li><strong>Answer:</strong> The greedy rule is to consider the lightest remaining edge first, so sorting ensures edges are checked in the correct order.</li>
-        <li><strong>Answer:</strong> An edge is skipped when its endpoints are already in the same connected component, because adding it would create a cycle.</li>
+        <li><strong>Answer:</strong> It chooses the lightest remaining edge that can be added without creating a cycle.</li>
+        <li><strong>Answer:</strong> The selected edges already contain a path between the endpoints, so adding the edge would close that path into a cycle.</li>
+        <li><strong>Answer:</strong> A forest on \(V\) vertices with \(V-1\) edges must be connected, so once Kruskal has selected \(V-1\) edges without creating a cycle, those edges form a spanning tree.</li>
+        <li><strong>Answer:</strong> By that point, \(A\) and \(C\) are already connected through \(A-B-C\), so adding \((A,C)\) would create a cycle.</li>
+        <li><strong>Answer:</strong> If a minimum spanning tree containing the earlier choices does not contain the next selected edge, adding that edge creates a cycle. Removing a no-lighter edge from that cycle produces another MST containing the new choice.</li>
+        <li><strong>Answer:</strong> Sorting all \(E\) edges by weight takes \(O(E \log E)\) time and dominates the standard efficient implementation.</li>
+        <li><strong>Answer:</strong> A disconnected graph has no spanning tree. Kruskal's process instead produces a minimum spanning forest, one minimum spanning tree for each connected component.</li>
+        <li><strong>Answer:</strong> Kruskal considers edges globally and may maintain several separate trees before they merge. Prim starts from one vertex and grows a single connected tree throughout the algorithm.</li>
       </ol>
     </div>
   </section>
@@ -264,16 +587,85 @@ int kruskalMST(int n, vector&lt;Edge&gt;&amp; edges) {
   <section id="activities" section-title="In-Class Activities">
     <h2>In-Class Activities</h2>
     <ol>
-      <li><strong>Sort and Select:</strong> Give students an edge list, have them sort it by weight, and then mark each edge as accepted or rejected step by step.</li>
-      <li><strong>Union-Find Snapshot:</strong> Ask students to record the disjoint sets after every accepted edge so they can visualize the connected components merging.</li>
+      <li>
+        <strong>Trace the Algorithm:</strong> For the graph with edges
+        \((A,B,4), (A,C,2), (B,C,1), (B,D,5), (C,D,3)\), sort the edges and process them in order.
+        For each edge, record whether it is selected or skipped and give the final MST weight.
+      </li>
+      <li>
+        <strong>Identify the Cycle:</strong> Suppose the currently selected edges are
+        \((A,B), (B,C), (C,D)\). For each candidate edge \((A,C), (A,D), (D,E)\), decide whether Kruskal's
+        Algorithm would accept it. For every rejected edge, identify the cycle it would create.
+      </li>
+      <li>
+        <strong>Track Components:</strong> Start with vertices \(A,B,C,D,E,F\) and process the accepted edges
+        \((A,C), (D,E), (B,C), (E,F), (C,D)\). After each edge, write the connected components formed by the
+        selected edges. Use the component information to explain why an edge whose endpoints are in the same
+        component must be rejected.
+      </li>
+      <li>
+        <strong>Equal-Weight Choices:</strong> Consider edges
+        \((A,B,1), (A,C,1), (B,C,1), (B,D,2), (C,D,2)\). Run Kruskal's Algorithm twice using two different
+        orders for equal-weight edges. Compare the resulting spanning trees and their total weights.
+      </li>
+      <li>
+        <strong>Find the First Rejection:</strong> For edges
+        \((A,B,1), (B,C,2), (A,C,3), (C,D,4), (B,D,5)\), determine the first edge Kruskal's Algorithm rejects.
+        Explain why all earlier edges are accepted and why this edge is not.
+      </li>
+      <li>
+        <strong>Change One Weight:</strong> Return to the graph from the first activity, but change the weight of
+        \((A,B)\) from 4 to 0. Run Kruskal's Algorithm again. Identify which edges are now selected or skipped
+        differently and compare the new MST weight with the original one.
+      </li>
+      <li>
+        <strong>Use the Demo:</strong> In the interactive demo, advance until the first edge is rejected. Before
+        revealing the decision, identify a path already connecting the endpoints of that edge. Continue until the
+        MST is complete and verify that exactly \(V-1\) edges were selected.
+      </li>
     </ol>
   </section>
 
   <section id="problems" section-title="Homework Problems">
     <h2>Homework Problems</h2>
     <ol>
-      <li><strong>Manual Simulation:</strong> Run Kruskal's Algorithm by hand on a weighted graph and list the accepted and rejected edges in order.</li>
-      <li><strong>Ties in Weights:</strong> Explain why two different tie-breaking choices among equal-weight edges can still lead to minimum spanning trees of the same total weight.</li>
+      <li>
+        <strong>Complete Trace:</strong> Run Kruskal's Algorithm on the graph with edges
+        \((A,B,7), (A,C,3), (A,D,6), (B,C,4), (B,E,2), (C,D,5), (C,E,8), (D,E,1)\).
+        List the edges in sorted order, process them until the algorithm stops, and label each examined edge as
+        selected or skipped. Mark any remaining edges as not examined, and give the final MST and its weight.
+      </li>
+      <li>
+        <strong>Cycle Reasoning:</strong> Kruskal's Algorithm has already selected
+        \((A,B), (B,C), (D,E), (C,D)\). For each of the edges \((A,C), (A,E), (E,F), (B,D)\), determine whether
+        it would be selected or skipped if it were considered next. Justify each answer using paths or cycles.
+      </li>
+      <li>
+        <strong>Tied Weights:</strong> Apply Kruskal's Algorithm to
+        \((A,B,1), (A,C,1), (B,C,1), (B,D,2), (C,D,2), (C,E,3), (D,E,3)\) using two different valid orders for
+        edges with equal weight. Give both resulting MSTs and verify that they have the same total weight.
+      </li>
+      <li>
+        <strong>Disconnected Input:</strong> Apply Kruskal's Algorithm to
+        \((A,B,1), (B,C,3), (A,C,2), (D,E,4), (E,F,1), (D,F,2)\). Explain why the algorithm cannot produce a
+        spanning tree and give the minimum spanning forest it produces.
+      </li>
+      <li>
+        <strong>Stopping Early:</strong> A connected graph has 12 vertices and 31 edges. Explain why Kruskal's
+        Algorithm can stop immediately when it selects its 11th edge. What is the fewest number of edges it could
+        have examined before stopping? What is the greatest number it might have had to examine?
+      </li>
+      <li>
+        <strong>Unsorted Processing:</strong> Give a connected weighted graph on four vertices for which processing
+        the edges in an arbitrary order and accepting every edge that does not create a cycle can produce a spanning
+        tree that is not minimum. Show the edge-processing order and compare the resulting tree with an MST.
+      </li>
+      <li>
+        <strong>Implementation Cost:</strong> Suppose cycle detection is implemented by running a graph search
+        through the currently selected edges every time an edge is considered. Explain why this is less efficient
+        than using a data structure that maintains connected components. You do not need to know the details of
+        union-find to answer; focus on what work is repeated by the graph searches.
+      </li>
     </ol>
   </section>
 </body>
