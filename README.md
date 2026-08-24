@@ -9,13 +9,13 @@ The goal is to replace a traditional data structures and algorithms textbook wit
 ## Run Locally
 
 ```bash
-python3 -m http.server 8080
+python3 internal/testing/.ht-server.py
 ```
 
 Then open:
 
 ```text
-http://localhost:8080/
+http://127.0.0.1:8099/DAIADS/
 ```
 
 ## Regenerate Navigation
@@ -28,7 +28,17 @@ python3 scripts/create_JSON.py
 
 ## Context For Agents
 
-- `AGENTS.md`: working instructions and conventions for AI/coding agents.
-- `PROJECT_CONTEXT.md`: project architecture, content types, and validation notes.
-- `CONTENT_GUIDE.md`: pedagogical guidance for writing and revising course content.
-- `agent.md`: lowercase pointer for tools or people looking for that filename.
+- `AGENTS.md`: a discovery bootstrap for AI/coding agents.
+- `internal/agent-docs/`: protected `.ht-*.md` working instructions,
+  architecture context, content guidance, and internal handoff notes.
+
+## Accessibility Tests
+
+The tracked Playwright test project is isolated under `internal/testing/`.
+Its source files use Apache's protected `.ht-*` naming convention. Dependencies
+and generated artifacts are placed under the operating system's temporary
+directory, outside the web root.
+
+```bash
+python3 internal/testing/.ht-run-tests.py
+```
