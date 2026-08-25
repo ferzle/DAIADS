@@ -10,8 +10,8 @@
   <title>Merge Step Demo</title>
   <style>
     /* Container styles for arrays and layout */
-    .array-container { display: flex; gap: 12px; margin-bottom: 10px; max-width: 100%; overflow-x: auto; }
-    #current-container { display: flex; flex-wrap: wrap; gap: 40px; margin: 20px 0; max-width: 100%; }
+    .array-container { display: flex; gap: 4px; margin-bottom: 10px; max-width: 100%; overflow-x: auto; }
+    #current-container { display: flex; flex-wrap: wrap; column-gap: 40px; row-gap: 10px; margin: 20px 0 10px; max-width: 100%; }
     .portion { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; max-width: 100%; }
     /* Highlight styles */
     .compare { background: #f99; }
@@ -25,6 +25,12 @@
 
     /* Wrapper for elements with index labels */
     .element-wrapper { display: flex; flex-direction: column; align-items: center; }
+    .array-container > .element-wrapper { flex: 0 0 32px; min-width: 32px; }
+    .array-container > .element-wrapper > .element {
+      width: 32px;
+      height: 32px;
+      line-height: 32px;
+    }
     .index-label { font-size: 0.8em; margin-top: 4px; }
     .arrow         { position: static; width: auto; line-height: 1.2; font-size: 18px; pointer-events: none; visibility: hidden; }
   </style>
@@ -71,7 +77,7 @@
       <div id="right-visualization" class="array-container"></div>
     </div>
   </div>
-  <div id="description" style="margin-top: 50px">Press "Random Arrays" to begin.</div>
+  <div id="description" style="margin-top: 10px">Press "Random Arrays" to begin.</div>
 
   <script>
     /**
@@ -156,6 +162,23 @@
             rightVis = document.getElementById('right-visualization'),
             desc     = document.getElementById('description');
       const st = steps[idx];
+      const revealCell = (cell) => {
+        if (!cell) return;
+        cell.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'center' });
+        let parent = cell.parentElement;
+        while (parent) {
+          if (parent.scrollWidth > parent.clientWidth) {
+            const cellRect = cell.getBoundingClientRect();
+            const parentRect = parent.getBoundingClientRect();
+            if (cellRect.left < parentRect.left) {
+              parent.scrollLeft += cellRect.left - parentRect.left;
+            } else if (cellRect.right > parentRect.right) {
+              parent.scrollLeft += cellRect.right - parentRect.right;
+            }
+          }
+          parent = parent.parentElement;
+        }
+      };
 
       // Find last comparison for sticky arrows
       let lastCompare = null;
@@ -193,8 +216,8 @@
 
       // Handle current step
       if (st.type === 'compare') {
-        if (st.idxLeft !== null) { const wL = leftVis.children[st.idxLeft]; wL.querySelector('.element').classList.add('compare'); wL.querySelector('.arrow').style.visibility = 'visible'; }
-        if (st.idxRight !== null) { const wR = rightVis.children[st.idxRight]; wR.querySelector('.element').classList.add('compare'); wR.querySelector('.arrow').style.visibility = 'visible'; }
+        if (st.idxLeft !== null) { const wL = leftVis.children[st.idxLeft]; wL.querySelector('.element').classList.add('compare'); wL.querySelector('.arrow').style.visibility = 'visible'; revealCell(wL); }
+        if (st.idxRight !== null) { const wR = rightVis.children[st.idxRight]; wR.querySelector('.element').classList.add('compare'); wR.querySelector('.arrow').style.visibility = 'visible'; revealCell(wR); }
         const chooseLeft = st.valueL <= st.valueR;
         desc.textContent = `${st.valueL} <= ${st.valueR}? ${chooseLeft ? 'Yes' : 'No'}, placing ${chooseLeft ? st.valueL : st.valueR}.`;
       }
@@ -202,15 +225,20 @@
         // Arrow logic (mark the source or previous comparison arrow)
         if (st.exhausted === 'left') {
           const wL = leftVis.children[st.idxLeft]; wL.querySelector('.arrow').style.visibility = 'visible';
+          revealCell(wL);
         } else if (st.exhausted === 'right') {
           const wR = rightVis.children[st.idxRight]; wR.querySelector('.arrow').style.visibility = 'visible';
+          revealCell(wR);
         } else if (st.idxLeft !== null) {
           const wL = leftVis.children[st.idxLeft]; wL.querySelector('.arrow').style.visibility = 'visible';
+          revealCell(wL);
           if (lastCompare && lastCompare.idxRight !== null) { const wR = rightVis.children[lastCompare.idxRight]; wR.querySelector('.arrow').style.visibility = 'visible'; }
         } else {
           const wR = rightVis.children[st.idxRight]; wR.querySelector('.arrow').style.visibility = 'visible';
+          revealCell(wR);
           if (lastCompare && lastCompare.idxLeft !== null) { const wL = leftVis.children[lastCompare.idxLeft]; wL.querySelector('.arrow').style.visibility = 'visible'; }
         }
+        revealCell(aux.children[st.k]);
         // Description logic with exhaustion first
         if (st.exhausted === 'left') {
           desc.textContent = `Left array elements exhausted, placing ${st.newValue}.`;

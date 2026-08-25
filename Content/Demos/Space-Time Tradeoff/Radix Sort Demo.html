@@ -17,12 +17,27 @@
         height: 50px;
       }
       .array-container {
-        margin-bottom: 30px;
+        margin: 0 0 8px;
         max-width: 100%;
         overflow-x: auto;
+        gap: 2px;
       }
       #input-container {
         position: relative;
+        padding-bottom: 18px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        clip-path: inset(0);
+      }
+      #input-container .count-wrapper.arrow-target::after {
+        content: '↑';
+        position: absolute;
+        left: 50%;
+        top: 100%;
+        transform: translateX(-50%);
+        font-size: 1.2em;
+        line-height: 1;
+        pointer-events: none;
       }
 
       /* Wrappers & Labels */
@@ -30,17 +45,17 @@
         display: flex;
         flex-direction: column;
         align-items: center;
+        position: relative;
       }
       .count-label {
         font-size: 0.8em;
         margin-top: 4px;
       }
       .digit-box {
-        border: 1px solid #ccc;
-        background: #f9f9f9;
-        padding: 6px 10px;
-        border-radius: 4px;
         display: inline-block;
+      }
+      .digit-inline {
+        margin-left: 8px;
       }
 
       /* Elements */
@@ -91,16 +106,19 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      margin-right: 4px;
+      margin-right: 0;
     
       /* NEW: ideal width = 40px, no grow, can shrink */
-      flex: 0 1 40px;
+      flex: 0 0 40px;
+      min-width: 40px;
       box-sizing: border-box;   /* so padding/margin don’t bust the math */
     }
     .array-container .count-wrapper .element {
       width: 100%;
       aspect-ratio: 1 / 1;     /* keep it square */
-      height: auto;
+      height: 40px;
+      box-sizing: border-box;
+      overflow: hidden;
     }
     </style>
 </head>
@@ -146,12 +164,9 @@
 
     <div id="description">Press "Next" to begin.</div>
 
-    <div id="digit-label" class="digit-box">
-      <strong>Digit:</strong> <span id="digit-pos">0</span>
-    </div>
-
-    <div id="input-label" class="digit-box" style="margin-top: 20px">
+    <div id="input-label" class="digit-box" style="margin-top: 8px">
       <strong>Input Array:</strong>
+      <span id="digit-label" class="digit-inline"><strong>Digit:</strong> <span id="digit-pos">0</span></span>
     </div>
     <div class="array-container" id="input-container">
       <div id="input-arrow" class="arrow">↑</div>
@@ -268,14 +283,12 @@
         const arrow = document.getElementById('input-arrow');
         const container = document.getElementById('input-container');
         const wrappers = container.querySelectorAll('.count-wrapper');
+        container.querySelectorAll('.count-wrapper.arrow-target').forEach(el => el.classList.remove('arrow-target'));
         if (i >= 0 && i < wrappers.length) {
-          const target = wrappers[i].getBoundingClientRect();
-          const parent = container.getBoundingClientRect();
-          const centerX = target.left - parent.left + target.width / 2;
-          const topY = target.bottom - parent.top + 2;
-          arrow.style.left = `${centerX}px`;
-          arrow.style.top = `${topY}px`;
-          arrow.style.display = 'block';
+          const target = wrappers[i];
+          target.classList.add('arrow-target');
+          target.scrollIntoView({ inline: 'nearest', block: 'nearest' });
+          arrow.style.display = 'none';
         } else {
           arrow.style.display = 'none';
         }

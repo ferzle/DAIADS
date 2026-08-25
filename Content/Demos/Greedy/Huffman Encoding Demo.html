@@ -70,11 +70,11 @@
 </div>
 
 <div id="buttons">
-  <button onclick="prevStep()">Previous</button>
-  <button onclick="nextStep()">Next</button>
-  <button id="play">Play</button>
+  <button id="prevBtn" onclick="prevStep()" disabled>Previous</button>
+  <button id="nextBtn" onclick="nextStep()" disabled>Next</button>
+  <button id="play" disabled>Play</button>
   <label for="speed">Speed:</label>
-  <select id="speed">
+  <select id="speed" disabled>
     <option value="1">1×</option>
     <option value="2">2×</option>
     <option value="4">4×</option>
@@ -83,9 +83,9 @@
   </select>
   <span>Scale:</span>
   <span id="scaleVal">1.0×</span>
-  <button id="zoomOut" title="Zoom out" aria-label="Zoom out">−</button>
-  <button id="zoomIn" title="Zoom in" aria-label="Zoom in">+</button>
-  <button id="toggleDetails" title="Show/Hide details">Hide Details</button>
+  <button id="zoomOut" title="Zoom out" aria-label="Zoom out" disabled>−</button>
+  <button id="zoomIn" title="Zoom in" aria-label="Zoom in" disabled>+</button>
+  <button id="toggleDetails" title="Show/Hide details" disabled>Hide Details</button>
 </div>
 
 <div id="output">Click "Start" to begin.</div>
@@ -259,15 +259,17 @@
     const baseSpacing = 40;               // previous default unit spacing
     const baseGapBetweenTrees = 20;       // gap between separate trees in the forest
 
-    const containerWidth = (svgQueue.getBoundingClientRect && svgQueue.getBoundingClientRect().width) ||
-                           svgQueue.clientWidth || (svgQueue.parentElement?.clientWidth) || 800;
+    const containerWidth = svgQueue.parentElement?.clientWidth || 800;
     const treeWidthsAtBase = queue.map(t => getTreeWidth(t, baseSpacing));
     const forestWidthAtBase = treeWidthsAtBase.reduce((a, b) => a + b, 0) + baseGapBetweenTrees * Math.max(0, queue.length - 1) + 20;
 
-    const MAX_WIDTH_BEFORE_COMPRESS = 600;
-    const targetWidth = Math.min(containerWidth - 20, MAX_WIDTH_BEFORE_COMPRESS);
-    const needCompress = forestWidthAtBase > targetWidth;
-    const scale = forestWidthAtBase > 0 ? (needCompress ? Math.min(1, targetWidth / forestWidthAtBase) : Math.min(1, (containerWidth - 20) / forestWidthAtBase)) : 1;
+    // Keep the natural forest width; the outer container provides horizontal scrolling.
+    const layoutWidth = Math.max(60, forestWidthAtBase + 20);
+    const targetWidth = layoutWidth - 20;
+    const scale = 1;
+    const renderedWidth = Math.ceil(layoutWidth * vizScale);
+    svgQueue.setAttribute("width", renderedWidth);
+    svgQueue.style.width = `${renderedWidth}px`;
 
     // Subtree horizontal spacing (within each tree)
     const minSpacing = Math.max(minSpacingFloor, Math.floor(baseSpacing * scale));
@@ -293,7 +295,7 @@
     // Compute root centers across top row
     const totalRootsWidth = roots > 1 ? (roots - 1) * rootGap : 0;
     // Center roots across the full container width; if too wide, left-align to margin
-    const leftStart = Math.max(margin, Math.floor((containerWidth - totalRootsWidth) / 2));
+    const leftStart = Math.max(margin, Math.floor((layoutWidth - totalRootsWidth) / 2));
 
     // Precompute tree widths and initial centers
     const treeWidths = queue.map(t => getTreeWidth(t, minSpacing));
@@ -322,6 +324,27 @@
       drawEdges(gRoot, tree, labelEdges && queue.length === 1);
       const isMerging = (i < highlightCount) || (idToHighlight !== null && tree.id === idToHighlight);
       drawAllNodes(gRoot, tree, isMerging, true);
+    }
+
+    // Fit the SVG to the nodes actually laid out in this step. The priority
+    // queue's theoretical width can stay almost constant while its visible
+    // roots and subtrees change substantially.
+    const laidOutNodes = [];
+    function collectLaidOutNodes(node) {
+      if (!node) return;
+      laidOutNodes.push(node);
+      collectLaidOutNodes(node.left);
+      collectLaidOutNodes(node.right);
+    }
+    queue.forEach(collectLaidOutNodes);
+    if (laidOutNodes.length) {
+      const minX = Math.min(...laidOutNodes.map(node => node._x));
+      const maxX = Math.max(...laidOutNodes.map(node => node._x));
+      const edgePadding = 20;
+      const fittedWidth = Math.max(60, Math.ceil(maxX - minX + edgePadding * 2));
+      svgQueue.setAttribute("width", Math.ceil(fittedWidth * vizScale));
+      svgQueue.style.width = `${Math.ceil(fittedWidth * vizScale)}px`;
+      gRoot.setAttribute("transform", `translate(${edgePadding - minX},0) scale(${vizScale})`);
     }
   }
 
@@ -462,6 +485,11 @@
     }
   }
 
+  function setDemoControlsEnabled(enabled) {
+    ['prevBtn', 'nextBtn', 'play', 'speed', 'zoomOut', 'zoomIn', 'toggleDetails']
+      .forEach(id => { document.getElementById(id).disabled = !enabled; });
+  }
+
   function startVisualization() {
     const input = document.getElementById("inputText").value;
     if (!input.trim()) return alert("Please enter a string.");
@@ -477,6 +505,7 @@
 
     const freqs = countFrequencies(input);
     buildHuffmanTree(freqs, input);
+    setDemoControlsEnabled(true);
     nextStep();
   }
 

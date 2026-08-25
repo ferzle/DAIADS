@@ -34,7 +34,9 @@
   top: 100%;            /* right below the bottom edge of the box */
   left: 50%;
   transform: translateX(-50%);
-  margin-top: 22px;      /* a little extra breathing room */
+  margin-top: 7px;
+  line-height: 1;
+  font-size: 12px;
 }
 
     /* Section labels */
@@ -48,10 +50,10 @@
     .element.bucket-range {
       background-color: #ffd700;
       white-space: nowrap;
-      font-size: 0.82em;
+      font-size: 0.7em;
       /* make sure you have at least a 1px border by default */
       border: 1px solid #333;
-      padding: 2px 4px;
+      padding: 1px 2px;
     }
 
     /* when the bucket is being sorted, bump up the border thickness */
@@ -81,6 +83,7 @@
       display: flex;
       flex-direction: row;
       align-items: flex-start;
+      gap: 4px;
       margin: 10px 0;
       overflow-x: auto;
     }
@@ -89,10 +92,33 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      margin-right: 16px;
+      margin-right: 0;
     }
     .bucket-block .element {
-      margin: 4px 0;
+      width: 38px;
+      height: 38px;
+      line-height: 38px;
+      margin: 2px 0;
+      box-sizing: border-box;
+      font-size: 0.85em;
+    }
+    #boxes {
+      display: flex;
+      flex-wrap: nowrap;
+      width: 100%;
+      max-width: 100%;
+      overflow-x: auto;
+      overflow-y: hidden;
+      height: 64px;
+      margin-bottom: 0;
+      box-sizing: border-box;
+    }
+    #boxes > .element {
+      flex: 0 0 32px;
+      min-width: 32px;
+      width: 32px;
+      height: 32px;
+      line-height: 32px;
     }
 
 
@@ -373,6 +399,13 @@
       const buckets   = st.buckets;
       const maxVal    = Math.max(...originalArray);
       const rangeSize = (maxVal + 1) / buckets.length;
+      let mainPointerIndex = null;
+      if (['find-minmax', 'distribute', 'bucketed', 'collect'].includes(st.phase)) {
+        // The initial collection snapshot is the transition into copying and
+        // has no active array index; only show the marker once a value is
+        // actually being copied into the main array.
+        mainPointerIndex = Number.isInteger(st.i) ? st.i : null;
+      }
 
       // ─── Show Min/Max underneath the main array ───
       document.getElementById('minVal').textContent = st.min;
@@ -422,13 +455,7 @@
         if (permMainSorted.has(i)) div.classList.add('sorted');
 
         // ─── highlight “i” with an arrow, depending on phase ───
-        if (
-          (st.phase === 'find-minmax' ||
-           st.phase === 'distribute'  ||
-           st.phase === 'bucketed'    ||
-           st.phase === 'collect') &&
-          i === st.i
-        ) {
+        if (i === mainPointerIndex) {
           div.innerHTML = `<div class="arrow">↑<br>i</div>` + div.textContent;
           if (st.phase === 'find-minmax')   div.classList.add('comparing');
           else if (st.phase === 'distribute') div.classList.add('comparing');
@@ -507,10 +534,7 @@
 
        if (permMainSorted.has(i)) div.classList.add('sorted');
 
-       if ((st.phase === 'find-minmax' ||
-            st.phase === 'distribute' ||
-            st.phase === 'bucketed'   ||
-            st.phase === 'collect') && i === st.i) {
+       if (i === mainPointerIndex) {
          div.innerHTML = `<div class="arrow">↑<br>i</div>` + div.textContent;
          if (st.phase === 'find-minmax')   div.classList.add('comparing');
          else if (st.phase === 'distribute') div.classList.add('comparing');

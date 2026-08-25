@@ -20,36 +20,35 @@
     .node-call { fill: #f8d3d3; }
     .node-computed { fill: #d3f8d3; }
     .node-current { stroke: #f00; stroke-width: 3; }
-    .node-text { font-size: 14px; text-anchor: middle; dominant-baseline: middle; }
-    .node-label { font-size: 10px; text-anchor: start; dominant-baseline: middle; }
+    .node-text { font-size: 17px; text-anchor: middle; dominant-baseline: middle; }
+    .node-label { font-size: 16px; text-anchor: start; dominant-baseline: middle; }
 
-    /* Toggle handle inside call panel */
-    .toggle-handle {
-      position: absolute;
-      top: 50%;
-      left: 8px;
-      width: 8px;
-      height: 40px;
-      transform: translateY(-50%);
-      cursor: ew-resize;
-      background: #ccc;
-      border-radius: 4px;
+    /* Keep the call stack beside the tree instead of covering it. */
+    .tree-layout {
+      display: flex;
+      flex-wrap: nowrap;
+      align-items: flex-start;
+      gap: 8px;
+      width: 100%;
     }
-
-    /* Call panel styling - resizable */
+    #treeSvg {
+      flex: 1 1 50%;
+      min-width: 0;
+      width: 50% !important;
+      max-width: 50% !important;
+      margin-left: 12px !important;
+    }
+    /* Plain trace panel beside the tree. */
     #callPanel {
-      position: fixed;
-      top: 0;
-      right: 0;
-      width: 240px;
-      min-width: 150px;
-      max-width: 80%;
-      height: 100%;
+      flex: 1 1 50%;
+      width: 50%;
+      min-width: 0;
+      min-height: 200px;
+      align-self: stretch;
       background: #fff;
-      border-left: 1px solid #ccc;
+      border: 1px solid #ccc;
       overflow: auto;
-      resize: horizontal;
-      z-index: 1000;
+      box-sizing: border-box;
     }
     
     #callPanel ul {
@@ -60,6 +59,22 @@
     #callPanel li {
       font-family: sans-serif;
       font-size: 14px;
+    }
+    @media (max-width: 500px) {
+      .tree-layout { flex-wrap: wrap; }
+      #treeSvg {
+        flex-basis: 100%;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin-left: 0 !important;
+      }
+      #callPanel {
+        flex-basis: 100%;
+        width: 100%;
+        min-width: 0;
+        font-size: 13px;
+      }
+      #callPanel li { font-size: 13px; }
     }
   </style>
 </head>
@@ -88,15 +103,16 @@
     <div class="array-container" id="memoArray" style="display:inline-block; vertical-align:middle;"></div>
   </div>
 
-  <svg id="treeSvg" viewBox="0 0 600 600" preserveAspectRatio="xMidYMid meet"
-       style="width:100%; max-width:600px; aspect-ratio:1/1; display:block; margin-left:5%; overflow:visible; height:auto;">
+  <div class="tree-layout">
+  <svg id="treeSvg" viewBox="0 0 710 600" preserveAspectRatio="xMidYMin meet"
+       style="width:100%; max-width:710px; aspect-ratio:auto; display:block; margin-left:12px; overflow:visible; height:auto;">
     <g id="linkLayer"></g>
     <g id="nodeLayer"></g>
   </svg>
 
   <div id="callPanel">
     <ul id="callList"></ul>
-    <div class="toggle-handle"></div>
+  </div>
   </div>
 
   <script>
@@ -113,7 +129,7 @@
 
     function generateEvents(root){ let seen=new Set([0,1]); eventList=[]; function t(n){ eventList.push({type:'call',node:n}); if(seen.has(n.n)){ eventList.push({type:'returnMemo',node:n}); return;} if(n.n<2){ eventList.push({type:'return',node:n}); seen.add(n.n);} else{ t(n.left); eventList.push({type:'resume',node:n}); t(n.right); eventList.push({type:'return',node:n}); seen.add(n.n);} } t(root);}    
 
-    function assignPositions(root){ const viewSize=600,leftMargin=20,topMargin=20,vSpacing=70; const n=root.n,maxOffset=viewSize/2-leftMargin,hOffset=maxOffset/n; function sp(node,x,y){ if(!node) return; node.x=x; node.y=y; sp(node.left,x-hOffset,y+vSpacing); sp(node.right,x+hOffset,y+vSpacing);} sp(root,viewSize/2,topMargin); const maxY=Math.max(...allNodes.map(n=>n.y)); const svgEl=document.getElementById('treeSvg'); svgEl.setAttribute('viewBox',`0 0 ${viewSize} ${maxY+50}`); svgEl.style.height=`${maxY+50}px`; }
+    function assignPositions(root){ const baseWidth=Math.max(650,600+10*root.n),leftMargin=25,topMargin=20,vSpacing=70; const n=root.n,maxOffset=baseWidth/2-leftMargin,hOffset=maxOffset/n+5; function sp(node,x,y){ if(!node) return; node.x=x; node.y=y; sp(node.left,x-hOffset,y+vSpacing); sp(node.right,x+hOffset,y+vSpacing);} sp(root,baseWidth/2,topMargin); const minX=Math.min(...allNodes.map(n=>n.x)),maxX=Math.max(...allNodes.map(n=>n.x)),leftPad=5,rightPad=-50; const width=Math.ceil(maxX-minX+leftPad+rightPad); allNodes.forEach(node=>{ node.x += leftPad-minX; }); const maxY=Math.max(...allNodes.map(n=>n.y)),height=maxY+25; const svgEl=document.getElementById('treeSvg'); svgEl.setAttribute('viewBox',`0 0 ${width} ${height}`); svgEl.style.width=`${width}px`; svgEl.style.height=`${height}px`; }
 
     function clearSvg(){ const svg=document.getElementById('treeSvg'); while(svg.firstChild) svg.removeChild(svg.firstChild); const l=document.createElementNS(svgNS,'g');l.id='linkLayer'; svg.append(l); const n=document.createElementNS(svgNS,'g');n.id='nodeLayer'; svg.append(n);}    
 
@@ -121,13 +137,13 @@
 
     function logCall(n,d,msg){ const li=document.createElement('li'); li.style.paddingLeft=`${d*20}px`; li.textContent=msg; document.getElementById('callList').append(li);}    
 
-    function drawLink(node){ if(!node.parent) return; const r=16,p=node.parent,dx=node.x-p.x,dy=node.y-p.y,d=Math.hypot(dx,dy)||1,ux=dx/d,uy=dy/d,x1=p.x+ux*r,y1=p.y+uy*r,x2=node.x-ux*r,y2=node.y-uy*r; const line=document.createElementNS(svgNS,'line'); line.setAttribute('x1',x1); line.setAttribute('y1',y1); line.setAttribute('x2',x2); line.setAttribute('y2',y2); line.classList.add('link-line'); document.getElementById('linkLayer').append(line);}    
+    function drawLink(node){ if(!node.parent) return; const r=20,p=node.parent,dx=node.x-p.x,dy=node.y-p.y,d=Math.hypot(dx,dy)||1,ux=dx/d,uy=dy/d,x1=p.x+ux*r,y1=p.y+uy*r,x2=node.x-ux*r,y2=node.y-uy*r; const line=document.createElementNS(svgNS,'line'); line.setAttribute('x1',x1); line.setAttribute('y1',y1); line.setAttribute('x2',x2); line.setAttribute('y2',y2); line.classList.add('link-line'); document.getElementById('linkLayer').append(line);}
 
-    function drawNode(node){ clearHighlights(); const r=16; const c=document.createElementNS(svgNS,'circle'); c.setAttribute('cx',node.x); c.setAttribute('cy',node.y); c.setAttribute('r',r); c.id='circle-'+node.id; c.classList.add('node-circle','node-call','node-current'); document.getElementById('nodeLayer').append(c); const lbl=document.createElementNS(svgNS,'text'); lbl.id='label-'+node.id; lbl.setAttribute('x', node.x + r + 4); lbl.setAttribute('y',node.y+r/2); lbl.classList.add('node-label'); lbl.textContent=`F(${node.n})`; document.getElementById('nodeLayer').append(lbl); const txt=document.createElementNS(svgNS,'text'); txt.setAttribute('x',node.x); txt.setAttribute('y',node.y); txt.id='text-'+node.id; txt.classList.add('node-text'); txt.textContent=''; document.getElementById('nodeLayer').append(txt); createCount++; document.getElementById('nodeCount').textContent=`Number of nodes: ${createCount}`; updateCommentary(`Calling F(${node.n})`); logCall(node.n,node.depth,`Call F(${node.n})`);}    
+    function drawNode(node){ clearHighlights(); const r=20; const c=document.createElementNS(svgNS,'circle'); c.setAttribute('cx',node.x); c.setAttribute('cy',node.y); c.setAttribute('r',r); c.id='circle-'+node.id; c.classList.add('node-circle','node-call','node-current'); document.getElementById('nodeLayer').append(c); const lbl=document.createElementNS(svgNS,'text'); lbl.id='label-'+node.id; lbl.setAttribute('x', node.x + r + 5); lbl.setAttribute('y',node.y+r/2+5); lbl.classList.add('node-label'); lbl.textContent=`F(${node.n})`; document.getElementById('nodeLayer').append(lbl); const txt=document.createElementNS(svgNS,'text'); txt.setAttribute('x',node.x); txt.setAttribute('y',node.y); txt.id='text-'+node.id; txt.classList.add('node-text'); txt.textContent=''; document.getElementById('nodeLayer').append(txt); createCount++; document.getElementById('nodeCount').textContent=`Number of nodes: ${createCount}`; updateCommentary(`Calling F(${node.n})`); logCall(node.n,node.depth,`Call F(${node.n})`);}
 
-    function computeNode(node){ clearHighlights(); let formula; if(node.n<2){ node.value=node.n; formula=`${node.value}`;} else{ node.value=node.left.value+node.right.value; formula=`${node.left.value}+${node.right.value}=${node.value}`;} memo[node.n]=node.value; updateMemoCell(node.n,node.value); const c=document.getElementById('circle-'+node.id); const tEl=document.getElementById('text-'+node.id); c.setAttribute('class','node-circle node-computed node-current'); tEl.textContent=node.value; updateCommentary(`Computing F(${node.n}) = F(${node.n-1}) + F(${node.n-2}) = ${formula}<br>saving M[${node.n}] = ${node.value}<br>Returning ${node.value}`); logCall(node.n,node.depth,`Return fib(${node.n}) = ${formula}`);}    
+    function computeNode(node){ clearHighlights(); let formula; if(node.n<2){ node.value=node.n; formula=`${node.value}`;} else{ node.value=node.left.value+node.right.value; formula=`${node.left.value}+${node.right.value}=${node.value}`;} memo[node.n]=node.value; updateMemoCell(node.n,node.value); const c=document.getElementById('circle-'+node.id); const tEl=document.getElementById('text-'+node.id); c.setAttribute('class','node-circle node-computed node-current'); tEl.textContent=node.value; updateCommentary(`Computing F(${node.n}) = F(${node.n-1}) + F(${node.n-2}) = ${formula}<br>set M[${node.n}] = ${node.value}<br>Return F(${node.n}) = ${node.value}`); logCall(node.n,node.depth,`Set M[${node.n}] = ${node.value}; return F(${node.n}) = ${node.value}`);}    
 
-    function handleReturnMemo(node){ clearHighlights(); node.value=memo[node.n]; updateMemoCell(node.n,node.value); const c=document.getElementById('circle-'+node.id); const tEl=document.getElementById('text-'+node.id); c.setAttribute('class','node-circle node-computed node-current'); tEl.textContent=node.value; if(node.n<2){ updateCommentary(`Base case return F(${node.n}) = ${node.value}`);} else{ updateCommentary(`Retrieved F(${node.n}) = ${node.value} from memo`);} logCall(node.n,node.depth,`Return fib(${node.n}) (memoized) = ${node.value}`);}    
+    function handleReturnMemo(node){ clearHighlights(); node.value=memo[node.n]; updateMemoCell(node.n,node.value); const c=document.getElementById('circle-'+node.id); const tEl=document.getElementById('text-'+node.id); c.setAttribute('class','node-circle node-computed node-current'); tEl.textContent=node.value; updateCommentary(`Return F(${node.n}) = M[${node.n}] = ${node.value}`); logCall(node.n,node.depth,`Return F(${node.n}) = M[${node.n}] = ${node.value}`);}    
 
     function removeNode(node){ const circleEl=document.getElementById('circle-'+node.id); const textEl=document.getElementById('text-'+node.id); const labelEl=document.getElementById('label-'+node.id); const lines=document.getElementById('linkLayer').getElementsByTagName('line'); if(lines.length) lines[lines.length-1].remove(); if(circleEl) circleEl.remove(); if(textEl) textEl.remove(); if(labelEl) labelEl.remove(); createCount--; document.getElementById('nodeCount').textContent=`Number of nodes: ${createCount}`; updateCommentary(`Undo call fib(${node.n})`); const ul=document.getElementById('callList'); if(ul.lastElementChild) ul.removeChild(ul.lastElementChild);}    
 
@@ -209,30 +225,6 @@
         clearInterval(intervalId);
       }
     });
-
-        // Enable dragging of left-edge toggle handle for custom panel resizing
-    (function() {
-      const panel = document.getElementById('callPanel');
-      const handle = panel.querySelector('.toggle-handle');
-      let isDragging = false;
-      handle.addEventListener('mousedown', e => {
-        isDragging = true;
-        e.preventDefault();
-      });
-      document.addEventListener('mouseup', () => {
-        isDragging = false;
-      });
-      document.addEventListener('mousemove', e => {
-        if (!isDragging) return;
-        // Compute new width as distance from mouse to right edge
-        const maxWidth = window.innerWidth * 0.8;
-        let newWidth = window.innerWidth - e.clientX;
-        // Enforce min/max
-        if (newWidth < 150) newWidth = 150;
-        if (newWidth > maxWidth) newWidth = maxWidth;
-        panel.style.width = newWidth + 'px';
-      });
-    })();
 
     // Auto-start on load
     window.addEventListener('load', () => {
