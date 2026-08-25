@@ -142,7 +142,7 @@
 </div>
 
 
-  <div id="description">Press "Next" to begin.</div>
+  <div id="description" role="status" aria-live="polite">Press "Next" to begin.</div>
 
   <div id="input-label"><strong>Input Array:</strong></div>
   <div class="array-container" id="input-container">
@@ -507,7 +507,12 @@ case 'prefix_calc':
    window.onGenerate = function(isCustom) {
   if (isCustom) {
     const txt = document.getElementById('customArray').value.trim();
-    return txt.split(',').map(s => parseInt(s.trim(), 10));
+    const values = txt.split(',').map(s => Number(s.trim()));
+    if (!txt || values.some(value => !Number.isInteger(value))) {
+      alert('Enter a comma-separated list of valid integers.');
+      return null;
+    }
+    return values;
   }
   const n   = parseInt(document.getElementById('arraySize').value, 10);
   const min = 2;

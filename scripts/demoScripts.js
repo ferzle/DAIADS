@@ -124,6 +124,7 @@ function generateRandomArray(sizeInput,inputValues) {
 };
 
     function start(arr) {
+      if (!Array.isArray(arr)) return;
       original = arr.slice();
       if (typeof window.setupAux === 'function') {
         window.setupAux(original, original.length);
