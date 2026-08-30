@@ -1,0 +1,1689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="/DAIADS/scripts/content-page-routing.js"></script>
+  <meta charset="UTF-8">
+  <title>Prim's Algorithm</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <script src="/DAIADS/scripts/chapterScripts.js"></script>
+  <link rel="stylesheet" href="/DAIADS/css/style.css">
+  <link rel="stylesheet" href="/DAIADS/css/chapter.css">
+</head>
+<body>
+  <h1>Prim's Algorithm</h1>
+
+  <section id="problem-solved" section-title="Problem Solved">
+    <h2>Problem Solved</h2>
+    <p>
+      Prim's Algorithm solves the
+      <a class="problem" href="?path=Problems%2FGraphs%2FMinimum%20Spanning%20Tree">Minimum Spanning Tree</a>
+      problem.
+    </p>
+  </section>
+
+  <section id="design" section-title="Design and Strategy">
+  <h2>Design and Strategy</h2>
+
+  <p>
+    Prim's Algorithm builds a minimum spanning tree of a connected, weighted, undirected graph by starting at
+    one vertex and growing a single tree. At each step, it selects a minimum-weight edge with exactly one
+    endpoint already in the tree. The other endpoint is then added to the tree. The process stops when every
+    vertex is in the tree.
+  </p>
+
+  <p>
+    This is a <strong>greedy</strong> algorithm: once it chooses the cheapest edge that can expand the current
+    tree, it never reverses that choice. Because each selected edge joins the current tree to a new vertex,
+    the selected edges remain connected and never contain a cycle.
+  </p>
+
+  <p>
+    A useful way to organize the choices is to keep a <em>key</em> for each vertex outside the tree. The key of
+    a vertex is the weight of the cheapest known edge connecting that vertex to the current tree. A min-priority
+    queue stores candidate vertices by key, so the vertex with the smallest key can be selected efficiently.
+    When a new vertex enters the tree, its incident edges may give some outside vertices cheaper ways to connect,
+    so their keys are updated and new priority-queue entries are added.
+  </p>
+
+  <p>
+    At every stage, the selected edges form a tree containing exactly the vertices that have already been reached.
+    For each vertex <code>v</code> outside that tree, <code>key[v]</code> is the weight of the lightest known
+    edge from the tree to <code>v</code>. Therefore, the outside vertex with the smallest key is attached by a
+    lightest edge leaving the current tree. This is how the priority-queue implementation carries out Prim's
+    greedy choice.
+  </p>
+
+  <p>
+    The greedy choice is safe because of the <em>cut property</em>. A cut divides the vertices into two groups.
+    At any point in Prim's Algorithm, consider the cut with the vertices already in the tree on one side and all
+    remaining vertices on the other. Prim selects a lightest edge crossing this cut. If a minimum spanning tree
+    does not contain that edge, adding it creates a cycle containing some other edge that also crosses the cut.
+    That other edge cannot be lighter than Prim's choice, so replacing it with Prim's edge gives another minimum
+    spanning tree that includes the greedy choice. Repeating this argument shows that every choice made by Prim
+    can be part of a minimum spanning tree.
+  </p>
+
+  <h3>High-Level Algorithm</h3>
+  <ol class="spaced">
+    <li>Choose any start vertex <code>s</code>.</li>
+    <li>
+      Set <code>key[s] = 0</code>. Set the key of every other vertex to infinity, and place
+      <code>s</code> in a min-priority queue.
+    </li>
+    <li>
+      While the priority queue is not empty:
+      <ol type="a">
+        <li>Remove the vertex <code>u</code> with the smallest key.</li>
+        <li>If <code>u</code> is already in the tree, skip this queue entry.</li>
+        <li>Otherwise, add <code>u</code> to the tree.</li>
+        <li>
+          For each edge from <code>u</code> to a vertex <code>v</code> outside the tree, if that edge is lighter
+          than <code>key[v]</code>, update <code>key[v]</code>, record <code>u</code> as the parent of
+          <code>v</code>, and insert the new key for <code>v</code> into the priority queue.
+        </li>
+      </ol>
+    </li>
+    <li>If the graph is connected, the parent edges form a minimum spanning tree.</li>
+  </ol>
+</section>
+
+    <style>
+      #prim-mini-example {
+        display: block;
+        max-width: 760px;
+      }
+
+      #prim-mini-example svg {
+        display: block;
+        width: 100%;
+        max-width: 520px;
+        height: auto;
+        margin: 0.75em 0;
+        border: 1px solid #888;
+        background: #ffffff;
+      }
+
+      #prim-mini-example .edge {
+        stroke: #999999;
+        stroke-width: 3;
+        fill: none;
+      }
+
+      #prim-mini-example .edge-label {
+        font-size: 14px;
+        fill: #333333;
+      }
+
+      #prim-mini-example .vertex {
+        fill: #f7f9fc;
+        stroke: #003366;
+        stroke-width: 2;
+      }
+
+      #prim-mini-example .vertex.in-tree {
+        fill: #dbeafe;
+      }
+
+      #prim-mini-example .vertex-label {
+        font-size: 16px;
+        font-weight: bold;
+        fill: #003366;
+        text-anchor: middle;
+        dominant-baseline: middle;
+      }
+
+      #prim-mini-example .selected {
+        stroke: #2e8b57;
+        stroke-width: 5;
+      }
+
+      #prim-mini-example .current {
+        stroke: #d97706;
+        stroke-width: 6;
+      }
+
+      #prim-mini-example .legend {
+        margin: 0.5em 0;
+        font-size: 0.95em;
+      }
+
+      #prim-mini-example .legend span {
+        margin-right: 1em;
+        white-space: nowrap;
+      }
+
+      #prim-mini-example .legend-line {
+        display: inline-block;
+        width: 24px;
+        height: 0;
+        border-top: 4px solid #999999;
+        vertical-align: middle;
+        margin-right: 0.25em;
+      }
+
+      #prim-mini-example .legend-line.current {
+        border-top-color: #d97706;
+      }
+
+      #prim-mini-example .legend-line.selected {
+        border-top-color: #2e8b57;
+      }
+
+      #prim-mini-example .legend-vertex {
+        display: inline-block;
+        width: 14px;
+        height: 14px;
+        background: #dbeafe;
+        border: 2px solid #003366;
+        border-radius: 50%;
+        vertical-align: middle;
+        margin-right: 0.25em;
+      }
+
+      #prim-mini-example .controls {
+        margin-top: 0.5em;
+      }
+
+      #prim-mini-example button {
+        margin-right: 0.4em;
+        margin-bottom: 0.4em;
+        padding: 0.35em 0.7em;
+        cursor: pointer;
+      }
+    </style>
+
+    <div id="prim-mini-example" class="example-box">
+      <strong class="example-title">Small Example</strong>
+      <p>
+        Suppose the graph has edges
+        \((A,B,2)\), \((A,C,3)\), \((B,C,1)\), \((B,D,4)\), \((C,E,2)\), and \((D,E,3)\),
+        where the third value is the edge weight. Start Prim's Algorithm at \(A\). Use the controls below to
+        follow the tree as it grows.
+      </p>
+
+      <svg viewBox="0 0 520 240"
+           role="img"
+           aria-label="Weighted graph used to demonstrate Prim's Algorithm">
+        <!-- Edges -->
+        <line id="p-edge-ab" class="edge" x1="90" y1="60" x2="210" y2="45"></line>
+        <text class="edge-label" x="150" y="42">2</text>
+
+        <line id="p-edge-bc" class="edge" x1="210" y1="45" x2="170" y2="150"></line>
+        <text class="edge-label" x="198" y="102">1</text>
+
+        <line id="p-edge-ac" class="edge" x1="90" y1="60" x2="170" y2="150"></line>
+        <text class="edge-label" x="112" y="115">3</text>
+
+        <line id="p-edge-ce" class="edge" x1="170" y1="150" x2="390" y2="155"></line>
+        <text class="edge-label" x="280" y="145">2</text>
+
+        <line id="p-edge-de" class="edge" x1="380" y1="60" x2="390" y2="155"></line>
+        <text class="edge-label" x="398" y="108">3</text>
+
+        <line id="p-edge-bd" class="edge" x1="210" y1="45" x2="380" y2="60"></line>
+        <text class="edge-label" x="295" y="42">4</text>
+
+        <!-- Vertices -->
+        <circle id="p-vertex-a" class="vertex" cx="90" cy="60" r="18"></circle>
+        <text class="vertex-label" x="90" y="60">A</text>
+
+        <circle id="p-vertex-b" class="vertex" cx="210" cy="45" r="18"></circle>
+        <text class="vertex-label" x="210" y="45">B</text>
+
+        <circle id="p-vertex-c" class="vertex" cx="170" cy="150" r="18"></circle>
+        <text class="vertex-label" x="170" y="150">C</text>
+
+        <circle id="p-vertex-d" class="vertex" cx="380" cy="60" r="18"></circle>
+        <text class="vertex-label" x="380" y="60">D</text>
+
+        <circle id="p-vertex-e" class="vertex" cx="390" cy="155" r="18"></circle>
+        <text class="vertex-label" x="390" y="155">E</text>
+      </svg>
+
+      <div class="legend">
+        <span><span class="legend-line"></span>Not selected</span>
+        <span><span class="legend-line current"></span>Edge selected this step</span>
+        <span><span class="legend-line selected"></span>Previously selected</span>
+        <span><span class="legend-vertex"></span>Vertex in tree</span>
+      </div>
+
+      <p id="p-status" aria-live="polite">
+        <strong>Step 0:</strong> Start with vertex \(A\) in the tree.
+      </p>
+
+      <p id="p-tree-vertices">
+        <strong>Vertices in tree:</strong> \(\{A\}\)
+      </p>
+
+      <p id="p-keys">
+        <strong>Keys outside the tree:</strong> \(B:2, C:3, D:\infty, E:\infty\)
+      </p>
+
+      <div class="controls">
+        <button type="button" id="p-prev">Previous</button>
+        <button type="button" id="p-next">Next</button>
+        <button type="button" id="p-play">Play</button>
+        <button type="button" id="p-reset">Reset</button>
+      </div>
+    </div>
+
+    <script>
+    (function () {
+      const edgeIds = {
+        ab: "p-edge-ab",
+        bc: "p-edge-bc",
+        ac: "p-edge-ac",
+        ce: "p-edge-ce",
+        de: "p-edge-de",
+        bd: "p-edge-bd"
+      };
+
+      const vertexIds = {
+        A: "p-vertex-a",
+        B: "p-vertex-b",
+        C: "p-vertex-c",
+        D: "p-vertex-d",
+        E: "p-vertex-e"
+      };
+
+      const steps = [
+        {
+          status: "Start with vertex \\(A\\) in the tree.",
+          vertices: ["A"],
+          keys: "\\(B:2, C:3, D:\\infty, E:\\infty\\)",
+          selected: []
+        },
+        {
+          status: "The lightest edge leaving the tree is \\((A,B,2)\\). Select it and add \\(B\\).",
+          vertices: ["A", "B"],
+          keys: "\\(C:1, D:4, E:\\infty\\)",
+          selected: ["ab"],
+          current: "ab"
+        },
+        {
+          status: "The lightest edge leaving the tree is now \\((B,C,1)\\). Select it and add \\(C\\).",
+          vertices: ["A", "B", "C"],
+          keys: "\\(D:4, E:2\\)",
+          selected: ["ab", "bc"],
+          current: "bc"
+        },
+        {
+          status: "The lightest edge leaving the tree is \\((C,E,2)\\). Select it and add \\(E\\).",
+          vertices: ["A", "B", "C", "E"],
+          keys: "\\(D:3\\)",
+          selected: ["ab", "bc", "ce"],
+          current: "ce"
+        },
+        {
+          status: "The lightest edge leaving the tree is \\((E,D,3)\\). Select it and add \\(D\\).",
+          vertices: ["A", "B", "C", "D", "E"],
+          keys: "none",
+          selected: ["ab", "bc", "ce", "de"],
+          current: "de"
+        },
+        {
+          status: "All five vertices are now in the tree. The selected edges have total weight \\(2+1+2+3=8\\).",
+          vertices: ["A", "B", "C", "D", "E"],
+          keys: "none",
+          selected: ["ab", "bc", "ce", "de"]
+        }
+      ];
+
+      let stepIndex = 0;
+      let timer = null;
+
+      const statusEl = document.getElementById("p-status");
+      const treeVerticesEl = document.getElementById("p-tree-vertices");
+      const keysEl = document.getElementById("p-keys");
+      const prevBtn = document.getElementById("p-prev");
+      const nextBtn = document.getElementById("p-next");
+      const playBtn = document.getElementById("p-play");
+      const resetBtn = document.getElementById("p-reset");
+
+      function renderStep() {
+        const step = steps[stepIndex];
+
+        for (const name in edgeIds) {
+          const edge = document.getElementById(edgeIds[name]);
+          edge.classList.remove("selected", "current");
+        }
+
+        for (const name in vertexIds) {
+          document.getElementById(vertexIds[name]).classList.remove("in-tree");
+        }
+
+        for (const name of step.selected) {
+          document.getElementById(edgeIds[name]).classList.add("selected");
+        }
+
+        if (step.current) {
+          document.getElementById(edgeIds[step.current]).classList.add("current");
+        }
+
+        for (const name of step.vertices) {
+          document.getElementById(vertexIds[name]).classList.add("in-tree");
+        }
+
+        statusEl.innerHTML =
+          "<strong>Step " + stepIndex + ":</strong> " + step.status;
+
+        treeVerticesEl.innerHTML =
+          "<strong>Vertices in tree:</strong> \\(\\{" + step.vertices.join(",") + "\\}\\)";
+
+        keysEl.innerHTML =
+          "<strong>Keys outside the tree:</strong> " + step.keys;
+
+        if (window.MathJax && window.MathJax.typesetPromise) {
+          window.MathJax.typesetPromise([statusEl, treeVerticesEl, keysEl]);
+        }
+
+        prevBtn.disabled = stepIndex === 0;
+        nextBtn.disabled = stepIndex === steps.length - 1;
+      }
+
+      function stopPlaying() {
+        if (timer !== null) {
+          clearInterval(timer);
+          timer = null;
+        }
+        playBtn.textContent = "Play";
+      }
+
+      prevBtn.addEventListener("click", function () {
+        stopPlaying();
+        if (stepIndex > 0) {
+          stepIndex--;
+          renderStep();
+        }
+      });
+
+      nextBtn.addEventListener("click", function () {
+        stopPlaying();
+        if (stepIndex < steps.length - 1) {
+          stepIndex++;
+          renderStep();
+        }
+      });
+
+      playBtn.addEventListener("click", function () {
+        if (timer !== null) {
+          stopPlaying();
+          return;
+        }
+
+        if (stepIndex === steps.length - 1) {
+          stepIndex = 0;
+          renderStep();
+        }
+
+        playBtn.textContent = "Pause";
+        timer = setInterval(function () {
+          if (stepIndex < steps.length - 1) {
+            stepIndex++;
+            renderStep();
+          } else {
+            stopPlaying();
+          }
+        }, 1800);
+      });
+
+      resetBtn.addEventListener("click", function () {
+        stopPlaying();
+        stepIndex = 0;
+        renderStep();
+      });
+
+      renderStep();
+    })();
+    </script>
+
+    <p>
+      The larger interactive demo below shows the same greedy process together with the key values and priority
+      queue used by an efficient implementation.
+    </p>
+  </section>
+
+  <section id="demo" section-title="Interactive Demo">
+    <h2>Interactive Demo</h2>
+    <div class="embeddedDemoContainer">
+      <iframe class="embeddedDemo"
+              src="../../../Content/Demos/Greedy/Prims Algorithm Demo.html"
+              allow="fullscreen"
+              name="prims-demo" title="Prim's Algorithm Demo">
+      </iframe>
+    </div>
+  </section>
+
+  <section id="code" section-title="Implementation in Java, C++, Python">
+    <h2>Implementation in Java, C++, Python</h2>
+    <p>
+      These implementations represent the graph with an adjacency list and use a min-priority queue to decide which
+      vertex to add to the tree next. Because the graph is undirected, each edge appears in the adjacency lists of both
+      of its endpoints. The array <code>key</code> stores, for each vertex not yet in the tree, the weight of the
+      cheapest known edge that could connect it to the tree. The array <code>parent</code> stores the other endpoint
+      of that edge. Thus, when the algorithm finishes, the <code>parent</code> array describes the minimum spanning
+      tree: for every vertex <code>v</code> except the start vertex, the edge
+      <code>(parent[v], v)</code> belongs to the tree. The start vertex has parent <code>-1</code>.
+    </p>
+
+    <p>
+      The <code>inTree</code> array records which vertices have already been added to the growing tree. The priority
+      queue stores candidate vertices ordered by their key values. Rather than modifying an existing queue entry when
+      a cheaper way to attach a vertex is found, the implementation simply inserts a new entry with the smaller key.
+      This means the queue may contain more than one entry for the same vertex. The newer, cheaper entry will be
+      removed first because the priority queue always removes the minimum key. Any older entries for that vertex will
+      be ignored if they are later removed from the queue, since the vertex is already in the tree.
+    </p>
+    <p>The implementations below use vertex <code>0</code> as the start vertex. 
+      It is not too difficult to generalize this to allow any vertex to be chosen as the starting point.</p>
+
+
+    <div class="tab-group">
+      <div class="tabs" role="tablist">
+        <button id="tab-java" class="tablink active" data-lang="java" role="tab" aria-controls="java" aria-selected="true">Java</button>
+        <button id="tab-cpp" class="tablink" data-lang="cpp" role="tab" aria-controls="cpp" aria-selected="false">C++</button>
+        <button id="tab-python" class="tablink" data-lang="python" role="tab" aria-controls="python" aria-selected="false">Python</button>
+      </div>
+      <div id="java" class="code-container active" role="tabpanel" aria-labelledby="tab-java">
+        <pre><code class="language-java">import java.util.*;
+
+class Edge {
+  int to, weight;
+
+  Edge(int to, int weight) {
+    this.to = to;
+    this.weight = weight;
+  }
+}
+
+class Prim {
+  static int[] primMST(List&lt;Edge&gt;[] graph) {
+    int n = graph.length;
+    boolean[] inTree = new boolean[n];
+    int[] key = new int[n];
+    int[] parent = new int[n];
+
+    Arrays.fill(key, Integer.MAX_VALUE);
+    Arrays.fill(parent, -1);
+    key[0] = 0;
+
+    PriorityQueue&lt;int[]&gt; pq =
+        new PriorityQueue&lt;&gt;(Comparator.comparingInt(a -&gt; a[0]));
+    pq.add(new int[]{0, 0}); // {key, vertex}
+
+    int verticesAdded = 0;
+
+    while (!pq.isEmpty()) {
+      int[] current = pq.poll();
+      int u = current[1];
+
+      if (inTree[u]) continue;
+
+      inTree[u] = true;
+      verticesAdded++;
+
+      for (Edge e : graph[u]) {
+        int v = e.to;
+        if (!inTree[v] &amp;&amp; e.weight &lt; key[v]) {
+          key[v] = e.weight;
+          parent[v] = u;
+          pq.add(new int[]{key[v], v});
+        }
+      }
+    }
+
+    if (verticesAdded != n) return null;
+    return parent;
+  }
+}</code></pre>
+      </div>
+      <div id="cpp" class="code-container" role="tabpanel" aria-labelledby="tab-cpp">
+        <pre><code class="language-cpp">#include &lt;climits&gt;
+#include &lt;functional&gt;
+#include &lt;queue&gt;
+#include &lt;utility&gt;
+#include &lt;vector&gt;
+using namespace std;
+
+struct Edge {
+  int to;
+  int weight;
+};
+
+vector&lt;int&gt; primMST(const vector&lt;vector&lt;Edge&gt;&gt;&amp; graph) {
+  int n = graph.size();
+  vector&lt;bool&gt; inTree(n, false);
+  vector&lt;int&gt; key(n, INT_MAX);
+  vector&lt;int&gt; parent(n, -1);
+
+  // {key, vertex}; greater makes this a min-priority queue.
+  priority_queue&lt;pair&lt;int, int&gt;,
+                 vector&lt;pair&lt;int, int&gt;&gt;,
+                 greater&lt;pair&lt;int, int&gt;&gt;&gt; pq;
+
+  key[0] = 0;
+  pq.push({0, 0});
+
+  int verticesAdded = 0;
+
+  while (!pq.empty()) {
+    int u = pq.top().second;
+    pq.pop();
+
+    if (inTree[u]) continue;
+
+    inTree[u] = true;
+    verticesAdded++;
+
+    for (const Edge&amp; e : graph[u]) {
+      int v = e.to;
+      if (!inTree[v] &amp;&amp; e.weight &lt; key[v]) {
+        key[v] = e.weight;
+        parent[v] = u;
+        pq.push({key[v], v});
+      }
+    }
+  }
+
+  if (verticesAdded != n) return {};
+  return parent;
+}</code></pre>
+      </div>
+      <div id="python" class="code-container" role="tabpanel" aria-labelledby="tab-python">
+        <pre><code class="language-python">import heapq
+
+
+def prim_mst(graph):
+    n = len(graph)
+    in_tree = [False] * n
+    key = [float("inf")] * n
+    parent = [-1] * n
+
+    key[0] = 0
+    pq = [(0, 0)]  # (key, vertex)
+    vertices_added = 0
+
+    while pq:
+        _, u = heapq.heappop(pq)
+
+        if in_tree[u]:
+            continue
+
+        in_tree[u] = True
+        vertices_added += 1
+
+        for v, weight in graph[u]:
+            if not in_tree[v] and weight &lt; key[v]:
+                key[v] = weight
+                parent[v] = u
+                heapq.heappush(pq, (key[v], v))
+
+    if vertices_added != n:
+        return None
+    return parent</code></pre>
+      </div>
+    </div>
+    <p>
+      If the graph is disconnected, not all vertices can be reached from the start vertex, so these implementations
+      return no spanning tree.
+    </p>
+
+  </section>
+
+
+ <section id="analysis" section-title="Time/Space Analysis">
+  <h2>Time/Space Analysis</h2>
+
+  <p>
+    <strong>Time Complexity:</strong>
+    A simple "work per iteration times number of iterations" analysis can overestimate the running time here.
+    When a vertex \(u\) is added to the tree, examining its adjacency list takes \(O(\deg(u))\) time, which can
+    be as large as \(O(V)\). Multiplying this worst case by \(V\) vertices would give \(O(V^2)\) just for examining
+    edges. However, not every vertex has \(V\) incident edges. Across all vertices, the total number of adjacency-list
+    entries is \(2E\), since each undirected edge appears once at each endpoint. Thus all of the adjacency-list
+    scans together take only \(O(E)\) time.
+    </p>
+
+  <p>
+    Whenever examining an edge produces a smaller key for a vertex, a new entry is inserted into the
+    min-priority queue. There can be at most \(O(E)\) such insertions. The lazy implementation may also remove
+    stale entries from the queue, but there can be at most \(O(E)\) removals because every removed entry was
+    previously inserted. Since the heap can contain \(O(E)\) entries, each insertion or removal takes
+    \(O(\log E)\) time. Thus the priority-queue work takes \(O(E\log E)\) time overall.
+  </p>
+
+  <p>
+    For a simple graph, \(E=O(V^2)\), so
+    \(\log E=O(\log V^2)=O(\log V)\). Therefore the running time can also be written as
+    \(O(E\log V)\).
+  </p>
+
+  <p>
+    A simpler implementation can avoid the priority queue and scan all vertices to find the smallest key at
+    each step. With an adjacency matrix, this version runs in \(O(V^2)\) time. It can be attractive for dense
+    graphs, while the \(O(E\log V)\) priority-queue version is generally preferable for sparse graphs.
+  </p>
+
+  <p>
+    <strong>Space Complexity:</strong> The <code>key</code>, <code>parent</code>, and <code>inTree</code>
+    arrays use \(O(V)\) extra space. Because the lazy priority queue may contain multiple entries for the same
+    vertex, it can use \(O(E)\) extra space in the worst case. Thus the total extra space is \(O(V+E)\), not
+    counting the adjacency-list representation of the input graph. A priority queue that supports an efficient
+    decrease-key operation can keep only one queue entry per vertex, reducing the extra heap space to \(O(V)\).
+  </p>
+</section>
+
+  <section id="variations" section-title="Variations/Improvements">
+    <h2>Variations/Improvements</h2>
+    <p>
+      Prim's Algorithm can be implemented in several ways depending on how the graph is represented. The
+      adjacency-list and min-priority-queue version above runs in \(O(E \log V)\) time and is usually preferable
+      for sparse graphs. A simpler adjacency-matrix version that scans all vertices to find the next minimum key
+      runs in \(O(V^2)\) time and can be competitive on dense graphs.
+    </p>
+    <p>
+      More sophisticated priority queues can improve the theoretical running time further. For example, a
+      Fibonacci heap supports the key decreases that occur while processing edges in \(O(1)\) amortized time
+      and removal of the minimum in \(O(\log V)\) amortized time. This gives Prim's Algorithm a running time of
+      \(O(E + V\log V)\). Fibonacci heaps are considerably more complicated than the priority queues used here,
+      so we mention this bound only as an example of how the choice of data structure can affect an algorithm's
+      running time.
+    </p>
+
+    <p>
+      The start vertex does not affect the minimum possible total weight, but it can affect which MST is produced
+      when several MSTs exist. Equal-weight choices can also be broken in different ways. If all edge weights are
+      distinct, the MST is unique, so every run of Prim's Algorithm produces the same tree regardless of the start
+      vertex.
+    </p>
+    <p>
+      Prim's Algorithm works correctly with negative edge weights. Negative weights cause no difficulty because the
+      algorithm only compares edge weights and repeatedly chooses the lightest edge that connects the current tree
+      to a new vertex.
+    </p>
+
+    <p>
+      If the graph is disconnected, no spanning tree exists. The implementation above detects this and reports
+      failure. A variation can instead restart Prim's Algorithm from an unvisited vertex whenever the priority
+      queue becomes empty; doing so produces a minimum spanning forest, with one minimum spanning tree for each
+      connected component.
+    </p>
+  </section>
+
+  <section id="connections" section-title="Connections and Comparisons">
+  <h2>Connections and Comparisons</h2>
+
+  <p>
+    Prim's Algorithm and
+    <a href="?path=Algorithms%2FGreedy%2FKruskals">Kruskal's Algorithm</a>
+    both solve the minimum spanning tree problem using a greedy strategy, but they organize their choices
+    differently. Prim always maintains one growing tree and repeatedly adds the lightest edge that connects
+    that tree to a new vertex. Kruskal considers edges globally from smallest to largest and may maintain
+    several separate trees that gradually merge.
+  </p>
+
+  <p>
+    Prim is also closely related to Dijkstra's shortest-path algorithm, which we will encounter later.
+    Both algorithms can use an adjacency list and a min-priority queue, repeatedly remove the vertex with
+    the smallest current priority, and examine its incident edges. The important difference is what that
+    priority represents. In Prim, <code>key[v]</code> is the weight of the cheapest known edge that can
+    attach <code>v</code> to the growing tree. In Dijkstra, <code>dist[v]</code> is the length of the
+    cheapest known path from the start vertex to <code>v</code>.
+  </p>
+
+  <p>
+    In Prim, the essential test and update are
+  </p>
+  <pre><code>if !inTree[v] and e.weight &lt; key[v]
+  key[v] = e.weight
+  parent[v] = u
+  add (key[v], v) to the priority queue</code></pre>
+
+  <p>
+    Dijkstra uses almost the same code, but the corresponding test and update use the length of the path
+    through <code>u</code>:
+  </p>
+  <pre><code>if !inTree[v] and dist[u] + e.weight &lt; dist[v]
+  dist[v] = dist[u] + e.weight
+  parent[v] = u
+  add (dist[v], v) to the priority queue</code></pre>
+
+  <p>
+    Thus, the two algorithms can have nearly identical control structures even though they solve different
+    problems. Prim chooses vertices according to the weight of a single edge connecting them to the tree,
+    while Dijkstra chooses vertices according to the total length of a path from the start vertex.
+  </p>
+</section>
+<section id="links" section-title="Related Links and Resources">
+  <h2>Related Links and Resources</h2>
+  <ul>
+    <li>
+      <a href="https://en.wikipedia.org/wiki/Prim%27s_algorithm" target="_blank">Wikipedia: Prim's algorithm</a>
+      Background, history, correctness, and implementation variants.
+    </li>
+    <li>
+      <a href="https://cp-algorithms.com/graph/mst_prim.html" target="_blank">cp-algorithms: Prim's algorithm</a>
+      A more implementation-oriented treatment, including dense and sparse versions.
+    </li>
+    <li>
+      <a href="https://www.geeksforgeeks.org/dsa/prims-minimum-spanning-tree-mst-greedy-algo-5/" target="_blank">GeeksforGeeks: Prim's Minimum Spanning Tree</a>
+      A step-by-step explanation with worked examples and implementations.
+    </li>
+    <li>
+      <a href="https://visualgo.net/en/mst" target="_blank">VisuAlgo: Minimum Spanning Tree</a>
+      An interactive visualization of Prim's and Kruskal's algorithms.
+    </li>
+  </ul>
+</section>
+<section id="reading-questions" section-title="Reading Comprehension Questions">
+  <h2>Reading Comprehension Questions</h2>
+  <ol>
+    <li>
+      <strong>Greedy Choice:</strong>
+      What greedy choice does Prim's Algorithm make each time it adds a new vertex to the tree?
+    </li>
+    <li>
+      <strong>Key and Parent:</strong>
+      What do <code>key[v]</code> and <code>parent[v]</code> represent for a vertex outside the tree?
+      How does the final <code>parent</code> array describe the MST?
+    </li>
+    <li>
+      <strong>Lazy Priority Queue:</strong>
+      Why can the priority queue contain several entries for the same vertex and why does it not break the algorithm?
+    </li>
+    <li>
+      <strong>Small Example:</strong>
+      After \(A\) and \(B\) are in the tree in the example above, why does the key of \(C\) change from
+      3 to 1, and which edge will be used to add \(C\)?
+    </li>
+    <li>
+      <strong>Greedy Correctness:</strong>
+      What exchange argument explains why selecting a lightest edge crossing from the current tree to the
+      remaining vertices is safe?
+    </li>
+    <li>
+      <strong>Counting Edge Examinations:</strong>
+      Examining the adjacency list of one vertex can take \(O(V)\) time. Why would multiplying this by
+      \(V\) vertices give an unnecessarily loose bound, and why do all adjacency-list scans together take
+      only \(O(E)\) time?
+    </li>
+    <li>
+      <strong>Priority-Queue Running Time:</strong>
+      Why does the lazy implementation perform at most \(O(E)\) priority-queue insertions and removals?
+      Why does this initially give a bound of \(O(E\log E)\), and why can that be written as
+      \(O(E\log V)\) for a simple graph?
+    </li>
+    <li>
+      <strong>Starting Vertex:</strong>
+      How can changing the starting vertex affect the tree produced by Prim's Algorithm?
+    </li>
+    <li>
+      <strong>Edge Weights:</strong>
+      Why do negative edge weights require no change to the algorithm?
+    </li>
+    <li>
+      <strong>Prim vs. Kruskal:</strong>
+      What is the main difference between how Prim's Algorithm and Kruskal's Algorithm build a minimum
+      spanning tree?
+    </li>
+    <li>
+      <strong>Prim vs. Dijkstra:</strong>
+      What does the priority of a vertex represent in Prim's Algorithm, and how does that differ from the
+      distance value used by Dijkstra's Algorithm?
+    </li>
+  </ol>
+
+<button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
+
+  <div id="answers" class="answer" hidden>
+    <ol>
+      <li>
+        <strong>Answer:</strong>
+        Prim chooses a minimum-weight edge with one endpoint in the current tree and the other endpoint outside the
+        tree. In the implementation above, it does this by removing from the min-priority queue the outside vertex
+        with the smallest key, where that key is the weight of the cheapest known edge connecting the vertex to the
+        current tree.
+      </li>
+
+      <li>
+        <strong>Answer:</strong>
+        <code>key[v]</code> is the weight of the cheapest known edge connecting <code>v</code> to the
+        current tree, and <code>parent[v]</code> is the tree vertex at the other endpoint of that edge.
+        When the algorithm finishes, each edge <code>(parent[v], v)</code>, except for the start vertex,
+        is an edge of the MST.
+      </li>
+      <li>
+        <strong>Answer:</strong>
+        When a smaller key is found, the implementations insert a new queue entry rather than changing
+        the old one. Since the new entry has the smaller key, it will be removed before the older entry.
+        Once the vertex has been added to the tree, any old entries for that vertex will be skipped
+        since the vertex is already in the tree at that point.
+      </li>
+      <li>
+        <strong>Answer:</strong>
+        Initially the cheapest known way to connect \(C\) is edge \((A,C)\), with weight 3. After \(B\)
+        enters the tree, edge \((B,C)\) provides a cheaper connection of weight 1, so
+        <code>key[C]</code> becomes 1 and its parent becomes \(B\). Edge \((B,C)\) is then used to add \(C\).
+      </li>
+      <li>
+        <strong>Answer:</strong>
+        Consider the cut separating the vertices already in Prim's tree from the remaining vertices. If
+        an MST does not contain Prim's lightest edge crossing this cut, adding that edge to the MST creates
+        a cycle containing another edge crossing the cut. That other edge is no lighter than Prim's edge,
+        so it can be replaced without increasing the total weight.
+      </li>
+      <li>
+        <strong>Answer:</strong>
+        Although one vertex can have \(O(V)\) incident edges, not every vertex necessarily does. In an
+        undirected adjacency list, every edge appears exactly twice, once at each endpoint. Therefore the
+        total number of adjacency-list entries examined over all vertices is \(2E\), which is \(O(E)\).
+      </li>
+      <li>
+        <strong>Answer:</strong>
+        Each examined edge can cause at most one key update at that time, so there are at most \(O(E)\)
+        insertions. Every removed queue entry must previously have been inserted, so there are also at most
+        \(O(E)\) removals. The lazy heap can contain \(O(E)\) entries, making each operation
+        \(O(\log E)\), for \(O(E\log E)\) total time. For a simple graph, \(E=O(V^2)\), so
+        \(\log E=O(\log V)\), giving \(O(E\log V)\).
+      </li>
+      <li>
+        <strong>Answer:</strong>
+        A different start vertex can change the order of choices and, when multiple MSTs exist, can result
+        in a different MST. It cannot change the minimum possible total weight.
+      </li>
+      <li>
+        <strong>Answer:</strong>
+         Negative edge weights cause
+        no problem because Prim only compares edge weights and chooses the lightest edge that can attach a
+        new vertex to the tree.
+      </li>
+      <li>
+        <strong>Answer:</strong>
+        Prim begins at one vertex and maintains a single growing tree. Kruskal considers edges globally
+        from smallest to largest, so its selected edges may form several separate trees that gradually merge.
+      </li>
+      <li>
+        <strong>Answer:</strong>
+        In Prim, the priority is the weight of the cheapest single edge that can attach a vertex to the
+        growing tree. In Dijkstra, the distance is the total length of the cheapest known path from the
+        start vertex to that vertex.
+      </li>
+    </ol>
+  </div>
+</section>
+
+<section id="activities" section-title="In-Class Activities">
+  <h2>In-Class Activities</h2>
+
+  <style>
+    .prim-activity-graph-box {
+      margin: 0.75em 0 1em;
+      padding: 0.75em;
+      border: 1px solid #bbb;
+      background: #fafafa;
+    }
+
+    .prim-activity-graph-box svg {
+      display: block;
+      width: 100%;
+      max-width: 760px;
+      height: auto;
+      margin: 0.75em 0;
+      border: 1px solid #888;
+      background: #fff;
+    }
+
+    .prim-activity-edge {
+      stroke: #777;
+      stroke-width: 2.5;
+    }
+
+    .prim-activity-weight {
+      font-size: 14px;
+      font-weight: 600;
+      fill: #222;
+      text-anchor: middle;
+      dominant-baseline: middle;
+      paint-order: stroke fill;
+      stroke: #fff;
+      stroke-width: 5px;
+      stroke-linejoin: round;
+    }
+
+    .prim-activity-vertex {
+      fill: #f7f9fc;
+      stroke: #003366;
+      stroke-width: 2;
+    }
+
+    .prim-activity-label {
+      font-size: 15px;
+      font-weight: bold;
+      fill: #003366;
+      text-anchor: middle;
+      dominant-baseline: middle;
+    }
+
+    .prim-activity-edge-list {
+      font-size: 0.95em;
+    }
+  </style>
+
+  <ol>
+    <li>
+      <strong>Trace Prim and Track the Keys:</strong>
+      Use Graph A below and run Prim's Algorithm starting at \(A\). Each time a vertex is added, record:
+      <ol type="a">
+        <li>the edge used to add the vertex,</li>
+        <li>the set of vertices currently in the tree, and</li>
+        <li>the current <code>key</code> and <code>parent</code> of every vertex still outside the tree.</li>
+      </ol>
+      Continue until all vertices have been added, then give the MST and its total weight.
+
+  <div class="prim-activity-graph-box">
+    <strong>Graph A</strong>
+    <svg viewBox="0 0 650 340"
+         role="img"
+         aria-label="Graph A, a weighted undirected graph. The complete edge list follows the diagram.">
+
+      <line class="prim-activity-edge" x1="70" y1="170" x2="180" y2="55"></line>
+      <line class="prim-activity-edge" x1="70" y1="170" x2="205" y2="170"></line>
+      <line class="prim-activity-edge" x1="180" y1="55" x2="205" y2="170"></line>
+      <line class="prim-activity-edge" x1="205" y1="170" x2="125" y2="285"></line>
+      <line class="prim-activity-edge" x1="180" y1="55" x2="365" y2="55"></line>
+      <line class="prim-activity-edge" x1="205" y1="170" x2="365" y2="55"></line>
+      <line class="prim-activity-edge" x1="205" y1="170" x2="375" y2="170"></line>
+      <line class="prim-activity-edge" x1="125" y1="285" x2="375" y2="170"></line>
+      <line class="prim-activity-edge" x1="125" y1="285" x2="355" y2="285"></line>
+      <line class="prim-activity-edge" x1="365" y1="55" x2="375" y2="170"></line>
+      <line class="prim-activity-edge" x1="375" y1="170" x2="355" y2="285"></line>
+      <line class="prim-activity-edge" x1="365" y1="55" x2="565" y2="170"></line>
+      <line class="prim-activity-edge" x1="375" y1="170" x2="565" y2="170"></line>
+      <line class="prim-activity-edge" x1="355" y1="285" x2="565" y2="170"></line>
+
+      <text class="prim-activity-weight" x="115" y="105">4</text>
+      <text class="prim-activity-weight" x="138" y="157">2</text>
+      <text class="prim-activity-weight" x="205" y="108">1</text>
+      <text class="prim-activity-weight" x="150" y="220">3</text>
+      <text class="prim-activity-weight" x="272" y="42">6</text>
+      <text class="prim-activity-weight" x="278" y="102">7</text>
+      <text class="prim-activity-weight" x="290" y="157">5</text>
+      <text class="prim-activity-weight" x="240" y="238">6</text>
+      <text class="prim-activity-weight" x="240" y="272">8</text>
+      <text class="prim-activity-weight" x="390" y="110">2</text>
+      <text class="prim-activity-weight" x="390" y="230">4</text>
+      <text class="prim-activity-weight" x="470" y="102">5</text>
+      <text class="prim-activity-weight" x="470" y="157">6</text>
+      <text class="prim-activity-weight" x="470" y="240">3</text>
+
+      <circle class="prim-activity-vertex" cx="70" cy="170" r="18"></circle>
+      <circle class="prim-activity-vertex" cx="180" cy="55" r="18"></circle>
+      <circle class="prim-activity-vertex" cx="205" cy="170" r="18"></circle>
+      <circle class="prim-activity-vertex" cx="125" cy="285" r="18"></circle>
+      <circle class="prim-activity-vertex" cx="365" cy="55" r="18"></circle>
+      <circle class="prim-activity-vertex" cx="375" cy="170" r="18"></circle>
+      <circle class="prim-activity-vertex" cx="355" cy="285" r="18"></circle>
+      <circle class="prim-activity-vertex" cx="565" cy="170" r="18"></circle>
+
+      <text class="prim-activity-label" x="70" y="170">A</text>
+      <text class="prim-activity-label" x="180" y="55">B</text>
+      <text class="prim-activity-label" x="205" y="170">C</text>
+      <text class="prim-activity-label" x="125" y="285">D</text>
+      <text class="prim-activity-label" x="365" y="55">E</text>
+      <text class="prim-activity-label" x="375" y="170">F</text>
+      <text class="prim-activity-label" x="355" y="285">G</text>
+      <text class="prim-activity-label" x="565" y="170">H</text>
+    </svg>
+
+    <p class="prim-activity-edge-list">
+      <strong>Edges:</strong>
+      \((A,B,4)\), \((A,C,2)\), \((B,C,1)\), \((C,D,3)\),
+      \((B,E,6)\), \((C,E,7)\), \((C,F,5)\), \((D,F,6)\),
+      \((D,G,8)\), \((E,F,2)\), \((F,G,4)\), \((E,H,5)\),
+      \((F,H,6)\), \((G,H,3)\).
+    </p>
+  </div>
+</li>
+
+<li>
+  <strong>Change the Start:</strong>
+  Run Prim's Algorithm on Graph A again, this time starting at \(H\). Compare the order in which vertices
+  and edges are selected with the run starting at \(A\). Do the two runs produce the same MST? Do they have
+  the same total weight? Explain.
+</li>
+
+<li>
+  <strong>Follow the Lazy Priority Queue:</strong>
+  Use Graph A starting at \(A\). After \(A\) is added, the priority queue contains entries
+  \((2,C)\) and \((4,B)\), where each pair gives a key and a vertex.
+  <ol type="a">
+    <li>
+      After \(C\) is removed and added to the tree, list every new queue entry that is inserted.
+    </li>
+    <li>
+      Write the queue entries that now exist, including the old entry \((4,B)\).
+    </li>
+    <li>
+      Which entry for \(B\) will be removed first? What happens when the old \((4,B)\) entry is eventually
+      removed?
+    </li>
+    <li>
+      Identify another vertex that can later have two entries in the queue and explain how this occurs.
+    </li>
+  </ol>
+</li>
+
+<li>
+  <strong>Tied Choices:</strong>
+  Use Graph B below and start at \(A\). There is initially a tie between edges \((A,B)\) and \((A,H)\).
+  Run Prim's Algorithm twice, choosing \(B\) first in one run and \(H\) first in the other. Continue making
+  any valid choices when ties occur. Compare the resulting parent edges and total weights. Identify at least
+  one vertex whose parent can depend on how a tie is broken.
+
+  <div class="prim-activity-graph-box">
+    <strong>Graph B</strong>
+    <svg viewBox="0 0 680 360"
+         role="img"
+         aria-label="Graph B, a weighted undirected graph with several equal-weight choices. The complete edge list follows the diagram.">
+
+      <line class="prim-activity-edge" x1="340" y1="35" x2="500" y2="80"></line>
+      <line class="prim-activity-edge" x1="500" y1="80" x2="585" y2="180"></line>
+      <line class="prim-activity-edge" x1="585" y1="180" x2="520" y2="295"></line>
+      <line class="prim-activity-edge" x1="520" y1="295" x2="340" y2="325"></line>
+      <line class="prim-activity-edge" x1="340" y1="325" x2="160" y2="295"></line>
+      <line class="prim-activity-edge" x1="160" y1="295" x2="95" y2="180"></line>
+      <line class="prim-activity-edge" x1="95" y1="180" x2="180" y2="80"></line>
+      <line class="prim-activity-edge" x1="180" y1="80" x2="340" y2="35"></line>
+
+      <line class="prim-activity-edge" x1="500" y1="80" x2="340" y2="180"></line>
+      <line class="prim-activity-edge" x1="180" y1="80" x2="340" y2="180"></line>
+      <line class="prim-activity-edge" x1="585" y1="180" x2="340" y2="180"></line>
+      <line class="prim-activity-edge" x1="520" y1="295" x2="340" y2="180"></line>
+      <line class="prim-activity-edge" x1="340" y1="325" x2="340" y2="180"></line>
+      <line class="prim-activity-edge" x1="160" y1="295" x2="340" y2="180"></line>
+      <line class="prim-activity-edge" x1="95" y1="180" x2="340" y2="180"></line>
+      <line class="prim-activity-edge" x1="340" y1="35" x2="340" y2="180"></line>
+
+      <text class="prim-activity-weight" x="425" y="45">1</text>
+      <text class="prim-activity-weight" x="555" y="120">2</text>
+      <text class="prim-activity-weight" x="570" y="245">1</text>
+      <text class="prim-activity-weight" x="435" y="318">2</text>
+      <text class="prim-activity-weight" x="250" y="318">1</text>
+      <text class="prim-activity-weight" x="115" y="245">2</text>
+      <text class="prim-activity-weight" x="125" y="120">1</text>
+      <text class="prim-activity-weight" x="255" y="45">1</text>
+
+      <text class="prim-activity-weight" x="430" y="125">2</text>
+      <text class="prim-activity-weight" x="250" y="125">2</text>
+      <text class="prim-activity-weight" x="470" y="168">2</text>
+      <text class="prim-activity-weight" x="435" y="245">3</text>
+      <text class="prim-activity-weight" x="355" y="255">2</text>
+      <text class="prim-activity-weight" x="250" y="245">3</text>
+      <text class="prim-activity-weight" x="210" y="168">2</text>
+      <text class="prim-activity-weight" x="355" y="105">4</text>
+
+      <circle class="prim-activity-vertex" cx="340" cy="35" r="18"></circle>
+      <circle class="prim-activity-vertex" cx="500" cy="80" r="18"></circle>
+      <circle class="prim-activity-vertex" cx="585" cy="180" r="18"></circle>
+      <circle class="prim-activity-vertex" cx="520" cy="295" r="18"></circle>
+      <circle class="prim-activity-vertex" cx="340" cy="325" r="18"></circle>
+      <circle class="prim-activity-vertex" cx="160" cy="295" r="18"></circle>
+      <circle class="prim-activity-vertex" cx="95" cy="180" r="18"></circle>
+      <circle class="prim-activity-vertex" cx="180" cy="80" r="18"></circle>
+      <circle class="prim-activity-vertex" cx="340" cy="180" r="18"></circle>
+
+      <text class="prim-activity-label" x="340" y="35">A</text>
+      <text class="prim-activity-label" x="500" y="80">B</text>
+      <text class="prim-activity-label" x="585" y="180">C</text>
+      <text class="prim-activity-label" x="520" y="295">D</text>
+      <text class="prim-activity-label" x="340" y="325">E</text>
+      <text class="prim-activity-label" x="160" y="295">F</text>
+      <text class="prim-activity-label" x="95" y="180">G</text>
+      <text class="prim-activity-label" x="180" y="80">H</text>
+      <text class="prim-activity-label" x="340" y="180">I</text>
+    </svg>
+
+    <p class="prim-activity-edge-list">
+      <strong>Edges:</strong>
+      \((A,B,1)\), \((B,C,2)\), \((C,D,1)\), \((D,E,2)\),
+      \((E,F,1)\), \((F,G,2)\), \((G,H,1)\), \((H,A,1)\),
+      \((B,I,2)\), \((H,I,2)\), \((C,I,2)\), \((D,I,3)\),
+      \((E,I,2)\), \((F,I,3)\), \((G,I,2)\), \((A,I,4)\).
+    </p>
+  </div>
+</li>
+
+<li>
+  <strong>Identify the Crossing Edges and Update Keys:</strong>
+  In Graph C below, suppose Prim has already selected edges \((A,E)\) and \((E,F)\), so the current tree
+  contains \(\{A,E,F\}\).
+  <ol type="a">
+    <li>List every edge with exactly one endpoint in the current tree.</li>
+    <li>Determine the current key and parent of every vertex outside the tree.</li>
+    <li>Which vertex will Prim add next, and which edge will add it?</li>
+    <li>After that vertex is added, identify every key that changes.</li>
+  </ol>
+
+  <div class="prim-activity-graph-box">
+    <strong>Graph C</strong>
+    <svg viewBox="0 0 700 360"
+         role="img"
+         aria-label="Graph C, a weighted undirected graph with ten vertices. The complete edge list follows the diagram.">
+
+      <line class="prim-activity-edge" x1="70" y1="60" x2="220" y2="50"></line>
+      <line class="prim-activity-edge" x1="220" y1="50" x2="390" y2="60"></line>
+      <line class="prim-activity-edge" x1="390" y1="60" x2="550" y2="50"></line>
+
+      <line class="prim-activity-edge" x1="70" y1="60" x2="80" y2="180"></line>
+      <line class="prim-activity-edge" x1="220" y1="50" x2="230" y2="170"></line>
+      <line class="prim-activity-edge" x1="390" y1="60" x2="400" y2="180"></line>
+      <line class="prim-activity-edge" x1="550" y1="50" x2="555" y2="170"></line>
+
+      <line class="prim-activity-edge" x1="80" y1="180" x2="230" y2="170"></line>
+      <line class="prim-activity-edge" x1="230" y1="170" x2="400" y2="180"></line>
+      <line class="prim-activity-edge" x1="400" y1="180" x2="555" y2="170"></line>
+
+      <line class="prim-activity-edge" x1="230" y1="170" x2="220" y2="300"></line>
+      <line class="prim-activity-edge" x1="400" y1="180" x2="410" y2="300"></line>
+      <line class="prim-activity-edge" x1="220" y1="300" x2="410" y2="300"></line>
+      <line class="prim-activity-edge" x1="80" y1="180" x2="220" y2="300"></line>
+      <line class="prim-activity-edge" x1="555" y1="170" x2="410" y2="300"></line>
+      <line class="prim-activity-edge" x1="390" y1="60" x2="230" y2="170"></line>
+
+      <text class="prim-activity-weight" x="145" y="43">6</text>
+      <text class="prim-activity-weight" x="305" y="42">2</text>
+      <text class="prim-activity-weight" x="470" y="43">7</text>
+
+      <text class="prim-activity-weight" x="58" y="120">3</text>
+      <text class="prim-activity-weight" x="240" y="110">5</text>
+      <text class="prim-activity-weight" x="410" y="120">4</text>
+      <text class="prim-activity-weight" x="570" y="110">6</text>
+
+      <text class="prim-activity-weight" x="155" y="162">1</text>
+      <text class="prim-activity-weight" x="315" y="163">2</text>
+      <text class="prim-activity-weight" x="477" y="162">3</text>
+
+      <text class="prim-activity-weight" x="205" y="235">4</text>
+      <text class="prim-activity-weight" x="420" y="240">5</text>
+      <text class="prim-activity-weight" x="315" y="288">2</text>
+      <text class="prim-activity-weight" x="135" y="245">8</text>
+      <text class="prim-activity-weight" x="495" y="240">1</text>
+      <text class="prim-activity-weight" x="300" y="105">9</text>
+
+      <circle class="prim-activity-vertex" cx="70" cy="60" r="18"></circle>
+      <circle class="prim-activity-vertex" cx="220" cy="50" r="18"></circle>
+      <circle class="prim-activity-vertex" cx="390" cy="60" r="18"></circle>
+      <circle class="prim-activity-vertex" cx="550" cy="50" r="18"></circle>
+      <circle class="prim-activity-vertex" cx="80" cy="180" r="18"></circle>
+      <circle class="prim-activity-vertex" cx="230" cy="170" r="18"></circle>
+      <circle class="prim-activity-vertex" cx="400" cy="180" r="18"></circle>
+      <circle class="prim-activity-vertex" cx="555" cy="170" r="18"></circle>
+      <circle class="prim-activity-vertex" cx="220" cy="300" r="18"></circle>
+      <circle class="prim-activity-vertex" cx="410" cy="300" r="18"></circle>
+
+      <text class="prim-activity-label" x="70" y="60">A</text>
+      <text class="prim-activity-label" x="220" y="50">B</text>
+      <text class="prim-activity-label" x="390" y="60">C</text>
+      <text class="prim-activity-label" x="550" y="50">D</text>
+      <text class="prim-activity-label" x="80" y="180">E</text>
+      <text class="prim-activity-label" x="230" y="170">F</text>
+      <text class="prim-activity-label" x="400" y="180">G</text>
+      <text class="prim-activity-label" x="555" y="170">H</text>
+      <text class="prim-activity-label" x="220" y="300">I</text>
+      <text class="prim-activity-label" x="410" y="300">J</text>
+    </svg>
+
+    <p class="prim-activity-edge-list">
+      <strong>Edges:</strong>
+      \((A,B,6)\), \((B,C,2)\), \((C,D,7)\), \((A,E,3)\),
+      \((B,F,5)\), \((C,G,4)\), \((D,H,6)\), \((E,F,1)\),
+      \((F,G,2)\), \((G,H,3)\), \((F,I,4)\), \((G,J,5)\),
+      \((I,J,2)\), \((E,I,8)\), \((H,J,1)\), \((C,F,9)\).
+    </p>
+  </div>
+</li>
+
+<li>
+  <strong>Prim vs. Kruskal:</strong>
+  Use Graph C. Run Prim's Algorithm starting at \(A\) until five edges have been selected. Separately, run
+  Kruskal's Algorithm until five edges have been selected; the order among equal-weight edges may vary.
+  Draw the selected edges after each run. Explain how the two partial solutions illustrate the difference
+  between Prim's and Kruskal's algorithms.
+</li>
+
+<li>
+  <strong>Add a Negative Edge:</strong>
+  In Graph C, change the weight of edge \((C,F)\) from 9 to \(-4\). Run Prim's Algorithm from \(A\) far
+  enough to determine when this edge is selected, and compare the beginning of this run with the original
+  graph. Explain why the presence of a negative edge requires no change to Prim's Algorithm.
+</li>
+
+<li>
+  <strong>Use the Demo:</strong>
+  In the interactive demo, pause before each vertex is added. Predict which vertex will be removed from the
+  priority queue next, which edge will attach it to the tree, and which key values will change after its
+  incident edges are examined. Advance one step to check each prediction.
+</li>
+
+  </ol>
+</section>
+
+<section id="problems" section-title="Homework Problems">
+  <h2>Homework Problems</h2>
+
+  <style>
+    .prim-hw-graph-box {
+      margin: 0.75em 0 1em;
+      padding: 0.75em;
+      border: 1px solid #bbb;
+      background: #fafafa;
+    }
+
+    .prim-hw-graph-box svg {
+      display: block;
+      width: 100%;
+      max-width: 820px;
+      height: auto;
+      margin: 0.75em 0;
+      border: 1px solid #888;
+      background: #fff;
+    }
+
+    .prim-hw-edge {
+      stroke: #777;
+      stroke-width: 2.5;
+    }
+
+    .prim-hw-weight {
+      font-size: 14px;
+      font-weight: 600;
+      fill: #222;
+      text-anchor: middle;
+      dominant-baseline: middle;
+      paint-order: stroke fill;
+      stroke: #fff;
+      stroke-width: 5px;
+      stroke-linejoin: round;
+    }
+
+    .prim-hw-vertex {
+      fill: #f7f9fc;
+      stroke: #003366;
+      stroke-width: 2;
+    }
+
+    .prim-hw-label {
+      font-size: 15px;
+      font-weight: bold;
+      fill: #003366;
+      text-anchor: middle;
+      dominant-baseline: middle;
+    }
+
+    .prim-hw-edge-list {
+      font-size: 0.95em;
+    }
+  </style>
+
+  <ol>
+    <li>
+      <strong>Complete Trace:</strong>
+      Run Prim's Algorithm on Graph D starting at \(A\). Each time a vertex is added:
+      <ol type="a">
+        <li>give the edge used to add it,</li>
+        <li>give its parent, and</li>
+        <li>give the current key and parent of every vertex still outside the tree.</li>
+      </ol>
+      Give the final minimum spanning tree and its total weight.
+
+  <div class="prim-hw-graph-box">
+    <strong>Graph D</strong>
+    <svg viewBox="0 0 720 350"
+         role="img"
+         aria-label="Graph D, a weighted connected undirected graph with eleven vertices. The complete edge list follows the diagram.">
+
+      <line class="prim-hw-edge" x1="70" y1="170" x2="170" y2="55"></line>
+      <line class="prim-hw-edge" x1="70" y1="170" x2="195" y2="170"></line>
+      <line class="prim-hw-edge" x1="170" y1="55" x2="195" y2="170"></line>
+      <line class="prim-hw-edge" x1="170" y1="55" x2="135" y2="290"></line>
+      <line class="prim-hw-edge" x1="195" y1="170" x2="135" y2="290"></line>
+
+      <line class="prim-hw-edge" x1="170" y1="55" x2="335" y2="50"></line>
+      <line class="prim-hw-edge" x1="195" y1="170" x2="335" y2="50"></line>
+      <line class="prim-hw-edge" x1="195" y1="170" x2="350" y2="160"></line>
+      <line class="prim-hw-edge" x1="135" y1="290" x2="350" y2="160"></line>
+      <line class="prim-hw-edge" x1="135" y1="290" x2="330" y2="285"></line>
+
+      <line class="prim-hw-edge" x1="335" y1="50" x2="350" y2="160"></line>
+      <line class="prim-hw-edge" x1="350" y1="160" x2="330" y2="285"></line>
+
+      <line class="prim-hw-edge" x1="335" y1="50" x2="520" y2="55"></line>
+      <line class="prim-hw-edge" x1="350" y1="160" x2="520" y2="55"></line>
+      <line class="prim-hw-edge" x1="350" y1="160" x2="520" y2="175"></line>
+      <line class="prim-hw-edge" x1="330" y1="285" x2="520" y2="175"></line>
+      <line class="prim-hw-edge" x1="330" y1="285" x2="500" y2="290"></line>
+
+      <line class="prim-hw-edge" x1="520" y1="55" x2="520" y2="175"></line>
+      <line class="prim-hw-edge" x1="520" y1="175" x2="500" y2="290"></line>
+
+      <line class="prim-hw-edge" x1="520" y1="55" x2="650" y2="175"></line>
+      <line class="prim-hw-edge" x1="520" y1="175" x2="650" y2="175"></line>
+      <line class="prim-hw-edge" x1="500" y1="290" x2="650" y2="175"></line>
+
+      <text class="prim-hw-weight" x="112" y="105">7</text>
+      <text class="prim-hw-weight" x="122" y="160">3</text>
+      <text class="prim-hw-weight" x="195" y="108">1</text>
+      <text class="prim-hw-weight" x="145" y="125">12</text>
+      <text class="prim-hw-weight" x="155" y="235">6</text>
+
+      <text class="prim-hw-weight" x="250" y="38">11</text>
+      <text class="prim-hw-weight" x="270" y="102">4</text>
+      <text class="prim-hw-weight" x="275" y="152">14</text>
+      <text class="prim-hw-weight" x="235" y="225">13</text>
+      <text class="prim-hw-weight" x="230" y="275">10</text>
+
+      <text class="prim-hw-weight" x="355" y="105">2</text>
+      <text class="prim-hw-weight" x="355" y="225">5</text>
+
+      <text class="prim-hw-weight" x="425" y="38">15</text>
+      <text class="prim-hw-weight" x="430" y="100">8</text>
+      <text class="prim-hw-weight" x="435" y="150">16</text>
+      <text class="prim-hw-weight" x="425" y="225">9</text>
+      <text class="prim-hw-weight" x="415" y="275">17</text>
+
+      <text class="prim-hw-weight" x="535" y="115">18</text>
+      <text class="prim-hw-weight" x="530" y="235">19</text>
+
+      <text class="prim-hw-weight" x="595" y="100">21</text>
+      <text class="prim-hw-weight" x="585" y="162">20</text>
+      <text class="prim-hw-weight" x="585" y="240">22</text>
+
+      <circle class="prim-hw-vertex" cx="70" cy="170" r="18"></circle>
+      <circle class="prim-hw-vertex" cx="170" cy="55" r="18"></circle>
+      <circle class="prim-hw-vertex" cx="195" cy="170" r="18"></circle>
+      <circle class="prim-hw-vertex" cx="135" cy="290" r="18"></circle>
+      <circle class="prim-hw-vertex" cx="335" cy="50" r="18"></circle>
+      <circle class="prim-hw-vertex" cx="350" cy="160" r="18"></circle>
+      <circle class="prim-hw-vertex" cx="330" cy="285" r="18"></circle>
+      <circle class="prim-hw-vertex" cx="520" cy="55" r="18"></circle>
+      <circle class="prim-hw-vertex" cx="520" cy="175" r="18"></circle>
+      <circle class="prim-hw-vertex" cx="500" cy="290" r="18"></circle>
+      <circle class="prim-hw-vertex" cx="650" cy="175" r="18"></circle>
+
+      <text class="prim-hw-label" x="70" y="170">A</text>
+      <text class="prim-hw-label" x="170" y="55">B</text>
+      <text class="prim-hw-label" x="195" y="170">C</text>
+      <text class="prim-hw-label" x="135" y="290">D</text>
+      <text class="prim-hw-label" x="335" y="50">E</text>
+      <text class="prim-hw-label" x="350" y="160">F</text>
+      <text class="prim-hw-label" x="330" y="285">G</text>
+      <text class="prim-hw-label" x="520" y="55">H</text>
+      <text class="prim-hw-label" x="520" y="175">I</text>
+      <text class="prim-hw-label" x="500" y="290">J</text>
+      <text class="prim-hw-label" x="650" y="175">K</text>
+    </svg>
+
+    <p class="prim-hw-edge-list">
+      <strong>Edges:</strong>
+      \((A,B,7)\), \((A,C,3)\), \((B,C,1)\), \((B,D,12)\),
+      \((C,D,6)\), \((B,E,11)\), \((C,E,4)\), \((C,F,14)\),
+      \((D,F,13)\), \((D,G,10)\), \((E,F,2)\), \((F,G,5)\),
+      \((E,H,15)\), \((F,H,8)\), \((F,I,16)\), \((G,I,9)\),
+      \((G,J,17)\), \((H,I,18)\), \((I,J,19)\), \((H,K,21)\),
+      \((I,K,20)\), \((J,K,22)\).
+    </p>
+  </div>
+</li>
+
+<li>
+  <strong>Change the Starting Vertex:</strong>
+  Run Prim's Algorithm on Graph D starting at \(K\) instead of \(A\). Give the order in which vertices are
+  added and the edges selected. Compare the final tree with your answer to the previous problem. 
+  Can you produce a different minimum spanning tree of this graph by changing the starting vertex? Explain.
+  
+</li>
+
+<li>
+  <strong>Equal Weights and Multiple MSTs:</strong>
+  Run Prim's Algorithm on Graph E starting at \(A\). Perform two runs that make different valid choices
+  whenever equal keys are available. For each run, give the parent edges and total weight. Identify at least
+  two places where a tie can affect the choices made by the algorithm.
+
+  <div class="prim-hw-graph-box">
+    <strong>Graph E</strong>
+    <svg viewBox="0 0 700 350"
+         role="img"
+         aria-label="Graph E, a weighted connected undirected graph with ten vertices and many equal edge weights. The complete edge list follows the diagram.">
+
+      <line class="prim-hw-edge" x1="90" y1="70" x2="220" y2="55"></line>
+      <line class="prim-hw-edge" x1="220" y1="55" x2="350" y2="70"></line>
+      <line class="prim-hw-edge" x1="350" y1="70" x2="480" y2="55"></line>
+      <line class="prim-hw-edge" x1="480" y1="55" x2="610" y2="70"></line>
+
+      <line class="prim-hw-edge" x1="90" y1="280" x2="220" y2="295"></line>
+      <line class="prim-hw-edge" x1="220" y1="295" x2="350" y2="280"></line>
+      <line class="prim-hw-edge" x1="350" y1="280" x2="480" y2="295"></line>
+      <line class="prim-hw-edge" x1="480" y1="295" x2="610" y2="280"></line>
+
+      <line class="prim-hw-edge" x1="90" y1="70" x2="90" y2="280"></line>
+      <line class="prim-hw-edge" x1="220" y1="55" x2="220" y2="295"></line>
+      <line class="prim-hw-edge" x1="350" y1="70" x2="350" y2="280"></line>
+      <line class="prim-hw-edge" x1="480" y1="55" x2="480" y2="295"></line>
+      <line class="prim-hw-edge" x1="610" y1="70" x2="610" y2="280"></line>
+
+      <line class="prim-hw-edge" x1="90" y1="70" x2="220" y2="295"></line>
+      <line class="prim-hw-edge" x1="220" y1="55" x2="350" y2="280"></line>
+      <line class="prim-hw-edge" x1="350" y1="70" x2="480" y2="295"></line>
+      <line class="prim-hw-edge" x1="480" y1="55" x2="610" y2="280"></line>
+
+      <text class="prim-hw-weight" x="155" y="48">1</text>
+      <text class="prim-hw-weight" x="285" y="48">2</text>
+      <text class="prim-hw-weight" x="415" y="48">1</text>
+      <text class="prim-hw-weight" x="545" y="48">2</text>
+
+      <text class="prim-hw-weight" x="155" y="302">2</text>
+      <text class="prim-hw-weight" x="285" y="302">1</text>
+      <text class="prim-hw-weight" x="415" y="302">2</text>
+      <text class="prim-hw-weight" x="545" y="302">1</text>
+
+      <text class="prim-hw-weight" x="75" y="175">3</text>
+      <text class="prim-hw-weight" x="205" y="175">2</text>
+      <text class="prim-hw-weight" x="335" y="175">3</text>
+      <text class="prim-hw-weight" x="465" y="175">2</text>
+      <text class="prim-hw-weight" x="625" y="175">3</text>
+
+      <text class="prim-hw-weight" x="145" y="185">1</text>
+      <text class="prim-hw-weight" x="275" y="185">2</text>
+      <text class="prim-hw-weight" x="405" y="185">1</text>
+      <text class="prim-hw-weight" x="535" y="185">2</text>
+
+      <circle class="prim-hw-vertex" cx="90" cy="70" r="18"></circle>
+      <circle class="prim-hw-vertex" cx="220" cy="55" r="18"></circle>
+      <circle class="prim-hw-vertex" cx="350" cy="70" r="18"></circle>
+      <circle class="prim-hw-vertex" cx="480" cy="55" r="18"></circle>
+      <circle class="prim-hw-vertex" cx="610" cy="70" r="18"></circle>
+
+      <circle class="prim-hw-vertex" cx="90" cy="280" r="18"></circle>
+      <circle class="prim-hw-vertex" cx="220" cy="295" r="18"></circle>
+      <circle class="prim-hw-vertex" cx="350" cy="280" r="18"></circle>
+      <circle class="prim-hw-vertex" cx="480" cy="295" r="18"></circle>
+      <circle class="prim-hw-vertex" cx="610" cy="280" r="18"></circle>
+
+      <text class="prim-hw-label" x="90" y="70">A</text>
+      <text class="prim-hw-label" x="220" y="55">B</text>
+      <text class="prim-hw-label" x="350" y="70">C</text>
+      <text class="prim-hw-label" x="480" y="55">D</text>
+      <text class="prim-hw-label" x="610" y="70">E</text>
+
+      <text class="prim-hw-label" x="90" y="280">F</text>
+      <text class="prim-hw-label" x="220" y="295">G</text>
+      <text class="prim-hw-label" x="350" y="280">H</text>
+      <text class="prim-hw-label" x="480" y="295">I</text>
+      <text class="prim-hw-label" x="610" y="280">J</text>
+    </svg>
+
+    <p class="prim-hw-edge-list">
+      <strong>Edges:</strong>
+      \((A,B,1)\), \((B,C,2)\), \((C,D,1)\), \((D,E,2)\),
+      \((F,G,2)\), \((G,H,1)\), \((H,I,2)\), \((I,J,1)\),
+      \((A,F,3)\), \((B,G,2)\), \((C,H,3)\), \((D,I,2)\),
+      \((E,J,3)\), \((A,G,1)\), \((B,H,2)\), \((C,I,1)\),
+      \((D,J,2)\).
+    </p>
+  </div>
+</li>
+
+<li>
+  <strong>Disconnected Input:</strong>
+  Consider Graph F below.
+  <ol type="a">
+    <li>Run the implementation from this page starting at \(A\). Which vertices receive parents?</li>
+    <li>What value will <code>verticesAdded</code> have when the priority queue becomes empty?</li>
+    <li>Explain why the implementation reports that no spanning tree exists.</li>
+    <li>
+      Describe how Prim's Algorithm could be modified to produce a minimum spanning
+      forest. 
+    </li>
+    <li>Give the edges in the resulting forest for Graph F.</li>
+  </ol>
+
+  <div class="prim-hw-graph-box">
+    <strong>Graph F</strong>
+    <svg viewBox="0 0 780 350"
+         role="img"
+         aria-label="Graph F, a disconnected weighted undirected graph with twelve vertices. The complete edge list follows the diagram.">
+
+      <line class="prim-hw-edge" x1="70" y1="70" x2="200" y2="50"></line>
+      <line class="prim-hw-edge" x1="70" y1="70" x2="150" y2="160"></line>
+      <line class="prim-hw-edge" x1="200" y1="50" x2="150" y2="160"></line>
+      <line class="prim-hw-edge" x1="200" y1="50" x2="280" y2="150"></line>
+      <line class="prim-hw-edge" x1="150" y1="160" x2="280" y2="150"></line>
+      <line class="prim-hw-edge" x1="150" y1="160" x2="210" y2="270"></line>
+      <line class="prim-hw-edge" x1="280" y1="150" x2="210" y2="270"></line>
+
+      <text class="prim-hw-weight" x="130" y="45">2</text>
+      <text class="prim-hw-weight" x="95" y="125">5</text>
+      <text class="prim-hw-weight" x="180" y="105">1</text>
+      <text class="prim-hw-weight" x="255" y="90">4</text>
+      <text class="prim-hw-weight" x="215" y="142">3</text>
+      <text class="prim-hw-weight" x="165" y="225">6</text>
+      <text class="prim-hw-weight" x="265" y="220">2</text>
+
+      <line class="prim-hw-edge" x1="400" y1="70" x2="530" y2="50"></line>
+      <line class="prim-hw-edge" x1="400" y1="70" x2="470" y2="165"></line>
+      <line class="prim-hw-edge" x1="530" y1="50" x2="470" y2="165"></line>
+      <line class="prim-hw-edge" x1="530" y1="50" x2="595" y2="165"></line>
+      <line class="prim-hw-edge" x1="470" y1="165" x2="595" y2="165"></line>
+
+      <text class="prim-hw-weight" x="465" y="45">3</text>
+      <text class="prim-hw-weight" x="420" y="125">1</text>
+      <text class="prim-hw-weight" x="510" y="108">2</text>
+      <text class="prim-hw-weight" x="575" y="105">4</text>
+      <text class="prim-hw-weight" x="530" y="150">5</text>
+
+      <line class="prim-hw-edge" x1="475" y1="285" x2="620" y2="285"></line>
+      <text class="prim-hw-weight" x="548" y="270">2</text>
+
+      <circle class="prim-hw-vertex" cx="70" cy="70" r="18"></circle>
+      <circle class="prim-hw-vertex" cx="200" cy="50" r="18"></circle>
+      <circle class="prim-hw-vertex" cx="150" cy="160" r="18"></circle>
+      <circle class="prim-hw-vertex" cx="280" cy="150" r="18"></circle>
+      <circle class="prim-hw-vertex" cx="210" cy="270" r="18"></circle>
+
+      <circle class="prim-hw-vertex" cx="400" cy="70" r="18"></circle>
+      <circle class="prim-hw-vertex" cx="530" cy="50" r="18"></circle>
+      <circle class="prim-hw-vertex" cx="470" cy="165" r="18"></circle>
+      <circle class="prim-hw-vertex" cx="595" cy="165" r="18"></circle>
+
+      <circle class="prim-hw-vertex" cx="475" cy="285" r="18"></circle>
+      <circle class="prim-hw-vertex" cx="620" cy="285" r="18"></circle>
+      <circle class="prim-hw-vertex" cx="710" cy="70" r="18"></circle>
+
+      <text class="prim-hw-label" x="70" y="70">A</text>
+      <text class="prim-hw-label" x="200" y="50">B</text>
+      <text class="prim-hw-label" x="150" y="160">C</text>
+      <text class="prim-hw-label" x="280" y="150">D</text>
+      <text class="prim-hw-label" x="210" y="270">E</text>
+
+      <text class="prim-hw-label" x="400" y="70">F</text>
+      <text class="prim-hw-label" x="530" y="50">G</text>
+      <text class="prim-hw-label" x="470" y="165">H</text>
+      <text class="prim-hw-label" x="595" y="165">I</text>
+
+      <text class="prim-hw-label" x="475" y="285">J</text>
+      <text class="prim-hw-label" x="620" y="285">K</text>
+      <text class="prim-hw-label" x="710" y="70">L</text>
+    </svg>
+
+    <p class="prim-hw-edge-list">
+      <strong>Edges:</strong>
+      \((A,B,2)\), \((A,C,5)\), \((B,C,1)\), \((B,D,4)\),
+      \((C,D,3)\), \((C,E,6)\), \((D,E,2)\),
+      \((F,G,3)\), \((F,H,1)\), \((G,H,2)\), \((G,I,4)\),
+      \((H,I,5)\), \((J,K,2)\). Vertex \(L\) is isolated.
+    </p>
+  </div>
+</li>
+
+<li>
+  <strong>Why the Greedy Choice Is Safe:</strong>
+  Suppose Prim's Algorithm has currently reached the set of vertices \(S\), and let \(e\) be a
+  minimum-weight edge with one endpoint in \(S\) and the other outside \(S\). Suppose a minimum spanning
+  tree \(T\) does not contain \(e\).
+  <ol type="a">
+    <li>Explain why adding \(e\) to \(T\) creates a cycle.</li>
+    <li>Explain why that cycle contains another edge \(f\) with one endpoint in \(S\) and one outside \(S\).</li>
+    <li>Explain why \(w(e) \leq w(f)\).</li>
+    <li>Explain why replacing \(f\) by \(e\) produces another minimum spanning tree.</li>
+    <li>Explain how this exchange argument supports the correctness of Prim's Algorithm.</li>
+  </ol>
+</li>
+
+<li>
+  <strong>Lazy Priority-Queue Analysis:</strong>
+  Consider the implementation on this page.
+  <ol type="a">
+    <li>Explain why one edge examination can cause at most one new priority-queue entry to be inserted.</li>
+    <li>Explain why there are at most \(O(E)\) insertions over the entire algorithm.</li>
+    <li>
+      The same vertex may appear in the queue several times. Explain why this still results in at most
+      \(O(E)\) removals.
+    </li>
+    <li>Why can the priority-queue contain \(O(E)\) entries, making one priority-queue operation \(O(\log E)\)?</li>
+    <li>Use these facts to derive the \(O(E\log E)\) running time.</li>
+    <li>
+      For a simple graph, explain why \(O(E\log E)\) can also be written as \(O(E\log V)\).
+    </li>
+  </ol>
+</li>
+
+<li>
+  <strong>Matrix vs. Priority Queue:</strong>
+  Compare the \(O(V^2)\) adjacency-matrix implementation of Prim with the \(O(E\log V)\)
+  priority-queue implementation when:
+  <ol type="a">
+    <li>\(E=\Theta(V)\),</li>
+    <li>\(E=\Theta(V\log V)\), and</li>
+    <li>\(E=\Theta(V^2)\).</li>
+  </ol>
+  Simplify the priority-queue bound in each case and determine which implementation is asymptotically
+  preferable, or whether the comparison is inconclusive from Big-O bounds alone.
+</li>
+
+<li>
+  <strong>A Wrong Greedy Rule:</strong>
+  Construct a connected weighted graph on exactly four vertices for which the following strategy does
+  <em>not</em> produce a minimum spanning tree:
+  "Start at any vertex. After adding a vertex, choose the lightest edge from that most recently added
+  vertex to a vertex not yet in the tree."
+  Draw your graph, show the tree produced by this rule, and exhibit a spanning tree with smaller total
+  weight. Explain why Prim's Algorithm would avoid the mistake.
+</li>
+
+  </ol>
+</section>
+
+</body>
+</html>

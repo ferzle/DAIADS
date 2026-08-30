@@ -1,0 +1,1802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script src="/DAIADS/scripts/content-page-routing.js"></script>
+  <meta charset="UTF-8">
+  <title>Kruskal's Algorithm</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <script src="/DAIADS/scripts/chapterScripts.js"></script>
+  <link rel="stylesheet" href="/DAIADS/css/style.css">
+  <link rel="stylesheet" href="/DAIADS/css/chapter.css">
+</head>
+<body>
+  <h1>Kruskal's Algorithm</h1>
+
+  <section id="problem-solved" section-title="Problem Solved">
+    <h2>Problem Solved</h2>
+    <p>
+      Kruskal's Algorithm solves the
+      <a class="problem" href="?path=Problems%2FGraphs%2FMinimum%20Spanning%20Tree">Minimum Spanning Tree</a>
+      problem.
+    </p>
+  </section>
+
+  <section id="design" section-title="Design and Strategy">
+  <h2>Design and Strategy</h2>
+
+  <p>
+    Kruskal's Algorithm builds a minimum spanning tree by considering the edges of a connected,
+    weighted, undirected graph from smallest weight to largest. Starting with no edges selected,
+    it repeatedly chooses the lightest edge that does not create a cycle. The process stops when
+    \(V-1\) edges have been selected, which is exactly the number of edges in a spanning tree on
+    \(V\) vertices.
+  </p>
+
+  <p>
+    This is a <strong>greedy</strong> algorithm because each step makes the best choice available
+    at that moment: select the lightest edge that can safely be added. Once an edge is selected,
+    the algorithm never removes it. Even though these choices are made one at a time, the final
+    result is guaranteed to be a minimum spanning tree.
+  </p>
+
+  <p>
+    To decide whether an edge is safe to add, consider its two endpoints. If there is a
+    path between them using the already selected edges, then adding the new edge would create a cycle, so the edge
+    must be skipped. Otherwise, the edge joins two separate connected components and can be
+    selected.
+  </p>
+
+  <p>
+    Efficient implementations usually keep track of the connected components with a
+    <em>disjoint-set</em> data structure, also called <em>union-find</em>. The details of that
+    data structure are not needed to understand Kruskal's Algorithm here; conceptually, we only
+    need to know whether two vertices are already connected.
+  </p>
+
+  <h3>High-Level Algorithm</h3>
+  <ol class="spaced">
+    <li>Sort all edges into nondecreasing order by weight.</li>
+    <li>Start with no selected edges.</li>
+    <li>
+      Process the edges from smallest weight to largest.
+      <ol type="a">
+        <li>If the selected edges do not already contain a path between the endpoints, select the edge.</li>
+        <li>Otherwise, skip the edge because adding it would create a cycle.</li>
+      </ol>
+    </li>
+    <li>Stop when \(V-1\) edges have been selected.</li>
+  </ol>
+  <p>
+  Note that negative edge weights do not cause a problem for Kruskal's Algorithm. Since the edges are processed from
+  smallest weight to largest, negative-weight edges are simply considered before zero- and positive-weight edges.
+</p>
+
+
+  <h3>Why the Greedy Choice Works</h3>
+  <p>
+    Suppose Kruskal is about to select an edge \(e\) that joins two currently separate components.
+    Any spanning tree must eventually contain some edge that connects those two sides. Since
+    Kruskal considers edges from smallest weight to largest, \(e\) is no heavier than any
+    alternative edge that could be used instead at this point.
+  </p>
+
+  <p>
+    More formally, imagine a minimum spanning tree that contains all of Kruskal's earlier choices
+    but does not contain \(e\). Adding \(e\) to that tree creates a cycle. That cycle contains
+    another edge connecting the same two sides. Replacing that edge with \(e\) cannot increase the
+    total weight, so there is still a minimum spanning tree containing all of Kruskal's choices.
+    Repeating this argument shows that every greedy choice is safe.
+  </p>
+
+  <style>
+    #kruskal-mini-example {
+      display: block;
+      max-width: 760px;
+    }
+
+    #kruskal-mini-example svg {
+      display: block;
+      width: 100%;
+      max-width: 520px;
+      height: auto;
+      margin: 0.75em 0;
+      border: 1px solid #888;
+      background: #ffffff;
+    }
+
+    #kruskal-mini-example .edge {
+      stroke: #999999;
+      stroke-width: 3;
+      fill: none;
+    }
+
+    #kruskal-mini-example .edge-label {
+      font-size: 14px;
+      fill: #333333;
+    }
+
+    #kruskal-mini-example .vertex {
+      fill: #f7f9fc;
+      stroke: #003366;
+      stroke-width: 2;
+    }
+
+    #kruskal-mini-example .vertex-label {
+      font-size: 16px;
+      font-weight: bold;
+      fill: #003366;
+      text-anchor: middle;
+      dominant-baseline: middle;
+    }
+
+    #kruskal-mini-example .accepted {
+      stroke: #2e8b57;
+      stroke-width: 5;
+    }
+
+    #kruskal-mini-example .rejected {
+      stroke: #cc3333;
+      stroke-width: 5;
+      stroke-dasharray: 10 6;
+    }
+
+    #kruskal-mini-example .current {
+      stroke: #d97706;
+      stroke-width: 6;
+    }
+
+    #kruskal-mini-example .legend {
+      margin: 0.5em 0;
+      font-size: 0.95em;
+    }
+
+    #kruskal-mini-example .legend span {
+      margin-right: 1em;
+      white-space: nowrap;
+    }
+
+    #kruskal-mini-example .legend-line {
+      display: inline-block;
+      width: 24px;
+      height: 0;
+      border-top: 4px solid #999999;
+      vertical-align: middle;
+      margin-right: 0.25em;
+    }
+
+    #kruskal-mini-example .legend-line.current {
+      border-top-color: #d97706;
+    }
+
+    #kruskal-mini-example .legend-line.accepted {
+      border-top-color: #2e8b57;
+    }
+
+    #kruskal-mini-example .legend-line.rejected {
+      border-top-color: #cc3333;
+      border-top-style: dashed;
+    }
+
+    #kruskal-mini-example .controls {
+      margin-top: 0.5em;
+    }
+
+    #kruskal-mini-example button {
+      margin-right: 0.4em;
+      margin-bottom: 0.4em;
+      padding: 0.35em 0.7em;
+      cursor: pointer;
+    }
+  </style>
+
+  <div id="kruskal-mini-example" class="example-box">
+    <strong class="example-title">Small Example</strong>
+
+<p>
+  Suppose the graph has edges
+  \((A,B,2)\), \((A,C,3)\), \((B,C,1)\), \((B,D,4)\),
+  \((C,E,2)\), and \((D,E,3)\), where the third value is the edge weight.
+  Sorting the edges by weight gives
+  \[
+    (B,C,1), (A,B,2), (C,E,2), (A,C,3), (D,E,3), (B,D,4).
+  \]
+  Use the controls below to follow Kruskal's Algorithm as it considers the
+  edges in this order.
+</p>
+
+<div class="controls">
+  <button type="button" id="k-prev">Previous</button>
+  <button type="button" id="k-next">Next</button>
+  <button type="button" id="k-play">Play</button>
+  <button type="button" id="k-reset">Reset</button>
+</div>
+
+<svg viewBox="0 0 520 240"
+     role="img"
+     aria-label="Weighted graph used to demonstrate Kruskal's Algorithm">
+
+  <line id="k-edge-ab" class="edge"
+        x1="90" y1="60" x2="210" y2="45"></line>
+  <text class="edge-label" x="150" y="42">2</text>
+
+  <line id="k-edge-bc" class="edge"
+        x1="210" y1="45" x2="170" y2="150"></line>
+  <text class="edge-label" x="198" y="102">1</text>
+
+  <line id="k-edge-ac" class="edge"
+        x1="90" y1="60" x2="170" y2="150"></line>
+  <text class="edge-label" x="112" y="115">3</text>
+
+  <line id="k-edge-ce" class="edge"
+        x1="170" y1="150" x2="390" y2="155"></line>
+  <text class="edge-label" x="280" y="145">2</text>
+
+  <line id="k-edge-de" class="edge"
+        x1="380" y1="60" x2="390" y2="155"></line>
+  <text class="edge-label" x="398" y="108">3</text>
+
+  <line id="k-edge-bd" class="edge"
+        x1="210" y1="45" x2="380" y2="60"></line>
+  <text class="edge-label" x="295" y="42">4</text>
+
+  <circle class="vertex" cx="90" cy="60" r="18"></circle>
+  <text class="vertex-label" x="90" y="60">A</text>
+
+  <circle class="vertex" cx="210" cy="45" r="18"></circle>
+  <text class="vertex-label" x="210" y="45">B</text>
+
+  <circle class="vertex" cx="170" cy="150" r="18"></circle>
+  <text class="vertex-label" x="170" y="150">C</text>
+
+  <circle class="vertex" cx="380" cy="60" r="18"></circle>
+  <text class="vertex-label" x="380" y="60">D</text>
+
+  <circle class="vertex" cx="390" cy="155" r="18"></circle>
+  <text class="vertex-label" x="390" y="155">E</text>
+</svg>
+
+<div class="legend">
+  <span><span class="legend-line"></span>Not yet considered</span>
+  <span><span class="legend-line current"></span>Currently considering</span>
+  <span><span class="legend-line accepted"></span>Selected</span>
+  <span><span class="legend-line rejected"></span>Skipped</span>
+</div>
+
+<p id="k-status" aria-live="polite">
+  <strong>Step 0:</strong> Start with no selected edges.
+</p>
+
+<p id="k-components">
+  <strong>Connected components:</strong>
+  \(\{A\}, \{B\}, \{C\}, \{D\}, \{E\}\)
+</p>
+
+  </div>
+
+  <script>
+  (function () {
+    const edgeIds = {
+      ab: "k-edge-ab",
+      bc: "k-edge-bc",
+      ac: "k-edge-ac",
+      ce: "k-edge-ce",
+      de: "k-edge-de",
+      bd: "k-edge-bd"
+    };
+
+    const steps = [
+      {
+        status: "Start with no selected edges.",
+        components:
+          "\\(\\{A\\}, \\{B\\}, \\{C\\}, \\{D\\}, \\{E\\}\\)",
+        states: {}
+      },
+      {
+        status:
+        "Consider \\((B,C,1)\\). Select it because the selected edges do not already contain a path between \\(B\\) and \\(C\\).",
+        components:
+          "\\(\\{A\\}, \\{B,C\\}, \\{D\\}, \\{E\\}\\)",
+        states: {
+          bc: "accepted"
+        },
+        current: "bc"
+      },
+      {
+        status:
+          "Consider \\((A,B,2)\\). Select it because the selected edges do not already contain a path between \\(A\\) and \\(B\\).",
+        components:
+          "\\(\\{A,B,C\\}, \\{D\\}, \\{E\\}\\)",
+        states: {
+          bc: "accepted",
+          ab: "accepted"
+        },
+        current: "ab"
+      },
+      {
+        status:
+          "Consider \\((C,E,2)\\). Select it because the selected edges do not already contain a path between \\(C\\) and \\(E\\).",
+        components:
+          "\\(\\{A,B,C,E\\}, \\{D\\}\\)",
+        states: {
+          bc: "accepted",
+          ab: "accepted",
+          ce: "accepted"
+        },
+        current: "ce"
+      },
+      {
+        status:
+          "Consider \\((A,C,3)\\). Skip it because the selected edges already contain a path between \\(A\\) and \\(C\\), so adding the edge would create a cycle.",
+        components:
+          "\\(\\{A,B,C,E\\}, \\{D\\}\\)",
+        states: {
+          bc: "accepted",
+          ab: "accepted",
+          ce: "accepted",
+          ac: "rejected"
+        },
+        current: "ac"
+      },
+      {
+        status:
+          "Consider \\((D,E,3)\\). Select it because the selected edges do not already contain a path between \\(D\\) and \\(E\\).",
+        components:
+          "\\(\\{A,B,C,D,E\\}\\)",
+        states: {
+          bc: "accepted",
+          ab: "accepted",
+          ce: "accepted",
+          ac: "rejected",
+          de: "accepted"
+        },
+        current: "de"
+      },
+      {
+        status:
+          "Four edges have now been selected. Since the graph has five vertices, the spanning tree is complete. Its total weight is \\(1+2+2+3=8\\).",
+        components:
+          "\\(\\{A,B,C,D,E\\}\\)",
+        states: {
+          bc: "accepted",
+          ab: "accepted",
+          ce: "accepted",
+          ac: "rejected",
+          de: "accepted"
+        }
+      }
+    ];
+
+    let stepIndex = 0;
+    let timer = null;
+
+    const statusEl = document.getElementById("k-status");
+    const componentsEl = document.getElementById("k-components");
+    const prevBtn = document.getElementById("k-prev");
+    const nextBtn = document.getElementById("k-next");
+    const playBtn = document.getElementById("k-play");
+    const resetBtn = document.getElementById("k-reset");
+
+    function clearEdgeClasses() {
+      for (const shortName in edgeIds) {
+        const edge = document.getElementById(edgeIds[shortName]);
+        edge.classList.remove("accepted", "rejected", "current");
+      }
+    }
+
+    function renderStep() {
+      clearEdgeClasses();
+
+      const step = steps[stepIndex];
+
+      for (const shortName in step.states) {
+        const edge = document.getElementById(edgeIds[shortName]);
+        edge.classList.add(step.states[shortName]);
+      }
+
+      if (step.current) {
+        document.getElementById(edgeIds[step.current])
+                .classList.add("current");
+      }
+
+      statusEl.innerHTML =
+        "<strong>Step " + stepIndex + ":</strong> " + step.status;
+
+      componentsEl.innerHTML =
+        "<strong>Connected components:</strong> " + step.components;
+
+      if (window.MathJax && window.MathJax.typesetPromise) {
+        window.MathJax.typesetPromise([statusEl, componentsEl]);
+      }
+
+      prevBtn.disabled = stepIndex === 0;
+      nextBtn.disabled = stepIndex === steps.length - 1;
+    }
+
+    function stopPlaying() {
+      if (timer !== null) {
+        clearInterval(timer);
+        timer = null;
+      }
+
+      playBtn.textContent = "Play";
+    }
+
+    prevBtn.addEventListener("click", function () {
+      stopPlaying();
+
+      if (stepIndex > 0) {
+        stepIndex--;
+        renderStep();
+      }
+    });
+
+    nextBtn.addEventListener("click", function () {
+      stopPlaying();
+
+      if (stepIndex < steps.length - 1) {
+        stepIndex++;
+        renderStep();
+      }
+    });
+
+    playBtn.addEventListener("click", function () {
+      if (timer !== null) {
+        stopPlaying();
+        return;
+      }
+
+      if (stepIndex === steps.length - 1) {
+        stepIndex = 0;
+        renderStep();
+      }
+
+      playBtn.textContent = "Pause";
+
+      timer = setInterval(function () {
+        if (stepIndex < steps.length - 1) {
+          stepIndex++;
+          renderStep();
+        } else {
+          stopPlaying();
+        }
+      }, 1800);
+    });
+
+    resetBtn.addEventListener("click", function () {
+      stopPlaying();
+      stepIndex = 0;
+      renderStep();
+    });
+
+    renderStep();
+  })();
+  </script>
+
+  <p>
+    The interactive demo below lets you follow the same process on larger graphs.
+  </p>
+</section>
+
+
+  <section id="demo" section-title="Interactive Demo">
+    <h2>Interactive Demo</h2>
+    <p>
+      The demo below displays the connected components formed by the edges selected so far. For example,
+      \(\{C\}\), \(\{A,B,D,F,I\}\), \(\{E,G\}\), and \(\{H\}\) indicate that the selected edges contain
+      paths connecting all vertices within each set, but no selected path connects vertices in different sets.
+      Thus, when considering a new edge, Kruskal's Algorithm selects it only if its endpoints are in different
+      sets; if they are in the same set, adding the edge would create a cycle.
+    </p>
+
+    <div class="embeddedDemoContainer">
+      <iframe class="embeddedDemo"
+              src="../../../Content/Demos/Greedy/Kruskals Algorithm Demo.html"
+              allow="fullscreen"
+              name="kruskals-demo" title="Kruskal's Algorithm Demo">
+      </iframe>
+    </div>
+  </section>
+
+ <section id="code" section-title="Pseudocode">
+  <h2>Pseudocode</h2>
+  <p>
+    The pseudocode leaves the path test abstract. Conceptually, we need to determine whether the selected
+    edges already contain a path between the endpoints of an edge. Efficient implementations normally use
+    union-find to keep track of this information.
+  </p>
+  <pre><code>Kruskal(vertices, edges)
+  sort edges into nondecreasing order by weight
+  selected = empty set
+
+  for each edge (u, v) in edges
+      if selected does not contain a path from u to v
+          add (u, v) to selected
+          if selected contains |vertices| - 1 edges
+              return selected
+  return selected</code></pre>
+
+  <p>
+    For a connected graph, the algorithm returns a minimum spanning tree. If the graph is disconnected, it
+    has no spanning tree; the same process instead returns a minimum spanning forest.
+  </p>
+</section>
+<section id="analysis" section-title="Time/Space Analysis">
+  <h2>Time/Space Analysis</h2>
+
+  <p>
+    <strong>Time Complexity:</strong> Sorting the \(E\) edges takes \(O(E \log E)\) time. After sorting,
+    Kruskal's Algorithm examines each edge at most once. The remaining cost depends on how we determine
+    whether the selected edges already contain a path between the two endpoints.
+  </p>
+
+  <p>
+    A simple but inefficient implementation could run a graph search through the selected edges each time
+    an edge is considered. Since the selected edges always form a forest with at most \(V-1\) edges, one
+    such search takes \(O(V)\) time in the worst case. Repeating this for as many as \(E\) edges gives
+    \(O(EV)\) time for the path tests alone. The total time would then be \(O(E \log E + E V)=O(E V)\). But we can do better.
+  </p>
+
+  <p>
+    A union-find data structure avoids repeatedly searching the forest. It supports a
+    <code>find</code> operation to determine which component contains a vertex and a
+    <code>union</code> operation to merge two components. With a standard efficient implementation,
+    these operations can be bounded by \(O(\log V)\) time each. Since Kruskal performs only a constant
+    number of these operations per edge, all of the component tests take \(O(E \log V)\) time.
+    Together with sorting, this gives \(O(E\log E + E \log V) = O(E \log V)\) time overall for a connected graph.
+    If you are wondering why this simplifies to \(O(E \log V)\) instead of \(O(E \log E)\), 
+    note that \(E\) is at most \(V^2\) in a simple graph, so \(\log E = O(\log V)\).
+    We will not justify the union-find bounds here; they depend on how the data structure is implemented.
+  </p>
+
+  <p>
+    <strong>A More Precise Bound:</strong> More advanced versions of union-find use techniques called 
+    <em>path compression</em> and <em>union by rank or size</em> to make these operations even faster: 
+    a sequence of operations takes \(O(\alpha(V))\) amortized time per
+    operation, where \(\alpha\) is the inverse Ackermann function and grows extremely slowly. Thus the
+    union-find work is \(O(E\alpha(V))\), and sorting still dominates. This stronger bound is stated
+    here for completeness; its proof and the details of these union-find optimizations are beyond the
+    scope of this page.
+  </p>
+
+  <p>
+    <strong>Space Complexity:</strong> Union-find uses \(O(V)\) extra space to represent the connected
+    components, not counting the input edge list or the edges returned as output. If the input edge list
+    is sorted in place, no additional \(O(E)\) storage is needed for the edge list. If a separate sorted
+    copy is created, that copy requires \(O(E)\) additional space.
+  </p>
+</section>
+
+ <section id="variations" section-title="Variations/Improvements">
+  <h2>Variations/Improvements</h2>
+  <p>
+    Efficient implementations of Kruskal's Algorithm typically use a disjoint-set, or union-find,
+    data structure to keep track of the connected components formed by the selected edges. More advanced
+    versions of union-find use techniques called <em>path compression</em> and <em>union by rank or size</em>
+    to make these operations even faster.
+  </p>
+  <p>
+    Equal-weight edges do not require a special rule and may be processed in any order. Different
+    tie-breaking choices can produce different spanning trees, but Kruskal's Algorithm will still produce
+    a minimum spanning tree. If all edge weights are distinct, the minimum spanning tree is unique.
+    Equal weights make multiple MSTs possible, but do not guarantee that more than one exists.
+  </p>
+</section>
+
+<section id="connections" section-title="Connections and Comparisons">
+  <h2>Connections and Comparisons</h2>
+
+  <p>
+    A graph search such as breadth-first search or depth-first search can also produce a spanning tree of a
+    connected graph. However, these algorithms do not use edge weights, so there is no reason for the resulting
+    spanning tree to have minimum total weight. Kruskal's Algorithm uses the weights explicitly, always considering
+    the lightest remaining edge first while avoiding cycles.
+  </p>
+
+  <p>
+    Kruskal's Algorithm is also a natural application of the <em>union-find</em> data structure. As edges are
+    selected, union-find maintains the connected components formed by those edges. This makes it possible to
+    determine efficiently whether the endpoints of a candidate edge are already joined by a selected path.
+  </p>
+
+  <p>
+    Kruskal's Algorithm and
+    <a href="?path=Algorithms%2FGreedy%2FPrims">Prim's Algorithm</a>
+    both solve the minimum spanning tree problem greedily, but they organize their choices differently.
+    Kruskal considers edges globally from smallest to largest, so its selected edges may form several separate
+    trees that gradually merge. Prim begins at one vertex and maintains a single growing tree throughout the
+    algorithm.
+  </p>
+</section>
+
+
+<section id="links" section-title="Related Links and Resources">
+  <h2>Related Links and Resources</h2>
+  <ul>
+    <li>
+      <a href="https://en.wikipedia.org/wiki/Kruskal%27s_algorithm" target="_blank">Wikipedia: Kruskal's Algorithm</a>
+      Overview of the algorithm, its history, running time, and relationship to minimum spanning forests.
+    </li>
+    <li>
+      <a href="https://cp-algorithms.com/graph/mst_kruskal.html" target="_blank">cp-algorithms: Kruskal's Algorithm</a>
+      A more detailed treatment of correctness, implementation, and the use of union-find.
+    </li>
+    <li>
+      <a href="https://www.geeksforgeeks.org/dsa/kruskals-minimum-spanning-tree-algorithm-greedy-algo-2/" target="_blank">GeeksforGeeks: Kruskal's Minimum Spanning Tree</a>
+      Additional illustrations, worked examples, and implementations.
+    </li>
+  </ul>
+</section>
+
+<section id="reading-questions" section-title="Reading Comprehension Questions">
+  <h2>Reading Comprehension Questions</h2>
+  <ol>
+    <li>
+      <strong>Greedy Choice:</strong>
+      What greedy choice does Kruskal's Algorithm make each time it considers an edge?
+    </li>
+    <li>
+      <strong>Skipping an Edge:</strong>
+      Why does Kruskal's Algorithm skip an edge when the selected edges already contain a path between its endpoints?
+    </li>
+    <li>
+      <strong>Stopping Condition:</strong>
+      Why can Kruskal's Algorithm stop after selecting \(V-1\) edges?
+    </li>
+    <li>
+      <strong>Small Example:</strong>
+      In the small example, why is edge \((A,C,3)\) skipped even though it is lighter than some edges that have not yet been considered?
+    </li>
+    <li>
+      <strong>Why Greedy Works:</strong>
+      In the exchange argument, what happens if a minimum spanning tree does not contain the next edge selected by Kruskal's Algorithm?
+    </li>
+    <li>
+      <strong>Path Testing:</strong>
+      What would be the worst-case running time if a graph search taking \(O(V)\) time were used to test each of the \(E\) edges, and why is union-find preferable?
+    </li>
+    <li>
+      <strong>Simplifying the Running Time:</strong>
+      The union-find version has running time
+      \(O(E\log E + E\log V)\). Why can this be simplified to \(O(E\log V)\) for a simple graph?
+    </li>
+    <li>
+      <strong>Equal and Negative Weights:</strong>
+      How does Kruskal's Algorithm handle equal-weight edges? Why do negative edge weights not require any change to the algorithm?
+    </li>
+    <li>
+      <strong>Disconnected Graphs:</strong>
+      What does Kruskal's Algorithm produce if the input graph is disconnected?
+    </li>
+  </ol>
+
+<button id="toggleAnswers" class="show-answer" aria-expanded="false">Show Answers</button>
+
+  <div id="answers" class="answer" hidden>
+    <ol>
+      <li>
+        <strong>Answer:</strong>
+        It considers edges from smallest weight to largest and selects the next edge whose addition would not
+        create a cycle.
+      </li>
+      <li>
+        <strong>Answer:</strong>
+        The existing path together with the new edge would form a cycle, so the edge cannot be part of the
+        growing forest.
+      </li>
+      <li>
+        <strong>Answer:</strong>
+        A tree on \(V\) vertices has exactly \(V-1\) edges. Since Kruskal never creates a cycle, selecting
+        \(V-1\) edges in a connected graph produces a spanning tree.
+      </li>
+      <li>
+        <strong>Answer:</strong>
+        The selected edges already contain the path \(A-B-C\). Adding \((A,C)\) would therefore create the
+        cycle \(A-B-C-A\), so the edge must be skipped.
+      </li>
+      <li>
+        <strong>Answer:</strong>
+        Adding Kruskal's selected edge to that minimum spanning tree creates a cycle. An appropriate edge on
+        that cycle can be removed and replaced by Kruskal's edge without increasing the total weight, producing
+        another minimum spanning tree that contains Kruskal's choice.
+      </li>
+      <li>
+        <strong>Answer:</strong>
+        Performing an \(O(V)\) graph search for as many as \(E\) edges takes \(O(EV)\) time. Union-find keeps
+        track of the connected components so that the necessary tests and updates can be performed much more
+        efficiently, leading to an overall time complexity of \(O(E\log V)\).
+      </li>
+      <li>
+        <strong>Answer:</strong>
+        A simple graph has at most \(O(V^2)\) edges, so
+        \(\log E = O(\log V^2) = O(2 \log V) = O(\log V)\). Therefore
+        \(E\log E = O(E\log V)\), and
+        \(O(E\log E + E\log V) = O(E\log V)\).
+      </li>
+      <li>
+        <strong>Answer:</strong>
+        Equal-weight edges may be processed in any order; different orders may produce different minimum
+        spanning trees. Negative-weight edges require no special treatment because sorting places them before
+        zero- and positive-weight edges.
+      </li>
+      <li>
+        <strong>Answer:</strong>
+        A disconnected graph has no spanning tree. Kruskal's Algorithm instead produces a minimum spanning
+        forest, consisting of a minimum spanning tree for each connected component.
+      </li>
+    </ol>
+  </div>
+</section>
+
+<section id="activities" section-title="In-Class Activities">
+  <h2>In-Class Activities</h2>
+
+  <p>
+    The following activities use the weighted graphs below. In each ordered triple \((u,v,w)\),
+    the third value \(w\) is the edge weight.
+  </p>
+<style>
+  .activity-graph-box {
+    margin: 1em 0;
+    padding: 0.75em;
+    border: 1px solid #bbb;
+    background: #fafafa;
+  }
+
+  .activity-graph-box > strong {
+    display: block;
+    margin-bottom: 0.5em;
+  }
+
+  .activity-graph-box svg {
+    display: block;
+    width: 100%;
+    max-width: 820px;
+    height: auto;
+    margin: 0.5em 0;
+    border: 1px solid #888;
+    background: #ffffff;
+  }
+
+  .activity-graph-edge {
+    stroke: #777;
+    stroke-width: 2.5;
+  }
+
+  .activity-graph-vertex {
+    fill: #f7f9fc;
+    stroke: #003366;
+    stroke-width: 2;
+  }
+
+  .activity-graph-label {
+    font-size: 15px;
+    font-weight: bold;
+    fill: #003366;
+    text-anchor: middle;
+    dominant-baseline: middle;
+  }
+
+  .activity-weight rect {
+    display: none;
+  }
+
+  .activity-weight text {
+    font-size: 13px;
+    fill: #222222;
+    stroke: #ffffff;
+    stroke-width: 4px;
+    stroke-linejoin: round;
+    paint-order: stroke fill;
+    text-anchor: middle;
+    dominant-baseline: middle;
+  }
+</style>
+
+
+<!-- ========================================================= -->
+<!-- Graph A: Irregular / layered                              -->
+<!-- ========================================================= -->
+
+<div class="activity-graph-box">
+  <strong>Graph A (8 vertices)</strong>
+  <p>
+    Edges:
+    \((A,B,4)\), \((A,C,2)\), \((B,C,1)\), \((B,D,5)\),
+    \((C,D,3)\), \((C,E,6)\), \((D,E,2)\), \((D,F,7)\),
+    \((E,F,4)\), \((E,G,5)\), \((F,H,3)\), \((G,H,1)\),
+    \((E,H,8)\), \((B,E,9)\).
+  </p>
+
+  <svg viewBox="0 0 760 300"
+       role="img"
+       aria-label="Weighted Graph A with vertices A through H">
+
+    <!-- Edges -->
+    <line class="activity-graph-edge"
+          x1="70" y1="140" x2="180" y2="55"></line>
+    <line class="activity-graph-edge"
+          x1="70" y1="140" x2="190" y2="210"></line>
+    <line class="activity-graph-edge"
+          x1="180" y1="55" x2="190" y2="210"></line>
+    <line class="activity-graph-edge"
+          x1="180" y1="55" x2="330" y2="65"></line>
+    <line class="activity-graph-edge"
+          x1="190" y1="210" x2="330" y2="65"></line>
+    <line class="activity-graph-edge"
+          x1="190" y1="210" x2="340" y2="220"></line>
+    <line class="activity-graph-edge"
+          x1="330" y1="65" x2="340" y2="220"></line>
+    <line class="activity-graph-edge"
+          x1="330" y1="65" x2="500" y2="60"></line>
+    <line class="activity-graph-edge"
+          x1="340" y1="220" x2="500" y2="60"></line>
+    <line class="activity-graph-edge"
+          x1="340" y1="220" x2="560" y2="225"></line>
+    <line class="activity-graph-edge"
+          x1="500" y1="60" x2="690" y2="135"></line>
+    <line class="activity-graph-edge"
+          x1="560" y1="225" x2="690" y2="135"></line>
+    <line class="activity-graph-edge"
+          x1="340" y1="220" x2="690" y2="135"></line>
+    <line class="activity-graph-edge"
+          x1="180" y1="55" x2="340" y2="220"></line>
+
+    <!-- Weights -->
+    <g class="activity-weight" transform="translate(115 88)">
+      <rect x="-11" y="-10" width="22" height="20" rx="3"></rect>
+      <text>4</text>
+    </g>
+
+    <g class="activity-weight" transform="translate(115 185)">
+      <rect x="-11" y="-10" width="22" height="20" rx="3"></rect>
+      <text>2</text>
+    </g>
+
+    <g class="activity-weight" transform="translate(205 132)">
+      <rect x="-11" y="-10" width="22" height="20" rx="3"></rect>
+      <text>1</text>
+    </g>
+
+    <g class="activity-weight" transform="translate(255 48)">
+      <rect x="-11" y="-10" width="22" height="20" rx="3"></rect>
+      <text>5</text>
+    </g>
+
+    <g class="activity-weight" transform="translate(285 112)">
+      <rect x="-11" y="-10" width="22" height="20" rx="3"></rect>
+      <text>3</text>
+    </g>
+
+    <g class="activity-weight" transform="translate(265 232)">
+      <rect x="-11" y="-10" width="22" height="20" rx="3"></rect>
+      <text>6</text>
+    </g>
+
+    <g class="activity-weight" transform="translate(352 143)">
+      <rect x="-11" y="-10" width="22" height="20" rx="3"></rect>
+      <text>2</text>
+    </g>
+
+    <g class="activity-weight" transform="translate(415 48)">
+      <rect x="-11" y="-10" width="22" height="20" rx="3"></rect>
+      <text>7</text>
+    </g>
+
+    <g class="activity-weight" transform="translate(430 145)">
+      <rect x="-11" y="-10" width="22" height="20" rx="3"></rect>
+      <text>4</text>
+    </g>
+
+    <g class="activity-weight" transform="translate(450 240)">
+      <rect x="-11" y="-10" width="22" height="20" rx="3"></rect>
+      <text>5</text>
+    </g>
+
+    <g class="activity-weight" transform="translate(595 82)">
+      <rect x="-11" y="-10" width="22" height="20" rx="3"></rect>
+      <text>3</text>
+    </g>
+
+    <g class="activity-weight" transform="translate(635 190)">
+      <rect x="-11" y="-10" width="22" height="20" rx="3"></rect>
+      <text>1</text>
+    </g>
+
+    <g class="activity-weight" transform="translate(520 190)">
+      <rect x="-11" y="-10" width="22" height="20" rx="3"></rect>
+      <text>8</text>
+    </g>
+
+    <g class="activity-weight" transform="translate(225 101)">
+      <rect x="-11" y="-10" width="22" height="20" rx="3"></rect>
+      <text>9</text>
+    </g>
+
+    <!-- Vertices -->
+    <circle class="activity-graph-vertex" cx="70" cy="140" r="18"></circle>
+    <text class="activity-graph-label" x="70" y="140">A</text>
+
+    <circle class="activity-graph-vertex" cx="180" cy="55" r="18"></circle>
+    <text class="activity-graph-label" x="180" y="55">B</text>
+
+    <circle class="activity-graph-vertex" cx="190" cy="210" r="18"></circle>
+    <text class="activity-graph-label" x="190" y="210">C</text>
+
+    <circle class="activity-graph-vertex" cx="330" cy="65" r="18"></circle>
+    <text class="activity-graph-label" x="330" y="65">D</text>
+
+    <circle class="activity-graph-vertex" cx="340" cy="220" r="18"></circle>
+    <text class="activity-graph-label" x="340" y="220">E</text>
+
+    <circle class="activity-graph-vertex" cx="500" cy="60" r="18"></circle>
+    <text class="activity-graph-label" x="500" y="60">F</text>
+
+    <circle class="activity-graph-vertex" cx="560" cy="225" r="18"></circle>
+    <text class="activity-graph-label" x="560" y="225">G</text>
+
+    <circle class="activity-graph-vertex" cx="690" cy="135" r="18"></circle>
+    <text class="activity-graph-label" x="690" y="135">H</text>
+  </svg>
+</div>
+
+
+<!-- ========================================================= -->
+<!-- Graph B: Circular, tie-heavy                              -->
+<!-- ========================================================= -->
+
+<div class="activity-graph-box">
+  <strong>Graph B (9 vertices)</strong>
+  <p>
+    Edges:
+    \((A,B,1)\), \((B,C,2)\), \((C,D,1)\), \((D,E,2)\),
+    \((E,F,1)\), \((F,G,2)\), \((G,H,1)\), \((H,A,2)\),
+    \((A,I,3)\), \((C,I,3)\), \((E,I,3)\), \((G,I,3)\).
+  </p>
+
+  <svg viewBox="0 0 760 320"
+       role="img"
+       aria-label="Circular weighted Graph B with vertices A through I">
+
+    <!-- Outer cycle -->
+    <line class="activity-graph-edge"
+          x1="380" y1="35" x2="500" y2="70"></line>
+    <line class="activity-graph-edge"
+          x1="500" y1="70" x2="545" y2="155"></line>
+    <line class="activity-graph-edge"
+          x1="545" y1="155" x2="500" y2="240"></line>
+    <line class="activity-graph-edge"
+          x1="500" y1="240" x2="380" y2="275"></line>
+    <line class="activity-graph-edge"
+          x1="380" y1="275" x2="260" y2="240"></line>
+    <line class="activity-graph-edge"
+          x1="260" y1="240" x2="215" y2="155"></line>
+    <line class="activity-graph-edge"
+          x1="215" y1="155" x2="260" y2="70"></line>
+    <line class="activity-graph-edge"
+          x1="260" y1="70" x2="380" y2="35"></line>
+
+    <!-- Spokes -->
+    <line class="activity-graph-edge"
+          x1="380" y1="35" x2="380" y2="155"></line>
+    <line class="activity-graph-edge"
+          x1="545" y1="155" x2="380" y2="155"></line>
+    <line class="activity-graph-edge"
+          x1="380" y1="275" x2="380" y2="155"></line>
+    <line class="activity-graph-edge"
+          x1="215" y1="155" x2="380" y2="155"></line>
+
+    <!-- Outer weights -->
+    <g class="activity-weight" transform="translate(445 42)">
+      <rect x="-11" y="-10" width="22" height="20" rx="3"></rect>
+      <text>1</text>
+    </g>
+
+    <g class="activity-weight" transform="translate(535 105)">
+      <rect x="-11" y="-10" width="22" height="20" rx="3"></rect>
+      <text>2</text>
+    </g>
+
+    <g class="activity-weight" transform="translate(535 205)">
+      <rect x="-11" y="-10" width="22" height="20" rx="3"></rect>
+      <text>1</text>
+    </g>
+
+    <g class="activity-weight" transform="translate(445 267)">
+      <rect x="-11" y="-10" width="22" height="20" rx="3"></rect>
+      <text>2</text>
+    </g>
+
+    <g class="activity-weight" transform="translate(315 267)">
+      <rect x="-11" y="-10" width="22" height="20" rx="3"></rect>
+      <text>1</text>
+    </g>
+
+    <g class="activity-weight" transform="translate(225 205)">
+      <rect x="-11" y="-10" width="22" height="20" rx="3"></rect>
+      <text>2</text>
+    </g>
+
+    <g class="activity-weight" transform="translate(225 105)">
+      <rect x="-11" y="-10" width="22" height="20" rx="3"></rect>
+      <text>1</text>
+    </g>
+
+    <g class="activity-weight" transform="translate(315 42)">
+      <rect x="-11" y="-10" width="22" height="20" rx="3"></rect>
+      <text>2</text>
+    </g>
+
+    <!-- Spoke weights -->
+    <g class="activity-weight" transform="translate(397 94)">
+      <rect x="-11" y="-10" width="22" height="20" rx="3"></rect>
+      <text>3</text>
+    </g>
+
+    <g class="activity-weight" transform="translate(465 140)">
+      <rect x="-11" y="-10" width="22" height="20" rx="3"></rect>
+      <text>3</text>
+    </g>
+
+    <g class="activity-weight" transform="translate(397 218)">
+      <rect x="-11" y="-10" width="22" height="20" rx="3"></rect>
+      <text>3</text>
+    </g>
+
+    <g class="activity-weight" transform="translate(295 140)">
+      <rect x="-11" y="-10" width="22" height="20" rx="3"></rect>
+      <text>3</text>
+    </g>
+
+    <!-- Vertices -->
+    <circle class="activity-graph-vertex" cx="380" cy="35" r="18"></circle>
+    <text class="activity-graph-label" x="380" y="35">A</text>
+
+    <circle class="activity-graph-vertex" cx="500" cy="70" r="18"></circle>
+    <text class="activity-graph-label" x="500" y="70">B</text>
+
+    <circle class="activity-graph-vertex" cx="545" cy="155" r="18"></circle>
+    <text class="activity-graph-label" x="545" y="155">C</text>
+
+    <circle class="activity-graph-vertex" cx="500" cy="240" r="18"></circle>
+    <text class="activity-graph-label" x="500" y="240">D</text>
+
+    <circle class="activity-graph-vertex" cx="380" cy="275" r="18"></circle>
+    <text class="activity-graph-label" x="380" y="275">E</text>
+
+    <circle class="activity-graph-vertex" cx="260" cy="240" r="18"></circle>
+    <text class="activity-graph-label" x="260" y="240">F</text>
+
+    <circle class="activity-graph-vertex" cx="215" cy="155" r="18"></circle>
+    <text class="activity-graph-label" x="215" y="155">G</text>
+
+    <circle class="activity-graph-vertex" cx="260" cy="70" r="18"></circle>
+    <text class="activity-graph-label" x="260" y="70">H</text>
+
+    <circle class="activity-graph-vertex" cx="380" cy="155" r="18"></circle>
+    <text class="activity-graph-label" x="380" y="155">I</text>
+  </svg>
+</div>
+
+
+<!-- ========================================================= -->
+<!-- Graph C: Rectangular / grid                               -->
+<!-- ========================================================= -->
+
+<div class="activity-graph-box">
+  <strong>Graph C (10 vertices)</strong>
+  <p>
+    Edges:
+    \((A,B,6)\), \((B,C,2)\), \((C,D,7)\),
+    \((A,E,3)\), \((B,F,5)\), \((C,G,4)\), \((D,H,6)\),
+    \((E,F,1)\), \((F,G,2)\), \((G,H,3)\),
+    \((F,I,4)\), \((G,J,5)\), \((I,J,2)\),
+    \((E,I,8)\), \((H,J,1)\), \((C,F,9)\).
+  </p>
+
+  <svg viewBox="0 0 820 400"
+       role="img"
+       aria-label="Rectangular weighted Graph C with vertices A through J">
+
+    <!-- Top row -->
+    <line class="activity-graph-edge"
+          x1="100" y1="55" x2="300" y2="55"></line>
+    <line class="activity-graph-edge"
+          x1="300" y1="55" x2="500" y2="55"></line>
+    <line class="activity-graph-edge"
+          x1="500" y1="55" x2="700" y2="55"></line>
+
+    <!-- Vertical edges -->
+    <line class="activity-graph-edge"
+          x1="100" y1="55" x2="100" y2="205"></line>
+    <line class="activity-graph-edge"
+          x1="300" y1="55" x2="300" y2="205"></line>
+    <line class="activity-graph-edge"
+          x1="500" y1="55" x2="500" y2="205"></line>
+    <line class="activity-graph-edge"
+          x1="700" y1="55" x2="700" y2="205"></line>
+
+    <!-- Middle row -->
+    <line class="activity-graph-edge"
+          x1="100" y1="205" x2="300" y2="205"></line>
+    <line class="activity-graph-edge"
+          x1="300" y1="205" x2="500" y2="205"></line>
+    <line class="activity-graph-edge"
+          x1="500" y1="205" x2="700" y2="205"></line>
+
+    <!-- Lower section -->
+    <line class="activity-graph-edge"
+          x1="300" y1="205" x2="300" y2="345"></line>
+    <line class="activity-graph-edge"
+          x1="500" y1="205" x2="500" y2="345"></line>
+    <line class="activity-graph-edge"
+          x1="300" y1="345" x2="500" y2="345"></line>
+
+    <!-- Diagonals -->
+    <line class="activity-graph-edge"
+          x1="100" y1="205" x2="300" y2="345"></line>
+    <line class="activity-graph-edge"
+          x1="700" y1="205" x2="500" y2="345"></line>
+    <line class="activity-graph-edge"
+          x1="500" y1="55" x2="300" y2="205"></line>
+
+    <!-- Weights: top -->
+    <g class="activity-weight" transform="translate(200 40)">
+      <rect x="-11" y="-10" width="22" height="20" rx="3"></rect>
+      <text>6</text>
+    </g>
+
+    <g class="activity-weight" transform="translate(400 40)">
+      <rect x="-11" y="-10" width="22" height="20" rx="3"></rect>
+      <text>2</text>
+    </g>
+
+    <g class="activity-weight" transform="translate(600 40)">
+      <rect x="-11" y="-10" width="22" height="20" rx="3"></rect>
+      <text>7</text>
+    </g>
+
+    <!-- Weights: vertical -->
+    <g class="activity-weight" transform="translate(84 130)">
+      <rect x="-11" y="-10" width="22" height="20" rx="3"></rect>
+      <text>3</text>
+    </g>
+
+    <g class="activity-weight" transform="translate(284 130)">
+      <rect x="-11" y="-10" width="22" height="20" rx="3"></rect>
+      <text>5</text>
+    </g>
+
+    <g class="activity-weight" transform="translate(516 130)">
+      <rect x="-11" y="-10" width="22" height="20" rx="3"></rect>
+      <text>4</text>
+    </g>
+
+    <g class="activity-weight" transform="translate(716 130)">
+      <rect x="-11" y="-10" width="22" height="20" rx="3"></rect>
+      <text>6</text>
+    </g>
+
+    <!-- Weights: middle -->
+    <g class="activity-weight" transform="translate(200 220)">
+      <rect x="-11" y="-10" width="22" height="20" rx="3"></rect>
+      <text>1</text>
+    </g>
+
+    <g class="activity-weight" transform="translate(400 220)">
+      <rect x="-11" y="-10" width="22" height="20" rx="3"></rect>
+      <text>2</text>
+    </g>
+
+    <g class="activity-weight" transform="translate(600 220)">
+      <rect x="-11" y="-10" width="22" height="20" rx="3"></rect>
+      <text>3</text>
+    </g>
+
+    <!-- Weights: lower -->
+    <g class="activity-weight" transform="translate(284 275)">
+      <rect x="-11" y="-10" width="22" height="20" rx="3"></rect>
+      <text>4</text>
+    </g>
+
+    <g class="activity-weight" transform="translate(516 275)">
+      <rect x="-11" y="-10" width="22" height="20" rx="3"></rect>
+      <text>5</text>
+    </g>
+
+    <g class="activity-weight" transform="translate(400 360)">
+      <rect x="-11" y="-10" width="22" height="20" rx="3"></rect>
+      <text>2</text>
+    </g>
+
+    <!-- Weights: diagonals -->
+    <g class="activity-weight" transform="translate(190 285)">
+      <rect x="-11" y="-10" width="22" height="20" rx="3"></rect>
+      <text>8</text>
+    </g>
+
+    <g class="activity-weight" transform="translate(610 285)">
+      <rect x="-11" y="-10" width="22" height="20" rx="3"></rect>
+      <text>1</text>
+    </g>
+
+    <g class="activity-weight" transform="translate(405 112)">
+      <rect x="-11" y="-10" width="22" height="20" rx="3"></rect>
+      <text>9</text>
+    </g>
+
+    <!-- Vertices -->
+    <circle class="activity-graph-vertex" cx="100" cy="55" r="18"></circle>
+    <text class="activity-graph-label" x="100" y="55">A</text>
+
+    <circle class="activity-graph-vertex" cx="300" cy="55" r="18"></circle>
+    <text class="activity-graph-label" x="300" y="55">B</text>
+
+    <circle class="activity-graph-vertex" cx="500" cy="55" r="18"></circle>
+    <text class="activity-graph-label" x="500" y="55">C</text>
+
+    <circle class="activity-graph-vertex" cx="700" cy="55" r="18"></circle>
+    <text class="activity-graph-label" x="700" y="55">D</text>
+
+    <circle class="activity-graph-vertex" cx="100" cy="205" r="18"></circle>
+    <text class="activity-graph-label" x="100" y="205">E</text>
+
+    <circle class="activity-graph-vertex" cx="300" cy="205" r="18"></circle>
+    <text class="activity-graph-label" x="300" y="205">F</text>
+
+    <circle class="activity-graph-vertex" cx="500" cy="205" r="18"></circle>
+    <text class="activity-graph-label" x="500" y="205">G</text>
+
+    <circle class="activity-graph-vertex" cx="700" cy="205" r="18"></circle>
+    <text class="activity-graph-label" x="700" y="205">H</text>
+
+    <circle class="activity-graph-vertex" cx="300" cy="345" r="18"></circle>
+    <text class="activity-graph-label" x="300" y="345">I</text>
+
+    <circle class="activity-graph-vertex" cx="500" cy="345" r="18"></circle>
+    <text class="activity-graph-label" x="500" y="345">J</text>
+  </svg>
+</div>
+
+  <ol>
+    <li>
+      <strong>Full Trace on Graph A:</strong>
+      Sort the edges of Graph A by weight and run Kruskal's Algorithm.
+      For each edge, record whether it is selected or skipped.
+      Stop when the MST is complete, and give the final set of selected edges and the total weight.
+    </li>
+<li>
+  <strong>First Skipped Edge on Graph A:</strong>
+  Run Kruskal's Algorithm on Graph A until the first time an edge is skipped.
+  Identify the path already present between its endpoints and the cycle that would be created by adding the edge.
+</li>
+
+<li>
+  <strong>Track Components on Graph A:</strong>
+  As you process Graph A, record the connected components after each selected edge.
+  Use this record to explain why an edge whose endpoints lie in the same component must be skipped.
+</li>
+
+<li>
+  <strong>Equal-Weight Choices on Graph B:</strong>
+  Graph B contains many ties.
+  Run Kruskal's Algorithm twice using two different valid orders for equal-weight edges.
+  Compare the resulting MSTs and verify that they have the same total weight.
+</li>
+
+<li>
+  <strong>Where the Choices Can Differ on Graph B:</strong>
+  Identify at least two moments during Kruskal's Algorithm on Graph B where more than one edge could be chosen next because of equal weights.
+  For each moment, explain why each candidate edge is safe at that point.
+</li>
+
+<li>
+  <strong>Spanning Tree vs. Minimum Spanning Tree on Graph C:</strong>
+  Ignore the weights and draw one spanning tree of Graph C that could result from a breadth-first search or depth-first search starting at \(A\).
+  Compute its total weight.
+  Then run Kruskal's Algorithm on Graph C and compare the two trees and their weights.
+</li>
+
+<li>
+  <strong>Change a Weight on Graph C:</strong>
+  Change the weight of edge \((C,F)\) in Graph C from 9 to 1 and run Kruskal's Algorithm again.
+  Determine which decisions change and how the total weight of the MST is affected.
+</li>
+  </ol>
+</section>
+
+<section id="problems" section-title="Homework Problems">
+  <h2>Homework Problems</h2>
+
+  <style>
+    .hw-graph-box {
+      margin: 0.75em 0 1em 0;
+      padding: 0.75em;
+      border: 1px solid #bbb;
+      background: #fafafa;
+    }
+
+    .hw-graph-box svg {
+      display: block;
+      width: 100%;
+      max-width: 820px;
+      height: auto;
+      margin: 0.75em 0;
+      border: 1px solid #888;
+      background: #ffffff;
+    }
+
+    .hw-edge {
+      stroke: #777777;
+      stroke-width: 2.5;
+    }
+
+    .hw-vertex {
+      fill: #f7f9fc;
+      stroke: #003366;
+      stroke-width: 2;
+    }
+
+    .hw-vertex-label {
+      font-size: 15px;
+      font-weight: bold;
+      fill: #003366;
+      text-anchor: middle;
+      dominant-baseline: middle;
+    }
+
+    .hw-weight {
+      font-size: 13px;
+      font-weight: 600;
+      fill: #222222;
+      text-anchor: middle;
+      dominant-baseline: middle;
+      paint-order: stroke fill;
+      stroke: #ffffff;
+      stroke-width: 5px;
+      stroke-linejoin: round;
+    }
+  </style>
+
+  <ol>
+    <li>
+      <strong>Complete Trace:</strong>
+      Run Kruskal's Algorithm on Graph D below. List the edges in nondecreasing order by weight
+      and process them until the algorithm stops. 
+      At each step, list the disjoint sets of vertices and whether the edge is selected or skipped.
+      Clearly mark the selected edges on the graph, and give the final MST and its total weight.
+
+  <div class="hw-graph-box">
+    <strong>Graph D</strong>
+    <p>
+      Edges:
+      \((A,B,7)\), \((A,C,4)\), \((A,D,9)\),
+      \((B,C,2)\), \((B,E,6)\), \((B,F,11)\),
+      \((C,D,5)\), \((C,E,3)\), \((C,F,8)\),
+      \((D,F,1)\), \((D,G,10)\),
+      \((E,F,4)\), \((E,G,7)\),
+      \((F,H,6)\), \((F,I,9)\),
+      \((G,H,2)\),
+      \((H,I,3)\), \((H,J,5)\),
+      \((I,J,4)\), \((I,K,7)\),
+      \((J,K,1)\), \((J,L,6)\), and \((K,L,2)\).
+    </p>
+
+    <svg viewBox="0 0 780 370"
+         role="img"
+         aria-label="Weighted Graph D with vertices A through L">
+
+      <!-- Edges -->
+      <line class="hw-edge" x1="65" y1="185" x2="175" y2="55"></line>
+      <line class="hw-edge" x1="65" y1="185" x2="205" y2="180"></line>
+      <line class="hw-edge" x1="65" y1="185" x2="175" y2="315"></line>
+
+      <line class="hw-edge" x1="175" y1="55" x2="205" y2="180"></line>
+      <line class="hw-edge" x1="175" y1="55" x2="385" y2="55"></line>
+      <line class="hw-edge" x1="175" y1="55" x2="350" y2="180"></line>
+
+      <line class="hw-edge" x1="205" y1="180" x2="175" y2="315"></line>
+      <line class="hw-edge" x1="205" y1="180" x2="385" y2="55"></line>
+      <line class="hw-edge" x1="205" y1="180" x2="350" y2="180"></line>
+
+      <line class="hw-edge" x1="175" y1="315" x2="350" y2="180"></line>
+      <line class="hw-edge" x1="175" y1="315" x2="385" y2="315"></line>
+
+      <line class="hw-edge" x1="385" y1="55" x2="350" y2="180"></line>
+      <line class="hw-edge" x1="385" y1="55" x2="385" y2="315"></line>
+
+      <line class="hw-edge" x1="350" y1="180" x2="535" y2="75"></line>
+      <line class="hw-edge" x1="350" y1="180" x2="535" y2="235"></line>
+
+      <line class="hw-edge" x1="385" y1="315" x2="535" y2="75"></line>
+
+      <line class="hw-edge" x1="535" y1="75" x2="535" y2="235"></line>
+      <line class="hw-edge" x1="535" y1="75" x2="690" y2="55"></line>
+
+      <line class="hw-edge" x1="535" y1="235" x2="690" y2="55"></line>
+      <line class="hw-edge" x1="535" y1="235" x2="710" y2="180"></line>
+
+      <line class="hw-edge" x1="690" y1="55" x2="710" y2="180"></line>
+      <line class="hw-edge" x1="690" y1="55" x2="620" y2="315"></line>
+      <line class="hw-edge" x1="710" y1="180" x2="620" y2="315"></line>
+
+      <!-- Weights -->
+      <text class="hw-weight" x="105" y="120">7</text>
+      <text class="hw-weight" x="132" y="171">4</text>
+      <text class="hw-weight" x="105" y="251">9</text>
+
+      <text class="hw-weight" x="202" y="115">2</text>
+      <text class="hw-weight" x="280" y="43">6</text>
+      <text class="hw-weight" x="245" y="105">11</text>
+
+      <text class="hw-weight" x="202" y="250">5</text>
+      <text class="hw-weight" x="325" y="104">3</text>
+      <text class="hw-weight" x="278" y="168">8</text>
+
+      <text class="hw-weight" x="255" y="258">1</text>
+      <text class="hw-weight" x="280" y="327">10</text>
+
+      <text class="hw-weight" x="355" y="118">4</text>
+      <text class="hw-weight" x="372" y="270">7</text>
+
+      <text class="hw-weight" x="438" y="112">6</text>
+      <text class="hw-weight" x="470" y="228">9</text>
+
+      <text class="hw-weight" x="485" y="145">2</text>
+
+      <text class="hw-weight" x="548" y="155">3</text>
+      <text class="hw-weight" x="612" y="53">5</text>
+
+      <text class="hw-weight" x="600" y="145">4</text>
+      <text class="hw-weight" x="628" y="202">7</text>
+
+      <text class="hw-weight" x="711" y="111">1</text>
+      <text class="hw-weight" x="668" y="132">6</text>
+      <text class="hw-weight" x="676" y="244">2</text>
+
+      <!-- Vertices -->
+      <circle class="hw-vertex" cx="65" cy="185" r="18"></circle>
+      <text class="hw-vertex-label" x="65" y="185">A</text>
+
+      <circle class="hw-vertex" cx="175" cy="55" r="18"></circle>
+      <text class="hw-vertex-label" x="175" y="55">B</text>
+
+      <circle class="hw-vertex" cx="205" cy="180" r="18"></circle>
+      <text class="hw-vertex-label" x="205" y="180">C</text>
+
+      <circle class="hw-vertex" cx="175" cy="315" r="18"></circle>
+      <text class="hw-vertex-label" x="175" y="315">D</text>
+
+      <circle class="hw-vertex" cx="385" cy="55" r="18"></circle>
+      <text class="hw-vertex-label" x="385" y="55">E</text>
+
+      <circle class="hw-vertex" cx="350" cy="180" r="18"></circle>
+      <text class="hw-vertex-label" x="350" y="180">F</text>
+
+      <circle class="hw-vertex" cx="385" cy="315" r="18"></circle>
+      <text class="hw-vertex-label" x="385" y="315">G</text>
+
+      <circle class="hw-vertex" cx="535" cy="75" r="18"></circle>
+      <text class="hw-vertex-label" x="535" y="75">H</text>
+
+      <circle class="hw-vertex" cx="535" cy="235" r="18"></circle>
+      <text class="hw-vertex-label" x="535" y="235">I</text>
+
+      <circle class="hw-vertex" cx="690" cy="55" r="18"></circle>
+      <text class="hw-vertex-label" x="690" y="55">J</text>
+
+      <circle class="hw-vertex" cx="710" cy="180" r="18"></circle>
+      <text class="hw-vertex-label" x="710" y="180">K</text>
+
+      <circle class="hw-vertex" cx="620" cy="315" r="18"></circle>
+      <text class="hw-vertex-label" x="620" y="315">L</text>
+    </svg>
+  </div>
+</li>
+
+<li>
+  <strong>Paths and Cycles:</strong>
+  Suppose Kruskal's Algorithm has currently selected the edges
+  \((A,B)\), \((B,C)\), \((C,D)\), \((D,E)\), and \((E,F)\)
+  in a graph with vertices \(A,B,C,D,E,F,G,H\).
+  For each candidate edge
+  \((A,C)\), \((B,E)\), \((F,G)\), \((G,H)\), and \((A,H)\),
+  considered independently, determine whether it would be selected or skipped next.
+  For every skipped edge, give a path already joining its endpoints and identify the cycle
+  that adding the edge would create.
+</li>
+
+<li>
+  <strong>Tied Weights:</strong>
+  Run Kruskal's Algorithm twice on Graph E using two different valid orders for edges having
+  the same weight. Give both resulting MSTs and verify that they have the same total weight.
+  Identify at least two places where the different tie-breaking orders lead to different choices.
+
+  <div class="hw-graph-box">
+    <strong>Graph E</strong>
+    <p>
+      Edges:
+      \((A,B,1)\), \((B,C,1)\), \((C,D,2)\), \((D,E,2)\),
+      \((E,F,1)\), \((F,G,1)\), \((G,H,2)\), \((H,I,2)\),
+      \((I,A,3)\), \((A,J,2)\), \((C,J,2)\), \((E,J,2)\),
+      \((G,J,2)\), \((I,J,2)\), \((B,J,3)\), \((D,J,3)\),
+      \((F,J,3)\), and \((H,J,3)\).
+    </p>
+
+    <svg viewBox="0 0 760 350"
+         role="img"
+         aria-label="Circular weighted Graph E with vertices A through J">
+
+      <!-- Outer cycle -->
+      <line class="hw-edge" x1="380" y1="35" x2="500" y2="70"></line>
+      <line class="hw-edge" x1="500" y1="70" x2="590" y2="155"></line>
+      <line class="hw-edge" x1="590" y1="155" x2="550" y2="260"></line>
+      <line class="hw-edge" x1="550" y1="260" x2="440" y2="315"></line>
+      <line class="hw-edge" x1="440" y1="315" x2="320" y2="315"></line>
+      <line class="hw-edge" x1="320" y1="315" x2="210" y2="260"></line>
+      <line class="hw-edge" x1="210" y1="260" x2="170" y2="155"></line>
+      <line class="hw-edge" x1="170" y1="155" x2="260" y2="70"></line>
+      <line class="hw-edge" x1="260" y1="70" x2="380" y2="35"></line>
+
+      <!-- Spokes to J -->
+      <line class="hw-edge" x1="380" y1="35" x2="380" y2="175"></line>
+      <line class="hw-edge" x1="590" y1="155" x2="380" y2="175"></line>
+      <line class="hw-edge" x1="440" y1="315" x2="380" y2="175"></line>
+      <line class="hw-edge" x1="210" y1="260" x2="380" y2="175"></line>
+      <line class="hw-edge" x1="260" y1="70" x2="380" y2="175"></line>
+
+      <line class="hw-edge" x1="500" y1="70" x2="380" y2="175"></line>
+      <line class="hw-edge" x1="550" y1="260" x2="380" y2="175"></line>
+      <line class="hw-edge" x1="320" y1="315" x2="380" y2="175"></line>
+      <line class="hw-edge" x1="170" y1="155" x2="380" y2="175"></line>
+
+      <!-- Outer weights -->
+      <text class="hw-weight" x="445" y="40">1</text>
+      <text class="hw-weight" x="555" y="100">1</text>
+      <text class="hw-weight" x="590" y="215">2</text>
+      <text class="hw-weight" x="505" y="292">2</text>
+      <text class="hw-weight" x="380" y="330">1</text>
+      <text class="hw-weight" x="265" y="292">1</text>
+      <text class="hw-weight" x="170" y="215">2</text>
+      <text class="hw-weight" x="205" y="100">2</text>
+      <text class="hw-weight" x="315" y="40">3</text>
+
+      <!-- Weight-2 spokes -->
+      <text class="hw-weight" x="400" y="100">2</text>
+      <text class="hw-weight" x="500" y="155">2</text>
+      <text class="hw-weight" x="425" y="245">2</text>
+      <text class="hw-weight" x="290" y="235">2</text>
+      <text class="hw-weight" x="305" y="110">2</text>
+
+      <!-- Weight-3 spokes -->
+      <text class="hw-weight" x="455" y="115">3</text>
+      <text class="hw-weight" x="475" y="225">3</text>
+      <text class="hw-weight" x="345" y="250">3</text>
+      <text class="hw-weight" x="275" y="165">3</text>
+
+      <!-- Vertices -->
+      <circle class="hw-vertex" cx="380" cy="35" r="18"></circle>
+      <text class="hw-vertex-label" x="380" y="35">A</text>
+
+      <circle class="hw-vertex" cx="500" cy="70" r="18"></circle>
+      <text class="hw-vertex-label" x="500" y="70">B</text>
+
+      <circle class="hw-vertex" cx="590" cy="155" r="18"></circle>
+      <text class="hw-vertex-label" x="590" y="155">C</text>
+
+      <circle class="hw-vertex" cx="550" cy="260" r="18"></circle>
+      <text class="hw-vertex-label" x="550" y="260">D</text>
+
+      <circle class="hw-vertex" cx="440" cy="315" r="18"></circle>
+      <text class="hw-vertex-label" x="440" y="315">E</text>
+
+      <circle class="hw-vertex" cx="320" cy="315" r="18"></circle>
+      <text class="hw-vertex-label" x="320" y="315">F</text>
+
+      <circle class="hw-vertex" cx="210" cy="260" r="18"></circle>
+      <text class="hw-vertex-label" x="210" y="260">G</text>
+
+      <circle class="hw-vertex" cx="170" cy="155" r="18"></circle>
+      <text class="hw-vertex-label" x="170" y="155">H</text>
+
+      <circle class="hw-vertex" cx="260" cy="70" r="18"></circle>
+      <text class="hw-vertex-label" x="260" y="70">I</text>
+
+      <circle class="hw-vertex" cx="380" cy="175" r="18"></circle>
+      <text class="hw-vertex-label" x="380" y="175">J</text>
+    </svg>
+  </div>
+</li>
+
+<li>
+  <strong>Negative Edge Weights:</strong>
+  Run Kruskal's Algorithm on the graph with edges
+  \((A,B,-4)\), \((A,C,3)\), \((B,C,-1)\), \((B,D,5)\),
+  \((C,D,2)\), \((C,E,4)\), \((D,E,-2)\), \((D,F,6)\),
+  \((E,F,1)\), \((E,G,5)\), \((F,G,3)\), \((F,H,-1)\),
+  \((G,H,6)\), \((G,I,2)\), and \((H,I,4)\).
+  Give the sorted edge order, indicate which edges are selected or skipped, and give the total
+  weight of the MST.
+
+  <div class="hw-graph-box">
+    <strong>Graph with Negative Edge Weights</strong>
+    <svg viewBox="0 0 760 330"
+         role="img"
+         aria-label="Weighted graph with vertices A through I and several negative edge weights">
+
+      <!-- Edges -->
+      <line class="hw-edge" x1="70" y1="165" x2="205" y2="55"></line>
+      <line class="hw-edge" x1="70" y1="165" x2="205" y2="275"></line>
+      <line class="hw-edge" x1="205" y1="55" x2="205" y2="275"></line>
+      <line class="hw-edge" x1="205" y1="55" x2="350" y2="55"></line>
+      <line class="hw-edge" x1="205" y1="275" x2="350" y2="55"></line>
+      <line class="hw-edge" x1="205" y1="275" x2="350" y2="275"></line>
+      <line class="hw-edge" x1="350" y1="55" x2="350" y2="275"></line>
+      <line class="hw-edge" x1="350" y1="55" x2="500" y2="55"></line>
+      <line class="hw-edge" x1="350" y1="275" x2="500" y2="55"></line>
+      <line class="hw-edge" x1="350" y1="275" x2="500" y2="275"></line>
+      <line class="hw-edge" x1="500" y1="55" x2="500" y2="275"></line>
+      <line class="hw-edge" x1="500" y1="55" x2="650" y2="55"></line>
+      <line class="hw-edge" x1="500" y1="275" x2="650" y2="55"></line>
+      <line class="hw-edge" x1="500" y1="275" x2="650" y2="275"></line>
+      <line class="hw-edge" x1="650" y1="55" x2="650" y2="275"></line>
+
+      <!-- Weights -->
+      <text class="hw-weight" x="126" y="96">-4</text>
+      <text class="hw-weight" x="126" y="234">3</text>
+      <text class="hw-weight" x="222" y="165">-1</text>
+      <text class="hw-weight" x="278" y="40">5</text>
+      <text class="hw-weight" x="270" y="157">2</text>
+      <text class="hw-weight" x="278" y="292">4</text>
+      <text class="hw-weight" x="367" y="165">-2</text>
+      <text class="hw-weight" x="425" y="40">6</text>
+      <text class="hw-weight" x="416" y="157">1</text>
+      <text class="hw-weight" x="425" y="292">5</text>
+      <text class="hw-weight" x="517" y="165">3</text>
+      <text class="hw-weight" x="575" y="40">-1</text>
+      <text class="hw-weight" x="566" y="157">6</text>
+      <text class="hw-weight" x="575" y="292">2</text>
+      <text class="hw-weight" x="667" y="165">4</text>
+
+      <!-- Vertices -->
+      <circle class="hw-vertex" cx="70" cy="165" r="18"></circle>
+      <text class="hw-vertex-label" x="70" y="165">A</text>
+      <circle class="hw-vertex" cx="205" cy="55" r="18"></circle>
+      <text class="hw-vertex-label" x="205" y="55">B</text>
+      <circle class="hw-vertex" cx="205" cy="275" r="18"></circle>
+      <text class="hw-vertex-label" x="205" y="275">C</text>
+      <circle class="hw-vertex" cx="350" cy="55" r="18"></circle>
+      <text class="hw-vertex-label" x="350" y="55">D</text>
+      <circle class="hw-vertex" cx="350" cy="275" r="18"></circle>
+      <text class="hw-vertex-label" x="350" y="275">E</text>
+      <circle class="hw-vertex" cx="500" cy="55" r="18"></circle>
+      <text class="hw-vertex-label" x="500" y="55">F</text>
+      <circle class="hw-vertex" cx="500" cy="275" r="18"></circle>
+      <text class="hw-vertex-label" x="500" y="275">G</text>
+      <circle class="hw-vertex" cx="650" cy="55" r="18"></circle>
+      <text class="hw-vertex-label" x="650" y="55">H</text>
+      <circle class="hw-vertex" cx="650" cy="275" r="18"></circle>
+      <text class="hw-vertex-label" x="650" y="275">I</text>
+    </svg>
+  </div>
+</li>
+
+<li>
+  <strong>Disconnected Input:</strong>
+  Run Kruskal's Algorithm on Graph F.
+  Give the minimum spanning forest produced by the algorithm, listing the selected edges in
+  each connected component. Be sure to account for every vertex.
+
+  <div class="hw-graph-box">
+    <strong>Graph F</strong>
+    <p>
+      Edges:
+      \((A,B,3)\), \((A,C,1)\), \((B,C,2)\), \((B,D,5)\),
+      \((C,D,4)\), \((C,E,6)\), \((D,E,2)\),
+      \((F,G,2)\), \((F,H,5)\), \((G,H,1)\), \((G,I,4)\),
+      \((H,I,3)\), and \((J,K,2)\).
+      Vertex \(L\) has no incident edges.
+    </p>
+
+    <svg viewBox="0 0 800 340"
+         role="img"
+         aria-label="Disconnected weighted Graph F with vertices A through L">
+
+      <!-- Component A-E -->
+      <line class="hw-edge" x1="80" y1="70" x2="200" y2="45"></line>
+      <line class="hw-edge" x1="80" y1="70" x2="155" y2="150"></line>
+      <line class="hw-edge" x1="200" y1="45" x2="155" y2="150"></line>
+      <line class="hw-edge" x1="200" y1="45" x2="275" y2="130"></line>
+      <line class="hw-edge" x1="155" y1="150" x2="275" y2="130"></line>
+      <line class="hw-edge" x1="155" y1="150" x2="225" y2="240"></line>
+      <line class="hw-edge" x1="275" y1="130" x2="225" y2="240"></line>
+
+      <text class="hw-weight" x="140" y="43">3</text>
+      <text class="hw-weight" x="105" y="115">1</text>
+      <text class="hw-weight" x="185" y="100">2</text>
+      <text class="hw-weight" x="250" y="75">5</text>
+      <text class="hw-weight" x="220" y="145">4</text>
+      <text class="hw-weight" x="175" y="200">6</text>
+      <text class="hw-weight" x="260" y="190">2</text>
+
+      <!-- Component F-I -->
+      <line class="hw-edge" x1="400" y1="70" x2="525" y2="45"></line>
+      <line class="hw-edge" x1="400" y1="70" x2="465" y2="155"></line>
+      <line class="hw-edge" x1="525" y1="45" x2="465" y2="155"></line>
+      <line class="hw-edge" x1="525" y1="45" x2="590" y2="165"></line>
+      <line class="hw-edge" x1="465" y1="155" x2="590" y2="165"></line>
+
+      <text class="hw-weight" x="462" y="43">2</text>
+      <text class="hw-weight" x="415" y="120">5</text>
+      <text class="hw-weight" x="510" y="105">1</text>
+      <text class="hw-weight" x="570" y="95">4</text>
+      <text class="hw-weight" x="530" y="175">3</text>
+
+      <!-- Component J-K -->
+      <line class="hw-edge" x1="485" y1="275" x2="625" y2="275"></line>
+      <text class="hw-weight" x="555" y="258">2</text>
+
+      <!-- Vertices A-E -->
+      <circle class="hw-vertex" cx="80" cy="70" r="18"></circle>
+      <text class="hw-vertex-label" x="80" y="70">A</text>
+
+      <circle class="hw-vertex" cx="200" cy="45" r="18"></circle>
+      <text class="hw-vertex-label" x="200" y="45">B</text>
+
+      <circle class="hw-vertex" cx="155" cy="150" r="18"></circle>
+      <text class="hw-vertex-label" x="155" y="150">C</text>
+
+      <circle class="hw-vertex" cx="275" cy="130" r="18"></circle>
+      <text class="hw-vertex-label" x="275" y="130">D</text>
+
+      <circle class="hw-vertex" cx="225" cy="240" r="18"></circle>
+      <text class="hw-vertex-label" x="225" y="240">E</text>
+
+      <!-- Vertices F-I -->
+      <circle class="hw-vertex" cx="400" cy="70" r="18"></circle>
+      <text class="hw-vertex-label" x="400" y="70">F</text>
+
+      <circle class="hw-vertex" cx="525" cy="45" r="18"></circle>
+      <text class="hw-vertex-label" x="525" y="45">G</text>
+
+      <circle class="hw-vertex" cx="465" cy="155" r="18"></circle>
+      <text class="hw-vertex-label" x="465" y="155">H</text>
+
+      <circle class="hw-vertex" cx="590" cy="165" r="18"></circle>
+      <text class="hw-vertex-label" x="590" y="165">I</text>
+
+      <!-- Vertices J-K -->
+      <circle class="hw-vertex" cx="485" cy="275" r="18"></circle>
+      <text class="hw-vertex-label" x="485" y="275">J</text>
+
+      <circle class="hw-vertex" cx="625" cy="275" r="18"></circle>
+      <text class="hw-vertex-label" x="625" y="275">K</text>
+
+      <!-- Isolated vertex L -->
+      <circle class="hw-vertex" cx="720" cy="70" r="18"></circle>
+      <text class="hw-vertex-label" x="720" y="70">L</text>
+    </svg>
+  </div>
+</li>
+
+<li>
+  <strong>Stopping Early:</strong>
+  A connected graph has 12 vertices and 31 edges.
+  Explain why Kruskal's Algorithm can stop as soon as it selects its 11th edge.
+  What is the fewest number of edges the algorithm could have examined before stopping?
+  What is the greatest number it might have to examine? Justify both answers.
+</li>
+
+<li>
+  <strong>Why Sorting Matters:</strong>
+  Construct a connected weighted graph on four vertices for which processing the edges in an
+  arbitrary order and selecting every edge that does not create a cycle produces a spanning tree
+  that is not minimum. Give the graph, specify the edge-processing order, show the spanning tree
+  produced by this procedure, and compare its weight with the weight of an MST.
+</li>
+  </ol>
+</section>
+
+</body>
+</html>

@@ -489,12 +489,70 @@ const computeIframeHeight = (doc) => {
   return baseHeight + buffer;
 };
 
+const decodeHash = (hash) => {
+  const value = String(hash || '').replace(/^#/, '');
+  if (!value) return '';
+  try { return decodeURIComponent(value); }
+  catch { return value; }
+};
+
+const expandTargetSections = (target, doc) => {
+  let node = target;
+  while (node && node !== doc.body) {
+    if (node.classList?.contains('collapsible-ready')) {
+      const btn = node.querySelector(':scope > h1 .section-toggle, :scope > h2 .section-toggle, :scope > h3 .section-toggle, :scope > h4 .section-toggle, :scope > h5 .section-toggle, :scope > h6 .section-toggle');
+      const body = node.querySelector(':scope > .section-body');
+      if (btn) {
+        btn.setAttribute('aria-expanded', 'true');
+        const chev = btn.querySelector('.chev');
+        if (chev) chev.textContent = '▾';
+      }
+      if (body) body.hidden = false;
+    }
+    node = node.parentElement;
+  }
+};
+
+// The content iframe grows to the height of its document, so the outer window
+// is the actual scroll container. Scroll it explicitly after the iframe has
+// been sized instead of relying on scrollIntoView across a frame boundary.
+const scrollToContentHash = (iframe, hash = window.location.hash, behavior = 'auto') => {
+  const id = decodeHash(hash);
+  if (!id) return false;
+
+  try {
+    const doc = getIframeDocument(iframe);
+    const target = doc && (doc.getElementById(id) || doc.querySelector(`[name="${CSS.escape(id)}"]`));
+    if (!target) return false;
+
+    expandTargetSections(target, doc);
+    const frameTop = iframe.getBoundingClientRect().top;
+    const targetTop = target.getBoundingClientRect().top;
+    const innerScrollY = doc.defaultView?.scrollY || 0;
+    const top = window.scrollY + frameTop + targetTop + innerScrollY;
+    window.scrollTo({ top: Math.max(0, Math.round(top)), behavior });
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 // ─── Navigation / Scroll‐State / Content Loading ─────────────────────────────
 let pendingScrollRestore = null;
+let loadedContentPath = null;
 
-const navigateTo = (rawPath) => {
+const navigateTo = (rawPath, hash = '') => {
   const currentPath = getCurrentPath();
-  if (rawPath === currentPath) return;
+  if (rawPath === currentPath) {
+    if (hash) {
+      if (window.location.hash === hash) {
+        scrollToContentHash(document.getElementById('content'), hash, 'smooth');
+      } else {
+        window.location.hash = hash;
+      }
+    }
+    return;
+  }
 
   // 1) Save old scroll position
   const oldScrollY = window.pageYOffset;
@@ -509,7 +567,7 @@ const navigateTo = (rawPath) => {
   history.pushState(
     { path: rawPath, book: activeBookId, scrollY: 0 },
     '',
-    buildNavigationURL(rawPath)
+    `${buildNavigationURL(rawPath)}${hash}`
   );
 
   // 3) Load
@@ -692,6 +750,16 @@ function hookIframeContent(iframe) {
       return;
     }
 
+    if (rawHref.startsWith('#')) {
+      event.preventDefault();
+      if (window.location.hash === resolved.hash) {
+        scrollToContentHash(iframe, resolved.hash, 'smooth');
+      } else {
+        window.location.hash = resolved.hash;
+      }
+      return;
+    }
+
     const raw = resolved.searchParams.get('path');
     if (!raw) return;
     const isSameSite = resolved.origin === window.location.origin;
@@ -699,8 +767,11 @@ function hookIframeContent(iframe) {
 
     event.preventDefault();
     const parentPath = getCurrentPath.call(window.parent);
-    if (raw === parentPath) return;
-    window.parent.postMessage({ type: 'navigate', path: raw }, '*');
+    if (raw === parentPath) {
+      if (resolved.hash) window.location.hash = resolved.hash;
+      return;
+    }
+    window.parent.postMessage({ type: 'navigate', path: raw, hash: resolved.hash }, '*');
   });
 
   /*
@@ -929,6 +1000,15 @@ function hookIframeContent(iframe) {
         });
         section.appendChild(body);
 
+        // Give top-level list items stable, human-readable fragment targets.
+        // For example, the tenth item in #problems is #problems-10. Preserve
+        // explicit author-provided IDs when present.
+        let itemNumber = 0;
+        body.querySelectorAll(':scope > ol > li, :scope > ul > li').forEach((item) => {
+          itemNumber += 1;
+          if (!item.id) item.id = `${id}-${itemNumber}`;
+        });
+
         // Create a toggle button inside the header
         const btn = doc.createElement('button');
         btn.type = 'button';
@@ -1054,39 +1134,14 @@ function hookIframeContent(iframe) {
     }
   })(innerDoc);
 
-  // Support deep-linking: scroll to element matching parent hash
+  // Support hash changes after the content document has loaded. The initial
+  // scroll is performed by loadContent after the iframe's final height is set.
   (function handleHashScroll(doc) {
-    const scrollToId = (id) => {
-      if (!id) return;
-      try {
-        const target = doc.getElementById(id) || doc.querySelector(`[name="${CSS.escape(id)}"]`);
-        if (!target) return;
-        // Expand any collapsed ancestor sections to ensure visibility
-        let node = target;
-        while (node && node !== doc.body) {
-          if (node.classList && node.classList.contains('collapsible-ready')) {
-            const btn = node.querySelector(':scope > h1 .section-toggle, :scope > h2 .section-toggle, :scope > h3 .section-toggle, :scope > h4 .section-toggle, :scope > h5 .section-toggle, :scope > h6 .section-toggle');
-            const body = node.querySelector(':scope > .section-body');
-            if (btn) btn.setAttribute('aria-expanded', 'true');
-            if (body) body.hidden = false;
-          }
-          node = node.parentElement;
-        }
-        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      } catch {}
-    };
-
-    // Initial pass using parent's hash (preferred), else iframe's own hash
-    let hash = '';
-    try { hash = window.parent?.location?.hash || window.location.hash || ''; }
-    catch { hash = window.location.hash || ''; }
-    if (hash && hash.startsWith('#')) scrollToId(hash.slice(1));
-
     // Listen for parent hash changes while this doc is active
     try {
       const onHash = () => {
         const h = window.parent.location.hash;
-        if (h && h.startsWith('#')) scrollToId(h.slice(1));
+        if (h && h.startsWith('#')) scrollToContentHash(iframe, h, 'smooth');
       };
       window.parent.addEventListener('hashchange', onHash);
       // Clean up when iframe unloads
@@ -1301,7 +1356,7 @@ const selectBook = (bookId) => {
   history.pushState(
     { path: currentPath, book: activeBookId, scrollY: window.pageYOffset || 0 },
     '',
-    buildNavigationURL(currentPath)
+    `${buildNavigationURL(currentPath)}${window.location.hash}`
   );
   buildMenu(chaptersData);
   highlightActiveLink(currentPath);
@@ -1430,6 +1485,7 @@ async function loadContent(relativePath) {
       } catch {}
 
       hookIframeContent(iframe);
+      loadedContentPath = getCurrentPath();
       resizeIframe();
       const d = getIframeDocument(iframe);
       const pageTitle = d && d.title;
@@ -1449,16 +1505,12 @@ async function loadContent(relativePath) {
       }
       window.addEventListener('resize', resizeIframe);
 
-      // After content is ready, if parent URL has a hash, scroll to it
-      try {
-        const h = window.location.hash;
-        if (h && h.startsWith('#')) {
-          const d2 = getIframeDocument(iframe);
-          const id = h.slice(1);
-          const el = d2 && (d2.getElementById(id) || d2.querySelector(`[name="${CSS.escape(id)}"]`));
-          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-      } catch {}
+      // The resize above deliberately preserves the current outer scroll
+      // position. Apply a requested fragment only after that resize completes.
+      if (window.location.hash) {
+        scrollToContentHash(iframe, window.location.hash);
+        requestAnimationFrame(() => scrollToContentHash(iframe, window.location.hash));
+      }
     };
   } catch (e) {
     iframe.style.display = 'none';
@@ -1502,7 +1554,7 @@ document.addEventListener('DOMContentLoaded', () => {
         history.replaceState(
           { path: initialPath, book: activeBookId, scrollY: window.pageYOffset || 0 },
           '',
-          buildNavigationURL(initialPath)
+          `${buildNavigationURL(initialPath)}${window.location.hash}`
         );
       }
 
@@ -1542,7 +1594,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!rawPath || resolved.origin !== window.location.origin) return;
 
     event.preventDefault();
-    navigateTo(rawPath);
+    navigateTo(rawPath, resolved.hash);
   });
 
   window.addEventListener('message', (event) => {
@@ -1559,7 +1611,11 @@ window.addEventListener('message', (event) => {
   const msg = event.data;
   if (msg?.type === 'navigate' && msg.path) {
     const currentPath = getCurrentPath();
-    if (msg.path !== currentPath) navigateTo(msg.path);
+    if (msg.path !== currentPath) {
+      navigateTo(msg.path, msg.hash || '');
+    } else if (msg.hash) {
+      window.location.hash = msg.hash;
+    }
   }
 });
 
@@ -1567,13 +1623,28 @@ window.addEventListener('message', (event) => {
 window.removeEventListener('popstate', loadFromURLParams);
 window.addEventListener('popstate', (event) => {
   const state = event.state || {};
-  pendingScrollRestore = typeof state.scrollY === 'number' ? state.scrollY : 0;
   // Prefer URL as source of truth for the popped entry; fallback to state
   const params = new URLSearchParams(window.location.search);
   const urlPath = params.get('path');
   const urlBook = params.get('book');
   const rawPath = urlPath || state.path || 'Start Here/About';
   const nextBook = isKnownBook(urlBook) ? urlBook : 'all-grouped';
+
+  // Browsers can fire popstate for fragment-only history navigation. The
+  // requested document is already loaded in that case; reloading the iframe
+  // would briefly remove the target and restart every embedded demo.
+  if (rawPath === loadedContentPath && nextBook === activeBookId) {
+    pendingScrollRestore = null;
+    if (window.location.hash) {
+      const iframe = document.getElementById('content');
+      requestAnimationFrame(() => scrollToContentHash(iframe, window.location.hash, 'smooth'));
+    } else if (typeof state.scrollY === 'number') {
+      window.scrollTo(0, state.scrollY);
+    }
+    return;
+  }
+
+  pendingScrollRestore = typeof state.scrollY === 'number' ? state.scrollY : 0;
   if (nextBook !== activeBookId) {
     activeBookId = nextBook;
     buildMenu(chaptersData);
