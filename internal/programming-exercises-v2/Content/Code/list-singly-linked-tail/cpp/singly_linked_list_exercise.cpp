@@ -244,8 +244,19 @@ void testLargeIndexedWorkload() {
     check(list.isEmpty(), true); check(list.last(), -1);
 }
 
+void testHundredThousandEndpointOperations() {
+    const int count = 100000;
+    IntList list;
+    bool ok = true;
+    for (int i = 0; i < count; i++) ok = list.addLast(i) && ok;
+    ok = list.size() == count && list.first() == 0 && list.last() == count - 1 && ok;
+    for (int i = 0; i < count; i++) ok = (list.removeFirst() == i) && ok;
+    check(ok && list.isEmpty() && list.size() == 0 && list.first() == -1 && list.last() == -1, true);
+}
+
 int main() {
     testList();
     testLargeIndexedWorkload();
+    testHundredThousandEndpointOperations();
   return failures == 0 ? 0 : 1;
 }

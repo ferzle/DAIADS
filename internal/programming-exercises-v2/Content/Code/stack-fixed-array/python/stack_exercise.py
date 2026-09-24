@@ -30,6 +30,9 @@ class IntStack:
         # TODO
         return -1
 
+    def used_values_for_testing(self):
+        return self.A[:self.top + 1]
+
 
 failures = 0
 
@@ -70,6 +73,7 @@ def test_stack():
     check(stack.peek(), 2)
 
     check(stack.push(5), False)
+    check(stack.used_values_for_testing(), [4, 7, 9, 2])
     check(stack.size(), 4)
     check(stack.peek(), 2)
 
@@ -80,6 +84,7 @@ def test_stack():
     check(stack.size(), 2)
 
     check(stack.push(6), True)
+    check(stack.used_values_for_testing(), [4, 7, 6])
     check(stack.size(), 3)
     check(stack.peek(), 6)
 
@@ -117,8 +122,22 @@ def test_boundary_sizes_and_reuse():
         check(stack.is_empty(), True)
 
 
+def test_large_aggregate_workload():
+    n = 100_000
+    stack = IntStack(n)
+    ok = True
+    for value in range(n):
+        ok = stack.push(value) and ok
+    ok = stack.size() == n and stack.is_full() and stack.peek() == n - 1 and ok
+    for value in range(n - 1, -1, -1):
+        ok = stack.pop() == value and ok
+    ok = stack.is_empty() and stack.size() == 0 and ok
+    check(ok, True)
+
+
 test_stack()
 test_boundary_sizes_and_reuse()
+test_large_aggregate_workload()
 
 if failures:
     raise SystemExit(1)

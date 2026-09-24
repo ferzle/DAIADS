@@ -186,12 +186,16 @@ def test_doubly_list():
 
 def test_large_drain_and_endpoint_helpers():
     lst = IntDoublyList()
-    for value in range(200):
+    half = 50_000
+    for value in range(half):
         lst.insert_at_tail(value)
-    check(lst.size(), 200)
-    for value in range(100):
-        check(lst.delete_from_head(), value)
-        check(lst.delete_from_tail(), 199 - value)
+    ok = lst.size() == half
+    ok = all(lst.delete_from_head() == value for value in range(half)) and ok
+    for value in range(half):
+        lst.insert_at_head(value)
+    ok = lst.size() == half and ok
+    ok = all(lst.delete_from_tail() == value for value in range(half)) and ok
+    check(ok, True)
     check(lst.is_empty(), True)
     check(lst.traverse_forward(), "")
     check(lst.traverse_backward(), "")

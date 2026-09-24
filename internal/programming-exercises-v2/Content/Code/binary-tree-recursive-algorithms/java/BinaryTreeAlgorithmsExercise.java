@@ -118,12 +118,28 @@ public class BinaryTreeAlgorithmsExercise {
       check(size(root.right), 5); check(height(root.right), 3); check(countLeaves(root.right), 2);
       BinaryNode chain = new BinaryNode(0), cursor = chain;
       for (int i = 1; i < 200; i++) { cursor.right = new BinaryNode(i); cursor = cursor.right; }
-      check(size(chain), 200); check(height(chain), 200); check(countLeaves(chain), 1); check(countTwoChildNodes(chain), 0);
+      check(size(chain), 200); check(height(chain), 199); check(countLeaves(chain), 1); check(countTwoChildNodes(chain), 0);
+  }
+
+  static void testHundredThousandNodeCompleteTree() {
+      final int count = 100_000;
+      BinaryNode[] nodes = new BinaryNode[count];
+      for (int i = 0; i < count; i++) nodes[i] = new BinaryNode(i);
+      for (int i = 0; i < count; i++) {
+          int left = 2 * i + 1, right = left + 1;
+          if (left < count) nodes[i].left = nodes[left];
+          if (right < count) nodes[i].right = nodes[right];
+      }
+      check(size(nodes[0]), count);
+      check(height(nodes[0]), 16);
+      check(countLeaves(nodes[0]), 50_000);
+      check(countTwoChildNodes(nodes[0]), 49_999);
   }
 
   public static void main(String[] args) {
     testAlgorithms();
     testIrregularTreeAndEverySubtree();
+    testHundredThousandNodeCompleteTree();
     System.out.println(failures == 0 ? "All tests passed." : failures + " test(s) failed.");
     if (failures > 0) System.exit(1);
   }

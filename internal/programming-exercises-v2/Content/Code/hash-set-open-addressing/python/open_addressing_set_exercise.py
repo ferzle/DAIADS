@@ -228,12 +228,25 @@ def test_large_delete_reinsert_cycles(probing_type):
     check(values.size() == 400, f"{name}: size after replacements")
 
 
+def test_fifty_thousand_keys(probing_type):
+    count = 50_000
+    values = OpenAddressingIntSet(17, probing_type)
+    ok = all(values.insert(key) for key in range(count))
+    ok = all(values.contains(key) for key in range(count)) and ok
+    ok = all(values.remove(key) for key in range(0, count, 3)) and ok
+    ok = all(values.insert(200_000 + key) for key in range(0, count, 3)) and ok
+    ok = all(values.contains(key) == (key % 3 != 0) for key in range(count)) and ok
+    ok = all(values.contains(200_000 + key) for key in range(0, count, 3)) and ok
+    check(ok and values.size() == count, f"{probing_type.name}: 50,000-key aggregate workload")
+
+
 if __name__ == "__main__":
     check_raises(lambda: OpenAddressingIntSet(3, None), "reject an invalid probing type")
     for strategy in ProbingType:
         test_strategy(strategy)
         test_tombstone_stress(strategy)
         test_large_delete_reinsert_cycles(strategy)
+        test_fifty_thousand_keys(strategy)
     print("All tests passed." if failures == 0 else f"{failures} test(s) failed.")
 
 if __name__ == "__main__" and failures:

@@ -157,9 +157,23 @@ def test_every_bit_around_word_boundaries():
         check(values.is_empty(), True, f"clear universe {universe}")
 
 
+def test_million_bit_universe():
+    universe = 1_000_000
+    values = BitVectorIntSet(universe)
+    ok = all(values.add(key) for key in range(universe))
+    ok = (values.size() == universe and values.contains(0) and values.contains(31)
+          and values.contains(32) and values.contains(999_999) and ok)
+    ok = all(values.remove(key) for key in range(0, universe, 2)) and ok
+    ok = (values.size() == universe // 2 and not values.contains(0)
+          and values.contains(999_999) and not values.contains(999_998) and ok)
+    values.clear()
+    check(ok and values.is_empty() and values.size() == 0, True, "million-bit aggregate workload")
+
+
 if __name__ == "__main__":
     test_set()
     test_every_bit_around_word_boundaries()
+    test_million_bit_universe()
     print("All tests passed." if failures == 0 else f"{failures} test(s) failed.")
 
 if __name__ == "__main__" and failures:

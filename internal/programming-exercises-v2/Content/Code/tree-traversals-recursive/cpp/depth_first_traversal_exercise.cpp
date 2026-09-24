@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -81,6 +82,11 @@ void check(
         printVector(actual);
         cout << endl;
     }
+}
+
+void checkSummary(const string& name, bool condition) {
+    if (condition) cout << "pass: " << name << endl;
+    else { ++failures; cout << "fail: " << name << endl; }
 }
 
 BinaryNode* buildCompleteTree() {
@@ -200,8 +206,30 @@ void testIrregularTreeAndIndependentResults() {
     destroyTree(root);
 }
 
+void testHundredThousandNodeCompleteTree() {
+    const int count = 100000;
+    vector<BinaryNode*> nodes;
+    nodes.reserve(count);
+    for (int i = 0; i < count; i++) nodes.push_back(new BinaryNode(i));
+    for (int i = 0; i < count; i++) {
+        int left = 2 * i + 1, right = left + 1;
+        if (left < count) nodes[i]->left = nodes[left];
+        if (right < count) nodes[i]->right = nodes[right];
+    }
+    vector<int> pre = preorder(nodes[0]), in = inorder(nodes[0]), post = postorder(nodes[0]);
+    bool ok = pre.size() == count && in.size() == count && post.size() == count
+              && pre.front() == 0 && in.front() == 65535 && post.back() == 0;
+    sort(pre.begin(), pre.end()); sort(in.begin(), in.end()); sort(post.begin(), post.end());
+    if (ok) {
+        for (int i = 0; i < count; i++) ok = pre[i] == i && in[i] == i && post[i] == i && ok;
+    }
+    checkSummary("100,000-node depth-first traversals", ok);
+    destroyTree(nodes[0]);
+}
+
 int main() {
     testTraversals();
     testIrregularTreeAndIndependentResults();
+    testHundredThousandNodeCompleteTree();
     return failures == 0 ? 0 : 1;
 }

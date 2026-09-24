@@ -135,8 +135,22 @@ def test_long_runs_and_singleton_reuse():
     check(queue.is_empty(), True)
 
 
+def test_large_aggregate_workload():
+    n = 100_000
+    queue = IntQueue()
+    for value in range(n):
+        queue.enqueue(value)
+    ok = (queue.size() == n and queue.front() == 0
+          and queue.has_valid_structure_for_testing())
+    for value in range(n):
+        ok = queue.dequeue() == value and ok
+    ok = queue.is_empty() and queue.has_valid_structure_for_testing() and ok
+    check(ok, True)
+
+
 test_queue()
 test_long_runs_and_singleton_reuse()
+test_large_aggregate_workload()
 
 if failures:
     raise SystemExit(1)

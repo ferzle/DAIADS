@@ -242,12 +242,15 @@ public class AVLTreeStarter {
 
         AVLTreeStarter large = new AVLTreeStarter();
         boolean largeOk = true;
-        for (int i = 0; i < 1000; i++) largeOk &= large.insert((i * 641) % 1000);
-        largeOk &= large.size() == 1000 && large.hasValidStructure();
-        largeOk &= large.treeHeightForTesting() <= 14;
-        for (int i = 0; i < 1000; i += 2) largeOk &= large.remove(i);
-        largeOk &= large.size() == 500 && large.hasValidStructure();
-        check(largeOk, "1000-key insertion and 500-key removal stress test");
+        final int count = 20_000;
+        for (int i = 0; i < count; i++) largeOk &= large.insert((i * 7_919) % count);
+        for (int i = 0; i < count; i++) largeOk &= large.contains(i);
+        largeOk &= large.size() == count && large.hasValidStructure();
+        largeOk &= large.treeHeightForTesting() <= 20;
+        for (int i = 0; i < count; i += 2) largeOk &= large.remove(i);
+        for (int i = 0; i < count; i++) largeOk &= large.contains(i) == (i % 2 == 1);
+        largeOk &= large.size() == count / 2 && large.hasValidStructure();
+        check(largeOk, "20,000-key insertion, search, and 10,000-key removal stress test");
         testDifferentialUpdates();
         System.out.println("inorder: " + tree.inorderValues());
         if (failures > 0) System.exit(1);

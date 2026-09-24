@@ -182,12 +182,15 @@ def main():
               and deletion_tree.has_valid_structure(),
               "deletion rotation pattern " + str(number))
     large = AVLTree()
-    large_ok = all(large.insert((i * 641) % 1000) for i in range(1000))
-    large_ok = (large.size == 1000 and large.has_valid_structure()
-                and large.tree_height_for_testing() <= 14 and large_ok)
-    large_ok = all(large.remove(i) for i in range(0, 1000, 2)) and large_ok
-    large_ok = large.size == 500 and large.has_valid_structure() and large_ok
-    check(large_ok, "1000-key insertion and 500-key removal stress test")
+    count = 20_000
+    large_ok = all(large.insert((i * 7_919) % count) for i in range(count))
+    large_ok = all(large.contains(i) for i in range(count)) and large_ok
+    large_ok = (large.size == count and large.has_valid_structure()
+                and large.tree_height_for_testing() <= 20 and large_ok)
+    large_ok = all(large.remove(i) for i in range(0, count, 2)) and large_ok
+    large_ok = all(large.contains(i) == (i % 2 == 1) for i in range(count)) and large_ok
+    large_ok = large.size == count // 2 and large.has_valid_structure() and large_ok
+    check(large_ok, "20,000-key insertion, search, and 10,000-key removal stress test")
     print("inorder:", tree.inorder_values())
 
 

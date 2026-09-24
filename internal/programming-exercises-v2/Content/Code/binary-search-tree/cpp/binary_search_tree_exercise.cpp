@@ -1,4 +1,6 @@
 #include <iostream>
+#include <utility>
+#include <vector>
 
 using namespace std;
 
@@ -315,8 +317,29 @@ void testLargeOrderedUpdates() {
   check(tree.isEmpty() && tree.hasCorrectParentReferences(), "empty after complete drain");
 }
 
+void testLargeBalancedOrderWorkload() {
+  const int count = 20000;
+  BinarySearchTree tree;
+  vector<pair<int, int>> ranges{{0, count - 1}};
+  bool ok = true;
+  while (!ranges.empty()) {
+    auto [low, high] = ranges.back(); ranges.pop_back();
+    if (low > high) continue;
+    int middle = low + (high - low) / 2;
+    ok = tree.insert(middle) && ok;
+    if (middle + 1 <= high) ranges.push_back({middle + 1, high});
+    if (low <= middle - 1) ranges.push_back({low, middle - 1});
+  }
+  for (int key = 0; key < count; key++) ok = tree.contains(key) && ok;
+  for (int key = 0; key < count; key += 2) ok = tree.remove(key) && ok;
+  for (int key = 0; key < count; key++) ok = (tree.contains(key) == (key % 2 == 1)) && ok;
+  check(ok && tree.size() == count / 2 && tree.hasCorrectParentReferences(),
+        "20,000-key balanced-order aggregate workload");
+}
+
 int main() {
   testBinarySearchTree();
   testLargeOrderedUpdates();
+  testLargeBalancedOrderWorkload();
   return failures == 0 ? 0 : 1;
 }

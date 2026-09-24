@@ -44,6 +44,15 @@ def check(name, actual, expected):
         )
 
 
+def check_summary(name, condition):
+    global failures
+    if condition:
+        print("pass:", name)
+    else:
+        failures += 1
+        print("fail:", name)
+
+
 def build_complete_tree():
     root = BinaryNode(1)
     root.left = BinaryNode(2)
@@ -105,7 +114,21 @@ def test_sparse_wide_and_independent_results():
     check("long right-only tree", level_order(chain), list(range(201)))
 
 
+def test_hundred_thousand_node_complete_tree():
+    count = 100_000
+    nodes = [BinaryNode(i) for i in range(count)]
+    for i, node in enumerate(nodes):
+        left = 2 * i + 1
+        right = left + 1
+        if left < count:
+            node.left = nodes[left]
+        if right < count:
+            node.right = nodes[right]
+    check_summary("100,000-node level-order traversal", level_order(nodes[0]) == list(range(count)))
+
+
 test_level_order()
 test_sparse_wide_and_independent_results()
+test_hundred_thousand_node_complete_tree()
 if failures:
     raise SystemExit(1)

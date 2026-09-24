@@ -38,6 +38,10 @@ public class ArrayQueueExercise {
             // TODO
             return -1;
         }
+
+        public int[] usedValuesForTesting() {
+            return java.util.Arrays.copyOf(A, count);
+        }
     }
 
     static String checkLocation() {
@@ -80,10 +84,12 @@ public class ArrayQueueExercise {
 
         check(queue.front(), 4);
         check(queue.dequeue(), 4);
+        check(java.util.Arrays.equals(queue.usedValuesForTesting(), new int[]{7, 9}), true);
         check(queue.front(), 7);
         check(queue.size(), 2);
 
         check(queue.enqueue(2), true);
+        check(java.util.Arrays.equals(queue.usedValuesForTesting(), new int[]{7, 9, 2}), true);
         check(queue.dequeue(), 7);
         check(queue.dequeue(), 9);
         check(queue.dequeue(), 2);
@@ -115,8 +121,8 @@ public class ArrayQueueExercise {
                 check(queue.size(), capacity - i - 1);
             }
             check(queue.isEmpty(), true);
-            // This intentionally ordinary array queue does not reclaim its removed prefix.
-            check(queue.enqueue(77), false);
+            check(queue.enqueue(77), true);
+            check(queue.dequeue(), 77);
         }
     }
 

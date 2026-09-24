@@ -240,6 +240,19 @@ void testLargeDeleteReinsertCycles(ProbingType type) {
     check(set.size() == 400, "size after replacements");
 }
 
+void testFiftyThousandKeys(ProbingType type) {
+    const int count = 50000;
+    OpenAddressingIntSet set(17, type);
+    bool ok = true;
+    for (int key = 0; key < count; key++) ok = set.insert(key) && ok;
+    for (int key = 0; key < count; key++) ok = set.contains(key) && ok;
+    for (int key = 0; key < count; key += 3) ok = set.remove(key) && ok;
+    for (int key = 0; key < count; key += 3) ok = set.insert(200000 + key) && ok;
+    for (int key = 0; key < count; key++) ok = (set.contains(key) == (key % 3 != 0)) && ok;
+    for (int key = 0; key < count; key += 3) ok = set.contains(200000 + key) && ok;
+    check(ok && set.size() == count, "50,000-key aggregate workload");
+}
+
 int main() {
     for (ProbingType type : {ProbingType::LINEAR,
                              ProbingType::QUADRATIC,
@@ -247,6 +260,7 @@ int main() {
         testStrategy(type);
         testTombstoneStress(type);
         testLargeDeleteReinsertCycles(type);
+        testFiftyThousandKeys(type);
     }
     std::cout << (failures == 0 ? "All tests passed.\n"
                                 : std::to_string(failures) + " test(s) failed.\n");

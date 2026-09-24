@@ -205,8 +205,24 @@ def test_block_boundaries_and_reuse():
         check(deque.peek_back(), -1)
 
 
+def test_large_aggregate_workload():
+    n = 100_000
+    deque = IntDeque(64)
+    ok = True
+    for value in range(n):
+        ok = deque.add_back(value) and ok
+    ok = (deque.size() == n and deque.peek_front() == 0
+          and deque.peek_back() == n - 1
+          and deque.has_valid_structure_for_testing() and ok)
+    for value in range(n):
+        ok = deque.remove_front() == value and ok
+    ok = deque.is_empty() and deque.has_valid_structure_for_testing() and ok
+    check(ok, True)
+
+
 test_deque()
 test_block_boundaries_and_reuse()
+test_large_aggregate_workload()
 
 if failures:
     raise SystemExit(1)

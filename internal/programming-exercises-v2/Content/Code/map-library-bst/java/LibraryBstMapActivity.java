@@ -85,9 +85,24 @@ public class LibraryBstMapActivity {
         check(map.entriesInRange(501, 700).isEmpty(), "range beyond all keys is empty");
     }
 
+    private static void testHundredThousandOrderedEntries() {
+        OrderedIntMap map = new OrderedIntMap();
+        boolean ok = true;
+        for (int key = -50_000; key < 50_000; key++) ok &= map.put(key, key * 2).isEmpty();
+        for (int key = -50_000; key < 50_000; key += 997) {
+            ok &= map.containsKey(key) && map.get(key).orElse(Integer.MIN_VALUE) == key * 2;
+        }
+        List<String> range = map.entriesInRange(-5_000, 4_999);
+        ok &= map.size() == 100_000 && range.size() == 10_000
+                && range.get(0).equals("-5000=-10000")
+                && range.get(range.size() - 1).equals("4999=9998");
+        check(ok, "100,000-entry ordered map and 10,000-entry range");
+    }
+
     public static void main(String[] args) {
         testMap();
         testUpdatesAndRangeBoundaries();
+        testHundredThousandOrderedEntries();
         System.out.println(failures == 0 ? "All tests passed."
                 : failures + " test(s) failed.");
         if (failures > 0) System.exit(1);

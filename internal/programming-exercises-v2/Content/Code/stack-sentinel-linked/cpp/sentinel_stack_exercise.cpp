@@ -163,8 +163,20 @@ void testLongRunsAndRepeatedReuse() {
     }
 }
 
+void testLargeAggregateWorkload() {
+    const int n = 100000;
+    IntStack stack;
+    for (int i = 0; i < n; ++i) stack.push(i);
+    bool ok = stack.size() == n && stack.peek() == n - 1
+        && stack.hasValidStructureForTesting();
+    for (int i = n - 1; i >= 0; --i) ok = (stack.pop() == i) && ok;
+    ok = stack.isEmpty() && stack.hasValidStructureForTesting() && ok;
+    check(ok, true);
+}
+
 int main() {
     testStack();
     testLongRunsAndRepeatedReuse();
+    testLargeAggregateWorkload();
     return failures == 0 ? 0 : 1;
 }

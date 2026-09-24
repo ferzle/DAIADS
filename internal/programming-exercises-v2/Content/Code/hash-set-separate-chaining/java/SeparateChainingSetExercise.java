@@ -168,9 +168,22 @@ public class SeparateChainingSetExercise {
         check(set.hasValidStructureForTesting(), "valid structure after collision-heavy workload");
     }
 
+    private static void testHundredThousandDistributedKeys() {
+        final int count = 100_000;
+        SeparateChainingIntSet set = new SeparateChainingIntSet(4);
+        boolean ok = true;
+        for (int key = 0; key < count; key++) ok &= set.add(key);
+        for (int key = 0; key < count; key++) ok &= set.contains(key);
+        for (int key = 0; key < count; key += 2) ok &= set.remove(key);
+        for (int key = 0; key < count; key++) ok &= set.contains(key) == (key % 2 == 1);
+        check(ok && set.size() == count / 2 && set.hasValidStructureForTesting(),
+                "100,000-key distributed aggregate workload");
+    }
+
     public static void main(String[] args) {
         testSet();
         testLargeResizeAndCollisionWorkload();
+        testHundredThousandDistributedKeys();
         System.out.println(failures == 0 ? "All tests passed."
                 : failures + " test(s) failed.");
         if (failures > 0) System.exit(1);

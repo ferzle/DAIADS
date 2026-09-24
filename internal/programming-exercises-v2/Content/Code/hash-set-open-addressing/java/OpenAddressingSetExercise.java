@@ -228,12 +228,26 @@ public class OpenAddressingSetExercise {
         check(set.size(), 400, type + " size after replacements");
     }
 
+    private static void testFiftyThousandKeys(ProbingType type) {
+        final int count = 50_000;
+        OpenAddressingIntSet set = new OpenAddressingIntSet(17, type);
+        boolean ok = true;
+        for (int key = 0; key < count; key++) ok &= set.insert(key);
+        for (int key = 0; key < count; key++) ok &= set.contains(key);
+        for (int key = 0; key < count; key += 3) ok &= set.remove(key);
+        for (int key = 0; key < count; key += 3) ok &= set.insert(200_000 + key);
+        for (int key = 0; key < count; key++) ok &= set.contains(key) == (key % 3 != 0);
+        for (int key = 0; key < count; key += 3) ok &= set.contains(200_000 + key);
+        check(ok && set.size() == count, type + ": 50,000-key aggregate workload");
+    }
+
     public static void main(String[] args) {
         checkThrows(() -> new OpenAddressingIntSet(3, null), "reject a null probing type");
         for (ProbingType type : ProbingType.values()) {
             testStrategy(type);
             testTombstoneStress(type);
             testLargeDeleteReinsertCycles(type);
+            testFiftyThousandKeys(type);
         }
         System.out.println(failures == 0 ? "All tests passed."
                 : failures + " test(s) failed.");

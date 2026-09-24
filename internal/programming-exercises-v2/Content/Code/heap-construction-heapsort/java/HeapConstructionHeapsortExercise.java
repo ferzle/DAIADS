@@ -127,7 +127,7 @@ public class HeapConstructionHeapsortExercise {
     }
 
     private static void testDeterministicLargeArrays() {
-        for (int length : new int[] {0, 1, 2, 3, 31, 32, 33, 1000}) {
+        for (int length : new int[] {0, 1, 2, 3, 31, 32, 33, 1000, 100_000}) {
             int[] values = new int[length];
             long state = 0x5EEDL;
             for (int i = 0; i < length; i++) { state = (state * 1103515245 + 12345) & 0x7fffffffL; values[i] = (int) (state % 101) - 50; }

@@ -1,4 +1,5 @@
 #include <iostream>
+#include <vector>
 using namespace std;
 
 
@@ -48,6 +49,10 @@ public:
     int size() {
         // TODO
         return -1;
+    }
+
+    vector<int> usedValuesForTesting() const {
+        return vector<int>(A, A + top + 1);
     }
 };
 
@@ -100,6 +105,7 @@ void testStack() {
     check(stack.peek(), 2);
 
     check(stack.push(5), false);
+    check(stack.usedValuesForTesting() == vector<int>({4, 7, 9, 2}), true);
     check(stack.size(), 4);
     check(stack.peek(), 2);
 
@@ -110,6 +116,7 @@ void testStack() {
     check(stack.size(), 2);
 
     check(stack.push(6), true);
+    check(stack.usedValuesForTesting() == vector<int>({4, 7, 6}), true);
     check(stack.size(), 3);
     check(stack.peek(), 6);
 
@@ -151,8 +158,20 @@ void testBoundarySizesAndReuse() {
     }
 }
 
+void testLargeAggregateWorkload() {
+    const int n = 100000;
+    IntStack stack(n);
+    bool ok = true;
+    for (int i = 0; i < n; ++i) ok = stack.push(i) && ok;
+    ok = stack.size() == n && stack.isFull() && stack.peek() == n - 1 && ok;
+    for (int i = n - 1; i >= 0; --i) ok = (stack.pop() == i) && ok;
+    ok = stack.isEmpty() && stack.size() == 0 && ok;
+    check(ok, true);
+}
+
 int main() {
     testStack();
     testBoundarySizesAndReuse();
+    testLargeAggregateWorkload();
     return failures == 0 ? 0 : 1;
 }

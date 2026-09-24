@@ -154,9 +154,21 @@ public class LinkedQueueExercise {
         check(queue.isEmpty(), true);
     }
 
+    static void testLargeAggregateWorkload() {
+        final int n = 100_000;
+        IntQueue queue = new IntQueue();
+        for (int i = 0; i < n; i++) queue.enqueue(i);
+        boolean ok = queue.size() == n && queue.front() == 0
+                && queue.hasValidStructureForTesting();
+        for (int i = 0; i < n; i++) ok &= queue.dequeue() == i;
+        ok &= queue.isEmpty() && queue.hasValidStructureForTesting();
+        check(ok, true);
+    }
+
     public static void main(String[] args) {
         testQueue();
         testLongRunsAndSingletonReuse();
+        testLargeAggregateWorkload();
         System.out.println(failures == 0 ? "All tests passed." : failures + " test(s) failed.");
         if (failures > 0) System.exit(1);
     }

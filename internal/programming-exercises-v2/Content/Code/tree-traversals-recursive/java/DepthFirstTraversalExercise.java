@@ -62,6 +62,11 @@ public class DepthFirstTraversalExercise {
         }
     }
 
+    static void checkSummary(String name, boolean condition) {
+        if (condition) System.out.println("pass: " + name);
+        else { failures++; System.out.println("fail: " + name); }
+    }
+
     static BinaryNode buildCompleteTree() {
         BinaryNode root = new BinaryNode(1);
 
@@ -164,9 +169,31 @@ public class DepthFirstTraversalExercise {
         check("interior subtree", inorder(root.right), List.of(50, 60, 30));
     }
 
+    static void testHundredThousandNodeCompleteTree() {
+        final int count = 100_000;
+        BinaryNode[] nodes = new BinaryNode[count];
+        for (int i = 0; i < count; i++) nodes[i] = new BinaryNode(i);
+        for (int i = 0; i < count; i++) {
+            int left = 2 * i + 1, right = left + 1;
+            if (left < count) nodes[i].left = nodes[left];
+            if (right < count) nodes[i].right = nodes[right];
+        }
+        List<Integer> pre = preorder(nodes[0]);
+        List<Integer> in = inorder(nodes[0]);
+        List<Integer> post = postorder(nodes[0]);
+        boolean ok = pre.size() == count && in.size() == count && post.size() == count
+                && pre.get(0) == 0 && in.get(0) == 65_535 && post.get(count - 1) == 0;
+        pre.sort(Integer::compareTo); in.sort(Integer::compareTo); post.sort(Integer::compareTo);
+        if (ok) {
+            for (int i = 0; i < count; i++) ok &= pre.get(i) == i && in.get(i) == i && post.get(i) == i;
+        }
+        checkSummary("100,000-node depth-first traversals", ok);
+    }
+
     public static void main(String[] args) {
         testTraversals();
         testIrregularTreeAndIndependentResults();
+        testHundredThousandNodeCompleteTree();
         System.out.println(failures == 0 ? "All tests passed." : failures + " test(s) failed.");
         if (failures > 0) System.exit(1);
     }

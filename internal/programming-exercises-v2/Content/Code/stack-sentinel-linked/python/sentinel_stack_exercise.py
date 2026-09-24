@@ -128,8 +128,22 @@ def test_long_runs_and_repeated_reuse():
         check(stack.is_empty(), True)
 
 
+def test_large_aggregate_workload():
+    n = 100_000
+    stack = IntStack()
+    for value in range(n):
+        stack.push(value)
+    ok = (stack.size() == n and stack.peek() == n - 1
+          and stack.has_valid_structure_for_testing())
+    for value in range(n - 1, -1, -1):
+        ok = stack.pop() == value and ok
+    ok = stack.is_empty() and stack.has_valid_structure_for_testing() and ok
+    check(ok, True)
+
+
 test_stack()
 test_long_runs_and_repeated_reuse()
+test_large_aggregate_workload()
 
 if failures:
     raise SystemExit(1)

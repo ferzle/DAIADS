@@ -88,16 +88,16 @@ def test_map() -> None:
 
 
 def test_exhaustive_universe():
-    map_ = DirectAddressIntMap(257)
-    for key in range(257):
-        check(map_.put(key, key - 128) is None, f"insert key {key}")
-    check(map_.size() == 257, "size after filling universe")
-    for key in range(257):
-        check(map_.get(key) == key - 128, f"get key {key}")
-    for key in range(0, 257, 2):
-        check(map_.remove(key) is not None, f"remove even key {key}")
-    for key in range(257):
-        check(map_.contains_key(key) == (key % 2 == 1), f"membership for key {key}")
+    universe = 100_000
+    map_ = DirectAddressIntMap(universe)
+    ok = all(map_.put(key, key - 50_000) is None for key in range(universe))
+    ok = map_.size() == universe and ok
+    ok = all(map_.get(key) == key - 50_000 for key in range(universe)) and ok
+    ok = all(map_.remove(key) is not None for key in range(0, universe, 2)) and ok
+    ok = all(map_.contains_key(key) == (key % 2 == 1) for key in range(universe)) and ok
+    map_.clear()
+    ok = map_.is_empty() and map_.put(universe - 1, 0) is None and ok
+    check(ok, "100,000-key exhaustive universe workload")
 
 
 if __name__ == "__main__":

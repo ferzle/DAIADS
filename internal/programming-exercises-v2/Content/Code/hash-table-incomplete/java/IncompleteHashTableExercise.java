@@ -92,12 +92,15 @@ public class IncompleteHashTableExercise {
     }
 
     private static void testAllHomePositionsAndCollisions() {
-        IncompleteHashTable table = new IncompleteHashTable(257);
-        for (int key = 0; key < 257; key++) check(table.insert(key) == InsertResult.INSERTED, "insert home key " + key);
-        for (int key = 0; key < 257; key++) check(table.contains(key), "find home key " + key);
-        for (int key = 0; key < 257; key++) check(table.insert(key + 257) == InsertResult.COLLISION, "report collision " + key);
-        for (int key = 0; key < 257; key += 2) check(table.remove(key), "remove home key " + key);
-        for (int key = 0; key < 257; key += 2) check(table.insert(key + 257) == InsertResult.INSERTED, "reuse removed home " + key);
+        final int capacity = 100_000;
+        IncompleteHashTable table = new IncompleteHashTable(capacity);
+        boolean ok = true;
+        for (int key = 0; key < capacity; key++) ok &= table.insert(key) == InsertResult.INSERTED;
+        for (int key = 0; key < capacity; key++) ok &= table.contains(key);
+        for (int key = 0; key < capacity; key++) ok &= table.insert(key + capacity) == InsertResult.COLLISION;
+        for (int key = 0; key < capacity; key += 2) ok &= table.remove(key);
+        for (int key = 0; key < capacity; key += 2) ok &= table.insert(key + capacity) == InsertResult.INSERTED;
+        check(ok, "100,000 home positions, collisions, removals, and slot reuses");
     }
 
     public static void main(String[] args) {

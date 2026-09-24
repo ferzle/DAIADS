@@ -53,14 +53,13 @@ def expect_exception(action, exception_type):
 
 def test_large_mixed_sequence():
     lst = LinkedSequence()
-    for value in range(200):
+    count = 100_000
+    for value in range(count):
         lst.insert_at_head(value)
-    middle = lst.search(100)
-    check(middle is not None, True)
-    lst.insert_after(middle, 999)
-    check(lst.delete_after(middle), 999)
-    for expected in range(199, -1, -1):
-        check(lst.delete_at_head(), expected)
+    tail = lst.search(0)
+    check(tail is not None and tail.data == 0, True)
+    ok = all(lst.delete_at_head() == expected for expected in range(count - 1, -1, -1))
+    check(ok, True)
     check(lst.traverse(), "")
     expect_exception(lambda: lst.delete_at_head(), IndexError)
 

@@ -1,4 +1,5 @@
 #include <iostream>
+#include <vector>
 using namespace std;
 
 
@@ -49,6 +50,10 @@ public:
         // TODO
         return -1;
     }
+
+    vector<int> usedValuesForTesting() const {
+        return vector<int>(A, A + count);
+    }
 };
 
 void checkAtLine(int actual, int expected, int line, const char* expression) {
@@ -91,10 +96,12 @@ void testQueue() {
 
     check(queue.front(), 4);
     check(queue.dequeue(), 4);
+    check(queue.usedValuesForTesting() == vector<int>({7, 9}), true);
     check(queue.front(), 7);
     check(queue.size(), 2);
 
     check(queue.enqueue(2), true);
+    check(queue.usedValuesForTesting() == vector<int>({7, 9, 2}), true);
     check(queue.dequeue(), 7);
     check(queue.dequeue(), 9);
     check(queue.dequeue(), 2);
@@ -126,8 +133,8 @@ void testCapacityBoundariesAndExhaustion() {
             check(queue.size(), capacity - i - 1);
         }
         check(queue.isEmpty(), true);
-        // This intentionally ordinary array queue does not reclaim its removed prefix.
-        check(queue.enqueue(77), false);
+        check(queue.enqueue(77), true);
+        check(queue.dequeue(), 77);
     }
 }
 

@@ -1,4 +1,5 @@
 #include <iostream>
+#include <vector>
 
 using namespace std;
 
@@ -100,6 +101,10 @@ bool deleteValue(int value) {
     return false;
 }
 
+vector<int> usedValuesForTesting() const {
+    return vector<int>(A, A + count);
+}
+
 };
 
 void checkAtLine(int actual, int expected, int line, const char* expression) {
@@ -141,6 +146,7 @@ check(list.addLast(4), true);       // [4]
 check(list.addLast(7), true);       // [4, 7]
 check(list.addFirst(2), true);      // [2, 4, 7]
 check(list.insert(2, 9), true);     // [2, 4, 9, 7]
+check(list.usedValuesForTesting() == vector<int>({2, 4, 9, 7}), true);
 
 check(list.size(), 4);
 check(list.isEmpty(), false);
@@ -164,6 +170,7 @@ check(list.size(), 5);
 check(list.addLast(13), false);     // full
 check(list.addFirst(13), false);    // full
 check(list.insert(2, 13), false);   // full
+check(list.usedValuesForTesting() == vector<int>({2, 5, 9, 7, 11}), true);
 check(list.size(), 5);
 
 check(list.indexOf(9), 2);
@@ -230,8 +237,18 @@ void testLargeIndexedWorkload() {
     check(list.size(), 0); check(list.addFirst(42), true); check(list.removeFirst(), 42);
 }
 
+void testHundredThousandAppendsAndReads() {
+    const int count = 100000;
+    IntList list(count);
+    bool ok = true;
+    for (int i = 0; i < count; i++) ok = list.addLast(i) && ok;
+    for (int i = 0; i < count; i++) ok = (list.get(i) == i) && ok;
+    check(ok && list.size() == count && list.first() == 0 && list.last() == count - 1, true);
+}
+
 int main() {
     testList();
     testLargeIndexedWorkload();
+    testHundredThousandAppendsAndReads();
   return failures == 0 ? 0 : 1;
 }

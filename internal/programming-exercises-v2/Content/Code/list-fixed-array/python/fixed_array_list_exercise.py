@@ -70,6 +70,9 @@ class IntList:
         # TODO
         return False
 
+    def used_values_for_testing(self):
+        return self.A[:self.count]
+
 
 failures = 0
 
@@ -100,6 +103,7 @@ def test_list():
     check(values.add_last(7), True)       # [4, 7]
     check(values.add_first(2), True)      # [2, 4, 7]
     check(values.insert(2, 9), True)      # [2, 4, 9, 7]
+    check(values.used_values_for_testing(), [2, 4, 9, 7])
 
     check(values.size(), 4)
     check(values.is_empty(), False)
@@ -123,6 +127,7 @@ def test_list():
     check(values.add_last(13), False)     # full
     check(values.add_first(13), False)    # full
     check(values.insert(2, 13), False)    # full
+    check(values.used_values_for_testing(), [2, 5, 9, 7, 11])
     check(values.size(), 5)
 
     check(values.index_of(9), 2)
@@ -200,8 +205,17 @@ def test_large_indexed_workload():
     check(values.remove_first(), 42)
 
 
+def test_hundred_thousand_appends_and_reads():
+    count = 100_000
+    values = IntList(count)
+    ok = all(values.add_last(i) for i in range(count))
+    ok = all(values.get(i) == i for i in range(count)) and ok
+    check(ok and values.size() == count and values.first() == 0 and values.last() == count - 1, True)
+
+
 test_list()
 test_large_indexed_workload()
+test_hundred_thousand_appends_and_reads()
 
 if failures:
     raise SystemExit(1)

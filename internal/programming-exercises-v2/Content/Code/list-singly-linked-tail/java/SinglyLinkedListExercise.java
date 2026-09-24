@@ -232,9 +232,20 @@ static void testLargeIndexedWorkload() {
     check(list.isEmpty(), true); check(list.last(), -1);
 }
 
+static void testHundredThousandEndpointOperations() {
+    final int count = 100_000;
+    IntList list = new IntList();
+    boolean ok = true;
+    for (int i = 0; i < count; i++) ok &= list.addLast(i);
+    ok &= list.size() == count && list.first() == 0 && list.last() == count - 1;
+    for (int i = 0; i < count; i++) ok &= list.removeFirst() == i;
+    check(ok && list.isEmpty() && list.size() == 0 && list.first() == -1 && list.last() == -1, true);
+}
+
 public static void main(String[] args) {
     testList();
     testLargeIndexedWorkload();
+    testHundredThousandEndpointOperations();
     System.out.println(failures == 0 ? "All tests passed." : failures + " test(s) failed.");
     if (failures > 0) System.exit(1);
 }

@@ -79,12 +79,17 @@ void checkThrows(Action action, const std::string& label) {
 }
 
 void testExhaustiveUniverse() {
-    DirectAddressIntMap map(257);
-    for (int key = 0; key < 257; key++) check(!map.put(key, key - 128), "exhaustive insert");
-    check(map.size() == 257, "size after filling universe");
-    for (int key = 0; key < 257; key++) check(map.get(key).value_or(9999) == key - 128, "exhaustive get");
-    for (int key = 0; key < 257; key += 2) check(map.remove(key).has_value(), "remove even key");
-    for (int key = 0; key < 257; key++) check(map.containsKey(key) == (key % 2 == 1), "post-removal membership");
+    const int universe = 100000;
+    DirectAddressIntMap map(universe);
+    bool ok = true;
+    for (int key = 0; key < universe; key++) ok = !map.put(key, key - 50000) && ok;
+    ok = map.size() == static_cast<std::size_t>(universe) && ok;
+    for (int key = 0; key < universe; key++) ok = (map.get(key).value_or(-200000) == key - 50000) && ok;
+    for (int key = 0; key < universe; key += 2) ok = map.remove(key).has_value() && ok;
+    for (int key = 0; key < universe; key++) ok = (map.containsKey(key) == (key % 2 == 1)) && ok;
+    map.clear();
+    ok = map.isEmpty() && !map.put(universe - 1, 0) && ok;
+    check(ok, "100,000-key exhaustive universe workload");
 }
 
 int main() {

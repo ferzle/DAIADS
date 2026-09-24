@@ -1,0 +1,150 @@
+import inspect
+
+
+class Node:
+    def __init__(self, value, next_node):
+        self.value = value
+        self.next = next_node
+
+
+class IntStack:
+    def __init__(self):
+        self.head = None
+        self.count = 0
+
+    def is_empty(self):
+        return self.head is None
+
+    def push(self, value):
+        self.head = Node(value, self.head)
+        self.count += 1
+
+    def pop(self):
+        if self.is_empty():
+            return -1
+        value = self.head.value
+        self.head = self.head.next
+        self.count -= 1
+        return value
+
+    def peek(self):
+        return -1 if self.is_empty() else self.head.value
+
+    def size(self):
+        return self.count
+
+    def has_valid_structure_for_testing(self):
+        slow = self.head
+        fast = self.head
+        while fast is not None and fast.next is not None:
+            slow = slow.next
+            fast = fast.next.next
+            if slow is fast:
+                return False
+        reachable = 0
+        node = self.head
+        while node is not None:
+            reachable += 1
+            node = node.next
+        return reachable == self.count
+
+
+failures = 0
+
+
+def check(actual, expected):
+    global failures
+    if actual == expected:
+        print("pass")
+    else:
+        line = inspect.currentframe().f_back.f_lineno
+        failures += 1
+        print(f"fail at test line {line}: expected {expected!r} but got {actual!r}")
+
+
+def test_stack():
+    stack = IntStack()
+
+    check(stack.is_empty(), True)
+    check(stack.size(), 0)
+    check(stack.pop(), -1)
+    check(stack.peek(), -1)
+    check(stack.size(), 0)
+
+    stack.push(4)
+    check(stack.is_empty(), False)
+    check(stack.size(), 1)
+    check(stack.peek(), 4)
+    check(stack.size(), 1)
+
+    stack.push(7)
+    check(stack.size(), 2)
+    check(stack.peek(), 7)
+
+    stack.push(9)
+    check(stack.size(), 3)
+    check(stack.peek(), 9)
+    check(stack.has_valid_structure_for_testing(), True)
+
+    check(stack.pop(), 9)
+    check(stack.size(), 2)
+    check(stack.peek(), 7)
+
+    stack.push(2)
+    check(stack.size(), 3)
+    check(stack.peek(), 2)
+
+    check(stack.pop(), 2)
+    check(stack.pop(), 7)
+    check(stack.pop(), 4)
+    check(stack.size(), 0)
+    check(stack.is_empty(), True)
+    check(stack.has_valid_structure_for_testing(), True)
+
+    check(stack.pop(), -1)
+    check(stack.peek(), -1)
+    check(stack.size(), 0)
+
+    stack.push(6)
+    check(stack.is_empty(), False)
+    check(stack.size(), 1)
+    check(stack.peek(), 6)
+    check(stack.pop(), 6)
+    check(stack.size(), 0)
+    check(stack.is_empty(), True)
+
+
+def test_long_runs_and_repeated_reuse():
+    stack = IntStack()
+    for round_number in range(25):
+        check(stack.is_empty(), True)
+        for i in range(200):
+            stack.push(round_number * 1000 + i)
+            check(stack.size(), i + 1)
+            check(stack.peek(), round_number * 1000 + i)
+        for i in range(199, -1, -1):
+            check(stack.pop(), round_number * 1000 + i)
+            check(stack.size(), i)
+        check(stack.pop(), -1)
+        check(stack.is_empty(), True)
+
+
+def test_large_aggregate_workload():
+    n = 100_000
+    stack = IntStack()
+    for value in range(n):
+        stack.push(value)
+    ok = (stack.size() == n and stack.peek() == n - 1
+          and stack.has_valid_structure_for_testing())
+    for value in range(n - 1, -1, -1):
+        ok = stack.pop() == value and ok
+    ok = stack.is_empty() and stack.has_valid_structure_for_testing() and ok
+    check(ok, True)
+
+
+test_stack()
+test_long_runs_and_repeated_reuse()
+test_large_aggregate_workload()
+
+if failures:
+    raise SystemExit(1)

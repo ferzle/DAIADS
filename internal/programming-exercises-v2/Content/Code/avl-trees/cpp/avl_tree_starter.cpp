@@ -246,12 +246,15 @@ int main() {
     }
     AVLTree large;
     bool largeOk = true;
-    for (int i = 0; i < 1000; i++) largeOk = large.insert((i * 641) % 1000) && largeOk;
-    largeOk = large.size() == 1000 && large.hasValidStructure()
-        && large.treeHeightForTesting() <= 14 && largeOk;
-    for (int i = 0; i < 1000; i += 2) largeOk = large.remove(i) && largeOk;
-    largeOk = large.size() == 500 && large.hasValidStructure() && largeOk;
-    check(largeOk, "1000-key insertion and 500-key removal stress test");
+    const int count = 20000;
+    for (int i = 0; i < count; i++) largeOk = large.insert((i * 7919) % count) && largeOk;
+    for (int i = 0; i < count; i++) largeOk = large.contains(i) && largeOk;
+    largeOk = large.size() == count && large.hasValidStructure()
+        && large.treeHeightForTesting() <= 20 && largeOk;
+    for (int i = 0; i < count; i += 2) largeOk = large.remove(i) && largeOk;
+    for (int i = 0; i < count; i++) largeOk = (large.contains(i) == (i % 2 == 1)) && largeOk;
+    largeOk = large.size() == count / 2 && large.hasValidStructure() && largeOk;
+    check(largeOk, "20,000-key insertion, search, and 10,000-key removal stress test");
     testDifferentialUpdates();
     std::cout << "inorder:";
     for (int key : tree.inorderValues()) std::cout << ' ' << key;

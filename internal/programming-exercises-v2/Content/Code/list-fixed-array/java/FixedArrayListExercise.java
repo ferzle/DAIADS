@@ -87,6 +87,10 @@ static class IntList {
         // TODO
         return false;
     }
+
+    public int[] usedValuesForTesting() {
+        return java.util.Arrays.copyOf(A, count);
+    }
 }
 
 static String checkLocation() {
@@ -128,6 +132,7 @@ static void testList() {
     check(list.addLast(7), true);       // [4, 7]
     check(list.addFirst(2), true);      // [2, 4, 7]
     check(list.insert(2, 9), true);     // [2, 4, 9, 7]
+    check(java.util.Arrays.equals(list.usedValuesForTesting(), new int[]{2, 4, 9, 7}), true);
 
     check(list.size(), 4);
     check(list.isEmpty(), false);
@@ -151,6 +156,7 @@ static void testList() {
     check(list.addLast(13), false);     // full
     check(list.addFirst(13), false);    // full
     check(list.insert(2, 13), false);   // full
+    check(java.util.Arrays.equals(list.usedValuesForTesting(), new int[]{2, 5, 9, 7, 11}), true);
     check(list.size(), 5);
 
     check(list.indexOf(9), 2);
@@ -216,9 +222,19 @@ static void testLargeIndexedWorkload() {
     check(list.size(), 0); check(list.addFirst(42), true); check(list.removeFirst(), 42);
 }
 
+static void testHundredThousandAppendsAndReads() {
+    final int count = 100_000;
+    IntList list = new IntList(count);
+    boolean ok = true;
+    for (int i = 0; i < count; i++) ok &= list.addLast(i);
+    for (int i = 0; i < count; i++) ok &= list.get(i) == i;
+    check(ok && list.size() == count && list.first() == 0 && list.last() == count - 1, true);
+}
+
 public static void main(String[] args) {
     testList();
     testLargeIndexedWorkload();
+    testHundredThousandAppendsAndReads();
     System.out.println(failures == 0 ? "All tests passed." : failures + " test(s) failed.");
     if (failures > 0) System.exit(1);
 }

@@ -149,9 +149,21 @@ public class LinkedStackExercise {
         }
     }
 
+    static void testLargeAggregateWorkload() {
+        final int n = 100_000;
+        IntStack stack = new IntStack();
+        for (int i = 0; i < n; i++) stack.push(i);
+        boolean ok = stack.size() == n && stack.peek() == n - 1
+                && stack.hasValidStructureForTesting();
+        for (int i = n - 1; i >= 0; i--) ok &= stack.pop() == i;
+        ok &= stack.isEmpty() && stack.hasValidStructureForTesting();
+        check(ok, true);
+    }
+
     public static void main(String[] args) {
         testStack();
         testLongRunsAndRepeatedReuse();
+        testLargeAggregateWorkload();
         System.out.println(failures == 0 ? "All tests passed." : failures + " test(s) failed.");
         if (failures > 0) System.exit(1);
     }

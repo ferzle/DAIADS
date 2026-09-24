@@ -88,13 +88,17 @@ public class DirectAddressMapExercise {
     }
 
     private static void testExhaustiveUniverse() {
-        DirectAddressIntMap map = new DirectAddressIntMap(257);
-        for (int key = 0; key < 257; key++) check(map.put(key, key - 128).isEmpty(), "insert key " + key);
-        check(map.size() == 257, "size after filling universe");
-        for (int key = 0; key < 257; key++) check(map.get(key).orElse(9999) == key - 128, "get key " + key);
-        for (int key = 0; key < 257; key += 2) check(map.remove(key).isPresent(), "remove even key " + key);
-        for (int key = 0; key < 257; key++) check(map.containsKey(key) == (key % 2 == 1), "membership for key " + key);
-        map.clear(); check(map.isEmpty(), "empty after exhaustive clear"); check(map.put(256, 0).isEmpty(), "reuse boundary key with zero");
+        final int universe = 100_000;
+        DirectAddressIntMap map = new DirectAddressIntMap(universe);
+        boolean ok = true;
+        for (int key = 0; key < universe; key++) ok &= map.put(key, key - 50_000).isEmpty();
+        ok &= map.size() == universe;
+        for (int key = 0; key < universe; key++) ok &= map.get(key).orElse(Integer.MIN_VALUE) == key - 50_000;
+        for (int key = 0; key < universe; key += 2) ok &= map.remove(key).isPresent();
+        for (int key = 0; key < universe; key++) ok &= map.containsKey(key) == (key % 2 == 1);
+        map.clear();
+        ok &= map.isEmpty() && map.put(universe - 1, 0).isEmpty();
+        check(ok, "100,000-key exhaustive universe workload");
     }
 
     public static void main(String[] args) {

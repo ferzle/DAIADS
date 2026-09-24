@@ -92,12 +92,14 @@ def test_table():
 
 
 def test_all_home_positions_and_collisions():
-    table = IncompleteHashTable(257)
-    for key in range(257): check(table.insert(key) is InsertResult.INSERTED, f"insert home key {key}")
-    for key in range(257): check(table.contains(key), f"find home key {key}")
-    for key in range(257): check(table.insert(key + 257) is InsertResult.COLLISION, f"report collision {key}")
-    for key in range(0, 257, 2): check(table.remove(key), f"remove home key {key}")
-    for key in range(0, 257, 2): check(table.insert(key + 257) is InsertResult.INSERTED, f"reuse removed home {key}")
+    capacity = 100_000
+    table = IncompleteHashTable(capacity)
+    ok = all(table.insert(key) is InsertResult.INSERTED for key in range(capacity))
+    ok = all(table.contains(key) for key in range(capacity)) and ok
+    ok = all(table.insert(key + capacity) is InsertResult.COLLISION for key in range(capacity)) and ok
+    ok = all(table.remove(key) for key in range(0, capacity, 2)) and ok
+    ok = all(table.insert(key + capacity) is InsertResult.INSERTED for key in range(0, capacity, 2)) and ok
+    check(ok, "100,000 home positions, collisions, removals, and slot reuses")
 
 
 if __name__ == "__main__":

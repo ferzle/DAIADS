@@ -519,9 +519,23 @@ public class TwoThreeTreeStarter {
         check(tree.isEmpty() && tree.hasValidStructure(), "valid empty tree after large drain");
     }
 
+    private static void testTwentyThousandOrderedKeys() {
+        final int count = 20_000;
+        TwoThreeTreeStarter tree = new TwoThreeTreeStarter();
+        boolean ok = true;
+        for (int key = 0; key < count; key++) ok &= tree.insert(key);
+        for (int key = 0; key < count; key++) ok &= tree.contains(key);
+        ok &= tree.size() == count && tree.hasValidStructure();
+        for (int key = 0; key < count; key += 2) ok &= tree.remove(key);
+        for (int key = 0; key < count; key++) ok &= tree.contains(key) == (key % 2 == 1);
+        ok &= tree.size() == count / 2 && tree.hasValidStructure();
+        check(ok, "20,000-key ordered insert/search and 10,000-key removal workload");
+    }
+
     public static void main(String[] args) {
         runTests();
         testLargeDifferentialUpdates();
+        testTwentyThousandOrderedKeys();
         if (failures > 0) System.exit(1);
     }
 }

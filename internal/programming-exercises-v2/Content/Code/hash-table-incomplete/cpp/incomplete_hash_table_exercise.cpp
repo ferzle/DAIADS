@@ -87,12 +87,15 @@ void testTable() {
 }
 
 void testAllHomePositionsAndCollisions() {
-    IncompleteHashTable table(257);
-    for (int key = 0; key < 257; key++) check(table.insert(key) == InsertResult::INSERTED, "insert home key");
-    for (int key = 0; key < 257; key++) check(table.contains(key), "find home key");
-    for (int key = 0; key < 257; key++) check(table.insert(key + 257) == InsertResult::COLLISION, "report collision");
-    for (int key = 0; key < 257; key += 2) check(table.remove(key), "remove home key");
-    for (int key = 0; key < 257; key += 2) check(table.insert(key + 257) == InsertResult::INSERTED, "reuse removed home");
+    const int capacity = 100000;
+    IncompleteHashTable table(capacity);
+    bool ok = true;
+    for (int key = 0; key < capacity; key++) ok = (table.insert(key) == InsertResult::INSERTED) && ok;
+    for (int key = 0; key < capacity; key++) ok = table.contains(key) && ok;
+    for (int key = 0; key < capacity; key++) ok = (table.insert(key + capacity) == InsertResult::COLLISION) && ok;
+    for (int key = 0; key < capacity; key += 2) ok = table.remove(key) && ok;
+    for (int key = 0; key < capacity; key += 2) ok = (table.insert(key + capacity) == InsertResult::INSERTED) && ok;
+    check(ok, "100,000 home positions, collisions, removals, and slot reuses");
 }
 
 int main() {

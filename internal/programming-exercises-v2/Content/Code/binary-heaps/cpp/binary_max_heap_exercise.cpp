@@ -239,10 +239,28 @@ void testLargeDeterministicDrain() {
     checkOptional(heap.extractMax(), 42, "extract reused value");
 }
 
+void testHundredThousandAggregateOperations() {
+    const int count = 100000;
+    std::vector<int> expected(count);
+    long long state = 0xC0FFEE;
+    FixedCapacityMaxHeap heap(count);
+    bool ok = true;
+    for (int i = 0; i < count; i++) {
+        state = (state * 1103515245 + 12345) & 0x7fffffff;
+        expected[i] = static_cast<int>(state);
+        ok = heap.insert(expected[i]) && ok;
+    }
+    std::sort(expected.begin(), expected.end());
+    for (int i = count - 1; i >= 0; i--) ok = heap.extractMax().value_or(-1) == expected[i] && ok;
+    check(ok && heap.isEmpty() && heap.hasValidHeapOrder(), true,
+          "100,000 aggregate insertions and extractions");
+}
+
 int main() {
     testCoreOperations();
     testOnlyLeftChildAndNegativeKeys();
     testLargeDeterministicDrain();
+    testHundredThousandAggregateOperations();
     cout << (failures == 0
         ? "All tests passed."
         : to_string(failures) + " test(s) failed.")

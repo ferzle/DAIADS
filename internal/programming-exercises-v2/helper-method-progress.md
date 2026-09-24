@@ -1,6 +1,6 @@
 # Test Helper Enhancement Progress
 
-Last updated: 2026-09-15
+Last updated: 2026-09-24
 
 This file is the restart point for the helper-method review. Changes are made
 only in the v2 candidate; the live `Content/Code/` starters remain untouched.
@@ -108,8 +108,64 @@ Languages: Java, C++, Python.
   text but contain no insertion, comparison, search, or extraction algorithm.
 - Verified that all nine heap/PQ files compile or parse.
 
-## Remaining order
+## Completed: array queues and circular deque
 
-1. Circular and ordinary array queues/deques.
-2. Smaller list, map, and set helpers where they add meaningful coverage.
-3. Consolidated compile/parse/run audit and final per-structure summary.
+Languages: Java, C++, Python.
+
+- Circular-array queue: added a read-only `(front, count, capacity)` state
+  observer. Tests check the state before wraparound, after advancing the front,
+  and when the wrapped queue becomes full. The observer exposes stored fields
+  but does not supply the modular-index formula.
+- Ordinary-array queue: added a copy of the used prefix. Tests check that
+  dequeue shifts the remaining logical values left and that enqueue appends to
+  that used prefix.
+- Corrected an erroneous v2 test which claimed an ordinary array queue could
+  not reuse capacity after draining. The lesson explicitly specifies shifting
+  values left on dequeue, and the starter has only a count field, so a drained
+  queue can be filled again. Tests now enqueue and dequeue a value after drain.
+- Fixed circular-array deque: added a read-only `(front, count, capacity)` state
+  observer. Tests check state after front wraparound and after refilling a
+  wrapped deque to capacity; no back-index formula is provided.
+- Verified that all nine changed files compile or parse.
+
+## Completed: final list, stack, map, and set review
+
+Languages: Java, C++, Python where available.
+
+- Fixed-array list: added a copy of the used prefix. Tests check the complete
+  logical order after mixed insertions and confirm failed full-capacity
+  insertion leaves contents unchanged.
+- Fixed-array stack: added a copy of the used prefix from bottom through top.
+  Tests confirm failed overflow is non-mutating and pop/reuse produces the
+  expected physical contents.
+- Unsorted-array map already supplies an aligned entry snapshot; no additional
+  helper is needed.
+- Unsorted-array, sorted-array, and bit-vector sets already supply complete
+  logical snapshots; no additional helpers are needed.
+- Direct-address map can be exhaustively checked through its finite public key
+  universe, so exposing its presence/value arrays would add coupling without
+  meaningful new confidence.
+- Library BST map intentionally delegates representation to a standard-library
+  map, so internal structural helpers would test the library rather than the
+  student activity.
+- The 2-3 tree already has inorder values, height, and a comprehensive
+  structural validator. Recursive algorithms, traversals, heap construction,
+  and heapsort return complete results that tests can inspect directly.
+- Verified that the six changed fixed-list/stack files compile or parse.
+
+## Completed: consolidated audit
+
+- Compiled all 32 Java files independently.
+- Compiled all 32 C++ files independently as C++17 with `-Wall`, `-Wextra`,
+  and `-pedantic`.
+- Parsed all 31 Python files independently without creating bytecode artifacts.
+- Ran all 95 deliberately unfinished suites with a five-second timeout. All 95
+  returned ordinary failure statuses; none passed accidentally, timed out, or
+  ended via a runtime signal.
+- Compared every TODO line in each v2 starter with its corresponding live
+  starter. All 716 current TODO markers match. The older status count of 720
+  had become stale and has been corrected.
+- Confirmed that no class files, Python bytecode, or executable artifacts were
+  left in the v2 directory.
+
+The helper-method enhancement is complete. Live starter files remain unchanged.

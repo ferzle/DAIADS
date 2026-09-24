@@ -53,6 +53,11 @@ public class LevelOrderTraversalExercise {
         }
     }
 
+    static void checkSummary(String name, boolean condition) {
+        if (condition) System.out.println("pass: " + name);
+        else { failures++; System.out.println("fail: " + name); }
+    }
+
     static BinaryNode buildCompleteTree() {
         BinaryNode root = new BinaryNode(1);
         root.left = new BinaryNode(2);
@@ -111,9 +116,25 @@ public class LevelOrderTraversalExercise {
         check("long right-only tree", levelOrder(wide), expected);
     }
 
+    static void testHundredThousandNodeCompleteTree() {
+        final int count = 100_000;
+        BinaryNode[] nodes = new BinaryNode[count];
+        for (int i = 0; i < count; i++) nodes[i] = new BinaryNode(i);
+        for (int i = 0; i < count; i++) {
+            int left = 2 * i + 1, right = left + 1;
+            if (left < count) nodes[i].left = nodes[left];
+            if (right < count) nodes[i].right = nodes[right];
+        }
+        List<Integer> result = levelOrder(nodes[0]);
+        boolean ok = result.size() == count;
+        for (int i = 0; i < result.size(); i++) ok &= result.get(i) == i;
+        checkSummary("100,000-node level-order traversal", ok);
+    }
+
     public static void main(String[] args) {
         testLevelOrder();
         testSparseWideAndIndependentResults();
+        testHundredThousandNodeCompleteTree();
         System.out.println(failures == 0 ? "All tests passed." : failures + " test(s) failed.");
         if (failures > 0) System.exit(1);
     }

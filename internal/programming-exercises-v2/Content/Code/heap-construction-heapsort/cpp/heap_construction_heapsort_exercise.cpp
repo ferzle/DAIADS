@@ -125,7 +125,7 @@ void testHeapSort() {
 }
 
 void testDeterministicLargeArrays() {
-    for (int length : {0, 1, 2, 3, 31, 32, 33, 1000}) {
+    for (int length : {0, 1, 2, 3, 31, 32, 33, 1000, 100000}) {
         std::vector<int> values(length);
         long long state = 0x5EED;
         for (int i = 0; i < length; i++) { state = (state * 1103515245 + 12345) & 0x7fffffff; values[i] = static_cast<int>(state % 101) - 50; }

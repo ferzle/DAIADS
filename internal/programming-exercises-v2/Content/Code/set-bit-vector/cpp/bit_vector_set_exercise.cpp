@@ -221,9 +221,24 @@ void testEveryBitAroundWordBoundaries() {
     }
 }
 
+void testMillionBitUniverse() {
+    const int universe = 1000000;
+    BitVectorIntSet set(universe);
+    bool ok = true;
+    for (int key = 0; key < universe; key++) ok = set.add(key) && ok;
+    ok = set.size() == universe && set.contains(0) && set.contains(31)
+         && set.contains(32) && set.contains(999999) && ok;
+    for (int key = 0; key < universe; key += 2) ok = set.remove(key) && ok;
+    ok = set.size() == universe / 2 && !set.contains(0)
+         && set.contains(999999) && !set.contains(999998) && ok;
+    set.clear();
+    check(ok && set.isEmpty() && set.size() == 0, true, "million-bit aggregate workload");
+}
+
 int main() {
     testSet();
     testEveryBitAroundWordBoundaries();
+    testMillionBitUniverse();
     std::cout << (failures == 0 ? "All tests passed.\n"
                                 : std::to_string(failures) + " test(s) failed.\n");
     return failures == 0 ? 0 : 1;

@@ -1,4 +1,5 @@
 #include <iostream>
+#include <vector>
   using namespace std;
   int failures = 0;
 
@@ -131,11 +132,30 @@ void testIrregularTreeAndEverySubtree() {
     check(size(root->right), 5); check(height(root->right), 3); check(countLeaves(root->right), 2);
     BinaryNode* chain = new BinaryNode(0); BinaryNode* cursor = chain;
     for (int i = 1; i < 200; i++) { cursor->right = new BinaryNode(i); cursor = cursor->right; }
-    check(size(chain), 200); check(height(chain), 200); check(countLeaves(chain), 1); check(countTwoChildNodes(chain), 0);
+    check(size(chain), 200); check(height(chain), 199); check(countLeaves(chain), 1); check(countTwoChildNodes(chain), 0);
+    destroyTree(root); destroyTree(chain);
+}
+
+void testHundredThousandNodeCompleteTree() {
+    const int count = 100000;
+    vector<BinaryNode*> nodes;
+    nodes.reserve(count);
+    for (int i = 0; i < count; i++) nodes.push_back(new BinaryNode(i));
+    for (int i = 0; i < count; i++) {
+        int left = 2 * i + 1, right = left + 1;
+        if (left < count) nodes[i]->left = nodes[left];
+        if (right < count) nodes[i]->right = nodes[right];
+    }
+    check(size(nodes[0]), count);
+    check(height(nodes[0]), 16);
+    check(countLeaves(nodes[0]), 50000);
+    check(countTwoChildNodes(nodes[0]), 49999);
+    destroyTree(nodes[0]);
 }
 
 int main() {
     testAlgorithms();
     testIrregularTreeAndEverySubtree();
+    testHundredThousandNodeCompleteTree();
     return failures == 0 ? 0 : 1;
 }

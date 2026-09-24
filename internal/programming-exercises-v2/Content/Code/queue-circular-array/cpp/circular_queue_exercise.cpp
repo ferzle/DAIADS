@@ -1,4 +1,5 @@
 #include <iostream>
+#include <vector>
 using namespace std;
 
 
@@ -51,6 +52,10 @@ public:
         // TODO
         return -1;
     }
+
+    vector<int> storageStateForTesting() const {
+        return {frontIndex, count, capacity};
+    }
 };
 
 void checkAtLine(int actual, int expected, int line, const char* expression) {
@@ -87,13 +92,16 @@ void testQueue() {
     check(queue.enqueue(4), true);
     check(queue.enqueue(7), true);
     check(queue.enqueue(9), true);
+    check(queue.storageStateForTesting() == vector<int>({0, 3, 4}), true);
 
     check(queue.dequeue(), 4);
     check(queue.dequeue(), 7);
+    check(queue.storageStateForTesting() == vector<int>({2, 1, 4}), true);
 
     check(queue.enqueue(2), true);
     check(queue.enqueue(5), true);
     check(queue.enqueue(8), true);
+    check(queue.storageStateForTesting() == vector<int>({2, 4, 4}), true);
     check(queue.isFull(), true);
     check(queue.enqueue(10), false);
 
@@ -138,8 +146,22 @@ void testRepeatedWraparound() {
     }
 }
 
+void testLargeAggregateWraparound() {
+    const int capacity = 10000;
+    IntQueue queue(capacity);
+    bool ok = true;
+    for (int round = 0; round < 10; ++round) {
+        for (int i = 0; i < capacity; ++i) ok = queue.enqueue(round * capacity + i) && ok;
+        ok = queue.isFull() && !queue.enqueue(-1) && ok;
+        for (int i = 0; i < capacity; ++i) ok = (queue.dequeue() == round * capacity + i) && ok;
+    }
+    ok = queue.isEmpty() && queue.size() == 0 && ok;
+    check(ok, true);
+}
+
 int main() {
     testQueue();
     testRepeatedWraparound();
+    testLargeAggregateWraparound();
     return failures == 0 ? 0 : 1;
 }

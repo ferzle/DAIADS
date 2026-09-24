@@ -209,8 +209,18 @@ def test_large_indexed_workload():
     check(values.last(), -1)
 
 
+def test_hundred_thousand_endpoint_operations():
+    count = 100_000
+    values = IntList()
+    ok = all(values.add_last(i) for i in range(count))
+    ok = values.size() == count and values.first() == 0 and values.last() == count - 1 and ok
+    ok = all(values.remove_first() == i for i in range(count)) and ok
+    check(ok and values.is_empty() and values.size() == 0 and values.first() == -1 and values.last() == -1, True)
+
+
 test_list()
 test_large_indexed_workload()
+test_hundred_thousand_endpoint_operations()
 
 if failures:
     raise SystemExit(1)

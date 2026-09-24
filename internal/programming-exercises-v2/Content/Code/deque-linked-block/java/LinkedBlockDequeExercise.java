@@ -218,9 +218,22 @@ static void testBlockBoundariesAndReuse() {
     }
 }
 
+static void testLargeAggregateWorkload() {
+    final int n = 100_000;
+    IntDeque deque = new IntDeque(64);
+    boolean ok = true;
+    for (int i = 0; i < n; i++) ok &= deque.addBack(i);
+    ok &= deque.size() == n && deque.peekFront() == 0
+            && deque.peekBack() == n - 1 && deque.hasValidStructureForTesting();
+    for (int i = 0; i < n; i++) ok &= deque.removeFront() == i;
+    ok &= deque.isEmpty() && deque.hasValidStructureForTesting();
+    check(ok, true);
+}
+
 public static void main(String[] args) {
     testDeque();
     testBlockBoundariesAndReuse();
+    testLargeAggregateWorkload();
     System.out.println(failures == 0 ? "All tests passed." : failures + " test(s) failed.");
     if (failures > 0) System.exit(1);
 }

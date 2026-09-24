@@ -162,9 +162,21 @@ def test_large_resize_and_collision_workload():
     check(values.has_valid_structure_for_testing(), "valid structure after collision-heavy workload")
 
 
+def test_hundred_thousand_distributed_keys():
+    count = 100_000
+    values = SeparateChainingIntSet(4)
+    ok = all(values.add(key) for key in range(count))
+    ok = all(values.contains(key) for key in range(count)) and ok
+    ok = all(values.remove(key) for key in range(0, count, 2)) and ok
+    ok = all(values.contains(key) == (key % 2 == 1) for key in range(count)) and ok
+    check(ok and values.size() == count // 2 and values.has_valid_structure_for_testing(),
+          "100,000-key distributed aggregate workload")
+
+
 if __name__ == "__main__":
     test_set()
     test_large_resize_and_collision_workload()
+    test_hundred_thousand_distributed_keys()
     print("All tests passed." if failures == 0 else f"{failures} test(s) failed.")
 
 if __name__ == "__main__" and failures:

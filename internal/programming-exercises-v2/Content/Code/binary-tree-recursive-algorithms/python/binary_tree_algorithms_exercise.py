@@ -111,11 +111,28 @@ def test_irregular_tree_and_every_subtree():
     for i in range(1, 200):
         cursor.right = BinaryNode(i)
         cursor = cursor.right
-    check(size(chain), 200); check(height(chain), 200); check(count_leaves(chain), 1); check(count_two_child_nodes(chain), 0)
+    check(size(chain), 200); check(height(chain), 199); check(count_leaves(chain), 1); check(count_two_child_nodes(chain), 0)
+
+
+def test_hundred_thousand_node_complete_tree():
+    count = 100_000
+    nodes = [BinaryNode(i) for i in range(count)]
+    for i, node in enumerate(nodes):
+        left = 2 * i + 1
+        right = left + 1
+        if left < count:
+            node.left = nodes[left]
+        if right < count:
+            node.right = nodes[right]
+    check(size(nodes[0]), count)
+    check(height(nodes[0]), 16)
+    check(count_leaves(nodes[0]), 50_000)
+    check(count_two_child_nodes(nodes[0]), 49_999)
 
 
 test_algorithms()
 test_irregular_tree_and_every_subtree()
+test_hundred_thousand_node_complete_tree()
 
 if failures:
     raise SystemExit(1)

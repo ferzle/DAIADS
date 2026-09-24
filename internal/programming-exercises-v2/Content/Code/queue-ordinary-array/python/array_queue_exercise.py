@@ -30,6 +30,9 @@ class IntQueue:
         # TODO
         return -1
 
+    def used_values_for_testing(self):
+        return self.A[:self.count]
+
 
 failures = 0
 
@@ -70,10 +73,12 @@ def test_queue():
 
     check(queue.front(), 4)
     check(queue.dequeue(), 4)
+    check(queue.used_values_for_testing(), [7, 9])
     check(queue.front(), 7)
     check(queue.size(), 2)
 
     check(queue.enqueue(2), True)
+    check(queue.used_values_for_testing(), [7, 9, 2])
     check(queue.dequeue(), 7)
     check(queue.dequeue(), 9)
     check(queue.dequeue(), 2)
@@ -96,8 +101,8 @@ def test_capacity_boundaries_and_exhaustion():
             check(queue.dequeue(), 1000 + i)
             check(queue.size(), capacity - i - 1)
         check(queue.is_empty(), True)
-        # This intentionally ordinary array queue does not reclaim its removed prefix.
-        check(queue.enqueue(77), False)
+        check(queue.enqueue(77), True)
+        check(queue.dequeue(), 77)
 
 
 test_queue()

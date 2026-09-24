@@ -1,4 +1,5 @@
 #include <iostream>
+#include <vector>
 
 using namespace std;
 
@@ -77,6 +78,10 @@ int removeBack() {
     return -1;
 }
 
+vector<int> storageStateForTesting() const {
+    return {front, count, capacity};
+}
+
 };
 
 void checkAtLine(int actual, int expected, int line, const char* expression) {
@@ -121,6 +126,7 @@ check(deque.size(), 1);
 check(deque.addBack(7), true);       // [4, 7]
 check(deque.addFront(2), true);      // [2, 4, 7]
 check(deque.addBack(9), true);       // [2, 4, 7, 9]
+check(deque.storageStateForTesting() == vector<int>({4, 4, 5}), true);
 
 check(deque.size(), 4);
 check(deque.isEmpty(), false);
@@ -151,6 +157,7 @@ check(deque.removeFront(), 0);       // [1, 4, 7, 11]
 check(deque.removeFront(), 1);       // [4, 7, 11]
 check(deque.addBack(13), true);      // [4, 7, 11, 13]
 check(deque.addBack(15), true);      // [4, 7, 11, 13, 15]
+check(deque.storageStateForTesting() == vector<int>({0, 5, 5}), true);
 check(deque.isFull(), true);
 check(deque.peekFront(), 4);
 check(deque.peekBack(), 15);
@@ -210,8 +217,21 @@ void testCapacitiesWraparoundAndReuse() {
     }
 }
 
+void testLargeAggregateWraparound() {
+    const int capacity = 10000;
+    IntDeque deque(capacity);
+    bool ok = true;
+    for (int round = 0; round < 10; ++round) {
+        for (int i = 0; i < capacity; ++i) ok = deque.addBack(round * capacity + i) && ok;
+        for (int i = 0; i < capacity; ++i) ok = (deque.removeFront() == round * capacity + i) && ok;
+    }
+    ok = deque.isEmpty() && deque.size() == 0 && ok;
+    check(ok, true);
+}
+
 int main() {
     testDeque();
     testCapacitiesWraparoundAndReuse();
+    testLargeAggregateWraparound();
   return failures == 0 ? 0 : 1;
 }

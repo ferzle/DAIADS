@@ -226,9 +226,15 @@ public class DoublyLinkedListExercise {
 
     static void testLargeDrainAndEndpointHelpers() {
         IntDoublyList list = new IntDoublyList();
-        for (int i = 0; i < 200; i++) list.insertAtTail(i);
-        check(list.size(), 200);
-        for (int i = 0; i < 100; i++) { check(list.deleteFromHead(), i); check(list.deleteFromTail(), 199 - i); }
+        final int half = 50_000;
+        boolean ok = true;
+        for (int i = 0; i < half; i++) list.insertAtTail(i);
+        ok &= list.size() == half;
+        for (int i = 0; i < half; i++) ok &= list.deleteFromHead() == i;
+        for (int i = 0; i < half; i++) list.insertAtHead(i);
+        ok &= list.size() == half;
+        for (int i = 0; i < half; i++) ok &= list.deleteFromTail() == i;
+        check(ok, true);
         check(list.isEmpty(), true); check(list.traverseForward(), ""); check(list.traverseBackward(), "");
         list.insertAtTail(7); list.insertAtTail(7); list.insertAtTail(7);
         IntDoublyList.Node first = list.searchForward(7);

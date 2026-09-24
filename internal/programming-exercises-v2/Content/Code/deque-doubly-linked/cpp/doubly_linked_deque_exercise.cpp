@@ -232,8 +232,21 @@ void testLargeMixedRuns() {
     check(deque.addBack(8), true); check(deque.removeFront(), 8);
 }
 
+void testLargeAggregateWorkload() {
+    const int n = 100000;
+    IntDeque deque;
+    bool ok = true;
+    for (int i = 0; i < n; ++i) ok = deque.addBack(i) && ok;
+    ok = deque.size() == n && deque.peekFront() == 0
+        && deque.peekBack() == n - 1 && deque.hasValidStructureForTesting() && ok;
+    for (int i = 0; i < n; ++i) ok = (deque.removeFront() == i) && ok;
+    ok = deque.isEmpty() && deque.hasValidStructureForTesting() && ok;
+    check(ok, true);
+}
+
 int main() {
     testDeque();
     testLargeMixedRuns();
+    testLargeAggregateWorkload();
   return failures == 0 ? 0 : 1;
 }

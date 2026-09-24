@@ -1,15 +1,16 @@
 # Programming Exercises v2 Work Status
 
-Last updated: 2026-09-15
+Last updated: 2026-09-24
 
-## Helper-method enhancement in progress
+## Helper-method and large-input enhancements complete
 
-The completed v2 test expansion is receiving a second pass that adds safe test
+The completed v2 test expansion received a second pass that adds safe test
 observers and uses them for otherwise hidden representation checks. Tree,
-linked-structure, hash-table, heap, and priority-queue checkpoints are complete
-in all available languages. Work resumes with circular and ordinary array
-queues/deques. See `helper-method-progress.md` for the exact restart point and
-per-structure decisions.
+linked-structure, hash-table, heap, priority-queue, array queue/deque, list,
+map, and set checkpoints are complete in all available languages. The
+consolidated audit also passes. See `helper-method-progress.md` for the
+per-structure additions and deliberate omissions, and
+`large-input-coverage.md` for the assignment-by-assignment scale review.
 
 ## Completed
 
@@ -17,6 +18,10 @@ per-structure decisions.
 - Expanded the tests for all 32 assignments in each available language.
 - Added larger workloads, boundary cases, drain/reuse cases, and deterministic
   differential tests appropriate to each assignment.
+- Re-audited all 32 assignments for scale. Constant-time, linear, and
+  O(n log n) work now reaches 20,000 to 1,000,000 elements as appropriate;
+  intentionally quadratic assignments retain 500- or 1,000-item adversarial
+  workloads.
 - Removed tests for zero or negative construction sizes from the v2 suites.
 - Added accumulated failure status handling to suites that use independent
   checks; dependent linked-sequence scenarios retain assertion-style failures.
@@ -26,7 +31,7 @@ per-structure decisions.
 - Confirmed that 32 C++ files compile independently as C++17 with `-Wall`,
   `-Wextra`, and `-pedantic`.
 - Confirmed that 31 Python files parse independently.
-- Confirmed that the live and v2 trees contain the same 720 implementation
+- Confirmed that the live and v2 trees contain the same 716 implementation
   `TODO` markers.
 
 ## Final audit results
@@ -39,13 +44,19 @@ per-structure decisions.
   rerun with clean diagnostic failure statuses.
 - All 95 implementation prefixes match the corresponding live starter after
   excluding only test counters and test-support includes.
-- All 720 implementation `TODO` markers are preserved verbatim.
+- All 716 current implementation `TODO` markers are preserved verbatim.
 - No compiled binaries, Java class files, or Python bytecode were left in the
   v2 directory.
+- After the final large-input pass, all 95 suites again compiled or parsed and
+  all 95 unfinished starters exited with ordinary failure status under a
+  30-second per-suite timeout. There were no accidental passes, signals, or
+  timeouts.
+- Corrected the recursive-tree chain test's expected height from 200 to 199,
+  consistent with the exercise's existing convention that an empty tree has
+  height -1 and a leaf has height 0.
 
 The v2 candidate is complete and ready for review. No files have been promoted
 to the live download tree.
 
-The live `Content/Code/` files have not been replaced. Its pre-existing
-`avl-trees/cpp/avl_tree_starter.cpp` `<string>` include remains the only tracked
-live starter difference visible in `git diff`.
+The live `Content/Code/` files have not been replaced and have no tracked
+changes from this work.

@@ -180,6 +180,18 @@ void testLargeResizeAndCollisionWorkload() {
     check(set.hasValidStructureForTesting(), "valid structure after collision-heavy workload");
 }
 
+void testHundredThousandDistributedKeys() {
+    const int count = 100000;
+    SeparateChainingIntSet set(4);
+    bool ok = true;
+    for (int key = 0; key < count; key++) ok = set.add(key) && ok;
+    for (int key = 0; key < count; key++) ok = set.contains(key) && ok;
+    for (int key = 0; key < count; key += 2) ok = set.remove(key) && ok;
+    for (int key = 0; key < count; key++) ok = (set.contains(key) == (key % 2 == 1)) && ok;
+    check(ok && set.size() == static_cast<std::size_t>(count / 2)
+          && set.hasValidStructureForTesting(), "100,000-key distributed aggregate workload");
+}
+
 int main() {
     try { testSet(); }
     catch (const std::exception& error) {
@@ -190,6 +202,11 @@ int main() {
     catch (const std::exception& error) {
         ++failures;
         std::cout << "FAIL: large workload threw " << error.what() << '\n';
+    }
+    try { testHundredThousandDistributedKeys(); }
+    catch (const std::exception& error) {
+        ++failures;
+        std::cout << "FAIL: distributed workload threw " << error.what() << '\n';
     }
     std::cout << (failures == 0 ? "All tests passed.\n"
                                 : std::to_string(failures) + " test(s) failed.\n");

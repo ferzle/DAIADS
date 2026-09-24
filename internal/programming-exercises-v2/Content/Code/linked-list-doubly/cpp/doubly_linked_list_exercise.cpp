@@ -247,9 +247,15 @@ void testDoublyList() {
 
 void testLargeDrainAndEndpointHelpers() {
     IntDoublyList list;
-    for (int i = 0; i < 200; i++) list.insertAtTail(i);
-    check(list.size(), 200);
-    for (int i = 0; i < 100; i++) { check(list.deleteFromHead(), i); check(list.deleteFromTail(), 199 - i); }
+    const int half = 50000;
+    bool ok = true;
+    for (int i = 0; i < half; i++) list.insertAtTail(i);
+    ok = list.size() == half && ok;
+    for (int i = 0; i < half; i++) ok = (list.deleteFromHead() == i) && ok;
+    for (int i = 0; i < half; i++) list.insertAtHead(i);
+    ok = list.size() == half && ok;
+    for (int i = 0; i < half; i++) ok = (list.deleteFromTail() == i) && ok;
+    check(ok, true);
     check(list.isEmpty(), true); check(list.traverseForward(), ""); check(list.traverseBackward(), "");
     list.insertAtTail(7); list.insertAtTail(7); list.insertAtTail(7);
     auto* first = list.searchForward(7);

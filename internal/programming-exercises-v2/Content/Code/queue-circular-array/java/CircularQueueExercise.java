@@ -40,6 +40,10 @@ public class CircularQueueExercise {
             // TODO
             return -1;
         }
+
+        public int[] storageStateForTesting() {
+            return new int[] {frontIndex, count, A.length};
+        }
     }
 
     static String checkLocation() {
@@ -76,13 +80,16 @@ public class CircularQueueExercise {
         check(queue.enqueue(4), true);
         check(queue.enqueue(7), true);
         check(queue.enqueue(9), true);
+        check(java.util.Arrays.equals(queue.storageStateForTesting(), new int[]{0, 3, 4}), true);
 
         check(queue.dequeue(), 4);
         check(queue.dequeue(), 7);
+        check(java.util.Arrays.equals(queue.storageStateForTesting(), new int[]{2, 1, 4}), true);
 
         check(queue.enqueue(2), true);
         check(queue.enqueue(5), true);
         check(queue.enqueue(8), true);
+        check(java.util.Arrays.equals(queue.storageStateForTesting(), new int[]{2, 4, 4}), true);
         check(queue.isFull(), true);
         check(queue.enqueue(10), false);
 
@@ -127,9 +134,23 @@ public class CircularQueueExercise {
         }
     }
 
+    static void testLargeAggregateWraparound() {
+        final int capacity = 10_000;
+        IntQueue queue = new IntQueue(capacity);
+        boolean ok = true;
+        for (int round = 0; round < 10; round++) {
+            for (int i = 0; i < capacity; i++) ok &= queue.enqueue(round * capacity + i);
+            ok &= queue.isFull() && !queue.enqueue(-1);
+            for (int i = 0; i < capacity; i++) ok &= queue.dequeue() == round * capacity + i;
+        }
+        ok &= queue.isEmpty() && queue.size() == 0;
+        check(ok, true);
+    }
+
     public static void main(String[] args) {
         testQueue();
         testRepeatedWraparound();
+        testLargeAggregateWraparound();
         System.out.println(failures == 0 ? "All tests passed." : failures + " test(s) failed.");
         if (failures > 0) System.exit(1);
     }

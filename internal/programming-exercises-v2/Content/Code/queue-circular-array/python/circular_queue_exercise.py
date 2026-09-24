@@ -31,6 +31,9 @@ class IntQueue:
         # TODO
         return -1
 
+    def storage_state_for_testing(self):
+        return self.front_index, self.count, len(self.A)
+
 
 failures = 0
 
@@ -56,13 +59,16 @@ def test_queue():
     check(queue.enqueue(4), True)
     check(queue.enqueue(7), True)
     check(queue.enqueue(9), True)
+    check(queue.storage_state_for_testing(), (0, 3, 4))
 
     check(queue.dequeue(), 4)
     check(queue.dequeue(), 7)
+    check(queue.storage_state_for_testing(), (2, 1, 4))
 
     check(queue.enqueue(2), True)
     check(queue.enqueue(5), True)
     check(queue.enqueue(8), True)
+    check(queue.storage_state_for_testing(), (2, 4, 4))
     check(queue.is_full(), True)
     check(queue.enqueue(10), False)
 
@@ -106,8 +112,23 @@ def test_repeated_wraparound():
             check(queue.is_empty(), True)
 
 
+def test_large_aggregate_wraparound():
+    capacity = 10_000
+    queue = IntQueue(capacity)
+    ok = True
+    for round_number in range(10):
+        for i in range(capacity):
+            ok = queue.enqueue(round_number * capacity + i) and ok
+        ok = queue.is_full() and not queue.enqueue(-1) and ok
+        for i in range(capacity):
+            ok = queue.dequeue() == round_number * capacity + i and ok
+    ok = queue.is_empty() and queue.size() == 0 and ok
+    check(ok, True)
+
+
 test_queue()
 test_repeated_wraparound()
+test_large_aggregate_wraparound()
 
 if failures:
     raise SystemExit(1)

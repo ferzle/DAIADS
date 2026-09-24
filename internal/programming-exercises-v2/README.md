@@ -34,6 +34,7 @@ continue when an earlier node creation fails.
   failure status rather than an accidental pass, and the expanded workloads do
   not hang by relying on a student-reported size or emptiness value.
 
-See `problem-text-changes.md` for the contract review and
-`../programming-exercise-test-improvement-plan.md` for the assignment-by-
-assignment rationale.
+See `problem-text-changes.md` for the contract review,
+`large-input-coverage.md` for the completed assignment-by-assignment scale
+audit, and `../programming-exercise-test-improvement-plan.md` for the broader
+test-improvement rationale.

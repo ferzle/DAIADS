@@ -207,9 +207,24 @@ public class BitVectorSetExercise {
         }
     }
 
+    private static void testMillionBitUniverse() {
+        final int universe = 1_000_000;
+        BitVectorIntSet set = new BitVectorIntSet(universe);
+        boolean ok = true;
+        for (int key = 0; key < universe; key++) ok &= set.add(key);
+        ok &= set.size() == universe && set.contains(0) && set.contains(31)
+                && set.contains(32) && set.contains(999_999);
+        for (int key = 0; key < universe; key += 2) ok &= set.remove(key);
+        ok &= set.size() == universe / 2 && !set.contains(0)
+                && set.contains(999_999) && !set.contains(999_998);
+        set.clear();
+        check(ok && set.isEmpty() && set.size() == 0, true, "million-bit aggregate workload");
+    }
+
     public static void main(String[] args) {
         testSet();
         testEveryBitAroundWordBoundaries();
+        testMillionBitUniverse();
         System.out.println(failures == 0
                 ? "All tests passed."
                 : failures + " test(s) failed.");

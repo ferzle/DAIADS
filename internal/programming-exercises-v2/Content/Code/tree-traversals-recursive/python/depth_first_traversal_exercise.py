@@ -57,6 +57,15 @@ def check(name, actual, expected):
         )
 
 
+def check_summary(name, condition):
+    global failures
+    if condition:
+        print("pass:", name)
+    else:
+        failures += 1
+        print("fail:", name)
+
+
 def build_complete_tree():
     root = BinaryNode(1)
 
@@ -160,7 +169,26 @@ def test_irregular_tree_and_independent_results():
     check("interior subtree", inorder(root.right), [50, 60, 30])
 
 
+def test_hundred_thousand_node_complete_tree():
+    count = 100_000
+    nodes = [BinaryNode(i) for i in range(count)]
+    for i, node in enumerate(nodes):
+        left = 2 * i + 1
+        right = left + 1
+        if left < count:
+            node.left = nodes[left]
+        if right < count:
+            node.right = nodes[right]
+    pre, ino, post = preorder(nodes[0]), inorder(nodes[0]), postorder(nodes[0])
+    ok = (len(pre) == count and len(ino) == count and len(post) == count
+          and pre[0] == 0 and ino[0] == 65_535 and post[-1] == 0)
+    ordered = list(range(count))
+    ok = sorted(pre) == ordered and sorted(ino) == ordered and sorted(post) == ordered and ok
+    check_summary("100,000-node depth-first traversals", ok)
+
+
 test_traversals()
 test_irregular_tree_and_independent_results()
+test_hundred_thousand_node_complete_tree()
 if failures:
     raise SystemExit(1)

@@ -118,12 +118,13 @@ void deleteAfterNull() {
 
 void testLargeMixedSequence() {
     LinkedSequence list;
-    for (int i = 0; i < 200; i++) list.insertAtHead(i);
-    auto* middle = list.search(100);
-    check(middle != nullptr, "search should find an interior node in a large list");
-    list.insertAfter(middle, 999);
-    check(list.deleteAfter(middle), 999);
-    for (int expected = 199; expected >= 0; expected--) check(list.deleteAtHead(), expected);
+    const int count = 100000;
+    for (int i = 0; i < count; i++) list.insertAtHead(i);
+    auto* tail = list.search(0);
+    check(tail != nullptr && tail->data == 0, "search should find the tail after traversing 100,000 nodes");
+    bool ok = true;
+    for (int expected = count - 1; expected >= 0; expected--) ok = (list.deleteAtHead() == expected) && ok;
+    check(ok, "100,000 head deletions should preserve reverse insertion order");
     check(list.traverse(), "");
 }
 

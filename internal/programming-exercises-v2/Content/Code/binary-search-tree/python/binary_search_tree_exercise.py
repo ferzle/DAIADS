@@ -193,8 +193,31 @@ def test_large_ordered_updates():
     check(tree.is_empty() and tree.has_correct_parent_references(), "empty after complete drain")
 
 
+def test_large_balanced_order_workload():
+    count = 20_000
+    tree = BinarySearchTree()
+    ranges = [(0, count - 1)]
+    ok = True
+    while ranges:
+        low, high = ranges.pop()
+        if low > high:
+            continue
+        middle = low + (high - low) // 2
+        ok = tree.insert(middle) and ok
+        if middle + 1 <= high:
+            ranges.append((middle + 1, high))
+        if low <= middle - 1:
+            ranges.append((low, middle - 1))
+    ok = all(tree.contains(key) for key in range(count)) and ok
+    ok = all(tree.remove(key) for key in range(0, count, 2)) and ok
+    ok = all(tree.contains(key) == (key % 2 == 1) for key in range(count)) and ok
+    check(ok and tree.size == count // 2 and tree.has_correct_parent_references(),
+          "20,000-key balanced-order aggregate workload")
+
+
 test_binary_search_tree()
 test_large_ordered_updates()
+test_large_balanced_order_workload()
 
 if failures:
     raise SystemExit(1)

@@ -168,8 +168,20 @@ void testLongRunsAndSingletonReuse() {
     check(queue.isEmpty(), true);
 }
 
+void testLargeAggregateWorkload() {
+    const int n = 100000;
+    IntQueue queue;
+    for (int i = 0; i < n; ++i) queue.enqueue(i);
+    bool ok = queue.size() == n && queue.front() == 0
+        && queue.hasValidStructureForTesting();
+    for (int i = 0; i < n; ++i) ok = (queue.dequeue() == i) && ok;
+    ok = queue.isEmpty() && queue.hasValidStructureForTesting() && ok;
+    check(ok, true);
+}
+
 int main() {
     testQueue();
     testLongRunsAndSingletonReuse();
+    testLargeAggregateWorkload();
     return failures == 0 ? 0 : 1;
 }

@@ -51,6 +51,9 @@ class IntDeque:
         # TODO
         return -1
 
+    def storage_state_for_testing(self):
+        return self.front, self.count, len(self.A)
+
 
 failures = 0
 
@@ -94,6 +97,7 @@ def test_deque():
     check(deque.add_back(7), True)       # [4, 7]
     check(deque.add_front(2), True)      # [2, 4, 7]
     check(deque.add_back(9), True)       # [2, 4, 7, 9]
+    check(deque.storage_state_for_testing(), (4, 4, 5))
 
     check(deque.size(), 4)
     check(deque.is_empty(), False)
@@ -124,6 +128,7 @@ def test_deque():
     check(deque.remove_front(), 1)       # [4, 7, 11]
     check(deque.add_back(13), True)      # [4, 7, 11, 13]
     check(deque.add_back(15), True)      # [4, 7, 11, 13, 15]
+    check(deque.storage_state_for_testing(), (0, 5, 5))
     check(deque.is_full(), True)
     check(deque.peek_front(), 4)
     check(deque.peek_back(), 15)
@@ -179,8 +184,22 @@ def test_capacities_wraparound_and_reuse():
         check(deque.remove_back(), 8)
 
 
+def test_large_aggregate_wraparound():
+    capacity = 10_000
+    deque = IntDeque(capacity)
+    ok = True
+    for round_number in range(10):
+        for i in range(capacity):
+            ok = deque.add_back(round_number * capacity + i) and ok
+        for i in range(capacity):
+            ok = deque.remove_front() == round_number * capacity + i and ok
+    ok = deque.is_empty() and deque.size() == 0 and ok
+    check(ok, True)
+
+
 test_deque()
 test_capacities_wraparound_and_reuse()
+test_large_aggregate_wraparound()
 
 if failures:
     raise SystemExit(1)

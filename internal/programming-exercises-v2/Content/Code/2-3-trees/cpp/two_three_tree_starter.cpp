@@ -383,8 +383,22 @@ void testLargeDifferentialUpdates() {
     check(tree.isEmpty() && tree.hasValidStructure(), "valid empty tree after large drain");
 }
 
+void testTwentyThousandOrderedKeys() {
+    const int count = 20000;
+    TwoThreeTree tree;
+    bool ok = true;
+    for (int key = 0; key < count; key++) ok = tree.insert(key) && ok;
+    for (int key = 0; key < count; key++) ok = tree.contains(key) && ok;
+    ok = tree.size() == count && tree.hasValidStructure() && ok;
+    for (int key = 0; key < count; key += 2) ok = tree.remove(key) && ok;
+    for (int key = 0; key < count; key++) ok = (tree.contains(key) == (key % 2 == 1)) && ok;
+    ok = tree.size() == count / 2 && tree.hasValidStructure() && ok;
+    check(ok, "20,000-key ordered insert/search and 10,000-key removal workload");
+}
+
 int main() {
     testLargeDifferentialUpdates();
+    testTwentyThousandOrderedKeys();
     TwoThreeTree tree;
     set<int> expected;
 

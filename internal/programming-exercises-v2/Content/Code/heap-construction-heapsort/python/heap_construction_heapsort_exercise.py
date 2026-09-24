@@ -115,7 +115,7 @@ def test_heap_sort() -> None:
 
 
 def test_deterministic_large_arrays():
-    for length in (0, 1, 2, 3, 31, 32, 33, 1000):
+    for length in (0, 1, 2, 3, 31, 32, 33, 1000, 100_000):
         state = 0x5EED
         values = []
         for _ in range(length):

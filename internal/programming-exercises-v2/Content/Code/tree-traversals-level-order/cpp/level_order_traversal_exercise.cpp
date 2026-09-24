@@ -69,6 +69,11 @@ void check(
     }
 }
 
+void checkSummary(const string& name, bool condition) {
+    if (condition) cout << "pass: " << name << endl;
+    else { ++failures; cout << "fail: " << name << endl; }
+}
+
 BinaryNode* buildCompleteTree() {
     BinaryNode* root = new BinaryNode(1);
     root->left = new BinaryNode(2);
@@ -141,8 +146,26 @@ void testSparseWideAndIndependentResults() {
     destroyTree(root); destroyTree(chain);
 }
 
+void testHundredThousandNodeCompleteTree() {
+    const int count = 100000;
+    vector<BinaryNode*> nodes;
+    nodes.reserve(count);
+    for (int i = 0; i < count; i++) nodes.push_back(new BinaryNode(i));
+    for (int i = 0; i < count; i++) {
+        int left = 2 * i + 1, right = left + 1;
+        if (left < count) nodes[i]->left = nodes[left];
+        if (right < count) nodes[i]->right = nodes[right];
+    }
+    vector<int> result = levelOrder(nodes[0]);
+    bool ok = result.size() == count;
+    for (int i = 0; i < static_cast<int>(result.size()); i++) ok = result[i] == i && ok;
+    checkSummary("100,000-node level-order traversal", ok);
+    destroyTree(nodes[0]);
+}
+
 int main() {
     testLevelOrder();
     testSparseWideAndIndependentResults();
+    testHundredThousandNodeCompleteTree();
     return failures == 0 ? 0 : 1;
 }

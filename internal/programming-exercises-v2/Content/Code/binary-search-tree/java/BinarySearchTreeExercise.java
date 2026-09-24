@@ -238,9 +238,32 @@ public class BinarySearchTreeExercise {
     check(tree.isEmpty() && tree.minimum() == null && tree.hasCorrectParentReferences(), "empty after complete drain");
   }
 
+  private static void testLargeBalancedOrderWorkload() {
+    final int count = 20_000;
+    BinarySearchTreeExercise tree = new BinarySearchTreeExercise();
+    int[] lows = new int[count], highs = new int[count];
+    int top = 0;
+    lows[top] = 0; highs[top++] = count - 1;
+    boolean ok = true;
+    while (top > 0) {
+      int low = lows[--top], high = highs[top];
+      if (low > high) continue;
+      int middle = low + (high - low) / 2;
+      ok &= tree.insert(middle);
+      if (middle + 1 <= high) { lows[top] = middle + 1; highs[top++] = high; }
+      if (low <= middle - 1) { lows[top] = low; highs[top++] = middle - 1; }
+    }
+    for (int key = 0; key < count; key++) ok &= tree.contains(key);
+    for (int key = 0; key < count; key += 2) ok &= tree.remove(key);
+    for (int key = 0; key < count; key++) ok &= tree.contains(key) == (key % 2 == 1);
+    check(ok && tree.size() == count / 2 && tree.hasCorrectParentReferences(),
+        "20,000-key balanced-order aggregate workload");
+  }
+
   public static void main(String[] args) {
     testBinarySearchTree();
     testLargeOrderedUpdates();
+    testLargeBalancedOrderWorkload();
       System.out.println(failures == 0 ? "All tests passed." : failures + " test(s) failed.");
       if (failures > 0) System.exit(1);
   }

@@ -44,8 +44,11 @@ The complete 32-assignment test pass did not identify any required live-page
 changes. The v2 suites use the contracts already stated either on the lesson
 page or directly beside the starter method. In particular:
 
-- The ordinary-array queue tests its intentionally noncircular behavior; they do
-  not require removed prefix positions to be reused.
+- The ordinary-array queue tests the published shifting implementation. Each
+  dequeue shifts the remaining values left, so the used prefix begins at index
+  zero and capacity is reusable after the queue drains. The earlier v2 test
+  expecting post-drain enqueue to fail was incorrect and has been fixed; no
+  problem-text change is needed.
 - The library BST-map starter already specifies inclusive ranges and an empty
   result when `low > high`.
 - The set, map, hash-table, and bit-vector suites test invalid *keys* only where
@@ -53,6 +56,13 @@ page or directly beside the starter method. In particular:
   negative construction sizes.
 - Heap and balanced-tree structural validators are starter-provided testing
   operations, so using them does not add a hidden representation requirement.
+- The recursive-tree chain's corrected expected height (199 for 200 nodes)
+  follows the already published/tested convention that a leaf has height 0;
+  it does not require a text change.
+- Newly added test-only observers expose copies, summaries, or already stored
+  metadata. They do not supply insertion, removal, rotation, probing, sifting,
+  wraparound, or traversal implementations. Helpers were deliberately omitted
+  where implementing one would reveal an assigned algorithm.
 
 Accordingly, no edits to live problem text are necessary for this v2 candidate.
 The linked-block wording above remains a documented optional future change, not

@@ -68,6 +68,19 @@ void testUpdatesAndRangeBoundaries() {
     check(map.entriesInRange(501, 700).empty(), "range beyond all keys is empty");
 }
 
+void testHundredThousandOrderedEntries() {
+    OrderedIntMap map;
+    bool ok = true;
+    for (int key = -50000; key < 50000; key++) ok = !map.put(key, key * 2) && ok;
+    for (int key = -50000; key < 50000; key += 997) {
+        ok = map.containsKey(key) && map.get(key).value_or(-200001) == key * 2 && ok;
+    }
+    const auto range = map.entriesInRange(-5000, 4999);
+    ok = map.size() == 100000 && range.size() == 10000
+         && range.front() == "-5000=-10000" && range.back() == "4999=9998" && ok;
+    check(ok, "100,000-entry ordered map and 10,000-entry range");
+}
+
 int main() {
     OrderedIntMap map;
     check(map.isEmpty() && map.size() == 0, "new map is empty");
@@ -86,6 +99,7 @@ int main() {
           "remove a present key");
     check(!map.remove(99).has_value(), "remove an absent key");
     testUpdatesAndRangeBoundaries();
+    testHundredThousandOrderedEntries();
     std::cout << (failures == 0 ? "All tests passed."
                                 : std::to_string(failures) + " test(s) failed.")
               << '\n';
