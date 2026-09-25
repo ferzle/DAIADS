@@ -1,0 +1,223 @@
+import java.util.Arrays;
+import java.util.HashSet;
+
+public class SeparateChainingSetExercise {
+    static final class SeparateChainingIntSet {
+        private static final double MAX_LOAD_FACTOR = 0.75;
+
+        private static final class Node {
+            final int key;
+            Node next;
+            Node(int key) { this.key = key; }
+        }
+
+        private Node[] buckets;
+        private int count;
+
+        SeparateChainingIntSet(int initialCapacity) {
+            if (initialCapacity < 1) {
+                throw new IllegalArgumentException("initialCapacity must be positive");
+            }
+            buckets = new Node[initialCapacity];
+        }
+
+        int size() {
+            return count;
+        }
+
+        int capacity() { return buckets.length; }
+
+        boolean contains(int key) {
+            checkKey(key);
+            for (Node node = buckets[bucketIndex(key)]; node != null; node = node.next) {
+                if (node.key == key) return true;
+            }
+            return false;
+        }
+
+        boolean add(int key) {
+            checkKey(key);
+            if (contains(key)) return false;
+            if ((count + 1.0) / buckets.length > MAX_LOAD_FACTOR) {
+                resize(buckets.length * 2);
+            }
+            int index = bucketIndex(key);
+            Node newNode = new Node(key);
+            if (buckets[index] == null) buckets[index] = newNode;
+            else {
+                Node tail = buckets[index];
+                while (tail.next != null) tail = tail.next;
+                tail.next = newNode;
+            }
+            count++;
+            return true;
+        }
+
+        boolean remove(int key) {
+            checkKey(key);
+            int index = bucketIndex(key);
+            Node previous = null;
+            Node node = buckets[index];
+            while (node != null && node.key != key) {
+                previous = node;
+                node = node.next;
+            }
+            if (node == null) return false;
+            if (previous == null) buckets[index] = node.next;
+            else previous.next = node.next;
+            count--;
+            return true;
+        }
+
+        private int bucketIndex(int key) { return key % buckets.length; }
+
+        private static void checkKey(int key) {
+            if (key < 0) throw new IllegalArgumentException("key must be nonnegative");
+        }
+
+        private void resize(int newCapacity) {
+            Node[] oldBuckets = buckets;
+            buckets = new Node[newCapacity];
+            Node[] tails = new Node[newCapacity];
+            for (Node head : oldBuckets) {
+                for (Node node = head; node != null; ) {
+                    Node next = node.next;
+                    node.next = null;
+                    int index = bucketIndex(node.key);
+                    if (buckets[index] == null) buckets[index] = node;
+                    else tails[index].next = node;
+                    tails[index] = node;
+                    node = next;
+                }
+            }
+        }
+
+        int[] bucketSnapshot(int index) {
+            if (index < 0 || index >= buckets.length) {
+                throw new IndexOutOfBoundsException("invalid bucket index");
+            }
+            int length = 0;
+            for (Node node = buckets[index]; node != null; node = node.next) length++;
+            int[] keys = new int[length];
+            int i = 0;
+            for (Node node = buckets[index]; node != null; node = node.next) keys[i++] = node.key;
+            return keys;
+        }
+
+        boolean hasValidStructureForTesting() {
+            HashSet<Integer> seen = new HashSet<>();
+            int reachable = 0;
+            for (int index = 0; index < buckets.length; index++) {
+                Node slow = buckets[index], fast = buckets[index];
+                while (fast != null && fast.next != null) {
+                    slow = slow.next;
+                    fast = fast.next.next;
+                    if (slow == fast) return false;
+                }
+                for (Node node = buckets[index]; node != null; node = node.next) {
+                    if (node.key < 0 || bucketIndex(node.key) != index
+                            || !seen.add(node.key)) return false;
+                    reachable++;
+                }
+            }
+            return reachable == count;
+        }
+    }
+
+    private static int failures;
+
+    private static void check(boolean condition, String label) {
+        if (condition) System.out.println("pass: " + label);
+        else { failures++; System.out.println("FAIL: " + label); }
+    }
+
+    private static void check(int actual, int expected, String label) {
+        check(actual == expected, label + " (expected " + expected + ", got " + actual + ")");
+    }
+
+    private static void checkArray(int[] actual, int[] expected, String label) {
+        check(Arrays.equals(actual, expected), label + " (expected "
+                + Arrays.toString(expected) + ", got " + Arrays.toString(actual) + ")");
+    }
+
+    private static void checkThrows(Runnable action, String label) {
+        try { action.run(); failures++; System.out.println("FAIL: " + label); }
+        catch (IllegalArgumentException expected) { System.out.println("pass: " + label); }
+    }
+
+    private static void testSet() {
+        SeparateChainingIntSet set = new SeparateChainingIntSet(8);
+        check(set.size(), 0, "new set has size zero");
+        check(!set.contains(6), "lookup in an empty bucket");
+        check(!set.remove(6), "remove from an empty bucket");
+
+        check(set.add(1), "add first key");
+        check(set.add(9) && set.add(17) && set.add(25), "add colliding keys");
+        checkArray(set.bucketSnapshot(1), new int[] {1, 9, 17, 25},
+                "colliding keys append at the tail");
+        check(set.hasValidStructureForTesting(), "collision chain has valid structure");
+        check(!set.add(17), "reject duplicate key");
+        check(set.size(), 4, "duplicate does not change size");
+        check(set.contains(1) && set.contains(17) && set.contains(25),
+                "contains traverses a chain");
+
+        check(set.remove(1), "remove first node");
+        check(set.remove(17), "remove middle node");
+        check(set.remove(25), "remove final node");
+        checkArray(set.bucketSnapshot(1), new int[] {9}, "remaining chain is intact");
+        check(!set.remove(17), "absent removal changes nothing");
+        check(set.size(), 1, "removals update size");
+
+        SeparateChainingIntSet growing = new SeparateChainingIntSet(4);
+        check(growing.add(2) && growing.add(6) && growing.add(10),
+                "fill table to load factor 0.75");
+        check(growing.capacity(), 4, "capacity unchanged at threshold");
+        check(!growing.add(6) && growing.capacity() == 4,
+                "duplicate does not trigger resize");
+        check(growing.add(14), "next distinct key triggers resize");
+        check(growing.capacity(), 8, "resize doubles capacity");
+        check(growing.contains(2) && growing.contains(6)
+                && growing.contains(10) && growing.contains(14),
+                "all keys remain findable after rehashing");
+        checkArray(growing.bucketSnapshot(2), new int[] {2, 10},
+                "rehashing preserves tail order in bucket 2");
+        checkArray(growing.bucketSnapshot(6), new int[] {6, 14},
+                "new key appends after rehashing");
+        check(growing.hasValidStructureForTesting(), "valid structure after rehashing");
+
+        checkThrows(() -> set.contains(-1), "reject negative lookup key");
+        checkThrows(() -> set.add(-1), "reject negative insertion key");
+        checkThrows(() -> set.remove(-1), "reject negative removal key");
+    }
+
+    private static void testLargeResizeAndCollisionWorkload() {
+        SeparateChainingIntSet set = new SeparateChainingIntSet(2);
+        for (int key = 0; key < 1000; key++) check(set.add(key * 16), "large add " + key);
+        check(set.size(), 1000, "size after collision-heavy growth");
+        for (int key = 0; key < 1000; key++) check(set.contains(key * 16), "large contains " + key);
+        for (int key = 0; key < 1000; key += 2) check(set.remove(key * 16), "large remove " + key);
+        for (int key = 0; key < 1000; key++) check(set.contains(key * 16) == (key % 2 == 1), "large membership " + key);
+        check(set.hasValidStructureForTesting(), "valid structure after collision-heavy workload");
+    }
+
+    private static void testHundredThousandDistributedKeys() {
+        final int count = 100_000;
+        SeparateChainingIntSet set = new SeparateChainingIntSet(4);
+        boolean ok = true;
+        for (int key = 0; key < count; key++) ok &= set.add(key);
+        for (int key = 0; key < count; key++) ok &= set.contains(key);
+        for (int key = 0; key < count; key += 2) ok &= set.remove(key);
+        for (int key = 0; key < count; key++) ok &= set.contains(key) == (key % 2 == 1);
+        check(ok && set.size() == count / 2 && set.hasValidStructureForTesting(),
+                "100,000-key distributed aggregate workload");
+    }
+
+    public static void main(String[] args) {
+        testSet();
+        testLargeResizeAndCollisionWorkload();
+        testHundredThousandDistributedKeys();
+        System.out.println(failures == 0 ? "All tests passed."
+                : failures + " test(s) failed.");
+        if (failures > 0) System.exit(1);
+    }
+}

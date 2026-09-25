@@ -1,0 +1,290 @@
+public class SinglyLinkedListExercise {
+    static int failures = 0;
+static class IntList {
+    private static class Node {
+        int value;
+        Node next;
+
+        Node(int value) {
+            this.value = value;
+            this.next = null;
+        }
+    }
+
+    private Node head;
+    private Node tail;
+    private int count;
+
+    public IntList() {
+        head = null;
+        tail = null;
+        count = 0;
+    }
+
+    public boolean isEmpty() {
+        return count == 0;
+    }
+
+    public int size() {
+        return count;
+    }
+
+    public void clear() {
+        head = null;
+        tail = null;
+        count = 0;
+    }
+
+    public int first() {
+        return isEmpty() ? -1 : head.value;
+    }
+
+    public int last() {
+        return isEmpty() ? -1 : tail.value;
+    }
+
+    private Node nodeAt(int index) {
+        if (index < 0 || index >= count) return null;
+        Node node = head;
+        for (int i = 0; i < index; i++) node = node.next;
+        return node;
+    }
+
+    public int get(int index) {
+        Node node = nodeAt(index);
+        return node == null ? -1 : node.value;
+    }
+
+    public boolean set(int index, int value) {
+        Node node = nodeAt(index);
+        if (node == null) return false;
+        node.value = value;
+        return true;
+    }
+
+    public boolean addFirst(int value) {
+        Node node = new Node(value);
+        node.next = head;
+        head = node;
+        if (tail == null) tail = node;
+        count++;
+        return true;
+    }
+
+    public boolean addLast(int value) {
+        Node node = new Node(value);
+        if (isEmpty()) head = node;
+        else tail.next = node;
+        tail = node;
+        count++;
+        return true;
+    }
+
+    public boolean insert(int index, int value) {
+        if (index < 0 || index > count) return false;
+        if (index == 0) return addFirst(value);
+        if (index == count) return addLast(value);
+        Node previous = nodeAt(index - 1);
+        Node node = new Node(value);
+        node.next = previous.next;
+        previous.next = node;
+        count++;
+        return true;
+    }
+
+    public int removeFirst() {
+        if (isEmpty()) return -1;
+        int value = head.value;
+        head = head.next;
+        count--;
+        if (head == null) tail = null;
+        return value;
+    }
+
+    public int removeLast() {
+        if (isEmpty()) return -1;
+        if (count == 1) return removeFirst();
+        Node previous = nodeAt(count - 2);
+        int value = tail.value;
+        previous.next = null;
+        tail = previous;
+        count--;
+        return value;
+    }
+
+    public int remove(int index) {
+        if (index < 0 || index >= count) return -1;
+        if (index == 0) return removeFirst();
+        if (index == count - 1) return removeLast();
+        Node previous = nodeAt(index - 1);
+        int value = previous.next.value;
+        previous.next = previous.next.next;
+        count--;
+        return value;
+    }
+
+    public int indexOf(int value) {
+        int index = 0;
+        for (Node node = head; node != null; node = node.next) {
+            if (node.value == value) return index;
+            index++;
+        }
+        return -1;
+    }
+
+    public boolean contains(int value) {
+        return indexOf(value) != -1;
+    }
+
+    public boolean delete(int value) {
+        int index = indexOf(value);
+        if (index == -1) return false;
+        remove(index);
+        return true;
+    }
+}
+
+static String checkLocation() {
+    StackTraceElement caller = Thread.currentThread().getStackTrace()[3];
+    return caller.getMethodName() + "(), line " + caller.getLineNumber();
+}
+
+static void check(int actual, int expected) {
+    if (actual == expected) {
+        System.out.println("PASS at " + checkLocation() + ": got " + actual);
+    } else {
+        failures++;
+        System.out.println("FAIL at " + checkLocation() + ": expected " + expected + " but got " + actual);
+    }
+}
+
+static void check(boolean actual, boolean expected) {
+    if (actual == expected) {
+        System.out.println("PASS at " + checkLocation() + ": got " + actual);
+    } else {
+        failures++;
+        System.out.println("FAIL at " + checkLocation() + ": expected " + expected + " but got " + actual);
+    }
+}
+
+static void testList() {
+    IntList list = new IntList();
+
+    check(list.isEmpty(), true);
+    check(list.size(), 0);
+    check(list.first(), -1);
+    check(list.last(), -1);
+    check(list.get(0), -1);
+    check(list.removeFirst(), -1);
+    check(list.removeLast(), -1);
+    check(list.remove(0), -1);
+
+    check(list.addLast(4), true);       // [4]
+    check(list.addLast(7), true);       // [4, 7]
+    check(list.addFirst(2), true);      // [2, 4, 7]
+    check(list.insert(2, 9), true);     // [2, 4, 9, 7]
+
+    check(list.size(), 4);
+    check(list.isEmpty(), false);
+    check(list.first(), 2);
+    check(list.last(), 7);
+    check(list.get(0), 2);
+    check(list.get(2), 9);
+    check(list.get(4), -1);
+    check(list.get(-1), -1);
+    check(list.set(-1, 8), false);
+    check(list.set(99, 8), false);
+    check(list.insert(-1, 8), false);
+    check(list.insert(99, 8), false);
+    check(list.remove(-1), -1);
+    check(list.remove(99), -1);
+
+    check(list.set(1, 5), true);        // [2, 5, 9, 7]
+    check(list.get(1), 5);
+    check(list.set(4, 8), false);
+    check(list.size(), 4);
+
+    check(list.insert(0, 11), true);    // [11, 2, 5, 9, 7]
+    check(list.first(), 11);
+    check(list.insert(list.size(), 13), true); // [11, 2, 5, 9, 7, 13]
+    check(list.last(), 13);
+    check(list.size(), 6);
+
+    check(list.indexOf(9), 3);
+    check(list.indexOf(100), -1);
+    check(list.contains(7), true);
+    check(list.contains(100), false);
+
+    check(list.remove(3), 9);           // [11, 2, 5, 7, 13]
+    check(list.get(3), 7);
+    check(list.removeFirst(), 11);      // [2, 5, 7, 13]
+    check(list.removeLast(), 13);       // [2, 5, 7]
+    check(list.size(), 3);
+    check(list.first(), 2);
+    check(list.last(), 7);
+
+    check(list.delete(2), true);        // [5, 7]
+    check(list.first(), 5);
+    check(list.delete(7), true);        // [5]
+    check(list.last(), 5);
+    check(list.delete(5), true);        // []
+    check(list.isEmpty(), true);
+    check(list.size(), 0);
+    check(list.first(), -1);
+    check(list.last(), -1);
+
+    check(list.delete(5), false);
+    check(list.removeLast(), -1);
+
+    check(list.addLast(6), true);       // [6]
+    check(list.first(), 6);
+    check(list.last(), 6);
+    check(list.removeLast(), 6);        // []
+    check(list.isEmpty(), true);
+
+    check(list.addFirst(8), true);      // [8]
+    check(list.addLast(10), true);      // [8, 10]
+    list.clear();                       // []
+    check(list.isEmpty(), true);
+    check(list.size(), 0);
+    check(list.first(), -1);
+
+    IntList large = new IntList();
+    boolean largeOk = true;
+    for (int i = 0; i < 1000; i++) largeOk &= large.addLast(i);
+    for (int i = 0; i < 1000; i++) largeOk &= large.get(i) == i;
+    for (int i = 999; i >= 0; i--) largeOk &= large.removeLast() == i;
+    check(largeOk && large.isEmpty(), true);
+}
+
+static void testLargeIndexedWorkload() {
+    IntList list = new IntList();
+    for (int i = 0; i < 200; i++) check(list.addLast(i % 17), true);
+    check(list.size(), 200); check(list.first(), 0); check(list.last(), 12);
+    check(list.insert(100, 999), true); check(list.get(100), 999); check(list.size(), 201);
+    check(list.remove(100), 999); check(list.size(), 200);
+    check(list.indexOf(5), 5); check(list.delete(5), true); check(list.indexOf(5), 21);
+    check(list.set(0, 777), true); check(list.get(0), 777);
+    for (int i = 0; i < 199; i++) list.removeLast();
+    check(list.size(), 0); check(list.addFirst(42), true); check(list.removeFirst(), 42);
+    check(list.isEmpty(), true); check(list.last(), -1);
+}
+
+static void testHundredThousandEndpointOperations() {
+    final int count = 100_000;
+    IntList list = new IntList();
+    boolean ok = true;
+    for (int i = 0; i < count; i++) ok &= list.addLast(i);
+    ok &= list.size() == count && list.first() == 0 && list.last() == count - 1;
+    for (int i = 0; i < count; i++) ok &= list.removeFirst() == i;
+    check(ok && list.isEmpty() && list.size() == 0 && list.first() == -1 && list.last() == -1, true);
+}
+
+public static void main(String[] args) {
+    testList();
+    testLargeIndexedWorkload();
+    testHundredThousandEndpointOperations();
+    System.out.println(failures == 0 ? "All tests passed." : failures + " test(s) failed.");
+    if (failures > 0) System.exit(1);
+}
+}

@@ -1,0 +1,175 @@
+#include <iostream>
+#include <stdexcept>
+#include <string>
+#include <vector>
+
+class SortedArrayIntSet {
+private:
+    int* keys;
+    int capacity;
+    int count;
+
+    int lowerBound(int key) const {
+        int low = 0, high = count;
+        while (low < high) {
+            int middle = low + (high - low) / 2;
+            if (keys[middle] < key) low = middle + 1;
+            else high = middle;
+        }
+        return low;
+    }
+
+    void ensureCapacity() {
+        if (count < capacity) return;
+        int* larger = new int[capacity * 2];
+        for (int i = 0; i < count; ++i) larger[i] = keys[i];
+        delete[] keys;
+        keys = larger;
+        capacity *= 2;
+    }
+
+public:
+    explicit SortedArrayIntSet(int initialCapacity)
+        : keys(nullptr), capacity(initialCapacity), count(0) {
+        if (initialCapacity < 1) {
+            throw std::invalid_argument("initialCapacity must be positive");
+        }
+        keys = new int[capacity];
+    }
+
+    ~SortedArrayIntSet() {
+        delete[] keys;
+    }
+
+    SortedArrayIntSet(const SortedArrayIntSet&) = delete;
+    SortedArrayIntSet& operator=(const SortedArrayIntSet&) = delete;
+
+    bool isEmpty() const {
+        return count == 0;
+    }
+
+    int size() const {
+        return count;
+    }
+
+    void clear() {
+        count = 0;
+    }
+
+    bool contains(int key) const {
+        int index = lowerBound(key);
+        return index < count && keys[index] == key;
+    }
+
+    bool add(int key) {
+        int index = lowerBound(key);
+        if (index < count && keys[index] == key) return false;
+        ensureCapacity();
+        for (int i = count; i > index; --i) keys[i] = keys[i - 1];
+        keys[index] = key;
+        ++count;
+        return true;
+    }
+
+    bool remove(int key) {
+        int index = lowerBound(key);
+        if (index == count || keys[index] != key) return false;
+        for (int i = index; i < count - 1; ++i) keys[i] = keys[i + 1];
+        --count;
+        return true;
+    }
+
+    std::vector<int> toVector() const {
+        return std::vector<int>(keys, keys + count);
+    }
+};
+
+int failures = 0;
+
+void check(bool actual, bool expected, const char* label) {
+    if (actual == expected) {
+        std::cout << "pass: " << label << '\n';
+    } else {
+        ++failures;
+        std::cout << "FAIL: " << label << " (expected " << std::boolalpha
+                  << expected << ", got " << actual << ")\n";
+    }
+}
+
+void check(int actual, int expected, const char* label) {
+    if (actual == expected) {
+        std::cout << "pass: " << label << '\n';
+    } else {
+        ++failures;
+        std::cout << "FAIL: " << label << " (expected " << expected
+                  << ", got " << actual << ")\n";
+    }
+}
+
+void checkVector(const std::vector<int>& actual,
+                 const std::vector<int>& expected,
+                 const char* label) {
+    if (actual == expected) {
+        std::cout << "pass: " << label << '\n';
+    } else {
+        ++failures;
+        std::cout << "FAIL: " << label << " (array contents differ)\n";
+    }
+}
+
+void testSet() {
+    SortedArrayIntSet set(2);
+    check(set.isEmpty(), true, "new set is empty");
+    check(set.size(), 0, "new set has size zero");
+    check(set.contains(4), false, "missing key is not contained");
+    check(set.remove(4), false, "removing a missing key changes nothing");
+
+    check(set.add(8), true, "add first key");
+    check(set.add(3), true, "insert before a larger key");
+    check(set.add(11), true, "append and grow the backing array");
+    check(set.add(6), true, "insert into the middle");
+    check(set.add(-2), true, "insert a new minimum");
+    checkVector(set.toVector(), {-2, 3, 6, 8, 11},
+                "iteration order remains sorted");
+
+    check(set.add(6), false, "reject duplicate key");
+    check(set.size(), 5, "duplicate does not change size");
+    check(set.contains(-2), true, "find the first key");
+    check(set.contains(8), true, "find an interior key");
+    check(set.contains(12), false, "reject a key beyond the used range");
+
+    check(set.remove(6), true, "remove an interior key");
+    checkVector(set.toVector(), {-2, 3, 8, 11},
+                "removal shifts the suffix left");
+    check(set.remove(-2), true, "remove the first key");
+    check(set.remove(11), true, "remove the final key");
+    check(set.remove(11), false, "cannot remove a key twice");
+    checkVector(set.toVector(), {3, 8}, "remaining keys stay sorted");
+
+    set.clear();
+    check(set.isEmpty(), true, "clear empties the set");
+    check(set.size(), 0, "size is zero after clear");
+    check(set.add(5), true, "set can be reused after clear");
+}
+
+void testLargeOrderedWorkload() {
+    SortedArrayIntSet set(1);
+    for (int i = 999; i >= 0; i--) check(set.add(i), true, "descending add");
+    check(set.size(), 1000, "size after descending additions");
+    std::vector<int> ordered = set.toVector();
+    check(static_cast<int>(ordered.size()), 1000, "ordered output size");
+    for (int i = 0; i < static_cast<int>(ordered.size()); i++)
+        check(ordered[i], i, "sorted position");
+    for (int i = 0; i < 1000; i += 2) check(set.remove(i), true, "remove even key");
+    check(set.size(), 500, "size after removing even keys");
+    for (int i = 0; i < 1000; i++) check(set.contains(i), i % 2 == 1, "membership after removals");
+    set.clear(); check(set.add(42), true, "reuse after clear");
+}
+
+int main() {
+    testSet();
+    testLargeOrderedWorkload();
+    std::cout << (failures == 0 ? "All tests passed.\n"
+                                : std::to_string(failures) + " test(s) failed.\n");
+    return failures == 0 ? 0 : 1;
+}
