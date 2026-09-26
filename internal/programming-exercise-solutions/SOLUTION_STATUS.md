@@ -1,6 +1,6 @@
 # Programming Exercise Solution Status
 
-Last updated: 2026-09-25
+Last updated: 2026-09-26
 
 ## Progress
 
@@ -69,10 +69,89 @@ Last updated: 2026-09-25
     Python. All three suites passed collision-chain ordering, duplicate
     rejection, head/interior/tail removal, load-factor resizing with stable
     rehash order, structural validation, and the 100,000-key workload.
+18. Open-addressing hash set — complete and verified in Java, C++, and Python.
+    All three suites passed linear, triangular-quadratic, and double-hashing
+    probe rules; tombstone search/reuse; full-table and wraparound cases;
+    invalid-key handling; and all three 50,000-key aggregate workloads.
+19. Incomplete hash table — complete and verified in Java, C++, and Python.
+    All three suites passed home-position insertion, explicit duplicate versus
+    collision results, non-overwriting collision behavior, removal/reuse,
+    invalid-key handling, and the 100,000-slot workload.
+20. Unsorted-array map — complete and verified in Java, C++, and Python. All
+    three suites passed aligned key/value growth, stored-zero handling,
+    replacement return values, constant-time gap filling on removal,
+    clear/reuse, negative keys, and the 1,000-key mixed workload.
+21. Direct-address map — complete and verified in Java, C++, and Python. All
+    three suites passed boundary keys, presence tracking independent of stored
+    values, replacement/removal return values, invalid-key handling,
+    clear/reuse, and the exhaustive 100,000-key universe workload.
+22. Library BST map — complete and verified in Java and C++; no Python version
+    exists by design. Both suites passed stored-zero handling, replacement and
+    removal return values, inclusive/reversed/out-of-range queries, sorted
+    iteration, and the 100,000-entry map with a 10,000-entry range query.
+23. Unsorted-array priority queue — complete and verified in Java, C++, and
+    Python. All three suites passed stable priority/sequence ordering, growth,
+    peek, interior and final-slot gap filling, complete drain, and the 500-entry
+    intentionally quadratic workload. The missing Python `check_empty` test
+    helper was added identically to v2 and the solution copy.
+24. Sorted-array priority queue — complete and verified in Java, C++, and
+    Python. All three suites passed worst-to-best insertion order, stable ties,
+    growth, constant-time peek/extract at the used right end, and the 500-entry
+    intentionally quadratic workload. Its missing Python `check_empty` helper
+    was added identically to v2 and the solution copy.
+25. Binary heaps — complete and verified in Java, C++, and Python. All three
+    suites passed fixed-capacity boundaries, parent/child indexing, sift-up and
+    sift-down (including an only-left-child case), duplicates, negative keys,
+    heap-order validation, reuse, and 100,000 insert/extract operations.
+26. Heap construction and heapsort — complete and verified in Java, C++, and
+    Python. All three suites passed exact bottom-up heap construction,
+    active-prefix sift-down boundaries, empty and singleton inputs,
+    duplicates and negative values, and deterministic heapsort and heap
+    construction workloads through 100,000 elements.
+27. Recursive binary-tree algorithms — complete and verified in Java, C++,
+    and Python. All three suites passed size, edge-based height, leaf count,
+    and two-child-node count checks for empty, singleton, complete,
+    degenerate, irregular, and 100,000-node trees. The irregular-tree height
+    expectations were corrected identically in v2 and the solution copy from
+    4/3/3 to 3/2/2 to match the documented empty-height -1 convention.
+28. Recursive tree traversals — complete and verified in Java, C++, and
+    Python. All three suites passed preorder, inorder, and postorder traversal
+    for empty, singleton, complete, degenerate, irregular, interior-subtree,
+    and 100,000-node trees, including independent result containers. The
+    irregular-tree inorder expectation was corrected identically in v2 and
+    the solution copy to visit a left child before its parent.
+29. Level-order tree traversal — complete and verified in Java, C++, and
+    Python. All three suites passed empty, singleton, complete, degenerate,
+    sparse, interior-subtree, and long right-only trees, independent result
+    containers, and a 100,000-node breadth-first traversal.
+30. Binary search tree — complete and verified in Java, C++, and Python. All
+    three suites passed search, duplicate-safe insertion, minimum and
+    successor queries, leaf/one-child/two-child/root removal, parent-link and
+    size maintenance, complete drain, 500-key ordered updates, and the
+    20,000-key balanced-order aggregate workload.
+31. AVL trees — complete and verified in Java, C++, and Python. All three
+    suites passed stored-height maintenance, all four insertion rotations,
+    deletion rotations, search, duplicate handling, removal and complete
+    drain, 2,000 randomized differential updates, and the 20,000-key insertion,
+    search, and 10,000-key removal stress workload.
+32. 2–3 trees — complete and verified in Java, C++, and Python. All three
+    suites passed cascading splits, minimum/maximum and neighbor queries,
+    inclusive ranges, deletion redistribution and merging, root shrinkage,
+    randomized differential updates and complete drains, and the 20,000-key
+    ordered insertion/search and 10,000-key removal workload. The Python large
+    test was corrected identically in v2 and the solution copy to call
+    `size()` instead of comparing the method object with an integer.
 
-## Next assignment
+## Completion
 
-18. Open-addressing hash set.
+All 32 assignments are complete and verified in every available language.
+The solution tree contains all 95 expected source paths, contains no remaining
+implementation `TODO` markers, and contains no generated build artifacts.
+A self-discovering runner, `run_all_tests.py`, compiles and executes every
+suite using an automatically cleaned temporary build directory. A fresh audit
+passed 94 suites through the runner; its initial 60-second policy timed out the
+Python open-addressing suite, which then completed separately with all tests
+passing in 4m7s. The runner's documented default is now 600 seconds.
 
 ## Verification policy
 

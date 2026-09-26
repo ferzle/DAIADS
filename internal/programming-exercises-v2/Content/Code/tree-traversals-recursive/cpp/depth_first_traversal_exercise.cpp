@@ -198,7 +198,7 @@ void testIrregularTreeAndIndependentResults() {
     root->left->right = new BinaryNode(40); root->left->right->left = new BinaryNode(20);
     root->right->left = new BinaryNode(50); root->right->left->right = new BinaryNode(60);
     check("irregular preorder", preorder(root), {10, 20, 40, 20, 30, 50, 60});
-    check("irregular inorder", inorder(root), {20, 40, 20, 10, 50, 60, 30});
+    check("irregular inorder", inorder(root), {20, 20, 40, 10, 50, 60, 30});
     check("irregular postorder", postorder(root), {20, 40, 20, 60, 50, 30, 10});
     vector<int> first = preorder(root); first.clear();
     check("returned vectors are independent", preorder(root), {10, 20, 40, 20, 30, 50, 60});

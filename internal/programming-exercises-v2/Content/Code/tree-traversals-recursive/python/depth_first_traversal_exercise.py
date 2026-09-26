@@ -161,7 +161,7 @@ def test_irregular_tree_and_independent_results():
     root.left.right = BinaryNode(40); root.left.right.left = BinaryNode(20)
     root.right.left = BinaryNode(50); root.right.left.right = BinaryNode(60)
     check("irregular preorder", preorder(root), [10, 20, 40, 20, 30, 50, 60])
-    check("irregular inorder", inorder(root), [20, 40, 20, 10, 50, 60, 30])
+    check("irregular inorder", inorder(root), [20, 20, 40, 10, 50, 60, 30])
     check("irregular postorder", postorder(root), [20, 40, 20, 60, 50, 30, 10])
     first = preorder(root)
     first.clear()

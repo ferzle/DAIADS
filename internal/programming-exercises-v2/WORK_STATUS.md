@@ -54,6 +54,12 @@ per-structure additions and deliberate omissions, and
 - Corrected the recursive-tree chain test's expected height from 200 to 199,
   consistent with the exercise's existing convention that an empty tree has
   height -1 and a leaf has height 0.
+- Corrected the recursive-tree irregular-tree height expectations from 4/3/3
+  to 3/2/2, also matching the edge-based height convention.
+- Corrected the recursive-traversal irregular-tree inorder expectation so its
+  left child is visited before its parent.
+- Corrected the Python 2-3-tree large workload to call `size()` instead of
+  comparing the `size` method object with the expected integer.
 
 The v2 candidate is complete and ready for review. No files have been promoted
 to the live download tree.

@@ -103,9 +103,9 @@ def test_irregular_tree_and_every_subtree():
     root.left.right = BinaryNode(40); root.left.right.left = BinaryNode(50)
     root.right.left = BinaryNode(60); root.right.left.right = BinaryNode(70)
     root.right.right = BinaryNode(80); root.right.right.right = BinaryNode(90)
-    check(size(root), 9); check(height(root), 4); check(count_leaves(root), 3); check(count_two_child_nodes(root), 2)
-    check(size(root.left), 3); check(height(root.left), 3); check(count_leaves(root.left), 1)
-    check(size(root.right), 5); check(height(root.right), 3); check(count_leaves(root.right), 2)
+    check(size(root), 9); check(height(root), 3); check(count_leaves(root), 3); check(count_two_child_nodes(root), 2)
+    check(size(root.left), 3); check(height(root.left), 2); check(count_leaves(root.left), 1)
+    check(size(root.right), 5); check(height(root.right), 2); check(count_leaves(root.right), 2)
     chain = BinaryNode(0)
     cursor = chain
     for i in range(1, 200):

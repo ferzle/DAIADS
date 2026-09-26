@@ -113,9 +113,9 @@ public class BinaryTreeAlgorithmsExercise {
       root.left.right = new BinaryNode(40); root.left.right.left = new BinaryNode(50);
       root.right.left = new BinaryNode(60); root.right.left.right = new BinaryNode(70);
       root.right.right = new BinaryNode(80); root.right.right.right = new BinaryNode(90);
-      check(size(root), 9); check(height(root), 4); check(countLeaves(root), 3); check(countTwoChildNodes(root), 2);
-      check(size(root.left), 3); check(height(root.left), 3); check(countLeaves(root.left), 1);
-      check(size(root.right), 5); check(height(root.right), 3); check(countLeaves(root.right), 2);
+      check(size(root), 9); check(height(root), 3); check(countLeaves(root), 3); check(countTwoChildNodes(root), 2);
+      check(size(root.left), 3); check(height(root.left), 2); check(countLeaves(root.left), 1);
+      check(size(root.right), 5); check(height(root.right), 2); check(countLeaves(root.right), 2);
       BinaryNode chain = new BinaryNode(0), cursor = chain;
       for (int i = 1; i < 200; i++) { cursor.right = new BinaryNode(i); cursor = cursor.right; }
       check(size(chain), 200); check(height(chain), 199); check(countLeaves(chain), 1); check(countTwoChildNodes(chain), 0);

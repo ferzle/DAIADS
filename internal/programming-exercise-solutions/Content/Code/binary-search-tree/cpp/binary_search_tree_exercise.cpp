@@ -1,0 +1,412 @@
+#include <iostream>
+#include <utility>
+#include <vector>
+
+using namespace std;
+
+
+int failures = 0;
+class BinarySearchTree {
+private:
+  struct Node {
+    int key;
+    Node* left;
+    Node* right;
+    Node* parent;
+
+    Node(int value) {
+        key = value;
+        left = nullptr;
+        right = nullptr;
+        parent = nullptr;
+    }
+  };
+
+  Node* root;
+  int nodeCount;
+
+  Node* searchNode(int key) {
+      Node* current = root;
+      while (current != nullptr) {
+          if (key == current->key) {
+              return current;
+          }
+          current = key < current->key ? current->left : current->right;
+      }
+      return nullptr;
+  }
+
+  Node* minimumNode(Node* node) {
+      if (node == nullptr) {
+          return nullptr;
+      }
+      while (node->left != nullptr) {
+          node = node->left;
+      }
+      return node;
+  }
+
+  Node* successorNode(Node* node) {
+      if (node->right != nullptr) {
+          return minimumNode(node->right);
+      }
+      Node* parent = node->parent;
+      while (parent != nullptr && node == parent->right) {
+          node = parent;
+          parent = parent->parent;
+      }
+      return parent;
+  }
+
+  void replaceSubtree(Node* oldRoot, Node* newRoot) {
+      if (oldRoot->parent == nullptr) {
+          root = newRoot;
+      } else if (oldRoot == oldRoot->parent->left) {
+          oldRoot->parent->left = newRoot;
+      } else {
+          oldRoot->parent->right = newRoot;
+      }
+      if (newRoot != nullptr) {
+          newRoot->parent = oldRoot->parent;
+      }
+  }
+
+  //--------------------------------------------------
+  // The next few methods are helpers for the tests
+  //--------------------------------------------------
+  
+  void appendInorder(Node* node, int values[], int& index) {
+      if (node == nullptr) {
+          return;
+      }
+
+      appendInorder(node->left, values, index);
+      values[index] = node->key;
+      index++;
+      appendInorder(node->right, values, index);
+  }
+
+  bool hasCorrectParentReferences(Node* node) {
+      if (node == nullptr) {
+          return true;
+      }
+
+      if (node->left != nullptr && node->left->parent != node) {
+          return false;
+      }
+
+      if (node->right != nullptr && node->right->parent != node) {
+          return false;
+      }
+
+      return hasCorrectParentReferences(node->left)
+          && hasCorrectParentReferences(node->right);
+  }
+
+  // Necessary memory management for C++ implementation
+  void destroyTree(Node* node) {
+      if (node == nullptr) {
+          return;
+      }
+
+      destroyTree(node->left);
+      destroyTree(node->right);
+      delete node;
+  }
+
+//--------------------------------------------------
+// More stuff to implement
+//--------------------------------------------------
+public:
+  BinarySearchTree() {
+    root = nullptr;
+    nodeCount = 0;
+  }
+
+  ~BinarySearchTree() {
+      destroyTree(root);
+  }
+
+  int size() {
+      return nodeCount;
+  }
+
+  bool isEmpty() {
+      return nodeCount == 0;
+  }
+
+  bool contains(int key) {
+      return searchNode(key) != nullptr;
+  }
+
+  bool insert(int key) {
+      Node* parent = nullptr;
+      Node* current = root;
+      while (current != nullptr) {
+          parent = current;
+          if (key == current->key) {
+              return false;
+          }
+          current = key < current->key ? current->left : current->right;
+      }
+
+      Node* node = new Node(key);
+      node->parent = parent;
+      if (parent == nullptr) {
+          root = node;
+      } else if (key < parent->key) {
+          parent->left = node;
+      } else {
+          parent->right = node;
+      }
+      nodeCount++;
+      return true;
+  }
+
+  // C++ cannot return nullptr in place of an int, so this method
+  // returns whether a result exists and stores the key in result.
+  bool minimum(int& result) {
+      Node* node = minimumNode(root);
+
+      if (node == nullptr) {
+          return false;
+      }
+
+      result = node->key;
+      return true;
+  }
+
+  // C++ cannot return nullptr in place of an int, so this method
+  // returns whether a result exists and stores the key in result.
+  bool successor(int key, int& result) {
+      Node* node = searchNode(key);
+
+      if (node == nullptr) {
+          return false;
+      }
+
+      Node* next = successorNode(node);
+
+      if (next == nullptr) {
+          return false;
+      }
+
+      result = next->key;
+      return true;
+  }
+
+  bool remove(int key) {
+      Node* node = searchNode(key);
+      if (node == nullptr) {
+          return false;
+      }
+
+      if (node->left == nullptr) {
+          replaceSubtree(node, node->right);
+      } else if (node->right == nullptr) {
+          replaceSubtree(node, node->left);
+      } else {
+          Node* successor = minimumNode(node->right);
+          if (successor->parent != node) {
+              replaceSubtree(successor, successor->right);
+              successor->right = node->right;
+              successor->right->parent = successor;
+          }
+          replaceSubtree(node, successor);
+          successor->left = node->left;
+          successor->left->parent = successor;
+      }
+      delete node;
+      nodeCount--;
+      return true;
+  }
+
+  
+  //--------------------------------------------------
+  // The rest of the code is for the tests
+  //--------------------------------------------------
+  int inorder(int values[]) {
+      int index = 0;
+      appendInorder(root, values, index);
+      return index;
+  }
+
+  bool hasCorrectParentReferences() {
+      if (root != nullptr && root->parent != nullptr) {
+          return false;
+      }
+
+      return hasCorrectParentReferences(root);
+  }
+
+  bool rootKeyForTesting(int& key) {
+      if (root == nullptr) return false;
+      key = root->key;
+      return true;
+  }
+
+};
+
+  void check(bool condition, const char* description) {
+    if (condition) {
+      cout << "pass: " << description << endl;
+    } else {
+      ++failures;
+      cout << "fail: " << description << endl;
+    }
+  }
+
+  bool sameArray(int actual[],int actualLength,int expected[],int expectedLength) {
+    if (actualLength != expectedLength) {
+      return false;
+    }
+
+    for (int i = 0; i < actualLength; i++) {
+        if (actual[i] != expected[i]) {
+            return false;
+        }
+    }
+   return true;
+  }
+
+  void testBinarySearchTree() {
+    BinarySearchTree tree;
+    int result = 0;
+
+    check(tree.isEmpty(), "a new tree is empty");
+    check(tree.size() == 0, "a new tree has size 0");
+    check(!tree.minimum(result), "an empty tree has no minimum");
+    check(!tree.contains(50), "an empty tree does not contain 50");
+    check(!tree.remove(50), "an absent key cannot be removed");
+
+    int keys[] = { 50, 30, 70, 20, 40, 60, 80, 55, 65, 57 };
+
+    for (int i = 0; i < 10; i++) {
+        check(tree.insert(keys[i]), "insert a distinct key");
+        check(tree.hasCorrectParentReferences(),
+            "parent references after insertion");
+    }
+
+    check(tree.size() == 10, "the tree has size 10");
+    check(!tree.isEmpty(), "the tree is not empty");
+    check(tree.contains(57), "the tree contains 57");
+    check(!tree.contains(58), "the tree does not contain 58");
+
+    int actual[10] = {0};
+    int actualLength = tree.inorder(actual);
+    int expected1[] = {
+        20, 30, 40, 50, 55, 57, 60, 65, 70, 80
+    };
+
+    check(sameArray(actual, actualLength, expected1, 10),
+        "inorder traversal after insertion");
+    check(tree.rootKeyForTesting(result) && result == 50,
+        "50 remains the root after insertion");
+
+    check(!tree.insert(60), "duplicate insertion fails");
+    check(tree.size() == 10, "duplicate insertion does not change size");
+
+    check(tree.minimum(result) && result == 20, "the minimum is 20");
+
+    check(tree.successor(40, result) && result == 50,
+        "the successor of 40 is 50");
+    check(tree.successor(55, result) && result == 57,
+        "the successor of 55 is 57");
+    check(tree.successor(65, result) && result == 70,
+        "the successor of 65 is 70");
+    check(!tree.successor(80, result), "80 has no successor");
+    check(!tree.successor(58, result), "an absent key has no successor");
+
+    check(tree.remove(20), "remove the leaf 20");
+
+    int expected2[] = {
+        30, 40, 50, 55, 57, 60, 65, 70, 80
+    };
+
+    actualLength = tree.inorder(actual);
+
+    check(sameArray(actual, actualLength, expected2, 9),
+        "inorder traversal after removing 20");
+    check(tree.hasCorrectParentReferences(),
+        "parent references after removing 20");
+
+    check(tree.remove(55), "remove the one-child node 55");
+
+    int expected3[] = {
+        30, 40, 50, 57, 60, 65, 70, 80
+    };
+
+    actualLength = tree.inorder(actual);
+
+    check(sameArray(actual, actualLength, expected3, 8),
+        "inorder traversal after removing 55");
+    check(tree.hasCorrectParentReferences(),
+        "parent references after removing 55");
+
+    check(tree.remove(50), "remove the two-child root 50");
+
+    int expected4[] = {30, 40, 57, 60, 65, 70, 80};
+
+    actualLength = tree.inorder(actual);
+
+    check(sameArray(actual, actualLength, expected4, 7),
+        "inorder traversal after removing 50");
+    check(tree.hasCorrectParentReferences(),
+        "parent references after removing 50");
+    check(tree.rootKeyForTesting(result) && result == 57,
+        "successor substitution changes the root key to 57");
+
+    check(tree.size() == 7, "the final size is 7");
+    check(!tree.remove(50), "removing 50 again fails");
+    check(tree.size() == 7,
+        "an unsuccessful removal does not change size");
+
+    BinarySearchTree oneNodeTree;
+
+    check(oneNodeTree.insert(10), "insert into an empty tree");
+    check(oneNodeTree.remove(10), "remove the only node");
+    check(oneNodeTree.isEmpty(), "the one-node tree becomes empty");
+    check(!oneNodeTree.rootKeyForTesting(result),
+        "the drained one-node tree has no root");
+    check(oneNodeTree.hasCorrectParentReferences(),
+        "the empty tree has valid parent references");
+  }
+
+void testLargeOrderedUpdates() {
+  BinarySearchTree tree;
+  for (int key = 0; key < 500; key++) check(tree.insert(key), "insert ascending key");
+  check(tree.size() == 500 && tree.hasCorrectParentReferences(), "ascending tree size and parent links");
+  for (int key = 0; key < 500; key++) check(tree.contains(key), "contains ascending key");
+  for (int key = 0; key < 500; key += 2) { check(tree.remove(key), "remove even key"); check(tree.hasCorrectParentReferences(), "parent links after removal"); }
+  int minimum = -1; check(tree.size() == 250 && tree.minimum(minimum) && minimum == 1, "size and minimum after removals");
+  for (int key = 1; key < 499; key += 2) { int next = -1; check(tree.successor(key, next) && next == key + 2, "successor among odd keys"); }
+  for (int key = 1; key < 500; key += 2) check(tree.remove(key), "drain odd key");
+  check(tree.isEmpty() && tree.hasCorrectParentReferences(), "empty after complete drain");
+}
+
+void testLargeBalancedOrderWorkload() {
+  const int count = 20000;
+  BinarySearchTree tree;
+  vector<pair<int, int>> ranges{{0, count - 1}};
+  bool ok = true;
+  while (!ranges.empty()) {
+    auto [low, high] = ranges.back(); ranges.pop_back();
+    if (low > high) continue;
+    int middle = low + (high - low) / 2;
+    ok = tree.insert(middle) && ok;
+    if (middle + 1 <= high) ranges.push_back({middle + 1, high});
+    if (low <= middle - 1) ranges.push_back({low, middle - 1});
+  }
+  for (int key = 0; key < count; key++) ok = tree.contains(key) && ok;
+  for (int key = 0; key < count; key += 2) ok = tree.remove(key) && ok;
+  for (int key = 0; key < count; key++) ok = (tree.contains(key) == (key % 2 == 1)) && ok;
+  check(ok && tree.size() == count / 2 && tree.hasCorrectParentReferences(),
+        "20,000-key balanced-order aggregate workload");
+}
+
+int main() {
+  testBinarySearchTree();
+  testLargeOrderedUpdates();
+  testLargeBalancedOrderWorkload();
+  return failures == 0 ? 0 : 1;
+}

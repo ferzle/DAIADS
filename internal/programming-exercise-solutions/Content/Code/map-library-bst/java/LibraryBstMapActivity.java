@@ -1,0 +1,111 @@
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.OptionalInt;
+import java.util.TreeMap;
+
+public class LibraryBstMapActivity {
+    static final class OrderedIntMap {
+        private final TreeMap<Integer, Integer> tree = new TreeMap<>();
+
+        boolean isEmpty() {
+            return tree.isEmpty();
+        }
+
+        int size() {
+            return tree.size();
+        }
+
+        boolean containsKey(int key) {
+            return tree.containsKey(key);
+        }
+
+        OptionalInt get(int key) {
+            Integer value = tree.get(key);
+            return value == null ? OptionalInt.empty() : OptionalInt.of(value);
+        }
+
+        OptionalInt put(int key, int value) {
+            Integer oldValue = tree.put(key, value);
+            return oldValue == null ? OptionalInt.empty() : OptionalInt.of(oldValue);
+        }
+
+        OptionalInt remove(int key) {
+            Integer oldValue = tree.remove(key);
+            return oldValue == null ? OptionalInt.empty() : OptionalInt.of(oldValue);
+        }
+
+        List<String> entriesInRange(int low, int high) {
+            List<String> result = new ArrayList<>();
+            if (low > high) return result;
+            for (Map.Entry<Integer, Integer> entry
+                    : tree.subMap(low, true, high, true).entrySet()) {
+                result.add(entry.getKey() + "=" + entry.getValue());
+            }
+            return result;
+        }
+    }
+
+    private static int failures;
+
+    private static void check(boolean condition, String label) {
+        if (condition) {
+            System.out.println("pass: " + label);
+        } else {
+            failures++;
+            System.out.println("FAIL: " + label);
+        }
+    }
+
+    private static void testMap() {
+        OrderedIntMap map = new OrderedIntMap();
+        check(map.isEmpty() && map.size() == 0, "new map is empty");
+        check(map.put(20, 4).isEmpty(), "put a new key");
+        check(map.put(5, 0).isEmpty(), "store zero as an ordinary value");
+        check(map.put(12, 7).isEmpty() && map.put(30, 9).isEmpty(),
+                "put more keys");
+        check(map.containsKey(5) && map.get(5).orElse(-1) == 0,
+                "presence is distinct from value zero");
+        check(map.put(12, 8).orElse(-1) == 7 && map.size() == 4,
+                "replacement returns old value without growing");
+        check(map.entriesInRange(6, 20).equals(List.of("12=8", "20=4")),
+                "closed range is sorted");
+        check(map.remove(20).orElse(-1) == 4 && !map.containsKey(20),
+                "remove a present key");
+        check(map.remove(99).isEmpty(), "remove an absent key");
+    }
+
+    private static void testUpdatesAndRangeBoundaries() {
+        OrderedIntMap map = new OrderedIntMap();
+        check(map.entriesInRange(0, 10).isEmpty(), "empty-map range is empty");
+        for (int key = -500; key <= 500; key++) check(map.put(key, key * 2).isEmpty(), "insert key " + key);
+        check(map.size() == 1001, "size after large insertion");
+        check(map.put(0, 77).orElse(-1) == 0 && map.get(0).orElse(-1) == 77, "update key and return old value");
+        check(map.entriesInRange(-2, 2).equals(List.of("-2=-4", "-1=-2", "0=77", "1=2", "2=4")), "inclusive range endpoints");
+        check(map.entriesInRange(20, 10).isEmpty(), "reversed range is empty");
+        check(map.entriesInRange(501, 700).isEmpty(), "range beyond all keys is empty");
+    }
+
+    private static void testHundredThousandOrderedEntries() {
+        OrderedIntMap map = new OrderedIntMap();
+        boolean ok = true;
+        for (int key = -50_000; key < 50_000; key++) ok &= map.put(key, key * 2).isEmpty();
+        for (int key = -50_000; key < 50_000; key += 997) {
+            ok &= map.containsKey(key) && map.get(key).orElse(Integer.MIN_VALUE) == key * 2;
+        }
+        List<String> range = map.entriesInRange(-5_000, 4_999);
+        ok &= map.size() == 100_000 && range.size() == 10_000
+                && range.get(0).equals("-5000=-10000")
+                && range.get(range.size() - 1).equals("4999=9998");
+        check(ok, "100,000-entry ordered map and 10,000-entry range");
+    }
+
+    public static void main(String[] args) {
+        testMap();
+        testUpdatesAndRangeBoundaries();
+        testHundredThousandOrderedEntries();
+        System.out.println(failures == 0 ? "All tests passed."
+                : failures + " test(s) failed.");
+        if (failures > 0) System.exit(1);
+    }
+}

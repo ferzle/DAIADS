@@ -475,10 +475,10 @@ def test_twenty_thousand_ordered_keys():
     tree = TwoThreeTree()
     ok = all(tree.insert(key) for key in range(count))
     ok = all(tree.contains(key) for key in range(count)) and ok
-    ok = tree.size == count and tree.has_valid_structure() and ok
+    ok = tree.size() == count and tree.has_valid_structure() and ok
     ok = all(tree.remove(key) for key in range(0, count, 2)) and ok
     ok = all(tree.contains(key) == (key % 2 == 1) for key in range(count)) and ok
-    ok = tree.size == count // 2 and tree.has_valid_structure() and ok
+    ok = tree.size() == count // 2 and tree.has_valid_structure() and ok
     check(ok, "20,000-key ordered insert/search and 10,000-key removal workload")
 
 

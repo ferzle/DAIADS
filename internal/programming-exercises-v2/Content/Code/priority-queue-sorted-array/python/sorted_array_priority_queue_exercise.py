@@ -94,6 +94,10 @@ def check_entry(
         )
 
 
+def check_empty(actual: Optional[Entry], label: str) -> None:
+    check(actual, None, label)
+
+
 def test_sorted_array_priority_queue() -> None:
     queue = SortedArrayMinPriorityQueue(2)
 
