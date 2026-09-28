@@ -1,6 +1,9 @@
 #include <iostream>
+#include <vector>
 using namespace std;
 
+
+int failures = 0;
 class IntQueue {
 private:
     int* A;
@@ -49,12 +52,17 @@ public:
         // TODO
         return -1;
     }
+
+    vector<int> storageStateForTesting() const {
+        return {frontIndex, count, capacity};
+    }
 };
 
 void checkAtLine(int actual, int expected, int line, const char* expression) {
     if (actual == expected) {
         cout << "PASS at test line " << line << " (" << expression << "): got " << actual << endl;
     } else {
+        ++failures;
         cout << "FAIL at test line " << line << " (" << expression
              << "): expected " << expected << " but got " << actual << endl;
     }
@@ -64,6 +72,7 @@ void checkAtLine(bool actual, bool expected, int line, const char* expression) {
     if (actual == expected) {
         cout << "PASS at test line " << line << " (" << expression << "): got " << actual << endl;
     } else {
+        ++failures;
         cout << "FAIL at test line " << line << " (" << expression
              << "): expected " << (expected ? "true" : "false")
              << " but got " << (actual ? "true" : "false") << endl;
@@ -83,13 +92,16 @@ void testQueue() {
     check(queue.enqueue(4), true);
     check(queue.enqueue(7), true);
     check(queue.enqueue(9), true);
+    check(queue.storageStateForTesting() == vector<int>({0, 3, 4}), true);
 
     check(queue.dequeue(), 4);
     check(queue.dequeue(), 7);
+    check(queue.storageStateForTesting() == vector<int>({2, 1, 4}), true);
 
     check(queue.enqueue(2), true);
     check(queue.enqueue(5), true);
     check(queue.enqueue(8), true);
+    check(queue.storageStateForTesting() == vector<int>({2, 4, 4}), true);
     check(queue.isFull(), true);
     check(queue.enqueue(10), false);
 
@@ -115,7 +127,41 @@ void testQueue() {
     check(wrappedOk && wrapped.isEmpty(), true);
 }
 
+void testRepeatedWraparound() {
+    for (int capacity : {1, 2, 5, 64}) {
+        IntQueue queue(capacity);
+        int nextExpected = 0;
+        for (int round = 0; round < 20; round++) {
+            for (int i = 0; i < capacity; i++)
+                check(queue.enqueue(round * capacity + i), true);
+            check(queue.isFull(), true);
+            check(queue.enqueue(999999), false);
+            for (int i = 0; i < capacity; i++) {
+                check(queue.front(), nextExpected);
+                check(queue.dequeue(), nextExpected++);
+                check(queue.size(), capacity - i - 1);
+            }
+            check(queue.isEmpty(), true);
+        }
+    }
+}
+
+void testLargeAggregateWraparound() {
+    const int capacity = 10000;
+    IntQueue queue(capacity);
+    bool ok = true;
+    for (int round = 0; round < 10; ++round) {
+        for (int i = 0; i < capacity; ++i) ok = queue.enqueue(round * capacity + i) && ok;
+        ok = queue.isFull() && !queue.enqueue(-1) && ok;
+        for (int i = 0; i < capacity; ++i) ok = (queue.dequeue() == round * capacity + i) && ok;
+    }
+    ok = queue.isEmpty() && queue.size() == 0 && ok;
+    check(ok, true);
+}
+
 int main() {
     testQueue();
-    return 0;
+    testRepeatedWraparound();
+    testLargeAggregateWraparound();
+    return failures == 0 ? 0 : 1;
 }

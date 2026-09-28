@@ -28,15 +28,29 @@ def level_order(root):
     return result
 
 
+failures = 0
+
+
 def check(name, actual, expected):
+    global failures
     if actual == expected:
         print("pass:", name)
     else:
+        failures += 1
         print(
             "fail:", name,
             "; expected", expected,
             "but got", actual
         )
+
+
+def check_summary(name, condition):
+    global failures
+    if condition:
+        print("pass:", name)
+    else:
+        failures += 1
+        print("fail:", name)
 
 
 def build_complete_tree():
@@ -82,4 +96,39 @@ def test_level_order():
     )
 
 
+def test_sparse_wide_and_independent_results():
+    root = BinaryNode(10)
+    root.left = BinaryNode(20); root.right = BinaryNode(30)
+    root.left.right = BinaryNode(40); root.right.left = BinaryNode(50)
+    root.left.right.left = BinaryNode(60); root.right.left.right = BinaryNode(70)
+    check("sparse mixed tree", level_order(root), [10, 20, 30, 40, 50, 60, 70])
+    check("interior subtree", level_order(root.left), [20, 40, 60])
+    first = level_order(root)
+    first.clear()
+    check("returned lists are independent", level_order(root), [10, 20, 30, 40, 50, 60, 70])
+    chain = BinaryNode(0)
+    cursor = chain
+    for i in range(1, 201):
+        cursor.right = BinaryNode(i)
+        cursor = cursor.right
+    check("long right-only tree", level_order(chain), list(range(201)))
+
+
+def test_hundred_thousand_node_complete_tree():
+    count = 100_000
+    nodes = [BinaryNode(i) for i in range(count)]
+    for i, node in enumerate(nodes):
+        left = 2 * i + 1
+        right = left + 1
+        if left < count:
+            node.left = nodes[left]
+        if right < count:
+            node.right = nodes[right]
+    check_summary("100,000-node level-order traversal", level_order(nodes[0]) == list(range(count)))
+
+
 test_level_order()
+test_sparse_wide_and_independent_results()
+test_hundred_thousand_node_complete_tree()
+if failures:
+    raise SystemExit(1)

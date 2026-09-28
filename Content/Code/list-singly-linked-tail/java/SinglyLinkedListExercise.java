@@ -1,4 +1,5 @@
 public class SinglyLinkedListExercise {
+    static int failures = 0;
 static class IntList {
     private static class Node {
         int value;
@@ -114,6 +115,7 @@ static void check(int actual, int expected) {
     if (actual == expected) {
         System.out.println("PASS at " + checkLocation() + ": got " + actual);
     } else {
+        failures++;
         System.out.println("FAIL at " + checkLocation() + ": expected " + expected + " but got " + actual);
     }
 }
@@ -122,6 +124,7 @@ static void check(boolean actual, boolean expected) {
     if (actual == expected) {
         System.out.println("PASS at " + checkLocation() + ": got " + actual);
     } else {
+        failures++;
         System.out.println("FAIL at " + checkLocation() + ": expected " + expected + " but got " + actual);
     }
 }
@@ -216,7 +219,34 @@ static void testList() {
     check(largeOk && large.isEmpty(), true);
 }
 
+static void testLargeIndexedWorkload() {
+    IntList list = new IntList();
+    for (int i = 0; i < 200; i++) check(list.addLast(i % 17), true);
+    check(list.size(), 200); check(list.first(), 0); check(list.last(), 12);
+    check(list.insert(100, 999), true); check(list.get(100), 999); check(list.size(), 201);
+    check(list.remove(100), 999); check(list.size(), 200);
+    check(list.indexOf(5), 5); check(list.delete(5), true); check(list.indexOf(5), 21);
+    check(list.set(0, 777), true); check(list.get(0), 777);
+    for (int i = 0; i < 199; i++) list.removeLast();
+    check(list.size(), 0); check(list.addFirst(42), true); check(list.removeFirst(), 42);
+    check(list.isEmpty(), true); check(list.last(), -1);
+}
+
+static void testHundredThousandEndpointOperations() {
+    final int count = 100_000;
+    IntList list = new IntList();
+    boolean ok = true;
+    for (int i = 0; i < count; i++) ok &= list.addLast(i);
+    ok &= list.size() == count && list.first() == 0 && list.last() == count - 1;
+    for (int i = 0; i < count; i++) ok &= list.removeFirst() == i;
+    check(ok && list.isEmpty() && list.size() == 0 && list.first() == -1 && list.last() == -1, true);
+}
+
 public static void main(String[] args) {
     testList();
+    testLargeIndexedWorkload();
+    testHundredThousandEndpointOperations();
+    System.out.println(failures == 0 ? "All tests passed." : failures + " test(s) failed.");
+    if (failures > 0) System.exit(1);
 }
 }

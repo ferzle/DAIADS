@@ -4,6 +4,7 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 using namespace std;
 
@@ -218,12 +219,51 @@ void testOnlyLeftChildAndNegativeKeys() {
                   "maximum is correct for negative keys");
 }
 
+void testLargeDeterministicDrain() {
+    std::vector<int> expected(1000);
+    long long state = 0x5EED;
+    FixedCapacityMaxHeap heap(static_cast<int>(expected.size()));
+    for (int i = 0; i < static_cast<int>(expected.size()); i++) {
+        state = (state * 1103515245 + 12345) & 0x7fffffff;
+        expected[i] = static_cast<int>(state % 2001) - 1000;
+        check(heap.insert(expected[i]), true, "large insert");
+        check(heap.hasValidHeapOrder(), true, "heap order after large insert");
+    }
+    std::sort(expected.begin(), expected.end());
+    for (int i = static_cast<int>(expected.size()) - 1; i >= 0; i--) {
+        checkOptional(heap.extractMax(), expected[i], "large extraction");
+        check(heap.hasValidHeapOrder(), true, "heap order after large extraction");
+    }
+    check(heap.isEmpty(), true, "empty after large drain");
+    check(heap.insert(42), true, "reuse after large drain");
+    checkOptional(heap.extractMax(), 42, "extract reused value");
+}
+
+void testHundredThousandAggregateOperations() {
+    const int count = 100000;
+    std::vector<int> expected(count);
+    long long state = 0xC0FFEE;
+    FixedCapacityMaxHeap heap(count);
+    bool ok = true;
+    for (int i = 0; i < count; i++) {
+        state = (state * 1103515245 + 12345) & 0x7fffffff;
+        expected[i] = static_cast<int>(state);
+        ok = heap.insert(expected[i]) && ok;
+    }
+    std::sort(expected.begin(), expected.end());
+    for (int i = count - 1; i >= 0; i--) ok = heap.extractMax().value_or(-1) == expected[i] && ok;
+    check(ok && heap.isEmpty() && heap.hasValidHeapOrder(), true,
+          "100,000 aggregate insertions and extractions");
+}
+
 int main() {
     testCoreOperations();
     testOnlyLeftChildAndNegativeKeys();
+    testLargeDeterministicDrain();
+    testHundredThousandAggregateOperations();
     cout << (failures == 0
         ? "All tests passed."
         : to_string(failures) + " test(s) failed.")
          << '\n';
-    return 0;
+    return failures == 0 ? 0 : 1;
 }

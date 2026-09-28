@@ -1,4 +1,5 @@
 public class DoublyLinkedDequeExercise {
+    static int failures = 0;
 static class IntDeque {
     private static class Node {
         int value;
@@ -65,6 +66,28 @@ static class IntDeque {
         // TODO
         return -1;
     }
+
+    public boolean hasValidStructureForTesting() {
+        if ((front == null) != (back == null)) return false;
+        if (front != null && front.prev != null) return false;
+        if (back != null && back.next != null) return false;
+        int reachable = 0;
+        Node previous = null;
+        for (Node node = front; node != null; node = node.next) {
+            if (node.prev != previous || reachable > count) return false;
+            previous = node;
+            reachable++;
+        }
+        if (previous != back || reachable != count) return false;
+        int backward = 0;
+        Node next = null;
+        for (Node node = back; node != null; node = node.prev) {
+            if (node.next != next || backward > count) return false;
+            next = node;
+            backward++;
+        }
+        return next == front && backward == count;
+    }
 }
 
 static String checkLocation() {
@@ -76,6 +99,7 @@ static void check(int actual, int expected) {
     if (actual == expected) {
         System.out.println("PASS at " + checkLocation() + ": got " + actual);
     } else {
+        failures++;
         System.out.println("FAIL at " + checkLocation() + ": expected " + expected + " but got " + actual);
     }
 }
@@ -84,6 +108,7 @@ static void check(boolean actual, boolean expected) {
     if (actual == expected) {
         System.out.println("PASS at " + checkLocation() + ": got " + actual);
     } else {
+        failures++;
         System.out.println("FAIL at " + checkLocation() + ": expected " + expected + " but got " + actual);
     }
 }
@@ -111,6 +136,7 @@ static void testDeque() {
     check(deque.size(), 4);
     check(deque.peekFront(), 2);
     check(deque.peekBack(), 9);
+    check(deque.hasValidStructureForTesting(), true);
 
     check(deque.removeFront(), 2);       // [4, 7, 9]
     check(deque.peekFront(), 4);
@@ -144,6 +170,7 @@ static void testDeque() {
     check(deque.size(), 0);
     check(deque.peekFront(), -1);
     check(deque.peekBack(), -1);
+    check(deque.hasValidStructureForTesting(), true);
     check(deque.removeFront(), -1);
     check(deque.removeBack(), -1);
 
@@ -178,7 +205,40 @@ static void testDeque() {
     check(transitionOk, true);
 }
 
+static void testLargeMixedRuns() {
+    IntDeque deque = new IntDeque();
+    for (int round = 0; round < 20; round++) {
+        for (int i = 0; i < 100; i++) {
+            check(deque.addFront(round * 1000 + i), true);
+            check(deque.addBack(round * 1000 + 500 + i), true);
+        }
+        check(deque.size(), 200);
+        for (int i = 99; i >= 0; i--) check(deque.removeFront(), round * 1000 + i);
+        for (int i = 99; i >= 0; i--) check(deque.removeBack(), round * 1000 + 500 + i);
+        check(deque.isEmpty(), true);
+    }
+    deque.addFront(7); deque.clear();
+    check(deque.isEmpty(), true); check(deque.peekFront(), -1); check(deque.peekBack(), -1);
+    check(deque.addBack(8), true); check(deque.removeFront(), 8);
+}
+
+static void testLargeAggregateWorkload() {
+    final int n = 100_000;
+    IntDeque deque = new IntDeque();
+    boolean ok = true;
+    for (int i = 0; i < n; i++) ok &= deque.addBack(i);
+    ok &= deque.size() == n && deque.peekFront() == 0
+            && deque.peekBack() == n - 1 && deque.hasValidStructureForTesting();
+    for (int i = 0; i < n; i++) ok &= deque.removeFront() == i;
+    ok &= deque.isEmpty() && deque.hasValidStructureForTesting();
+    check(ok, true);
+}
+
 public static void main(String[] args) {
     testDeque();
+    testLargeMixedRuns();
+    testLargeAggregateWorkload();
+    System.out.println(failures == 0 ? "All tests passed." : failures + " test(s) failed.");
+    if (failures > 0) System.exit(1);
 }
 }

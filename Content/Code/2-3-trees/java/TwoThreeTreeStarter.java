@@ -12,6 +12,7 @@ import java.util.TreeSet;
  * a nonroot node may temporarily contain zero keys and one child.
  */
 public class TwoThreeTreeStarter {
+    private static int failures = 0;
     private static class Node {
         // A valid node uses one or two keys and zero, two, or three
         // children. The extra slots hold the temporary overflow created
@@ -365,6 +366,7 @@ public class TwoThreeTreeStarter {
     // ---------------------------- Tests ----------------------------
 
     private static void check(boolean condition, String description) {
+        if (!condition) failures++;
         System.out.println((condition ? "pass: " : "FAIL: ") + description);
     }
 
@@ -500,7 +502,40 @@ public class TwoThreeTreeStarter {
         check(randomTree.height() == -1, "empty tree has height -1");
     }
 
+    private static void testLargeDifferentialUpdates() {
+        TwoThreeTreeStarter tree = new TwoThreeTreeStarter();
+        TreeSet<Integer> expected = new TreeSet<>();
+        long state = 0x5EEDL;
+        for (int operation = 0; operation < 3000; operation++) {
+            state = (state * 1103515245 + 12345) & 0x7fffffffL;
+            int key = (int) (state % 1500);
+            boolean actual = operation % 3 == 0 ? tree.remove(key) : tree.insert(key);
+            boolean oracle = operation % 3 == 0 ? expected.remove(key) : expected.add(key);
+            check(actual == oracle, "large operation result " + operation);
+            check(tree.inorderValues().equals(new ArrayList<>(expected)), "large contents after operation " + operation);
+            check(tree.hasValidStructure(), "large structure after operation " + operation);
+        }
+        for (int key : new ArrayList<>(expected)) check(tree.remove(key), "large final drain key " + key);
+        check(tree.isEmpty() && tree.hasValidStructure(), "valid empty tree after large drain");
+    }
+
+    private static void testTwentyThousandOrderedKeys() {
+        final int count = 20_000;
+        TwoThreeTreeStarter tree = new TwoThreeTreeStarter();
+        boolean ok = true;
+        for (int key = 0; key < count; key++) ok &= tree.insert(key);
+        for (int key = 0; key < count; key++) ok &= tree.contains(key);
+        ok &= tree.size() == count && tree.hasValidStructure();
+        for (int key = 0; key < count; key += 2) ok &= tree.remove(key);
+        for (int key = 0; key < count; key++) ok &= tree.contains(key) == (key % 2 == 1);
+        ok &= tree.size() == count / 2 && tree.hasValidStructure();
+        check(ok, "20,000-key ordered insert/search and 10,000-key removal workload");
+    }
+
     public static void main(String[] args) {
         runTests();
+        testLargeDifferentialUpdates();
+        testTwentyThousandOrderedKeys();
+        if (failures > 0) System.exit(1);
     }
 }

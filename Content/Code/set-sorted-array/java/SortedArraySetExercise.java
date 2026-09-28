@@ -129,10 +129,25 @@ public class SortedArraySetExercise {
         check(set.add(5), true, "set can be reused after clear");
     }
 
+    private static void testLargeOrderedWorkload() {
+        SortedArrayIntSet set = new SortedArrayIntSet(1);
+        for (int i = 999; i >= 0; i--) check(set.add(i), true, "descending add " + i);
+        check(set.size(), 1000, "size after descending additions");
+        int[] ordered = set.toArray();
+        for (int i = 0; i < 1000; i++) check(ordered[i], i, "sorted position " + i);
+        for (int i = 0; i < 1000; i += 2) check(set.remove(i), true, "remove key " + i);
+        check(set.size(), 500, "size after removing even keys");
+        for (int i = 0; i < 1000; i++)
+            check(set.contains(i), i % 2 == 1, "membership after removals for " + i);
+        set.clear(); check(set.add(42), true, "reuse after clear");
+    }
+
     public static void main(String[] args) {
         testSet();
+        testLargeOrderedWorkload();
         System.out.println(failures == 0
                 ? "All tests passed."
                 : failures + " test(s) failed.");
+        if (failures > 0) System.exit(1);
     }
 }

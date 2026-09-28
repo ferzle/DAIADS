@@ -111,11 +111,16 @@ class IntDoublyList:
         return -1
 
 
+failures = 0
+
+
 def check(actual, expected):
+    global failures
     line = inspect.currentframe().f_back.f_lineno
     if actual == expected:
         print(f"PASS at test line {line}: got {actual!r}")
     else:
+        failures += 1
         print(f"FAIL at test line {line}: expected {expected!r} but got {actual!r}")
 
 
@@ -179,4 +184,32 @@ def test_doubly_list():
     check(lst.size(), 4)
 
 
+def test_large_drain_and_endpoint_helpers():
+    lst = IntDoublyList()
+    half = 50_000
+    for value in range(half):
+        lst.insert_at_tail(value)
+    ok = lst.size() == half
+    ok = all(lst.delete_from_head() == value for value in range(half)) and ok
+    for value in range(half):
+        lst.insert_at_head(value)
+    ok = lst.size() == half and ok
+    ok = all(lst.delete_from_tail() == value for value in range(half)) and ok
+    check(ok, True)
+    check(lst.is_empty(), True)
+    check(lst.traverse_forward(), "")
+    check(lst.traverse_backward(), "")
+    for _ in range(3):
+        lst.insert_at_tail(7)
+    first = lst.search_forward(7)
+    lst.insert_before(first, 6)
+    lst.insert_after(first, 8)
+    check(lst.traverse_forward(), "6 -> 7 -> 8 -> 7 -> 7")
+    check(lst.traverse_backward(), "7 -> 7 -> 8 -> 7 -> 6")
+
+
 test_doubly_list()
+test_large_drain_and_endpoint_helpers()
+
+if failures:
+    raise SystemExit(1)

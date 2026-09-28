@@ -51,6 +51,19 @@ def expect_exception(action, exception_type):
         pass
 
 
+def test_large_mixed_sequence():
+    lst = LinkedSequence()
+    count = 100_000
+    for value in range(count):
+        lst.insert_at_head(value)
+    tail = lst.search(0)
+    check(tail is not None and tail.data == 0, True)
+    ok = all(lst.delete_at_head() == expected for expected in range(count - 1, -1, -1))
+    check(ok, True)
+    check(lst.traverse(), "")
+    expect_exception(lambda: lst.delete_at_head(), IndexError)
+
+
 def test_linked_sequence():
     lst = LinkedSequence()
 
@@ -89,6 +102,8 @@ def test_linked_sequence():
     check(lst.delete_at_head(), 4)
     check(lst.traverse(), "")
     expect_exception(lambda: lst.delete_at_head(), IndexError)
+
+    test_large_mixed_sequence()
 
     print("All tests passed.")
 

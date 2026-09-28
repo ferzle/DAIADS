@@ -91,8 +91,23 @@ public class UnsortedArrayMapExercise {
         check(map.isEmpty() && map.put(5, 50).isEmpty(), "clear and reuse");
     }
 
+    private static void testLargeMixedWorkload() {
+        UnsortedArrayIntMap map = new UnsortedArrayIntMap(1);
+        for (int key = 0; key < 1000; key++) check(map.put(key, key * 3).isEmpty(), "insert key " + key);
+        check(map.size() == 1000, "size after 1000 inserts");
+        for (int key = 0; key < 1000; key++) check(map.get(key).orElse(-1) == key * 3, "get key " + key);
+        for (int key = 0; key < 1000; key += 3) check(map.put(key, -key).orElse(-1) == key * 3, "replace key " + key);
+        check(map.size() == 1000, "replacement preserves size");
+        for (int key = 0; key < 1000; key += 2) check(map.remove(key).isPresent(), "remove key " + key);
+        check(map.size() == 500, "size after removing even keys");
+        for (int key = 0; key < 1000; key++) check(map.containsKey(key) == (key % 2 == 1), "membership for key " + key);
+        map.clear(); check(map.isEmpty() && map.put(7, 0).isEmpty() && map.get(7).orElse(-1) == 0, "clear and reuse with stored zero");
+    }
+
     public static void main(String[] args) {
         testMap();
+        testLargeMixedWorkload();
         System.out.println(failures == 0 ? "All tests passed." : failures + " test(s) failed.");
+        if (failures > 0) System.exit(1);
     }
 }

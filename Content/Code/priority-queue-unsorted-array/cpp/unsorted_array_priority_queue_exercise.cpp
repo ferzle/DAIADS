@@ -2,6 +2,7 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 using namespace std;
 
@@ -101,6 +102,15 @@ public:
         // The same steps must work when the best entry is already last.
         return nullopt;
     }
+
+    vector<string> entriesForTesting() const {
+        vector<string> result;
+        for (int i = 0; i < count; ++i) {
+            result.push_back(entries[i].value + ":" + to_string(entries[i].priorityKey)
+                             + "#" + to_string(entries[i].sequenceNumber));
+        }
+        return result;
+    }
 };
 
 int failures = 0;
@@ -165,6 +175,9 @@ void testGapFillingAndStability() {
     queue.insert("C", 4);
     queue.insert("D", 3);
     queue.insert("E", 1);
+    check(queue.entriesForTesting() == vector<string>({
+              "A:5#0", "B:1#1", "C:4#2", "D:3#3", "E:1#4"}),
+          true, "insertions append entries with increasing sequence numbers");
 
     check(queue.size(), 5, "resizing preserves all entries");
     checkEntry(queue.peek(), "B", 1, "peek returns earliest best entry");
@@ -172,6 +185,9 @@ void testGapFillingAndStability() {
 
     // B is not last, so extracting it must fill an interior gap.
     checkEntry(queue.extract(), "B", 1, "interior-gap extraction");
+    check(queue.entriesForTesting() == vector<string>({
+              "A:5#0", "E:1#4", "C:4#2", "D:3#3"}),
+          true, "last entry fills the extracted interior gap");
     checkEntry(queue.extract(), "E", 1, "stable tied-key extraction");
     checkEntry(queue.extract(), "D", 3, "replacement remains searchable");
     checkEntry(queue.extract(), "C", 4, "next extraction");
@@ -192,12 +208,23 @@ void testBestEntryAlreadyLast() {
     checkEntry(queue.extract(), "Y", 6, "remaining entries stay valid");
 }
 
+void testLargeStableDrain() {
+    UnsortedArrayMinPriorityQueue queue(1);
+    for (int i = 0; i < 500; i++) queue.insert("v" + std::to_string(i), i % 17);
+    check(queue.size(), 500, "size after large insertion");
+    for (int priority = 0; priority < 17; priority++)
+        for (int i = priority; i < 500; i += 17)
+            checkEntry(queue.extract(), "v" + std::to_string(i), priority, "stable large extraction");
+    check(queue.isEmpty(), true, "empty after large drain"); checkEmpty(queue.extract(), "extract after large drain");
+}
+
 int main() {
     testGapFillingAndStability();
     testBestEntryAlreadyLast();
+    testLargeStableDrain();
     cout << (failures == 0
         ? "All tests passed."
         : to_string(failures) + " test(s) failed.")
          << '\n';
-    return 0;
+    return failures == 0 ? 0 : 1;
 }

@@ -1,4 +1,5 @@
 public class DoublyLinkedListExercise {
+    static int failures = 0;
     static class IntDoublyList {
         private static class Node {
             int value;
@@ -140,6 +141,7 @@ public class DoublyLinkedListExercise {
         if (actual.equals(expected)) {
             System.out.println("PASS at " + checkLocation() + ": got \"" + actual + "\"");
         } else {
+            failures++;
             System.out.println("FAIL at " + checkLocation() + ": expected \"" + expected + "\" but got \"" + actual + "\"");
         }
     }
@@ -148,6 +150,7 @@ public class DoublyLinkedListExercise {
         if (actual == expected) {
             System.out.println("PASS at " + checkLocation() + ": got " + actual);
         } else {
+            failures++;
             System.out.println("FAIL at " + checkLocation() + ": expected " + expected + " but got " + actual);
         }
     }
@@ -156,6 +159,7 @@ public class DoublyLinkedListExercise {
         if (actual == expected) {
             System.out.println("PASS at " + checkLocation() + ": got " + actual);
         } else {
+            failures++;
             System.out.println("FAIL at " + checkLocation() + ": expected " + expected + " but got " + actual);
         }
     }
@@ -220,7 +224,29 @@ public class DoublyLinkedListExercise {
         check(list.size(), 4);
     }
 
+    static void testLargeDrainAndEndpointHelpers() {
+        IntDoublyList list = new IntDoublyList();
+        final int half = 50_000;
+        boolean ok = true;
+        for (int i = 0; i < half; i++) list.insertAtTail(i);
+        ok &= list.size() == half;
+        for (int i = 0; i < half; i++) ok &= list.deleteFromHead() == i;
+        for (int i = 0; i < half; i++) list.insertAtHead(i);
+        ok &= list.size() == half;
+        for (int i = 0; i < half; i++) ok &= list.deleteFromTail() == i;
+        check(ok, true);
+        check(list.isEmpty(), true); check(list.traverseForward(), ""); check(list.traverseBackward(), "");
+        list.insertAtTail(7); list.insertAtTail(7); list.insertAtTail(7);
+        IntDoublyList.Node first = list.searchForward(7);
+        list.insertBefore(first, 6); list.insertAfter(first, 8);
+        check(list.traverseForward(), "6 -> 7 -> 8 -> 7 -> 7");
+        check(list.traverseBackward(), "7 -> 7 -> 8 -> 7 -> 6");
+    }
+
     public static void main(String[] args) {
         testDoublyList();
+        testLargeDrainAndEndpointHelpers();
+        System.out.println(failures == 0 ? "All tests passed." : failures + " test(s) failed.");
+        if (failures > 0) System.exit(1);
     }
 }

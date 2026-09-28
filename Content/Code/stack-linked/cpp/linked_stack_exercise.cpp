@@ -1,6 +1,8 @@
 #include <iostream>
 using namespace std;
 
+
+int failures = 0;
 class IntStack {
 private:
     struct Node {
@@ -53,12 +55,26 @@ public:
         // TODO
         return -1;
     }
+
+    bool hasValidStructureForTesting() const {
+        Node* slow = head;
+        Node* fast = head;
+        while (fast != nullptr && fast->next != nullptr) {
+            slow = slow->next;
+            fast = fast->next->next;
+            if (slow == fast) return false;
+        }
+        int reachable = 0;
+        for (Node* node = head; node != nullptr; node = node->next) ++reachable;
+        return reachable == count;
+    }
 };
 
 void checkAtLine(int actual, int expected, int line, const char* expression) {
     if (actual == expected) {
         cout << "pass" << endl;
     } else {
+        ++failures;
         cout << "fail at test line " << line << " (" << expression
              << "): expected " << expected << " but got " << actual << endl;
     }
@@ -68,6 +84,7 @@ void checkAtLine(bool actual, bool expected, int line, const char* expression) {
     if (actual == expected) {
         cout << "pass" << endl;
     } else {
+        ++failures;
         cout << "fail at test line " << line << " (" << expression
              << "): expected " << (expected ? "true" : "false")
              << " but got " << (actual ? "true" : "false") << endl;
@@ -98,6 +115,7 @@ void testStack() {
     stack.push(9);
     check(stack.size(), 3);
     check(stack.peek(), 9);
+    check(stack.hasValidStructureForTesting(), true);
 
     check(stack.pop(), 9);
     check(stack.size(), 2);
@@ -112,6 +130,7 @@ void testStack() {
     check(stack.pop(), 4);
     check(stack.size(), 0);
     check(stack.isEmpty(), true);
+    check(stack.hasValidStructureForTesting(), true);
 
     check(stack.pop(), -1);
     check(stack.peek(), -1);
@@ -126,7 +145,38 @@ void testStack() {
     check(stack.isEmpty(), true);
 }
 
+void testLongRunsAndRepeatedReuse() {
+    IntStack stack;
+    for (int round = 0; round < 25; round++) {
+        check(stack.isEmpty(), true);
+        for (int i = 0; i < 200; i++) {
+            stack.push(round * 1000 + i);
+            check(stack.size(), i + 1);
+            check(stack.peek(), round * 1000 + i);
+        }
+        for (int i = 199; i >= 0; i--) {
+            check(stack.pop(), round * 1000 + i);
+            check(stack.size(), i);
+        }
+        check(stack.pop(), -1);
+        check(stack.isEmpty(), true);
+    }
+}
+
+void testLargeAggregateWorkload() {
+    const int n = 100000;
+    IntStack stack;
+    for (int i = 0; i < n; ++i) stack.push(i);
+    bool ok = stack.size() == n && stack.peek() == n - 1
+        && stack.hasValidStructureForTesting();
+    for (int i = n - 1; i >= 0; --i) ok = (stack.pop() == i) && ok;
+    ok = stack.isEmpty() && stack.hasValidStructureForTesting() && ok;
+    check(ok, true);
+}
+
 int main() {
     testStack();
-    return 0;
+    testLongRunsAndRepeatedReuse();
+    testLargeAggregateWorkload();
+    return failures == 0 ? 0 : 1;
 }

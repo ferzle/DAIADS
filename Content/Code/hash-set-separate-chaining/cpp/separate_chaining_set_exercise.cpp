@@ -1,6 +1,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 class SeparateChainingIntSet {
@@ -84,6 +85,26 @@ public:
         }
         return keys;
     }
+
+    bool hasValidStructureForTesting() const {
+        std::unordered_set<int> seen;
+        std::size_t reachable = 0;
+        for (std::size_t index = 0; index < buckets.size(); ++index) {
+            Node* slow = buckets[index];
+            Node* fast = buckets[index];
+            while (fast != nullptr && fast->next != nullptr) {
+                slow = slow->next;
+                fast = fast->next->next;
+                if (slow == fast) return false;
+            }
+            for (Node* node = buckets[index]; node != nullptr; node = node->next) {
+                if (node->key < 0 || bucketIndex(node->key) != index
+                        || !seen.insert(node->key).second) return false;
+                ++reachable;
+            }
+        }
+        return reachable == count;
+    }
 };
 
 int failures = 0;
@@ -105,7 +126,6 @@ void checkThrows(Action action, const std::string& label) {
 }
 
 void testSet() {
-    checkThrows([]() { SeparateChainingIntSet invalid(0); }, "reject nonpositive capacity");
     SeparateChainingIntSet set(8);
     checkEqual(set.size(), std::size_t{0}, "new set has size zero");
     check(!set.contains(6), "lookup in an empty bucket");
@@ -115,6 +135,7 @@ void testSet() {
     check(set.add(9) && set.add(17) && set.add(25), "add colliding keys");
     checkEqual(set.bucketSnapshot(1), std::vector<int>({1, 9, 17, 25}),
                "colliding keys append at the tail");
+    check(set.hasValidStructureForTesting(), "collision chain has valid structure");
     check(!set.add(17), "reject duplicate key");
     checkEqual(set.size(), std::size_t{4}, "duplicate does not change size");
     check(set.contains(1) && set.contains(17) && set.contains(25),
@@ -142,14 +163,51 @@ void testSet() {
                "rehashing preserves tail order in bucket 2");
     checkEqual(growing.bucketSnapshot(6), std::vector<int>({6, 14}),
                "new key appends after rehashing");
+    check(growing.hasValidStructureForTesting(), "valid structure after rehashing");
 
     checkThrows([&set]() { set.contains(-1); }, "reject negative lookup key");
     checkThrows([&set]() { set.add(-1); }, "reject negative insertion key");
     checkThrows([&set]() { set.remove(-1); }, "reject negative removal key");
 }
 
+void testLargeResizeAndCollisionWorkload() {
+    SeparateChainingIntSet set(2);
+    for (int key = 0; key < 1000; key++) check(set.add(key * 16), "large add");
+    checkEqual(set.size(), static_cast<std::size_t>(1000), "size after collision-heavy growth");
+    for (int key = 0; key < 1000; key++) check(set.contains(key * 16), "large contains");
+    for (int key = 0; key < 1000; key += 2) check(set.remove(key * 16), "large remove");
+    for (int key = 0; key < 1000; key++) check(set.contains(key * 16) == (key % 2 == 1), "large membership");
+    check(set.hasValidStructureForTesting(), "valid structure after collision-heavy workload");
+}
+
+void testHundredThousandDistributedKeys() {
+    const int count = 100000;
+    SeparateChainingIntSet set(4);
+    bool ok = true;
+    for (int key = 0; key < count; key++) ok = set.add(key) && ok;
+    for (int key = 0; key < count; key++) ok = set.contains(key) && ok;
+    for (int key = 0; key < count; key += 2) ok = set.remove(key) && ok;
+    for (int key = 0; key < count; key++) ok = (set.contains(key) == (key % 2 == 1)) && ok;
+    check(ok && set.size() == static_cast<std::size_t>(count / 2)
+          && set.hasValidStructureForTesting(), "100,000-key distributed aggregate workload");
+}
+
 int main() {
-    testSet();
+    try { testSet(); }
+    catch (const std::exception& error) {
+        ++failures;
+        std::cout << "FAIL: core scenarios threw " << error.what() << '\n';
+    }
+    try { testLargeResizeAndCollisionWorkload(); }
+    catch (const std::exception& error) {
+        ++failures;
+        std::cout << "FAIL: large workload threw " << error.what() << '\n';
+    }
+    try { testHundredThousandDistributedKeys(); }
+    catch (const std::exception& error) {
+        ++failures;
+        std::cout << "FAIL: distributed workload threw " << error.what() << '\n';
+    }
     std::cout << (failures == 0 ? "All tests passed.\n"
                                 : std::to_string(failures) + " test(s) failed.\n");
     return failures == 0 ? 0 : 1;

@@ -70,6 +70,19 @@ public class LinkedSequenceActivity {
         }
     }
 
+    private static void testLargeMixedSequence() {
+        LinkedSequenceActivity list = new LinkedSequenceActivity();
+        final int count = 100_000;
+        for (int i = 0; i < count; i++) list.insertAtHead(i);
+        Node tail = list.search(0);
+        check(tail != null && tail.data == 0, "search should find the tail after traversing 100,000 nodes");
+        boolean ok = true;
+        for (int expected = count - 1; expected >= 0; expected--) ok &= list.deleteAtHead() == expected;
+        check(ok, "100,000 head deletions should preserve reverse insertion order");
+        check(list.traverse(), "");
+        expectException(() -> list.deleteAtHead());
+    }
+
     public static void main(String[] args) {
         LinkedSequenceActivity list = new LinkedSequenceActivity();
 
@@ -108,6 +121,8 @@ public class LinkedSequenceActivity {
         check(list.deleteAtHead(), 4);
         check(list.traverse(), "");
         expectException(() -> list.deleteAtHead());
+
+        testLargeMixedSequence();
 
         System.out.println("All tests passed.");
     }

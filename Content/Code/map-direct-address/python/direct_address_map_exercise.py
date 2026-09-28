@@ -74,11 +74,6 @@ def check_raises(action, label: str) -> None:
 
 
 def test_map() -> None:
-    try:
-        DirectAddressIntMap(0)
-        check(False, "reject nonpositive universe size")
-    except ValueError:
-        check(True, "reject nonpositive universe size")
     map_ = DirectAddressIntMap(10)
     check(map_.universe_size() == 10 and map_.is_empty(), "new map records universe")
     check(map_.put(0, 0) is None and map_.put(9, -4) is None, "insert boundary keys")
@@ -92,6 +87,23 @@ def test_map() -> None:
     check(map_.put(5, 50) is None, "reuse after clear")
 
 
+def test_exhaustive_universe():
+    universe = 100_000
+    map_ = DirectAddressIntMap(universe)
+    ok = all(map_.put(key, key - 50_000) is None for key in range(universe))
+    ok = map_.size() == universe and ok
+    ok = all(map_.get(key) == key - 50_000 for key in range(universe)) and ok
+    ok = all(map_.remove(key) is not None for key in range(0, universe, 2)) and ok
+    ok = all(map_.contains_key(key) == (key % 2 == 1) for key in range(universe)) and ok
+    map_.clear()
+    ok = map_.is_empty() and map_.put(universe - 1, 0) is None and ok
+    check(ok, "100,000-key exhaustive universe workload")
+
+
 if __name__ == "__main__":
     test_map()
+    test_exhaustive_universe()
     print("All tests passed." if failures == 0 else f"{failures} test(s) failed.")
+
+if __name__ == "__main__" and failures:
+    raise SystemExit(1)

@@ -1,6 +1,9 @@
 #include <iostream>
+#include <vector>
 using namespace std;
 
+
+int failures = 0;
 class IntStack {
 private:
     int* A;
@@ -47,12 +50,17 @@ public:
         // TODO
         return -1;
     }
+
+    vector<int> usedValuesForTesting() const {
+        return vector<int>(A, A + top + 1);
+    }
 };
 
 void checkAtLine(int actual, int expected, int line, const char* expression) {
     if (actual == expected) {
         cout << "pass" << endl;
     } else {
+        ++failures;
         cout << "fail at test line " << line << " (" << expression
              << "): expected " << expected << " but got " << actual << endl;
     }
@@ -62,6 +70,7 @@ void checkAtLine(bool actual, bool expected, int line, const char* expression) {
     if (actual == expected) {
         cout << "pass" << endl;
     } else {
+        ++failures;
         cout << "fail at test line " << line << " (" << expression
              << "): expected " << (expected ? "true" : "false")
              << " but got " << (actual ? "true" : "false") << endl;
@@ -96,6 +105,7 @@ void testStack() {
     check(stack.peek(), 2);
 
     check(stack.push(5), false);
+    check(stack.usedValuesForTesting() == vector<int>({4, 7, 9, 2}), true);
     check(stack.size(), 4);
     check(stack.peek(), 2);
 
@@ -106,6 +116,7 @@ void testStack() {
     check(stack.size(), 2);
 
     check(stack.push(6), true);
+    check(stack.usedValuesForTesting() == vector<int>({4, 7, 6}), true);
     check(stack.size(), 3);
     check(stack.peek(), 6);
 
@@ -123,7 +134,44 @@ void testStack() {
     check(stack.size(), 0);
 }
 
+void testBoundarySizesAndReuse() {
+    for (int capacity : {1, 2, 5, 32}) {
+        IntStack stack(capacity);
+        check(stack.isEmpty(), true);
+        check(stack.isFull(), false);
+        for (int i = 0; i < capacity; i++) {
+            check(stack.push(1000 + i), true);
+            check(stack.size(), i + 1);
+            check(stack.peek(), 1000 + i);
+        }
+        check(stack.isFull(), true);
+        check(stack.push(9999), false);
+        check(stack.size(), capacity);
+        for (int i = capacity - 1; i >= 0; i--) {
+            check(stack.pop(), 1000 + i);
+            check(stack.size(), i);
+        }
+        check(stack.isEmpty(), true);
+        check(stack.push(77), true);
+        check(stack.pop(), 77);
+        check(stack.isEmpty(), true);
+    }
+}
+
+void testLargeAggregateWorkload() {
+    const int n = 100000;
+    IntStack stack(n);
+    bool ok = true;
+    for (int i = 0; i < n; ++i) ok = stack.push(i) && ok;
+    ok = stack.size() == n && stack.isFull() && stack.peek() == n - 1 && ok;
+    for (int i = n - 1; i >= 0; --i) ok = (stack.pop() == i) && ok;
+    ok = stack.isEmpty() && stack.size() == 0 && ok;
+    check(ok, true);
+}
+
 int main() {
     testStack();
-    return 0;
+    testBoundarySizesAndReuse();
+    testLargeAggregateWorkload();
+    return failures == 0 ? 0 : 1;
 }

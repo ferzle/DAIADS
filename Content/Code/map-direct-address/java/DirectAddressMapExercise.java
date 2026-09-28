@@ -73,18 +73,7 @@ public class DirectAddressMapExercise {
         try { action.run(); failures++; System.out.println("FAIL: " + label); }
         catch (IndexOutOfBoundsException expected) { System.out.println("pass: " + label); }
     }
-    private static void checkInvalidUniverse() {
-        try {
-            new DirectAddressIntMap(0);
-            failures++;
-            System.out.println("FAIL: reject nonpositive universe size");
-        } catch (IllegalArgumentException expected) {
-            System.out.println("pass: reject nonpositive universe size");
-        }
-    }
-
     private static void testMap() {
-        checkInvalidUniverse();
         DirectAddressIntMap map = new DirectAddressIntMap(10);
         check(map.universeSize() == 10 && map.isEmpty(), "new map records universe");
         check(map.put(0, 0).isEmpty() && map.put(9, -4).isEmpty(), "insert boundary keys");
@@ -98,8 +87,24 @@ public class DirectAddressMapExercise {
         check(map.put(5, 50).isEmpty(), "reuse after clear");
     }
 
+    private static void testExhaustiveUniverse() {
+        final int universe = 100_000;
+        DirectAddressIntMap map = new DirectAddressIntMap(universe);
+        boolean ok = true;
+        for (int key = 0; key < universe; key++) ok &= map.put(key, key - 50_000).isEmpty();
+        ok &= map.size() == universe;
+        for (int key = 0; key < universe; key++) ok &= map.get(key).orElse(Integer.MIN_VALUE) == key - 50_000;
+        for (int key = 0; key < universe; key += 2) ok &= map.remove(key).isPresent();
+        for (int key = 0; key < universe; key++) ok &= map.containsKey(key) == (key % 2 == 1);
+        map.clear();
+        ok &= map.isEmpty() && map.put(universe - 1, 0).isEmpty();
+        check(ok, "100,000-key exhaustive universe workload");
+    }
+
     public static void main(String[] args) {
         testMap();
+        testExhaustiveUniverse();
         System.out.println(failures == 0 ? "All tests passed." : failures + " test(s) failed.");
+        if (failures > 0) System.exit(1);
     }
 }

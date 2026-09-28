@@ -32,12 +32,32 @@ class IntStack:
         # TODO
         return -1
 
+    def has_valid_structure_for_testing(self):
+        slow = self.head
+        fast = self.head
+        while fast is not None and fast.next is not None:
+            slow = slow.next
+            fast = fast.next.next
+            if slow is fast:
+                return False
+        reachable = 0
+        node = self.head
+        while node is not None:
+            reachable += 1
+            node = node.next
+        return reachable == self.count
+
+
+failures = 0
+
 
 def check(actual, expected):
+    global failures
     if actual == expected:
         print("pass")
     else:
         line = inspect.currentframe().f_back.f_lineno
+        failures += 1
         print(f"fail at test line {line}: expected {expected!r} but got {actual!r}")
 
 
@@ -63,6 +83,7 @@ def test_stack():
     stack.push(9)
     check(stack.size(), 3)
     check(stack.peek(), 9)
+    check(stack.has_valid_structure_for_testing(), True)
 
     check(stack.pop(), 9)
     check(stack.size(), 2)
@@ -77,6 +98,7 @@ def test_stack():
     check(stack.pop(), 4)
     check(stack.size(), 0)
     check(stack.is_empty(), True)
+    check(stack.has_valid_structure_for_testing(), True)
 
     check(stack.pop(), -1)
     check(stack.peek(), -1)
@@ -91,4 +113,37 @@ def test_stack():
     check(stack.is_empty(), True)
 
 
+def test_long_runs_and_repeated_reuse():
+    stack = IntStack()
+    for round_number in range(25):
+        check(stack.is_empty(), True)
+        for i in range(200):
+            stack.push(round_number * 1000 + i)
+            check(stack.size(), i + 1)
+            check(stack.peek(), round_number * 1000 + i)
+        for i in range(199, -1, -1):
+            check(stack.pop(), round_number * 1000 + i)
+            check(stack.size(), i)
+        check(stack.pop(), -1)
+        check(stack.is_empty(), True)
+
+
+def test_large_aggregate_workload():
+    n = 100_000
+    stack = IntStack()
+    for value in range(n):
+        stack.push(value)
+    ok = (stack.size() == n and stack.peek() == n - 1
+          and stack.has_valid_structure_for_testing())
+    for value in range(n - 1, -1, -1):
+        ok = stack.pop() == value and ok
+    ok = stack.is_empty() and stack.has_valid_structure_for_testing() and ok
+    check(ok, True)
+
+
 test_stack()
+test_long_runs_and_repeated_reuse()
+test_large_aggregate_workload()
+
+if failures:
+    raise SystemExit(1)

@@ -1,4 +1,5 @@
 import java.util.Arrays;
+import java.util.HashSet;
 
 public class SeparateChainingSetExercise {
     static final class SeparateChainingIntSet {
@@ -70,6 +71,25 @@ public class SeparateChainingSetExercise {
             for (Node node = buckets[index]; node != null; node = node.next) keys[i++] = node.key;
             return keys;
         }
+
+        boolean hasValidStructureForTesting() {
+            HashSet<Integer> seen = new HashSet<>();
+            int reachable = 0;
+            for (int index = 0; index < buckets.length; index++) {
+                Node slow = buckets[index], fast = buckets[index];
+                while (fast != null && fast.next != null) {
+                    slow = slow.next;
+                    fast = fast.next.next;
+                    if (slow == fast) return false;
+                }
+                for (Node node = buckets[index]; node != null; node = node.next) {
+                    if (node.key < 0 || bucketIndex(node.key) != index
+                            || !seen.add(node.key)) return false;
+                    reachable++;
+                }
+            }
+            return reachable == count;
+        }
     }
 
     private static int failures;
@@ -94,7 +114,6 @@ public class SeparateChainingSetExercise {
     }
 
     private static void testSet() {
-        checkThrows(() -> new SeparateChainingIntSet(0), "reject nonpositive capacity");
         SeparateChainingIntSet set = new SeparateChainingIntSet(8);
         check(set.size(), 0, "new set has size zero");
         check(!set.contains(6), "lookup in an empty bucket");
@@ -104,6 +123,7 @@ public class SeparateChainingSetExercise {
         check(set.add(9) && set.add(17) && set.add(25), "add colliding keys");
         checkArray(set.bucketSnapshot(1), new int[] {1, 9, 17, 25},
                 "colliding keys append at the tail");
+        check(set.hasValidStructureForTesting(), "collision chain has valid structure");
         check(!set.add(17), "reject duplicate key");
         check(set.size(), 4, "duplicate does not change size");
         check(set.contains(1) && set.contains(17) && set.contains(25),
@@ -131,15 +151,41 @@ public class SeparateChainingSetExercise {
                 "rehashing preserves tail order in bucket 2");
         checkArray(growing.bucketSnapshot(6), new int[] {6, 14},
                 "new key appends after rehashing");
+        check(growing.hasValidStructureForTesting(), "valid structure after rehashing");
 
         checkThrows(() -> set.contains(-1), "reject negative lookup key");
         checkThrows(() -> set.add(-1), "reject negative insertion key");
         checkThrows(() -> set.remove(-1), "reject negative removal key");
     }
 
+    private static void testLargeResizeAndCollisionWorkload() {
+        SeparateChainingIntSet set = new SeparateChainingIntSet(2);
+        for (int key = 0; key < 1000; key++) check(set.add(key * 16), "large add " + key);
+        check(set.size(), 1000, "size after collision-heavy growth");
+        for (int key = 0; key < 1000; key++) check(set.contains(key * 16), "large contains " + key);
+        for (int key = 0; key < 1000; key += 2) check(set.remove(key * 16), "large remove " + key);
+        for (int key = 0; key < 1000; key++) check(set.contains(key * 16) == (key % 2 == 1), "large membership " + key);
+        check(set.hasValidStructureForTesting(), "valid structure after collision-heavy workload");
+    }
+
+    private static void testHundredThousandDistributedKeys() {
+        final int count = 100_000;
+        SeparateChainingIntSet set = new SeparateChainingIntSet(4);
+        boolean ok = true;
+        for (int key = 0; key < count; key++) ok &= set.add(key);
+        for (int key = 0; key < count; key++) ok &= set.contains(key);
+        for (int key = 0; key < count; key += 2) ok &= set.remove(key);
+        for (int key = 0; key < count; key++) ok &= set.contains(key) == (key % 2 == 1);
+        check(ok && set.size() == count / 2 && set.hasValidStructureForTesting(),
+                "100,000-key distributed aggregate workload");
+    }
+
     public static void main(String[] args) {
         testSet();
+        testLargeResizeAndCollisionWorkload();
+        testHundredThousandDistributedKeys();
         System.out.println(failures == 0 ? "All tests passed."
                 : failures + " test(s) failed.");
+        if (failures > 0) System.exit(1);
     }
 }

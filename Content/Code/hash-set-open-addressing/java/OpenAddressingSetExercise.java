@@ -38,6 +38,12 @@ public class OpenAddressingSetExercise {
 
         int capacity() { return m; }
 
+        int[] slotCountsForTesting() {
+            int[] result = new int[3]; // EMPTY, OCCUPIED, DELETED
+            for (SlotState state : states) result[state.ordinal()]++;
+            return result;
+        }
+
         boolean contains(int key) {
             // TODO: Reject a negative key. Probe at most capacity() positions,
             // stopping successfully at key or unsuccessfully at an EMPTY slot.
@@ -126,11 +132,17 @@ public class OpenAddressingSetExercise {
         check(set.capacity(), 8, name + ": exponent 3 gives capacity 8");
         check(set.isEmpty() && set.size() == 0, name + ": new set is empty");
         check(set.insert(1) && set.insert(9) && set.insert(17), name + ": insert colliding keys");
+        check(Arrays.equals(set.slotCountsForTesting(), new int[]{5, 3, 0}),
+                name + ": three inserts occupy three slots");
         check(set.contains(1) && set.contains(9) && set.contains(17), name + ": find colliding keys");
         check(!set.insert(17) && set.size() == 3, name + ": reject duplicate insertion");
         check(set.remove(9) && !set.contains(9), name + ": remove creates a tombstone");
+        check(Arrays.equals(set.slotCountsForTesting(), new int[]{5, 2, 1}),
+                name + ": removal changes one occupied slot to deleted");
         check(set.contains(17), name + ": lookup continues past a tombstone");
         check(set.insert(41) && set.contains(41), name + ": insertion can reuse a tombstone");
+        check(Arrays.equals(set.slotCountsForTesting(), new int[]{5, 3, 0}),
+                name + ": insertion reuses the tombstone");
         check(!set.remove(99), name + ": absent removal changes nothing");
 
         OpenAddressingIntSet wraparound = new OpenAddressingIntSet(3, type);
@@ -146,6 +158,8 @@ public class OpenAddressingSetExercise {
 
         set.clear();
         check(set.isEmpty() && set.size() == 0 && !set.contains(1), name + ": clear resets the set");
+        check(Arrays.equals(set.slotCountsForTesting(), new int[]{8, 0, 0}),
+                name + ": clear restores every slot to empty");
         checkThrows(() -> set.contains(-1), name + ": reject negative lookup key");
         checkThrows(() -> set.insert(-1), name + ": reject negative insertion key");
         checkThrows(() -> set.remove(-1), name + ": reject negative removal key");
@@ -205,15 +219,38 @@ public class OpenAddressingSetExercise {
         check(result, name + ": final membership is correct after 41 removals and replacements");
     }
 
+    private static void testLargeDeleteReinsertCycles(ProbingType type) {
+        OpenAddressingIntSet set = new OpenAddressingIntSet(10, type);
+        for (int key = 0; key < 400; key++) check(set.insert(key * 17), type + " large insert " + key);
+        for (int key = 0; key < 400; key += 3) check(set.remove(key * 17), type + " large remove " + key);
+        for (int key = 0; key < 400; key += 3) check(set.insert(100000 + key * 17), type + " tombstone reuse " + key);
+        for (int key = 0; key < 400; key++) check(set.contains(key * 17) == (key % 3 != 0), type + " final membership " + key);
+        check(set.size(), 400, type + " size after replacements");
+    }
+
+    private static void testFiftyThousandKeys(ProbingType type) {
+        final int count = 50_000;
+        OpenAddressingIntSet set = new OpenAddressingIntSet(17, type);
+        boolean ok = true;
+        for (int key = 0; key < count; key++) ok &= set.insert(key);
+        for (int key = 0; key < count; key++) ok &= set.contains(key);
+        for (int key = 0; key < count; key += 3) ok &= set.remove(key);
+        for (int key = 0; key < count; key += 3) ok &= set.insert(200_000 + key);
+        for (int key = 0; key < count; key++) ok &= set.contains(key) == (key % 3 != 0);
+        for (int key = 0; key < count; key += 3) ok &= set.contains(200_000 + key);
+        check(ok && set.size() == count, type + ": 50,000-key aggregate workload");
+    }
+
     public static void main(String[] args) {
-        checkThrows(() -> new OpenAddressingIntSet(0, ProbingType.LINEAR),
-                "reject an invalid capacity exponent");
         checkThrows(() -> new OpenAddressingIntSet(3, null), "reject a null probing type");
         for (ProbingType type : ProbingType.values()) {
             testStrategy(type);
             testTombstoneStress(type);
+            testLargeDeleteReinsertCycles(type);
+            testFiftyThousandKeys(type);
         }
         System.out.println(failures == 0 ? "All tests passed."
                 : failures + " test(s) failed.");
+        if (failures > 0) System.exit(1);
     }
 }

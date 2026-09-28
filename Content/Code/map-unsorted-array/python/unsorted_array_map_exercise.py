@@ -78,6 +78,26 @@ def test_map() -> None:
     check(map_.is_empty() and map_.put(5, 50) is None, "clear and reuse")
 
 
+def test_large_mixed_workload():
+    map_ = UnsortedArrayIntMap(1)
+    for key in range(1000):
+        check(map_.put(key, key * 3) is None, f"insert key {key}")
+    check(map_.size() == 1000, "size after 1000 inserts")
+    for key in range(1000):
+        check(map_.get(key) == key * 3, f"get key {key}")
+    for key in range(0, 1000, 3):
+        check(map_.put(key, -key) == key * 3, f"replace key {key}")
+    check(map_.size() == 1000, "replacement preserves size")
+    for key in range(0, 1000, 2):
+        check(map_.remove(key) is not None, f"remove key {key}")
+    for key in range(1000):
+        check(map_.contains_key(key) == (key % 2 == 1), f"membership for key {key}")
+
+
 if __name__ == "__main__":
     test_map()
+    test_large_mixed_workload()
     print("All tests passed." if failures == 0 else f"{failures} test(s) failed.")
+
+if __name__ == "__main__" and failures:
+    raise SystemExit(1)

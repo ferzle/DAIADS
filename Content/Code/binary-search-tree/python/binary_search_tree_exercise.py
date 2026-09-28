@@ -83,6 +83,9 @@ class BinarySearchTree:
 
       return self.check_parent_references(self.root)
 
+  def root_key_for_testing(self):
+      return None if self.root is None else self.root.key
+
   def check_parent_references(self, node):
       if node is None:
           return True
@@ -96,10 +99,15 @@ class BinarySearchTree:
       return (self.check_parent_references(node.left)
           and self.check_parent_references(node.right))
 
+failures = 0
+
+
 def check(condition, description):
+  global failures
   if condition:
     print("pass:", description)
   else:
+    failures += 1
     print("fail:", description)
 
 def test_binary_search_tree():
@@ -125,6 +133,7 @@ def test_binary_search_tree():
 
   check(tree.inorder_list() == [20, 30, 40, 50, 55, 57, 60, 65, 70, 80],
       "inorder traversal after insertion")
+  check(tree.root_key_for_testing() == 50, "50 remains the root after insertion")
 
   check(not tree.insert(60), "duplicate insertion fails")
   check(tree.size == 10, "duplicate insertion does not change size")
@@ -153,6 +162,8 @@ def test_binary_search_tree():
       "inorder traversal after removing 50")
   check(tree.has_correct_parent_references(),
       "parent references after removing 50")
+  check(tree.root_key_for_testing() == 57,
+      "successor substitution changes the root key to 57")
 
   check(tree.size == 7, "the final size is 7")
   check(not tree.remove(50), "removing 50 again fails")
@@ -163,7 +174,50 @@ def test_binary_search_tree():
   check(one_node_tree.insert(10), "insert into an empty tree")
   check(one_node_tree.remove(10), "remove the only node")
   check(one_node_tree.is_empty(), "the one-node tree becomes empty")
+  check(one_node_tree.root_key_for_testing() is None,
+      "the drained one-node tree has no root")
   check(one_node_tree.has_correct_parent_references(),
       "the empty tree has valid parent references")
 
+def test_large_ordered_updates():
+    tree = BinarySearchTree()
+    for key in range(500): check(tree.insert(key), f"insert ascending key {key}")
+    check(tree.size == 500 and tree.has_correct_parent_references(), "ascending tree size and parent links")
+    for key in range(500): check(tree.contains(key), f"contains ascending key {key}")
+    for key in range(0, 500, 2):
+        check(tree.remove(key), f"remove even key {key}")
+        check(tree.has_correct_parent_references(), f"parent links after removing {key}")
+    check(tree.size == 250 and tree.minimum() == 1, "size and minimum after even removals")
+    for key in range(1, 499, 2): check(tree.successor(key) == key + 2, f"successor among odd keys {key}")
+    for key in range(1, 500, 2): check(tree.remove(key), f"drain odd key {key}")
+    check(tree.is_empty() and tree.has_correct_parent_references(), "empty after complete drain")
+
+
+def test_large_balanced_order_workload():
+    count = 20_000
+    tree = BinarySearchTree()
+    ranges = [(0, count - 1)]
+    ok = True
+    while ranges:
+        low, high = ranges.pop()
+        if low > high:
+            continue
+        middle = low + (high - low) // 2
+        ok = tree.insert(middle) and ok
+        if middle + 1 <= high:
+            ranges.append((middle + 1, high))
+        if low <= middle - 1:
+            ranges.append((low, middle - 1))
+    ok = all(tree.contains(key) for key in range(count)) and ok
+    ok = all(tree.remove(key) for key in range(0, count, 2)) and ok
+    ok = all(tree.contains(key) == (key % 2 == 1) for key in range(count)) and ok
+    check(ok and tree.size == count // 2 and tree.has_correct_parent_references(),
+          "20,000-key balanced-order aggregate workload")
+
+
 test_binary_search_tree()
+test_large_ordered_updates()
+test_large_balanced_order_workload()
+
+if failures:
+    raise SystemExit(1)

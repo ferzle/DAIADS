@@ -1,6 +1,8 @@
 #include <iostream>
 using namespace std;
 
+
+int failures = 0;
 class IntDeque {
 private:
 struct BlockNode {
@@ -84,12 +86,30 @@ int removeBack() {
     return -1;
 }
 
+bool hasValidStructureForTesting() const {
+    if (blockSize <= 0 || count < 0) return false;
+    if (count == 0) return firstBlock == nullptr && lastBlock == nullptr;
+    if (firstBlock == nullptr || lastBlock == nullptr) return false;
+    if (firstBlock->prev != nullptr || lastBlock->next != nullptr) return false;
+    if (frontIndex < 0 || frontIndex >= blockSize
+            || backIndex < 0 || backIndex >= blockSize) return false;
+    int blocks = 0;
+    BlockNode* previous = nullptr;
+    for (BlockNode* node = firstBlock; node != nullptr; node = node->next) {
+        if (node->prev != previous || blocks > count + 1) return false;
+        previous = node;
+        ++blocks;
+    }
+    return previous == lastBlock;
+}
+
 };
 
 void checkAtLine(int actual, int expected, int line, const char* expression) {
     if (actual == expected) {
         cout << "PASS at test line " << line << " (" << expression << "): got " << actual << endl;
     } else {
+        ++failures;
         cout << "FAIL at test line " << line << " (" << expression
              << "): expected " << expected << " but got " << actual << endl;
     }
@@ -99,6 +119,7 @@ void checkAtLine(bool actual, bool expected, int line, const char* expression) {
     if (actual == expected) {
         cout << "PASS at test line " << line << " (" << expression << "): got " << actual << endl;
     } else {
+        ++failures;
         cout << "FAIL at test line " << line << " (" << expression
              << "): expected " << (expected ? "true" : "false")
              << " but got " << (actual ? "true" : "false") << endl;
@@ -108,7 +129,8 @@ void checkAtLine(bool actual, bool expected, int line, const char* expression) {
 #define check(actual, expected) checkAtLine((actual), (expected), __LINE__, #actual)
 
 void testDeque() {
-IntDeque deque(3);
+    IntDeque deque(3);
+    check(deque.hasValidStructureForTesting(), true);
 
 check(deque.isEmpty(), true);
 check(deque.size(), 0);
@@ -135,6 +157,7 @@ check(deque.addFront(0), true);      // [0, 1, 2, 4, 7, 9, 11]
 check(deque.peekFront(), 0);
 check(deque.peekBack(), 11);
 check(deque.size(), 7);
+check(deque.hasValidStructureForTesting(), true);
 
 check(deque.removeFront(), 0);       // [1, 2, 4, 7, 9, 11]
 check(deque.removeFront(), 1);       // [2, 4, 7, 9, 11]
@@ -166,6 +189,7 @@ check(deque.size(), 1);
 check(deque.removeBack(), 7);        // []
 check(deque.isEmpty(), true);
 check(deque.size(), 0);
+check(deque.hasValidStructureForTesting(), true);
 check(deque.peekFront(), -1);
 check(deque.peekBack(), -1);
 check(deque.removeFront(), -1);
@@ -188,7 +212,40 @@ for (int i = 499; i >= 250; i--) tinyOk = (tinyBlocks.removeBack() == i) && tiny
 check(tinyOk && tinyBlocks.isEmpty(), true);
 }
 
+void testBlockBoundariesAndReuse() {
+    for (int blockSize : {1, 2, 3, 4, 5, 8, 32}) {
+        IntDeque deque(blockSize);
+        int count = blockSize * 20 + 3;
+        for (int i = 0; i < count; i++) check(deque.addBack(i), true);
+        for (int i = 0; i < count; i++) check(deque.removeFront(), i);
+        check(deque.isEmpty(), true); check(deque.size(), 0);
+        for (int i = 0; i < count; i++) check(deque.addFront(i), true);
+        for (int i = 0; i < count; i++) check(deque.removeBack(), i);
+        check(deque.isEmpty(), true);
+        for (int i = 0; i < count; i++) {
+            check(deque.addBack(10000 + i), true);
+            check(deque.removeFront(), 10000 + i);
+        }
+        deque.addFront(7); deque.clear(); check(deque.isEmpty(), true);
+        check(deque.peekFront(), -1); check(deque.peekBack(), -1);
+    }
+}
+
+void testLargeAggregateWorkload() {
+    const int n = 100000;
+    IntDeque deque(64);
+    bool ok = true;
+    for (int i = 0; i < n; ++i) ok = deque.addBack(i) && ok;
+    ok = deque.size() == n && deque.peekFront() == 0
+        && deque.peekBack() == n - 1 && deque.hasValidStructureForTesting() && ok;
+    for (int i = 0; i < n; ++i) ok = (deque.removeFront() == i) && ok;
+    ok = deque.isEmpty() && deque.hasValidStructureForTesting() && ok;
+    check(ok, true);
+}
+
 int main() {
     testDeque();
-    return 0;
+    testBlockBoundariesAndReuse();
+    testLargeAggregateWorkload();
+    return failures == 0 ? 0 : 1;
 }

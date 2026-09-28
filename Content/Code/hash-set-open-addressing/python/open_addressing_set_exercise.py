@@ -35,6 +35,9 @@ class OpenAddressingIntSet:
     def capacity(self):
         return self.m
 
+    def slot_counts_for_testing(self):
+        return tuple(self._states.count(state) for state in self._SlotState)
+
     def contains(self, key):
         # TODO: Reject a negative key. Probe at most capacity() positions,
         # stopping successfully at key or unsuccessfully at an EMPTY slot.
@@ -123,12 +126,18 @@ def test_strategy(probing_type):
     check(values.is_empty() and values.size() == 0, f"{name}: new set is empty")
     check(values.insert(1) and values.insert(9) and values.insert(17),
           f"{name}: insert colliding keys")
+    check_equal(values.slot_counts_for_testing(), (5, 3, 0),
+                f"{name}: three inserts occupy three slots")
     check(values.contains(1) and values.contains(9) and values.contains(17),
           f"{name}: find colliding keys")
     check(not values.insert(17) and values.size() == 3, f"{name}: reject duplicate insertion")
     check(values.remove(9) and not values.contains(9), f"{name}: remove creates a tombstone")
+    check_equal(values.slot_counts_for_testing(), (5, 2, 1),
+                f"{name}: removal changes one occupied slot to deleted")
     check(values.contains(17), f"{name}: lookup continues past a tombstone")
     check(values.insert(41) and values.contains(41), f"{name}: insertion can reuse a tombstone")
+    check_equal(values.slot_counts_for_testing(), (5, 3, 0),
+                f"{name}: insertion reuses the tombstone")
     check(not values.remove(99), f"{name}: absent removal changes nothing")
 
     wraparound = OpenAddressingIntSet(3, probing_type)
@@ -144,6 +153,8 @@ def test_strategy(probing_type):
     values.clear()
     check(values.is_empty() and values.size() == 0 and not values.contains(1),
           f"{name}: clear resets the set")
+    check_equal(values.slot_counts_for_testing(), (8, 0, 0),
+                f"{name}: clear restores every slot to empty")
     check_raises(lambda: values.contains(-1), f"{name}: reject negative lookup key")
     check_raises(lambda: values.insert(-1), f"{name}: reject negative insertion key")
     check_raises(lambda: values.remove(-1), f"{name}: reject negative removal key")
@@ -207,11 +218,41 @@ def test_tombstone_stress(probing_type):
     check(result, f"{name}: final membership is correct after 41 removals and replacements")
 
 
+def test_large_delete_reinsert_cycles(probing_type):
+    values = OpenAddressingIntSet(10, probing_type)
+    name = probing_type.name
+    for key in range(400): check(values.insert(key * 17), f"{name}: large insert {key}")
+    for key in range(0, 400, 3): check(values.remove(key * 17), f"{name}: large remove {key}")
+    for key in range(0, 400, 3): check(values.insert(100000 + key * 17), f"{name}: tombstone reuse {key}")
+    for key in range(400): check(values.contains(key * 17) == (key % 3 != 0), f"{name}: final membership {key}")
+    check(values.size() == 400, f"{name}: size after replacements")
+
+
+def test_fifty_thousand_keys(probing_type):
+    count = 50_000
+    values = OpenAddressingIntSet(17, probing_type)
+    ok = all(values.insert(key) for key in range(count))
+    ok = all(values.contains(key) for key in range(count)) and ok
+    ok = all(values.remove(key) for key in range(0, count, 3)) and ok
+    ok = all(values.insert(200_000 + key) for key in range(0, count, 3)) and ok
+    ok = all(values.contains(key) == (key % 3 != 0) for key in range(count)) and ok
+    ok = all(values.contains(200_000 + key) for key in range(0, count, 3)) and ok
+    check(ok and values.size() == count, f"{probing_type.name}: 50,000-key aggregate workload")
+
+
 if __name__ == "__main__":
-    check_raises(lambda: OpenAddressingIntSet(0, ProbingType.LINEAR),
-                 "reject an invalid capacity exponent")
+    print(
+        "Note: the complete Python open-addressing test suite may take "
+        "several minutes.",
+        flush=True,
+    )
     check_raises(lambda: OpenAddressingIntSet(3, None), "reject an invalid probing type")
     for strategy in ProbingType:
         test_strategy(strategy)
         test_tombstone_stress(strategy)
+        test_large_delete_reinsert_cycles(strategy)
+        test_fifty_thousand_keys(strategy)
     print("All tests passed." if failures == 0 else f"{failures} test(s) failed.")
+
+if __name__ == "__main__" and failures:
+    raise SystemExit(1)

@@ -1,4 +1,5 @@
 public class LinkedBlockDequeExercise {
+    static int failures = 0;
 static class IntDeque {
     private static class BlockNode {
         int[] values;
@@ -71,6 +72,24 @@ static class IntDeque {
         // TODO
         return -1;
     }
+
+    public boolean hasValidStructureForTesting() {
+        if (blockSize <= 0 || count < 0) return false;
+        if (count == 0) return firstBlock == null && lastBlock == null;
+        if (firstBlock == null || lastBlock == null) return false;
+        if (firstBlock.prev != null || lastBlock.next != null) return false;
+        if (frontIndex < 0 || frontIndex >= blockSize
+                || backIndex < 0 || backIndex >= blockSize) return false;
+        int blocks = 0;
+        BlockNode previous = null;
+        for (BlockNode node = firstBlock; node != null; node = node.next) {
+            if (node.prev != previous || node.values.length != blockSize
+                    || blocks > count + 1) return false;
+            previous = node;
+            blocks++;
+        }
+        return previous == lastBlock;
+    }
 }
 
 static String checkLocation() {
@@ -82,6 +101,7 @@ static void check(int actual, int expected) {
     if (actual == expected) {
         System.out.println("PASS at " + checkLocation() + ": got " + actual);
     } else {
+        failures++;
         System.out.println("FAIL at " + checkLocation() + ": expected " + expected + " but got " + actual);
     }
 }
@@ -90,12 +110,14 @@ static void check(boolean actual, boolean expected) {
     if (actual == expected) {
         System.out.println("PASS at " + checkLocation() + ": got " + actual);
     } else {
+        failures++;
         System.out.println("FAIL at " + checkLocation() + ": expected " + expected + " but got " + actual);
     }
 }
 
 static void testDeque() {
     IntDeque deque = new IntDeque(3);
+    check(deque.hasValidStructureForTesting(), true);
 
     check(deque.isEmpty(), true);
     check(deque.size(), 0);
@@ -122,6 +144,7 @@ static void testDeque() {
     check(deque.peekFront(), 0);
     check(deque.peekBack(), 11);
     check(deque.size(), 7);
+    check(deque.hasValidStructureForTesting(), true);
 
     check(deque.removeFront(), 0);       // [1, 2, 4, 7, 9, 11]
     check(deque.removeFront(), 1);       // [2, 4, 7, 9, 11]
@@ -153,6 +176,7 @@ static void testDeque() {
     check(deque.removeBack(), 7);        // []
     check(deque.isEmpty(), true);
     check(deque.size(), 0);
+    check(deque.hasValidStructureForTesting(), true);
     check(deque.peekFront(), -1);
     check(deque.peekBack(), -1);
     check(deque.removeFront(), -1);
@@ -175,7 +199,42 @@ static void testDeque() {
     check(tinyOk && tinyBlocks.isEmpty(), true);
 }
 
+static void testBlockBoundariesAndReuse() {
+    for (int blockSize : new int[] {1, 2, 3, 4, 5, 8, 32}) {
+        IntDeque deque = new IntDeque(blockSize);
+        int count = blockSize * 20 + 3;
+        for (int i = 0; i < count; i++) check(deque.addBack(i), true);
+        for (int i = 0; i < count; i++) check(deque.removeFront(), i);
+        check(deque.isEmpty(), true); check(deque.size(), 0);
+        for (int i = 0; i < count; i++) check(deque.addFront(i), true);
+        for (int i = 0; i < count; i++) check(deque.removeBack(), i);
+        check(deque.isEmpty(), true);
+        for (int i = 0; i < count; i++) {
+            check(deque.addBack(10000 + i), true);
+            check(deque.removeFront(), 10000 + i);
+        }
+        deque.addFront(7); deque.clear(); check(deque.isEmpty(), true);
+        check(deque.peekFront(), -1); check(deque.peekBack(), -1);
+    }
+}
+
+static void testLargeAggregateWorkload() {
+    final int n = 100_000;
+    IntDeque deque = new IntDeque(64);
+    boolean ok = true;
+    for (int i = 0; i < n; i++) ok &= deque.addBack(i);
+    ok &= deque.size() == n && deque.peekFront() == 0
+            && deque.peekBack() == n - 1 && deque.hasValidStructureForTesting();
+    for (int i = 0; i < n; i++) ok &= deque.removeFront() == i;
+    ok &= deque.isEmpty() && deque.hasValidStructureForTesting();
+    check(ok, true);
+}
+
 public static void main(String[] args) {
     testDeque();
+    testBlockBoundariesAndReuse();
+    testLargeAggregateWorkload();
+    System.out.println(failures == 0 ? "All tests passed." : failures + " test(s) failed.");
+    if (failures > 0) System.exit(1);
 }
 }

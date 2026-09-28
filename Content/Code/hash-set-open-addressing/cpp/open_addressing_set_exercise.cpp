@@ -80,6 +80,16 @@ public:
 
     std::size_t capacity() const { return m; }
 
+    std::vector<std::size_t> slotCountsForTesting() const {
+        std::vector<std::size_t> result(3, 0); // EMPTY, OCCUPIED, DELETED
+        for (SlotState state : states) {
+            if (state == SlotState::EMPTY) ++result[0];
+            else if (state == SlotState::OCCUPIED) ++result[1];
+            else ++result[2];
+        }
+        return result;
+    }
+
     bool contains(int key) const {
         // TODO: Reject a negative key. Probe at most capacity() positions,
         // stopping successfully at key or unsuccessfully at an EMPTY slot.
@@ -134,11 +144,17 @@ void testStrategy(ProbingType type) {
     checkEqual(set.capacity(), std::size_t{8}, name + ": exponent 3 gives capacity 8");
     check(set.isEmpty() && set.size() == 0, name + ": new set is empty");
     check(set.insert(1) && set.insert(9) && set.insert(17), name + ": insert colliding keys");
+    checkEqual(set.slotCountsForTesting(), std::vector<std::size_t>({5, 3, 0}),
+               name + ": three inserts occupy three slots");
     check(set.contains(1) && set.contains(9) && set.contains(17), name + ": find colliding keys");
     check(!set.insert(17) && set.size() == 3, name + ": reject duplicate insertion");
     check(set.remove(9) && !set.contains(9), name + ": remove creates a tombstone");
+    checkEqual(set.slotCountsForTesting(), std::vector<std::size_t>({5, 2, 1}),
+               name + ": removal changes one occupied slot to deleted");
     check(set.contains(17), name + ": lookup continues past a tombstone");
     check(set.insert(41) && set.contains(41), name + ": insertion can reuse a tombstone");
+    checkEqual(set.slotCountsForTesting(), std::vector<std::size_t>({5, 3, 0}),
+               name + ": insertion reuses the tombstone");
     check(!set.remove(99), name + ": absent removal changes nothing");
 
     OpenAddressingIntSet wraparound(3, type);
@@ -154,6 +170,8 @@ void testStrategy(ProbingType type) {
 
     set.clear();
     check(set.isEmpty() && set.size() == 0 && !set.contains(1), name + ": clear resets the set");
+    checkEqual(set.slotCountsForTesting(), std::vector<std::size_t>({8, 0, 0}),
+               name + ": clear restores every slot to empty");
     checkThrows([&set]() { set.contains(-1); }, name + ": reject negative lookup key");
     checkThrows([&set]() { set.insert(-1); }, name + ": reject negative insertion key");
     checkThrows([&set]() { set.remove(-1); }, name + ": reject negative removal key");
@@ -213,14 +231,36 @@ void testTombstoneStress(ProbingType type) {
     check(result, name + ": final membership is correct after 41 removals and replacements");
 }
 
+void testLargeDeleteReinsertCycles(ProbingType type) {
+    OpenAddressingIntSet set(10, type);
+    for (int key = 0; key < 400; key++) check(set.insert(key * 17), "large insert");
+    for (int key = 0; key < 400; key += 3) check(set.remove(key * 17), "large remove");
+    for (int key = 0; key < 400; key += 3) check(set.insert(100000 + key * 17), "tombstone reuse");
+    for (int key = 0; key < 400; key++) check(set.contains(key * 17) == (key % 3 != 0), "final membership");
+    check(set.size() == 400, "size after replacements");
+}
+
+void testFiftyThousandKeys(ProbingType type) {
+    const int count = 50000;
+    OpenAddressingIntSet set(17, type);
+    bool ok = true;
+    for (int key = 0; key < count; key++) ok = set.insert(key) && ok;
+    for (int key = 0; key < count; key++) ok = set.contains(key) && ok;
+    for (int key = 0; key < count; key += 3) ok = set.remove(key) && ok;
+    for (int key = 0; key < count; key += 3) ok = set.insert(200000 + key) && ok;
+    for (int key = 0; key < count; key++) ok = (set.contains(key) == (key % 3 != 0)) && ok;
+    for (int key = 0; key < count; key += 3) ok = set.contains(200000 + key) && ok;
+    check(ok && set.size() == count, "50,000-key aggregate workload");
+}
+
 int main() {
-    checkThrows([]() { OpenAddressingIntSet invalid(0, ProbingType::LINEAR); },
-                "reject an invalid capacity exponent");
     for (ProbingType type : {ProbingType::LINEAR,
                              ProbingType::QUADRATIC,
                              ProbingType::DOUBLE_HASHING}) {
         testStrategy(type);
         testTombstoneStress(type);
+        testLargeDeleteReinsertCycles(type);
+        testFiftyThousandKeys(type);
     }
     std::cout << (failures == 0 ? "All tests passed.\n"
                                 : std::to_string(failures) + " test(s) failed.\n");

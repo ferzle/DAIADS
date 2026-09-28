@@ -78,6 +78,17 @@ void check(bool condition, const std::string& label) {
     else { ++failures; std::cout << "FAIL: " << label << '\n'; }
 }
 
+void testLargeMixedWorkload() {
+    UnsortedArrayIntMap map(1);
+    for (int key = 0; key < 1000; key++) check(!map.put(key, key * 3), "large insert");
+    check(map.size() == 1000, "size after 1000 inserts");
+    for (int key = 0; key < 1000; key++) check(map.get(key).value_or(-1) == key * 3, "large get");
+    for (int key = 0; key < 1000; key += 3) check(map.put(key, -key).value_or(-1) == key * 3, "large replace");
+    check(map.size() == 1000, "replacement preserves size");
+    for (int key = 0; key < 1000; key += 2) check(map.remove(key).has_value(), "large remove");
+    for (int key = 0; key < 1000; key++) check(map.containsKey(key) == (key % 2 == 1), "post-removal membership");
+}
+
 int main() {
     UnsortedArrayIntMap map(2);
     check(map.isEmpty() && map.size() == 0, "new map is empty");
@@ -92,5 +103,7 @@ int main() {
     check(map.remove(11).value_or(-1) == 110 && !map.remove(11), "remove once");
     map.clear();
     check(map.isEmpty() && !map.put(5, 50), "clear and reuse");
+    testLargeMixedWorkload();
     std::cout << (failures == 0 ? "All tests passed." : std::to_string(failures) + " test(s) failed.") << '\n';
+    return failures == 0 ? 0 : 1;
 }

@@ -124,10 +124,28 @@ public class UnsortedArraySetExercise {
         check(set.add(5), true, "set can be reused after clear");
     }
 
+    private static void testLargeDifferentialWorkload() {
+        UnsortedArrayIntSet set = new UnsortedArrayIntSet(1);
+        for (int i = 0; i < 1000; i++) check(set.add(i), true, "add unique key " + i);
+        check(set.size(), 1000, "size after 1000 unique additions");
+        for (int i = 0; i < 1000; i++) {
+            check(set.contains(i), true, "contains key " + i);
+            check(set.add(i), false, "reject duplicate key " + i);
+        }
+        for (int i = 0; i < 1000; i += 2) check(set.remove(i), true, "remove key " + i);
+        check(set.size(), 500, "size after removing even keys");
+        for (int i = 0; i < 1000; i++)
+            check(set.contains(i), i % 2 == 1, "membership after removals for " + i);
+        set.clear(); check(set.isEmpty(), true, "empty after large clear");
+        check(set.add(0), true, "reuse after large clear");
+    }
+
     public static void main(String[] args) {
         testSet();
+        testLargeDifferentialWorkload();
         System.out.println(failures == 0
                 ? "All tests passed."
                 : failures + " test(s) failed.");
+        if (failures > 0) System.exit(1);
     }
 }

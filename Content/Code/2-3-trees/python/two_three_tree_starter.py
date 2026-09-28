@@ -331,7 +331,13 @@ class TwoThreeTree:
 
 # ---------------------------- Tests ----------------------------
 
+failures = 0
+
+
 def check(condition: bool, description: str) -> None:
+    global failures
+    if not condition:
+        failures += 1
     print(("pass: " if condition else "FAIL: ") + description)
 
 
@@ -448,5 +454,37 @@ def run_tests() -> None:
     check(random_tree.height() == -1, "empty tree has height -1")
 
 
+def test_large_differential_updates():
+    tree = TwoThreeTree(); expected = set(); state = 0x5EED
+    for operation in range(3000):
+        state = (state * 1103515245 + 12345) & 0x7FFFFFFF
+        key = state % 1500
+        if operation % 3 == 0:
+            oracle = key in expected; expected.discard(key); actual = tree.remove(key)
+        else:
+            oracle = key not in expected; expected.add(key); actual = tree.insert(key)
+        check(actual == oracle, f"large operation result {operation}")
+        check(tree.inorder_values() == sorted(expected), f"large contents {operation}")
+        check(tree.has_valid_structure(), f"large structure {operation}")
+    for key in sorted(expected): check(tree.remove(key), f"large final drain key {key}")
+    check(tree.is_empty() and tree.has_valid_structure(), "valid empty tree after large drain")
+
+
+def test_twenty_thousand_ordered_keys():
+    count = 20_000
+    tree = TwoThreeTree()
+    ok = all(tree.insert(key) for key in range(count))
+    ok = all(tree.contains(key) for key in range(count)) and ok
+    ok = tree.size() == count and tree.has_valid_structure() and ok
+    ok = all(tree.remove(key) for key in range(0, count, 2)) and ok
+    ok = all(tree.contains(key) == (key % 2 == 1) for key in range(count)) and ok
+    ok = tree.size() == count // 2 and tree.has_valid_structure() and ok
+    check(ok, "20,000-key ordered insert/search and 10,000-key removal workload")
+
+
 if __name__ == "__main__":
     run_tests()
+    test_large_differential_updates()
+    test_twenty_thousand_ordered_keys()
+    if failures:
+        raise SystemExit(1)

@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -123,13 +124,26 @@ void testHeapSort() {
     }
 }
 
+void testDeterministicLargeArrays() {
+    for (int length : {0, 1, 2, 3, 31, 32, 33, 1000, 100000}) {
+        std::vector<int> values(length);
+        long long state = 0x5EED;
+        for (int i = 0; i < length; i++) { state = (state * 1103515245 + 12345) & 0x7fffffff; values[i] = static_cast<int>(state % 101) - 50; }
+        std::vector<int> expected = values; std::sort(expected.begin(), expected.end());
+        heapSort(values); checkArray(values, expected, "deterministic large heapSort");
+        std::vector<int> heap = expected; buildMaxHeap(heap);
+        check(isMaxHeap(heap, static_cast<int>(heap.size())), true, "deterministic large buildMaxHeap");
+    }
+}
+
 int main() {
     testKnownConstruction();
     testActivePrefixBoundary();
     testHeapSort();
+    testDeterministicLargeArrays();
     cout << (failures == 0
         ? "All tests passed."
         : to_string(failures) + " test(s) failed.")
          << '\n';
-    return 0;
+    return failures == 0 ? 0 : 1;
 }

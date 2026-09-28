@@ -198,11 +198,50 @@ public class BinaryMaxHeapExercise {
                 "maximum is correct for negative keys");
     }
 
+    private static void testLargeDeterministicDrain() {
+        int[] expected = new int[1000];
+        long state = 0x5EEDL;
+        FixedCapacityMaxHeap heap = new FixedCapacityMaxHeap(expected.length);
+        for (int i = 0; i < expected.length; i++) {
+            state = (state * 1103515245 + 12345) & 0x7fffffffL;
+            expected[i] = (int) (state % 2001) - 1000;
+            check(heap.insert(expected[i]), true, "large insert " + i);
+            check(heap.hasValidHeapOrder(), true, "heap order after large insert " + i);
+        }
+        Arrays.sort(expected);
+        for (int i = expected.length - 1; i >= 0; i--) {
+            checkOptional(heap.extractMax(), expected[i], "large extraction " + (expected.length - 1 - i));
+            check(heap.hasValidHeapOrder(), true, "heap order after large extraction " + i);
+        }
+        check(heap.isEmpty(), true, "empty after large drain");
+        check(heap.insert(42), true, "reuse after large drain"); checkOptional(heap.extractMax(), 42, "extract reused value");
+    }
+
+    private static void testHundredThousandAggregateOperations() {
+        final int count = 100_000;
+        int[] expected = new int[count];
+        long state = 0xC0FFEEL;
+        FixedCapacityMaxHeap heap = new FixedCapacityMaxHeap(count);
+        boolean ok = true;
+        for (int i = 0; i < count; i++) {
+            state = (state * 1103515245 + 12345) & 0x7fffffffL;
+            expected[i] = (int) state;
+            ok &= heap.insert(expected[i]);
+        }
+        Arrays.sort(expected);
+        for (int i = count - 1; i >= 0; i--) ok &= heap.extractMax().orElse(Integer.MIN_VALUE) == expected[i];
+        check(ok && heap.isEmpty() && heap.hasValidHeapOrder(), true,
+                "100,000 aggregate insertions and extractions");
+    }
+
     public static void main(String[] args) {
         testCoreOperations();
         testOnlyLeftChildAndNegativeKeys();
+        testLargeDeterministicDrain();
+        testHundredThousandAggregateOperations();
         System.out.println(failures == 0
                 ? "All tests passed."
                 : failures + " test(s) failed.");
+        if (failures > 0) System.exit(1);
     }
 }

@@ -266,6 +266,11 @@ def test_fifty_thousand_keys(probing_type):
 
 
 if __name__ == "__main__":
+    print(
+        "Note: the complete Python open-addressing test suite may take "
+        "several minutes.",
+        flush=True,
+    )
     check_raises(lambda: OpenAddressingIntSet(3, None), "reject an invalid probing type")
     for strategy in ProbingType:
         test_strategy(strategy)

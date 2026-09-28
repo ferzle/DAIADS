@@ -114,8 +114,27 @@ def test_heap_sort() -> None:
         check(values, expected, label)
 
 
+def test_deterministic_large_arrays():
+    for length in (0, 1, 2, 3, 31, 32, 33, 1000, 100_000):
+        state = 0x5EED
+        values = []
+        for _ in range(length):
+            state = (state * 1103515245 + 12345) & 0x7FFFFFFF
+            values.append(state % 101 - 50)
+        expected = sorted(values)
+        heap_sort(values)
+        check(values, expected, f"deterministic heap_sort length {length}")
+        heap = expected.copy()
+        build_max_heap(heap)
+        check(is_max_heap(heap, len(heap)), True, f"build_max_heap length {length}")
+
+
 if __name__ == "__main__":
     test_known_construction()
     test_active_prefix_boundary()
     test_heap_sort()
+    test_deterministic_large_arrays()
     print("All tests passed." if failures == 0 else f"{failures} test(s) failed.")
+
+if __name__ == "__main__" and failures:
+    raise SystemExit(1)

@@ -153,7 +153,6 @@ public class BitVectorSetExercise {
     }
 
     private static void testSet() {
-        checkInvalidUniverse("reject nonpositive universe size");
         BitVectorIntSet set = new BitVectorIntSet(128);
         check(set.universeSize(), 128, "constructor records universe size");
         check(set.isEmpty(), true, "new set is empty");
@@ -196,10 +195,39 @@ public class BitVectorSetExercise {
         check(set.add(127), true, "set can be reused after clear");
     }
 
+    private static void testEveryBitAroundWordBoundaries() {
+        for (int universe : new int[] {1, 31, 32, 33, 63, 64, 65, 257}) {
+            BitVectorIntSet set = new BitVectorIntSet(universe);
+            for (int key = 0; key < universe; key++) check(set.add(key), true, "add key " + key + " in universe " + universe);
+            check(set.size(), universe, "all keys counted in universe " + universe);
+            for (int key = 0; key < universe; key++) check(set.contains(key), true, "find key " + key + " in universe " + universe);
+            for (int key = 0; key < universe; key += 2) check(set.remove(key), true, "remove even key " + key);
+            for (int key = 0; key < universe; key++) check(set.contains(key), key % 2 == 1, "post-removal membership for " + key);
+            set.clear(); check(set.isEmpty(), true, "clear universe " + universe);
+        }
+    }
+
+    private static void testMillionBitUniverse() {
+        final int universe = 1_000_000;
+        BitVectorIntSet set = new BitVectorIntSet(universe);
+        boolean ok = true;
+        for (int key = 0; key < universe; key++) ok &= set.add(key);
+        ok &= set.size() == universe && set.contains(0) && set.contains(31)
+                && set.contains(32) && set.contains(999_999);
+        for (int key = 0; key < universe; key += 2) ok &= set.remove(key);
+        ok &= set.size() == universe / 2 && !set.contains(0)
+                && set.contains(999_999) && !set.contains(999_998);
+        set.clear();
+        check(ok && set.isEmpty() && set.size() == 0, true, "million-bit aggregate workload");
+    }
+
     public static void main(String[] args) {
         testSet();
+        testEveryBitAroundWordBoundaries();
+        testMillionBitUniverse();
         System.out.println(failures == 0
                 ? "All tests passed."
                 : failures + " test(s) failed.");
+        if (failures > 0) System.exit(1);
     }
 }

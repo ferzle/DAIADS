@@ -1,7 +1,9 @@
 # Programming Exercise Tests v2
 
-This directory mirrors all student starter code under `Content/Code/` while the
-live downloads remain unchanged.
+This directory contains the expanded-test version of all student starter code
+under `Content/Code/`. After its final audit, this tree was promoted to the
+live downloads on 2026-09-28; the original production versions are preserved
+under `internal/programming-exercises-v0/Content/Code/`.
 
 ## Scope
 

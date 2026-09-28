@@ -168,7 +168,47 @@ def test_only_left_child_and_negative_keys() -> None:
     )
 
 
+def test_large_deterministic_drain():
+    expected = []
+    state = 0x5EED
+    heap = FixedCapacityMaxHeap(1000)
+    for operation in range(1000):
+        state = (state * 1103515245 + 12345) & 0x7FFFFFFF
+        value = state % 2001 - 1000
+        expected.append(value)
+        check(heap.insert(value), True, f"large insert {operation}")
+        check(heap.has_valid_heap_order(), True, f"heap order after large insert {operation}")
+    expected.sort(reverse=True)
+    for operation, value in enumerate(expected):
+        check(heap.extract_max(), value, f"large extraction {operation}")
+        check(heap.has_valid_heap_order(), True, f"heap order after large extraction {operation}")
+    check(heap.is_empty(), True, "empty after large drain")
+    check(heap.insert(42), True, "reuse after large drain")
+    check(heap.extract_max(), 42, "extract reused value")
+
+
+def test_hundred_thousand_aggregate_operations():
+    count = 100_000
+    expected = []
+    state = 0xC0FFEE
+    heap = FixedCapacityMaxHeap(count)
+    ok = True
+    for _ in range(count):
+        state = (state * 1103515245 + 12345) & 0x7FFFFFFF
+        expected.append(state)
+        ok = heap.insert(state) and ok
+    expected.sort(reverse=True)
+    ok = all(heap.extract_max() == value for value in expected) and ok
+    check(ok and heap.is_empty() and heap.has_valid_heap_order(), True,
+          "100,000 aggregate insertions and extractions")
+
+
 if __name__ == "__main__":
     test_core_operations()
     test_only_left_child_and_negative_keys()
+    test_large_deterministic_drain()
+    test_hundred_thousand_aggregate_operations()
     print("All tests passed." if failures == 0 else f"{failures} test(s) failed.")
+
+if __name__ == "__main__" and failures:
+    raise SystemExit(1)

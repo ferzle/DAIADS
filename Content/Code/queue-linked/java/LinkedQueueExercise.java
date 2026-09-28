@@ -1,4 +1,5 @@
 public class LinkedQueueExercise {
+    static int failures = 0;
     static class IntQueue {
         private static class Node {
             int value;
@@ -43,6 +44,24 @@ public class LinkedQueueExercise {
             // TODO
             return -1;
         }
+
+        public boolean hasValidStructureForTesting() {
+            if ((head == null) != (tail == null)) return false;
+            if (tail != null && tail.next != null) return false;
+            Node slow = head, fast = head;
+            while (fast != null && fast.next != null) {
+                slow = slow.next;
+                fast = fast.next.next;
+                if (slow == fast) return false;
+            }
+            int reachable = 0;
+            Node last = null;
+            for (Node node = head; node != null; node = node.next) {
+                last = node;
+                reachable++;
+            }
+            return reachable == count && last == tail;
+        }
     }
 
     static String checkLocation() {
@@ -54,6 +73,7 @@ public class LinkedQueueExercise {
         if (actual == expected) {
             System.out.println("PASS at " + checkLocation() + ": got " + actual);
         } else {
+            failures++;
             System.out.println("FAIL at " + checkLocation() + ": expected " + expected + " but got " + actual);
         }
     }
@@ -62,6 +82,7 @@ public class LinkedQueueExercise {
         if (actual == expected) {
             System.out.println("PASS at " + checkLocation() + ": got " + actual);
         } else {
+            failures++;
             System.out.println("FAIL at " + checkLocation() + ": expected " + expected + " but got " + actual);
         }
     }
@@ -83,6 +104,7 @@ public class LinkedQueueExercise {
         queue.enqueue(9);
         check(queue.size(), 3);
         check(queue.front(), 4);
+        check(queue.hasValidStructureForTesting(), true);
 
         check(queue.dequeue(), 4);
         check(queue.front(), 7);
@@ -94,6 +116,7 @@ public class LinkedQueueExercise {
         check(queue.dequeue(), 2);
         check(queue.isEmpty(), true);
         check(queue.size(), 0);
+        check(queue.hasValidStructureForTesting(), true);
 
         check(queue.dequeue(), -1);
         check(queue.front(), -1);
@@ -112,7 +135,41 @@ public class LinkedQueueExercise {
         check(largeOk && large.isEmpty(), true);
     }
 
+    static void testLongRunsAndSingletonReuse() {
+        IntQueue queue = new IntQueue();
+        for (int round = 0; round < 50; round++) {
+            queue.enqueue(round);
+            check(queue.front(), round);
+            check(queue.dequeue(), round);
+            check(queue.isEmpty(), true);
+        }
+        for (int i = 0; i < 1000; i++) queue.enqueue(i);
+        for (int i = 0; i < 1000; i++) {
+            check(queue.front(), i);
+            check(queue.dequeue(), i);
+            check(queue.size(), 999 - i);
+        }
+        queue.enqueue(77);
+        check(queue.dequeue(), 77);
+        check(queue.isEmpty(), true);
+    }
+
+    static void testLargeAggregateWorkload() {
+        final int n = 100_000;
+        IntQueue queue = new IntQueue();
+        for (int i = 0; i < n; i++) queue.enqueue(i);
+        boolean ok = queue.size() == n && queue.front() == 0
+                && queue.hasValidStructureForTesting();
+        for (int i = 0; i < n; i++) ok &= queue.dequeue() == i;
+        ok &= queue.isEmpty() && queue.hasValidStructureForTesting();
+        check(ok, true);
+    }
+
     public static void main(String[] args) {
         testQueue();
+        testLongRunsAndSingletonReuse();
+        testLargeAggregateWorkload();
+        System.out.println(failures == 0 ? "All tests passed." : failures + " test(s) failed.");
+        if (failures > 0) System.exit(1);
     }
 }

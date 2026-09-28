@@ -41,15 +41,29 @@ def postorder_helper(node, result):
     pass
 
 
+failures = 0
+
+
 def check(name, actual, expected):
+    global failures
     if actual == expected:
         print("pass:", name)
     else:
+        failures += 1
         print(
             "fail:", name,
             "; expected", expected,
             "but got", actual
         )
+
+
+def check_summary(name, condition):
+    global failures
+    if condition:
+        print("pass:", name)
+    else:
+        failures += 1
+        print("fail:", name)
 
 
 def build_complete_tree():
@@ -141,4 +155,40 @@ def test_traversals():
     )
 
 
+def test_irregular_tree_and_independent_results():
+    root = BinaryNode(10)
+    root.left = BinaryNode(20); root.right = BinaryNode(30)
+    root.left.right = BinaryNode(40); root.left.right.left = BinaryNode(20)
+    root.right.left = BinaryNode(50); root.right.left.right = BinaryNode(60)
+    check("irregular preorder", preorder(root), [10, 20, 40, 20, 30, 50, 60])
+    check("irregular inorder", inorder(root), [20, 20, 40, 10, 50, 60, 30])
+    check("irregular postorder", postorder(root), [20, 40, 20, 60, 50, 30, 10])
+    first = preorder(root)
+    first.clear()
+    check("returned lists are independent", preorder(root), [10, 20, 40, 20, 30, 50, 60])
+    check("interior subtree", inorder(root.right), [50, 60, 30])
+
+
+def test_hundred_thousand_node_complete_tree():
+    count = 100_000
+    nodes = [BinaryNode(i) for i in range(count)]
+    for i, node in enumerate(nodes):
+        left = 2 * i + 1
+        right = left + 1
+        if left < count:
+            node.left = nodes[left]
+        if right < count:
+            node.right = nodes[right]
+    pre, ino, post = preorder(nodes[0]), inorder(nodes[0]), postorder(nodes[0])
+    ok = (len(pre) == count and len(ino) == count and len(post) == count
+          and pre[0] == 0 and ino[0] == 65_535 and post[-1] == 0)
+    ordered = list(range(count))
+    ok = sorted(pre) == ordered and sorted(ino) == ordered and sorted(post) == ordered and ok
+    check_summary("100,000-node depth-first traversals", ok)
+
+
 test_traversals()
+test_irregular_tree_and_independent_results()
+test_hundred_thousand_node_complete_tree()
+if failures:
+    raise SystemExit(1)

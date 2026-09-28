@@ -59,6 +59,10 @@ class SortedArrayMinPriorityQueue:
         """Double the backing array's capacity when it is full."""
         # TODO
 
+    def entries_for_testing(self) -> list[str]:
+        return [f"{entry.value}:{entry.priority_key}"
+                for entry in self._entries[:self._count] if entry is not None]
+
 
 failures = 0
 
@@ -90,6 +94,10 @@ def check_entry(
         )
 
 
+def check_empty(actual: Optional[Entry], label: str) -> None:
+    check(actual, None, label)
+
+
 def test_sorted_array_priority_queue() -> None:
     queue = SortedArrayMinPriorityQueue(2)
 
@@ -105,6 +113,8 @@ def test_sorted_array_priority_queue() -> None:
     queue.insert("C", 7)
     queue.insert("D", 4)
     queue.insert("E", 2)
+    check(queue.entries_for_testing(), ["C:7", "A:5", "D:4", "E:2", "B:2"],
+          "physical order is worst-to-best with stable ties")
 
     check(queue.size(), 5, "size after five insertions")
     check_entry(queue.peek(), "B", 2, "peek returns earliest best entry")
@@ -121,6 +131,21 @@ def test_sorted_array_priority_queue() -> None:
     check(queue.extract(), None, "extract remains safe when empty")
 
 
+def test_large_stable_drain():
+    queue = SortedArrayMinPriorityQueue(1)
+    for i in range(500): queue.insert(f"v{i}", i % 17)
+    check(queue.size(), 500, "size after large insertion")
+    for priority in range(17):
+        for i in range(priority, 500, 17):
+            check_entry(queue.extract(), f"v{i}", priority, f"stable large extraction {i}")
+    check(queue.is_empty(), True, "empty after large drain")
+    check_empty(queue.extract(), "extract after large drain")
+
+
 if __name__ == "__main__":
     test_sorted_array_priority_queue()
+    test_large_stable_drain()
     print("All tests passed." if failures == 0 else f"{failures} test(s) failed.")
+
+if __name__ == "__main__" and failures:
+    raise SystemExit(1)

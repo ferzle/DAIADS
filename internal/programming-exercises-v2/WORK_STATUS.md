@@ -1,6 +1,6 @@
 # Programming Exercises v2 Work Status
 
-Last updated: 2026-09-24
+Last updated: 2026-09-28
 
 ## Helper-method and large-input enhancements complete
 
@@ -31,8 +31,8 @@ per-structure additions and deliberate omissions, and
 - Confirmed that 32 C++ files compile independently as C++17 with `-Wall`,
   `-Wextra`, and `-pedantic`.
 - Confirmed that 31 Python files parse independently.
-- Confirmed that the live and v2 trees contain the same 716 implementation
-  `TODO` markers.
+- Confirmed that the pre-promotion live tree (now v0) and v2 contain the same
+  716 implementation `TODO` markers.
 
 ## Final audit results
 
@@ -42,8 +42,9 @@ per-structure additions and deliberate omissions, and
   prerequisite left later test state invalid. The tests were corrected to use
   bounds checks or scenario-level exception reporting, then recompiled and
   rerun with clean diagnostic failure statuses.
-- All 95 implementation prefixes match the corresponding live starter after
-  excluding only test counters and test-support includes.
+- All 95 implementation prefixes match the corresponding pre-promotion starter
+  now preserved in v0, after excluding only test counters and test-support
+  includes.
 - All 716 current implementation `TODO` markers are preserved verbatim.
 - No compiled binaries, Java class files, or Python bytecode were left in the
   v2 directory.
@@ -61,8 +62,10 @@ per-structure additions and deliberate omissions, and
 - Corrected the Python 2-3-tree large workload to call `size()` instead of
   comparing the `size` method object with the expected integer.
 
-The v2 candidate is complete and ready for review. No files have been promoted
-to the live download tree.
-
-The live `Content/Code/` files have not been replaced and have no tracked
-changes from this work.
+The v2 candidate was promoted to the live `Content/Code/` download tree on
+2026-09-28. Immediately before promotion, a fresh audit compiled or parsed all
+95 files and confirmed that all 95 deliberately unfinished suites exited with
+ordinary failure status within 30 seconds, with no accidental passes, signals,
+timeouts, or build failures. Post-copy comparison confirmed that production
+matches v2 byte-for-byte. The former production tree is archived unchanged at
+`internal/programming-exercises-v0/Content/Code/`.

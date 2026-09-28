@@ -1,3 +1,4 @@
+import java.util.Arrays;
 import java.util.Optional;
 
 public class SortedArrayPriorityQueueExercise {
@@ -81,6 +82,12 @@ public class SortedArrayPriorityQueueExercise {
             // TODO: When full, allocate an array with twice the old capacity
             // and copy the count used entries into it.
         }
+
+        String[] entriesForTesting() {
+            String[] result = new String[count];
+            for (int i = 0; i < count; i++) result[i] = entries[i].toString();
+            return result;
+        }
     }
 
     private static int failures = 0;
@@ -138,6 +145,9 @@ public class SortedArrayPriorityQueueExercise {
         queue.insert("C", 7);
         queue.insert("D", 4);
         queue.insert("E", 2);
+        check(Arrays.equals(queue.entriesForTesting(),
+                new String[]{"C:7", "A:5", "D:4", "E:2", "B:2"}), true,
+                "physical order is worst-to-best with stable ties");
 
         check(queue.size(), 5, "size after five insertions");
         checkEntry(queue.peek(), "B", 2, "peek returns earliest best entry");
@@ -154,10 +164,22 @@ public class SortedArrayPriorityQueueExercise {
         checkEmpty(queue.extract(), "extract remains safe when empty");
     }
 
+    private static void testLargeStableDrain() {
+        SortedArrayMinPriorityQueue queue = new SortedArrayMinPriorityQueue(1);
+        for (int i = 0; i < 500; i++) queue.insert("v" + i, i % 17);
+        check(queue.size(), 500, "size after large insertion");
+        for (int priority = 0; priority < 17; priority++)
+            for (int i = priority; i < 500; i += 17)
+                checkEntry(queue.extract(), "v" + i, priority, "stable large extraction " + i);
+        check(queue.isEmpty(), true, "empty after large drain"); checkEmpty(queue.extract(), "extract after large drain");
+    }
+
     public static void main(String[] args) {
         testSortedArrayPriorityQueue();
+        testLargeStableDrain();
         System.out.println(failures == 0
                 ? "All tests passed."
                 : failures + " test(s) failed.");
+        if (failures > 0) System.exit(1);
     }
 }

@@ -50,12 +50,46 @@ class IntDeque:
         # TODO
         return -1
 
+    def has_valid_structure_for_testing(self):
+        if (self.front is None) != (self.back is None):
+            return False
+        if self.front is not None and self.front.prev is not None:
+            return False
+        if self.back is not None and self.back.next is not None:
+            return False
+        reachable = 0
+        previous = None
+        node = self.front
+        while node is not None:
+            if node.prev is not previous or reachable > self.count:
+                return False
+            previous = node
+            reachable += 1
+            node = node.next
+        if previous is not self.back or reachable != self.count:
+            return False
+        backward = 0
+        next_node = None
+        node = self.back
+        while node is not None:
+            if node.next is not next_node or backward > self.count:
+                return False
+            next_node = node
+            backward += 1
+            node = node.prev
+        return next_node is self.front and backward == self.count
+
+
+failures = 0
+
 
 def check(actual, expected):
+    global failures
     line = inspect.currentframe().f_back.f_lineno
     if actual == expected:
         print(f"PASS at test line {line}: got {actual!r}")
     else:
+        failures += 1
         print(f"FAIL at test line {line}: expected {expected!r} but got {actual!r}")
 
 
@@ -92,6 +126,7 @@ def test_deque():
     check(deque.size(), 4)
     check(deque.peek_front(), 2)
     check(deque.peek_back(), 9)
+    check(deque.has_valid_structure_for_testing(), True)
 
     check(deque.remove_front(), 2)       # [4, 7, 9]
     check(deque.peek_front(), 4)
@@ -125,6 +160,7 @@ def test_deque():
     check(deque.size(), 0)
     check(deque.peek_front(), -1)
     check(deque.peek_back(), -1)
+    check(deque.has_valid_structure_for_testing(), True)
     check(deque.remove_front(), -1)
     check(deque.remove_back(), -1)
 
@@ -148,4 +184,45 @@ def test_deque():
     check(deque.size(), 0)
 
 
+def test_large_mixed_runs():
+    deque = IntDeque()
+    for round_number in range(20):
+        for i in range(100):
+            check(deque.add_front(round_number * 1000 + i), True)
+            check(deque.add_back(round_number * 1000 + 500 + i), True)
+        check(deque.size(), 200)
+        for i in range(99, -1, -1):
+            check(deque.remove_front(), round_number * 1000 + i)
+        for i in range(99, -1, -1):
+            check(deque.remove_back(), round_number * 1000 + 500 + i)
+        check(deque.is_empty(), True)
+    deque.add_front(7)
+    deque.clear()
+    check(deque.is_empty(), True)
+    check(deque.peek_front(), -1)
+    check(deque.peek_back(), -1)
+    check(deque.add_back(8), True)
+    check(deque.remove_front(), 8)
+
+
+def test_large_aggregate_workload():
+    n = 100_000
+    deque = IntDeque()
+    ok = True
+    for value in range(n):
+        ok = deque.add_back(value) and ok
+    ok = (deque.size() == n and deque.peek_front() == 0
+          and deque.peek_back() == n - 1
+          and deque.has_valid_structure_for_testing() and ok)
+    for value in range(n):
+        ok = deque.remove_front() == value and ok
+    ok = deque.is_empty() and deque.has_valid_structure_for_testing() and ok
+    check(ok, True)
+
+
 test_deque()
+test_large_mixed_runs()
+test_large_aggregate_workload()
+
+if failures:
+    raise SystemExit(1)

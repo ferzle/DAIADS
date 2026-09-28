@@ -1,7 +1,11 @@
 #include <iostream>
+#include <utility>
+#include <vector>
 
 using namespace std;
 
+
+int failures = 0;
 class BinarySearchTree {
 private:
   struct Node {
@@ -168,12 +172,19 @@ public:
       return hasCorrectParentReferences(root);
   }
 
+  bool rootKeyForTesting(int& key) {
+      if (root == nullptr) return false;
+      key = root->key;
+      return true;
+  }
+
 };
 
   void check(bool condition, const char* description) {
     if (condition) {
       cout << "pass: " << description << endl;
     } else {
+      ++failures;
       cout << "fail: " << description << endl;
     }
   }
@@ -222,6 +233,8 @@ public:
 
     check(sameArray(actual, actualLength, expected1, 10),
         "inorder traversal after insertion");
+    check(tree.rootKeyForTesting(result) && result == 50,
+        "50 remains the root after insertion");
 
     check(!tree.insert(60), "duplicate insertion fails");
     check(tree.size() == 10, "duplicate insertion does not change size");
@@ -273,6 +286,8 @@ public:
         "inorder traversal after removing 50");
     check(tree.hasCorrectParentReferences(),
         "parent references after removing 50");
+    check(tree.rootKeyForTesting(result) && result == 57,
+        "successor substitution changes the root key to 57");
 
     check(tree.size() == 7, "the final size is 7");
     check(!tree.remove(50), "removing 50 again fails");
@@ -284,11 +299,47 @@ public:
     check(oneNodeTree.insert(10), "insert into an empty tree");
     check(oneNodeTree.remove(10), "remove the only node");
     check(oneNodeTree.isEmpty(), "the one-node tree becomes empty");
+    check(!oneNodeTree.rootKeyForTesting(result),
+        "the drained one-node tree has no root");
     check(oneNodeTree.hasCorrectParentReferences(),
         "the empty tree has valid parent references");
   }
 
+void testLargeOrderedUpdates() {
+  BinarySearchTree tree;
+  for (int key = 0; key < 500; key++) check(tree.insert(key), "insert ascending key");
+  check(tree.size() == 500 && tree.hasCorrectParentReferences(), "ascending tree size and parent links");
+  for (int key = 0; key < 500; key++) check(tree.contains(key), "contains ascending key");
+  for (int key = 0; key < 500; key += 2) { check(tree.remove(key), "remove even key"); check(tree.hasCorrectParentReferences(), "parent links after removal"); }
+  int minimum = -1; check(tree.size() == 250 && tree.minimum(minimum) && minimum == 1, "size and minimum after removals");
+  for (int key = 1; key < 499; key += 2) { int next = -1; check(tree.successor(key, next) && next == key + 2, "successor among odd keys"); }
+  for (int key = 1; key < 500; key += 2) check(tree.remove(key), "drain odd key");
+  check(tree.isEmpty() && tree.hasCorrectParentReferences(), "empty after complete drain");
+}
+
+void testLargeBalancedOrderWorkload() {
+  const int count = 20000;
+  BinarySearchTree tree;
+  vector<pair<int, int>> ranges{{0, count - 1}};
+  bool ok = true;
+  while (!ranges.empty()) {
+    auto [low, high] = ranges.back(); ranges.pop_back();
+    if (low > high) continue;
+    int middle = low + (high - low) / 2;
+    ok = tree.insert(middle) && ok;
+    if (middle + 1 <= high) ranges.push_back({middle + 1, high});
+    if (low <= middle - 1) ranges.push_back({low, middle - 1});
+  }
+  for (int key = 0; key < count; key++) ok = tree.contains(key) && ok;
+  for (int key = 0; key < count; key += 2) ok = tree.remove(key) && ok;
+  for (int key = 0; key < count; key++) ok = (tree.contains(key) == (key % 2 == 1)) && ok;
+  check(ok && tree.size() == count / 2 && tree.hasCorrectParentReferences(),
+        "20,000-key balanced-order aggregate workload");
+}
+
 int main() {
   testBinarySearchTree();
-  return 0;
+  testLargeOrderedUpdates();
+  testLargeBalancedOrderWorkload();
+  return failures == 0 ? 0 : 1;
 }

@@ -139,8 +139,23 @@ void testSet() {
     check(set.add(5), true, "set can be reused after clear");
 }
 
+void testLargeOrderedWorkload() {
+    SortedArrayIntSet set(1);
+    for (int i = 999; i >= 0; i--) check(set.add(i), true, "descending add");
+    check(set.size(), 1000, "size after descending additions");
+    std::vector<int> ordered = set.toVector();
+    check(static_cast<int>(ordered.size()), 1000, "ordered output size");
+    for (int i = 0; i < static_cast<int>(ordered.size()); i++)
+        check(ordered[i], i, "sorted position");
+    for (int i = 0; i < 1000; i += 2) check(set.remove(i), true, "remove even key");
+    check(set.size(), 500, "size after removing even keys");
+    for (int i = 0; i < 1000; i++) check(set.contains(i), i % 2 == 1, "membership after removals");
+    set.clear(); check(set.add(42), true, "reuse after clear");
+}
+
 int main() {
     testSet();
+    testLargeOrderedWorkload();
     std::cout << (failures == 0 ? "All tests passed.\n"
                                 : std::to_string(failures) + " test(s) failed.\n");
     return failures == 0 ? 0 : 1;

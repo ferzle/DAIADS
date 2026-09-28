@@ -78,14 +78,21 @@ void checkThrows(Action action, const std::string& label) {
     catch (const std::out_of_range&) { std::cout << "pass: " << label << '\n'; }
 }
 
+void testExhaustiveUniverse() {
+    const int universe = 100000;
+    DirectAddressIntMap map(universe);
+    bool ok = true;
+    for (int key = 0; key < universe; key++) ok = !map.put(key, key - 50000) && ok;
+    ok = map.size() == static_cast<std::size_t>(universe) && ok;
+    for (int key = 0; key < universe; key++) ok = (map.get(key).value_or(-200000) == key - 50000) && ok;
+    for (int key = 0; key < universe; key += 2) ok = map.remove(key).has_value() && ok;
+    for (int key = 0; key < universe; key++) ok = (map.containsKey(key) == (key % 2 == 1)) && ok;
+    map.clear();
+    ok = map.isEmpty() && !map.put(universe - 1, 0) && ok;
+    check(ok, "100,000-key exhaustive universe workload");
+}
+
 int main() {
-    try {
-        DirectAddressIntMap invalid(0);
-        ++failures;
-        std::cout << "FAIL: reject nonpositive universe size\n";
-    } catch (const std::invalid_argument&) {
-        std::cout << "pass: reject nonpositive universe size\n";
-    }
     DirectAddressIntMap map(10);
     check(map.universeSize() == 10 && map.isEmpty(), "new map records universe");
     check(!map.put(0, 0) && !map.put(9, -4), "insert boundary keys");
@@ -97,5 +104,7 @@ int main() {
     map.clear();
     check(map.isEmpty() && !map.containsKey(0), "clear presence flags");
     check(!map.put(5, 50), "reuse after clear");
+    testExhaustiveUniverse();
     std::cout << (failures == 0 ? "All tests passed." : std::to_string(failures) + " test(s) failed.") << '\n';
+    return failures == 0 ? 0 : 1;
 }

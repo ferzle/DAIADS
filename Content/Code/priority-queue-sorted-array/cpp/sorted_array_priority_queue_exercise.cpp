@@ -2,6 +2,7 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 using namespace std;
 
@@ -88,6 +89,14 @@ public:
         // Overwrite the vacated cell with a default Entry.
         return nullopt;
     }
+
+    vector<string> entriesForTesting() const {
+        vector<string> result;
+        for (int i = 0; i < count; ++i) {
+            result.push_back(entries[i].value + ":" + to_string(entries[i].priorityKey));
+        }
+        return result;
+    }
 };
 
 int failures = 0;
@@ -153,6 +162,8 @@ void testSortedArrayPriorityQueue() {
     queue.insert("C", 7);
     queue.insert("D", 4);
     queue.insert("E", 2);
+    check(queue.entriesForTesting() == vector<string>({"C:7", "A:5", "D:4", "E:2", "B:2"}),
+          true, "physical order is worst-to-best with stable ties");
 
     check(queue.size(), 5, "size after five insertions");
     checkEntry(queue.peek(), "B", 2, "peek returns earliest best entry");
@@ -169,11 +180,22 @@ void testSortedArrayPriorityQueue() {
     checkEmpty(queue.extract(), "extract remains safe when empty");
 }
 
+void testLargeStableDrain() {
+    SortedArrayMinPriorityQueue queue(1);
+    for (int i = 0; i < 500; i++) queue.insert("v" + std::to_string(i), i % 17);
+    check(queue.size(), 500, "size after large insertion");
+    for (int priority = 0; priority < 17; priority++)
+        for (int i = priority; i < 500; i += 17)
+            checkEntry(queue.extract(), "v" + std::to_string(i), priority, "stable large extraction");
+    check(queue.isEmpty(), true, "empty after large drain"); checkEmpty(queue.extract(), "extract after large drain");
+}
+
 int main() {
     testSortedArrayPriorityQueue();
+    testLargeStableDrain();
     cout << (failures == 0
         ? "All tests passed."
         : to_string(failures) + " test(s) failed.")
          << '\n';
-    return 0;
+    return failures == 0 ? 0 : 1;
 }

@@ -9,6 +9,7 @@
 #include <vector>
 
 using namespace std;
+int failures = 0;
 
 /**
  * Starter implementation for an ordered set backed by a 2-3 tree.
@@ -342,6 +343,7 @@ public:
 // ---------------------------- Tests ----------------------------
 
 static void check(bool condition, const string& description) {
+    if (!condition) ++failures;
     cout << (condition ? "pass: " : "FAIL: ") << description << '\n';
 }
 
@@ -365,7 +367,38 @@ static bool contentsMatch(const TwoThreeTree& tree, const set<int>& expected) {
         && tree.inorderValues() == setValues(expected);
 }
 
+void testLargeDifferentialUpdates() {
+    TwoThreeTree tree; std::set<int> expected; long long state = 0x5EED;
+    for (int operation = 0; operation < 3000; operation++) {
+        state = (state * 1103515245 + 12345) & 0x7fffffff;
+        int key = static_cast<int>(state % 1500);
+        bool actual = operation % 3 == 0 ? tree.remove(key) : tree.insert(key);
+        bool oracle = operation % 3 == 0 ? expected.erase(key) > 0 : expected.insert(key).second;
+        check(actual == oracle, "large operation result " + std::to_string(operation));
+        check(tree.inorderValues() == setValues(expected), "large contents " + std::to_string(operation));
+        check(tree.hasValidStructure(), "large structure " + std::to_string(operation));
+    }
+    std::vector<int> remaining(expected.begin(), expected.end());
+    for (int key : remaining) check(tree.remove(key), "large final drain key");
+    check(tree.isEmpty() && tree.hasValidStructure(), "valid empty tree after large drain");
+}
+
+void testTwentyThousandOrderedKeys() {
+    const int count = 20000;
+    TwoThreeTree tree;
+    bool ok = true;
+    for (int key = 0; key < count; key++) ok = tree.insert(key) && ok;
+    for (int key = 0; key < count; key++) ok = tree.contains(key) && ok;
+    ok = tree.size() == count && tree.hasValidStructure() && ok;
+    for (int key = 0; key < count; key += 2) ok = tree.remove(key) && ok;
+    for (int key = 0; key < count; key++) ok = (tree.contains(key) == (key % 2 == 1)) && ok;
+    ok = tree.size() == count / 2 && tree.hasValidStructure() && ok;
+    check(ok, "20,000-key ordered insert/search and 10,000-key removal workload");
+}
+
 int main() {
+    testLargeDifferentialUpdates();
+    testTwentyThousandOrderedKeys();
     TwoThreeTree tree;
     set<int> expected;
 
@@ -384,7 +417,7 @@ int main() {
         if (!tree.insert(value)) {
             check(false, "insert " + to_string(value));
             cout << "Complete insertion before running later tests.\n";
-            return 0;
+            return 1;
         }
         check(true, "insert " + to_string(value));
         expected.insert(value);
@@ -412,7 +445,7 @@ int main() {
         if (!tree.remove(value)) {
             check(false, "remove " + to_string(value));
             cout << "Complete removal before running randomized tests.\n";
-            return 0;
+            return 1;
         }
         check(true, "remove " + to_string(value));
         expected.erase(value);
@@ -425,7 +458,7 @@ int main() {
     for (int value = 1; value <= 31; value++) {
         if (!sortedTree.insert(value) || !sortedTree.hasValidStructure()) {
             check(false, "sorted insertion through " + to_string(value));
-            return 0;
+            return 1;
         }
     }
     check(true, "sorted insertion through 31");
@@ -449,7 +482,7 @@ int main() {
             : randomTree.remove(value);
         if (actualResult != expectedResult || !contentsMatch(randomTree, oracle)) {
             check(false, "randomized differential test at update " + to_string(step));
-            return 0;
+            return 1;
         }
     }
     check(true, "500 randomized differential updates");
@@ -458,15 +491,16 @@ int main() {
     for (int value : remaining) {
         if (!randomTree.remove(value)) {
             check(false, "remove all remaining keys at " + to_string(value));
-            return 0;
+            return 1;
         }
         oracle.erase(value);
         if (!contentsMatch(randomTree, oracle)) {
             check(false, "invariants while removing all remaining keys");
-            return 0;
+            return 1;
         }
     }
     check(true, "remove all remaining keys");
     check(randomTree.isEmpty(), "tree is empty after removing every key");
     check(randomTree.height() == -1, "empty tree has height -1");
+    return failures == 0 ? 0 : 1;
 }

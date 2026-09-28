@@ -66,6 +66,10 @@ class UnsortedArrayMinPriorityQueue:
         """Double the backing array's capacity when it is full."""
         # TODO
 
+    def entries_for_testing(self) -> list[str]:
+        return [f"{entry.value}:{entry.priority_key}#{entry.sequence_number}"
+                for entry in self._entries[:self._count] if entry is not None]
+
 
 failures = 0
 
@@ -97,6 +101,10 @@ def check_entry(
         )
 
 
+def check_empty(actual: Optional[Entry], label: str) -> None:
+    check(actual, None, label)
+
+
 def test_gap_filling_and_stability() -> None:
     queue = UnsortedArrayMinPriorityQueue(2)
 
@@ -110,6 +118,9 @@ def test_gap_filling_and_stability() -> None:
     queue.insert("C", 4)
     queue.insert("D", 3)
     queue.insert("E", 1)
+    check(queue.entries_for_testing(),
+          ["A:5#0", "B:1#1", "C:4#2", "D:3#3", "E:1#4"],
+          "insertions append entries with increasing sequence numbers")
 
     check(queue.size(), 5, "resizing preserves all entries")
     check_entry(queue.peek(), "B", 1, "peek returns earliest best entry")
@@ -117,6 +128,9 @@ def test_gap_filling_and_stability() -> None:
 
     # B is not last, so extracting it must fill an interior gap.
     check_entry(queue.extract(), "B", 1, "interior-gap extraction")
+    check(queue.entries_for_testing(),
+          ["A:5#0", "E:1#4", "C:4#2", "D:3#3"],
+          "last entry fills the extracted interior gap")
     check_entry(queue.extract(), "E", 1, "stable tied-key extraction")
     check_entry(queue.extract(), "D", 3, "replacement remains searchable")
     check_entry(queue.extract(), "C", 4, "next extraction")
@@ -137,7 +151,22 @@ def test_best_entry_already_last() -> None:
     check_entry(queue.extract(), "Y", 6, "remaining entries stay valid")
 
 
+def test_large_stable_drain():
+    queue = UnsortedArrayMinPriorityQueue(1)
+    for i in range(500): queue.insert(f"v{i}", i % 17)
+    check(queue.size(), 500, "size after large insertion")
+    for priority in range(17):
+        for i in range(priority, 500, 17):
+            check_entry(queue.extract(), f"v{i}", priority, f"stable large extraction {i}")
+    check(queue.is_empty(), True, "empty after large drain")
+    check_empty(queue.extract(), "extract after large drain")
+
+
 if __name__ == "__main__":
     test_gap_filling_and_stability()
     test_best_entry_already_last()
+    test_large_stable_drain()
     print("All tests passed." if failures == 0 else f"{failures} test(s) failed.")
+
+if __name__ == "__main__" and failures:
+    raise SystemExit(1)

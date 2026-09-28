@@ -30,12 +30,20 @@ class IntQueue:
         # TODO
         return -1
 
+    def used_values_for_testing(self):
+        return self.A[:self.count]
+
+
+failures = 0
+
 
 def check(actual, expected):
+    global failures
     line = inspect.currentframe().f_back.f_lineno
     if actual == expected:
         print(f"PASS at test line {line}: got {actual!r}")
     else:
+        failures += 1
         print(f"FAIL at test line {line}: expected {expected!r} but got {actual!r}")
 
 
@@ -65,10 +73,12 @@ def test_queue():
 
     check(queue.front(), 4)
     check(queue.dequeue(), 4)
+    check(queue.used_values_for_testing(), [7, 9])
     check(queue.front(), 7)
     check(queue.size(), 2)
 
     check(queue.enqueue(2), True)
+    check(queue.used_values_for_testing(), [7, 9, 2])
     check(queue.dequeue(), 7)
     check(queue.dequeue(), 9)
     check(queue.dequeue(), 2)
@@ -78,4 +88,25 @@ def test_queue():
     check(queue.dequeue(), -1)
 
 
+def test_capacity_boundaries_and_exhaustion():
+    for capacity in (1, 2, 5, 64):
+        queue = IntQueue(capacity)
+        for i in range(capacity):
+            check(queue.enqueue(1000 + i), True)
+            check(queue.front(), 1000)
+            check(queue.size(), i + 1)
+        check(queue.is_full(), True)
+        check(queue.enqueue(9999), False)
+        for i in range(capacity):
+            check(queue.dequeue(), 1000 + i)
+            check(queue.size(), capacity - i - 1)
+        check(queue.is_empty(), True)
+        check(queue.enqueue(77), True)
+        check(queue.dequeue(), 77)
+
+
 test_queue()
+test_capacity_boundaries_and_exhaustion()
+
+if failures:
+    raise SystemExit(1)

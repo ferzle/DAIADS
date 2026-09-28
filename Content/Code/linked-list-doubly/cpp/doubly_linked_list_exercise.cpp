@@ -3,6 +3,8 @@
 #include <string>
 using namespace std;
 
+
+int failures = 0;
 class IntDoublyList {
 private:
     struct Node {
@@ -154,6 +156,7 @@ void checkAtLine(const string& actual, const string& expected, int line, const c
     if (actual == expected) {
         cout << "PASS at test line " << line << " (" << expression << "): got \"" << actual << "\"" << endl;
     } else {
+        ++failures;
         cout << "FAIL at test line " << line << " (" << expression
              << "): expected \"" << expected << "\" but got \"" << actual << "\"" << endl;
     }
@@ -163,6 +166,7 @@ void checkAtLine(int actual, int expected, int line, const char* expression) {
     if (actual == expected) {
         cout << "PASS at test line " << line << " (" << expression << "): got " << actual << endl;
     } else {
+        ++failures;
         cout << "FAIL at test line " << line << " (" << expression
              << "): expected " << expected << " but got " << actual << endl;
     }
@@ -172,6 +176,7 @@ void checkAtLine(bool actual, bool expected, int line, const char* expression) {
     if (actual == expected) {
         cout << "PASS at test line " << line << " (" << expression << "): got " << actual << endl;
     } else {
+        ++failures;
         cout << "FAIL at test line " << line << " (" << expression
              << "): expected " << (expected ? "true" : "false")
              << " but got " << (actual ? "true" : "false") << endl;
@@ -240,7 +245,27 @@ void testDoublyList() {
     check(list.size(), 4);
 }
 
+void testLargeDrainAndEndpointHelpers() {
+    IntDoublyList list;
+    const int half = 50000;
+    bool ok = true;
+    for (int i = 0; i < half; i++) list.insertAtTail(i);
+    ok = list.size() == half && ok;
+    for (int i = 0; i < half; i++) ok = (list.deleteFromHead() == i) && ok;
+    for (int i = 0; i < half; i++) list.insertAtHead(i);
+    ok = list.size() == half && ok;
+    for (int i = 0; i < half; i++) ok = (list.deleteFromTail() == i) && ok;
+    check(ok, true);
+    check(list.isEmpty(), true); check(list.traverseForward(), ""); check(list.traverseBackward(), "");
+    list.insertAtTail(7); list.insertAtTail(7); list.insertAtTail(7);
+    auto* first = list.searchForward(7);
+    list.insertBefore(first, 6); list.insertAfter(first, 8);
+    check(list.traverseForward(), "6 -> 7 -> 8 -> 7 -> 7");
+    check(list.traverseBackward(), "7 -> 7 -> 8 -> 7 -> 6");
+}
+
 int main() {
     testDoublyList();
-    return 0;
+    testLargeDrainAndEndpointHelpers();
+    return failures == 0 ? 0 : 1;
 }

@@ -2,6 +2,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DepthFirstTraversalExercise {
+    static int failures = 0;
     static class BinaryNode {
         int value;
         BinaryNode left;
@@ -52,12 +53,18 @@ public class DepthFirstTraversalExercise {
         if (actual.equals(expected)) {
             System.out.println("pass: " + name);
         } else {
+            failures++;
             System.out.println(
                 "fail: " + name
                 + "; expected " + expected
                 + " but got " + actual
             );
         }
+    }
+
+    static void checkSummary(String name, boolean condition) {
+        if (condition) System.out.println("pass: " + name);
+        else { failures++; System.out.println("fail: " + name); }
     }
 
     static BinaryNode buildCompleteTree() {
@@ -149,7 +156,45 @@ public class DepthFirstTraversalExercise {
         );
     }
 
+    static void testIrregularTreeAndIndependentResults() {
+        BinaryNode root = new BinaryNode(10);
+        root.left = new BinaryNode(20); root.right = new BinaryNode(30);
+        root.left.right = new BinaryNode(40); root.left.right.left = new BinaryNode(20);
+        root.right.left = new BinaryNode(50); root.right.left.right = new BinaryNode(60);
+        check("irregular preorder", preorder(root), List.of(10, 20, 40, 20, 30, 50, 60));
+        check("irregular inorder", inorder(root), List.of(20, 20, 40, 10, 50, 60, 30));
+        check("irregular postorder", postorder(root), List.of(20, 40, 20, 60, 50, 30, 10));
+        List<Integer> first = preorder(root); first.clear();
+        check("returned lists are independent", preorder(root), List.of(10, 20, 40, 20, 30, 50, 60));
+        check("interior subtree", inorder(root.right), List.of(50, 60, 30));
+    }
+
+    static void testHundredThousandNodeCompleteTree() {
+        final int count = 100_000;
+        BinaryNode[] nodes = new BinaryNode[count];
+        for (int i = 0; i < count; i++) nodes[i] = new BinaryNode(i);
+        for (int i = 0; i < count; i++) {
+            int left = 2 * i + 1, right = left + 1;
+            if (left < count) nodes[i].left = nodes[left];
+            if (right < count) nodes[i].right = nodes[right];
+        }
+        List<Integer> pre = preorder(nodes[0]);
+        List<Integer> in = inorder(nodes[0]);
+        List<Integer> post = postorder(nodes[0]);
+        boolean ok = pre.size() == count && in.size() == count && post.size() == count
+                && pre.get(0) == 0 && in.get(0) == 65_535 && post.get(count - 1) == 0;
+        pre.sort(Integer::compareTo); in.sort(Integer::compareTo); post.sort(Integer::compareTo);
+        if (ok) {
+            for (int i = 0; i < count; i++) ok &= pre.get(i) == i && in.get(i) == i && post.get(i) == i;
+        }
+        checkSummary("100,000-node depth-first traversals", ok);
+    }
+
     public static void main(String[] args) {
         testTraversals();
+        testIrregularTreeAndIndependentResults();
+        testHundredThousandNodeCompleteTree();
+        System.out.println(failures == 0 ? "All tests passed." : failures + " test(s) failed.");
+        if (failures > 0) System.exit(1);
     }
 }

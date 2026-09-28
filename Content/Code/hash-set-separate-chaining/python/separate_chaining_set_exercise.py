@@ -60,6 +60,27 @@ class SeparateChainingIntSet:
             node = node.next
         return keys
 
+    def has_valid_structure_for_testing(self):
+        seen = set()
+        reachable = 0
+        for index, head in enumerate(self._buckets):
+            slow = head
+            fast = head
+            while fast is not None and fast.next is not None:
+                slow = slow.next
+                fast = fast.next.next
+                if slow is fast:
+                    return False
+            node = head
+            while node is not None:
+                if (node.key < 0 or self._bucket_index(node.key) != index
+                        or node.key in seen):
+                    return False
+                seen.add(node.key)
+                reachable += 1
+                node = node.next
+        return reachable == self._count
+
 
 failures = 0
 
@@ -88,7 +109,6 @@ def check_raises(action, label):
 
 
 def test_set():
-    check_raises(lambda: SeparateChainingIntSet(0), "reject nonpositive capacity")
     values = SeparateChainingIntSet(8)
     check_equal(values.size(), 0, "new set has size zero")
     check(not values.contains(6), "lookup in an empty bucket")
@@ -98,6 +118,7 @@ def test_set():
     check(values.add(9) and values.add(17) and values.add(25), "add colliding keys")
     check_equal(values.bucket_snapshot(1), [1, 9, 17, 25],
                 "colliding keys append at the tail")
+    check(values.has_valid_structure_for_testing(), "collision chain has valid structure")
     check(not values.add(17), "reject duplicate key")
     check_equal(values.size(), 4, "duplicate does not change size")
     check(values.contains(1) and values.contains(17) and values.contains(25),
@@ -124,12 +145,39 @@ def test_set():
                 "rehashing preserves tail order in bucket 2")
     check_equal(growing.bucket_snapshot(6), [6, 14],
                 "new key appends after rehashing")
+    check(growing.has_valid_structure_for_testing(), "valid structure after rehashing")
 
     check_raises(lambda: values.contains(-1), "reject negative lookup key")
     check_raises(lambda: values.add(-1), "reject negative insertion key")
     check_raises(lambda: values.remove(-1), "reject negative removal key")
 
 
+def test_large_resize_and_collision_workload():
+    values = SeparateChainingIntSet(2)
+    for key in range(1000): check(values.add(key * 16), f"large add {key}")
+    check(values.size() == 1000, "size after collision-heavy growth")
+    for key in range(1000): check(values.contains(key * 16), f"large contains {key}")
+    for key in range(0, 1000, 2): check(values.remove(key * 16), f"large remove {key}")
+    for key in range(1000): check(values.contains(key * 16) == (key % 2 == 1), f"large membership {key}")
+    check(values.has_valid_structure_for_testing(), "valid structure after collision-heavy workload")
+
+
+def test_hundred_thousand_distributed_keys():
+    count = 100_000
+    values = SeparateChainingIntSet(4)
+    ok = all(values.add(key) for key in range(count))
+    ok = all(values.contains(key) for key in range(count)) and ok
+    ok = all(values.remove(key) for key in range(0, count, 2)) and ok
+    ok = all(values.contains(key) == (key % 2 == 1) for key in range(count)) and ok
+    check(ok and values.size() == count // 2 and values.has_valid_structure_for_testing(),
+          "100,000-key distributed aggregate workload")
+
+
 if __name__ == "__main__":
     test_set()
+    test_large_resize_and_collision_workload()
+    test_hundred_thousand_distributed_keys()
     print("All tests passed." if failures == 0 else f"{failures} test(s) failed.")
+
+if __name__ == "__main__" and failures:
+    raise SystemExit(1)

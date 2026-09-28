@@ -1,7 +1,10 @@
 #include <iostream>
+#include <vector>
 
 using namespace std;
 
+
+int failures = 0;
 class IntList {
 private:
 int* A;
@@ -98,12 +101,17 @@ bool deleteValue(int value) {
     return false;
 }
 
+vector<int> usedValuesForTesting() const {
+    return vector<int>(A, A + count);
+}
+
 };
 
 void checkAtLine(int actual, int expected, int line, const char* expression) {
     if (actual == expected) {
         cout << "PASS at test line " << line << " (" << expression << "): got " << actual << endl;
     } else {
+        ++failures;
         cout << "FAIL at test line " << line << " (" << expression
              << "): expected " << expected << " but got " << actual << endl;
     }
@@ -113,6 +121,7 @@ void checkAtLine(bool actual, bool expected, int line, const char* expression) {
     if (actual == expected) {
         cout << "PASS at test line " << line << " (" << expression << "): got " << actual << endl;
     } else {
+        ++failures;
         cout << "FAIL at test line " << line << " (" << expression
              << "): expected " << (expected ? "true" : "false")
              << " but got " << (actual ? "true" : "false") << endl;
@@ -137,6 +146,7 @@ check(list.addLast(4), true);       // [4]
 check(list.addLast(7), true);       // [4, 7]
 check(list.addFirst(2), true);      // [2, 4, 7]
 check(list.insert(2, 9), true);     // [2, 4, 9, 7]
+check(list.usedValuesForTesting() == vector<int>({2, 4, 9, 7}), true);
 
 check(list.size(), 4);
 check(list.isEmpty(), false);
@@ -160,6 +170,7 @@ check(list.size(), 5);
 check(list.addLast(13), false);     // full
 check(list.addFirst(13), false);    // full
 check(list.insert(2, 13), false);   // full
+check(list.usedValuesForTesting() == vector<int>({2, 5, 9, 7, 11}), true);
 check(list.size(), 5);
 
 check(list.indexOf(9), 2);
@@ -212,7 +223,32 @@ check(largeOk && large.isEmpty(), true);
 
 }
 
+void testLargeIndexedWorkload() {
+    IntList list(256);
+    for (int i = 0; i < 200; i++) check(list.addLast(i % 17), true);
+    check(list.size(), 200); check(list.first(), 0); check(list.last(), 12);
+    check(list.insert(100, 999), true); check(list.get(100), 999); check(list.size(), 201);
+    check(list.remove(100), 999); check(list.size(), 200);
+    check(list.indexOf(5), 5); check(list.deleteValue(5), true); check(list.indexOf(5), 21);
+    check(list.set(0, 777), true); check(list.get(0), 777);
+    check(list.insert(-1, 8), false); check(list.insert(list.size() + 1, 8), false);
+    check(list.size(), 199);
+    for (int i = 0; i < 199; i++) list.removeLast();
+    check(list.size(), 0); check(list.addFirst(42), true); check(list.removeFirst(), 42);
+}
+
+void testHundredThousandAppendsAndReads() {
+    const int count = 100000;
+    IntList list(count);
+    bool ok = true;
+    for (int i = 0; i < count; i++) ok = list.addLast(i) && ok;
+    for (int i = 0; i < count; i++) ok = (list.get(i) == i) && ok;
+    check(ok && list.size() == count && list.first() == 0 && list.last() == count - 1, true);
+}
+
 int main() {
-  testList();
-  return 0;
+    testList();
+    testLargeIndexedWorkload();
+    testHundredThousandAppendsAndReads();
+  return failures == 0 ? 0 : 1;
 }

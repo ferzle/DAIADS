@@ -2,8 +2,11 @@
 #include <cstdlib>
 #include <iostream>
 #include <limits>
+#include <set>
 #include <string>
 #include <vector>
+
+int failures = 0;
 
 class AVLTree {
 private:
@@ -129,6 +132,14 @@ public:
     bool isEmpty() const { return nodeCount == 0; }
     bool contains(int key) const { return searchNode(key) != nullptr; }
 
+    // Test observers: expose stored metadata without showing how to maintain it.
+    int treeHeightForTesting() const { return root == nullptr ? -1 : root->height; }
+    bool rootKeyForTesting(int& key) const {
+        if (root == nullptr) return false;
+        key = root->key;
+        return true;
+    }
+
     bool insert(int key) {
         // Call bstInsert. If it succeeds, increment nodeCount exactly once,
         // then repair from the returned leaf.
@@ -159,13 +170,34 @@ public:
 };
 
 void check(bool condition, const std::string& description) {
+    if (!condition) ++failures;
     std::cout << (condition ? "pass: " : "fail: ") << description << '\n';
+}
+
+void testDifferentialUpdates() {
+    AVLTree tree; std::set<int> expected; long long state = 0x5EED;
+    for (int operation = 0; operation < 2000; operation++) {
+        state = (state * 1103515245 + 12345) & 0x7fffffff;
+        int key = static_cast<int>(state % 1000);
+        bool actual = operation % 3 == 0 ? tree.remove(key) : tree.insert(key);
+        bool oracle = operation % 3 == 0 ? expected.erase(key) > 0 : expected.insert(key).second;
+        check(actual == oracle, "differential operation result " + std::to_string(operation));
+        check(tree.size() == static_cast<int>(expected.size()), "differential size " + std::to_string(operation));
+        check(tree.inorderValues() == std::vector<int>(expected.begin(), expected.end()), "differential contents " + std::to_string(operation));
+        check(tree.hasValidStructure(), "differential AVL structure " + std::to_string(operation));
+    }
+    std::vector<int> remaining(expected.begin(), expected.end());
+    for (int key : remaining) check(tree.remove(key), "final drain key");
+    check(tree.isEmpty() && tree.hasValidStructure(), "valid empty tree after complete drain");
 }
 
 int main() {
     AVLTree tree;
+    int observedRoot = 0;
     check(tree.isEmpty(), "a new tree is empty");
     check(tree.size() == 0, "a new tree has size zero");
+    check(tree.treeHeightForTesting() == -1, "an empty tree has height -1");
+    check(!tree.rootKeyForTesting(observedRoot), "an empty tree has no root key");
     check(!tree.contains(99), "contains reports absent key 99");
     check(!tree.remove(99), "removing absent key 99 returns false");
     int keys[] = {30, 20, 10, 40, 50, 25, 27};
@@ -188,16 +220,44 @@ int main() {
         bool ok = true;
         for (int key : rotationPatterns[i]) ok = rotationTree.insert(key) && ok;
         check(ok && rotationTree.size() == 3 && rotationTree.hasValidStructure(),
-              "rotation pattern " + std::to_string(i + 1));
+            "rotation pattern " + std::to_string(i + 1));
+        check(rotationTree.rootKeyForTesting(observedRoot) && observedRoot == 20
+                && rotationTree.treeHeightForTesting() == 1,
+            "rotation pattern root and height " + std::to_string(i + 1));
+    }
+
+    int deletionPatterns[][5] = {
+        {30, 20, 40, 10, 25}, {20, 10, 30, 25, 40},
+        {30, 10, 40, 20, -1}, {20, 10, 40, 30, -1}
+    };
+    int patternLengths[] = {5, 5, 4, 4};
+    int removedKeys[] = {40, 10, 40, 10};
+    int expectedRoots[] = {20, 30, 20, 30};
+    int expectedHeights[] = {2, 2, 1, 1};
+    for (int i = 0; i < 4; i++) {
+        AVLTree deletionTree;
+        bool ok = true;
+        for (int j = 0; j < patternLengths[i]; j++) ok = deletionTree.insert(deletionPatterns[i][j]) && ok;
+        ok = deletionTree.remove(removedKeys[i]) && ok;
+        check(ok && deletionTree.rootKeyForTesting(observedRoot) && observedRoot == expectedRoots[i]
+                && deletionTree.treeHeightForTesting() == expectedHeights[i]
+                && deletionTree.hasValidStructure(),
+            "deletion rotation pattern " + std::to_string(i + 1));
     }
     AVLTree large;
     bool largeOk = true;
-    for (int i = 0; i < 1000; i++) largeOk = large.insert((i * 641) % 1000) && largeOk;
-    largeOk = large.size() == 1000 && large.hasValidStructure() && largeOk;
-    for (int i = 0; i < 1000; i += 2) largeOk = large.remove(i) && largeOk;
-    largeOk = large.size() == 500 && large.hasValidStructure() && largeOk;
-    check(largeOk, "1000-key insertion and 500-key removal stress test");
+    const int count = 20000;
+    for (int i = 0; i < count; i++) largeOk = large.insert((i * 7919) % count) && largeOk;
+    for (int i = 0; i < count; i++) largeOk = large.contains(i) && largeOk;
+    largeOk = large.size() == count && large.hasValidStructure()
+        && large.treeHeightForTesting() <= 20 && largeOk;
+    for (int i = 0; i < count; i += 2) largeOk = large.remove(i) && largeOk;
+    for (int i = 0; i < count; i++) largeOk = (large.contains(i) == (i % 2 == 1)) && largeOk;
+    largeOk = large.size() == count / 2 && large.hasValidStructure() && largeOk;
+    check(largeOk, "20,000-key insertion, search, and 10,000-key removal stress test");
+    testDifferentialUpdates();
     std::cout << "inorder:";
     for (int key : tree.inorderValues()) std::cout << ' ' << key;
     std::cout << '\n';
+    return failures == 0 ? 0 : 1;
 }

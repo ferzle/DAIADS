@@ -1,4 +1,5 @@
 public class BinarySearchTreeExercise {
+    static int failures = 0;
   private static class Node {
       int key;
       Node left;
@@ -116,6 +117,10 @@ public class BinarySearchTreeExercise {
       return hasCorrectParentReferences(root);
   }
 
+  public Integer rootKeyForTesting() {
+      return root == null ? null : root.key;
+  }
+
   private boolean hasCorrectParentReferences(Node node) {
       if (node == null) {
           return true;
@@ -137,6 +142,7 @@ public class BinarySearchTreeExercise {
       if (condition) {
           System.out.println("pass: " + description);
       } else {
+          failures++;
           System.out.println("fail: " + description);
       }
   }
@@ -167,6 +173,8 @@ public class BinarySearchTreeExercise {
 
       check(tree.inorderString().equals("20 30 40 50 55 57 60 65 70 80"),
           "inorder traversal after insertion");
+      check(Integer.valueOf(50).equals(tree.rootKeyForTesting()),
+          "50 remains the root after insertion");
 
       check(!tree.insert(60), "duplicate insertion fails");
       check(tree.size() == 10, "duplicate insertion does not change size");
@@ -199,6 +207,8 @@ public class BinarySearchTreeExercise {
           "inorder traversal after removing 50");
       check(tree.hasCorrectParentReferences(),
           "parent references after removing 50");
+      check(Integer.valueOf(57).equals(tree.rootKeyForTesting()),
+          "successor substitution changes the root key to 57");
 
       check(tree.size() == 7, "the final size is 7");
       check(!tree.remove(50), "removing 50 again fails");
@@ -210,11 +220,51 @@ public class BinarySearchTreeExercise {
       check(oneNodeTree.insert(10), "insert into an empty tree");
       check(oneNodeTree.remove(10), "remove the only node");
       check(oneNodeTree.isEmpty(), "the one-node tree becomes empty");
+      check(oneNodeTree.rootKeyForTesting() == null,
+          "the drained one-node tree has no root");
       check(oneNodeTree.hasCorrectParentReferences(),
           "the empty tree has valid parent references");
   }
 
+  private static void testLargeOrderedUpdates() {
+    BinarySearchTreeExercise tree = new BinarySearchTreeExercise();
+    for (int key = 0; key < 500; key++) check(tree.insert(key), "insert ascending key " + key);
+    check(tree.size() == 500 && tree.hasCorrectParentReferences(), "ascending tree size and parent links");
+    for (int key = 0; key < 500; key++) check(tree.contains(key), "contains ascending key " + key);
+    for (int key = 0; key < 500; key += 2) { check(tree.remove(key), "remove even key " + key); check(tree.hasCorrectParentReferences(), "parent links after removing " + key); }
+    check(tree.size() == 250 && tree.minimum() == 1, "size and minimum after even removals");
+    for (int key = 1; key < 499; key += 2) check(tree.successor(key) == key + 2, "successor among odd keys " + key);
+    for (int key = 1; key < 500; key += 2) check(tree.remove(key), "drain odd key " + key);
+    check(tree.isEmpty() && tree.minimum() == null && tree.hasCorrectParentReferences(), "empty after complete drain");
+  }
+
+  private static void testLargeBalancedOrderWorkload() {
+    final int count = 20_000;
+    BinarySearchTreeExercise tree = new BinarySearchTreeExercise();
+    int[] lows = new int[count], highs = new int[count];
+    int top = 0;
+    lows[top] = 0; highs[top++] = count - 1;
+    boolean ok = true;
+    while (top > 0) {
+      int low = lows[--top], high = highs[top];
+      if (low > high) continue;
+      int middle = low + (high - low) / 2;
+      ok &= tree.insert(middle);
+      if (middle + 1 <= high) { lows[top] = middle + 1; highs[top++] = high; }
+      if (low <= middle - 1) { lows[top] = low; highs[top++] = middle - 1; }
+    }
+    for (int key = 0; key < count; key++) ok &= tree.contains(key);
+    for (int key = 0; key < count; key += 2) ok &= tree.remove(key);
+    for (int key = 0; key < count; key++) ok &= tree.contains(key) == (key % 2 == 1);
+    check(ok && tree.size() == count / 2 && tree.hasCorrectParentReferences(),
+        "20,000-key balanced-order aggregate workload");
+  }
+
   public static void main(String[] args) {
-      testBinarySearchTree();
+    testBinarySearchTree();
+    testLargeOrderedUpdates();
+    testLargeBalancedOrderWorkload();
+      System.out.println(failures == 0 ? "All tests passed." : failures + " test(s) failed.");
+      if (failures > 0) System.exit(1);
   }
 }

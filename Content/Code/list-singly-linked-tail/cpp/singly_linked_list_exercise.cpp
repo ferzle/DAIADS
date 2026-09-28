@@ -1,6 +1,8 @@
 #include <iostream>
 using namespace std;
 
+
+int failures = 0;
 class IntList {
 private:
 struct Node {
@@ -120,6 +122,7 @@ void checkAtLine(int actual, int expected, int line, const char* expression) {
     if (actual == expected) {
         cout << "PASS at test line " << line << " (" << expression << "): got " << actual << endl;
     } else {
+        ++failures;
         cout << "FAIL at test line " << line << " (" << expression
              << "): expected " << expected << " but got " << actual << endl;
     }
@@ -129,6 +132,7 @@ void checkAtLine(bool actual, bool expected, int line, const char* expression) {
     if (actual == expected) {
         cout << "PASS at test line " << line << " (" << expression << "): got " << actual << endl;
     } else {
+        ++failures;
         cout << "FAIL at test line " << line << " (" << expression
              << "): expected " << (expected ? "true" : "false")
              << " but got " << (actual ? "true" : "false") << endl;
@@ -227,7 +231,32 @@ for (int i = 999; i >= 0; i--) largeOk = (large.removeLast() == i) && largeOk;
 check(largeOk && large.isEmpty(), true);
 }
 
+void testLargeIndexedWorkload() {
+    IntList list;
+    for (int i = 0; i < 200; i++) check(list.addLast(i % 17), true);
+    check(list.size(), 200); check(list.first(), 0); check(list.last(), 12);
+    check(list.insert(100, 999), true); check(list.get(100), 999); check(list.size(), 201);
+    check(list.remove(100), 999); check(list.size(), 200);
+    check(list.indexOf(5), 5); check(list.deleteValue(5), true); check(list.indexOf(5), 21);
+    check(list.set(0, 777), true); check(list.get(0), 777);
+    for (int i = 0; i < 199; i++) list.removeLast();
+    check(list.size(), 0); check(list.addFirst(42), true); check(list.removeFirst(), 42);
+    check(list.isEmpty(), true); check(list.last(), -1);
+}
+
+void testHundredThousandEndpointOperations() {
+    const int count = 100000;
+    IntList list;
+    bool ok = true;
+    for (int i = 0; i < count; i++) ok = list.addLast(i) && ok;
+    ok = list.size() == count && list.first() == 0 && list.last() == count - 1 && ok;
+    for (int i = 0; i < count; i++) ok = (list.removeFirst() == i) && ok;
+    check(ok && list.isEmpty() && list.size() == 0 && list.first() == -1 && list.last() == -1, true);
+}
+
 int main() {
-  testList();
-  return 0;
+    testList();
+    testLargeIndexedWorkload();
+    testHundredThousandEndpointOperations();
+  return failures == 0 ? 0 : 1;
 }

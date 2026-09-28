@@ -51,12 +51,20 @@ class IntDeque:
         # TODO
         return -1
 
+    def storage_state_for_testing(self):
+        return self.front, self.count, len(self.A)
+
+
+failures = 0
+
 
 def check(actual, expected):
+    global failures
     line = inspect.currentframe().f_back.f_lineno
     if actual == expected:
         print(f"PASS at test line {line}: got {actual!r}")
     else:
+        failures += 1
         print(f"FAIL at test line {line}: expected {expected!r} but got {actual!r}")
 
 
@@ -89,6 +97,7 @@ def test_deque():
     check(deque.add_back(7), True)       # [4, 7]
     check(deque.add_front(2), True)      # [2, 4, 7]
     check(deque.add_back(9), True)       # [2, 4, 7, 9]
+    check(deque.storage_state_for_testing(), (4, 4, 5))
 
     check(deque.size(), 4)
     check(deque.is_empty(), False)
@@ -119,6 +128,7 @@ def test_deque():
     check(deque.remove_front(), 1)       # [4, 7, 11]
     check(deque.add_back(13), True)      # [4, 7, 11, 13]
     check(deque.add_back(15), True)      # [4, 7, 11, 13, 15]
+    check(deque.storage_state_for_testing(), (0, 5, 5))
     check(deque.is_full(), True)
     check(deque.peek_front(), 4)
     check(deque.peek_back(), 15)
@@ -151,4 +161,45 @@ def test_deque():
     check(deque.peek_front(), -1)
 
 
+def test_capacities_wraparound_and_reuse():
+    for capacity in (1, 2, 3, 8, 64):
+        deque = IntDeque(capacity)
+        for round_number in range(20):
+            for i in range(capacity):
+                check(deque.add_back(round_number * capacity + i), True)
+            check(deque.is_full(), True)
+            check(deque.add_front(999999), False)
+            for i in range(capacity):
+                check(deque.remove_front(), round_number * capacity + i)
+            check(deque.is_empty(), True)
+            for i in range(capacity):
+                check(deque.add_front(round_number * capacity + i), True)
+            for i in range(capacity):
+                check(deque.remove_back(), round_number * capacity + i)
+            check(deque.is_empty(), True)
+        deque.add_back(7)
+        deque.clear()
+        check(deque.is_empty(), True)
+        check(deque.add_front(8), True)
+        check(deque.remove_back(), 8)
+
+
+def test_large_aggregate_wraparound():
+    capacity = 10_000
+    deque = IntDeque(capacity)
+    ok = True
+    for round_number in range(10):
+        for i in range(capacity):
+            ok = deque.add_back(round_number * capacity + i) and ok
+        for i in range(capacity):
+            ok = deque.remove_front() == round_number * capacity + i and ok
+    ok = deque.is_empty() and deque.size() == 0 and ok
+    check(ok, True)
+
+
 test_deque()
+test_capacities_wraparound_and_reuse()
+test_large_aggregate_wraparound()
+
+if failures:
+    raise SystemExit(1)

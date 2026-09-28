@@ -4,6 +4,8 @@
 #include <string>
 using namespace std;
 
+int failures = 0;
+
 class LinkedSequence {
 public:
     struct Node {
@@ -85,12 +87,13 @@ void check(bool condition, const string& message) {
 }
 
 void expectException(void (*action)()) {
+    bool threw = false;
     try {
         action();
-        throw runtime_error("Expected an exception, but none was thrown");
     } catch (const runtime_error&) {
-        // expected
+        threw = true;
     }
+    if (!threw) throw runtime_error("Expected an exception, but none was thrown");
 }
 
 // These globals are only used to make simple exception tests possible.
@@ -113,7 +116,20 @@ void deleteAfterNull() {
     testList->deleteAfter(nullptr);
 }
 
+void testLargeMixedSequence() {
+    LinkedSequence list;
+    const int count = 100000;
+    for (int i = 0; i < count; i++) list.insertAtHead(i);
+    auto* tail = list.search(0);
+    check(tail != nullptr && tail->data == 0, "search should find the tail after traversing 100,000 nodes");
+    bool ok = true;
+    for (int expected = count - 1; expected >= 0; expected--) ok = (list.deleteAtHead() == expected) && ok;
+    check(ok, "100,000 head deletions should preserve reverse insertion order");
+    check(list.traverse(), "");
+}
+
 int main() {
+    try {
     LinkedSequence list;
     testList = &list;
 
@@ -152,7 +168,18 @@ int main() {
     check(list.deleteAtHead(), 4);
     check(list.traverse(), "");
     expectException(deleteAtHeadOnEmpty);
+    } catch (const std::exception& error) {
+        ++failures;
+        cout << "FAIL: core linked-sequence scenario threw " << error.what() << endl;
+    }
 
-    cout << "All tests passed." << endl;
-    return 0;
+    try {
+        testLargeMixedSequence();
+    } catch (const std::exception& error) {
+        ++failures;
+        cout << "FAIL: large linked-sequence scenario threw " << error.what() << endl;
+    }
+
+    cout << (failures == 0 ? "All tests passed." : to_string(failures) + " scenario(s) failed.") << endl;
+    return failures == 0 ? 0 : 1;
 }

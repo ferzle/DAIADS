@@ -67,7 +67,8 @@ correct quadratic implementation to perform billions of operations.
 - Unfinished-starter execution audit: complete. All 95 suites exited with the
   expected ordinary failure status; none passed accidentally, crashed, or
   timed out under a 30-second per-suite limit.
-- Preservation audit: complete. The live and v2 trees each contain 95 starter
+- Preservation audit: complete. The pre-promotion live tree (now v0) and v2
+  each contain 95 starter
   files and 716 `TODO` markers, and the v2 directory contains no generated
   binaries, class files, or bytecode.
 

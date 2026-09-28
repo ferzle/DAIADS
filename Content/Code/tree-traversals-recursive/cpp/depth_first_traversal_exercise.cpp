@@ -1,7 +1,9 @@
+#include <algorithm>
 #include <iostream>
 #include <string>
 #include <vector>
 using namespace std;
+int failures = 0;
 
 struct BinaryNode {
     int value;
@@ -73,12 +75,18 @@ void check(
     if (actual == expected) {
         cout << "pass: " << name << endl;
     } else {
+        ++failures;
         cout << "fail: " << name << "; expected ";
         printVector(expected);
         cout << " but got ";
         printVector(actual);
         cout << endl;
     }
+}
+
+void checkSummary(const string& name, bool condition) {
+    if (condition) cout << "pass: " << name << endl;
+    else { ++failures; cout << "fail: " << name << endl; }
 }
 
 BinaryNode* buildCompleteTree() {
@@ -184,7 +192,44 @@ void testTraversals() {
     destroyTree(degenerate);
 }
 
+void testIrregularTreeAndIndependentResults() {
+    BinaryNode* root = new BinaryNode(10);
+    root->left = new BinaryNode(20); root->right = new BinaryNode(30);
+    root->left->right = new BinaryNode(40); root->left->right->left = new BinaryNode(20);
+    root->right->left = new BinaryNode(50); root->right->left->right = new BinaryNode(60);
+    check("irregular preorder", preorder(root), {10, 20, 40, 20, 30, 50, 60});
+    check("irregular inorder", inorder(root), {20, 20, 40, 10, 50, 60, 30});
+    check("irregular postorder", postorder(root), {20, 40, 20, 60, 50, 30, 10});
+    vector<int> first = preorder(root); first.clear();
+    check("returned vectors are independent", preorder(root), {10, 20, 40, 20, 30, 50, 60});
+    check("interior subtree", inorder(root->right), {50, 60, 30});
+    destroyTree(root);
+}
+
+void testHundredThousandNodeCompleteTree() {
+    const int count = 100000;
+    vector<BinaryNode*> nodes;
+    nodes.reserve(count);
+    for (int i = 0; i < count; i++) nodes.push_back(new BinaryNode(i));
+    for (int i = 0; i < count; i++) {
+        int left = 2 * i + 1, right = left + 1;
+        if (left < count) nodes[i]->left = nodes[left];
+        if (right < count) nodes[i]->right = nodes[right];
+    }
+    vector<int> pre = preorder(nodes[0]), in = inorder(nodes[0]), post = postorder(nodes[0]);
+    bool ok = pre.size() == count && in.size() == count && post.size() == count
+              && pre.front() == 0 && in.front() == 65535 && post.back() == 0;
+    sort(pre.begin(), pre.end()); sort(in.begin(), in.end()); sort(post.begin(), post.end());
+    if (ok) {
+        for (int i = 0; i < count; i++) ok = pre[i] == i && in[i] == i && post[i] == i && ok;
+    }
+    checkSummary("100,000-node depth-first traversals", ok);
+    destroyTree(nodes[0]);
+}
+
 int main() {
     testTraversals();
-    return 0;
+    testIrregularTreeAndIndependentResults();
+    testHundredThousandNodeCompleteTree();
+    return failures == 0 ? 0 : 1;
 }

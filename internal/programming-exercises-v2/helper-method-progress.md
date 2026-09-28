@@ -2,8 +2,9 @@
 
 Last updated: 2026-09-24
 
-This file is the restart point for the helper-method review. Changes are made
-only in the v2 candidate; the live `Content/Code/` starters remain untouched.
+This file records the helper-method review. Changes were developed only in the
+v2 candidate; the original live starters are preserved untouched in v0. The
+verified v2 tree was promoted to live `Content/Code/` on 2026-09-28.
 
 ## Safety rule
 
@@ -168,4 +169,5 @@ Languages: Java, C++, Python where available.
 - Confirmed that no class files, Python bytecode, or executable artifacts were
   left in the v2 directory.
 
-The helper-method enhancement is complete. Live starter files remain unchanged.
+The helper-method enhancement is complete. The pre-promotion starter files
+remain unchanged in `internal/programming-exercises-v0/Content/Code/`.

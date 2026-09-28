@@ -91,6 +91,25 @@ def test_set():
     check(values.add(5), True, "set can be reused after clear")
 
 
+def test_large_ordered_workload():
+    values = SortedArrayIntSet(1)
+    for key in range(999, -1, -1):
+        check(values.add(key), True, f"descending add {key}")
+    check(values.size(), 1000, "size after descending additions")
+    check(values.to_list(), list(range(1000)), "sorted order after descending additions")
+    for key in range(0, 1000, 2):
+        check(values.remove(key), True, f"remove key {key}")
+    check(values.size(), 500, "size after removing even keys")
+    for key in range(1000):
+        check(values.contains(key), key % 2 == 1, f"membership after removals for {key}")
+    values.clear()
+    check(values.add(42), True, "reuse after clear")
+
+
 if __name__ == "__main__":
     test_set()
+    test_large_ordered_workload()
     print("All tests passed." if failures == 0 else f"{failures} test(s) failed.")
+
+if __name__ == "__main__" and failures:
+    raise SystemExit(1)

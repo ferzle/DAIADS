@@ -1,4 +1,5 @@
 public class ArrayQueueExercise {
+    static int failures = 0;
     static class IntQueue {
         private int[] A;
         private int count;
@@ -37,6 +38,10 @@ public class ArrayQueueExercise {
             // TODO
             return -1;
         }
+
+        public int[] usedValuesForTesting() {
+            return java.util.Arrays.copyOf(A, count);
+        }
     }
 
     static String checkLocation() {
@@ -48,6 +53,7 @@ public class ArrayQueueExercise {
         if (actual == expected) {
             System.out.println("PASS at " + checkLocation() + ": got " + actual);
         } else {
+            failures++;
             System.out.println("FAIL at " + checkLocation() + ": expected " + expected + " but got " + actual);
         }
     }
@@ -56,6 +62,7 @@ public class ArrayQueueExercise {
         if (actual == expected) {
             System.out.println("PASS at " + checkLocation() + ": got " + actual);
         } else {
+            failures++;
             System.out.println("FAIL at " + checkLocation() + ": expected " + expected + " but got " + actual);
         }
     }
@@ -77,10 +84,12 @@ public class ArrayQueueExercise {
 
         check(queue.front(), 4);
         check(queue.dequeue(), 4);
+        check(java.util.Arrays.equals(queue.usedValuesForTesting(), new int[]{7, 9}), true);
         check(queue.front(), 7);
         check(queue.size(), 2);
 
         check(queue.enqueue(2), true);
+        check(java.util.Arrays.equals(queue.usedValuesForTesting(), new int[]{7, 9, 2}), true);
         check(queue.dequeue(), 7);
         check(queue.dequeue(), 9);
         check(queue.dequeue(), 2);
@@ -97,7 +106,30 @@ public class ArrayQueueExercise {
         check(largeOk && large.isEmpty(), true);
     }
 
+    static void testCapacityBoundariesAndExhaustion() {
+        for (int capacity : new int[] {1, 2, 5, 64}) {
+            IntQueue queue = new IntQueue(capacity);
+            for (int i = 0; i < capacity; i++) {
+                check(queue.enqueue(1000 + i), true);
+                check(queue.front(), 1000);
+                check(queue.size(), i + 1);
+            }
+            check(queue.isFull(), true);
+            check(queue.enqueue(9999), false);
+            for (int i = 0; i < capacity; i++) {
+                check(queue.dequeue(), 1000 + i);
+                check(queue.size(), capacity - i - 1);
+            }
+            check(queue.isEmpty(), true);
+            check(queue.enqueue(77), true);
+            check(queue.dequeue(), 77);
+        }
+    }
+
     public static void main(String[] args) {
         testQueue();
+        testCapacityBoundariesAndExhaustion();
+        System.out.println(failures == 0 ? "All tests passed." : failures + " test(s) failed.");
+        if (failures > 0) System.exit(1);
     }
 }

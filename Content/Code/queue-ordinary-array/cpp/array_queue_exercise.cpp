@@ -1,6 +1,9 @@
 #include <iostream>
+#include <vector>
 using namespace std;
 
+
+int failures = 0;
 class IntQueue {
 private:
     int* A;
@@ -47,12 +50,17 @@ public:
         // TODO
         return -1;
     }
+
+    vector<int> usedValuesForTesting() const {
+        return vector<int>(A, A + count);
+    }
 };
 
 void checkAtLine(int actual, int expected, int line, const char* expression) {
     if (actual == expected) {
         cout << "PASS at test line " << line << " (" << expression << "): got " << actual << endl;
     } else {
+        ++failures;
         cout << "FAIL at test line " << line << " (" << expression
              << "): expected " << expected << " but got " << actual << endl;
     }
@@ -62,6 +70,7 @@ void checkAtLine(bool actual, bool expected, int line, const char* expression) {
     if (actual == expected) {
         cout << "PASS at test line " << line << " (" << expression << "): got " << actual << endl;
     } else {
+        ++failures;
         cout << "FAIL at test line " << line << " (" << expression
              << "): expected " << (expected ? "true" : "false")
              << " but got " << (actual ? "true" : "false") << endl;
@@ -87,10 +96,12 @@ void testQueue() {
 
     check(queue.front(), 4);
     check(queue.dequeue(), 4);
+    check(queue.usedValuesForTesting() == vector<int>({7, 9}), true);
     check(queue.front(), 7);
     check(queue.size(), 2);
 
     check(queue.enqueue(2), true);
+    check(queue.usedValuesForTesting() == vector<int>({7, 9, 2}), true);
     check(queue.dequeue(), 7);
     check(queue.dequeue(), 9);
     check(queue.dequeue(), 2);
@@ -107,7 +118,28 @@ void testQueue() {
     check(largeOk && large.isEmpty(), true);
 }
 
+void testCapacityBoundariesAndExhaustion() {
+    for (int capacity : {1, 2, 5, 64}) {
+        IntQueue queue(capacity);
+        for (int i = 0; i < capacity; i++) {
+            check(queue.enqueue(1000 + i), true);
+            check(queue.front(), 1000);
+            check(queue.size(), i + 1);
+        }
+        check(queue.isFull(), true);
+        check(queue.enqueue(9999), false);
+        for (int i = 0; i < capacity; i++) {
+            check(queue.dequeue(), 1000 + i);
+            check(queue.size(), capacity - i - 1);
+        }
+        check(queue.isEmpty(), true);
+        check(queue.enqueue(77), true);
+        check(queue.dequeue(), 77);
+    }
+}
+
 int main() {
     testQueue();
-    return 0;
+    testCapacityBoundariesAndExhaustion();
+    return failures == 0 ? 0 : 1;
 }
