@@ -92,9 +92,6 @@ behavior.
   the duplicate closing body/html pair.
 - [ ] **P0** `Content/Demos/Divide-and-Conquer/Matrix Multiplcation (Inplace) Demo.html`
   — remove the duplicate closing body/html pair.
-- [ ] **P1** `Content/Demos/Data Structures/Open Addressing Demo.html` — inspect the
-  dynamically generated table markup; the source contains an unmatched table opener.
-
 ### Normalize code tabs
 
 Several older pages mark every tab and/or every panel active on initial load. The
@@ -120,7 +117,7 @@ to assistive technology. In each tab group, only the initial tab should have
 
 ### Make the reference pages connect back into the textbook
 
-All 30 individual Problem pages name relevant algorithms and techniques as plain
+All 31 individual Problem pages name relevant algorithms and techniques as plain
 text, but almost none link back to the DAIADS pages that teach them. Add internal
 links in each page's Common Algorithms/Techniques and Variants sections. This is the
 largest navigation/content-discovery gap in an otherwise connected site.
@@ -171,6 +168,325 @@ Thirteen demos also omit the project convention `body class="no-tooltips"`; add 
 - [ ] **P2** Add `rel="noopener"` consistently to external `target="_blank"` links.
 - [ ] **P2** Run a final spelling/name pass, especially for “Quickselect,” “Quicksort,”
   “Strassen's,” “Horner's,” and “matrix multiplication.”
+
+### Strengthen the weakest learning-task sets
+
+The task sections vary more in quality than their presence/length initially suggests.
+Use pages such as `Content/Foundations/Recursion.html`,
+`Content/Analysis/Algorithm Analysis Examples.html`,
+`Content/Algorithms/Decrease-and-Conquer/Quickselect.html`, and the newer data-structure chapters
+as the benchmark. A strong set should include:
+
+- reading questions that move from comprehension to prediction, tracing, invariant or
+  state reasoning, analysis, and edge cases;
+- complete answers that model the expected reasoning instead of saying to check a demo;
+- in-class activities with a supplied input, roles or grouping when relevant, an
+  observable deliverable, and a realistic scope for class time;
+- homework that is specific enough to grade, progresses from trace/analysis to
+  modification or implementation, and does not merely duplicate the activities; and
+- explicit alignment with the exact algorithm variant and terminology taught on the page.
+
+The following pages need the most attention in this dimension.
+
+#### `Content/Algorithms/Brute Force/Bubble Sort.html`
+
+- [ ] **P1** Replace some of the true/false and multiple-choice reading questions with
+  a concrete pass trace, an invariant/prediction question, an exact comparison/swap
+  count, and a stability question.
+- [ ] **P1** Remove or carefully justify the answer that classifies Bubble Sort as both
+  brute force and decrease-and-conquer. It introduces taxonomy ambiguity without the
+  prose first establishing that interpretation.
+- [ ] **P1** Give the card/comparison activities fixed inputs and recording tables so
+  groups compare the same evidence rather than only “discussing performance.”
+
+#### `Content/Algorithms/Brute Force/Selection Sort.html`
+
+- [ ] **P0** Align the questions and answers with the algorithm actually taught. The
+  implementation selects the maximum and grows a sorted suffix, but the supplied trace
+  selects minima and grows a sorted prefix while the preceding answer says the right
+  portion is sorted.
+- [ ] **P1** Replace “go over,” “which is better,” and “discuss optimizations” with
+  specified arrays, required comparison/swap counts, a stability experiment using
+  tagged duplicate keys, and a comparison table against Bubble and Insertion Sort.
+- [ ] **P1** State the expected deliverable and cost model for the linked-list and
+  dual-ended homework; otherwise the questions admit several incomparable answers.
+
+#### `Content/Algorithms/Brute Force/Sequential Search.html`
+
+- [ ] **P1** Give the in-class tasks concrete arrays/targets and require a comparison
+  log, first-match/all-match result, or short decision rule for choosing sequential
+  versus binary search. Four of the five current prompts are broad discussion prompts.
+- [ ] **P1** Add homework on boundary tests, generic equality/comparator behavior, and
+  an evidence-based cost comparison; the current set mostly asks for closely related
+  reimplementations of the same scan.
+
+#### `Content/Algorithms/Brute Force/Matrix Multiplication.html`
+
+- [ ] **P1** Expand the reading questions beyond definition recall: ask students to
+  trace one output cell, derive the exact scalar-operation counts for rectangular
+  dimensions, identify the loop invariant, and predict the effect of loop ordering.
+- [ ] **P1** Replace or move homework that is only general matrix programming (addition,
+  identity testing, column norms). Use that space for multiplication-specific testing,
+  dimension validation, operation counting, sparse/diagonal cases, and comparison with
+  the divide-and-conquer page.
+
+#### `Content/Algorithms/Brute Force/Polynomial Evaluation.html`
+
+- [ ] **P1** Strengthen the reading set with a complete coefficient/value trace and an
+  exact multiplication count. The activities and homework are substantially stronger
+  than the mostly definition/complexity recall questions.
+- [ ] **P1** Remove duplicate derivative exercises or distinguish their learning goals;
+  use the recovered space for a direct brute-force/repeated-power/Horner comparison.
+
+#### `Content/Algorithms/Decrease-and-Conquer/Hoare Partition.html`
+
+- [ ] **P0** Rebuild all three task sections only after choosing the exact partition
+  contract. The current answers repeat the disputed claims that the pivot necessarily
+  reaches its final position and that each element is examined exactly once.
+- [ ] **P1** Replace “go over a few examples” with one shared trace table containing
+  `i`, `j`, pivot, comparison, swap, and array-state columns; include duplicates and
+  all-equal input as required cases.
+- [ ] **P1** Supply an explicit Lomuto implementation/contract before asking students to
+  compare the schemes, and define what they should measure.
+
+#### `Content/Algorithms/Decrease-and-Conquer/Insertion Sort.html`
+
+- [ ] **P1** Expand the three short activities into a prefix-invariant trace, a tagged-
+  duplicate stability test, and a measured comparison of sorted, reverse, and nearly
+  sorted inputs.
+- [ ] **P1** Add scaffolding and test requirements to the four homework prompts. Include
+  boundary cases, exact shift/comparison counting, and a question explaining why binary
+  search reduces comparisons but not the quadratic number of movements.
+- [ ] **P1** Change “Does insertion sort swap elements?” to refer explicitly to the shown
+  shift-based implementation; swap-based insertion-sort variants exist.
+
+#### `Content/Algorithms/Divide-and-Conquer/Merge Sort.html`
+
+- [ ] **P1** Add an intermediate homework tier. The current set moves quickly from a
+  basic trace to genuinely difficult in-place and parallel implementations. Include a
+  recurrence derivation, merge invariant, tagged-duplicate stability test, and tests for
+  empty/odd-sized inputs before those advanced options.
+- [ ] **P2** Specify what counts as a comparison and a move in the counting exercise so
+  student results are comparable.
+
+#### `Content/Algorithms/Divide-and-Conquer/Quicksort.html`
+
+- [ ] **P0** Replace “Check your answer by comparing with the demo” with the complete
+  trace for the exact partition rule used on the page.
+- [ ] **P1** Replace the first six vague activities with two or three specified tasks:
+  compare pivot rules on the same inputs, trace duplicate-heavy data, derive best/worst
+  recurrences, and record maximum recursion depth.
+- [ ] **P1** Qualify the reading answer that sorted input causes the worst case: that is
+  true for particular deterministic pivot rules, not for Quicksort unconditionally.
+- [ ] **P1** Add smaller correctness and edge-case homework before the million-element
+  benchmark and label Nuts and Bolts/performance engineering as advanced.
+
+#### `Content/Algorithms/Greedy/Merge.html`
+
+- [ ] **P1** Rebuild the very small task set (three reading questions, three activities,
+  and two homework prompts). Add a pointer/state trace, merge invariant, exact best/worst
+  comparison counts, tagged-duplicate stability, exhaustion edge cases, and tests for
+  empty inputs.
+- [ ] **P1** Do not make a difficult `O(1)`-extra-space merge design one of only two
+  homework options; add scaffolded core exercises and label that problem advanced.
+
+#### `Content/Algorithms/Space-Time Tradeoff/Boyer-Moore_DRAFT.html`
+
+- [ ] **P0** Replace the placeholder-like five-question/five-activity/five-problem lists
+  with tasks tied to one fully specified pattern/text example. Students should construct
+  both preprocessing tables, predict every shift, compare with Horspool, and explain
+  which rule wins at each mismatch.
+
+#### `Content/Algorithms/Space-Time Tradeoff/Bucket Sort.html`
+
+- [ ] **P1** Replace the non-answer “Look at the demo or perform this by hand” with the
+  actual bucket assignments and final arrays, or change the prompt to a self-check task
+  without a Show Answers entry.
+- [ ] **P2** Give the exploratory activities a shared dataset and results table for
+  `k`, bucket occupancy, internal comparisons, and space. This will turn several broad
+  “discuss/compare” prompts into an evidence-based comparison.
+
+#### `Content/Algorithms/Transform-and-Conquer/Binary Exponentiation.html`
+
+- [ ] **P1** Edit the unusually long reading section for progression and remove repeated
+  binary-product exercises. Retain one derivation, one LTR trace, one RTL trace, one
+  operation-count question, and edge cases; move additional numerical practice to
+  homework.
+
+#### `Content/Techniques/Greedy Algorithms.html`
+
+- [ ] **P1** Rewrite the first activity so students test a named candidate greedy rule
+  on a supplied instance and produce either a counterexample or an exchange argument;
+  “convince yourself” is not an assessable outcome.
+- [ ] **P1** Reduce duplication between activities and homework (minimum stabbing points
+  and rope merging currently appear in both) and use the space for a greedy-choice
+  identification exercise and a compare-with-DP exercise.
+- [ ] **P1** Replace the claim that greedy algorithms “typically” run in `O(n)` or
+  `O(n log n)` with the more accurate point that runtime depends on candidate generation,
+  ordering, feasibility checks, and the supporting data structure.
+
+#### `Content/Techniques/Transform-and-Conquer.html`
+
+- [ ] **P1** Give the comparison/brainstorm activities explicit outputs: a cost table,
+  transformed representation, pseudocode, and a break-even inequality where applicable.
+- [ ] **P1** Either provide prerequisites/scaffolding for Gaussian elimination with
+  partial pivoting or replace it; it is a large numerical-analysis jump from the page's
+  taught examples.
+- [ ] **P2** Correct `heapfify`, `comparision`, `comparisions`, and `multipliation` in the
+  question/activity/homework text.
+
+#### `Content/Data Structures/Trees/2-3 Trees.html`
+
+- [ ] **P1** Curate the exceptionally large activity/homework bank into Core, Additional
+  Practice, and Advanced/Implementation groups. Remove near-duplicate traces and make a
+  short required path visible; abundance currently makes assignment selection harder.
+
+#### `Content/Data Structures/Priority Queues and Heaps/Priority Queues.html`
+
+- [ ] **P1** Similarly identify a core subset of homework before the multiple
+  implementation projects. Ensure a student can practice ADT behavior, compare
+  representations, and analyze costs without completing every starter-code exercise.
+
+## Other improvement areas
+
+The exercise-quality pass exposed several broader curriculum and presentation issues.
+These should be addressed selectively: the goal is to make dependencies, contracts,
+and page roles clear, not to force every chapter into identical headings.
+
+### Make the learning sequence and page roles explicit
+
+- [ ] **P1** Add a short “Before you begin” or prerequisite line to advanced pages
+  whose explanations assume material elsewhere in the book. The highest-value cases
+  are BFS/DFS/topological sorting (graph representations), Prim/Kruskal (graphs plus
+  priority queues or disjoint sets), Floyd/Warshall (graph matrices and dynamic
+  programming), AVL/2-3 Trees (BST invariants), and the divide-and-conquer algorithms
+  that immediately use recurrence analysis. Link the prerequisite rather than
+  re-teaching it.
+- [ ] **P1** Give each unit overview a usable route through the material: what is core,
+  what may be read independently, and what should come next. Only six non-demo pages
+  currently signal prerequisites explicitly, so menu order is doing too much hidden
+  curricular work.
+- [ ] **P1** Define the different jobs of `Content/Foundations/Basic Analysis.html` and
+  `Content/Analysis/Algorithm Analysis Fundamentals.html`. They currently cover much
+  of the same ground at substantial length. Make the former an explicitly concise
+  on-ramp and the latter the deeper course chapter, cross-link them, and remove or
+  consolidate duplicated explanations and exercises.
+- [ ] **P1** Add “this page's role” and continuation links where one topic is spread
+  across several page types: the Fibonacci problem/brute-force/DP/matrix materials;
+  brute-force, divide-and-conquer, and Strassen matrix multiplication; Merge versus
+  Merge Sort; the exponentiation problem, technique examples, and Binary
+  Exponentiation; and the Heapsort gateway versus the heap-construction chapter.
+  Readers should be able to tell whether a page is a problem contract, a technique
+  example, a full algorithm lesson, or an optional extension.
+- [ ] **P1** Add internal previous/next or prerequisite links to the data-structure
+  chapters, not just external Related Links. Fifteen of the 23 data-structure pages
+  currently contain no route to another DAIADS page, including most of the linear,
+  tree, and set/map chapters, despite forming deliberate sequences in the menu.
+
+### Standardize mathematical and algorithm contracts
+
+- [ ] **P0** `Content/Algorithms/Decrease-and-Conquer/Quickselect.html` — replace the
+  statement that its supplied code can use “Hoare partition, Lomuto partition, or any
+  other” partition. The code requires a routine that returns a pivot's final index;
+  classic Hoare partition does not provide that contract. Also rewrite the precondition
+  in terms of the zero-based target `k - 1`, not the currently confusing
+  `lo <= k <= hi`, and keep rank versus index explicit at the API boundary.
+- [ ] **P1** Establish a small site-wide notation/conventions reference and link it
+  where needed: 0-based indices versus 1-based ranks, inclusive versus half-open
+  subarray bounds, `n`/`m`/`k` meanings, graph symbols `V`/`E`, and whether a space
+  bound includes output storage or means auxiliary space. Individual pages may choose
+  different conventions, but each algorithm/demo/problem trio must declare and share
+  one contract.
+- [ ] **P1** Audit complexity statements for bound strength and assumptions. Use
+  `Theta` for tight bounds when established, reserve `O` for upper bounds, state the
+  input distribution behind average-case claims, and distinguish expected time from
+  average time. Pay particular attention to Quicksort/Quickselect, hashing, Bucket
+  Sort, and graph algorithms whose bound depends on the representation.
+- [ ] **P2** Adopt canonical display names and aliases across titles, menu labels,
+  glossary variants, demos, and prose: `Quickselect`, `Quicksort`, `QuickHull`, and a
+  consistent possessive policy for Prim, Kruskal, Floyd, Warshall, Strassen, Hoare,
+  and Horner. Preserve common aliases for search, but stop presenting spelling
+  variation as if it identifies a different algorithm.
+
+### Treat prose, demos, figures, and code as one lesson
+
+- [ ] **P1** For every embedded demo, state the exact variant it implements, the
+  initial/default input, and one or two things the student should observe. Then verify
+  that its step vocabulary, tie/duplicate behavior, indexing, and output match the
+  surrounding worked example and code. Start with the partition/Quickselect/Quicksort
+  cluster, both matrix divide-and-conquer demos, directed versus undirected DFS, and
+  the left-to-right versus right-to-left Binary Exponentiation demos.
+- [ ] **P1** Give the 18 currently unnamed instructional SVGs an accessible purpose:
+  use `aria-labelledby` with a concise title/description when the graphic teaches
+  something, or mark it hidden when nearby text completely duplicates it. The affected
+  pages are Hoare Partition, both draft Topological Sort pages, QuickHull, BFS, DFS,
+  N-Queens, and the Divide-and-Conquer technique chapter. Use the newer named
+  data-structure SVGs as the implementation model.
+- [ ] **P1** Do not make color the only vocabulary for graph state. In particular,
+  the DFS lesson explicitly maps white/gray/black states to blue/orange/green and calls
+  those colors central to understanding the traversal. Add persistent textual state,
+  patterns/shapes, or labels to the static diagrams and demos and describe the
+  semantic states first.
+- [ ] **P2** Add “what to notice” captions to dense traces and diagrams. A label such
+  as “Dataset B” identifies an input but does not explain the instructional point;
+  captions should call out the invariant, boundary, repeated subproblem, or state
+  transition the figure is meant to reveal.
+
+### Make code examples teachable and verifiable
+
+- [ ] **P1** Add language-neutral pseudocode or a precise numbered algorithm before
+  the language tabs on code-first pages that currently provide neither. The clearest
+  cases are brute-force Fibonacci, Selection Sort, Hoare Partition, Insertion Sort,
+  both Topological Sort drafts, Merge Sort, Quicksort, Subset Sum, Prim's algorithm,
+  Bucket Sort, and the Boyer-Moore draft. Students should be able to reason about the
+  algorithm without first translating Java, C++, or Python syntax.
+- [ ] **P1** Build a repeatable compile/syntax-check pass for extractable Java, C++,
+  and Python samples. The invalid C++ Insertion Sort declaration and stray character
+  in Merge show that visual review is insufficient. Mark intentionally partial
+  fragments as fragments so the check does not encourage fake scaffolding.
+- [ ] **P1** Check semantic parity across each language tab: same preconditions,
+  mutation behavior, return value, duplicate/tie handling, and asymptotic strategy.
+  Add a tiny shared example and boundary-case test set (empty, singleton, duplicate,
+  and invalid input where relevant) rather than allowing three implementations to
+  drift independently.
+- [ ] **P1** Put input contracts next to code, not only in prose several sections
+  earlier. State whether arrays may be empty, matrices may be ragged, graphs may be
+  disconnected, keys may repeat, arithmetic may overflow, and whether invalid input
+  is rejected or assumed absent.
+
+### Improve assessment usability, not just assessment quantity
+
+- [ ] **P1** Apply `Core`, `Additional Practice`, and `Advanced/Project` labels to
+  unusually large activity/homework banks. Use the core set to cover trace,
+  correctness/invariant, complexity, and one edge case; optional breadth should not
+  obscure what every reader is expected to learn.
+- [ ] **P1** Distinguish formative self-checks from assignable work. Reading-question
+  answers should be complete and explanatory; prompts intended for grading should
+  state the deliverable, assumptions, and cost model and should not reveal their full
+  solution through a nearby demo.
+- [ ] **P2** Add rough scope markers where assignments range from a five-minute trace
+  to a multi-class implementation project. A simple `Short`, `Standard`, or `Project`
+  label is more useful than making instructors infer scale from prose.
+
+### Audit the glossary as instructional content
+
+- [ ] **P0** Repair `scripts/glossary-data.json` before relying on its definitions in
+  page-wide tooltips. `Parent` is incorrectly listed as a variant of `Pointer`, and
+  Approximation Algorithm, Bellman-Ford Algorithm, Hamiltonian Path, and Weighted Graph
+  have duplicate canonical/variant entries. The Bubble Sort definition also contains
+  malformed complexity markup (`O(n^2>)`) and copy errors. Merge genuine duplicates
+  and add a uniqueness check for normalized variants.
+- [ ] **P1** Review all 321 glossary definitions against the corresponding chapters,
+  especially terms with multiple valid conventions such as partition, height, path,
+  average case, in-place, stability, and space complexity. A tooltip must not silently
+  contradict the page it appears on.
+- [ ] **P1** Make the Glossary page navigable at its current size: add an alphabet jump
+  list and term/alias search, suppress empty letter sections, and let definitions link
+  to the primary DAIADS lesson where one exists.
+- [ ] **P1** Replace or verify time-sensitive factual examples in otherwise durable
+  chapters. For example, `Algorithm Analysis Fundamentals.html` names a supposedly
+  current fastest supercomputer “as of June 2026” (and says “in the words”). A timeless
+  machine-speed comparison would teach the same point without becoming stale.
 
 ## Page-specific TODOs
 
@@ -227,10 +543,11 @@ Thirteen demos also omit the project convention `body class="no-tooltips"`; add 
 - [ ] **P2** State the hypotheses for l'Hopital's Rule more carefully or clearly label
   the displayed version as an informal course-use rule.
 
-The remaining Foundations, Analysis, and recurrence pages are among the strongest
-material in the repository: they contain sustained explanations, worked examples,
-practice, and clear audience scaffolding. No page-specific rewrite is recommended for
-them in this pass.
+Apart from the cross-cutting role, notation, and freshness items above, the remaining
+Foundations, Analysis, and recurrence pages are among the strongest material in the
+repository: they contain sustained explanations, worked examples, practice, and clear
+audience scaffolding. No broad page-specific rewrite is recommended for them in this
+pass.
 
 ### Data Structures
 
@@ -318,8 +635,7 @@ show state changes, discuss costs and pitfalls, and provide structured exercises
   At 56 words it is the clearest non-graph content stub. Prefer a full algorithm-shaped
   page, or make it an explicit concise gateway to the already strong Heap Construction
   and Heapsort chapter without pretending to be a complete lesson.
-- [ ] **P2** Correct “unfamili ar” (`unfamili ar` is currently written as
-  `unfamili ar`/`unfamili ar` without the second “i” in source) and add the viewport
+- [ ] **P2** Correct `unfamilair` to `unfamiliar` and add the viewport
   metadata. Verify the cross-page `#heapsort-example` deep link after consolidation.
 
 #### `Content/Algorithms/Space-Time Tradeoff/Boyer-Moore_DRAFT.html`
@@ -603,16 +919,44 @@ algorithm chapters.
 - [ ] **P2** `Content/Demos/Divide-and-Conquer/Exponentiation Demo.html` — correct
   “multiplcation” in the step narration.
 
+## Coverage gaps exposed by the page audit
+
+These are not defects in a single existing file, but they explain why several Problem
+pages and standalone demos currently feel disconnected. Decide deliberately whether to
+add these lessons or mark the topics as reference-only; do not leave their status
+implicit.
+
+- [ ] **P1** Add a real graph-data-structures prerequisite before expanding graph
+  algorithms. This is the dependency for BFS/DFS, topological sorting, MST, shortest
+  paths, and maximum flow.
+- [ ] **P1** Add dedicated algorithm lessons (or clearly scoped technique examples) for
+  Euclid's GCD algorithm, closest pair, single-source shortest path, and maximum flow.
+  Their Problem/demo coverage currently has no matching algorithm chapter.
+- [ ] **P1** Decide the Dynamic Programming sequence beyond 0-1 Knapsack, Floyd, and
+  Warshall. Chain matrix multiplication, edit distance, minimum coin change, and the DP
+  form of subset sum all have Problem pages but no dedicated algorithm lesson.
+- [ ] **P2** Decide whether Travelling Salesman belongs only in the problem catalog or
+  should receive exact, dynamic-programming, and approximation coverage.
+- [ ] **P2** Decide whether Red-Black Trees warrant a chapter. Until then, present the
+  existing operations demo as an explicitly optional preview rather than peer material
+  beside the fully developed AVL and 2-3 tree chapters.
+
 ## Suggested implementation order
 
 1. Fix malformed HTML and the two invalid displayed code samples.
-2. Resolve the Hoare/partition contract and Problem List taxonomy issues.
-3. Replace the Graphs placeholder and decide the Heapsort consolidation strategy.
+2. Resolve the Hoare/partition/Quickselect contracts, glossary correctness issues, and
+   Problem List taxonomy issues.
+3. Replace the Graphs placeholder and decide the overlapping-page roles, beginning
+   with Basic Analysis versus Analysis Fundamentals and the Heapsort consolidation.
 4. Finish or explicitly quarantine the three draft algorithm pages.
-5. Add internal textbook links to every Problem page.
-6. Expand the thin legacy algorithm pages with worked examples and edge contracts.
-7. Apply the demo accessibility baseline and integrate the five isolated demos.
-8. Complete the metadata, spelling, naming, and external-resource freshness pass.
+5. Add prerequisite/continuation links and internal textbook links to every Problem
+   page and the currently isolated data-structure chapters.
+6. Expand the thin legacy algorithm pages with worked examples, pseudocode, and edge
+   contracts; then establish repeatable sample-code checks.
+7. Apply the demo/figure accessibility baseline, verify lesson-demo variant alignment,
+   and integrate the five isolated demos.
+8. Complete the notation, metadata, spelling, naming, glossary, and external-resource
+   freshness passes.
 
 ## What is already working well
 
