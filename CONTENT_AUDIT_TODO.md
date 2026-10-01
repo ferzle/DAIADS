@@ -63,34 +63,34 @@ section. Correct these before doing substantial copy edits because the browser's
 error recovery can hide the source problem while changing collapsible-section
 behavior.
 
-- [ ] **P0** `Content/Algorithms/Brute Force/Matrix Multiplication.html` — remove
+- [x] **P0** `Content/Algorithms/Brute Force/Matrix Multiplication.html` — remove
   the extra `</section>` after Homework Problems.
-- [ ] **P0** `Content/Algorithms/Decrease-and-Conquer/Hoare Partition.html` —
+- [x] **P0** `Content/Algorithms/Decrease-and-Conquer/Hoare Partition.html` —
   remove the duplicate closing `</body>` and `</html>` pair.
-- [ ] **P0** `Content/Algorithms/Divide-and-Conquer/Matrix Multiplication.html` —
+- [x] **P0** `Content/Algorithms/Divide-and-Conquer/Matrix Multiplication.html` —
   close Design and Strategy at the intended boundary; it currently has one more
   opening than closing section tag.
-- [ ] **P0** `Content/Algorithms/Exhaustive Search/Depth-First Search.html` — close
+- [x] **P0** `Content/Algorithms/Exhaustive Search/Depth-First Search.html` — close
   the outer Design and Strategy section at the intended boundary.
-- [ ] **P0** `Content/Algorithms/Exhaustive Search/Topological Sort (DFS) DRAFT.html`
+- [x] **P0** `Content/Algorithms/Exhaustive Search/Topological Sort (DFS) DRAFT.html`
   — remove the duplicate closing `</html>`.
-- [ ] **P0** `Content/Algorithms/Greedy/Prims.html` — remove the stray section close
+- [x] **P0** `Content/Algorithms/Greedy/Prims.html` — remove the stray section close
   between the design illustration and Interactive Demo.
-- [ ] **P0** `Content/Data Structures/Linear Structures/Stacks.html` — close the
+- [x] **P0** `Content/Data Structures/Linear Structures/Stacks.html` — close the
   unmatched `div` and verify that the remainder of the page is not swallowed by it.
-- [ ] **P0** `Content/Problems/Graphs/All-Pairs Shortest Path.html` — close the
+- [x] **P0** `Content/Problems/Graphs/All-Pairs Shortest Path.html` — close the
   Examples section.
-- [ ] **P0** `Content/Problems/Graphs/Maximum Flow.html` — add the missing opening
+- [x] **P0** `Content/Problems/Graphs/Maximum Flow.html` — add the missing opening
   section around Problem Description.
-- [ ] **P0** `Content/Problems/Optimization/Minimum Coin Change.html` — add the
+- [x] **P0** `Content/Problems/Optimization/Minimum Coin Change.html` — add the
   missing `<body>` and remove the extra `</section>` after Examples.
-- [ ] **P0** `Content/Techniques/Dynamic Programming.html` — repair the extra
+- [x] **P0** `Content/Techniques/Dynamic Programming.html` — repair the extra
   section close around the nested Fibonacci examples/summary and then verify the
   top-level collapse structure.
-- [ ] **P0** `Content/Techniques/Exhaustive Search.html` — close the unmatched `div`.
-- [ ] **P0** `Content/Demos/Brute Force/Matrix Multiplication Demo.html` — remove
+- [x] **P0** `Content/Techniques/Exhaustive Search.html` — close the unmatched `div`.
+- [x] **P0** `Content/Demos/Brute Force/Matrix Multiplication Demo.html` — remove
   the duplicate closing body/html pair.
-- [ ] **P0** `Content/Demos/Divide-and-Conquer/Matrix Multiplcation (Inplace) Demo.html`
+- [x] **P0** `Content/Demos/Divide-and-Conquer/Matrix Multiplcation (Inplace) Demo.html`
   — remove the duplicate closing body/html pair.
 ### Normalize code tabs
 
@@ -99,20 +99,20 @@ scripts partly mask this visually, but the source exposes contradictory tab sema
 to assistive technology. In each tab group, only the initial tab should have
 `aria-selected="true"` and only its panel should be active/visible.
 
-- [ ] **P1** `Content/Algorithms/Brute Force/Bubble Sort.html`
-- [ ] **P1** `Content/Algorithms/Brute Force/Selection Sort.html`
-- [ ] **P1** `Content/Algorithms/Brute Force/Sequential Search.html`
-- [ ] **P1** `Content/Algorithms/Decrease-and-Conquer/Hoare Partition.html`
-- [ ] **P1** `Content/Algorithms/Decrease-and-Conquer/Insertion Sort.html`
-- [ ] **P1** `Content/Algorithms/Divide-and-Conquer/Merge Sort.html`
-- [ ] **P1** `Content/Algorithms/Divide-and-Conquer/Quicksort.html`
-- [ ] **P1** `Content/Algorithms/Greedy/Merge.html` — normalize both independent tab
+- [x] **P1** `Content/Algorithms/Brute Force/Bubble Sort.html`
+- [x] **P1** `Content/Algorithms/Brute Force/Selection Sort.html`
+- [x] **P1** `Content/Algorithms/Brute Force/Sequential Search.html`
+- [x] **P1** `Content/Algorithms/Decrease-and-Conquer/Hoare Partition.html`
+- [x] **P1** `Content/Algorithms/Decrease-and-Conquer/Insertion Sort.html`
+- [x] **P1** `Content/Algorithms/Divide-and-Conquer/Merge Sort.html`
+- [x] **P1** `Content/Algorithms/Divide-and-Conquer/Quicksort.html`
+- [x] **P1** `Content/Algorithms/Greedy/Merge.html` — normalize both independent tab
   groups.
-- [ ] **P1** `Content/Algorithms/Space-Time Tradeoff/Bucket Sort.html`
-- [ ] **P1** `Content/Algorithms/Space-Time Tradeoff/Counting Sort.html`
-- [ ] **P1** `Content/Algorithms/Space-Time Tradeoff/Radix Sort.html`
-- [ ] **P1** `Content/Algorithms/Transform-and-Conquer/Horner's Rule.html`
-- [ ] **P1** `Content/Data Structures/Linear Structures/Representing Linear Structures.html`
+- [x] **P1** `Content/Algorithms/Space-Time Tradeoff/Bucket Sort.html`
+- [x] **P1** `Content/Algorithms/Space-Time Tradeoff/Counting Sort.html`
+- [x] **P1** `Content/Algorithms/Space-Time Tradeoff/Radix Sort.html`
+- [x] **P1** `Content/Algorithms/Transform-and-Conquer/Horner's Rule.html`
+- [x] **P1** `Content/Data Structures/Linear Structures/Representing Linear Structures.html`
   — keep one selected tab per language group, not one for the whole page.
 
 ### Make the reference pages connect back into the textbook
@@ -144,19 +144,19 @@ for exceptions and integration work:
 
 Thirteen demos also omit the project convention `body class="no-tooltips"`; add it to:
 
-- [ ] **P2** `Content/Demos/Brute Force/Matrix Multiplication Demo.html`
-- [ ] **P2** `Content/Demos/Brute Force/String Matching Demo.html`
-- [ ] **P2** `Content/Demos/Decrease-and-Conquer/Quickselect Demo.html`
-- [ ] **P2** `Content/Demos/Divide-and-Conquer/Matrix Multiplcation (Inplace) Demo.html`
-- [ ] **P2** `Content/Demos/Divide-and-Conquer/Matrix Multiplication Demo.html`
-- [ ] **P2** `Content/Demos/Divide-and-Conquer/Strassens Demo.html`
-- [ ] **P2** `Content/Demos/Dynamic Programming/Fibonacci Best Demo.html`
-- [ ] **P2** `Content/Demos/Dynamic Programming/Floyd's Demo.html`
-- [ ] **P2** `Content/Demos/Dynamic Programming/Warshall's Demo.html`
-- [ ] **P2** `Content/Demos/Space-Time Tradeoff/Boyer-Moore Demo.html`
-- [ ] **P2** `Content/Demos/Space-Time Tradeoff/Horspool Precomputation Demo.html`
-- [ ] **P2** `Content/Demos/Transform-and-Conquer/Fibonacci Number (Matrix) Demo.html`
-- [ ] **P2** `Content/Demos/Transform-and-Conquer/Horners Rule Demo.html`
+- [x] **P2** `Content/Demos/Brute Force/Matrix Multiplication Demo.html`
+- [x] **P2** `Content/Demos/Brute Force/String Matching Demo.html`
+- [x] **P2** `Content/Demos/Decrease-and-Conquer/Quickselect Demo.html`
+- [x] **P2** `Content/Demos/Divide-and-Conquer/Matrix Multiplcation (Inplace) Demo.html`
+- [x] **P2** `Content/Demos/Divide-and-Conquer/Matrix Multiplication Demo.html`
+- [x] **P2** `Content/Demos/Divide-and-Conquer/Strassens Demo.html`
+- [x] **P2** `Content/Demos/Dynamic Programming/Fibonacci Best Demo.html`
+- [x] **P2** `Content/Demos/Dynamic Programming/Floyd's Demo.html`
+- [x] **P2** `Content/Demos/Dynamic Programming/Warshall's Demo.html`
+- [x] **P2** `Content/Demos/Space-Time Tradeoff/Boyer-Moore Demo.html`
+- [x] **P2** `Content/Demos/Space-Time Tradeoff/Horspool Precomputation Demo.html`
+- [x] **P2** `Content/Demos/Transform-and-Conquer/Fibonacci Number (Matrix) Demo.html`
+- [x] **P2** `Content/Demos/Transform-and-Conquer/Horners Rule Demo.html`
 
 ### Mechanical consistency pass
 
@@ -165,7 +165,7 @@ Thirteen demos also omit the project convention `body class="no-tooltips"`; add 
 - [ ] **P2** Standardize algorithm section names (`Problem Solved`, `Design and
   Strategy`, `Implementation in Java, C++, Python`, `Time/Space Analysis`, and
   `Homework Problems`) where a different name does not convey a real distinction.
-- [ ] **P2** Add `rel="noopener"` consistently to external `target="_blank"` links.
+- [x] **P2** Add `rel="noopener"` consistently to external `target="_blank"` links.
 - [ ] **P2** Run a final spelling/name pass, especially for “Quickselect,” “Quicksort,”
   “Strassen's,” “Horner's,” and “matrix multiplication.”
 
@@ -332,7 +332,7 @@ The following pages need the most attention in this dimension.
 - [ ] **P1** Either provide prerequisites/scaffolding for Gaussian elimination with
   partial pivoting or replace it; it is a large numerical-analysis jump from the page's
   taught examples.
-- [ ] **P2** Correct `heapfify`, `comparision`, `comparisions`, and `multipliation` in the
+- [x] **P2** Correct `heapfify`, `comparision`, `comparisions`, and `multipliation` in the
   question/activity/homework text.
 
 #### `Content/Data Structures/Trees/2-3 Trees.html`
@@ -598,11 +598,11 @@ show state changes, discuss costs and pitfalls, and provide structured exercises
 - [ ] **P1** Rework the markup so the page title is outside the first top-level section;
   the current outer section contains all later sections and does not match the site's
   normal collapse structure.
-- [ ] **P2** Correct “but be too prohbitive,” and standardize “QuickHull.”
+- [x] **P2** Correct “but be too prohbitive,” and standardize “QuickHull.”
 
 #### `Content/Techniques/Decrease-and-Conquer/Introduction.html`
 
-- [ ] **P0** Fix the broken MathJax delimiter in `\(c)` and the sentence “doing a bit
+- [x] **P0** Fix the broken MathJax delimiter in `\(c)` and the sentence “doing a bit
   work.”
 - [ ] **P1** Remove Binary Search from Variable-Size-Decrease examples (it is already,
   correctly, listed under decrease-by-a-constant-factor) or explain a genuinely
@@ -612,7 +612,7 @@ show state changes, discuss costs and pitfalls, and provide structured exercises
 
 #### `Content/Techniques/Backtracking.html`
 
-- [ ] **P2** Correct “Exhuastive Search” and call exhaustive search a technique rather
+- [x] **P2** Correct “Exhuastive Search” and call exhaustive search a technique rather
   than an algorithm in the comparison text.
 
 #### `Content/Techniques/Dynamic Programming.html`
@@ -656,7 +656,7 @@ show state changes, discuss costs and pitfalls, and provide structured exercises
 
 #### `Content/Algorithms/Exhaustive Search/Topological Sort (DFS) DRAFT.html`
 
-- [ ] **P0** Remove the duplicate closing HTML tag.
+- [x] **P0** Remove the duplicate closing HTML tag.
 - [ ] **P1** Perform the same publication pass as the source-removal page and add a
   direct side-by-side comparison: state maintained, cycle detection, output order, and
   shared `O(V+E)` bound.
@@ -684,7 +684,7 @@ show state changes, discuss costs and pitfalls, and provide structured exercises
 
 #### `Content/Algorithms/Decrease-and-Conquer/Insertion Sort.html`
 
-- [ ] **P0** Fix the displayed C++ declaration `void insertionSort(int []A, int n)`;
+- [x] **P0** Fix the displayed C++ declaration `void insertionSort(int []A, int n)`;
   use valid C++ array/pointer or container syntax.
 - [ ] **P1** Add visible headings for Design and Strategy and Implementation, plus a
   complete static trace that states the sorted-prefix invariant.
@@ -693,7 +693,7 @@ show state changes, discuss costs and pitfalls, and provide structured exercises
 
 #### `Content/Algorithms/Greedy/Merge.html`
 
-- [ ] **P0** Remove the stray `S` after `C[k++] = A[i++];` in the displayed C++ code.
+- [x] **P0** Remove the stray `S` after `C[k++] = A[i++];` in the displayed C++ code.
 - [ ] **P1** Reconsider the Greedy classification. If Merge remains here, explicitly
   explain the local-choice interpretation and that Merge is normally taught as the
   combine subroutine of divide-and-conquer Merge Sort, not as a standalone greedy
@@ -714,7 +714,7 @@ show state changes, discuss costs and pitfalls, and provide structured exercises
 
 - [ ] **P1** Add a complete worked pass-by-pass example and explicitly discuss
   in-place behavior, non-adaptiveness, and when the shown variant is or is not stable.
-- [ ] **P2** Correct “the number of comparisons the algorithms does.”
+- [x] **P2** Correct “the number of comparisons the algorithms does.”
 
 #### `Content/Algorithms/Brute Force/Bubble Sort.html`
 
@@ -909,14 +909,14 @@ algorithm chapters.
 
 - [ ] **P1** Link/embed it from the Fibonacci problem page or Binary Exponentiation
   variations and explain why matrix exponentiation is transform-and-conquer.
-- [ ] **P2** Correct “Matrix-Multiplcation” in the visible heading.
+- [x] **P2** Correct “Matrix-Multiplcation” in the visible heading.
 
 #### Demo filename/title cleanup
 
 - [ ] **P2** Rename `Matrix Multiplcation (Inplace) Demo.html`, `Strassens Demo.html`,
   and `Horners Rule Demo.html` to correctly spelled titles. Update all iframe references
   and regenerate `scripts/chapters.json`/the sitemap in the same change.
-- [ ] **P2** `Content/Demos/Divide-and-Conquer/Exponentiation Demo.html` — correct
+- [x] **P2** `Content/Demos/Divide-and-Conquer/Exponentiation Demo.html` — correct
   “multiplcation” in the step narration.
 
 ## Coverage gaps exposed by the page audit

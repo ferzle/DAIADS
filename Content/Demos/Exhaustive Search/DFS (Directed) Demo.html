@@ -45,10 +45,28 @@
     #linkLayer line.active-current-edge-under, #linkLayer path.active-current-edge-under { stroke: black; stroke-width: 6px; }
     #linkLayer line.active-current-edge, #linkLayer path.active-current-edge { stroke: var(--edge-highlight-current); stroke-width: 4px; }
     #linkLayer line.neighbor-edge, #linkLayer path.neighbor-edge { stroke: #00cc00; stroke-width: 4px; }
-    #linkLayer line.tree-edge, #linkLayer path.tree-edge { stroke: var(--tree-edge); stroke-width: 4px; }
-    #linkLayer line.back-edge, #linkLayer path.back-edge { stroke: var(--back-edge); stroke-width: 4px; }
-    #linkLayer line.forward-edge, #linkLayer path.forward-edge { stroke: var(--forward-edge); stroke-width: 4px; }
-    #linkLayer line.cross-edge, #linkLayer path.cross-edge { stroke: var(--cross-edge); stroke-width: 4px; }
+    /* Edge classes use distinct patterns as well as colors so they remain
+       identifiable for viewers with color-vision deficiencies. */
+    #linkLayer line.tree-edge, #linkLayer path.tree-edge {
+      stroke: var(--tree-edge);
+      stroke-width: 4px;
+    }
+    #linkLayer line.back-edge, #linkLayer path.back-edge {
+      stroke: var(--back-edge);
+      stroke-width: 4px;
+      stroke-dasharray: 12 7;
+    }
+    #linkLayer line.forward-edge, #linkLayer path.forward-edge {
+      stroke: var(--forward-edge);
+      stroke-width: 4px;
+      stroke-dasharray: 2 7;
+      stroke-linecap: round;
+    }
+    #linkLayer line.cross-edge, #linkLayer path.cross-edge {
+      stroke: var(--cross-edge);
+      stroke-width: 4px;
+      stroke-dasharray: 12 5 2 5;
+    }
     #state-table { width: 100%; border-collapse: collapse; font-family: var(--font-sans); }
     #state-table th, #state-table td { border: 1px solid #ddd; padding: 0.3em; text-align: center; }
     #state-table th { background: #f0f0f0; }
@@ -106,10 +124,32 @@
     .legend-line.active-stack { background: var(--edge-highlight-stack); }
     .legend-line.active-current-under { background: black; border: none; height: 0.6em; }
     .legend-line.active-current { background: var(--edge-highlight-current); }
-    .legend-line.tree { background: var(--tree-edge); }
-    .legend-line.back { background: var(--back-edge); }
-    .legend-line.forward { background: var(--forward-edge); }
-    .legend-line.cross { background: var(--cross-edge); }
+    .legend-line.tree {
+      height: 0;
+      border-top: 4px solid var(--tree-edge);
+      border-radius: 0;
+    }
+    .legend-line.back {
+      height: 0;
+      border-top: 4px dashed var(--back-edge);
+      border-radius: 0;
+    }
+    .legend-line.forward {
+      height: 0;
+      border-top: 4px dotted var(--forward-edge);
+      border-radius: 0;
+    }
+    .legend-line.cross {
+      height: 4px;
+      border-radius: 0;
+      background: repeating-linear-gradient(
+        to right,
+        var(--cross-edge) 0 10px,
+        transparent 10px 14px,
+        var(--cross-edge) 14px 16px,
+        transparent 16px 20px
+      );
+    }
     .legend-line.neighbors { background: #00cc00; }
     
     /* Reduce spacing before headings */
@@ -443,6 +483,13 @@ function renderGraph(ev) {
     });
   });
 
+  // Highlighted and classified paths replace their black base path. Leaving
+  // the base visible would fill the gaps in dashed patterns with black.
+  function hideBaseEdge(from, to) {
+    const basePath = document.getElementById(`edge-${from}-${to}`);
+    if (basePath) basePath.setAttribute('visibility', 'hidden');
+  }
+
   // Highlight edges to neighbors - only if we're not currently exploring a specific edge
   if (ev.highlightedNodes && ev.highlightedNodes.length > 1 && ev.current !== null && !ev.exploringEdge) {
     const current = ev.current;
@@ -452,6 +499,7 @@ function renderGraph(ev) {
     ev.highlightedNodes.forEach(neighbor => {
       if (neighbor !== current && adjList[current] && adjList[current].includes(neighbor)) {
         console.log(`Highlighting edge ${current}→${neighbor}`);
+        hideBaseEdge(current, neighbor);
         const pathData = getPathData(current, neighbor);
         const path = document.createElementNS(svgNS, 'path');
         path.setAttribute('d', pathData);
@@ -468,6 +516,7 @@ function renderGraph(ev) {
 
   // Active edges in stack
   ev.activeEdges.forEach(({ from, to }) => {
+    hideBaseEdge(from, to);
     const pathData = getPathData(from, to);
     const path = document.createElementNS(svgNS, 'path');
     path.setAttribute('d', pathData);
@@ -480,6 +529,7 @@ function renderGraph(ev) {
 
   // Back edges
   ev.backEdges.forEach(({ from, to }) => {
+    hideBaseEdge(from, to);
     const pathData = getPathData(from, to);
     const path = document.createElementNS(svgNS, 'path');
     path.setAttribute('d', pathData);
@@ -492,6 +542,7 @@ function renderGraph(ev) {
 
   // Forward edges
   ev.forwardEdges.forEach(({ from, to }) => {
+    hideBaseEdge(from, to);
     const pathData = getPathData(from, to);
     const path = document.createElementNS(svgNS, 'path');
     path.setAttribute('d', pathData);
@@ -504,6 +555,7 @@ function renderGraph(ev) {
 
   // Cross edges
   ev.crossEdges.forEach(({ from, to }) => {
+    hideBaseEdge(from, to);
     const pathData = getPathData(from, to);
     const path = document.createElementNS(svgNS, 'path');
     path.setAttribute('d', pathData);
@@ -516,6 +568,7 @@ function renderGraph(ev) {
 
   // Tree edges
   ev.treeEdges.forEach(({ from, to }) => {
+    hideBaseEdge(from, to);
     const pathData = getPathData(from, to);
     const path = document.createElementNS(svgNS, 'path');
     path.setAttribute('d', pathData);
@@ -529,6 +582,7 @@ function renderGraph(ev) {
   // Current edge being explored (black border underlay)
   if (ev.exploringEdge) {
     const {from, to} = ev.exploringEdge;
+    hideBaseEdge(from, to);
     const pathData = getPathData(from, to);
     const path = document.createElementNS(svgNS, 'path');
     path.setAttribute('d', pathData);
