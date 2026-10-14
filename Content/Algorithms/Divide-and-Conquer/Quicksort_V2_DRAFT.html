@@ -25,57 +25,127 @@
 </section><section id="design-and-strategy" section-title="Design and Strategy">
 <h2>Design and Strategy</h2>
   <p>
-    Quicksort is a <strong>divide-and-conquer</strong> algorithm: it picks a <strong>pivot</strong>,
-    partitions the array into elements less than or equal to <em>pivot</em> and 
-    greater than <em>pivot</em>, with <em>pivot</em> being placed in its proper location. 
-    This is referred to as the partition step, and involves an algorithm like 
-    <a class="problem" href="?path=Algorithms/Decrease-and-Conquer/Hoare Partition">Hoare's Partition</a>.
-    If you are not already familiar with Hoare's Partition, you should read that section before continuing.
-    Then Quicksort recursively sorts each half of the array. 
-    This reduces the problem size at each recursive step.
+    Quicksort is a <strong>divide-and-conquer</strong> algorithm. It chooses a
+    <strong>pivot</strong> value, partitions the current array segment around that
+    value, and recursively sorts the two remaining subarrays. Partitioning puts
+    the chosen pivot in a valid final sorted position: every element to its left
+    is less than or equal to it, and every element to its right is greater than
+    or equal to it. Neither side is necessarily sorted yet, and the two sides
+    need not have the same size.
   </p>
-  <p>More formally, Quicksort operates as follows:
+  <p>
+    We write \(A[lo \ldots hi]\) for the current segment, with both endpoints
+    included. Let \(v\) be the chosen pivot <em>value</em> and \(p\) the pivot's
+    final <em>index</em>, returned by partitioning. A segment with \(lo = hi\)
+    contains one element; a range with \(lo > hi\) is empty. The initial call
+    for an array of length \(n\) uses \(lo = 0\) and \(hi = n-1\).
   </p>
+  <p>
+    The implementation below uses a Hoare-style partition variant that starts
+    with the pivot at \(A[lo]\), scans inward from both ends, and finishes by
+    swapping that pivot into its final position. It rearranges only the current
+    segment, preserving all its elements, and returns \(p\) with these guarantees:
+  </p>
+  <ul>
+    <li>Every element in \(A[lo \ldots p-1]\) is at most \(v\).</li>
+    <li>\(A[p] = v\).</li>
+    <li>Every element in \(A[p+1 \ldots hi]\) is at least \(v\).</li>
+  </ul>
+  <p>
+    Equal values can occur on either side of the pivot. With duplicates, the
+    chosen pivot occupies a valid final sorted position, not a unique position
+    among equal values. These guarantees are what Quicksort needs from
+    partitioning. See
+    <a class="problem" href="?path=Algorithms/Decrease-and-Conquer/Hoare Partition">Hoare's Partition</a>
+    for the scanning procedure. Partition variants can return different kinds
+    of boundaries, so the recursive ranges must match the particular variant
+    used here.
+  </p>
+
+  <p>More formally, Quicksort operates as follows:</p>
   <ol>
     <li>
-      <strong>Base case:</strong>  
-      If there are fewer than two elements in the segment, it’s already sorted; return.
+      <strong>Base case:</strong>
+      If \(lo \geq hi\), the segment has fewer than two elements and is already
+      sorted; return.
     </li>
     <li>
       Otherwise:
       <ol type="a">
         <li>
-          <strong>Pick a pivot:</strong>  
-          Choose one element (e.g., first, last, middle, or random).
+          <strong>Pick a pivot:</strong>
+          The implementation below chooses the first element of the current
+          segment, \(A[lo]\). To use a different choice, such as the last,
+          middle, or a random element, first swap the chosen element into
+          \(A[lo]\). Choosing the middle index does not necessarily choose the
+          median value or produce balanced subarrays.
         </li>
         <li>
-          <strong>Partition the segment</strong> 
-          (e.g. using <a class="problem" href="?path=Algorithms/Decrease-and-Conquer/Hoare Partition">Hoare's Partition</a>)
-          The array now has three regions:
-          <ul>
-            <li>The elements on the left part are all less than or equal to the pivot, but may be out of order.</li>
-            <li>The pivot is in the correct location \(p\).</li>
-            <li>The elements on the right part are all greater than the pivot, but may be out of order.</li>
-          </ul>
+          <strong>Partition the segment:</strong>
+          Rearrange the segment to satisfy the three guarantees above. In this
+          implementation, the final <code>swap(A, lo, j)</code> places the pivot
+          at index \(j\), and partitioning returns that index as \(p\).
         </li>
         <li>
-          <strong>Recurse on left:</strong>  
-          QuickSort the subarray before the pivot (indices \(lo \ldots p-1\)).
+          <strong>Recurse on the left:</strong>
+          Quicksort the subarray before the pivot, \(A[lo \ldots p-1]\).
         </li>
         <li>
-          <strong>Recurse on right:</strong>  
-          QuickSort the subarray after the pivot (indices \(p+1 \ldots hi\)).
+          <strong>Recurse on the right:</strong>
+          Quicksort the subarray after the pivot, \(A[p+1 \ldots hi]\).
+          The pivot is excluded from both recursive calls because it is already
+          in a valid final sorted position.
         </li>
       </ol>
     </li>
   </ol>
 
   <p>
-    Because the swaps during the partition process can reorder equal
-    elements around the pivot without preserving their original order, 
-    Quicksort is generally not a stable sorting algorithm.
+    For example, the partition code below transforms the following array using
+    its first value, \(4\), as the pivot (indices start at zero):
   </p>
-  
+  <pre>Before:          [4, 7, 2, 4, 1, 6]
+After partition: [2, 1 | 4 | 4, 7, 6]
+                        p = 2</pre>
+  <p>
+    The bars separate the left subarray, the chosen pivot, and the right
+    subarray. The next calls sort indices \(0 \ldots 1\) and \(3 \ldots 5\).
+    Notice that the left subarray is still unsorted, an equal value remains on
+    the right, and the two subarrays have different sizes. Even though the right
+    subarray happens to be sorted in this example, partitioning does not
+    guarantee that either side is sorted.
+  </p>
+
+  <p>
+    <strong>Why the recursion terminates:</strong>
+    For a segment of size \(n = hi-lo+1\), the two recursive subarrays have
+    sizes \(p-lo\) and \(hi-p\). Their sizes sum to \(n-1\), since the pivot
+    is excluded. Each is therefore strictly smaller than the original segment,
+    even when one side is empty and the other contains \(n-1\) elements.
+    Repeated recursive calls eventually reach segments of size zero or one.
+  </p>
+  <p>
+    <strong>Why the result is sorted:</strong>
+    Assume the recursive calls correctly sort the smaller subarrays. Every
+    value in the sorted left subarray is still at most the pivot, and every
+    value in the sorted right subarray is still at least the pivot. Thus the
+    sorted left subarray, followed by the pivot, followed by the sorted right
+    subarray forms a sorted segment. No separate merge step is needed. Together
+    with the already-sorted base cases, this explains why the recursion sorts
+    the entire array.
+  </p>
+
+  <p>
+    A sorting algorithm is <strong>stable</strong> if records with equal keys
+    retain their original relative order. This Quicksort implementation is not
+    stable: its swaps can reverse that order. For example, let \(2_a\) and
+    \(2_b\) label two distinct records whose keys are both \(2\), with
+    comparisons using only the keys. Partitioning \([2_a, 2_b, 1]\) selects
+    \(2_a\) as the pivot; the final pivot swap produces \([1, 2_b, 2_a]\).
+    The equal-key records have reversed order, which the remaining recursive
+    calls do not restore.
+  </p>
+
   <section id="demo" section-title="Interactive Demo">
 <div class="embeddedDemoContainer">
   <iframe class="embeddedDemo"
@@ -489,31 +559,41 @@ splits into three regions: less than pivot, equal to pivot and greater than pivo
   
 </section><section id="reading-comprehension-questions" section-title="Reading Comprehension Questions">
 <h2>Reading Comprehension Questions</h2>
+  <p>Use the partition implementation on this page for all tracing questions. Array indices start at zero, and both endpoints of a range are included.</p>
   <ol>
-    <li>How does Quicksort employ the divide-and-conquer technique?</li>
-    <li>What are the average and worst-case time complexities of Quicksort, and when might they occur?</li>
-    <li>Is Quicksort stable? Explain.</li>
-    <li>Perform Quicksort on \([46,89,8,34,33,77]\) using the first element as pivot.</li>
-    <li>What are some ways to reduce the chances of getting the worst-case time complexity scenario of Quicksort?</li>
+    <li><strong>Partitioning and correctness.</strong> After <code>partition(A, lo, hi)</code> returns \(p\), what is guaranteed about the pivot and the elements on either side? What is <em>not</em> guaranteed about those sides? Use these facts to explain why sorting the two subarrays finishes the sort without a merge step.</li>
+    <li><strong>Trace the code.</strong> Using the partition implementation shown above, trace the first partition of \([46,89,8,34,33,77]\) with \(lo=0\) and \(hi=5\). Record \(i\) and \(j\) after each pair of scans, the array after each swap, the returned \(p\), and the two recursive ranges.</li>
+    <li><strong>Find a recursion bug.</strong> A student changes the right recursive call to <code>quickSort(A, p, hi)</code>, leaving the left call unchanged. Trace what happens on \([1,2]\). Why does the changed version fail to terminate? Explain how the original ranges and base case handle both empty and one-element segments.</li>
+    <li><strong>Test stability.</strong> Let \(3_a\) and \(3_b\) be distinct records with equal key \(3\), compared only by key. Trace the complete sort of \([3_a,3_b,2]\). Does it preserve the records' original relative order? Explain what this shows about stability.</li>
+    <li><strong>Relate splits to running time.</strong> Assume a partition of \(n\) elements takes \(\Theta(n)\) time. Write and solve recurrences for (a) splits as evenly as possible and (b) splits of sizes \(0\) and \(n-1\). Give a concrete input pattern that causes case (b) with the shown first-element pivot rule.</li>
+    <li><strong>Interpret the average-case recurrence.</strong> Assume all keys are distinct and each recursive call chooses a pivot uniformly at random. Explain the factors \(1/n\), the terms \(T(k)+T(n-k-1)\), and the factor \(2\) in
+ \[T(n)=\frac{1}{n}\sum_{k=0}^{n-1}\bigl(T(k)+T(n-k-1)\bigr)+\Theta(n)
+ =\frac{2}{n}\sum_{k=0}^{n-1}T(k)+\Theta(n).\]
+ Does the expected \(\Theta(n\log n)\) bound mean that every run has that running time?</li>
+    <li><strong>Understand the proof.</strong> In the average-case upper-bound proof, why is the negative term \(-\tfrac18 n^2\) in the lemma useful? After multiplying the lemma's bound by \(2a/n\), explain how choosing \(a\) sufficiently large allows the induction to absorb the linear partition cost.</li>
+    <li><strong>Evaluate pivot choices.</strong> A student claims that choosing the middle array position always gives two nearly equal subarrays. Give a counterexample with distinct keys. Explain how to use that chosen element with the existing partition code, and whether random selection or median-of-three guarantees balanced splits on every input.</li>
+    <li><strong>Analyze duplicate keys.</strong> For an array of \(n\) equal values, where does the shown partition routine place the chosen pivot? Determine the recursive subarray sizes and total running time. Would randomizing the pivot fix this case? Explain how three-way partitioning changes the work.</li>
+    <li><strong>Reason about auxiliary space.</strong> Each call uses only constant local storage, so why can the shown Quicksort still use \(\Theta(n)\) auxiliary space? Explain why recursively sorting only the smaller side and processing the larger side in a loop bounds stack space by \(O(\log n)\). Would merely making the smaller recursive call first, while retaining both recursive calls, give the same guarantee?</li>
   </ol>
-  
+
   <button id="toggleAnswers" class="show-answer" aria-expanded="false" style="margin-top:10px;">
     Show Answers
   </button>
   <div id="answers" class="answer" hidden style="margin-top:10px;">
     <ol>
-      <li><strong>Answer:</strong> It splits the array around a pivot and recursively sorts each half.</li>
-      <li><strong>Answer:</strong> Average \(O(n\log n)\); worst \(O(n^2)\) when pivots are poorly chosen
-	  or the array is already sorted or mostly sorted.</li>
-      <li><strong>Answer:</strong> Because its in-place partitioning can swap equal elements across the pivot, 
-        identical keys may end up in a different order than they started.</li>
-      <li><strong>Answer:</strong> Check your answer by comparing with the demo.</li>
-      <li><strong>Answer:</strong> By choosing pivots to avoid poor splits—e.g., 
-        using randomized pivot selection or median-of-three pivot; by employing three-way partitioning for duplicates.</li>
+      <li><strong>Answer:</strong> The chosen pivot is at \(A[p]\), all elements in \(A[lo\ldots p-1]\) are at most it, and all elements in \(A[p+1\ldots hi]\) are at least it. Equal values may occur on either side; neither side is necessarily sorted or the same size as the other. Once the recursive calls sort both sides, their ordering relative to the pivot makes the whole segment sorted. No merge is needed.</li>
+      <li><strong>Answer:</strong> The pivot is \(46\). The first scans stop at \(i=1\), \(j=4\); swapping those entries gives \([46,33,8,34,89,77]\). After incrementing \(i\) and decrementing \(j\), the next scans stop at \(i=4\), \(j=3\). Since \(j\leq i\), the final swap exchanges indices \(0\) and \(3\), producing \([34,33,8,46,89,77]\). The routine returns \(p=3\); the recursive ranges are \(0\ldots2\) and \(4\ldots5\).</li>
+      <li><strong>Answer:</strong> Partitioning \([1,2]\) leaves the array unchanged and returns \(p=0\). The changed right call repeats the identical range \(0\ldots1\), so the same partition and recursive call repeat indefinitely (until the call stack overflows). The original calls exclude the pivot, giving sizes \(p-lo\) and \(hi-p\), each smaller than the original segment. The guard \(lo&lt;hi\) stops on empty ranges (\(lo&gt;hi\)) and singletons (\(lo=hi\)).</li>
+      <li><strong>Answer:</strong> The first partition swaps the pivot \(3_a\) with \(2\), producing \([2,3_b,3_a]\) and returning \(p=2\). Sorting indices \(0\ldots1\) leaves that order unchanged. The final result is \([2,3_b,3_a]\): the equal-key records have reversed order. This is a counterexample to stability.</li>
+      <li><strong>Answer:</strong> With constant-time base cases, balanced splits give \(T(n)=T(\lfloor(n-1)/2\rfloor)+T(\lceil(n-1)/2\rceil)+\Theta(n)=\Theta(n\log n)\). Splits of sizes \(0\) and \(n-1\) give \(T(n)=T(n-1)+\Theta(n)=\Theta(n^2)\), since the partition costs sum as \(n+(n-1)+\cdots+2\). A strictly increasing array causes the first element to be the smallest in every remaining segment, producing the latter splits.</li>
+      <li><strong>Answer:</strong> Distinct keys give \(n\) possible pivot ranks, each with probability \(1/n\). A pivot with \(k\) smaller elements leaves subproblems of sizes \(k\) and \(n-k-1\). As \(k\) runs from \(0\) to \(n-1\), both sums of recursive costs contain exactly the same terms in opposite order, yielding the factor \(2\). The additive term is the partition work. The bound is an expectation over random choices; an individual run can still repeatedly choose extreme pivots and take \(\Theta(n^2)\) time.</li>
+      <li><strong>Answer:</strong> Multiplication turns the lemma's bound into \(an\log n-\tfrac a4 n\). The negative linear term leaves room for the partition cost and remaining constants. If that cost is at most \(cn\) for sufficiently large \(n\), choose \(a\) large enough that \(\tfrac a4 n\geq cn+C\), and also large enough for the base cases. Then the full expression is at most \(an\log n\). Using only the weaker bound \(\tfrac12 n^2\log n\) would leave a positive linear cost that this induction could not absorb.</li>
+      <li><strong>Answer:</strong> For \([4,5,1,2,3]\), the middle element is \(1\), the minimum, so its partition has an empty left side and four elements on the right. Swap the chosen element into \(A[lo]\) before calling the existing routine. Neither a random pivot nor median-of-three guarantees balanced splits on every input. Random selection gives an expected bound under the stated assumptions; median-of-three is a heuristic and can still select a value far from the true median.</li>
+      <li><strong>Answer:</strong> For every segment of size at least two, the right scan reaches \(lo\), and the final swap leaves the pivot at \(p=lo\). The recursive sizes are \(0\) and \(n-1\), giving \(\Theta(n^2)\) total time. Choosing a different equal-valued pivot cannot change this behavior. Three-way partitioning groups all equal keys together and recurses only on the less-than and greater-than regions; on an all-equal array, one \(\Theta(n)\) partition finishes the sort.</li>
+      <li><strong>Answer:</strong> Auxiliary space includes all simultaneously active call frames. Repeated extreme splits can keep \(\Theta(n)\) frames active, even though each frame has constant size. If only the smaller side is recursive, each nested recursive segment has at most half as many elements as its parent, so nesting is \(O(\log n)\); the larger side is handled in the same frame by a loop. Merely changing call order does not remove the larger recursive call: repeated empty/small-side returns followed by large-side recursion can still accumulate \(\Theta(n)\) frames. This stack optimization does not by itself eliminate quadratic running time.</li>
     </ol>
   </div>
-  
-  
+
 </section><section id="in-class-activities" section-title="In-class Activities">
 <h2>In-class Activities</h2>
   <ol>
